@@ -1,0 +1,413 @@
+Manim Community v0.21.0
+
+Animation 0: FadeIn(Text('Klimadaten: das Testreferenzjahr')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]                                                                                                          [10/14/26 18:37:32] INFO     Animation 0 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/34895980_3200186659_                         
+                             1641082183.mp4'                                    
+Animation 1: FadeIn(VGroup of 2 submobjects):   0%|          | 0/5 [00:00<?, ?it/s]                                                                                   [10/14/26 18:37:33] INFO     Animation 1 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_329373418                         
+                             8_3908859424.mp4'                                  
+Animation 2: Create(VGroup of 4 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 2: Create(VGroup of 4 submobjects), etc.:  60%|██████    | 9/15 [00:00<00:00, 83.82it/s]                                                                                                  [10/14/26 18:37:35] INFO     Animation 2 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_104257302                         
+                             5_3371050238.mp4'                                  
+Animation 3: Create(VGroup of 5 submobjects):   0%|          | 0/18 [00:00<?, ?it/s]                                                                                    [10/14/26 18:37:36] INFO     Animation 3 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_393987623                         
+                             3_2525209061.mp4'                                  
+Animation 4: FadeIn(VGroup of 4 submobjects):   0%|          | 0/12 [00:00<?, ?it/s]                                                                                    [10/14/26 18:37:37] INFO     Animation 4 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_101653995                         
+                             3_1213101479.mp4'                                  
+Animation 5: LaggedStart(Group), etc.:   0%|          | 0/21 [00:00<?, ?it/s]Animation 5: LaggedStart(Group), etc.:  48%|████▊     | 10/21 [00:00<00:00, 90.81it/s]Animation 5: LaggedStart(Group), etc.:  95%|█████████▌| 20/21 [00:00<00:00, 82.58it/s]                                                                                      [10/14/26 18:37:38] INFO     Animation 5 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_243860290                         
+                             0_3914082544.mp4'                                  
+Animation 6: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 6: FadeIn(VGroup of 2 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 77.83it/s]                                                                                                  [10/14/26 18:37:39] INFO     Animation 6 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_876205663                         
+                             _2472288169.mp4'                                   
+Animation 7: Indicate(VGroup of 2 submobjects), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 7: Indicate(VGroup of 2 submobjects), etc.:  50%|█████     | 9/18 [00:00<00:00, 85.44it/s]Animation 7: Indicate(VGroup of 2 submobjects), etc.: 100%|██████████| 18/18 [00:00<00:00, 84.50it/s]                                                                                                                         INFO     Animation 7 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_170979730                         
+                             3_2344590179.mp4'                                  
+Animation 8: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/5 [00:00<?, ?it/s]                                                                                                [10/14/26 18:37:40] INFO     Animation 8 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_776045006                         
+                             _169012488.mp4'                                    
+Animation 9: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:37:42] INFO     Animation 9 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_548713066                         
+                             _1387306481.mp4'                                   
+Animation 10: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:37:43] INFO     Animation 10 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_425820572                         
+                             7_2868032983.mp4'                                  
+Animation 11: Create(DashedLine), etc.:   0%|          | 0/11 [00:00<?, ?it/s]Animation 11: Create(DashedLine), etc.:  45%|████▌     | 5/11 [00:00<00:00, 47.65it/s]Animation 11: Create(DashedLine), etc.:  91%|█████████ | 10/11 [00:00<00:00, 47.98it/s]                                                                                       [10/14/26 18:37:44] INFO     Animation 11 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_304132563                         
+                             2_1806696327.mp4'                                  
+Animation 12: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/98 [00:00<?, ?it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:   3%|▎         | 3/98 [00:00<00:04, 22.11it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:   6%|▌         | 6/98 [00:00<00:03, 24.84it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:   9%|▉         | 9/98 [00:00<00:03, 25.76it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  12%|█▏        | 12/98 [00:00<00:03, 25.50it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  15%|█▌        | 15/98 [00:00<00:03, 24.06it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  18%|█▊        | 18/98 [00:00<00:03, 22.70it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  21%|██▏       | 21/98 [00:00<00:03, 20.74it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  24%|██▍       | 24/98 [00:01<00:03, 20.74it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  28%|██▊       | 27/98 [00:01<00:03, 21.86it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  31%|███       | 30/98 [00:01<00:03, 21.47it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  34%|███▎      | 33/98 [00:01<00:02, 22.09it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  37%|███▋      | 36/98 [00:01<00:02, 22.38it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  40%|███▉      | 39/98 [00:01<00:02, 22.35it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  43%|████▎     | 42/98 [00:01<00:02, 22.84it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  46%|████▌     | 45/98 [00:01<00:02, 22.94it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  49%|████▉     | 48/98 [00:02<00:02, 23.00it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  52%|█████▏    | 51/98 [00:02<00:02, 23.37it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  55%|█████▌    | 54/98 [00:02<00:01, 23.53it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  58%|█████▊    | 57/98 [00:02<00:01, 23.44it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  61%|██████    | 60/98 [00:02<00:01, 23.02it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  64%|██████▍   | 63/98 [00:02<00:01, 22.50it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  67%|██████▋   | 66/98 [00:02<00:01, 21.99it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  70%|███████   | 69/98 [00:03<00:01, 21.68it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  73%|███████▎  | 72/98 [00:03<00:01, 20.57it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  77%|███████▋  | 75/98 [00:03<00:01, 20.52it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  80%|███████▉  | 78/98 [00:03<00:00, 20.44it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  83%|████████▎ | 81/98 [00:03<00:00, 20.06it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  86%|████████▌ | 84/98 [00:03<00:00, 19.63it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  89%|████████▉ | 87/98 [00:03<00:00, 19.43it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  91%|█████████ | 89/98 [00:04<00:00, 17.92it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  93%|█████████▎| 91/98 [00:04<00:00, 17.26it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  95%|█████████▍| 93/98 [00:04<00:00, 15.36it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  97%|█████████▋| 95/98 [00:04<00:00,  8.87it/s]Animation 12: _MethodAnimation(ValueTracker), etc.:  99%|█████████▉| 97/98 [00:05<00:00, 10.03it/s]                                                                                                   [10/14/26 18:37:51] INFO     Animation 12 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_187277494                         
+                             2_3196837538.mp4'                                  
+Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/42 [00:00<?, ?it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):   2%|▏         | 1/42 [00:00<00:05,  7.25it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):   5%|▍         | 2/42 [00:00<00:06,  5.72it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  10%|▉         | 4/42 [00:00<00:03, 10.26it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  14%|█▍        | 6/42 [00:00<00:04,  7.80it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  19%|█▉        | 8/42 [00:00<00:03,  9.58it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  24%|██▍       | 10/42 [00:01<00:04,  7.56it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  26%|██▌       | 11/42 [00:01<00:04,  6.27it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  31%|███       | 13/42 [00:01<00:03,  8.31it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  38%|███▊      | 16/42 [00:01<00:02, 11.56it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  48%|████▊     | 20/42 [00:01<00:01, 16.74it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  60%|█████▉    | 25/42 [00:02<00:00, 22.92it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  69%|██████▉   | 29/42 [00:02<00:00, 25.73it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  79%|███████▊  | 33/42 [00:02<00:00, 26.08it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  86%|████████▌ | 36/42 [00:02<00:00, 25.03it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 6 submobjects):  95%|█████████▌| 40/42 [00:02<00:00, 28.36it/s]                                                                                                           [10/14/26 18:37:57] INFO     Animation 13 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_391950554                         
+                             0_2644417174.mp4'                                  
+Animation 14: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 14: FadeOut(VGroup of 2 submobjects):  67%|██████▋   | 2/3 [00:00<00:00, 13.77it/s]                                                                                             [10/14/26 18:38:01] INFO     Animation 14 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_125522960                         
+                             4_3333727696.mp4'                                  
+Animation 15: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 15: FadeIn(VGroup of 2 submobjects): 100%|██████████| 3/3 [00:00<00:00, 27.90it/s]                                                                                            [10/14/26 18:38:02] INFO     Animation 15 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_264097089                         
+                             5_2943886945.mp4'                                  
+Animation 16: FadeOut(DashedLine), etc.:   0%|          | 0/8 [00:00<?, ?it/s]Animation 16: FadeOut(DashedLine), etc.:  38%|███▊      | 3/8 [00:00<00:00, 27.83it/s]Animation 16: FadeOut(DashedLine), etc.:  75%|███████▌  | 6/8 [00:00<00:00, 27.32it/s]                                                                                      [10/14/26 18:38:04] INFO     Animation 16 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_18766946_                         
+                             613776227.mp4'                                     
+Animation 17: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/98 [00:00<?, ?it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:   3%|▎         | 3/98 [00:00<00:03, 29.20it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:   7%|▋         | 7/98 [00:00<00:02, 32.00it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  11%|█         | 11/98 [00:00<00:02, 29.77it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  15%|█▌        | 15/98 [00:00<00:02, 30.17it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  19%|█▉        | 19/98 [00:00<00:02, 29.02it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  22%|██▏       | 22/98 [00:00<00:02, 26.57it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  26%|██▌       | 25/98 [00:00<00:02, 26.30it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  29%|██▊       | 28/98 [00:01<00:02, 26.45it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  32%|███▏      | 31/98 [00:01<00:02, 26.45it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  36%|███▌      | 35/98 [00:01<00:02, 28.23it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  40%|███▉      | 39/98 [00:01<00:02, 29.44it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  44%|████▍     | 43/98 [00:01<00:01, 30.69it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  48%|████▊     | 47/98 [00:01<00:01, 29.53it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  51%|█████     | 50/98 [00:01<00:02, 21.25it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  54%|█████▍    | 53/98 [00:02<00:02, 20.32it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  57%|█████▋    | 56/98 [00:02<00:01, 22.26it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  61%|██████    | 60/98 [00:02<00:01, 24.95it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  65%|██████▌   | 64/98 [00:02<00:01, 27.44it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  69%|██████▉   | 68/98 [00:02<00:01, 28.85it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  73%|███████▎  | 72/98 [00:02<00:00, 28.41it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  78%|███████▊  | 76/98 [00:02<00:00, 29.34it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  82%|████████▏ | 80/98 [00:02<00:00, 29.55it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  86%|████████▌ | 84/98 [00:03<00:00, 29.85it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  90%|████████▉ | 88/98 [00:03<00:00, 29.06it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  93%|█████████▎| 91/98 [00:03<00:00, 28.58it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  96%|█████████▌| 94/98 [00:03<00:00, 27.94it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  99%|█████████▉| 97/98 [00:03<00:00, 27.98it/s]                                                                                                   [10/14/26 18:38:09] INFO     Animation 17 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_412679644                         
+                             7_2380475926.mp4'                                  
+Animation 18: _MethodAnimation(ValueTracker):   0%|          | 0/21 [00:00<?, ?it/s]Animation 18: _MethodAnimation(ValueTracker):  19%|█▉        | 4/21 [00:00<00:00, 32.33it/s]Animation 18: _MethodAnimation(ValueTracker):  38%|███▊      | 8/21 [00:00<00:00, 32.74it/s]Animation 18: _MethodAnimation(ValueTracker):  57%|█████▋    | 12/21 [00:00<00:00, 35.53it/s]Animation 18: _MethodAnimation(ValueTracker):  81%|████████  | 17/21 [00:00<00:00, 37.78it/s]                                                                                             [10/14/26 18:38:12] INFO     Animation 18 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_968546655                         
+                             _3538696240.mp4'                                   
+Animation 19: FadeIn(VMobject), etc.:   0%|          | 0/11 [00:00<?, ?it/s]Animation 19: FadeIn(VMobject), etc.:  18%|█▊        | 2/11 [00:00<00:00, 16.94it/s]Animation 19: FadeIn(VMobject), etc.:  45%|████▌     | 5/11 [00:00<00:00, 23.51it/s]Animation 19: FadeIn(VMobject), etc.:  82%|████████▏ | 9/11 [00:00<00:00, 28.70it/s]                                                                                    [10/14/26 18:38:14] INFO     Animation 19 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_325956085                         
+                             2_1611295629.mp4'                                  
+Animation 20: Create(VGroup of 2 submobjects):   0%|          | 0/9 [00:00<?, ?it/s]Animation 20: Create(VGroup of 2 submobjects):  44%|████▍     | 4/9 [00:00<00:00, 36.98it/s]Animation 20: Create(VGroup of 2 submobjects):  89%|████████▉ | 8/9 [00:00<00:00, 33.54it/s]                                                                                            [10/14/26 18:38:16] INFO     Animation 20 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_337796830                         
+                             4_369509232.mp4'                                   
+Animation 21: Create(VGroup of 2 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 21: Create(VGroup of 2 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 39.94it/s]Animation 21: Create(VGroup of 2 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 39.92it/s]Animation 21: Create(VGroup of 2 submobjects), etc.:  87%|████████▋ | 13/15 [00:00<00:00, 40.90it/s]                                                                                                    [10/14/26 18:38:18] INFO     Animation 21 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_45686183_                         
+                             601648502.mp4'                                     
+Animation 22: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/7 [00:00<?, ?it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 6 submobjects):  71%|███████▏  | 5/7 [00:00<00:00, 44.26it/s]                                                                                                         [10/14/26 18:38:22] INFO     Animation 22 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_126618813                         
+                             0_745131369.mp4'                                   
+Animation 23: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                     [10/14/26 18:38:24] INFO     Animation 23 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_398661263                         
+                             1_1296400359.mp4'                                  
+Animation 24: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:38:26] INFO     Animation 24 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_263070345                         
+                             4_318810883.mp4'                                   
+Animation 25: FadeIn(VGroup of 4 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 25: FadeIn(VGroup of 4 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 36.14it/s]Animation 25: FadeIn(VGroup of 4 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 35.99it/s]Animation 25: FadeIn(VGroup of 4 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 34.97it/s]                                                                                                    [10/14/26 18:38:28] INFO     Animation 25 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_913117580                         
+                             _2813301018.mp4'                                   
+Animation 26: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/90 [00:00<?, ?it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:   4%|▍         | 4/90 [00:00<00:02, 35.34it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:   9%|▉         | 8/90 [00:00<00:02, 35.83it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  13%|█▎        | 12/90 [00:00<00:02, 35.37it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  18%|█▊        | 16/90 [00:00<00:02, 35.80it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  22%|██▏       | 20/90 [00:00<00:02, 33.70it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  27%|██▋       | 24/90 [00:00<00:01, 33.40it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  31%|███       | 28/90 [00:00<00:01, 34.02it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  36%|███▌      | 32/90 [00:00<00:01, 35.10it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  40%|████      | 36/90 [00:01<00:01, 34.74it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  44%|████▍     | 40/90 [00:01<00:01, 34.64it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  49%|████▉     | 44/90 [00:01<00:01, 34.70it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  53%|█████▎    | 48/90 [00:01<00:01, 34.93it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  58%|█████▊    | 52/90 [00:01<00:01, 34.56it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  62%|██████▏   | 56/90 [00:01<00:01, 33.97it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  67%|██████▋   | 60/90 [00:01<00:00, 34.53it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  71%|███████   | 64/90 [00:01<00:00, 33.46it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  76%|███████▌  | 68/90 [00:01<00:00, 33.57it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  80%|████████  | 72/90 [00:02<00:00, 34.28it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  84%|████████▍ | 76/90 [00:02<00:00, 34.10it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  89%|████████▉ | 80/90 [00:02<00:00, 34.96it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  93%|█████████▎| 84/90 [00:02<00:00, 34.69it/s]Animation 26: _MethodAnimation(ValueTracker), etc.:  98%|█████████▊| 88/90 [00:02<00:00, 34.91it/s]                                                                                                   [10/14/26 18:38:32] INFO     Animation 26 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_334242323                         
+                             8_3610707902.mp4'                                  
+Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/17 [00:00<?, ?it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  18%|█▊        | 3/17 [00:00<00:00, 29.37it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  35%|███▌      | 6/17 [00:00<00:00, 29.34it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  59%|█████▉    | 10/17 [00:00<00:00, 32.15it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  82%|████████▏ | 14/17 [00:00<00:00, 33.06it/s]                                                                                                           [10/14/26 18:38:35] INFO     Animation 27 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_226260715                         
+                             9_2967903801.mp4'                                  
+Animation 28: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 28: FadeOut(VGroup of 2 submobjects): 100%|██████████| 3/3 [00:00<00:00, 29.91it/s]                                                                                             [10/14/26 18:38:39] INFO     Animation 28 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_308311510                         
+                             0_2250508454.mp4'                                  
+Animation 29: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 29: FadeIn(VGroup of 2 submobjects):  67%|██████▋   | 2/3 [00:00<00:00, 18.10it/s]                                                                                            [10/14/26 18:38:40] INFO     Animation 29 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_209996542                         
+                             5_3947106314.mp4'                                  
+Animation 30: FadeOut(VGroup of 1 submobjects), etc.:   0%|          | 0/14 [00:00<?, ?it/s]Animation 30: FadeOut(VGroup of 1 submobjects), etc.:  21%|██▏       | 3/14 [00:00<00:00, 23.11it/s]Animation 30: FadeOut(VGroup of 1 submobjects), etc.:  43%|████▎     | 6/14 [00:00<00:00, 24.62it/s]Animation 30: FadeOut(VGroup of 1 submobjects), etc.:  64%|██████▍   | 9/14 [00:00<00:00, 24.96it/s]Animation 30: FadeOut(VGroup of 1 submobjects), etc.:  86%|████████▌ | 12/14 [00:00<00:00, 22.64it/s]                                                                                                     [10/14/26 18:38:44] INFO     Animation 30 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_552013060                         
+                             _629340784.mp4'                                    
+Animation 31: Indicate(VGroup of 13 submobjects), etc.:   0%|          | 0/21 [00:00<?, ?it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  14%|█▍        | 3/21 [00:00<00:00, 27.98it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  29%|██▊       | 6/21 [00:00<00:00, 27.01it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  43%|████▎     | 9/21 [00:00<00:00, 26.41it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  57%|█████▋    | 12/21 [00:00<00:00, 26.85it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  71%|███████▏  | 15/21 [00:00<00:00, 26.88it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.:  86%|████████▌ | 18/21 [00:00<00:00, 26.30it/s]Animation 31: Indicate(VGroup of 13 submobjects), etc.: 100%|██████████| 21/21 [00:00<00:00, 26.22it/s]                                                                                                       [10/14/26 18:38:47] INFO     Animation 31 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_838682793                         
+                             _4079199157.mp4'                                   
+Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/115 [00:00<?, ?it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):   3%|▎         | 4/115 [00:00<00:03, 33.35it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):   7%|▋         | 8/115 [00:00<00:03, 32.55it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  10%|█         | 12/115 [00:00<00:03, 31.86it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  14%|█▍        | 16/115 [00:00<00:03, 31.24it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  17%|█▋        | 20/115 [00:00<00:02, 32.05it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  21%|██        | 24/115 [00:00<00:02, 32.69it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  24%|██▍       | 28/115 [00:00<00:02, 30.94it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  28%|██▊       | 32/115 [00:01<00:02, 29.57it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  31%|███▏      | 36/115 [00:01<00:02, 29.86it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  35%|███▍      | 40/115 [00:01<00:02, 30.36it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  38%|███▊      | 44/115 [00:01<00:02, 29.37it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  42%|████▏     | 48/115 [00:01<00:02, 30.27it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  45%|████▌     | 52/115 [00:01<00:02, 31.11it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  49%|████▊     | 56/115 [00:01<00:01, 31.08it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  52%|█████▏    | 60/115 [00:01<00:01, 31.55it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  56%|█████▌    | 64/115 [00:02<00:01, 30.79it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  59%|█████▉    | 68/115 [00:02<00:01, 30.62it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  63%|██████▎   | 72/115 [00:02<00:01, 28.46it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  65%|██████▌   | 75/115 [00:02<00:01, 24.23it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  68%|██████▊   | 78/115 [00:02<00:01, 24.47it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  70%|███████   | 81/115 [00:02<00:01, 25.17it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  73%|███████▎  | 84/115 [00:02<00:01, 26.02it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  77%|███████▋  | 88/115 [00:03<00:00, 27.42it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  80%|████████  | 92/115 [00:03<00:00, 28.93it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  83%|████████▎ | 96/115 [00:03<00:00, 29.33it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  86%|████████▌ | 99/115 [00:03<00:00, 29.45it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  89%|████████▊ | 102/115 [00:03<00:00, 27.56it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  91%|█████████▏| 105/115 [00:03<00:00, 27.42it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  94%|█████████▍| 108/115 [00:03<00:00, 25.34it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects):  97%|█████████▋| 111/115 [00:03<00:00, 26.13it/s]Animation 32: UpdateFromAlphaFunc(VGroup of 6 submobjects): 100%|██████████| 115/115 [00:03<00:00, 27.51it/s]                                                                                                             [10/14/26 18:38:55] INFO     Animation 32 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_210611574                         
+                             _212676867.mp4'                                    
+Animation 33: FadeOut(Text('GEG-Nachweis: standardisiertes Referenzklima — Referenzklimazone Potsdam zentral')), etc.:   0%|          | 0/6 [00:00<?, ?it/s]Animation 33: FadeOut(Text('GEG-Nachweis: standardisiertes Referenzklima — Referenzklimazone Potsdam zentral')), etc.:  50%|█████     | 3/6 [00:00<00:00, 29.91it/s]Animation 33: FadeOut(Text('GEG-Nachweis: standardisiertes Referenzklima — Referenzklimazone Potsdam zentral')), etc.: 100%|██████████| 6/6 [00:00<00:00, 29.83it/s]                                                                                                                                                                    [10/14/26 18:38:57] INFO     Animation 33 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_207582370                         
+                             2_2455060289.mp4'                                  
+Animation 34: FadeOut(VGroup of 4 submobjects), etc.:   0%|          | 0/9 [00:00<?, ?it/s]Animation 34: FadeOut(VGroup of 4 submobjects), etc.:  33%|███▎      | 3/9 [00:00<00:00, 29.04it/s]Animation 34: FadeOut(VGroup of 4 submobjects), etc.:  67%|██████▋   | 6/9 [00:00<00:00, 26.32it/s]Animation 34: FadeOut(VGroup of 4 submobjects), etc.: 100%|██████████| 9/9 [00:00<00:00, 24.58it/s]                                                                                                   [10/14/26 18:39:00] INFO     Animation 34 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_156856709                         
+                             7_98178742.mp4'                                    
+                    INFO     Animation 35 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat3_Klima                         
+                             daten/2119445635_241228271                         
+                             _3304580577.mp4'                                   
+                    INFO     Combining to Movie file.   scene_file_writer.py:952
+                    INFO                               scene_file_writer.py:1103
+                             File ready at                                      
+                             '/Users/niloufarghandehar                          
+                             iyoon/Developer/semio/.re                          
+                             po/🎫/26/10/13/RESTYLE-EN                          
+                             ERGYBALANCE-WITH-FUNDAMEN                          
+                             TALS-GLYPHS/checks/ch2_me                          
+                             dia/videos/scene_2/480p15                          
+                             /Beat3_Klimadaten.mp4'                             
+                                                                                
+                    INFO     Rendered Beat3_Klimadaten              scene.py:290
+                             Played 36 animations                               
+You are using manim version v0.21.0, but version v0.22.0 is available.
+You should consider upgrading via pip install -U manim

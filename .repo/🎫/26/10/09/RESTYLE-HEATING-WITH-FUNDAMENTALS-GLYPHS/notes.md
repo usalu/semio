@@ -28,3 +28,14 @@ Full video rendering at 1080p60 now (`full_heating_video.py -q h --no-play`, log
 Full video: `full_heating_video.py -q h --no-play` (log `checks/full_heating_qh.log`) -> `rendered/Full_Heating_Demand_1080p60.mp4`, 1920x1080 @ 60 fps, 35:12, silent; frames every 88s checked across the whole length in `checks/sheets/hq_full_heating_*.png` -- clean throughout.
 
 Status: closed 2026-10-10 (manually -- repo MCP unavailable).
+
+## Reopened 2026-10-10 — g-value scene too cluttered
+
+Dev report (screenshot at 26:21 of the full video): Modul 5 Beat3_GWert ("Gesamtenergiedurchlassgrad g") was cluttered — ten parallel rays (one per 10% share) crossing a reflected-ray fan made the split hard to read. Asked to match the cleaner single-ray glazing graphic already used in the Cooling video (Teil 4 Beat4_GlassTransmittance).
+
+- Replaced the ten-ray fan with one ray through a glass cross-section, same approach as `Cooling/4_solar_radiation/scene_4.py` `Beat4_GlassTransmittance`: a single beam from the sun hits the outer pane, splits into a reflected ray and a ray that continues through the glass and out the far side, with `pulse_flashes` running along both paths during every hold.
+- Kept all of Heating's own content: the same percentages (reflektiert 20%, im Glas 30%, durchgelassen 50%, Wärme nach innen 10%/außen 20%), the same `g ≈ 0,6` brace spanning only the "innen" contributions (durchgelassen + Wärme nach innen), the same formula fly-in into `Φ = G·A·F_f·g`, the same pastel colours and narration.
+- Removed the now-dead `RAY_SHARE` constant and the ray-fan math it drove; `_soft_ray`/`_pulses` stay (still used by other beats in this file).
+- One guard hit found and fixed: the shallow incoming ray passed behind the "reflektiert 20%" label — moved the label below the reflected ray instead of above it.
+- Verified: `LAYOUT_CHECK=1` over all 8 beats of `5_solar_heat_gain/scene_5.py` is silent. Dense contact sheet (`checks/sheets/5_solar_heat_gain/lead_gwert_v2_*.png`) reviewed frame by frame — clean.
+- Full video re-rendered at 1080p60 (`checks/full_heating_qh_v2.log`); the staleness check reuses the other five sections and only re-renders Modul 5.

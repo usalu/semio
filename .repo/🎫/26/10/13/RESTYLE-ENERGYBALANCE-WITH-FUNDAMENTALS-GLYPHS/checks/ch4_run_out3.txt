@@ -1,0 +1,3 @@
+[LAYOUT] Beat3_Erzeugung t=37.1s play: line through 'nichtzugekauft' @(4.75,0.02) × RoundedRectangle@(3.70,0.55)
+                             File ready at                                      
+19

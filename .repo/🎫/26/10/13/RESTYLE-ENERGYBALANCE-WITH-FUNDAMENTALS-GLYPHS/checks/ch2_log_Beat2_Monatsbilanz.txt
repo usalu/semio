@@ -1,0 +1,468 @@
+Manim Community v0.21.0
+
+Animation 0: FadeIn(Text('Warum Monat für Monat bilanziert wird')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]                                                                                                               [10/14/26 18:35:05] INFO     Animation 0 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/34895980_263503477                         
+                             2_1641082183.mp4'                                  
+Animation 1: FadeIn(VGroup of 2 submobjects):   0%|          | 0/5 [00:00<?, ?it/s]Animation 1: FadeIn(VGroup of 2 submobjects):  60%|██████    | 3/5 [00:00<00:00, 24.31it/s]                                                                                           [10/14/26 18:35:08] INFO     Animation 1 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2252638                         
+                             154_2145653625.mp4'                                
+Animation 2: Create(VGroup of 4 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]                                                                                          [10/14/26 18:35:09] INFO     Animation 2 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1590940                         
+                             544_3500126545.mp4'                                
+Animation 3: Create(VGroup of 5 submobjects):   0%|          | 0/18 [00:00<?, ?it/s]                                                                                    [10/14/26 18:35:10] INFO     Animation 3 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3896389                         
+                             725_413244198.mp4'                                 
+Animation 4: FadeIn(VGroup of 4 submobjects):   0%|          | 0/12 [00:00<?, ?it/s]                                                                                    [10/14/26 18:35:11] INFO     Animation 4 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_4171490                         
+                             842_55774102.mp4'                                  
+Animation 5: LaggedStart(Group), etc.:   0%|          | 0/21 [00:00<?, ?it/s]Animation 5: LaggedStart(Group), etc.:  33%|███▎      | 7/21 [00:00<00:00, 61.83it/s]Animation 5: LaggedStart(Group), etc.:  67%|██████▋   | 14/21 [00:00<00:00, 58.27it/s]                                                                                      [10/14/26 18:35:12] INFO     Animation 5 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2438602                         
+                             900_4011014144.mp4'                                
+Animation 6: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/54 [00:00<?, ?it/s]Animation 6: _MethodAnimation(ValueTracker), etc.:  17%|█▋        | 9/54 [00:00<00:00, 82.54it/s]Animation 6: _MethodAnimation(ValueTracker), etc.:  33%|███▎      | 18/54 [00:00<00:00, 60.06it/s]Animation 6: _MethodAnimation(ValueTracker), etc.:  50%|█████     | 27/54 [00:00<00:00, 69.65it/s]Animation 6: _MethodAnimation(ValueTracker), etc.:  69%|██████▊   | 37/54 [00:00<00:00, 78.27it/s]Animation 6: _MethodAnimation(ValueTracker), etc.:  85%|████████▌ | 46/54 [00:00<00:00, 66.04it/s]Animation 6: _MethodAnimation(ValueTracker), etc.: 100%|██████████| 54/54 [00:00<00:00, 59.95it/s]                                                                                                  [10/14/26 18:35:13] INFO     Animation 6 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1184169                         
+                             079_3627540026.mp4'                                
+Animation 7: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/12 [00:00<?, ?it/s]Animation 7: UpdateFromAlphaFunc(VGroup of 6 submobjects):  67%|██████▋   | 8/12 [00:00<00:00, 42.52it/s]                                                                                                         [10/14/26 18:35:15] INFO     Animation 7 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2985493                         
+                             79_3148117248.mp4'                                 
+Animation 8: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:35:18] INFO     Animation 8 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2799264                         
+                             681_2776994063.mp4'                                
+Animation 9: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 9: FadeIn(VGroup of 2 submobjects):  67%|██████▋   | 2/3 [00:00<00:00, 17.13it/s]                                                                                           [10/14/26 18:35:19] INFO     Animation 9 : Partial      scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_4220932                         
+                             081_1237051593.mp4'                                
+Animation 10: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/98 [00:00<?, ?it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:   2%|▏         | 2/98 [00:00<00:05, 16.75it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:   7%|▋         | 7/98 [00:00<00:02, 31.51it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  11%|█         | 11/98 [00:00<00:03, 22.65it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  16%|█▋        | 16/98 [00:00<00:03, 22.91it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  20%|██        | 20/98 [00:00<00:02, 26.77it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  26%|██▌       | 25/98 [00:00<00:02, 30.83it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  30%|██▉       | 29/98 [00:01<00:02, 33.08it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  34%|███▎      | 33/98 [00:01<00:02, 25.19it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  38%|███▊      | 37/98 [00:01<00:02, 28.04it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  42%|████▏     | 41/98 [00:01<00:01, 30.72it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  46%|████▌     | 45/98 [00:01<00:01, 29.19it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  50%|█████     | 49/98 [00:01<00:01, 31.17it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  54%|█████▍    | 53/98 [00:01<00:01, 24.77it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  57%|█████▋    | 56/98 [00:02<00:01, 23.80it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  60%|██████    | 59/98 [00:02<00:01, 23.54it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  63%|██████▎   | 62/98 [00:02<00:01, 21.98it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  66%|██████▋   | 65/98 [00:02<00:01, 21.61it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  70%|███████   | 69/98 [00:02<00:01, 23.68it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  73%|███████▎  | 72/98 [00:02<00:01, 23.50it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  77%|███████▋  | 75/98 [00:02<00:01, 22.05it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  80%|███████▉  | 78/98 [00:03<00:01, 17.09it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  82%|████████▏ | 80/98 [00:03<00:01, 15.77it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  85%|████████▍ | 83/98 [00:03<00:00, 18.10it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  89%|████████▉ | 87/98 [00:03<00:00, 22.33it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  92%|█████████▏| 90/98 [00:03<00:00, 22.55it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  95%|█████████▍| 93/98 [00:03<00:00, 19.27it/s]Animation 10: _MethodAnimation(ValueTracker), etc.:  98%|█████████▊| 96/98 [00:04<00:00, 20.65it/s]                                                                                                   [10/14/26 18:35:25] INFO     Animation 10 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1909801                         
+                             995_3353383568.mp4'                                
+Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/43 [00:00<?, ?it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  14%|█▍        | 6/43 [00:00<00:00, 50.25it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  28%|██▊       | 12/43 [00:00<00:00, 31.27it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  37%|███▋      | 16/43 [00:00<00:00, 30.25it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  47%|████▋     | 20/43 [00:00<00:00, 29.09it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  56%|█████▌    | 24/43 [00:00<00:00, 28.03it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  63%|██████▎   | 27/43 [00:00<00:00, 27.56it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  70%|██████▉   | 30/43 [00:01<00:00, 23.81it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  77%|███████▋  | 33/43 [00:01<00:00, 23.77it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  88%|████████▊ | 38/43 [00:01<00:00, 29.66it/s]Animation 11: UpdateFromAlphaFunc(VGroup of 6 submobjects):  98%|█████████▊| 42/43 [00:01<00:00, 31.82it/s]                                                                                                           [10/14/26 18:35:28] INFO     Animation 11 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1168942                         
+                             687_1873761400.mp4'                                
+Animation 12: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                     [10/14/26 18:35:32] INFO     Animation 12 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2981642                         
+                             302_139544214.mp4'                                 
+Animation 13: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:35:33] INFO     Animation 13 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2078304                         
+                             697_2720642046.mp4'                                
+Animation 14: FadeIn(Rectangle), etc.:   0%|          | 0/8 [00:00<?, ?it/s]Animation 14: FadeIn(Rectangle), etc.:  62%|██████▎   | 5/8 [00:00<00:00, 45.95it/s]                                                                                    [10/14/26 18:35:35] INFO     Animation 14 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1586208                         
+                             604_1864204957.mp4'                                
+Animation 15: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/105 [00:00<?, ?it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:   2%|▏         | 2/105 [00:00<00:05, 18.33it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:   6%|▌         | 6/105 [00:00<00:03, 29.34it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:   9%|▊         | 9/105 [00:00<00:06, 15.75it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  11%|█▏        | 12/105 [00:00<00:04, 18.82it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  14%|█▍        | 15/105 [00:00<00:04, 21.65it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  18%|█▊        | 19/105 [00:00<00:03, 24.30it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  21%|██        | 22/105 [00:01<00:03, 21.23it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  24%|██▍       | 25/105 [00:01<00:03, 21.74it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  27%|██▋       | 28/105 [00:01<00:03, 20.86it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  30%|██▉       | 31/105 [00:01<00:04, 15.64it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  31%|███▏      | 33/105 [00:01<00:05, 13.77it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  34%|███▍      | 36/105 [00:01<00:04, 16.25it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  37%|███▋      | 39/105 [00:02<00:03, 17.94it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  40%|████      | 42/105 [00:02<00:03, 17.45it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  44%|████▍     | 46/105 [00:02<00:02, 20.69it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  47%|████▋     | 49/105 [00:02<00:02, 21.81it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  50%|████▉     | 52/105 [00:02<00:02, 22.70it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  52%|█████▏    | 55/105 [00:02<00:03, 15.35it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  54%|█████▍    | 57/105 [00:03<00:03, 15.74it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  56%|█████▌    | 59/105 [00:03<00:02, 16.44it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  59%|█████▉    | 62/105 [00:03<00:02, 19.33it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  62%|██████▏   | 65/105 [00:03<00:02, 19.66it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  65%|██████▍   | 68/105 [00:03<00:02, 17.99it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  67%|██████▋   | 70/105 [00:03<00:02, 14.44it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  69%|██████▊   | 72/105 [00:04<00:02, 12.12it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  70%|███████   | 74/105 [00:04<00:02, 12.05it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  72%|███████▏  | 76/105 [00:04<00:02, 12.60it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  74%|███████▍  | 78/105 [00:04<00:02, 12.13it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  76%|███████▌  | 80/105 [00:04<00:02, 11.41it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  78%|███████▊  | 82/105 [00:05<00:02, 11.13it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  81%|████████  | 85/105 [00:05<00:01, 13.99it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  83%|████████▎ | 87/105 [00:05<00:01, 13.64it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  85%|████████▍ | 89/105 [00:05<00:01, 11.60it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  87%|████████▋ | 91/105 [00:05<00:01, 11.14it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  89%|████████▊ | 93/105 [00:05<00:00, 12.65it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  91%|█████████▏| 96/105 [00:05<00:00, 15.90it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  94%|█████████▍| 99/105 [00:06<00:00, 16.22it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  97%|█████████▋| 102/105 [00:06<00:00, 18.30it/s]Animation 15: _MethodAnimation(ValueTracker), etc.:  99%|█████████▉| 104/105 [00:06<00:00, 16.52it/s]                                                                                                     [10/14/26 18:35:43] INFO     Animation 15 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3416086                         
+                             659_2527652589.mp4'                                
+Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/56 [00:00<?, ?it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):   4%|▎         | 2/56 [00:00<00:03, 17.49it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  12%|█▎        | 7/56 [00:00<00:01, 29.05it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  18%|█▊        | 10/56 [00:00<00:01, 29.38it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  25%|██▌       | 14/56 [00:00<00:01, 30.19it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  30%|███       | 17/56 [00:00<00:01, 24.43it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  36%|███▌      | 20/56 [00:00<00:01, 25.17it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  45%|████▍     | 25/56 [00:00<00:01, 30.53it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  52%|█████▏    | 29/56 [00:01<00:01, 22.86it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  57%|█████▋    | 32/56 [00:01<00:01, 20.26it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  62%|██████▎   | 35/56 [00:01<00:01, 19.26it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  68%|██████▊   | 38/56 [00:01<00:01, 17.50it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  75%|███████▌  | 42/56 [00:01<00:00, 19.17it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  80%|████████  | 45/56 [00:02<00:00, 19.14it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  84%|████████▍ | 47/56 [00:02<00:00, 19.07it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  89%|████████▉ | 50/56 [00:02<00:00, 21.14it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 6 submobjects):  96%|█████████▋| 54/56 [00:02<00:00, 24.52it/s]                                                                                                           [10/14/26 18:35:48] INFO     Animation 16 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3177086                         
+                             708_3625873793.mp4'                                
+Animation 17: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                     [10/14/26 18:35:51] INFO     Animation 17 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3596856                         
+                             823_2101021797.mp4'                                
+Animation 18: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                                        INFO     Animation 18 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2208814                         
+                             80_1914730869.mp4'                                 
+Animation 19: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/105 [00:00<?, ?it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:   4%|▍         | 4/105 [00:00<00:02, 38.56it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:   8%|▊         | 8/105 [00:00<00:02, 38.19it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  11%|█▏        | 12/105 [00:00<00:02, 37.08it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  15%|█▌        | 16/105 [00:00<00:02, 36.83it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  19%|█▉        | 20/105 [00:00<00:02, 36.30it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  23%|██▎       | 24/105 [00:00<00:02, 36.61it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  27%|██▋       | 28/105 [00:00<00:02, 36.93it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  30%|███       | 32/105 [00:00<00:02, 32.50it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  34%|███▍      | 36/105 [00:01<00:02, 31.71it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  38%|███▊      | 40/105 [00:01<00:02, 25.55it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  42%|████▏     | 44/105 [00:01<00:02, 27.39it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  46%|████▌     | 48/105 [00:01<00:01, 29.22it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  50%|████▉     | 52/105 [00:01<00:01, 26.70it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  52%|█████▏    | 55/105 [00:01<00:01, 26.36it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  56%|█████▌    | 59/105 [00:01<00:01, 28.02it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  60%|██████    | 63/105 [00:02<00:01, 28.71it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  63%|██████▎   | 66/105 [00:02<00:01, 25.74it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  66%|██████▌   | 69/105 [00:02<00:01, 25.88it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  70%|██████▉   | 73/105 [00:02<00:01, 27.03it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  72%|███████▏  | 76/105 [00:02<00:01, 25.86it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  75%|███████▌  | 79/105 [00:02<00:00, 26.19it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  78%|███████▊  | 82/105 [00:02<00:00, 26.99it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  81%|████████  | 85/105 [00:02<00:00, 25.48it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  84%|████████▍ | 88/105 [00:03<00:01, 15.20it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  87%|████████▋ | 91/105 [00:03<00:00, 15.07it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  89%|████████▊ | 93/105 [00:03<00:00, 15.55it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  91%|█████████▏| 96/105 [00:03<00:00, 17.32it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  94%|█████████▍| 99/105 [00:03<00:00, 19.49it/s]Animation 19: _MethodAnimation(ValueTracker), etc.:  97%|█████████▋| 102/105 [00:04<00:00, 20.98it/s]Animation 19: _MethodAnimation(ValueTracker), etc.: 100%|██████████| 105/105 [00:04<00:00, 16.44it/s]                                                                                                     [10/14/26 18:35:57] INFO     Animation 19 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3664000                         
+                             001_2576501668.mp4'                                
+Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:  13%|█▎        | 2/15 [00:00<00:00, 15.05it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 14.03it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:  47%|████▋     | 7/15 [00:00<00:00, 14.54it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 14.87it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 16.09it/s]Animation 20: _MethodAnimation(VGroup of 12 submobjects), etc.: 100%|██████████| 15/15 [00:00<00:00, 19.62it/s]                                                                                                               [10/14/26 18:36:00] INFO     Animation 20 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1361086                         
+                             125_2586860832.mp4'                                
+Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/96 [00:00<?, ?it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):   3%|▎         | 3/96 [00:00<00:05, 16.43it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):   5%|▌         | 5/96 [00:00<00:05, 15.68it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):   9%|▉         | 9/96 [00:00<00:03, 23.63it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  14%|█▎        | 13/96 [00:00<00:03, 27.60it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  17%|█▋        | 16/96 [00:00<00:03, 25.97it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  20%|█▉        | 19/96 [00:00<00:03, 23.50it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  23%|██▎       | 22/96 [00:00<00:03, 21.63it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  26%|██▌       | 25/96 [00:01<00:04, 16.49it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  28%|██▊       | 27/96 [00:01<00:04, 16.67it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  32%|███▏      | 31/96 [00:01<00:03, 16.62it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  35%|███▌      | 34/96 [00:01<00:03, 16.63it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  38%|███▊      | 36/96 [00:01<00:03, 15.34it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  40%|███▉      | 38/96 [00:02<00:03, 15.98it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  43%|████▎     | 41/96 [00:02<00:02, 18.78it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  46%|████▌     | 44/96 [00:02<00:03, 16.02it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  48%|████▊     | 46/96 [00:02<00:03, 15.43it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  50%|█████     | 48/96 [00:02<00:03, 13.67it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  52%|█████▏    | 50/96 [00:02<00:03, 14.90it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  55%|█████▌    | 53/96 [00:03<00:02, 16.38it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  57%|█████▋    | 55/96 [00:03<00:02, 13.95it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  60%|██████    | 58/96 [00:03<00:02, 17.05it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  65%|██████▍   | 62/96 [00:03<00:01, 21.71it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  69%|██████▉   | 66/96 [00:03<00:01, 25.50it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  73%|███████▎  | 70/96 [00:03<00:00, 27.11it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  77%|███████▋  | 74/96 [00:03<00:00, 29.58it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  81%|████████▏ | 78/96 [00:03<00:00, 30.45it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  85%|████████▌ | 82/96 [00:04<00:00, 31.62it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  90%|████████▉ | 86/96 [00:04<00:00, 32.61it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  94%|█████████▍| 90/96 [00:04<00:00, 33.29it/s]Animation 21: UpdateFromAlphaFunc(VGroup of 6 submobjects):  98%|█████████▊| 94/96 [00:04<00:00, 34.51it/s]                                                                                                           [10/14/26 18:36:08] INFO     Animation 21 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1356611                         
+                             349_3745407745.mp4'                                
+Animation 22: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 22: FadeOut(VGroup of 2 submobjects): 100%|██████████| 3/3 [00:00<00:00, 29.32it/s]                                                                                             [10/14/26 18:36:13] INFO     Animation 22 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3986112                         
+                             741_2500278496.mp4'                                
+Animation 23: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]Animation 23: FadeIn(VGroup of 2 submobjects): 100%|██████████| 3/3 [00:00<00:00, 19.10it/s]                                                                                            [10/14/26 18:36:15] INFO     Animation 23 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3619716                         
+                             182_1467947887.mp4'                                
+Animation 24: FadeIn(Text('Sommerüberschuss zählt nicht für die Heizbilanz.')), etc.:   0%|          | 0/9 [00:00<?, ?it/s]Animation 24: FadeIn(Text('Sommerüberschuss zählt nicht für die Heizbilanz.')), etc.:  44%|████▍     | 4/9 [00:00<00:00, 30.20it/s]Animation 24: FadeIn(Text('Sommerüberschuss zählt nicht für die Heizbilanz.')), etc.:  89%|████████▉ | 8/9 [00:00<00:00, 33.61it/s]                                                                                                                                   [10/14/26 18:36:18] INFO     Animation 24 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1302290                         
+                             306_1562513419.mp4'                                
+Animation 25: _MethodAnimation(Rectangle), etc.:   0%|          | 0/27 [00:00<?, ?it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  15%|█▍        | 4/27 [00:00<00:00, 33.20it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  30%|██▉       | 8/27 [00:00<00:00, 33.61it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  44%|████▍     | 12/27 [00:00<00:00, 35.82it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  63%|██████▎   | 17/27 [00:00<00:00, 37.53it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  78%|███████▊  | 21/27 [00:00<00:00, 37.54it/s]Animation 25: _MethodAnimation(Rectangle), etc.:  93%|█████████▎| 25/27 [00:00<00:00, 34.99it/s]                                                                                                [10/14/26 18:36:20] INFO     Animation 25 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3284695                         
+                             952_1958904239.mp4'                                
+Animation 26: FadeIn(VGroup of 2 submobjects):   0%|          | 0/6 [00:00<?, ?it/s]Animation 26: FadeIn(VGroup of 2 submobjects):  67%|██████▋   | 4/6 [00:00<00:00, 36.34it/s]                                                                                            [10/14/26 18:36:21] INFO     Animation 26 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_4952254                         
+                             69_1374978308.mp4'                                 
+Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/99 [00:00<?, ?it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):   3%|▎         | 3/99 [00:00<00:03, 26.73it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):   6%|▌         | 6/99 [00:00<00:03, 28.19it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  10%|█         | 10/99 [00:00<00:02, 30.98it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  14%|█▍        | 14/99 [00:00<00:02, 30.91it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  18%|█▊        | 18/99 [00:00<00:02, 31.17it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  22%|██▏       | 22/99 [00:00<00:02, 31.98it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  26%|██▋       | 26/99 [00:00<00:02, 32.70it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  30%|███       | 30/99 [00:00<00:02, 32.63it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  34%|███▍      | 34/99 [00:01<00:02, 30.32it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  38%|███▊      | 38/99 [00:01<00:01, 31.14it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  42%|████▏     | 42/99 [00:01<00:01, 32.96it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  46%|████▋     | 46/99 [00:01<00:01, 30.68it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  51%|█████     | 50/99 [00:01<00:01, 26.86it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  54%|█████▎    | 53/99 [00:01<00:02, 20.19it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  57%|█████▋    | 56/99 [00:02<00:02, 19.71it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  60%|█████▉    | 59/99 [00:02<00:01, 20.46it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  63%|██████▎   | 62/99 [00:02<00:01, 19.59it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  66%|██████▌   | 65/99 [00:02<00:01, 17.63it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  69%|██████▊   | 68/99 [00:02<00:01, 19.68it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  73%|███████▎  | 72/99 [00:02<00:01, 23.77it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  76%|███████▌  | 75/99 [00:02<00:00, 25.17it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  79%|███████▉  | 78/99 [00:03<00:00, 23.84it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  82%|████████▏ | 81/99 [00:03<00:00, 22.68it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  86%|████████▌ | 85/99 [00:03<00:00, 26.02it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  90%|████████▉ | 89/99 [00:03<00:00, 28.27it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  94%|█████████▍| 93/99 [00:03<00:00, 29.90it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 6 submobjects):  98%|█████████▊| 97/99 [00:03<00:00, 31.21it/s]                                                                                                           [10/14/26 18:36:28] INFO     Animation 27 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1960377                         
+                             631_2015568389.mp4'                                
+Animation 28: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 28: FadeOut(VGroup of 2 submobjects), etc.:  33%|███▎      | 4/12 [00:00<00:00, 35.00it/s]Animation 28: FadeOut(VGroup of 2 submobjects), etc.:  67%|██████▋   | 8/12 [00:00<00:00, 34.50it/s]Animation 28: FadeOut(VGroup of 2 submobjects), etc.: 100%|██████████| 12/12 [00:00<00:00, 35.40it/s]                                                                                                     [10/14/26 18:36:31] INFO     Animation 28 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2293830                         
+                             661_280615440.mp4'                                 
+Animation 29: FadeOut(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                     [10/14/26 18:36:33] INFO     Animation 29 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1175302                         
+                             602_3025438808.mp4'                                
+Animation 30: FadeIn(VGroup of 2 submobjects):   0%|          | 0/3 [00:00<?, ?it/s]                                                                                    [10/14/26 18:36:34] INFO     Animation 30 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2900784                         
+                             236_1451581687.mp4'                                
+Animation 31: FadeOut(Rectangle), etc.:   0%|          | 0/6 [00:00<?, ?it/s]Animation 31: FadeOut(Rectangle), etc.:  83%|████████▎ | 5/6 [00:00<00:00, 42.53it/s]                                                                                     [10/14/26 18:36:36] INFO     Animation 31 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3713571                         
+                             609_2865638757.mp4'                                
+Animation 32: LaggedStart(Group), etc.:   0%|          | 0/24 [00:00<?, ?it/s]Animation 32: LaggedStart(Group), etc.:  21%|██        | 5/24 [00:00<00:00, 44.99it/s]Animation 32: LaggedStart(Group), etc.:  42%|████▏     | 10/24 [00:00<00:00, 44.20it/s]Animation 32: LaggedStart(Group), etc.:  62%|██████▎   | 15/24 [00:00<00:00, 44.49it/s]Animation 32: LaggedStart(Group), etc.:  83%|████████▎ | 20/24 [00:00<00:00, 45.52it/s]                                                                                       [10/14/26 18:36:37] INFO     Animation 32 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2103206                         
+                             376_434378936.mp4'                                 
+Animation 33: Create(SurroundingRectangle), etc.:   0%|          | 0/14 [00:00<?, ?it/s]Animation 33: Create(SurroundingRectangle), etc.:  36%|███▌      | 5/14 [00:00<00:00, 47.90it/s]Animation 33: Create(SurroundingRectangle), etc.:  71%|███████▏  | 10/14 [00:00<00:00, 46.40it/s]                                                                                                 [10/14/26 18:36:38] INFO     Animation 33 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1307768                         
+                             317_194975937.mp4'                                 
+Animation 34: Create(SurroundingRectangle), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 34: Create(SurroundingRectangle), etc.:  42%|████▏     | 5/12 [00:00<00:00, 48.45it/s]Animation 34: Create(SurroundingRectangle), etc.:  83%|████████▎ | 10/12 [00:00<00:00, 46.61it/s]                                                                                                 [10/14/26 18:36:40] INFO     Animation 34 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2875190                         
+                             429_314626772.mp4'                                 
+Animation 35: ReplacementTransform(SurroundingRectangle), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 35: ReplacementTransform(SurroundingRectangle), etc.:  42%|████▏     | 5/12 [00:00<00:00, 44.16it/s]Animation 35: ReplacementTransform(SurroundingRectangle), etc.:  83%|████████▎ | 10/12 [00:00<00:00, 43.55it/s]                                                                                                               [10/14/26 18:36:41] INFO     Animation 35 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3498182                         
+                             575_2331373576.mp4'                                
+Animation 36: ReplacementTransform(SurroundingRectangle), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 36: ReplacementTransform(SurroundingRectangle), etc.:  33%|███▎      | 4/12 [00:00<00:00, 35.75it/s]Animation 36: ReplacementTransform(SurroundingRectangle), etc.:  67%|██████▋   | 8/12 [00:00<00:00, 33.99it/s]Animation 36: ReplacementTransform(SurroundingRectangle), etc.: 100%|██████████| 12/12 [00:00<00:00, 36.43it/s]                                                                                                               [10/14/26 18:36:42] INFO     Animation 36 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1515327                         
+                             443_3086797471.mp4'                                
+Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):   0%|          | 0/42 [00:00<?, ?it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  12%|█▏        | 5/42 [00:00<00:00, 47.96it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  24%|██▍       | 10/42 [00:00<00:00, 48.13it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  36%|███▌      | 15/42 [00:00<00:00, 46.78it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  48%|████▊     | 20/42 [00:00<00:00, 47.37it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  62%|██████▏   | 26/42 [00:00<00:00, 48.73it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  74%|███████▍  | 31/42 [00:00<00:00, 49.00it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  86%|████████▌ | 36/42 [00:00<00:00, 48.73it/s]Animation 37: UpdateFromAlphaFunc(VGroup of 6 submobjects):  98%|█████████▊| 41/42 [00:00<00:00, 48.39it/s]                                                                                                           [10/14/26 18:36:45] INFO     Animation 37 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_1544970                         
+                             459_552796742.mp4'                                 
+Animation 38: FadeOut(SurroundingRectangle), etc.:   0%|          | 0/6 [00:00<?, ?it/s]Animation 38: FadeOut(SurroundingRectangle), etc.:  67%|██████▋   | 4/6 [00:00<00:00, 35.20it/s]                                                                                                [10/14/26 18:36:47] INFO     Animation 38 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3493851                         
+                             951_3214476437.mp4'                                
+Animation 39: FadeOut(VGroup of 4 submobjects), etc.:   0%|          | 0/9 [00:00<?, ?it/s]Animation 39: FadeOut(VGroup of 4 submobjects), etc.:  56%|█████▌    | 5/9 [00:00<00:00, 43.65it/s]                                                                                                   [10/14/26 18:36:48] INFO     Animation 39 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_3881227                         
+                             416_3624358521.mp4'                                
+                    INFO     Animation 40 : Partial     scene_file_writer.py:192
+                             movie file written in                              
+                             '/Users/niloufarghandehari                         
+                             yoon/Developer/semio/.repo                         
+                             /🎫/26/10/13/RESTYLE-ENERG                         
+                             YBALANCE-WITH-FUNDAMENTALS                         
+                             -GLYPHS/checks/ch2_media/v                         
+                             ideos/scene_2/480p15/parti                         
+                             al_movie_files/Beat2_Monat                         
+                             sbilanz/2119445635_2412282                         
+                             71_2553982074.mp4'                                 
+                    INFO     Combining to Movie file.   scene_file_writer.py:952
+                    INFO                               scene_file_writer.py:1103
+                             File ready at                                      
+                             '/Users/niloufarghandehar                          
+                             iyoon/Developer/semio/.re                          
+                             po/🎫/26/10/13/RESTYLE-EN                          
+                             ERGYBALANCE-WITH-FUNDAMEN                          
+                             TALS-GLYPHS/checks/ch2_me                          
+                             dia/videos/scene_2/480p15                          
+                             /Beat2_Monatsbilanz.mp4'                           
+                                                                                
+                    INFO     Rendered Beat2_Monatsbilanz            scene.py:290
+                             Played 41 animations                               
+You are using manim version v0.21.0, but version v0.22.0 is available.
+You should consider upgrading via pip install -U manim

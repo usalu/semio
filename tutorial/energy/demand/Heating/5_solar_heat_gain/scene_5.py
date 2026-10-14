@@ -567,12 +567,6 @@ class Beat2_BestrahlungUndFlaeche(Scene):
 
 
 #region Beat3 — g-Wert
-# Ten parallel rays carry 10 % each, so every share is a count of rays: two
-# bounce back, three end in the glass, five pass; the warm glass then emits one
-# ripple inward and two outward.
-RAY_SHARE = 0.10
-
-
 def _glazing(x: float, y0: float, y1: float):
     """🪟 Double glazing in section: two panes, spacer and frame blocks."""
     panes = VGroup(*[
@@ -619,62 +613,68 @@ class Beat3_GWert(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         #region glazing section
-        x_in, x_out, x_end = -0.2, 0.2, 6.0
         panes, frames = _glazing(0.0, -1.35, 1.75)
-        side_out = Text("außen", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL).move_to([-6.1, 1.55, 0])
-        side_in = Text("innen", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL).move_to([6.1, 1.55, 0])
+        x_block_outer, x_block_inner = -0.165, 0.165
+        side_out = Text("außen", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL).move_to([-6.1, 1.9, 0])
+        side_in = Text("innen", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL).move_to([6.1, 2.1, 0])
         self.play(Create(panes), FadeIn(frames), FadeIn(side_out), FadeIn(side_in), run_time=1.2)
         hold_for(self, N, "section", used=1.2 + 0.3)
         #endregion
 
-        #region split at the glass
+        #region split at the glass — one ray, like the Cooling glazing beat
         caption = swap_caption(self, caption, subtitle_text(N, "split"))
-        n_r, n_a = round(SHARE_R / RAY_SHARE), round(SHARE_ABS / RAY_SHARE)
-        ys = [1.25 - 0.2 * i for i in range(round(1 / RAY_SHARE))]
-        sun_c = np.array([-6.15, float(np.mean(ys)), 0.0])
-        sun = _sun(sun_c)
-        x0 = sun_c[0] + 0.55
-        incoming = VGroup(*[_soft_ray([x0, y, 0], [x_in, y, 0], width=2.0) for y in ys])
-        r_dir = np.array([-1.0, 0.3, 0.0]) / np.linalg.norm([-1.0, 0.3])
-        refl_ends = [np.array([x_in, y, 0]) + r_dir * (x_in + 2.9) / -r_dir[0] for y in ys[:n_r]]
-        reflected = VGroup(*[radiation_ray([x_in, y, 0], e, color=COLOR_REFL, stroke_width=2.0).set_stroke(opacity=0.7)
-                             for y, e in zip(ys, refl_ends)])
-        t_ys = ys[n_r + n_a:]
-        transmitted = VGroup(*[VGroup(_soft_ray([x_in, y, 0], [x_out, y, 0], width=2.0, opacity=0.6, fade=False),
-                                      _soft_ray([x_out, y, 0], [x_end, y, 0], width=2.0, opacity=0.7, fade=False))
-                               for y in t_ys])
-        in_lbl = Text("100 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([-4.6, ys[-1] - 0.32, 0])
+        sun_pos = np.array([-5.6, 1.3, 0.0])
+        sun = _sun(sun_pos)
+        hit_out = np.array([x_block_outer, 0.9, 0.0])
+        d_in = hit_out - sun_pos
+        d_in = d_in / np.linalg.norm(d_in)
+        d_ref = np.array([-d_in[0], d_in[1], 0.0])
+        d_glass = np.array([d_in[0], d_in[1] * 0.6, 0.0])
+        d_glass = d_glass / np.linalg.norm(d_glass)
+        hit_in = hit_out + d_glass * ((x_block_inner - x_block_outer) / d_glass[0])
+        ray_end = hit_in + d_in * 6.0
+        refl_end = hit_out + d_ref * 2.8
+
+        incoming = radiation_ray(sun_pos + d_in * 0.45, hit_out, color=COLOR_G, stroke_width=2.6)
+        reflected = radiation_ray(hit_out, refl_end, color=COLOR_REFL, stroke_width=2.2).set_stroke(opacity=0.75)
+        glass_seg = radiation_ray(hit_out, hit_in, color=COLOR_G, stroke_width=1.8).set_stroke(opacity=0.55)
+        transmitted = radiation_ray(hit_in, ray_end, color=COLOR_G, stroke_width=2.6)
+        ray_path = [[sun_pos + d_in * 0.45, hit_out, hit_in, ray_end]]
+        refl_path = [[sun_pos + d_in * 0.45, hit_out, refl_end]]
+
+        in_lbl = Text("100 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        in_lbl.next_to(sun_pos + d_in * 2.0, UP, buff=0.22)
         refl_lbl = Text("reflektiert 20 %", font_size=LABEL_FONT_SIZE, color=COLOR_REFL)
-        refl_lbl.move_to([-3.1 - refl_lbl.width / 2, float(np.mean([e[1] for e in refl_ends])), 0])
-        trans_lbl = Text("durchgelassen 50 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([3.1, t_ys[0] + 0.35, 0])
+        refl_lbl.move_to((hit_out + refl_end) / 2 + DOWN * 0.45)
+        trans_lbl = Text("durchgelassen 50 %", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        trans_lbl.next_to(hit_in + d_in * 2.4, UP, buff=0.25)
         abs_lbl = Text("im Glas 30 %", font_size=LABEL_FONT_SIZE, color=COLOR_GLASS_HEAT).move_to([0.0, 2.15, 0])
-        light_paths = [[[x0, y, 0], [x_in, y, 0], e] for y, e in zip(ys, refl_ends)]
-        light_paths += [[[x0, y, 0], [x_in, y, 0]] for y in ys[n_r:n_r + n_a]]
-        light_paths += [[[x0, y, 0], [x_end, y, 0]] for y in t_ys]
 
         def sunshine(rt):
-            return [_pulses(light_paths, rt, every=1.8)]
+            n = max(1, int(rt / 1.6))
+            return [pulse_flashes(ray_path, COLOR_G, repeats=n, width=3.2),
+                    pulse_flashes(refl_path, COLOR_REFL, repeats=n, width=2.4)]
 
         self.play(FadeIn(sun, scale=0.7), run_time=0.5)
-        self.play(LaggedStart(*[Create(r, rate_func=linear) for r in incoming], lag_ratio=0.06), FadeIn(in_lbl),
-                  run_time=1.4)
-        self.play(LaggedStart(*[Create(r, rate_func=linear) for r in reflected], lag_ratio=0.2), FadeIn(refl_lbl),
-                  LaggedStart(*[Create(r, rate_func=linear) for r in transmitted], lag_ratio=0.1), FadeIn(trans_lbl),
-                  panes.animate.set_fill(COLOR_GLASS_HEAT, opacity=0.7), FadeIn(abs_lbl), run_time=1.8)
+        self.play(Create(incoming, rate_func=linear), FadeIn(in_lbl), run_time=1.0)
+        self.play(
+            Create(reflected, rate_func=linear), Create(glass_seg, rate_func=linear),
+            Create(transmitted, rate_func=linear), FadeIn(refl_lbl), FadeIn(trans_lbl),
+            panes.animate.set_fill(COLOR_GLASS_HEAT, opacity=0.7), FadeIn(abs_lbl),
+            run_time=1.8,
+        )
         hold_for(self, N, "split", during=sunshine)
         #endregion
 
         #region secondary heat and g
         caption = swap_caption(self, caption, subtitle_text(N, "gval"))
-        n_in, n_out = round(SHARE_IN / RAY_SHARE), round(SHARE_OUT / RAY_SHARE)
-        face = 0.13 + 0.035
-        heat_y = -1.05
-        warm_in = [np.array([face, heat_y - 0.25 * k, 0]) for k in range(n_in)]
-        warm_out = [np.array([-face, heat_y + 0.1 - 0.25 * k, 0]) for k in range(n_out)]
+        heat_y = -0.55
+        warm_in = [np.array([x_block_inner, heat_y, 0.0])]
+        warm_out = [np.array([x_block_outer, heat_y, 0.0]), np.array([x_block_outer, heat_y - 0.25, 0.0])]
         in_heat_lbl = Text("Wärme nach innen 10 %", font_size=LABEL_FONT_SIZE, color=COLOR_GLASS_HEAT)
-        in_heat_lbl.move_to([0.8 + in_heat_lbl.width / 2, heat_y, 0])
+        in_heat_lbl.next_to(warm_in[0], RIGHT, buff=0.35)
         out_heat_lbl = Text("Wärme nach außen 20 %", font_size=LABEL_FONT_SIZE, color=COLOR_GLASS_HEAT)
-        out_heat_lbl.move_to([-0.8 - out_heat_lbl.width / 2, heat_y - 0.05, 0])
+        out_heat_lbl.next_to(warm_out[0], LEFT, buff=0.35).shift(DOWN * 0.1)
 
         def glass_heat(rt):
             cycles = max(1.0, rt / 1.4)
@@ -683,8 +683,8 @@ class Beat3_GWert(Scene):
 
         self.play(FadeIn(in_heat_lbl), FadeIn(out_heat_lbl), panes.animate.set_fill(COLOR_GLASS_HEAT, opacity=0.45),
                   *glass_heat(1.6), run_time=1.6)
-        g_top, g_bot = t_ys[0] + 0.1, heat_y - 0.2
-        brace = BraceBetweenPoints([6.2, g_top, 0], [6.2, g_bot, 0], direction=RIGHT, color=COLOR_GVAL)
+        g_top, g_bot = 1.35, heat_y - 0.35
+        brace = BraceBetweenPoints([6.3, g_top, 0], [6.3, g_bot, 0], direction=RIGHT, color=COLOR_GVAL)
         g_lbl = math_label(rf"g \approx {de_num(G_VALUE, 1)}", size=FORMULA_FONT_SIZE, color=COLOR_GVAL)
         g_lbl.next_to(brace, UP, buff=0.15).shift(LEFT * 0.3)
         self.play(GrowFromCenter(brace), FadeIn(g_lbl, shift=UP * 0.1), *glass_heat(1.0), run_time=1.0)

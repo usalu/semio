@@ -1,0 +1,4 @@
+[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=13.2s play: line through '°C' @(-1.23,1.19) × Circle@(-1.10,1.20)
+[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=13.2s play: line through '°C' @(-1.23,1.19) × Line@(-1.10,1.08)
+                             File ready at                                      
+13

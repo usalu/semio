@@ -1,0 +1,14 @@
+{
+  "id": "2026/10/13/RESTYLE-ENERGYBALANCE-WITH-FUNDAMENTALS-GLYPHS",
+  "title": "Restyle Energy Balance Video with Physical Fundamentals Glyphs",
+  "slug": "RESTYLE-ENERGYBALANCE-WITH-FUNDAMENTALS-GLYPHS",
+  "emoji": "⚖️",
+  "status": "open",
+  "description": "Replace the object drawings and animated effects of the Energy Balance video (house, person, lamp, sun, sun radiation, energy flow) with the Physical Fundamentals vocabulary from tutorial/manim_visuals.py. Narration content stays. Every factor animates 0-1, every equation term is the result of the physical picture, formulas typeset with math_label/math_panel, ideas morph into each other, no overlaps, animations synced with subtitles. Deliver the full video at 1080p60.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "dates": {"due": "2026-10-13", "started": "2026-10-13"},
+  "client": "claude-code",
+  "llm": "sonnet-5",
+  "summary": "",
+  "files": {"created": [], "updated": [], "removed": []}
+}

@@ -1,0 +1,10 @@
+[LAYOUT] Beat4_Anlagenaufwandszahl t=12.6s play: overlap '1' @(4.40,2.20) × 'SchematischeDarstellung—DIN/TS18599-5rechnetdeutlichdetaillierter' @(0.00,2.30) by 0.04×0.14 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap 'Q' @(0.88,-1.14) × '88' @(0.68,-1.11) by 0.09×0.23 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap 'Q' @(0.88,-1.14) × 'kWh' @(1.14,-1.10) by 0.15×0.24 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap 'E' @(1.07,-1.22) × 'kWh' @(1.14,-1.10) by 0.18×0.09 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap '=' @(1.29,-1.14) × 'kWh' @(1.14,-1.10) by 0.19×0.11 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap '31' @(1.58,-1.16) × 'kWh' @(1.14,-1.10) by 0.02×0.19 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap 'Wärmepumpe' @(1.58,0.06) × 'e' @(2.36,0.13) by 0.16×0.17 units
+[LAYOUT] Beat4_Anlagenaufwandszahl t=28.9s play: overlap 'Wärmepumpe' @(1.58,0.06) × 'g' @(2.49,0.02) by 0.02×0.18 units
+                             File ready at                                      
+16

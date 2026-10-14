@@ -439,14 +439,6 @@ class Beat2_VolumeFlowEquation(Scene):
             hold_for(self, self.NARRATION, key, during=cool_air)
             self.play(FadeOut(ring), *cool_air(0.25), run_time=0.25)
 
-        air_blob = RoundedRectangle(
-            width=1.4, height=0.9, corner_radius=0.2,
-            color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN, fill_opacity=0.18,
-        ).move_to(room_c)
-        self.play(FadeIn(air_blob), run_time=0.5)
-        self.play(FadeOut(items["qvr"]), run_time=0.3)
-        self.remove(items["qvr"])
-        self.play(ReplacementTransform(air_blob, items["qvr"].set_opacity(1.0)), run_time=1.7)
         self.play(FadeOut(caption), run_time=0.4)
         self.wait(0.5)
 #endregion

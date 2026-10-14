@@ -83,6 +83,13 @@ def _person(pos, color=P_ORANGE, scale=1.0):
     return person_glyph(pos, color=color, scale=1.09 * scale)
 
 
+def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
+    """🧍 Occupant at true scale — 1.75 m in a 2.5 m room, feet on the floor slab's top edge at ``x``."""
+    height = 0.7 * (room_h - t)
+    scale = height / (0.66 * 1.09)
+    return _person(np.array([x, float(room_c[1]) - room_h / 2 + t / 2 + height / 2, 0.0]), color=color, scale=scale)
+
+
 def _badge(title, value, color=P_TEAL):
     """🏷️ Compact callout card for design levers / comfort states."""
     import re
@@ -182,9 +189,10 @@ class Beat1_PassivhausIdee(Scene):
             tr + RIGHT * (0.26 * 0.8 + off) + UP * 0.02, tr + RIGHT * off, br + RIGHT * off,
         ])
         louvre = VGroup(*[
-            Line(np.array([up_win["x"] - 0.42, y + 0.09, 0.0]), np.array([up_win["x"] - 0.24, y - 0.09, 0.0]),
+            Line(np.array([w["x"] - 0.40, y - 0.07, 0.0]), np.array([w["x"] - 0.14, y + 0.07, 0.0]),
                  color=P_TEAL, stroke_width=3)
-            for y in np.linspace(up_win["sill"] + 0.02, up_win["lintel"] - 0.02, 4)
+            for w in (lo_win, up_win)
+            for y in np.linspace(w["sill"] + 0.07, w["lintel"] - 0.07, 4)
         ])
         warm_spots = [person.get_top() + UP * 0.05, np.array([-2.75, hs["level_1"].get_center()[1] + 0.02, 0.0])]
 
@@ -302,7 +310,7 @@ class Beat2_Fensterregeln(Scene):
         wash = Rectangle(
             width=5.5, height=2.4, stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
         ).move_to(room_c)
-        person = _person(room_c + LEFT * 1.05 + DOWN * 0.53)
+        person = _stand(room_c, 2.5, room_c[0] + 1.3)
 
         win_h = 1.42
         frame = Rectangle(
@@ -344,7 +352,7 @@ class Beat2_Fensterregeln(Scene):
         scaffold = VGroup(room, floor, wash, person, frame, sash, gap, open_pct, outdoor_cool)
         fit_band(scaffold)
 
-        stuffy_spots = [person.get_top() + UP * 0.05, person.get_top() + RIGHT * 1.3 + DOWN * 0.3]
+        stuffy_spots = [person.get_top() + UP * 0.05, person.get_top() + LEFT * 1.6 + DOWN * 0.6]
 
         def stuffy(rt, r_max=0.6, color=P_RED):
             return [ripples(stuffy_spots, r_max=r_max, color=color, cycles=rt / 1.4)]
@@ -499,7 +507,7 @@ class Beat3_Querlueftung(Scene):
         room_c = np.array([0.0, 0.55, 0.0])
         shell = _room(room_c, 6.4, 2.2)
         room, floor = shell[0], shell[1]
-        person = _person(np.array([0.45, -0.19, 0.0]))
+        person = _stand(room_c, 2.2, 1.6)
         left_win = _window(np.array([room.get_left()[0], 0.55, 0.0]), height=1.15)
         right_win = _window(np.array([room.get_right()[0], 0.55, 0.0]), height=1.15)
 
@@ -696,7 +704,7 @@ class Beat4_Auftrieb(Scene):
         inlet = _window(np.array([room.get_left()[0], -0.95, 0.0]), height=0.60)
         inlet_lbl = Text("Zuluft", font_size=LABEL_FONT_SIZE, color=P_CYAN)
         inlet_lbl.next_to(inlet, LEFT, buff=0.34)
-        person = _person(np.array([-3.85, -0.94, 0.0]))
+        person = _stand(room_c, 1.7, -3.85)
 
         shaft_walls = VGroup(*[
             Line(
@@ -706,22 +714,15 @@ class Beat4_Auftrieb(Scene):
             )
             for s in (-1, 1)
         ])
-        outlet = VGroup(
-            Line(
-                np.array([self.SHAFT_X - self.SHAFT_HW, self.TOP_LOW, 0.0]),
-                np.array([self.SHAFT_X + self.SHAFT_HW, self.TOP_LOW, 0.0]),
-                color=P_ORANGE, stroke_width=3.0,
-            ),
-            Arrow(
-                np.array([self.SHAFT_X + self.SHAFT_HW - 0.05, self.TOP_LOW - 0.12, 0.0]),
-                np.array([self.SHAFT_X + self.SHAFT_HW + 0.65, self.TOP_LOW - 0.02, 0.0]),
-                buff=0, color=P_ORANGE, stroke_width=4, max_tip_length_to_length_ratio=0.22,
-            ),
+        outlet = Line(
+            np.array([self.SHAFT_X - self.SHAFT_HW, self.TOP_LOW, 0.0]),
+            np.array([self.SHAFT_X + self.SHAFT_HW, self.TOP_LOW, 0.0]),
+            color=P_ORANGE, stroke_width=3.0,
         )
         outlet_lbl = Text("Abluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         # Beside the outlet, not above it: the shaft later rises 1.3 units and a
         # label riding on top would run into the beat subtitle.
-        outlet_lbl.next_to(outlet[0], LEFT, buff=0.25)
+        outlet_lbl.next_to(outlet, LEFT, buff=0.25)
 
         legend_rows = VGroup(
             VGroup(
@@ -843,7 +844,7 @@ class Beat4_Auftrieb(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "comfort"))
         low_ring = SurroundingRectangle(VGroup(inlet, person), color=P_CYAN, buff=0.12,
                                         corner_radius=0.08, stroke_width=2.5)
-        high_ring = SurroundingRectangle(outlet[0], color=P_ORANGE, buff=0.14,
+        high_ring = SurroundingRectangle(outlet, color=P_ORANGE, buff=0.14,
                                          corner_radius=0.08, stroke_width=2.5)
         self.play(Create(low_ring), Create(high_ring), *rising(1.0), run_time=1.0)
         self.play(Indicate(person, color=P_ORANGE), *rising(0.9), run_time=0.9)
@@ -1101,7 +1102,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
             width=4.3, height=2.1, stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
         ).move_to(room_c)
         win = _window(np.array([room.get_left()[0], 0.55, 0.0]), height=1.0)
-        person = _person(np.array([-2.55, -0.19, 0.0]))
+        person = _stand(room_c, 2.2, -1.65)
 
         outdoor = _badge("Außenluft", "34 °C · schwül", P_RED)
         outdoor.move_to(np.array([-3.40, 2.15, 0.0]))

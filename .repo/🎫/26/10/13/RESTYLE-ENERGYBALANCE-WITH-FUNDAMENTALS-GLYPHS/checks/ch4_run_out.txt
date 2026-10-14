@@ -1,0 +1,4 @@
+[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=34.6s play: overlap 'Speicherung' @(1.57,-0.35) × 'e' @(2.23,-0.28) by 0.16×0.17 units
+[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=34.6s play: overlap 'Speicherung' @(1.57,-0.35) × 's' @(2.35,-0.37) by 0.02×0.14 units
+                             File ready at                                      
+26
