@@ -1,0 +1,4 @@
+{"manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
+ "targets": [
+  {"name": "io_laws", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🔬️io-laws/🦀️.rs", "doc": "//! 🧪️ The IFC4 and IFC2x3 Part-21 import, export and builder laws of the subsets' io roots.", "tests": ["(4️⃣4/🪆️subsets/✳️any|🔖️2x3/🪆️subsets/🧱️base)/🚪️io/🧪️tests/🔬️unit/🦀️\\.rs$"]}
+ ]}

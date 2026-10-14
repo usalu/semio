@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maxSourceBytes",
+    "maxSourceFiles",
+    "maxActiveLines"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maxSourceBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxSourceFiles": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maxActiveLines": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

@@ -69,6 +69,7 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn get(self)->&'a T{self.value}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  pub fn binding_copy_bytes(self)->usize{0}
+ pub fn binding_demand(self,binding:&Option<RetainedCloneBinding>)->Result<Option<crate::RetirementDemand>,crate::ValueError>{if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}Ok(None)}else{Ok(Some(crate::RetirementDemand{copy_bytes:self.binding_copy_bytes(),depth:1,..Default::default()}))}}
  pub fn bind(self,binding:&mut Option<RetainedCloneBinding>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,crate::ValueError>{
   if let Some(expected)=binding{if expected.lease.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"projected source binding already closing"))?.get().id!=self.lease.get().id||expected.projection!=self.projection{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"original clone source or projected path changed"));}return Ok(None);}
   if grant.maximum_items==0||grant.maximum_copy_bytes<self.binding_copy_bytes()||grant.maximum_depth==0{return Ok(Some(Default::default()));}
@@ -315,7 +316,11 @@ pub fn bulk_run_progress(elements: usize, width: usize) -> RetainedCloneProgress
 }
 
 /// 🧷️ Transfers one native owner once; after `take`, callers must close the spent cursor before dropping it.
+/// 🎟️ Borrows the actual selected child closure quote without advancing its typed owner.
+pub fn clone_cursor_close_demand<T:RetainedClone>(cursor:&impl RetainedCloneCursor<T>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}Ok(crate::RetirementDemand{copy_bytes:cursor.next_close_copy_byte_demand()?,capacity_bytes:cursor.next_close_capacity_byte_demand(body)?,release_bytes:cursor.next_close_release_byte_demand()?,depth:cursor.next_close_depth_demand()?})}
+
 pub trait RetainedCloneCursor<T: RetainedClone>: Send {
+    fn output_ready(&self)->bool{false}
     /// 🎟️ Quotes the actual next immutable-source turn before any work or allocation.
     fn advance_demands(&self, _source: RetainedCloneRef<'_, T>, _maximum_body_bytes: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "clone cursor lacks an original-source advance quote"))
@@ -411,6 +416,7 @@ impl<T> RetainedCloneCursor<T> for ScalarCursor<T>
 where
     T: RetainedClone + Copy,
 {
+    fn output_ready(&self)->bool{self.value.is_some()}
     fn advance_demands(&self, source:RetainedCloneRef<'_,T>, _body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"scalar clone cannot quote a closing or spent owner"));}
         Ok(if self.source.is_none(){crate::RetirementDemand{copy_bytes:source.binding_copy_bytes(),depth:1,..Default::default()}}else if self.value.is_none(){crate::RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}else{Default::default()})
@@ -515,6 +521,9 @@ impl<T: RetainedClone, const N: usize> Default for ArrayCursor<T, N> {
 }
 
 impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCursor<T, N> {
+    fn output_ready(&self)->bool{self.output.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,[T;N]>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"array original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}if T::BITWISE||self.index==N{return Ok(crate::RetirementDemand{copy_bytes:size_of::<[T;N]>(),depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(self.child.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"array original child absent"))?,body)}let projected=source.project(self.index+1,|array|&array[self.index]);match self.child.as_ref(){Some(child)=>child.advance_demands(projected,body),None=>T::retained_clone_cursor().advance_demands(projected,body)}}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, [T; N]>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained array clone cursor is closing")); }
         if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained array clone cursor is spent")); }
@@ -645,6 +654,9 @@ pub struct StringCursor {
 }
 
 impl RetainedCloneCursor<String> for StringCursor {
+    fn output_ready(&self)->bool{self.output.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,String>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original clone is closing or spent"))}let original=source.get();let(copy,capacity)=match self.phase{0=>(0,original.len()),1=>{let start=self.output.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original output absent"))?.len();if start>original.len()||!original.is_char_boundary(start){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"string original offset changed"))}let mut end=start+(original.len()-start).min(body.min(RETAINED_CLONE_BULK_PAGE_BYTES));while end>start&&!original.is_char_boundary(end){end-=1;}if end==start&&start<original.len(){end=start+original[start..].chars().next().unwrap().len_utf8();}(end-start,0)},_=>(0,0)};Ok(crate::RetirementDemand{copy_bytes:copy,capacity_bytes:capacity,depth:1,..Default::default()})}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, String>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained string clone cursor is closing"));
@@ -797,6 +809,9 @@ impl<T: RetainedClone> VecCursor<T> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
+    fn output_ready(&self)->bool{self.output.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,Vec<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.phase==3{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original clone is closing or spent"))}let original=source.get();if self.phase==0{return Ok(crate::RetirementDemand{capacity_bytes:original.len().checked_mul(size_of::<T>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"vector original reserve overflow"))?,depth:1,..Default::default()})}if self.phase==2||self.index==original.len(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}if T::BITWISE{let width=size_of::<T>();let count=(original.len()-self.index).min(if width==0{usize::MAX}else{body.min(RETAINED_CLONE_BULK_PAGE_BYTES)/width}).max(1);return Ok(crate::RetirementDemand{copy_bytes:count.saturating_mul(width),depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(self.child.as_ref().ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"vector original child absent"))?,body)}let projected=source.project(self.index+1,|values|&values[self.index]);match self.child.as_ref(){Some(child)=>child.advance_demands(projected,body),None=>T::retained_clone_cursor().advance_demands(projected,body)}}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, Vec<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained vector clone cursor is closing"));
@@ -973,6 +988,9 @@ impl<T: RetainedClone> Default for OptionCursor<T> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
+    fn output_ready(&self)->bool{self.output.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,Option<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"optional original clone is closing or spent"))}if self.output.is_some()||source.get().is_none(){return Ok(crate::RetirementDemand{depth:1,..Default::default()})}if self.child_value.is_some(){return clone_cursor_close_demand::<T>(&self.child,body)}self.child.advance_demands(source.project(1,|value|value.as_ref().unwrap()),body)}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, Option<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained optional clone cursor is closing"));
@@ -1101,6 +1119,9 @@ impl<T: RetainedClone> Default for BoxCursor<T> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
+    fn output_ready(&self)->bool{self.output.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,Box<T>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"boxed original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}if self.value.is_some(){if let Some(child)=self.child.as_ref(){if !child.terminal_is_empty(){return clone_cursor_close_demand::<T>(&**child,body)}return Ok(crate::RetirementDemand{release_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}return Ok(crate::RetirementDemand{capacity_bytes:size_of::<T>(),depth:1,..Default::default()})}if let Some(child)=self.child.as_ref(){let mut demand=child.advance_demands(source.project(1,|boxed|boxed.as_ref()),body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"boxed original clone quote depth overflow"))?;Ok(demand)}else{Ok(crate::RetirementDemand{capacity_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, Box<T>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing {
             return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained box clone cursor is closing"));
@@ -1260,6 +1281,9 @@ macro_rules! retained_clone_tuple {
         }
 
         impl<$($type: RetainedClone),+> RetainedCloneCursor<($($type,)+)> for $cursor<$($type),+> {
+    fn output_ready(&self)->bool{self.output.is_some()}
+            fn advance_demands(&self,source:RetainedCloneRef<'_,($($type,)+)>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"tuple original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}match self.phase{$($index=>if self.draining{clone_cursor_close_demand::<$type>(&self.$child,body)}else{self.$child.advance_demands(source.project($index+1,|value|&value.$index),body)},)+_=>Ok(crate::RetirementDemand{depth:1,..Default::default()})}}
+
             fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
                 if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
                 if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
@@ -1365,3 +1389,7 @@ macro_rules! retained_clone_tuple {
 
 retained_clone_tuple!(Tuple2Cursor, 2, (0, A, first_cursor, first_value), (1, B, second_cursor, second_value));
 retained_clone_tuple!(Tuple3Cursor, 3, (0, A, first_cursor, first_value), (1, B, second_cursor, second_value), (2, C, third_cursor, third_value));
+
+#[path="🧳️owner/🦀️.rs"]
+mod typed_owner;
+pub use typed_owner::RetainedCloneOwner;

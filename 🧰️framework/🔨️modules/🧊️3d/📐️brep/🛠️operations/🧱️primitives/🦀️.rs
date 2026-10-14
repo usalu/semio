@@ -1,8 +1,8 @@
 //! 🧱 Analytic solid primitives: box/sphere/cylinder/cone/torus + wires/planar faces/convex hull.
 //!
 //! Builds closed [`Body`](semio_framework_3d_brep_representation::topology::Body) solids exclusively through
-//! [`crate::euler`] editors, attaching shared [`Curve3`](semio_framework_3d_brep_representation::curve::Curve3) /
-//! [`Surface`](semio_framework_3d_brep_representation::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
+//! [`crate::euler`] editors, attaching shared [`Curve3`](semio_framework_3d_brep_curve::Curve3) /
+//! [`Surface`](semio_framework_3d_brep_surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
 //! every coedge. Topology: box (V=8 E=12 F=6), sphere/cylinder/cone/torus as exact analytic
 //! surfaces with seam/degenerate edges (no faceting, no `segments`), convex hull as
 //! coplanar-merged polygon faces (Quickhull + boundary-walk merge).
@@ -19,16 +19,16 @@ use std::f64::consts::{FRAC_PI_2, TAU};
 use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::{Body, Wire};
 #[cfg(test)]
 use semio_framework_3d_brep_representation::topology::Edge;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 /// 🔺 Coplanar triangles grouped by quantized plane coordinates.
 pub type PlaneClusters = HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)>;
@@ -133,7 +133,7 @@ fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, memb
 /// 🧱 Stamps `pcurves` (one `(curve2, prange)` pair per coedge, in `attach_face`'s own `members`
 /// order) onto `face`'s outer loop. `prange` always shares its interpolating parameter `s` with
 /// the coedge's underlying [`Edge::range`] — i.e. it is *never* reversed to account for
-/// `Coedge::forward` (see [`semio_framework_3d_brep_queries::validation::check_same_parameter`], which samples both ranges with
+/// `Coedge::forward` (see [`semio_framework_3d_brep_validation::check_same_parameter`], which samples both ranges with
 /// the same `s`) — only reparametrized (phase/sign/offset) when the p-curve targets a different
 /// surface frame than the edge's own curve.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

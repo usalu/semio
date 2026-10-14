@@ -1,10 +1,10 @@
-use super::InsertPile;
-use crate::mutations::{remove_pile, En1993Mutation};
-use crate::En1993Snapshot;
-pub fn inverse(payload: &InsertPile, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::insert_pile::InsertPile;
+use crate::remove_pile;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &InsertPile, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_pile::RemovePile> {
     Ok((|| {
     let at = payload.index.unwrap_or(usize::MAX).min(base.piles.len());
-    vec![En1993Mutation::RemovePile(remove_pile::RemovePile { index: at })]
+    vec![Op::from(remove_pile::RemovePile { index: at })]
 
     })())
 }

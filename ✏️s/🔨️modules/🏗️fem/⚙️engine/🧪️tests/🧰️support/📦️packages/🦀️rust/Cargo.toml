@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-fem-test-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Retained-payload test vectors shared by the fem engine contract tests (dev-dependency only)"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }

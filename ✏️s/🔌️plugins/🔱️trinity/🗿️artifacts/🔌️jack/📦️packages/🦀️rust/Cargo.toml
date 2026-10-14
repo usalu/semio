@@ -33,7 +33,8 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-geometry = { workspace = true }
-semio-framework-graph = { workspace = true }
+semio-framework-graph-manifest = { workspace = true }
+semio-framework-graph-dsl = { workspace = true }
 semio-framework-graph-layout-run = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust" }

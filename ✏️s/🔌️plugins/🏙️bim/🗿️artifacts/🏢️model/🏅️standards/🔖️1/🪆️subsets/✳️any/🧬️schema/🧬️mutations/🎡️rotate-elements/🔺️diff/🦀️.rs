@@ -5,7 +5,7 @@
 
 use super::super::elements::{self, Change, Refusal};
 use super::RotateElements;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changes(payload: &RotateElements, base: &ModelSnapshot) -> Result<Change, Refusal> {

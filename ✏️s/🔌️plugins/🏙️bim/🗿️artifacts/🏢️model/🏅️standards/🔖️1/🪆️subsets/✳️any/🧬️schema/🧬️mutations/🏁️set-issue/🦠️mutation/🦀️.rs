@@ -1,8 +1,8 @@
 //! 🏁️ `set-issue` payload. Sparsely changes an issue: title, description, status, priority, assignee, author, creation moment, labels, elements, the clash it was raised from (an assigned null clears it) and the viewpoint (an assigned null clears it).
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Assigned, ClashRef, IssuePatch, IssuePriority, IssueStatus, IssueViewpoint};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::IssuePatch}, snapshot::{ClashRef, IssuePriority, IssueStatus, IssueViewpoint}};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

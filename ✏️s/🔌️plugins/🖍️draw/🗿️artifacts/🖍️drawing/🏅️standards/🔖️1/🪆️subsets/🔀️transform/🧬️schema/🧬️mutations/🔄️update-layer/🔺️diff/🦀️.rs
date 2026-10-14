@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateLayerTransform`.
-use crate::diff::{diff_set_layer_transform, DrawingDiff};
-use crate::schema::{find_drawing_layer, layer_base};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_set_layer_transform, DrawingDiff};
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::UpdateLayerTransform, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

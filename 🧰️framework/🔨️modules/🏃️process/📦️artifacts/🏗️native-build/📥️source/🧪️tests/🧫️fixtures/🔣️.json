@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "cases": [
+    {"name":"production excludes test mount","cfg":[],"source":"#[cfg(test)] #[path = \"test.rs\"] mod tests; pub fn production() {}","expected":"pub fn production() {}"},
+    {"name":"feature selects module","cfg":["feature=engine"],"source":"#[cfg(feature = \"engine\")] mod engine; #[cfg(not(feature = \"engine\"))] mod portable;","expected":"mod engine;"},
+    {"name":"nested target predicates","cfg":["target_arch=wasm32","target_env=p2"],"source":"#[cfg(all(target_arch = \"wasm32\", not(target_env = \"p2\")))] mod browser; #[cfg(any(test, target_env = \"p2\"))] mod guest;","expected":"mod guest;"},
+    {"name":"inline module inherits exclusion","cfg":[],"source":"#[cfg(test)] mod tests { #[path = \"fixture.rs\"] mod fixture; } mod production { #[cfg(test)] mod nested; pub fn live() {} }","expected":"mod production { pub fn live() {} }"},
+    {"name":"cfg attribute selects literal path","cfg":["target_os=windows"],"source":"#[cfg_attr(target_os = \"windows\", path = \"windows.rs\")] #[cfg_attr(not(target_os = \"windows\"), path = \"unix.rs\")] mod platform;","expected":"#[path = \"windows.rs\"] mod platform;"},
+    {"name":"macro_rules bodies keep metavariable cfg attributes for their expansion site","cfg":["unix"],"source":"macro_rules! scoped { ($scope:meta, $name:ident) => { #[cfg($scope)] pub fn $name() {} }; } #[cfg(test)] mod tests; #[cfg(unix)] scoped!(unix, native);","expected":"macro_rules! scoped { ($scope:meta, $name:ident) => { #[cfg($scope)] pub fn $name() {} }; } scoped!(unix, native);"}
+  ]
+}

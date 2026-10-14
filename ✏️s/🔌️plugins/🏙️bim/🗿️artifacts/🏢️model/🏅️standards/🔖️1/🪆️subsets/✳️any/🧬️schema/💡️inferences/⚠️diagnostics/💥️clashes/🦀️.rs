@@ -9,7 +9,7 @@
 use super::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::bodies::{ceiling_bodies, storey_bodies, Body, BodyKind};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_geometry::bulge::{intersect, Extent};
@@ -71,7 +71,7 @@ fn inside(regions: &[Region], p: Point) -> bool {
 
 fn ends_of(snapshot: &ModelSnapshot, id: &str) -> Option<[Point; 2]> {
     snapshot.beams.get(id).map(|beam| {
-        let (crate::Axis::Line { start, end } | crate::Axis::Arc { start, end, .. }) = &beam.axis;
+        let (crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. }) = &beam.axis;
         [Point::new(start.x, start.y), Point::new(end.x, end.y)]
     })
 }

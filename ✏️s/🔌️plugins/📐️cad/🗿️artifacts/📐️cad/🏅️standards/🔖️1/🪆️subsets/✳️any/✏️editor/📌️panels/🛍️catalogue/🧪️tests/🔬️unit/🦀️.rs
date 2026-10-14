@@ -1,8 +1,8 @@
-use super::*;
-use crate::editor::cad::config::CadConfig;
-use crate::editor::cad::unit_tests::context::*;
-use crate::editor::cad::CadPlayApp;
-use crate::standards::v1::subsets::any::schema::inferences::default_document;
+use semio_s_artifact_cad_cad_panels::catalogue::*;
+use semio_s_artifact_cad_cad_config::CadConfig;
+use semio_s_artifact_cad_cad_editor::unit_tests::context::*;
+use semio_s_artifact_cad_cad_editor::CadPlayApp;
+use semio_s_artifact_cad_cad_inferences::default_document;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::ViewModel;

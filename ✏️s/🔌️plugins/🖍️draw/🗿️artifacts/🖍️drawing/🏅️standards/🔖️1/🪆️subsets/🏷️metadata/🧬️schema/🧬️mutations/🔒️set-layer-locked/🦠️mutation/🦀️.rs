@@ -1,7 +1,7 @@
 //! 🔒️ Drawing mutation — `SetLayerLocked`: flips one layer's `locked` flag.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔒️ `set-layer-locked` payload.
@@ -18,17 +18,17 @@ pub struct SetLayerLocked {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_locked(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, locked: bool) -> DrawingMutation {
-    DrawingMutation::SetLayerLocked(SetLayerLocked { layer_id, locked })
+pub fn set_layer_locked<Op: From<SetLayerLocked>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, locked: bool) -> Op {
+    Op::from(SetLayerLocked { layer_id, locked })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerLocked {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerLocked where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerLocked> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-locked", record: "SetLayerLocked" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

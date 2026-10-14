@@ -7,7 +7,7 @@
 use super::super::super::quantities::ElementQuantity;
 use super::rows::{sources, AuthoredView, Reader};
 use super::{RowKind, ScheduleCell, ScheduleRow, ScheduleTable};
-use crate::{Schedule, ScheduleKey, ScheduleOp};
+use crate::standards::v1::subsets::any::schema::snapshot::{Schedule, ScheduleKey, ScheduleOp};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
 

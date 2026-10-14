@@ -9,9 +9,9 @@ use super::reader::{refs, text};
 use super::spatial::{authoring_of, set_of, single_values};
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::energy::{CONDITIONS_ROW, DERIVED_ROW, SPACE_SET};
-use crate::SpaceConditions;
+use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🌡️ The thermal data of a window or door type.

@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-write"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling export: serializers to las, ply, png, json, txt, stl, gltf and obj."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-io = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }

@@ -6,9 +6,6 @@
     "test": "bun repo run @semio-tech/compiler-syntax-rust-ts:test",
     "test-path-literals": "bun repo run @semio-tech/compiler-syntax-rust-ts:test-path-literals"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

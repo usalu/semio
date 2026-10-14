@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::ClassificationSystem;
+use crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
 
 fn edit(op: &str, code: &str, title: &str, parent: &str) -> EditClassification {
     EditClassification { id: "cs-uni".into(), op: op.into(), code: code.into(), title: title.into(), parent: parent.into() }

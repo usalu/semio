@@ -62,6 +62,9 @@ pub use output::OperatorFinishCursor;
 pub struct Dictionary {
     pairs: OrderedMap<Value>,
 }
+#[path="📖️lookup/🦀️.rs"]
+mod original_lookup;
+pub use original_lookup::OriginalDictionaryLookup;
 
 impl Dictionary {
     pub fn new() -> Self {
@@ -82,6 +85,8 @@ impl Dictionary {
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.pairs.get(key)
     }
+    /// 🪪️ Borrows the exact immutable source root without issuing another ownership alias.
+    pub fn original_root_identity(&self)->Option<usize>{self.pairs.original_root_identity()}
 
     /// 🔗️ Retains only the exact immutable value of one ranked entry.
     pub fn value_shared_at_rank(&self,index:usize)->Option<semio_framework_value::ordered::SharedOwner<Value>> {self.pairs.value_shared_at_rank(index)}

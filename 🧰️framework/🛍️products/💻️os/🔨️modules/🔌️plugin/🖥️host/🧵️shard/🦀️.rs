@@ -34,7 +34,8 @@ use lifecycle::AdmittedAuthority;
 #[path="🎟️grant/📨️event/🦀️.rs"]
 mod original_event;
 use original_event::OriginalShardEvent;
-use semio_framework_actor::{OriginalActorInput,OriginalActorGuestReturn,ActorGuestPhase};
+use semio_framework_actor::{OriginalActorInput,OriginalActorGuestReturn,ActorGuestPhase,RetainedTurnInput};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 #[path="🪪️identity/🦀️.rs"]
 pub mod identity;
 
@@ -85,9 +86,10 @@ pub enum ShardFrame {
     /// `ShardLoop::pump` remembers `budget` as `actor`'s "last granted budget" (`Self::
     /// granted_budget`) — used for THIS grant's own envelopes, any later standalone `Envelope`
     /// frame for the same actor, and that actor's job steps.
-    Grant { actor: ActorId, budget: semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput, envelopes: Vec<Envelope> },
+    Grant { actor: ActorId, budget: semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput, retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64, envelopes: Vec<Envelope> },
     /// 🔌️ One raw envelope remains retained until its actor supplies an original issued budget.
     Envelope(Envelope),
+    MeshReceived{actor:ActorId,input:semio_framework_actor::RetainedTurnInput,receiving_sequence:u64,spent:semio_framework_value::RetainedCloneProgress,work_units_spent:u64,accepted:bool},
 }
 
 impl ShardFrame {
@@ -97,17 +99,19 @@ impl ShardFrame {
             ShardFrame::Unregister { .. } => 1,
             ShardFrame::Grant { .. } => 2,
             ShardFrame::Envelope(_) => 3,
+            ShardFrame::MeshReceived{..}=>4,
         }
     }
 
     pub async fn pack_encode_grant(grant: &semio_framework_actor::TurnGrant, resources: grant::ShardResourceBudget, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
         grant.original_input().validate().map_err(|_| semio_framework_actor::pack::PackError::InvalidRetainedTurn("operation identity is absent"))?;
+        grant.loan.validate_for(grant.retained).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original grant semantic loan exceeds its source"))?;let semio_framework_actor::OriginalActorTurnLoan{retained_policy,work_fuel,deadline_us}=grant.loan;
         let mut budget = grant.budget;
         resources.apply(&mut budget);
         semio_framework_actor::pack::write_u8(out, 2).await;
         grant.actor.pack_encode(out).await;
         budget.pack_encode(out).await?;
-        grant.retained.pack_encode(out).await?;
+        grant.retained.pack_encode(out).await?;semio_framework_actor::retained_turn::pack_encode_grant(out,retained_policy).await;semio_framework_actor::pack::write_u64(out,work_fuel).await;semio_framework_actor::pack::write_u64(out,deadline_us).await;
         semio_framework_actor::pack::write_vec(out, &grant.envelopes, async |envelope, out| envelope.pack_encode(out).await).await;
         Ok(())
     }
@@ -118,13 +122,14 @@ impl ShardFrame {
         match self {
             ShardFrame::Register { actor } => actor.pack_encode(out).await,
             ShardFrame::Unregister { actor } => actor.pack_encode(out).await,
-            ShardFrame::Grant { actor, budget, retained, envelopes } => {
+            ShardFrame::Grant { actor, budget, retained, retained_policy,work_fuel,deadline_us,envelopes } => {
                 actor.pack_encode(out).await;
                 budget.pack_encode(out).await?;
-                retained.pack_encode(out).await?;
+                retained.pack_encode(out).await?;semio_framework_actor::retained_turn::pack_encode_grant(out,*retained_policy).await;semio_framework_actor::pack::write_u64(out,*work_fuel).await;semio_framework_actor::pack::write_u64(out,*deadline_us).await;
                 semio_framework_actor::pack::write_vec(out, envelopes, async |o, e| o.pack_encode(e).await).await;
             }
             ShardFrame::Envelope(envelope) => envelope.pack_encode(out).await,
+            ShardFrame::MeshReceived{actor,input,receiving_sequence,spent,work_units_spent,accepted}=>{actor.pack_encode(out).await;semio_framework_actor::OriginalActorGuestReturn{input:*input,spent:*spent,work_units_spent:*work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None}.pack_encode(out).await;semio_framework_actor::pack::write_u64(out,*receiving_sequence).await;semio_framework_actor::pack::write_bool(out,*accepted).await;},
         }
         Ok(())
     }
@@ -138,9 +143,13 @@ impl ShardFrame {
                 actor: ActorId::pack_decode(bytes, pos).await?,
                 budget: semio_framework_actor::Budget::pack_decode(bytes, pos).await?,
                 retained: semio_framework_actor::RetainedTurnInput::pack_decode(bytes, pos).await?,
+                retained_policy:semio_framework_actor::retained_turn::pack_decode_grant(bytes,pos).await?,
+                work_fuel:semio_framework_actor::pack::read_u64(bytes,pos,"Grant::work-fuel").await?,
+                deadline_us:semio_framework_actor::pack::read_u64(bytes,pos,"Grant::deadline-us").await?,
                 envelopes: semio_framework_actor::pack::read_vec(bytes, pos, "ShardFrame::Grant::envelopes", Envelope::pack_decode).await?,
             }),
             3 => Ok(ShardFrame::Envelope(Envelope::pack_decode(bytes, pos).await?)),
+            4=>{let actor=ActorId::pack_decode(bytes,pos).await?;let raw=semio_framework_actor::OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let receiving_sequence=semio_framework_actor::pack::read_u64(bytes,pos,"MeshReceived::sequence").await?;let accepted=semio_framework_actor::pack::read_bool(bytes,pos,"MeshReceived::accepted").await?;Ok(Self::MeshReceived{actor,input:raw.input,receiving_sequence,spent:raw.spent,work_units_spent:raw.work_units_spent,accepted})},
             other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardFrame", tag: other, offset: *pos }),
         }
     }
@@ -151,9 +160,9 @@ impl ShardFrame {
 
 /// 📦️ OS scheduling resources remain a sibling of the original Actor-issued batch.
 #[derive(Debug,PartialEq)]
-struct IssuedShardTurn{budget:semio_framework_actor::Budget,original:semio_framework_actor::IssuedRetainedBatch}
+struct IssuedShardTurn{budget:semio_framework_actor::Budget,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,original:semio_framework_actor::IssuedRetainedBatch}
 impl IssuedShardTurn{
- fn new(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{Ok(Self{budget,original:semio_framework_actor::IssuedRetainedBatch::new(input,envelopes)?})}
+ fn new(budget:semio_framework_actor::Budget,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,envelopes:usize)->Result<Self,semio_framework_value::ValueError>{if deadline_us==0||deadline_us>input.work.absolute_deadline_us||work_fuel>input.work.fuel||retained_policy.maximum_items>input.grant.maximum_items||retained_policy.maximum_copy_bytes>input.grant.maximum_copy_bytes||retained_policy.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||retained_policy.maximum_release_bytes>input.grant.maximum_release_bytes||retained_policy.maximum_depth>input.grant.maximum_depth{return Err(Self::refusal("original shard policy exceeds its held total source authority"))}Ok(Self{budget,retained_policy,work_fuel,deadline_us,original:semio_framework_actor::IssuedRetainedBatch::new(input,envelopes)?})}
  fn envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.envelope_recipient(index)?})}
  fn resume_envelope_recipient(&mut self,index:usize)->Result<IssuedShardRetainedRecipient<'_>,semio_framework_value::ValueError>{Ok(IssuedShardRetainedRecipient{original:self.original.resume_envelope_recipient(index)?})}
  fn refusal(message:&'static str)->semio_framework_value::ValueError{semio_framework_actor::IssuedRetainedBatch::refusal(message)}
@@ -170,8 +179,8 @@ impl semio_framework_os_services::ComputeRetainedRecipient for IssuedShardRetain
     fn record_progress(&mut self, progress: semio_framework_value::RetainedCloneProgress) -> Result<(), semio_framework_value::ValueError> { self.original.record_progress(progress) }
 }
 
-async fn turn_budget_from_grant(budget: &semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput) -> Budget {
-    Budget { retained, fuel: budget.fuel, deadline_ms: budget.wall_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames }
+async fn turn_budget_from_grant(budget: &semio_framework_actor::Budget, retained: semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64) -> Budget {
+    Budget { retained, retained_policy,work_fuel,fuel: budget.fuel, deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames }
 }
 
 /// 🔀️ Same `Grant` budget, `GuestRuntime::step_job`'s shape — `JobBudget` only ever carried
@@ -277,6 +286,7 @@ const SHARD_TURN_ADMITTED_JOBS_MAXIMUM: usize = 1_024;
 /// 📤️ Owned pack-coded outcome sent from a shard to its scheduler-side consumer.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ShardOutcome {
+    OriginalMesh{actor:u64,input:semio_framework_actor::RetainedTurnInput,retained_policy:semio_framework_value::RetainedCloneGrant,work_fuel:u64,deadline_us:u64,receiving_sequence:u64,source_spent:semio_framework_value::RetainedCloneProgress,source_work_units_spent:u64,bytes:[u8;semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES]},
     /// 🧾️ One original raw call is returned before the Kernel may issue a continuation.
     OriginalCall{actor:u64,returned:OriginalActorGuestReturn,continuation:bool,call:Option<crate::original_actor_context::OriginalActorFixedCall>},
     /// 🔁️ One granted turn's result, with the step authority of every live job the turn's
@@ -330,7 +340,7 @@ impl ShardOutcome {
     /// `Event::JobCompleted` turn this shard ran without a grant of its own.
     pub fn actor(&self) -> u64 {
         match self {
-            Self::OriginalCall{actor,..}|Self::Turn { actor, .. } | Self::Job { actor, .. } | Self::Fault { actor, .. } | Self::Checkpoint { actor, .. } | Self::Resumed { actor, .. } | Self::Cancelled { actor } | Self::Preempted { actor } => *actor,
+            Self::OriginalMesh{actor,..}|Self::OriginalCall{actor,..}|Self::Turn { actor, .. } | Self::Job { actor, .. } | Self::Fault { actor, .. } | Self::Checkpoint { actor, .. } | Self::Resumed { actor, .. } | Self::Cancelled { actor } | Self::Preempted { actor } => *actor,
         }
     }
 
@@ -341,6 +351,7 @@ impl ShardOutcome {
             }
         }
         match self {
+            Self::OriginalMesh{actor,input,retained_policy,work_fuel,deadline_us,receiving_sequence,source_spent,source_work_units_spent,bytes}=>{semio_framework_actor::pack::write_u8(out,8).await;semio_framework_actor::pack::write_u64(out,*actor).await;semio_framework_actor::OriginalActorGuestReturn{input:*input,spent:*source_spent,work_units_spent:*source_work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None}.pack_encode(out).await;semio_framework_actor::retained_turn::pack_encode_grant(out,*retained_policy).await;semio_framework_actor::pack::write_u64(out,*work_fuel).await;semio_framework_actor::pack::write_u64(out,*deadline_us).await;semio_framework_actor::pack::write_u64(out,*receiving_sequence).await;out.extend_from_slice(bytes);},
             Self::OriginalCall{actor,returned,continuation,call}=>{semio_framework_actor::pack::write_u8(out,7).await;semio_framework_actor::pack::write_u64(out,*actor).await;returned.pack_encode(out).await;semio_framework_actor::pack::write_bool(out,*continuation).await;semio_framework_actor::pack::write_bool(out,call.is_some()).await;if let Some(call)=call{let mut receipt=crate::original_actor_context::OriginalActorFixedReceipt::empty();receipt.write(*call);out.extend_from_slice(receipt.bytes())}},
             Self::Turn { actor, result, jobs } => {
                 semio_framework_actor::pack::write_u8(out, 0).await;
@@ -427,7 +438,8 @@ impl ShardOutcome {
             4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
             5 => Ok(Self::Cancelled { actor }),
             6 => Ok(Self::Preempted { actor }),
-            7=>{let returned=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let continuation=semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::continuation").await?;let call=if semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::fixed").await?{let end=pos.checked_add(112).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call is truncated"))?;let call=crate::original_actor_context::OriginalActorFixedReceipt::read(source).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call header is malformed"))?;*pos=end;Some(call)}else{None};Ok(Self::OriginalCall{actor,returned,continuation,call})},
+            7=>{let returned=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let continuation=semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::continuation").await?;let call=if semio_framework_actor::pack::read_bool(bytes,pos,"OriginalCall::fixed").await?{let end=pos.checked_add(136).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call is truncated"))?;let call=crate::original_actor_context::OriginalActorFixedReceipt::read(source).map_err(|_|semio_framework_actor::pack::PackError::InvalidRetainedTurn("original fixed call header is malformed"))?;*pos=end;Some(call)}else{None};Ok(Self::OriginalCall{actor,returned,continuation,call})},
+            8=>{let raw=OriginalActorGuestReturn::pack_decode(bytes,pos).await?;let retained_policy=semio_framework_actor::retained_turn::pack_decode_grant(bytes,pos).await?;let work_fuel=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::work-fuel").await?;let deadline_us=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::deadline-us").await?;let receiving_sequence=semio_framework_actor::pack::read_u64(bytes,pos,"OriginalMesh::sequence").await?;let end=pos.checked_add(semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original mesh fixed extent overflow"))?;let source=bytes.get(*pos..end).ok_or(semio_framework_actor::pack::PackError::InvalidRetainedTurn("original mesh packet truncated"))?;let mut packet=[0;semio_framework_ui_runtime::UI_NATIVE_MESH_MESSAGE_BYTES];packet.copy_from_slice(source);*pos=end;Ok(Self::OriginalMesh{actor,input:raw.input,retained_policy,work_fuel,deadline_us,receiving_sequence,source_spent:raw.spent,source_work_units_spent:raw.work_units_spent,bytes:packet})},
             other => Err(semio_framework_actor::pack::PackError::InvalidTag { what: "ShardOutcome", tag: other, offset: *pos }),
         }
     }
@@ -1973,6 +1985,9 @@ impl ShardLoop {
     /// wire-shape-mismatch sites this packet's report flags (`🦀️.rs`'s
     /// `execute_turn`, `⏳️runtime/🦀️.rs`'s `convert_poll_success`): nothing was dropped
     /// here, there was simply nothing produced.
+    fn receive_original_mesh_frame(&mut self,actor:ActorId,input:RetainedTurnInput,sequence:u64,spent:RetainedCloneProgress,work:u64,accepted:bool)->Result<(),PluginHostError>{let budget=self.granted_budgets.get(&actor.0).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh peer has no existing actor batch")))?.budget;for ring in[&mut self.pending_interactive,&mut self.pending_background]{for offset in 0..ring.len{let Some(slot)=ring.slots[ring.order[offset]].as_mut()else{continue};if slot.owner.authority.actor()!=actor.0{continue}let Some(original)=slot.owner.original_event.as_mut()else{continue};if !original.mesh_awaits_host(){continue}original.receive_mesh_progress(input,sequence,spent,work,accepted).map_err(PluginHostError::NativeIo)?;if slot.owner.budget.is_some(){return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh peer would overwrite its actual source budget")))}slot.owner.budget=Some(budget);slot.owner.retry=lifecycle::LifecycleRetry::Ready;return Ok(())}}Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh receive delta has no retained event checkout")))}
+    async fn send_original_mesh_step(&mut self,actor:u64,original:&mut OriginalShardEvent,policy:RetainedCloneGrant,work_fuel:u64,deadline_us:u64)->Result<bool,PluginHostError>{if !original.has_mesh_receiving(){return Ok(false)}if original.mesh_awaits_host(){return Ok(true)}for _ in 0..64{if original.mesh_is_accepted(){let before=original.input.work_units_spent();original.close_mesh_effect_step(policy).map_err(PluginHostError::NativeIo)?;if !original.has_mesh_receiving(){return Ok(false)}if before==original.input.work_units_spent(){return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh source close preserves its denied physical frontier")))}continue}let binding=original.input.issued_input().ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh source lost its actual input")))?.work.clock_binding;let now=self.instances.get(&actor).and_then(|instance|instance.original_clock_observation(binding));if let Some(packet)=original.prepare_mesh_packet_step(actor,policy,work_fuel,deadline_us,now).map_err(PluginHostError::NativeIo)?{self.send_outcome(&packet).await?;return Ok(true)}}Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original mesh source remains under its finite short policy or expired clock")))}
+
     fn receive_original_event_input(&mut self,actor:u64)->Result<(),PluginHostError>{
         let supplied=self.granted_budgets.get(&actor).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original continuation has no Kernel supplier")))?;let input=*supplied.original_input();let budget=supplied.budget;
         for ring in [&mut self.pending_interactive,&mut self.pending_background]{for offset in 0..ring.len{let Some(slot)=ring.slots[ring.order[offset]].as_mut()else{continue};if slot.owner.authority.actor()!=actor{continue}if let Some(original)=slot.owner.original_event.as_mut(){original.receive_next_issued(input).map_err(PluginHostError::NativeIo)?;if slot.owner.budget.is_some(){return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event already holds a supplied budget")))}slot.owner.budget=Some(budget);slot.owner.retry=lifecycle::LifecycleRetry::Ready;return Ok(())}}}
@@ -1985,37 +2000,38 @@ impl ShardLoop {
 
     async fn execute_turn_for(&mut self, actor_id:u64, original:&mut OriginalShardEvent,granted:semio_framework_actor::Budget,actor_lane:semio_framework_actor::Lane)->Result<bool,PluginHostError>{
         let input=*original.input.issued_input().ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event awaits its next Kernel input")))?;
-        let turn_budget=turn_budget_from_grant(&granted,input).await;
+        let turn_budget=turn_budget_from_grant(&granted,input,self.granted_budgets.get(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event held policy is absent")))?.retained_policy,self.granted_budgets.get(&actor_id).unwrap().work_fuel,self.granted_budgets.get(&actor_id).unwrap().deadline_us).await;
         let allocation=*self.allocations.get(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event actor allocation is absent")))?;
         if original.input.phase()==ActorGuestPhase::Pending{
             let instance=self.instances.get_mut(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event guest instance is absent")))?;
-            let admission=self.identities.get_mut(&allocation).expect("registered actor owns original identity").admit_actor_original(&self.runtime,instance,&mut original.input,turn_budget,input.grant).await.map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event admission has no funded checkout")))?;
-            let call=match admission.call{Ok(reply)=>Some(crate::original_actor_context::OriginalActorFixedCall{input:reply.input,spent:reply.spent,work_units_spent:0,kind:crate::original_actor_context::OriginalActorFixedKind::Admission{ready:reply.ready,refusal:reply.refusal}}),Err(TurnFault::ActorCall(call))=>Some(call),Err(fault)=>{original.retain_trap(fault);None}};
-            let raw=call.map(|call|OriginalActorGuestReturn{input:call.input,spent:call.spent,claimed_remaining:None});
+            let admission=self.identities.get_mut(&allocation).expect("registered actor owns original identity").admit_actor_original(&self.runtime,instance,&mut original.input,turn_budget,turn_budget.retained_policy).await.map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event admission has no funded checkout")))?;
+            let call=match admission.call{Ok(reply)=>Some(crate::original_actor_context::OriginalActorFixedCall{input:reply.input,spent:reply.spent,work_units_spent:reply.work_units_spent,kind:crate::original_actor_context::OriginalActorFixedKind::Admission{ready:reply.ready,refusal:reply.refusal}}),Err(TurnFault::ActorCall(call))=>Some(call),Err(fault)=>{original.retain_trap(fault);None}};
+            let raw=call.map(|call|OriginalActorGuestReturn{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None});
             let receipt=match admission.receiving{Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,raw,call).await};
-            if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)}),call).await,error=>Err(error)}}
-            let Some(call)=call else{return self.send_refused_original_call(actor_id,original,IssuedShardTurn::refusal("original admission trap remains held after its actual raw receipt"),Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)}),None).await};
-            self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)},continuation:true,call:Some(call)}).await?;
+            if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)}),call).await,error=>Err(error)}}
+            let Some(call)=call else{return self.send_refused_original_call(actor_id,original,IssuedShardTurn::refusal("original admission trap remains held after its actual raw receipt"),Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)}),None).await};
+            self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)},continuation:true,call:Some(call)}).await?;
             return Ok(true)
         }
+        if original.is_retiring()&&self.send_original_mesh_step(actor_id,original,turn_budget.retained_policy,turn_budget.work_fuel,turn_budget.deadline_us).await?{return Ok(true)}
         let turn_outcome=if original.is_retiring(){
-            let checked=original.input.checkout_guest(input.grant).map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event retirement has no funded checkout")))?;
-            let step=match original.release_empty_cursor(checked.grant){Some(progress)=>Ok(progress),None=>original.source_close_step(checked.grant)};
-            let progress=match step{Ok(progress)=>progress,Err(error)=>{let progress=error.retained_progress();original.retain_source_refusal(error);let receiving=original.input.receive_guest_spent(checked,progress,ActorGuestPhase::Dispatched);let error=receiving.err().unwrap_or_else(||IssuedShardTurn::refusal("original source close failure remains held with its whole Event"));return self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:checked,spent:progress,claimed_remaining:None}),None).await}};
-            let raw=OriginalActorGuestReturn{input:checked,spent:progress,claimed_remaining:None};if let Err(error)=original.input.receive_guest_spent(checked,progress,ActorGuestPhase::Dispatched){return self.send_refused_original_call(actor_id,original,error,Some(raw),None).await}
-            let receipt=match original.input.return_actor_turn(){Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,Some(raw),None).await};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)}),None).await,error=>Err(error)}}
-            match original.take_closed_result(receipt){Some(result)=>Ok(result),None=>{self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)},continuation:true,call:None}).await?;return Ok(true)}}
+            let checked=original.input.checkout_guest(turn_budget.retained_policy).map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event retirement has no funded checkout")))?;
+            let policy=original.input.guest_policy(checked).map_err(PluginHostError::NativeIo)?;let mut source_work=0;let step=if checked.work.fuel==0{Ok(Default::default())}else{match original.release_empty_cursor(policy,&mut source_work){Some(progress)=>Ok(progress),None=>original.source_close_step(policy,&mut source_work)}};
+            let progress=match step{Ok(progress)=>progress,Err(error)=>{let progress=error.retained_progress();original.retain_source_refusal(error);let receiving=original.input.receive_guest_spent(checked,progress,source_work,ActorGuestPhase::Dispatched);let error=receiving.err().unwrap_or_else(||IssuedShardTurn::refusal("original source close failure remains held with its whole Event"));return self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:checked,spent:progress,work_units_spent:source_work,claimed_remaining:None,claimed_remaining_fuel:None}),None).await}};
+            let raw=OriginalActorGuestReturn{input:checked,spent:progress,work_units_spent:source_work,claimed_remaining:None,claimed_remaining_fuel:None};if let Err(error)=original.input.receive_guest_spent(checked,progress,source_work,ActorGuestPhase::Dispatched){return self.send_refused_original_call(actor_id,original,error,Some(raw),None).await}
+            let receipt=match original.input.return_actor_turn(){Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,Some(raw),None).await};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)}),None).await,error=>Err(error)}}
+            match original.take_closed_result(receipt){Some(result)=>Ok(result),None=>{self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)},continuation:true,call:None}).await?;return Ok(true)}}
         }else{
-            let checked=original.input.checkout_guest(input.grant).map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event dispatch has no funded checkout")))?;
+            let checked=original.input.checkout_guest(turn_budget.retained_policy).map_err(PluginHostError::NativeIo)?.ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event dispatch has no funded checkout")))?;
             let first=original.input.phase()==ActorGuestPhase::Ready;
             let event=original.input.original().ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event source is absent")))?;
             let events=if first{std::slice::from_ref(event)}else{&[]};
             let instance=self.instances.get_mut(&actor_id).ok_or_else(||PluginHostError::NativeIo(IssuedShardTurn::refusal("original Event guest instance is absent")))?;
-            let call=self.identities.get_mut(&allocation).expect("registered actor owns original identity").execute_turn(&self.runtime,instance,events,Budget{retained:checked,..turn_budget}).await;
+            let call=self.identities.get_mut(&allocation).expect("registered actor owns original identity").execute_turn(&self.runtime,instance,events,Budget{retained:checked,retained_policy:original.input.guest_policy(checked).map_err(PluginHostError::NativeIo)?,..turn_budget}).await;
             match call{
-                Ok(result)=>{let receipt=match original.receive_dispatched_result(result){Ok(receipt)=>receipt,Err(error)=>{let raw=original.pending_raw_return();return self.send_refused_original_call(actor_id,original,error,raw,None).await}};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>{let raw=original.pending_raw_return();self.send_refused_original_call(actor_id,original,error,raw,None).await},error=>Err(error)}}
-                    match original.take_received_more_work(receipt){Some(result)=>Ok(result),None=>{self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,claimed_remaining:Some(receipt.remaining)},continuation:true,call:None}).await?;return Ok(true)}}},
-                Err(TurnFault::ActorCall(call))=>{let raw=OriginalActorGuestReturn{input:call.input,spent:call.spent,claimed_remaining:None};let receipt=match original.receive_failed_call(call){Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,Some(raw),Some(call)).await};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(raw),Some(call)).await,error=>Err(error)}}self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:raw,continuation:false,call:Some(call)}).await?;return Ok(true)},
+                Ok(result)=>{if let Err(error)=original.retain_dispatched_result(result){let raw=original.pending_raw_return();return self.send_refused_original_call(actor_id,original,error,raw,None).await}if self.send_original_mesh_step(actor_id,original,turn_budget.retained_policy,turn_budget.work_fuel,turn_budget.deadline_us).await?{return Ok(true)}let receipt=match original.input.return_actor_turn(){Ok(receipt)=>receipt,Err(error)=>{let raw=original.pending_raw_return();return self.send_refused_original_call(actor_id,original,error,raw,None).await}};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>{let raw=original.pending_raw_return();self.send_refused_original_call(actor_id,original,error,raw,None).await},error=>Err(error)}}
+                    match original.take_received_more_work(receipt){Some(result)=>Ok(result),None=>{self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:OriginalActorGuestReturn{input:receipt.input,spent:receipt.spent,work_units_spent:receipt.work_units_spent,claimed_remaining:Some(receipt.remaining),claimed_remaining_fuel:Some(receipt.remaining_fuel)},continuation:true,call:None}).await?;return Ok(true)}}},
+                Err(TurnFault::ActorCall(call))=>{let raw=OriginalActorGuestReturn{input:call.input,spent:call.spent,work_units_spent:call.work_units_spent,claimed_remaining:None,claimed_remaining_fuel:None};let receipt=match original.receive_failed_call(call){Ok(receipt)=>receipt,Err(error)=>return self.send_refused_original_call(actor_id,original,error,Some(raw),Some(call)).await};if let Err(error)=self.receive_original_event(actor_id,receipt){return match error{PluginHostError::NativeIo(error)=>self.send_refused_original_call(actor_id,original,error,Some(raw),Some(call)).await,error=>Err(error)}}self.send_outcome(&ShardOutcome::OriginalCall{actor:actor_id,returned:raw,continuation:false,call:Some(call)}).await?;return Ok(true)},
                 Err(fault)=>{original.retain_trap(fault);return Err(PluginHostError::NativeIo(IssuedShardTurn::refusal("original guest trap has no raw return; its owner and checkout remain held")))},
             }
         };
@@ -2119,7 +2135,7 @@ impl ShardLoop {
             }
         };
         let target = match &frame {
-            ShardFrame::Grant { actor, .. } | ShardFrame::Unregister { actor } => Some(*actor),
+            ShardFrame::Grant { actor, .. } | ShardFrame::MeshReceived{actor,..} | ShardFrame::Unregister { actor } => Some(*actor),
             ShardFrame::Envelope(envelope) => Some(envelope.to),
             ShardFrame::Register { .. } => None,
         };
@@ -2141,9 +2157,9 @@ impl ShardLoop {
         match frame {
             ShardFrame::Register { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Register { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
             ShardFrame::Unregister { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Unregister { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,
-            ShardFrame::Grant { actor, budget, retained, envelopes } => {
+            ShardFrame::Grant { actor, budget, retained, retained_policy,work_fuel,deadline_us,envelopes } => {
                 if envelopes.len()!=1 {return Err(self.retain_terminal_frame(bytes,PluginHostError::NativeIo(IssuedShardTurn::refusal("one Kernel input admits exactly one original export envelope"))))}
-                let issued = match IssuedShardTurn::new(budget, retained, envelopes.len()) {
+                let issued = match IssuedShardTurn::new(budget, retained, retained_policy,work_fuel,deadline_us,envelopes.len()) {
                     Ok(issued) => issued,
                     Err(error) => return Err(self.retain_terminal_frame(bytes, PluginHostError::NativeIo(error))),
                 };
@@ -2155,6 +2171,7 @@ impl ShardLoop {
                     }
                 }
             }
+            ShardFrame::MeshReceived{actor,input,receiving_sequence,spent,work_units_spent,accepted}=>{if let Err(error)=self.receive_original_mesh_frame(actor,input,receiving_sequence,spent,work_units_spent,accepted){return Err(self.retain_terminal_frame(bytes,error))}},
             ShardFrame::Envelope(envelope) => {
                 if let Err(error) = self.dispatch_envelope(envelope, bytes.len()).await {
                     return Err(self.retain_terminal_frame(bytes, error));
@@ -2176,6 +2193,7 @@ impl ShardLoop {
         let envelopes: &[Envelope] = match frame {
             ShardFrame::Grant { envelopes, .. } => envelopes,
             ShardFrame::Envelope(envelope) => std::slice::from_ref(envelope),
+            ShardFrame::MeshReceived{..}=>return Ok(()),
             ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return self.pending_background.can_admit(1, raw_bytes),
         };
         let mut interactive_items = 0usize;
@@ -2200,7 +2218,7 @@ impl ShardLoop {
         let envelopes: &[Envelope] = match frame {
             ShardFrame::Grant { envelopes, .. } => envelopes,
             ShardFrame::Envelope(envelope) => std::slice::from_ref(envelope),
-            ShardFrame::Register { .. } | ShardFrame::Unregister { .. } => return Ok(()),
+            ShardFrame::Register { .. } | ShardFrame::Unregister { .. } | ShardFrame::MeshReceived{..} => return Ok(()),
         };
         for envelope in envelopes {
             match &envelope.payload {
@@ -2611,8 +2629,8 @@ impl RecordingRuntime {
 
 #[cfg(test)]
 impl GuestRuntime for RecordingRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input)))}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input)))}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply::borrow_original(&state.actor_context.admit_step(input,_budget.retained_policy,semio_framework_job::logical_now_us)))}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,_budget:Budget,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let GuestInstanceState::Mock(state)=&mut inst.state else{return Err(super::identity_turn_fault(crate::operation_authority::refusal(4)))};Ok(semio_framework_actor::retained_turn::context::OriginalActorCloseReply::borrow_original(&state.actor_context.close_step(input,_budget.retained_policy)))}
 
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::CompiledHandle, PluginHostError> {
         Ok(super::CompiledHandle { package_hash: package.hash.0, component: None, owned: None })

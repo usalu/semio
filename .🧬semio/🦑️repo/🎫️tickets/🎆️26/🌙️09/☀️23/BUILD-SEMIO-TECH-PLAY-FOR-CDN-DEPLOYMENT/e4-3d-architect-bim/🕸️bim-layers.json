@@ -1,0 +1,117 @@
+{
+ "order": [
+  "model",
+  "diff",
+  "mutations",
+  "inferences",
+  "read",
+  "write",
+  "io",
+  "editor",
+  "root"
+ ],
+ "allow": {
+  "model": [],
+  "diff": [
+   "model"
+  ],
+  "mutations": [
+   "model",
+   "diff"
+  ],
+  "inferences": [
+   "model"
+  ],
+  "read": [
+   "model",
+   "inferences",
+   "diff",
+   "mutations"
+  ],
+  "write": [
+   "model",
+   "inferences"
+  ],
+  "io": [
+   "model",
+   "diff",
+   "mutations",
+   "inferences",
+   "read",
+   "write"
+  ],
+  "editor": [
+   "model",
+   "diff",
+   "mutations",
+   "inferences",
+   "read",
+   "write",
+   "io"
+  ],
+  "root": [
+   "model",
+   "diff",
+   "mutations",
+   "inferences",
+   "read",
+   "write",
+   "io",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "^🧪️tests/",
+   "root"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "editor"
+  ],
+  [
+   "/📚️examples/",
+   "editor"
+  ],
+  [
+   "/🎨️render/",
+   "editor"
+  ],
+  [
+   "/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/📥️import/",
+   "read"
+  ],
+  [
+   "/🚪️io/📤️export/",
+   "write"
+  ],
+  [
+   "/🚪️io/",
+   "io"
+  ]
+ ]
+}

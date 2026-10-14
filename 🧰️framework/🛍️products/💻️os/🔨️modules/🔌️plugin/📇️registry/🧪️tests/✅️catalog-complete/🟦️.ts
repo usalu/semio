@@ -19,7 +19,7 @@ import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
-const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-complete");
+const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
   readonly nodes: readonly CatalogVerificationNode[];
   readonly expectedOrder: readonly string[];
@@ -34,7 +34,7 @@ describe("explicit module deployment directories", () => {
     const deployment = await import("../../📦️deployment/🟦️.ts"), { URL: IndependentUrl } = await import("whatwg-url");
     const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     const validate = new Ajv({ strict: true }).addKeyword({ keyword: "x-semio-formats", schemaType: "array", valid: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
     expect(validate(routes)).toBe(true);
     expect(deployment.parseModuleRoutes(routes)).toEqual(routes);
@@ -50,7 +50,7 @@ describe("explicit module deployment directories", () => {
 
   it("uses the declared authored bridge without deriving a filename from the public ID", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
     const deployment = await import("../../📦️deployment/🟦️.ts");
     const inventory = parseModuleDirectories({ version: 1, modules: cases.modules });
@@ -69,11 +69,11 @@ describe("explicit module deployment directories", () => {
   });
   it("matches the schema and independent emoji oracle without changing public identities", async () => {
     const emojiRegex = (await import("emoji-regex")).default;
-    const portable = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const portable = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     const entries = portable.modules.map((row: { pluginId: string; directoryName: string }) => ({ pluginId: row.pluginId, directoryName: row.directoryName }));
     const catalog = { version: 1, modules: registryModuleDirectories(entries) };
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
-    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
     const registrySchemas = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json"), "utf8"))).addSchema(schema);
     const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
     expect(validate(catalog)).toBe(true);

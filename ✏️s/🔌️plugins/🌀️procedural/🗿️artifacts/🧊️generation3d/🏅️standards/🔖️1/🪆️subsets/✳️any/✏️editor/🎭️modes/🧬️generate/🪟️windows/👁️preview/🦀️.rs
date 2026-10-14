@@ -3,10 +3,20 @@
 
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
-use crate::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewPayload, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use crate::standards::v1::subsets::any::schema::{generation_by_id, generation_host_snapshot_for};
+use crate::editor::generation3d::preview_camera_json;
+use crate::editor::generation3d::preview_payload;
+use crate::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
+use crate::editor::generation3d::PreviewInteractionMarks;
+use crate::editor::generation3d::PreviewPayload;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
+use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
+use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::generation_by_id;
+use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 use semio_framework_os_flow::FlowEvalSession;
@@ -104,11 +114,11 @@ pub fn render(
     };
     let empty = payload.meshes_json == "[]" && payload.instances_json == "[]";
     let status_json = generate_preview_status_json(session, run, eval_json, &payload, preview_status, empty.then(|| labels.preview_hint.as_str()));
-    let fit_json = crate::preview_eval::preview_fit_json(host_snapshot, &payload.meshes_json);
+    let fit_json = semio_s_artifact_procedural_3d_preview_eval::preview_fit_json(host_snapshot, &payload.meshes_json);
     let sun = cfg.sun();
     let selection_json = preview_selection_json(cfg, active_utility, &payload);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    crate::accessible_scene_surface(
+    semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {

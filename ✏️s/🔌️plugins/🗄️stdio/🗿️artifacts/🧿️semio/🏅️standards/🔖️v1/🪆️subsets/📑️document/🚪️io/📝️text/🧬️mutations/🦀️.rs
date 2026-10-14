@@ -6,8 +6,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
 use crate::io::text::diff::dec_run_style;
 use crate::io::text::diff::enc_run_style;

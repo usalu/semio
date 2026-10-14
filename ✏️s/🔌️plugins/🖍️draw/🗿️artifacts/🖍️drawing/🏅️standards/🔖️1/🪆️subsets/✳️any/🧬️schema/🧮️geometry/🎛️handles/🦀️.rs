@@ -27,8 +27,8 @@ impl HandleMotion {
     /// 🧮️ The world-space affine matrix of the motion.
     pub fn matrix(self) -> [f64;6] {
         match self {
-            Self::Rotate { pivot:[x,y],angle }=>crate::mutations::drawing_rotation_matrix(x,y,angle),
-            Self::Scale { pivot:[x,y],scale:[scale_x,scale_y] }=>crate::mutations::drawing_scaling_matrix(x,y,scale_x,scale_y),
+            Self::Rotate { pivot:[x,y],angle }=>crate::drawing_rotation_matrix(x,y,angle),
+            Self::Scale { pivot:[x,y],scale:[scale_x,scale_y] }=>crate::drawing_scaling_matrix(x,y,scale_x,scale_y),
         }
     }
 }

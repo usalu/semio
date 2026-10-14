@@ -3,7 +3,7 @@
 //! channel literal in a wgpu target is the only way the two renderers can silently drift apart, so
 //! it fails here instead of at a screenshot diff.
 
-use super::*;
+use semio_framework_ui_theme::theme::*;
 #[path = "../../🧪️testing/🎨️paint-policy/🦀️.rs"]
 mod paint_policy;
 

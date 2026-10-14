@@ -1,6 +1,6 @@
 //! 🎚️ Norm configuration mutation 💾️binary codec.
 
-use crate::results_window_config::NormResultsWindowConfigMutation;
+use crate::mutations::NormResultsWindowConfigMutation;
 
 /// 🎯️ Uses the shared canonical terminal-operation frame for this schema-owned aggregate.
 impl protocol::OpBinary for NormResultsWindowConfigMutation {

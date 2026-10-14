@@ -1,6 +1,6 @@
 //! 👣️ `set-roof-footprint` payload. Replaces the footprint loop of a roof; the shape, overhang and solid follow by inference.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Vertex}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

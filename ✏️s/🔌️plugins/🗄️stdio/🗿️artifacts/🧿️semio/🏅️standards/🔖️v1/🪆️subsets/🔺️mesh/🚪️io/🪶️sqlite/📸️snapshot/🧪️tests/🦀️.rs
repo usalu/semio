@@ -1,7 +1,9 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioPrimitive, SemioTopology, SemioMaterial, SemioTexture};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioUv, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 #[test]
 fn sqlite_snapshot_semio_mesh_controlled_native_output(){

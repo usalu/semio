@@ -3,24 +3,11 @@ use semio_framework_value::artifact_retire_struct;
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence};
 use std::mem::ManuallyDrop;
 
-artifact_retire_struct!(super::ArtifactCursorOwners { applied_edit_ids, redo_edit_ids, checkpoint_id });
-artifact_retire_struct!(super::ArtifactCursorGroupRoot { visibility, owners });
 artifact_retire_struct!(super::CursorRevisionRecord { ledger_key, id_digest, edit_digest, prefix_digest });
 artifact_retire_struct!(super::EditDigestChains { forwards, inverse, meta, forwards_digest, inverse_digest, meta_digest });
 artifact_retire_struct!(super::CursorRevisionAccumulator { identity_digest, applied, redo, applied_tail_chains, mutation_positions, indexed_edits, unit_flags });
-impl RetireOwned for super::ArtifactCursor {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        let mut original = ManuallyDrop::new(self);
-        let owners = unsafe { ManuallyDrop::take(&mut original.owners) };
-        let group = unsafe { ManuallyDrop::take(&mut original.group) };
-        sequence(vec![semio_framework_value::retirement::deferred(owners), semio_framework_value::retirement::deferred(group)])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&*self.owners), semio_framework_value::retirement::deferred_birth_bytes_for(&*self.group)]) }
-    fn controlled_retirement_supported() -> bool { true }
-}
 artifact_retire_struct!(super::BlobRef { hash, size, media_type });
 artifact_retire_struct!(super::ArtifactLink { target, pin, role });
-artifact_retire_struct!(super::OwnerRef { parent, slot, child_id });
 impl<S: Send + 'static> RetireOwned for super::ArtifactChild<S> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         sequence(vec![semio_framework_value::retirement::deferred(self.child_id), semio_framework_value::retirement::deferred(self.target)])
@@ -30,61 +17,6 @@ impl<S: Send + 'static> RetireOwned for super::ArtifactChild<S> {
     }
     fn controlled_retirement_supported() -> bool { true }
 }
-artifact_retire_struct!(super::ArtifactBackboneRef { uri });
-artifact_retire_struct!(super::MigrationProvenance { document_id, dialect, checkpoint_id, migrated_at });
-artifact_retire_struct!(super::OpenToolTransaction { transaction, edit_id });
-
-semio_framework_value::artifact_retire_leaf!(super::HistoryLane);
-
-impl<Mutation: RetireOwned> RetireOwned for super::SupersedeInput<Mutation> {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        sequence(vec![semio_framework_value::retirement::deferred(self.target), semio_framework_value::retirement::deferred(self.replacement)])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.target), semio_framework_value::retirement::deferred_birth_bytes_for(&self.replacement)])
-    }
-    fn controlled_retirement_supported() -> bool { Mutation::controlled_retirement_supported() }
-}
-
-macro_rules! retire_command_fields {
-    ($($variant:ident { $($field:ident),* }),* $(,)?) => {
-        impl<Mutation: RetireOwned> RetireOwned for super::ArtifactCommand<Mutation> {
-            fn retirement(self) -> Box<dyn RetirementCursor> {
-                match self {
-                    $(Self::$variant { $($field),* } => sequence(vec![$(semio_framework_value::retirement::deferred($field)),*]),)*
-                    Self::Undo | Self::Redo | Self::PruneDrafts => sequence(Vec::new()),
-                }
-            }
-            fn retirement_birth_bytes(&self) -> Option<usize> {
-                match self {
-                    $(Self::$variant { $($field),* } => semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($field)),*]),)*
-                    Self::Undo | Self::Redo | Self::PruneDrafts => semio_framework_value::retirement::sequence_birth_bytes(&[]),
-                }
-            }
-            fn controlled_retirement_supported() -> bool { Mutation::controlled_retirement_supported() }
-        }
-    };
-}
-
-retire_command_fields!(
-    Apply { mutations, transaction },
-    UndoWithPolicy { policy, semantic_command },
-    ApplyInLane { mutations, lane, transaction },
-    UndoInLane { lane },
-    RedoInLane { lane },
-    CommitCheckpoint { message, authors },
-    CreateAlternative { name },
-    SwitchAlternative { alternative_id },
-    CheckoutCheckpoint { checkpoint_id },
-    IngestRemote { envelope },
-    SetMergePolicy { policy },
-    ResolveConflict { conflict_id, resolution },
-    Supersede { scope, inputs },
-    CreateAlternativeWithSupersede { name, inputs },
-    AppendTransaction { mutations, transaction },
-    CommitTransaction { transaction_id },
-    AbortTransaction { transaction_id },
-);
 
 artifact_retire_struct!(super::HistoryColumn { checkpoint_id, timestamp, labels, authors, parent_checkpoint_id, description, lane, alternative_ids });
 artifact_retire_struct!(super::SpaceMemberPin { document_id, checkpoint_id, alternative_id });

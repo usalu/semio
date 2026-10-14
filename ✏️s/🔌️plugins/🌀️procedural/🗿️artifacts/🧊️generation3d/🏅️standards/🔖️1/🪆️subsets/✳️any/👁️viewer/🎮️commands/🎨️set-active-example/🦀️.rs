@@ -10,10 +10,10 @@
 //! `flowEvalTick` chain afterwards, so the switch's own consequence never depends on a host
 //! `refresh-ui` round trip (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
-use crate::standards::v1::subsets::any::schema::is_generation3d_example_id;
+use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
 use crate::viewer::generation3d::config;
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 

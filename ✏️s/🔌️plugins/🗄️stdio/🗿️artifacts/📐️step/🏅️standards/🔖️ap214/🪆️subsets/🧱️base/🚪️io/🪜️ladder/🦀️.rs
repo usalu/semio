@@ -4,9 +4,9 @@
 //! `✳️ccN`'s `check_ccN_conformance` calls into these primitives rather than re-deriving the
 //! ladder or the shared base scans independently — one classification, six consumers.
 
-use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
-use crate::schema::snapshot::{StepEntity, StepFileSchema, StepValue};
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileSchema, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use semio_framework_value::{FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, SnapshotEditError, SnapshotEditEvent};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};

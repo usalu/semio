@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-wires-document-contract": "bun repo run @semio-tech/reasoning-wires-rs:verify-wires-document-contract",
     "verify-wires-window-transient": "bun repo run @semio-tech/reasoning-wires-rs:verify-wires-window-transient"

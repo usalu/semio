@@ -20,13 +20,13 @@ fn mesh_component_vertices_match_evaluated_topology_fixtures() {
 #[test]
 fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
     let _serial = crate::test_serial::lock();
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let mut owned_session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     let session = &mut owned_session;
     {
         let ids = ["extrude@meshOut#0.face.0".into()];
         assert!(validate_cached_components(&snapshot.host_snapshot, session, &ids, None).is_err());
-        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host_session(&snapshot.host_snapshot, session, |host, session| {
+        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, |host, session| {
             host.evaluate().unwrap();
             session.capture_baseline_from(host);
         });
@@ -34,7 +34,7 @@ fn mesh_component_cached_validation_rejects_stale_indices_without_evaluation() {
         for mode in ["face", "edge", "vertex"] {
             assert!(validate_cached_components(&snapshot.host_snapshot, session, &[format!("extrude@meshOut#0.{mode}.999999")], None).is_err());
         }
-        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host_session(&snapshot.host_snapshot, session, |host, session| {
+        semio_s_artifact_procedural_3d_model::with_host_session(&snapshot.host_snapshot, session, |host, session| {
             let (id, _, _) = semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::ensure_component_node(host, &ids, "translate").unwrap();
             validate_cached_components(&host.host_snapshot, session, &[format!("{id}@meshOut#0.face.0")], None).unwrap();
             host.set_neuron_params("extrude", r#"{"distance":{"$schema":"number","value":0.7}}"#).unwrap();

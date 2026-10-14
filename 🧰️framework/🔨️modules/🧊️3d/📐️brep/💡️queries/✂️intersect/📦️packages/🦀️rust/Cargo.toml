@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-intersect"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Curve/curve, curve/surface and surface/surface intersection of the 3D boundary-representation kernel"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-representation.workspace = true
+
+[dev-dependencies]
+semio-framework-async-macros.workspace = true
+semio-framework-geometry.workspace = true

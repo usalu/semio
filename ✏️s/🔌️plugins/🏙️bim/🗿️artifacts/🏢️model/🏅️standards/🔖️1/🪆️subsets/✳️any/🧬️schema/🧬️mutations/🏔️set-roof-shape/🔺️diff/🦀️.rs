@@ -3,7 +3,7 @@
 
 use super::super::horizontal_rules::{overhang_fault, shape_fault};
 use super::SetRoofShape;
-use crate::{Entry, ModelDiff, ModelSnapshot, RoofPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RoofPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetRoofShape, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

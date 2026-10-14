@@ -5,11 +5,12 @@ use semio_framework_value::DslValue;
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayRoot};
 use std::collections::BTreeMap;
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{create_widget, update_widget, delete_widget, connect_synapse, update_synapse, disconnect_synapse, move_widget, delete_widget_position, update_camera, change_schema, create_generation, delete_generation, rename_generation, change_generation_value, change_slider_value, drag_transforms, rotate_transforms, scale_transforms, move_nodes, change_widget_input, select_generation, change_generation_preview};
+#[cfg(test)] use semio_s_artifact_procedural_3d_mutations::{create_widget, update_widget, delete_widget, connect_synapse, update_synapse, disconnect_synapse, move_widget, delete_widget_position, update_camera, change_schema, create_generation, delete_generation, rename_generation, change_generation_value, change_slider_value, drag_transforms, rotate_transforms, scale_transforms, move_nodes, change_widget_input, select_generation, change_generation_preview};
 
 fn is_false(value: &bool) -> bool { !value }
 
-use crate::standards::v1::subsets::any::schema::{Generation3dArtifact, Generation3dPreviewCamera};
+use semio_s_artifact_procedural_3d_model::Generation3dArtifact;
+use semio_s_artifact_procedural_3d_model::Generation3dPreviewCamera;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -34,7 +35,23 @@ pub struct Generation3dPreviewCamera {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::catalogue::{Localized, Quality, PortType, ShapeKind, SelectionComponent, Selection, EnumOption, Port, PickComponent, Pick, GumballMotion, Along, Gumball, Interaction, Kind, Category, CategoryFile};
+use semio_s_artifact_procedural_3d_model::catalogue::Localized;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
+use semio_s_artifact_procedural_3d_model::catalogue::PortType;
+use semio_s_artifact_procedural_3d_model::catalogue::ShapeKind;
+use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;
+use semio_s_artifact_procedural_3d_model::catalogue::Selection;
+use semio_s_artifact_procedural_3d_model::catalogue::EnumOption;
+use semio_s_artifact_procedural_3d_model::catalogue::Port;
+use semio_s_artifact_procedural_3d_model::catalogue::PickComponent;
+use semio_s_artifact_procedural_3d_model::catalogue::Pick;
+use semio_s_artifact_procedural_3d_model::catalogue::GumballMotion;
+use semio_s_artifact_procedural_3d_model::catalogue::Along;
+use semio_s_artifact_procedural_3d_model::catalogue::Gumball;
+use semio_s_artifact_procedural_3d_model::catalogue::Interaction;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Category;
+use semio_s_artifact_procedural_3d_model::catalogue::CategoryFile;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -255,7 +272,7 @@ pub struct CategoryFile {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::snapshot::{Generation3dSnapshot};
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -266,7 +283,20 @@ pub struct Generation3dSnapshot {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dWidgetsDelta, Generation3dSynapsesDelta, Generation3dGenerationsDelta, Generation3dDiff, Generation3dWidgetPatch, Generation3dLayoutRow, Generation3dLayoutDelta, Generation3dGenerationPatch, Generation3dValueRow, Generation3dValuesDelta, Generation3dSelectionChange, Generation3dPreviewChange, Generation3dStringList, Generation3dSynapsePatch};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetsDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapsesDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationsDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dLayoutRow;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dLayoutDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dValueRow;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dValuesDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSelectionChange;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dPreviewChange;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dStringList;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapsePatch;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -369,7 +399,7 @@ value_codec! {
 pub struct Generation3dSynapsePatch(pub SynapseSpec);
 }
 
-use crate::standards::v1::subsets::any::schema::inferences::{Generation3dInference};
+use semio_s_artifact_procedural_3d_inferences::Generation3dInference;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -380,7 +410,7 @@ pub struct Generation3dInference {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::inferences::topology::{Generation3dTopology};
+use semio_s_artifact_procedural_3d_inferences::topology::Generation3dTopology;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -394,7 +424,13 @@ pub struct Generation3dTopology {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::{GeometryWire, GeometryDependencyLiteral, GeometryDependency, Generation3dFaultRecord, Generation3dOutputRecord, Generation3dWidgetRecord, Generation3dGeometryRecord};
+use semio_s_artifact_procedural_3d_geometry::GeometryWire;
+use semio_s_artifact_procedural_3d_geometry::GeometryDependencyLiteral;
+use semio_s_artifact_procedural_3d_geometry::GeometryDependency;
+use semio_s_artifact_procedural_3d_geometry::Generation3dFaultRecord;
+use semio_s_artifact_procedural_3d_geometry::Generation3dOutputRecord;
+use semio_s_artifact_procedural_3d_geometry::Generation3dWidgetRecord;
+use semio_s_artifact_procedural_3d_geometry::Generation3dGeometryRecord;
 
 value_codec! {
 #[derive(ToValue)]
@@ -485,7 +521,10 @@ pub struct Generation3dGeometryRecord {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::service::{GeometryCursor, GeometryProgress, GeometryWidgetResult, GeometryResult};
+use semio_s_artifact_procedural_3d_geometry::service::GeometryCursor;
+use semio_s_artifact_procedural_3d_geometry::service::GeometryProgress;
+use semio_s_artifact_procedural_3d_geometry::service::GeometryWidgetResult;
+use semio_s_artifact_procedural_3d_geometry::service::GeometryResult;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -533,7 +572,7 @@ pub struct GeometryResult {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -564,7 +603,7 @@ pub enum Generation3dMutation {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::create_widget::{CreateWidget};
+use semio_s_artifact_procedural_3d_mutations::create_widget::CreateWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -575,7 +614,7 @@ pub struct CreateWidget {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::update_widget::{UpdateWidget};
+use semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -585,7 +624,7 @@ pub struct UpdateWidget {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget::{DeleteWidget};
+use semio_s_artifact_procedural_3d_mutations::delete_widget::DeleteWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -595,7 +634,7 @@ pub struct DeleteWidget {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::{ConnectSynapse};
+use semio_s_artifact_procedural_3d_mutations::connect_synapse::ConnectSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -606,7 +645,7 @@ pub struct ConnectSynapse {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::update_synapse::{UpdateSynapse};
+use semio_s_artifact_procedural_3d_mutations::update_synapse::UpdateSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -616,7 +655,7 @@ pub struct UpdateSynapse {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::{DisconnectSynapse};
+use semio_s_artifact_procedural_3d_mutations::disconnect_synapse::DisconnectSynapse;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -626,7 +665,7 @@ pub struct DisconnectSynapse {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::move_widget::{MoveWidget};
+use semio_s_artifact_procedural_3d_mutations::move_widget::MoveWidget;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -637,7 +676,7 @@ pub struct MoveWidget {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::{DeleteWidgetPosition};
+use semio_s_artifact_procedural_3d_mutations::delete_widget_position::DeleteWidgetPosition;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -647,7 +686,7 @@ pub struct DeleteWidgetPosition {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::update_camera::{UpdateCamera};
+use semio_s_artifact_procedural_3d_mutations::update_camera::UpdateCamera;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -657,7 +696,7 @@ pub struct UpdateCamera {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_schema::{ChangeSchema};
+use semio_s_artifact_procedural_3d_mutations::change_schema::ChangeSchema;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -667,7 +706,7 @@ pub struct ChangeSchema {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::create_generation::{CreateGeneration};
+use semio_s_artifact_procedural_3d_mutations::create_generation::CreateGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -678,7 +717,7 @@ pub struct CreateGeneration {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::delete_generation::{DeleteGeneration};
+use semio_s_artifact_procedural_3d_mutations::delete_generation::DeleteGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -688,7 +727,7 @@ pub struct DeleteGeneration {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::rename_generation::{RenameGeneration};
+use semio_s_artifact_procedural_3d_mutations::rename_generation::RenameGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -699,7 +738,7 @@ pub struct RenameGeneration {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::{ChangeGenerationValue};
+use semio_s_artifact_procedural_3d_mutations::change_generation_value::ChangeGenerationValue;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -711,7 +750,7 @@ pub struct ChangeGenerationValue {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::{ChangeSliderValue};
+use semio_s_artifact_procedural_3d_mutations::change_slider_value::ChangeSliderValue;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -722,7 +761,7 @@ pub struct ChangeSliderValue {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::{DragTransforms};
+use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -735,7 +774,7 @@ pub struct DragTransforms {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::{RotateTransforms};
+use semio_s_artifact_procedural_3d_mutations::rotate_transforms::RotateTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -749,7 +788,7 @@ pub struct RotateTransforms {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::{ScaleTransforms};
+use semio_s_artifact_procedural_3d_mutations::scale_transforms::ScaleTransforms;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -762,7 +801,7 @@ pub struct ScaleTransforms {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::{MoveNodes};
+use semio_s_artifact_procedural_3d_mutations::move_nodes::MoveNodes;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -774,7 +813,9 @@ pub struct MoveNodes {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputPlane, WidgetInputValue, ChangeWidgetInput};
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::ChangeWidgetInput;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -814,7 +855,7 @@ pub struct ChangeWidgetInput {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::select_generation::{SelectGeneration};
+use semio_s_artifact_procedural_3d_mutations::select_generation::SelectGeneration;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -824,7 +865,7 @@ pub struct SelectGeneration {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_preview::{ChangeGenerationPreview};
+use semio_s_artifact_procedural_3d_mutations::change_generation_preview::ChangeGenerationPreview;
 
 value_codec! {
 #[derive(ToValue, FromValue)]
@@ -834,7 +875,10 @@ pub struct ChangeGenerationPreview {
 }
 }
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dWidgetRemoval, Generation3dWidgetInsertion, Generation3dWidgetRelocation, Generation3dWidgetModification};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetRemoval;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetInsertion;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetRelocation;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetModification;
 value_codec! {
 #[value(rename_all = "camelCase")]
 pub struct Generation3dWidgetRemoval { pub id: String, pub index: usize, }
@@ -855,7 +899,10 @@ value_codec! {
 #[value(rename_all = "camelCase", default)]
 pub struct Generation3dWidgetsDelta { pub removed: Vec<Generation3dWidgetRemoval>, pub inserted: Vec<Generation3dWidgetInsertion>, pub moved: Vec<Generation3dWidgetRelocation>, pub modified: Vec<Generation3dWidgetModification>, }
 }
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapseRemoval, Generation3dSynapseInsertion, Generation3dSynapseRelocation, Generation3dSynapseModification};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapseRemoval;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapseInsertion;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapseRelocation;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapseModification;
 value_codec! {
 #[value(rename_all = "camelCase")]
 pub struct Generation3dSynapseRemoval { pub id: String, pub index: usize, }
@@ -876,7 +923,10 @@ value_codec! {
 #[value(rename_all = "camelCase", default)]
 pub struct Generation3dSynapsesDelta { pub removed: Vec<Generation3dSynapseRemoval>, pub inserted: Vec<Generation3dSynapseInsertion>, pub moved: Vec<Generation3dSynapseRelocation>, pub modified: Vec<Generation3dSynapseModification>, }
 }
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dGenerationRemoval, Generation3dGenerationInsertion, Generation3dGenerationRelocation, Generation3dGenerationModification};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationRemoval;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationInsertion;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationRelocation;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationModification;
 value_codec! {
 #[value(rename_all = "camelCase")]
 pub struct Generation3dGenerationRemoval { pub id: String, pub index: usize, }

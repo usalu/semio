@@ -1,5 +1,9 @@
 //! 🔥️❄️ Heating and cooling coils: electric, gas, water, DX with bypass factor.
 
+extern crate semio_s_plugin_energy_engine_curves as curves;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::curves::PerformanceCurve;
 use crate::props::{latent_heat_vaporization, moist_air_enthalpy_j_per_kg, saturation_pressure_pa};
 use crate::units::{CP_DRY_AIR, H_FG_0C};

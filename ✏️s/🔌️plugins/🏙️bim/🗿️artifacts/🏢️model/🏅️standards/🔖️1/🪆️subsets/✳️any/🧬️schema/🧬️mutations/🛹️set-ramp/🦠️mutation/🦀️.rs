@@ -1,6 +1,6 @@
 //! 📈️ `set-ramp` payload. Sets any of a ramp's authored path, width, landing lengths, slope limit, thickness, material, base offset, top constraint, side railings and name; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, RampPatch, TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::RampPatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint, Vertex}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

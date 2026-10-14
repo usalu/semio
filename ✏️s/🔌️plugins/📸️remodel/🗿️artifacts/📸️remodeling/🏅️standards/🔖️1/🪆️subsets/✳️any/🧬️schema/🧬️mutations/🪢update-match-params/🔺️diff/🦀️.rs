@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `UpdateMatchParams` — the field is always present, so there is no
 //! missing-target case. A non-finite or out-of-range `ratio_test` ⇒ Fatal `mutation.invariant`;
 //! identical params ⇒ Warning `mutation.no-op`.
-use crate::diff::{RemodelingDiff, RemodelingParamsDiff};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingParamsDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateMatchParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

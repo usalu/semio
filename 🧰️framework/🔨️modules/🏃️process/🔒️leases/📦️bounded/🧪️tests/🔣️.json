@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "cases": [
+    {"maximumDatabaseBytes": 16384, "accepted": true, "maximumPages": 4},
+    {"maximumDatabaseBytes": 32768, "accepted": true, "maximumPages": 8},
+    {"maximumDatabaseBytes": 0, "accepted": false},
+    {"maximumDatabaseBytes": 16385, "accepted": false},
+    {"maximumDatabaseBytes": 2097152, "accepted": false}
+  ]
+}

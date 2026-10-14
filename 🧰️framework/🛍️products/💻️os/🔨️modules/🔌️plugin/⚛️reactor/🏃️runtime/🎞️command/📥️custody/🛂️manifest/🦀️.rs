@@ -84,17 +84,24 @@ impl OriginalManifestCommandReceiving{
 impl Drop for OriginalManifestCommandReceiving{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original manifest command requires paid source return before drop")}}
 
 /// 📦️ Decoded wire and its manifest receiving continuation share one persistent source owner.
-pub struct OriginalDecodedPluginCommand{wire:protocol::DecodedAppCommandOwner,pub(crate) command_seq:Option<u64>,artifact:bool,pub(crate) receiving:ManuallyDrop<Option<OriginalManifestCommandReceiving>>}
+pub struct OriginalDecodedPluginCommand{wire:protocol::DecodedAppCommandOwner,pub(crate) command_seq:Option<u64>,artifact:bool,pub(crate) receiving:ManuallyDrop<Option<OriginalManifestCommandReceiving>>,media_submission:ManuallyDrop<Option<ArtifactMediaExportHandle>>,media_submission_close:ManuallyDrop<Option<ControlledRetirement<ArtifactMediaExportHandle>>>}
 impl OriginalDecodedPluginCommand{
- pub(crate) fn new(command:protocol::AppCommand)->Self{let command_seq=match &command{protocol::AppCommand::Command{seq,..}|protocol::AppCommand::ArtifactCommand{seq,..}=>Some(*seq),_=>None};let artifact=matches!(&command,protocol::AppCommand::ArtifactCommand{..});Self{wire:protocol::DecodedAppCommandOwner::new(command),command_seq,artifact,receiving:ManuallyDrop::new(None)}}
+ pub(crate) fn new(command:protocol::AppCommand)->Self{let command_seq=match &command{protocol::AppCommand::Command{seq,..}|protocol::AppCommand::ArtifactCommand{seq,..}=>Some(*seq),_=>None};let artifact=matches!(&command,protocol::AppCommand::ArtifactCommand{..});Self{wire:protocol::DecodedAppCommandOwner::new(command),command_seq,artifact,receiving:ManuallyDrop::new(None),media_submission:ManuallyDrop::new(None),media_submission_close:ManuallyDrop::new(None)}}
  pub(crate) fn original_command(&self)->Option<&protocol::AppCommand>{self.wire.original_command()}
+ pub(crate) fn media_submission_parts(&mut self)->Result<(&str,&str,u64,&mut Option<ArtifactMediaExportHandle>),OriginalTurnFailure>{match self.wire.original_command(){Some(protocol::AppCommand::SubmitMediaExport{port,expected_parent_document_id,expected_base_revision,..})=>Ok((port,expected_parent_document_id,*expected_base_revision,&mut self.media_submission)),_=>Err(refusal("media submission requires its retained decoded command"))}}
+ pub(crate) fn take_media_submission(&mut self)->Option<ArtifactMediaExportHandle>{self.media_submission.take()}
+
  pub(crate) fn configuration_bytes_mut(&mut self)->Result<&mut Vec<u8>,OriginalTurnFailure>{match self.wire.original_command_mut(){Some(protocol::AppCommand::ConfigCommand{command,..})=>Ok(command),_=>Err(refusal("original configuration receiving requires its retained decoded wire owner"))}}
  pub(crate) fn command_parts(&mut self)->Result<(&mut Vec<u8>,&[u8],&mut Option<OriginalManifestCommandReceiving>),OriginalTurnFailure>{match self.wire.original_command_mut(){Some(protocol::AppCommand::Command{command,view_state,..})=>Ok((command,view_state,&mut self.receiving)),Some(protocol::AppCommand::ArtifactCommand{command,..})=>Ok((command,&[],&mut self.receiving)),_=>Err(refusal("original manifest receiving requires its retained command frame"))}}
  pub(crate) fn take_for_dispatch(&mut self)->Option<protocol::AppCommand>{if self.receiving.is_some(){None}else{self.wire.take_for_dispatch()}}
- pub(crate) fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.receiving.is_some(){let(source,_,receiving)=self.command_parts()?;let owner=receiving.as_mut().unwrap();if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_is_empty(){return Ok(false)}if !paid(cx,0)?{return Ok(false)}receiving.take();return Ok(false)}self.wire.close_original_step(cx)}
- pub(crate) fn close_step(&mut self,bytes:usize)->(bool,usize,usize){if self.receiving.is_some(){(false,0,0)}else{self.wire.close_step(bytes)}}
- pub(crate) fn terminal_is_empty(&self)->bool{self.receiving.is_none()&&self.wire.terminal_is_empty()}
+ pub(crate) fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.media_submission.is_some()||self.media_submission_close.is_some(){let demand=crate::bounded_ownership::plugin_typed_owner_demand(&self.media_submission,&self.media_submission_close,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|crate::bounded_ownership::plugin_typed_owner_step(&mut self.media_submission,&mut self.media_submission_close,grant))?;return Ok(false)}
+  if self.receiving.is_some(){let(source,_,receiving)=self.command_parts()?;let owner=receiving.as_mut().unwrap();if !owner.close_step(cx)?{return Ok(false)}if !owner.terminal_is_empty(){return Ok(false)}if !paid(cx,0)?{return Ok(false)}receiving.take();return Ok(false)}self.wire.close_original_step(cx)}
+ pub(crate) fn close_step(&mut self,bytes:usize)->(bool,usize,usize){if self.receiving.is_some()||self.media_submission.is_some()||self.media_submission_close.is_some(){(false,0,0)}else{self.wire.close_step(bytes)}}
+ pub(crate) fn terminal_is_empty(&self)->bool{self.receiving.is_none()&&self.media_submission.is_none()&&self.media_submission_close.is_none()&&self.wire.terminal_is_empty()}
 }
+
+impl Drop for OriginalDecodedPluginCommand{fn drop(&mut self){assert!(std::thread::panicking()||self.media_submission.is_none()&&self.media_submission_close.is_none(),"original media submission requires paid handle return before decoded owner drop")}}
 
 #[derive(Debug,semio_framework_value::RetireOwned)]
 struct OriginalCommandPackFailure{original:store::os_pack::PackRefusal}

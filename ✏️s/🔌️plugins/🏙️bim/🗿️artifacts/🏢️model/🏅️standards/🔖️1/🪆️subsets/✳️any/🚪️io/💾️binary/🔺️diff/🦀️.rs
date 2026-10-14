@@ -4,7 +4,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-use crate::ModelDiff;
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
 
 impl protocol::DiffBinary for ModelDiff {
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

@@ -6,7 +6,7 @@
 use super::super::{component_rules, elements};
 use super::super::wall_geometry::{snap, split, Split};
 use super::SplitWall;
-use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot, Opening, OpeningPatch, Wall, WallPatch, WallSweep};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::{ModelSnapshot, Opening, Wall, WallSweep}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -34,7 +34,7 @@ pub fn diff(payload: &SplitWall, base: &ModelSnapshot) -> MutationOutcome<ModelD
     let moved: BTreeMap<String, Entry<Opening, OpeningPatch>> = carried(base, &payload.id, parts.at)
         .map(|(id, opening)| (id.clone(), Entry::Patched(OpeningPatch { host: Some(payload.new_id.clone()), offset: Some(snap(opening.offset - parts.at)), ..Default::default() })))
         .collect();
-    let swept: BTreeMap<String, Entry<WallSweep, crate::WallSweepPatch>> = base.wall_sweeps.iter().filter(|(_, sweep)| sweep.host == payload.id).map(|(id, sweep)| (format!("{id}-{}", payload.new_id), Entry::Created(WallSweep { host: payload.new_id.clone(), ..sweep.clone() }))).collect();
+    let swept: BTreeMap<String, Entry<WallSweep, crate::standards::v1::subsets::any::schema::diff::patches::WallSweepPatch>> = base.wall_sweeps.iter().filter(|(_, sweep)| sweep.host == payload.id).map(|(id, sweep)| (format!("{id}-{}", payload.new_id), Entry::Created(WallSweep { host: payload.new_id.clone(), ..sweep.clone() }))).collect();
     if let Some((noun, id)) = swept.keys().find_map(|id| elements::taken(base, id).map(|noun| (noun, id))) {
         return MutationOutcome::refuse(OutcomeCode::DuplicateId, format!("{noun} \"{id}\" already exists."), [id.clone()]);
     }

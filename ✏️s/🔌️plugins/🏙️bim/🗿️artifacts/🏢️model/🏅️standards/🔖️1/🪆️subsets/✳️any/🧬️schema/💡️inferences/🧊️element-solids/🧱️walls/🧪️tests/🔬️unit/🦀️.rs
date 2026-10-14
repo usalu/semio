@@ -1,5 +1,5 @@
 use super::*;
-use crate::TopConstraint;
+use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, fixtures::case, ElementSolid};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
 use semio_framework_geometry::mesh::TriMesh;
@@ -186,7 +186,7 @@ async fn every_wall_of_the_join_fixture_fills_exactly_its_trimmed_footprint() {
     let (layouts, solids) = (compute_wall_layout(&snapshot), compute_element_solids(&snapshot));
     assert_eq!(solids.len(), snapshot.walls.len());
     for (id, wall) in &snapshot.walls {
-        let curved = matches!(wall.axis, crate::Axis::Arc { .. }) || layouts[id].footprint.iter().any(|vertex| vertex.bulge.abs() > 1e-12);
+        let curved = matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { .. }) || layouts[id].footprint.iter().any(|vertex| vertex.bulge.abs() > 1e-12);
         let tolerance = if curved { 1e-4 } else { 1e-9 };
         assert!(close(solids[id].volume, layouts[id].volume, tolerance), "{id}: solid {} against footprint {}", solids[id].volume, layouts[id].volume);
         let layers = snapshot.wall_types[&wall.wall_type].layers.len();

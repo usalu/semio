@@ -1,0 +1,11 @@
+# Fixed Bazel Module Setup
+
+Pinned Bazel 8.4.2's own startup/build help admits `--incompatible_autoload_externally=` and documents its default external Java/protobuf autoloads. An actual cold custom `ctx.actions.write` rule with an empty autoload list, empty repository cache, disabled downloads and an unreachable registry still failed while resolving protobuf module metadata. The embedded `bazel_tools/MODULE.bazel` declares that catalog unconditionally; suppressing autoloads does not suppress module graph resolution.
+
+A separate setup proof built the fixed `semio_tasks` module with a shared repository cache and an admitted lock file in 6.634 seconds. A brand-new workspace and output base then built the same custom rule in 0.946 seconds with the copied lock, `lockfile_mode=error`, downloads disabled, all proxy variables pointing at an unreachable address, and an empty NO_PROXY. This established a shared tool setup requirement rather than warming an individual task namespace.
+
+The backend now prepares that fixed catalog once per pinned Bazel version, platform and architecture under the original caller's signal, progress and remaining deadline. Setup intersects its two-minute ceiling with the original budget. An authored schema admits its receipt; subsequent invocations validate the lock checksum and every content-addressed repository blob before use. Offline authority with missing executable or module setup fails before starting a downloader. The original native network grant comes from the shared canonical build caller boundary and is never widened.
+
+Each selection receives the identical module declaration and validated seed lock, reuses the shared repository cache, disables external autoloads and repository downloads, and requires an up-to-date lock. The actual integration includes a new random task selection on every run, so the final offline proof cannot reuse an already warmed selection or output base. The final hostile-proxy suite passed eight tests and 82 assertions, including that cold direct task execution.
+
+Temporary cold/help/module probes ran with Bazel's batch mode and left no persistent ticket-owned server. Authored probe inputs are retained; their generated workspaces, extracted products and logs remain beneath the ticket's generated folder for final cleanup.

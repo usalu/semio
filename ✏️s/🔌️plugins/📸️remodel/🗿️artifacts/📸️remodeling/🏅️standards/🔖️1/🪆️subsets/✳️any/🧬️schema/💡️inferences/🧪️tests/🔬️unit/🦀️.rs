@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::seed_remodeling_mesh;
+use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io::seed_remodeling_mesh;
 use protocol::Inference;
 use semio_framework::MeshData;
 

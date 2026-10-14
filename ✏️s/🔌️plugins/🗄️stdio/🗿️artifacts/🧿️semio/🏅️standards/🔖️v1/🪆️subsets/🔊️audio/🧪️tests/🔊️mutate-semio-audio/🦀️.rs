@@ -35,11 +35,16 @@ mod subject {
     use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio_audio::schema::mutations::{diff_semio_audio_mutation, inverse_semio_audio_mutation, SemioAudioMutation};
-    use semio_s_artifact_stdio_semio_audio::io::text::mutations::decode_semio_audio_mutation_json;
-    use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-    use semio_s_artifact_stdio_semio_audio::io::text::snapshot::print_semio_audio_dsl;
-    use semio_s_artifact_stdio_semio_audio::io::text::snapshot::parse_semio_audio_dsl;
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::diff_semio_audio_mutation;
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::inverse_semio_audio_mutation;
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
+    use semio_s_artifact_stdio_semio_audio_mutations::io::text::mutations::decode_semio_audio_mutation_json;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
+    use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::print_semio_audio_dsl;
+    use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::parse_semio_audio_dsl;
 
     /// 🎤️ The document every mutation row runs on: the first real second of the real committed
     /// "Bauen mit Bestand" recording — 8 000 real 16-bit PCM samples at the file's own 8 000 Hz —

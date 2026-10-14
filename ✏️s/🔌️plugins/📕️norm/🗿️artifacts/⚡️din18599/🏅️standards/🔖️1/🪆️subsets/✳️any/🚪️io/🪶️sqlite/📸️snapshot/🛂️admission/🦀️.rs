@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn plant(root:&R)->Result<Option<&R>,ValueError>{let cooling=n::record(n::field(root,14)?)?;match n::field(cooling,0)?{F::Absent=>Ok(None),value=>n::record(value).map(Some)}}
 fn count(root:&R)->Result<usize,ValueError>{let rows=n::add(20,n::list(n::field(root,9)?)?.len())?;n::add(n::add(rows,n::list(n::field(root,10)?)?.len())?,usize::from(plant(root)?.is_some()))}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

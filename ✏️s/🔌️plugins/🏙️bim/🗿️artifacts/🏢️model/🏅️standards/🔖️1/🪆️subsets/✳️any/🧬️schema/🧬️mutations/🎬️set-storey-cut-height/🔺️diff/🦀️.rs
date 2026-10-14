@@ -2,7 +2,7 @@
 //! a positive length; restating the current value is a no-op. Nothing else is written: only the plan view reads it.
 
 use super::SetStoreyCutHeight;
-use crate::{cut_height_problem, Assigned, Entry, ModelDiff, ModelSnapshot, StoreyPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{cut_height_problem, ModelSnapshot}, diff::{Assigned, Entry, ModelDiff, patches::StoreyPatch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetStoreyCutHeight, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

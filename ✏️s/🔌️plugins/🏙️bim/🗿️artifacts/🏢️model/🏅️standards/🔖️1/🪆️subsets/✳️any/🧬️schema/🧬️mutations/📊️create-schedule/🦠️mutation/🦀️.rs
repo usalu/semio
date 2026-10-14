@@ -1,6 +1,6 @@
 //! 📊️ `create-schedule` payload. Brings a new schedule into the model: the authored definition (category, columns, sort, filter, grouping, scope) of a table whose rows and totals are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Schedule};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Schedule}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

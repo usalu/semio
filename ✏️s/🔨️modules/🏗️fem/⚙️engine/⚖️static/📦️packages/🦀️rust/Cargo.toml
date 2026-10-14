@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-fem-static"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Linear static analysis over the closed fem element set"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dispatch-macros = { workspace = true }
+semio-s-fem-algebra = { workspace = true }
+semio-s-fem-elements2d = { workspace = true }
+semio-s-fem-elements3d = { workspace = true }
+semio-s-fem-model = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-formulation = { workspace = true }
+serde_json = { workspace = true }

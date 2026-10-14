@@ -81,17 +81,17 @@ fn widget_drag_json(item: &semio_framework_os_flow::CatalogueItem) -> semio_fram
 }
 
 fn click_args(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut pairs = vec![("kind", crate::ui_value_text(if item.kind == "neuron" { "neuron" } else { item.kind.as_str() })?)];
+    let mut pairs = vec![("kind", semio_s_procedural_core_semantic_ui::ui_value_text(if item.kind == "neuron" { "neuron" } else { item.kind.as_str() })?)];
     if item.kind == "neuron" {
-        pairs.push(("neuronKind", crate::ui_value_text(item.neuron_kind.as_deref().unwrap_or("math.add"))?));
+        pairs.push(("neuronKind", semio_s_procedural_core_semantic_ui::ui_value_text(item.neuron_kind.as_deref().unwrap_or("math.add"))?));
     }
     if let Some(format) = item.format.as_deref() {
-        pairs.push(("format", crate::ui_value_text(format)?));
+        pairs.push(("format", semio_s_procedural_core_semantic_ui::ui_value_text(format)?));
     }
     if let Some(action) = item.action.as_deref() {
-        pairs.push(("action", crate::ui_value_text(action)?));
+        pairs.push(("action", semio_s_procedural_core_semantic_ui::ui_value_text(action)?));
     }
-    crate::ui_value_map(pairs)
+    semio_s_procedural_core_semantic_ui::ui_value_map(pairs)
 }
 
 fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -99,7 +99,7 @@ fn catalogue_row(item: &semio_framework_os_flow::CatalogueItem) -> semio_framewo
     let icon = if item.icon.starts_with("emoji:") { "box" } else { item.icon.as_str() };
     let mut node = tree_item_with_action_draggable(item_key(item), item.name.clone(), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("addWidget", Some(click_args(item)?))?, &drag)?;
     if let Component::TreeItem(props) = &mut node.component {
-        props.icon = Some(crate::ui_text(icon)?);
+        props.icon = Some(semio_s_procedural_core_semantic_ui::ui_text(icon)?);
     }
     Ok(node)
 }
@@ -111,7 +111,7 @@ fn group_id(section: &semio_framework_os_flow::CatalogueSection) -> String {
 /// 🗂️ A palette group whose children are that group's own window. The group row is not a pick target.
 fn group_row(windows: &TreeWindows<'_>, section: &semio_framework_os_flow::CatalogueSection, default_open: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let id = group_id(section);
-    let item = semio_framework_ui_contract::tree_item(crate::ui_label(section.title.as_str())?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
+    let item = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(section.title.as_str())?).try_id(&id).map_err(|_| catalogue_error("group.id"))?;
     tree_window_item(windows, item, &id, default_open, &section.items, catalogue_row)
 }
 
@@ -120,9 +120,9 @@ pub fn render(labels: &Generation2dLabels, windows: &TreeWindows<'_>) -> semio_f
     let first_group = sections.first().map(|section| section.id.clone()).unwrap_or_default();
     let modes = ["preview", "generate", "wire"];
     PanelTreeBuilder::new("procedural2d-play-catalogue")?
-        .window_section(windows, GENERATION2D_PLAY_CATALOGUE_SECTION, Some(crate::ui_label(labels.components.as_str())?), true, &sections, |section| group_row(windows, section, section.id == first_group))?
-        .window_section(windows, "procedural2d-play-catalogue.modes", Some(crate::ui_label(labels.show_mode_section.as_str())?), false, &modes, |mode| {
-            let args = crate::ui_value_map([("value", crate::ui_value_text(mode)?)])?;
+        .window_section(windows, GENERATION2D_PLAY_CATALOGUE_SECTION, Some(semio_s_procedural_core_semantic_ui::ui_label(labels.components.as_str())?), true, &sections, |section| group_row(windows, section, section.id == first_group))?
+        .window_section(windows, "procedural2d-play-catalogue.modes", Some(semio_s_procedural_core_semantic_ui::ui_label(labels.show_mode_section.as_str())?), false, &modes, |mode| {
+            let args = semio_s_procedural_core_semantic_ui::ui_value_map([("value", semio_s_procedural_core_semantic_ui::ui_value_text(mode)?)])?;
             tree_item_with_action(format!("procedural2d-play-catalogue.mode.{mode}"), format!("{} {mode}", labels.show_prefix.as_str()), None, ActionFactory::new(GENERATION2D_PLAY_APP_ID).action("setShowMode", Some(args))?)
         })?
         .build()

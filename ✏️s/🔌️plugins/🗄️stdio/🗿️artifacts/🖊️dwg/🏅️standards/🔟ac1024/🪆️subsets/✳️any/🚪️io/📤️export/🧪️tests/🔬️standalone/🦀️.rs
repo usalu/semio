@@ -28,34 +28,54 @@ fn r2010_object_inventory(sections: &[DwgRawSection]) -> Result<Vec<(u64, u16)>,
 }
 
 #[cfg(test)]
+/// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.
+#[cfg(test)]
+fn fixture(relative: &str) -> Vec<u8> {
+    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+}
+
+#[cfg(test)]
 #[test]
 fn schema_facets_reject_imported_byte_shadow_state() {
     let facets = [
-        include_str!("../../../../🧬️schema/📸️snapshot/🦀️.rs"),
-        include_str!("../../../../🧬️schema/📸️snapshot/🟦️.ts"),
-        include_str!("../../../../🧬️schema/📸️snapshot/🔣️.json"),
-        include_str!("../../../📝️text/📸️snapshot/🔗️.graphql"),
-        include_str!("../../../📝️text/📸️snapshot/🛰️.proto"),
-        include_str!("../../../../🧬️schema/🧬️mutations/🟦️.ts"),
-        include_str!("../../../../🧬️schema/🧬️mutations/🔣️.json"),
-        include_str!("../../../../🧬️schema/🧬️mutations/🔗️.graphql"),
-        include_str!("../../../../🧬️schema/🧬️mutations/🛰️.proto"),
-        include_str!("../../../📝️text/🔺️diff/📖️.grammar.semio"),
-        include_str!("../../../💾️binary/🔺️diff/📡️.protocol.semio"),
-        include_str!("../../../📝️text/🧬️mutations/📖️.grammar.semio"),
-        include_str!("../../../💾️binary/🧬️mutations/📡️.protocol.semio"),
-        include_str!("../../../../🧬️schema/💡️inferences/🦀️.rs"),
-        include_str!("../../../../🧬️schema/💡️inferences/🟦️.ts"),
-        include_str!("../../../../🧬️schema/💡️inferences/🔣️.json"),
-        include_str!("../../../📝️text/💡️inferences/🔗️.graphql"),
-        include_str!("../../../📝️text/💡️inferences/🛰️.proto"),
-        include_str!("../../../📝️text/💡️inferences/📖️.grammar.semio"),
-        include_str!("../../../💾️binary/💡️inferences/🔠️.abnf"),
-        include_str!("../../../💾️binary/💡️inferences/🥋️.ksy"),
-        include_str!("../../../💾️binary/💡️inferences/🌶️.spicy"),
-        include_str!("../../../💾️binary/💡️inferences/📡️.protocol.semio"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/🧮️geometry/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🎛️metadata/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🏷️xrecord/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🗃️tables/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/📐️entities/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🔗️associativity/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🖌️styles/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/🧩️blocks/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📦️objects/📏️constraints/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/✏️drawing/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/🔧️header/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/📄️document/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/🟦️.ts")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/📸️snapshot/🔣️.json")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/📸️snapshot/🔗️.graphql")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/📸️snapshot/🛰️.proto")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/🧬️mutations/🟦️.ts")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/🧬️mutations/🔣️.json")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/🧬️mutations/🔗️.graphql")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/🧬️mutations/🛰️.proto")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/🔺️diff/📖️.grammar.semio")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/🔺️diff/📡️.protocol.semio")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/🧬️mutations/📖️.grammar.semio")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/🧬️mutations/📡️.protocol.semio")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/💡️inferences/🦀️.rs")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/💡️inferences/🟦️.ts")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../../🧬️schema/💡️inferences/🔣️.json")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/💡️inferences/🔗️.graphql")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/💡️inferences/🛰️.proto")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../📝️text/💡️inferences/📖️.grammar.semio")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/💡️inferences/🔠️.abnf")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/💡️inferences/🥋️.ksy")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/💡️inferences/🌶️.spicy")).expect("utf-8 facet"),
+        String::from_utf8(fixture("../../../💾️binary/💡️inferences/📡️.protocol.semio")).expect("utf-8 facet"),
     ];
-    for facet in facets {
+    for facet in &facets {
         for forbidden in
             [concat!("pub decod", "ed:"), concat!("\"decod", "ed\""), concat!("decod", "ed="), concat!("bytes_", "wire"), concat!("\"by", "tes\":"), concat!("source-", "field"), concat!("artifact-", "source"), concat!("semantic-", "blake3")]
         {

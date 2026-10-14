@@ -1,10 +1,10 @@
 use super::*;
 
 /// 🧾️ Preserves actual raster and pool backing through every independently refused full grant.
-#[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn original_raster_lease_full_grant_closes_final_pool_with_physical_receipts() {
-    use crate::wgpu::host::physical_job_close_tests::measured;
+    use crate::test_allocation::observe_backing as measured;
     use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../♻️raster-lease-close/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["rasters"].as_array().unwrap(){for copy in fixture["copyGrants"].as_array().unwrap(){

@@ -1,0 +1,267 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/rust-unit-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "id",
+    "package",
+    "manifest",
+    "target",
+    "mode",
+    "profile",
+    "features",
+    "cfg",
+    "compiler",
+    "arguments",
+    "environment",
+    "inputs",
+    "dependencies",
+    "outputs",
+    "limits",
+    "cfgSnapshot"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+      "maxLength": 200
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "role",
+        "triple",
+        "entry"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "library",
+            "binary",
+            "proc-macro",
+            "build-script",
+            "test",
+            "link"
+          ]
+        },
+        "role": {
+          "enum": [
+            "host",
+            "target"
+          ]
+        },
+        "triple": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+          "maxLength": 200
+        }
+      }
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    },
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "cfg": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "digest",
+        "sysrootDigest",
+        "linkerDigest"
+      ],
+      "properties": {
+        "program": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sysrootDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "linkerDigest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "arguments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "digest",
+          "bytes",
+          "kind"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+            "maxLength": 200
+          },
+          "digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kind": {
+            "enum": [
+              "source",
+              "generated",
+              "configuration",
+              "toolchain"
+            ]
+          }
+        }
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit",
+          "artifactDigest",
+          "externName"
+        ],
+        "properties": {
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "artifactDigest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "externName": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          }
+        }
+      },
+      "uniqueItems": true
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(?!/)(?!.*[\\\\:\\u0000-\\u001f])(?!.*(?:^|/)\\.\\.?(/|$))(?!.*//)[^\\u0000-\\u001f]+$",
+        "maxLength": 200
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumSourceBytes",
+        "maximumSourceFiles",
+        "maximumArtifactBytes"
+      ],
+      "properties": {
+        "maximumSourceBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumSourceFiles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumArtifactBytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "cfgSnapshot": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

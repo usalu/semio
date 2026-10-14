@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🎛️controlled/🟦️.ts";
 import { advanceScriptInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -13,7 +14,7 @@ import { advanceScriptInvocation } from "../../../🏃️process/📦️packages
 class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-diagnostic"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-diagnostic"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -48,7 +49,7 @@ class OriginalDomainSource extends BundleScript {
 }
 /** 🦀️ Original domain custody, exact wire, denied System events and full paid retirement. */
 class OriginalDomainNative extends OriginalDomainSource {
- async run(args:string[]):Promise<void>{await super.run(args);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-diagnostic"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--lib","-E","test(original_fault_domain_wire_same_object_exact_u64_bytes_paid_scalar_denials_and_full_close) | test(controlled_diagnostic_all_owner_corpus_and_exact_admission) | test(controlled_diagnostic_independent_ajv_schema_oracle)","--","--nocapture"]},readCargoTestPolicyV1(process.env));}
+ async run(args:string[]):Promise<void>{await super.run(args);await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-diagnostic"],cwd:this.root,signal:this.invocation.control.signal,remainingMilliseconds:()=>scriptInvocationBudget(this.invocation,0),extraArgs:["--offline","--lib","-E","test(original_fault_domain_wire_same_object_exact_u64_bytes_paid_scalar_denials_and_full_close) | test(controlled_diagnostic_all_owner_corpus_and_exact_admission) | test(controlled_diagnostic_independent_ajv_schema_oracle)","--","--nocapture"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test-original-domain-source",OriginalDomainSource).register("test-original-domain-native",OriginalDomainNative).register("test-native", NativeScript).register("test-controlled-oracle", TestScript).register("test-text-error-portable", TextErrorPortableScript).register("test-source", SourceScript);

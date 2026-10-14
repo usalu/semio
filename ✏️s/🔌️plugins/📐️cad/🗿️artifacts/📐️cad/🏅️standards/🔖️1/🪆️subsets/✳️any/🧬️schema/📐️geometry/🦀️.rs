@@ -22,7 +22,9 @@ use std::collections::HashMap;
 // is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
 // same real mesh→OBJ encoder `⚙️engine/🦀️.rs`'s `export_solids_as` now uses, no
 // reimplementation.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
@@ -56,7 +58,7 @@ pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio_brep:
     let body = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;
     let mut result = MeshData::default();
     for face in body.faces.ids() {
-        let transfer = semio_framework_3d_brep_queries::tessellation::tessellate_face(&body, face, 0.1).map_err(|error| format!("{error:?}"))?;
+        let transfer = semio_framework_3d_brep_tessellation::tessellate_face(&body, face, 0.1).map_err(|error| format!("{error:?}"))?;
         let mut mesh = mesh_data_from_mesh_transfer(&transfer).map_err(|error| format!("{error:?}"))?;
         let offset = (result.positions.len() / 3) as u32;
         for (kind, ids) in [("face", &mut mesh.face_ids), ("edge", &mut mesh.edge_ids), ("vertex", &mut mesh.vertex_ids)] {

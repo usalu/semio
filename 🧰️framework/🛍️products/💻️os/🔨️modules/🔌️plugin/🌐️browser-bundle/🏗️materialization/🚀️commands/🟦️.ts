@@ -137,7 +137,7 @@ export function assembleComponentModuleV1(work: ComponentModuleWorkV1, transpile
 export async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string): Promise<Uint8Array> {
   checkResourceLeaseControl(work.control);
   const vendor = join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile === "wasm-release" ? "release" : "prototype"), PREVIEW2_VENDOR_RELATIVE);
-  if (!existsSync(join(vendor, ".nx-artifact.json"))) throw new Error("Missing browser support prerequisite; run @semio-tech/framework-plugin-web:support");
+  if (!existsSync(join(vendor, ".semio-artifact.json"))) throw new Error("Missing browser support prerequisite; run @semio-tech/framework-plugin-web:support");
   const inputs: Record<string, string> = {};
   for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.control.signal);
   for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.control.signal);

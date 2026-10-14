@@ -1,8 +1,15 @@
 //! 🎚️ Persisted local preferences for one exact CAD world window instance.
+use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
+use semio_s_artifact_cad_cad_config::{CadConfig, cad_sun_config_to_world};
+use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, cad_runtime_from};
+use crate;
+use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
+use semio_framework_plugin::{ConfigView, Fault, ViewModel};
+use std::collections::HashMap;
 
-use crate::editor::cad::config::{CadDislocateOptions, CadSunConfig};
-use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
-use crate::CadCamera;
+use semio_s_artifact_cad_cad_config::{CadDislocateOptions, CadSunConfig};
+use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
+use semio_s_artifact_cad_cad_model::snapshot::CadCamera;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -192,9 +199,9 @@ macro_rules! cad_world_window_config_owner {
             const WINDOW_KIND_ID: &'static str = $kind;
             const SCHEMA: &'static str = "cad.worldwindowconfig";
             const MAXIMUM_PUBLICATION_BYTES: usize = 65_536;
-            type State = crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfig;
-            type Mutation = crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfigMutation;
-            type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfig, crate::editor::cad::modes::edit::windows::config::CadWorldWindowConfigMutation>;
+            type State = crate::windows::config::CadWorldWindowConfig;
+            type Mutation = crate::windows::config::CadWorldWindowConfigMutation;
+            type Edit = store::snapshot_clone_preparation::ConfigApplyEdit<crate::windows::config::CadWorldWindowConfig, crate::windows::config::CadWorldWindowConfigMutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
             fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
                 std::sync::Arc::new(store::snapshot_clone_preparation::ConfigApplyEdit::new())
@@ -233,15 +240,59 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: CadWorldWindo
     }
 }
 
-pub fn addressed_from_context(ctx: &crate::editor::cad::CadDispatchCtx, config: CadWorldWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed_from_context(ctx: &semio_s_artifact_cad_cad_kit::CadDispatchCtx, config: CadWorldWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     addressed(ctx.view_state.as_ref().ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.required: command has no view state"))?, config)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window/🦀️.rs"]
-mod tests;
 
 //#region 🪢️TaxonomyMounts
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
 //#endregion 🪢️TaxonomyMounts
+
+//#region 🔖️Runtime
+/// 🪟️ Maps a pane to the window-KIND id whose Dislocate options it owns — the typed-command
+/// counterpart of the pre-B1 `view_state.window_id` resolution.
+pub fn cad_window_id_for_pane(pane: CadPaneId) -> &'static str {
+    match pane {
+        CadPaneId::Shape => shape::WINDOW_KIND_ID,
+        CadPaneId::Building => building::WINDOW_KIND_ID,
+        CadPaneId::Energy => energy::WINDOW_KIND_ID,
+        CadPaneId::StructureClassic => structure_classic::WINDOW_KIND_ID,
+    }
+}
+/// 🎯️ Resolves the addressed CAD pane from the host's concrete window instance.
+pub fn cad_pane_from_view(view: &ViewModel) -> Result<CadPaneId, Fault> {
+    let window_id = view.window_id.as_deref().ok_or_else(|| Fault::from("cad.window.invalid: command has no addressed window instance"))?;
+    let window_kind_id = view
+        .window_instances
+        .iter()
+        .find(|window| window.id == window_id)
+        .map(|window| window.window_kind_id.as_str())
+        .ok_or_else(|| Fault::from("cad.window.invalid: addressed window instance is not open"))?;
+    match window_kind_id {
+        shape::WINDOW_KIND_ID => Ok(CadPaneId::Shape),
+        building::WINDOW_KIND_ID => Ok(CadPaneId::Building),
+        energy::WINDOW_KIND_ID => Ok(CadPaneId::Energy),
+        structure_classic::WINDOW_KIND_ID => Ok(CadPaneId::StructureClassic),
+        _ => Err(Fault::from("cad.window.invalid: addressed window kind is not a CAD pane")),
+    }
+}
+/// 🔀️ The `CadConfig` + window transient -> `CadPlayRuntime` boundary every command handler and render opens with.
+pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>, transient: &CadWorldWindowTransient) -> CadPlayRuntime {
+    let mut runtime = cad_runtime_from(cfg.snapshot, transient);
+    let window = edit::windows::config::current(cfg);
+    runtime.sun = cad_sun_config_to_world(&window.sun);
+    runtime.camera = window.camera.clone();
+    runtime.camera_building = window.camera.clone();
+    runtime.camera_energy = window.camera.clone();
+    runtime.camera_structure_classic = window.camera;
+    runtime.dislocate_options_by_window_id = HashMap::from([
+        (shape::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (building::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (energy::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+        (structure_classic::WINDOW_KIND_ID.to_string(), window.dislocate_options),
+    ]);
+    runtime
+}
+//#endregion 🔖️Runtime

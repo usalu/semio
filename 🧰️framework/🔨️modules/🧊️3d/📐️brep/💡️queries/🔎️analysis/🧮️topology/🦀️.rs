@@ -1,7 +1,7 @@
 //! 🧮️ Topology counts with Euler characteristic and genus, and the closed / manifold / watertight verdict.
 
 use super::{ScopeMembers, ShapeKind, ShapeScope};
-use crate::validation::is_point_edge;
+use semio_framework_3d_brep_validation::is_point_edge;
 use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::Body;

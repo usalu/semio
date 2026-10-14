@@ -17,7 +17,7 @@ async fn the_manifest_declares_both_domains_with_one_granularity_per_kind() {
 async fn a_wall_sweep_is_a_node_of_the_element_domain_under_its_wall() {
     let create = crate::editor::bim::entities::kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
     let snapshot = demo();
-    let snapshot = crate::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
     let topology = element_topology(&snapshot);
     let position = |id: &str| topology.ordered.iter().position(|node| node.id == id).unwrap_or_else(|| panic!("{id} in topology"));
     assert!(position("w-south") < position("sw-1") && position("sw-1") < position("st-first"));

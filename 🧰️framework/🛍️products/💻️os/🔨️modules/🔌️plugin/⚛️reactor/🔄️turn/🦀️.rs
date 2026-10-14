@@ -506,7 +506,7 @@ fn redirty_arena_starved_surfaces(dirty: &mut DirtyPollOwners) -> Result<usize, 
 }
 
 impl DirtyPollOwners {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { surfaces: ui_contract::UiFixedList::default(), intents: ui_contract::UiFixedList::default() }
     }
 
@@ -850,7 +850,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
 ) -> Result<T, semio_framework_job::OriginalTurnFailure> {
     budget.retained.validate()?;
     if budget.retained.operation!=cx.operation().0||budget.retained.generation!=cx.generation().0||budget.retained.grant!=cx.retained_grant(){return Err(reactor_close_fault("original reactor retained input does not match its borrowed context").into());}
-    let original_progress=cx.retained_progress();
+    let original_progress=cx.retained_progress();let original_work=cx.original_work_units_spent();
     if REFUSED_PUBLICATION.with(|owner|owner.borrow().is_some()){return Err(reactor_close_fault("original refused publication still owns its output and receipts").into());}
     trace_turn_phase_retention("enter");
     let retryable_lifecycle = command_page.is_none() && cold_pair_page.is_none() && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)));
@@ -1585,7 +1585,7 @@ async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     });
     let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?)?;
+    let retained_receipt=budget.retained.return_original(original_turn_progress(original_progress,cx.retained_progress())?,u64::try_from(cx.original_work_units_spent()-original_work).map_err(|_|reactor_close_fault("original turn work exceeds fixed receipt extent"))?)?;
     let mut result = semio_framework::kernel::TurnResult { retained_receipt, ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress, cold_pair_ingress, lifecycle_receipt, ui_patch_receipt };
     with_pending_patches(|pending| {
         let mut pending = pending.borrow_mut();

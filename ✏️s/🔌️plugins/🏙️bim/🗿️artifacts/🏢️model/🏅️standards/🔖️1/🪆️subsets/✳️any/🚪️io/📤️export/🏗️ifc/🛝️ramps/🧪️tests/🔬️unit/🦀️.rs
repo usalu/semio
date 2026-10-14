@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, quantity, rows, string, tags, target};
-use crate::{ModelSnapshot, Point2, Ramp, TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, Ramp, TopConstraint, Vertex};
 
 fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge }
@@ -76,7 +76,7 @@ fn a_side_railing_adds_an_ifc_railing_part() {
 
 #[test]
 fn a_bent_ramp_writes_a_flight_per_slope_and_a_landing_per_landing_of_its_run() {
-    use crate::ModelInference;
+    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let mut model = with_ramp(false);
     model.ramps.get_mut("rp-1").expect("the ramp").path = vec![vertex(0.0, -3.0, 0.0), vertex(6.0, -3.0, 0.0), vertex(6.0, 2.0, 0.0)];
@@ -103,7 +103,7 @@ fn read_ramps(name: &str) -> Vec<u8> {
 #[test]
 fn the_report_counts_one_ramp_with_its_flights_landings_and_railings_per_resolved_ramp() {
     use crate::standards::v1::subsets::any::io::export::ifc::projection::projection;
-    use crate::ModelInference;
+    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     let model = ramps();
     let runs = ModelInference::infer(&model).expect("infers").ramp_runs;

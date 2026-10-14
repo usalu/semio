@@ -15,15 +15,15 @@ if(segments[0]?.startsWith("managed-")){
   const save=(state:Record<string,unknown>)=>{mkdirSync(directory,{recursive:true});writeFileSync(statePath+".next",JSON.stringify(state,null,2)+"\n");renameSync(statePath+".next",statePath);};
   if(mode==="managed-start"){
     const boundary=segments[2]==="--capabilities"?4:2;
-    if(segments[boundary]!=="--"||segments[boundary+1]!=="nx")throw Error("Managed verification only runs an explicit Bun Nx invocation");
+    if(segments[boundary]!=="--"||segments[boundary+1]!=="repo")throw Error("Managed verification only runs an explicit repository build invocation");
     const capabilities=boundary===4?JSON.parse(readFileSync(resolve(root,segments[3]!),"utf8")):{};
-    if(boundary===4){const schema=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"),"utf8"));const {validateJsonSchemaSubset}=await import(join(root,"🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));if(validateJsonSchemaSubset(schema,capabilities).length||capabilities.workspaceRoot!==root||JSON.stringify(capabilities.arguments)!==JSON.stringify(segments.slice(boundary+1)))throw Error("Managed verification requires its exact original Nx native caller capability");}
+    if(boundary===4){const schema=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️caller.json"),"utf8"));const {validateJsonSchemaSubset}=await import(join(root,"🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"));if(validateJsonSchemaSubset(schema,capabilities).length||capabilities.workspaceRoot!==root||JSON.stringify(capabilities.arguments)!==JSON.stringify(segments.slice(boundary+1)))throw Error("Managed verification requires its exact original build native caller capability");}
     if(existsSync(statePath))throw Error("Managed job name already exists; inspect it or select a fresh verification cohort");
     mkdirSync(dirname(directory),{recursive:true});mkdirSync(directory);
     save({name,status:"scheduled",pid:process.pid,startedAt:new Date().toISOString(),args:segments.slice(boundary+1),capabilities});
     const output=openSync(logPath,"wx");
     try{
-      const runner=spawn(process.execPath,[import.meta.filename,"managed-execute",name],{cwd:root,env:{...process.env,NX_DAEMON:"false"},detached:true,stdio:["ignore",output,output],windowsHide:true});
+      const runner=spawn(process.execPath,[import.meta.filename,"managed-execute",name],{cwd:root,env:{...process.env,SEMIO_BUILD_TERMINAL:"false"},detached:true,stdio:["ignore",output,output],windowsHide:true});
       await once(runner,"spawn");runner.unref();
       console.log(JSON.stringify({name,pid:runner.pid,statePath,logPath}));
     }finally{closeSync(output);}
@@ -48,7 +48,7 @@ if(segments[0]?.startsWith("managed-")){
       const invocation=createScriptProcessEnvelope({version:1,owner:`verification:${name}`,maximumElapsedMilliseconds:TEST_LEVEL_BUDGET_MS.exhaustive},state.capabilities,Date.now());
       const artifactDirectory=join(import.meta.dir,"../🗑️generated",String(process.pid));mkdirSync(artifactDirectory,{recursive:true});
       save({...state,status:"running",pid:process.pid,invocation,artifactDirectory});
-      const environment={...process.env,SEMIO_SCRIPT_POLICY:JSON.stringify(invocation.policy),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(invocation.capabilities),SEMIO_TEST_ARTIFACT_DIR:artifactDirectory};
+      const environment={...process.env,SEMIO_BUILD_TOOL:state.capabilities.tool??process.env.SEMIO_BUILD_TOOL,SEMIO_SCRIPT_POLICY:JSON.stringify(invocation.policy),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(invocation.capabilities),SEMIO_TEST_ARTIFACT_DIR:artifactDirectory};
       if(state.capabilities.native){environment.CARGO_TARGET_DIR=resolve(root,state.capabilities.native.artifactDirectory);environment.CARGO_NET_OFFLINE=String(state.capabilities.native.network.offline);}
       await runOwnedCommand(process.execPath,state.args,root,`verification:${name}`,TEST_LEVEL_BUDGET_MS.exhaustive,{signal:controller.signal,env:scriptProcessEnvironment(invocation,environment),onLine(line){
         const text=line.replace(/\x1b\[[0-9;]*m/gu,"");

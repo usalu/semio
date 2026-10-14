@@ -23,7 +23,6 @@ pub const DIMENSION_TOLERANCE: f64 = 1e-3;
 
 /// 🦠️ Applies one declared mutation kind to a real document and returns the re-serialized bytes. An
 /// unrecognised kind is an error, never a silent no-op.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").ok_or("Missing mutation parameters")?;
     let number = |key| match params.get(key) {
@@ -40,13 +39,8 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ↩️ The undo of `forward`, read out of `base` by the independent implementation alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     if !KINDS.contains(&forward.str("kind").as_str()) {
         return Err("Unknown inverse kind".into());
@@ -55,21 +49,12 @@ pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> 
     Ok(Json::Object(vec![("kind".into(), Json::String("set-page-size".into())), ("params".into(), Json::Object(vec![("width".into(), Json::Number(width)), ("height".into(), Json::Number(height))]))]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🔁️ The reference implementation's own decode/re-encode.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 👁️ Projects document bytes onto exactly the axis `check_pdf_x_conformance` reads: page 1's real
 /// `/MediaBox` extents and the degeneracy verdict the checker itself computes from them.
@@ -84,7 +69,6 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 /// at A4. It reads the real page tree now, and `pageCount` is here for the other half of the same
 /// defect — the old codec returned a ONE-page snapshot for the committed 65-page thesis, so a
 /// producer that silently drops pages fails this projection on its first field.
-#[cfg(feature = "oracles")]
 pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
     let (width, height) = oracles::read_media_box(input)?;
     Ok(Json::Object(vec![
@@ -97,14 +81,9 @@ pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_conformance(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Reference
-#[cfg(feature = "oracles")]
 mod oracles {
     use lopdf::{Document, Object};
 
@@ -157,7 +136,7 @@ mod oracles {
 //#endregion 🔖️Reference
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

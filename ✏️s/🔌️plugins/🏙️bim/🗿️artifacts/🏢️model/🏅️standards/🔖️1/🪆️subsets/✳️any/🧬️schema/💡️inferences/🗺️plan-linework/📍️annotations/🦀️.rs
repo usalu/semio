@@ -2,7 +2,7 @@
 
 use super::{Context, PlanKind, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, point};
-use crate::SpaceBoundary;
+use crate::standards::v1::subsets::any::schema::snapshot::SpaceBoundary;
 use semio_framework_geometry::Point;
 
 /// ⭕️ Radius of a grid bubble in metres: the plan convention.

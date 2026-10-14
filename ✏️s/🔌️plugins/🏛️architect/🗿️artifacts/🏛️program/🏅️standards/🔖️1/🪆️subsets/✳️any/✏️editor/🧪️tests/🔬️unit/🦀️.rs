@@ -532,7 +532,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         ("benchmarks", snapshot.benchmarks.child_id.clone(), snapshot.benchmarks_payload.len()),
     ] {
         let derived = crate::standards::v1::subsets::any::schema::snapshot::genesis_program_child_pack(&snapshot, slot, &child_id).unwrap_or_else(|| panic!("the loaded snapshot still derives its own {slot} member"));
-        let table = <semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
+        let table = <semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
         assert_eq!(table.rows.len(), rows, "the genesis-derived {slot} member must carry one row per loaded record");
     }
     artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);

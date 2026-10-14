@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-motion"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine motion: tracking and trajectory estimation."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+geometry = { workspace = true }
+
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-camera = { workspace = true }
+semio-s-artifact-remodel-remodeling-feature = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-lie = { workspace = true }
+semio-s-artifact-remodel-remodeling-optimize = { workspace = true }
+semio-s-artifact-remodel-remodeling-sfm-geometry = { workspace = true }
+semio-s-artifact-remodel-remodeling-signal = { workspace = true }
+semio-s-artifact-remodel-remodeling-spatial = { workspace = true }

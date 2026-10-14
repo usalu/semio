@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::Axis;
+use crate::standards::v1::subsets::any::schema::snapshot::Axis;
 
 fn split(ids: &[&str], at: &str, selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();

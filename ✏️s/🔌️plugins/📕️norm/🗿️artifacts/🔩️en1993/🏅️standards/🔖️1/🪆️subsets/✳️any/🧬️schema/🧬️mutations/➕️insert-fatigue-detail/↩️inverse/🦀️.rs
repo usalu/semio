@@ -1,10 +1,10 @@
-use super::InsertFatigueDetail;
-use crate::mutations::{remove_fatigue_detail, En1993Mutation};
-use crate::En1993Snapshot;
-pub fn inverse(payload: &InsertFatigueDetail, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::insert_fatigue_detail::InsertFatigueDetail;
+use crate::remove_fatigue_detail;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &InsertFatigueDetail, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_fatigue_detail::RemoveFatigueDetail> {
     Ok((|| {
     let at = payload.index.unwrap_or(usize::MAX).min(base.fatigue_details.len());
-    vec![En1993Mutation::RemoveFatigueDetail(remove_fatigue_detail::RemoveFatigueDetail { index: at })]
+    vec![Op::from(remove_fatigue_detail::RemoveFatigueDetail { index: at })]
 
     })())
 }

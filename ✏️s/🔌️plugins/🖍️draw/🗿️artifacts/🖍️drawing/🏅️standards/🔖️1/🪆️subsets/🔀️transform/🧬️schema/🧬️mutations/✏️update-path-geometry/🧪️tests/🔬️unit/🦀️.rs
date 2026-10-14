@@ -1,19 +1,20 @@
 //! ✏️ Path geometry changes roundtrip through the semantic mutation and inverse.
-use crate::{DrawingSnapshot, DrawingLayerNode, PathSegment};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, PathSegment};
 
 #[test]
 fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     use protocol::Mutation;
     let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let after: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json")).unwrap();
-    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json")).unwrap();
     let result = mutation.diff(&before);
     assert!(result.messages().is_empty());
-    assert_eq!(*result.diff(), serde_json::from_value::<crate::DrawingDiff>(expected).unwrap());
+    assert_eq!(*result.diff(), serde_json::from_value::<semio_s_artifact_draw_drawing_diff::DrawingDiff>(expected).unwrap());
     assert_eq!(protocol::apply_diff(result.diff(), &before).unwrap(), after);
     let mut restored = after;
-    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
+    for undo in mutation.inverse(&before).expect("valid retained mutation inverse fixture") { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored, &undo).unwrap(); }
     assert_eq!(restored, before);
 }
 
@@ -23,8 +24,8 @@ fn path_geometry_mutation_roundtrip_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/🔣️.json")).unwrap();
     let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
     let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
-    let layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before.into());
-    let id = crate::schema::layer_id(&layer).to_string();
+    let layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", before.into());
+    let id = semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let mutation = super::mutation::update_path_geometry(id.into(), after.clone().into());
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
@@ -33,10 +34,10 @@ fn path_geometry_mutation_roundtrip_fixture() {
     assert_eq!(decoded, after);
     let inverse = mutation.inverse(&document).expect("valid retained mutation inverse fixture");
     let mut edited = document.clone();
-    crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap();
+    semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut edited, &mutation).unwrap();
     let DrawingLayerNode::Path(path) = &edited.layers[0] else { panic!("Expected a path") };
     assert_eq!(path.segments, after.into());
-    for mutation in inverse { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
+    for mutation in inverse { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut edited, &mutation).unwrap(); }
     assert_eq!(edited, document);
 }
 
@@ -44,6 +45,6 @@ fn path_geometry_mutation_roundtrip_fixture() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_sums_to_the_negative_diff() {
     let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    let mutation: semio_s_artifact_draw_drawing_mutations::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

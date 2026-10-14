@@ -1,7 +1,8 @@
 use super::*;
 use crate::mutations::LayoutMutation;
 use protocol::{Mutation, MutationDiff};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
 
 fn plan(text: &str) -> LayoutSnapshot {

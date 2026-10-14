@@ -1,9 +1,9 @@
 //! 🏗️ Complete CAD relational ownership under the actual caller ledger.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::{CadSnapshot, CadReference, CadNode, CadModelChild};
-use crate::CadReferenceIndex;
-use crate::standards::v1::subsets::any::schema::references::{close, invalid};
-use crate::standards::v1::subsets::any::schema::references::frontiers as semantic_frontiers;
+use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CadReference, snapshot::CadNode, snapshot::CadModelChild};
+use semio_s_artifact_cad_cad_model::CadReferenceIndex;
+use semio_s_artifact_cad_cad_model::{references::close, references::invalid};
+use semio_s_artifact_cad_cad_model::references::frontiers as semantic_frontiers;
 use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
 
@@ -270,12 +270,9 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 }
 semio_framework_value::artifact_retire_struct!(CadNode { id, label, kind });
 semio_framework_value::artifact_retire_struct!(CadSnapshot { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
-semio_framework_value::artifact_retire_struct!(crate::schema::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
+semio_framework_value::artifact_retire_struct!(semio_s_artifact_cad_cad_model::CadArtifact { schema, id, shape_model, building_model, energy_model, structure_classic_model, drawings, breps, references_by_model_definition_id, nodes });
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path="🚦️frontiers/🦀️.rs"]

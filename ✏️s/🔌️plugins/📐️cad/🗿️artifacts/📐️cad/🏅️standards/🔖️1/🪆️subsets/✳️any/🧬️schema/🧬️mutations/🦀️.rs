@@ -20,53 +20,73 @@
 //! composed model child (`insert-element`, `remove-element`, `set-element`, `drag-elements`, `rotate-elements`,
 //! `scale-elements`; ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING design §20.15): no parent leaf reads a child.
 
-use crate::diff::CadDiff;
-use crate::CadSnapshot;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "➕create-node/🧪️tests/🌱️appends-node-3/🦀️.rs"]
+mod tests_appends_node_3;
+#[cfg(test)]
+#[path = "🗑️delete-node/🧪️tests/🚫️removes-node-2/🦀️.rs"]
+mod tests_removes_node_2;
+#[cfg(test)]
+#[path = "🏷️rename-node/🧪️tests/🔤️relabels-the-root-node/🦀️.rs"]
+mod tests_relabels_the_root_node;
+#[cfg(test)]
+#[path = "👁️change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs"]
+mod tests_hides_the_shape_reference;
+#[cfg(test)]
+#[path = "🔒change-reference-locked/🧪️tests/🔓️unlocks/🦀️.rs"]
+mod tests_unlocks_the_shape_reference;
+#[cfg(test)]
+#[path = "📏change-reference-width/🧪️tests/↔️widens/🦀️.rs"]
+mod tests_widens_the_shape_reference_plane;
+#[cfg(test)]
+#[path = "📍move-reference/🧪️tests/📍️moves/🦀️.rs"]
+mod tests_moves_the_shape_reference_off_origin;
+#[cfg(test)]
+#[path = "🖇️replace-reference-media/🧪️tests/🖼️reattaches/🦀️.rs"]
+mod tests_reattaches_the_shape_reference_to_a_new_plan;
+#[cfg(test)]
+#[path = "📎replace-references/🧪️tests/🔄️swaps/🦀️.rs"]
+mod tests_swaps_the_shape_reference_list;
+#[cfg(test)]
+#[path = "🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs"]
+mod tests_rehandles_the_occupied_shape_slot;
+#[cfg(test)]
+#[path = "🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot/🦀️.rs"]
+mod tests_vacates_the_shape_slot;
+#[cfg(test)]
+#[path = "🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs"]
+mod tests_rehandles_the_occupied_building_slot;
+#[cfg(test)]
+#[path = "💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs"]
+mod tests_vacates_the_building_slot;
+#[cfg(test)]
+#[path = "⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs"]
+mod tests_rehandles_the_occupied_energy_slot;
+#[cfg(test)]
+#[path = "🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs"]
+mod tests_vacates_the_energy_slot;
+#[cfg(test)]
+#[path = "🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs"]
+mod tests_rehandles_the_occupied_structure_classic_slot;
+#[cfg(test)]
+#[path = "💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs"]
+mod tests_vacates_the_structure_classic_slot;
+#[cfg(test)]
+#[path = "📐️create-drawing/🧪️tests/📐️appends-drawing-2/🦀️.rs"]
+mod tests_appends_drawing_2;
+#[cfg(test)]
+#[path = "🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs"]
+mod tests_removes_drawing_1;
+//#endregion 🧩️Modules
+
+use semio_s_artifact_cad_cad_model::diff::CadDiff;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
-//#region 🔖️InternalPatches
-/// 🩹 Option-bag field delta for [`crate::CadNode`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub struct CadNodePatch {
-    pub label: Option<String>,
-}
-
-/// 🩹 Option-bag field delta for [`crate::CadReference`] — INTERNAL diff-construction glue only.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase")]
-pub struct CadReferencePatch {
-    pub source_url: Option<String>,
-    pub media_kind: Option<String>,
-    pub origin: Option<[f64; 3]>,
-    pub orientation: Option<CadOrientationSet>,
-    pub scale: Option<CadScaleSet>,
-    pub width_world: Option<f64>,
-    pub hidden: Option<bool>,
-    pub locked: Option<bool>,
-    pub opacity: Option<CadOpacitySet>,
-}
-
-/// 🧭️ Explicit set-or-clear of a reference's orientation (an absent patch field leaves it untouched).
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadOrientationSet {
-    pub value: Option<[f64; 4]>,
-}
-
-/// 📐️ Explicit set-or-clear of a reference's scale.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadScaleSet {
-    pub value: Option<f64>,
-}
-
-/// 🌫️ Explicit set-or-clear of a reference's opacity.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", default)]
-pub struct CadOpacitySet {
-    pub value: Option<f64>,
-}
-//#endregion 🔖️InternalPatches
 
 
 
@@ -134,26 +154,26 @@ pub const KINDS: &[&str] = &[
 //#endregion 🔖️Mutations
 
 //#region 🔖️Leaves
-use super::change_reference_hidden;
-use super::change_reference_locked;
-use super::change_reference_width;
-use super::create_building_model;
-use super::create_drawing;
-use super::{create_brep, delete_brep};
-use super::create_energy_model;
-use super::create_node;
-use super::create_shape_model;
-use super::create_structure_classic_model;
-use super::delete_building_model;
-use super::delete_drawing;
-use super::delete_energy_model;
-use super::delete_node;
-use super::delete_shape_model;
-use super::delete_structure_classic_model;
-use super::move_reference;
-use super::rename_node;
-use super::replace_reference_media;
-use super::replace_references;
+use semio_s_artifact_cad_cad_mut_references::change_reference_hidden;
+use semio_s_artifact_cad_cad_mut_references::change_reference_locked;
+use semio_s_artifact_cad_cad_mut_references::change_reference_width;
+use semio_s_artifact_cad_cad_mut_slots::create_building_model;
+use semio_s_artifact_cad_cad_mut_documents::create_drawing;
+use semio_s_artifact_cad_cad_mut_documents::{create_brep, delete_brep};
+use semio_s_artifact_cad_cad_mut_slots::create_energy_model;
+use semio_s_artifact_cad_cad_mut_nodes::create_node;
+use semio_s_artifact_cad_cad_mut_slots::create_shape_model;
+use semio_s_artifact_cad_cad_mut_slots::create_structure_classic_model;
+use semio_s_artifact_cad_cad_mut_slots::delete_building_model;
+use semio_s_artifact_cad_cad_mut_documents::delete_drawing;
+use semio_s_artifact_cad_cad_mut_slots::delete_energy_model;
+use semio_s_artifact_cad_cad_mut_nodes::delete_node;
+use semio_s_artifact_cad_cad_mut_slots::delete_shape_model;
+use semio_s_artifact_cad_cad_mut_slots::delete_structure_classic_model;
+use semio_s_artifact_cad_cad_mut_references::move_reference;
+use semio_s_artifact_cad_cad_mut_nodes::rename_node;
+use semio_s_artifact_cad_cad_mut_references::replace_reference_media;
+use semio_s_artifact_cad_cad_mut_references::replace_references;
 //#endregion 🔖️Leaves
 
 //#region 🧪️Tests

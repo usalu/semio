@@ -1,0 +1,13 @@
+[
+ {
+  "from": "crate::standards::v1::subsets::any::schema::mutations",
+  "to": "crate::standards::v1::subsets::any::schema::diff",
+  "items": [
+   "CadNodePatch",
+   "CadOpacitySet",
+   "CadOrientationSet",
+   "CadReferencePatch",
+   "CadScaleSet"
+  ]
+ }
+]

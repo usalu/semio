@@ -1,5 +1,6 @@
 use super::*;
-use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child};
+use semio_s_artifact_cad_cad_model::snapshot::empty_cad_snapshot;
+use semio_s_artifact_cad_cad_testing::sample_model_child;
 use protocol::Inference;
 
 //#region 🧪️InferenceLaws

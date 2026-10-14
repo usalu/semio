@@ -33,9 +33,6 @@
     "test-original-owned-async-source": "bun repo run @semio-tech/framework-actor-rs:test-original-owned-async-source",
     "test-original-owned-async-native": "bun repo run @semio-tech/framework-actor-rs:test-original-owned-async-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

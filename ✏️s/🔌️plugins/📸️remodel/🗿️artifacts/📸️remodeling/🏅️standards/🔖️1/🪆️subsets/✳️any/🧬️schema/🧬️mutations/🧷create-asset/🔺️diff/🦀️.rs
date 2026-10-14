@@ -10,8 +10,15 @@
 //! retried import. An upsert also DROPS the durable leaf the overwritten handle owned, so the store
 //! never accumulates a leaf nothing addresses and `delete-asset` (which drops the leaf it minted) is
 //! this verb's exact inverse in both directions.
-use crate::diff::{RemodelingAssetEntry, RemodelingContentDelta, RemodelingContentRow, RemodelingDiff, RemodelingRow, RemodelingRows};
-use crate::{durable_remodeling_asset, store_remodeling_asset, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingAssetEntry;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentDelta;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRows;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::durable_remodeling_asset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::store_remodeling_asset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

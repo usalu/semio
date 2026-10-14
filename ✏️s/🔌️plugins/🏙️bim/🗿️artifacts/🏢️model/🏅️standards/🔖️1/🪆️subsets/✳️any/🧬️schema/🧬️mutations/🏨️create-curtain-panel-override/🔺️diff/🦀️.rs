@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::wall_geometry::panel_flaw;
 use super::CreateCurtainPanelOverride;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateCurtainPanelOverride, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

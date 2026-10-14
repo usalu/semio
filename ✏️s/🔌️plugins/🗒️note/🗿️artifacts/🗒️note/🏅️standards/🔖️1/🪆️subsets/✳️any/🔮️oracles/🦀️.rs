@@ -36,7 +36,6 @@ use semio_repo_test_host::Json;
 //#region 🔖️Dispatch
 /// 🖊️ Independent semantic projection of the `LINE` entities `NoteIntoDxf` wrote, via the same
 /// qualifying `dxf` reader `s.stdio.dxf@r12/✳️any` registers.
-#[cfg(feature = "oracles")]
 pub fn project_note_dxf(bytes: &[u8]) -> Result<Json, String> {
     semio_s_plugin_stdio_drawing_test_oracle::project_dxf_r12(bytes)
 }
@@ -44,7 +43,6 @@ pub fn project_note_dxf(bytes: &[u8]) -> Result<Json, String> {
 /// 🎨️ Independent semantic projection of the SVG XML `NoteIntoSvg` wrote (via the real semio/drawing
 /// bridge), using this crate's shared `quick-xml` tree reader/projector — SVG is XML, so nothing
 /// note-specific is needed to read it.
-#[cfg(feature = "oracles")]
 pub fn project_note_svg(bytes: &[u8]) -> Result<Json, String> {
     let doc = semio_s_plugin_stdio_markup_test_oracle::live::parse_markup(bytes)?;
     Ok(semio_s_plugin_stdio_markup_test_oracle::live::project_markup(&doc))
@@ -52,24 +50,10 @@ pub fn project_note_svg(bytes: &[u8]) -> Result<Json, String> {
 
 /// 📄️ Independent semantic projection (media box + `Tj` text operands per page) of the PDF
 /// `NoteIntoPdf` wrote, via this crate's shared `lopdf` reader.
-#[cfg(feature = "oracles")]
 pub fn project_note_pdf(bytes: &[u8]) -> Result<Json, String> {
     semio_s_plugin_stdio_document_test_oracle::project_pdf(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature no reference implementation is linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn project_note_dxf(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn project_note_svg(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn project_note_pdf(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️SmokeTests
@@ -78,7 +62,7 @@ pub fn project_note_pdf(_bytes: &[u8]) -> Result<Json, String> {
 /// dependency on `semio_s_plugin_stdio` (the production codec that plugin belongs to — an oracle
 /// crate must never link the subject it is evidence for), so each fixture below is built from the
 /// FORMAT'S OWN minimal grammar rather than by calling note's real serializer.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️smoke/🦀️.rs"]
 mod smoke_tests;
 //#endregion 🧪️SmokeTests

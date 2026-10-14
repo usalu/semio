@@ -12,7 +12,7 @@
 //! ac1018 side — this facet pair is already in that post-fix shape, so the collision ticket never
 //! has to touch either file.
 
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::structure::compute_dwg_structure;

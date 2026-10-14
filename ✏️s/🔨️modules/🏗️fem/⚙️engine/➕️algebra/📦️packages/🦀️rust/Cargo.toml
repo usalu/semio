@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-fem-algebra"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Dense `MatD`/`VecD` linear algebra of the fem engine"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }

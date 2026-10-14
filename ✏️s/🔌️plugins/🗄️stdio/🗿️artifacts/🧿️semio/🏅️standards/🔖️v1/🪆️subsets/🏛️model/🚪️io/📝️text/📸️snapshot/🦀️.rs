@@ -9,8 +9,11 @@ mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::native;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ P2 pilot (model): real hex/bracket-encoded value primitives backing the hand-rolled
@@ -392,7 +395,9 @@ mod snapshot_wire_codec {
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::native;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;

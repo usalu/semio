@@ -188,7 +188,7 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 /// replacing a document is not something a read-only surface may do.
 #[test]
 fn the_viewer_offers_export_in_both_languages_and_never_offers_import() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::document_io;
+    use semio_s_artifact_procedural_3d_io::document_io;
     use semio_framework_plugin::ArgSchema;
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::Terminology;
@@ -249,7 +249,7 @@ fn the_preview_window_is_bound_to_the_graph_interaction_domain() {
 #[test]
 fn the_interaction_topology_declares_node_handle_and_edge_targets() {
     let _serial = context::lock();
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig::default();
@@ -288,7 +288,7 @@ async fn every_viewer_action_dispatches_live_and_never_mutates_the_document() {
         // 🎨️ The navbar example picker's verb belongs in this law too: loading an example into a
         // read-only surface is a CONFIG edit, and it must stay one
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_SHELL.into() }),
+        Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL.into() }),
         Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
     ];
     for command in commands {

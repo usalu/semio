@@ -56,11 +56,6 @@ semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️
 # 🔬️ Third-party oracle for `kernel::media_export_bytes`'s base64 lane — dev-only, never a runtime dep.
 base64 = "0.22.1"
 
-[features]
-# 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🪪️manifest/🟦️.ts`);
-# never enabled by default so schema projection never affects the plain build/test path.
-typegen = []
-
 [[test]]
 name="original_kernel_retirement"
 path="../../🔨️modules/🎠️kernel/♻️retirement/🧪️tests/🦀️.rs"

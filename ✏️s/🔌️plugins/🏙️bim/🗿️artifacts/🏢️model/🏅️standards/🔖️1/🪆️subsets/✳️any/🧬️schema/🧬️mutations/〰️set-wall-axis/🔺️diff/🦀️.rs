@@ -3,7 +3,7 @@
 
 use super::super::wall_geometry::flaw;
 use super::SetWallAxis;
-use crate::{Entry, ModelDiff, ModelSnapshot, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallAxis, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

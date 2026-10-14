@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{plan
 use super::clip::Rect;
 use super::filters::{crop_plan, lets_through};
 use super::ViewLinework;
-use crate::{view_cut_height, ModelSnapshot, View, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{view_cut_height, ModelSnapshot, View, ViewKind};
 use semio_framework_geometry::Point;
 
 fn mirrored(style: PlanStyle) -> PlanStyle {

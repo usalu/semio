@@ -1,0 +1,7 @@
+{"🧊️object": ["🌱create-object", "🗑️delete-object", "🏗️change-object-kind", "⚓change-object-anchor", "🧱change-object-mesh", "🖋️edit-object-label", "👁️change-object-hidden", "🔒change-object-locked"],
+ "🧭️pose": ["📍move-object", "🔃rotate-object", "📏scale-object"],
+ "🌀️vortex": ["➕add-object-vortex", "➖remove-object-vortex", "🔌replace-object-vortex", "🪢️connect-vortices", "✂️disconnect-vortices", "🧮replace-attraction-geometry"],
+ "🌍️volume": ["🌍create-target-volume", "🪦delete-target-volume", "🚀move-target-volume", "🌀rotate-target-volume", "📐scale-target-volume", "🙈change-target-volume-hidden", "🔐change-target-volume-locked"],
+ "🖼️reference": ["🖼️create-reference", "🚮delete-reference", "🎯move-reference", "📎resize-reference", "🖇️replace-reference-source", "👀change-reference-hidden", "🗝️change-reference-locked"],
+ "📚️catalog": ["🌐change-domain", "🤝connect-kind-compatibility", "💔disconnect-kind-compatibility", "📚replace-kind-catalogs"],
+ "✋️selection": ["✋️drag-selection", "🔄️rotate-selection", "🔍️scale-selection"]}

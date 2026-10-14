@@ -126,7 +126,7 @@ fn actual_wire(root: &Root) -> Vec<u8> {
             break;
         }
     }
-    bytes.extend(crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap());
+    bytes.extend(crate::encode_record_body(&spec, &record, &crate::EncodeOptions::default()).unwrap());
     bytes
 }
 fn run(cursor: &mut ScalarRecordWireWitness<Root>, bytes: &[u8], grant: usize, stop: Option<usize>) -> Result<bool, &'static str> {

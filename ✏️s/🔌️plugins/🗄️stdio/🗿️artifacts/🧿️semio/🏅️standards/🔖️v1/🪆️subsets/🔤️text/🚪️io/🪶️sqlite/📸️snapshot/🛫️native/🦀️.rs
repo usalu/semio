@@ -1,6 +1,7 @@
 //! 🔤️ Writes explicit run languages, contents and ordered typed marks under cumulative control.
 use crate::schema::snapshot::{SemioTextSnapshot, SemioTextRun, SemioTextMark};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(snapshot:&SemioTextSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.text.dsl v1\n","s.stdio.semio.text.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn mark(value:&SemioTextMark,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{crate::io::binary::snapshot::mark_kind_tag(value.kind)}else{crate::io::text::snapshot::enc_mark_kind(value.kind) as u8})?;writer.delimiter(b",",encoding)?;writer.string(&value.href,encoding)?;writer.delimiter(b"]",encoding)}

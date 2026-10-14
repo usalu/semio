@@ -348,7 +348,8 @@ async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
 
 #[test]
 fn background_drawing_fits_an_offset_plan_onto_the_page() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -394,7 +395,8 @@ fn background_drawing_fits_an_offset_plan_onto_the_page() {
 }
 
 fn unit_square_drawing() -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     SemioDrawingSnapshot {
@@ -439,7 +441,8 @@ fn a_placed_drawing_frame_fits_the_plan_inside_its_bounds() {
 
 #[test]
 fn drawing_text_lands_on_the_page_and_inside_the_placed_frame() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -490,7 +493,8 @@ fn red_png() -> Vec<u8> {
 }
 
 fn drawing_with_red_png() -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     SemioDrawingSnapshot {
@@ -536,7 +540,8 @@ fn an_embedded_drawing_png_fits_the_page_and_the_placed_frame() {
 
 #[test]
 fn an_imported_arc_bulges_off_its_chord() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {

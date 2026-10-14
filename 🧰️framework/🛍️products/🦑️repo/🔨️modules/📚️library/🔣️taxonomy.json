@@ -8554,6 +8554,38 @@
       "parentKindIds": [
         "schema"
       ]
+    },
+    "repo-build-bootstrap": {
+      "emoji": "🚀️",
+      "slugPattern": "^bootstrap$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-bootstrap-sources": {
+      "emoji": "🌱️",
+      "slugPattern": "^sources$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-build-bootstrap"
+      ]
+    },
+    "repo-build-arguments": {
+      "emoji": "📤️",
+      "slugPattern": "^arguments$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-library-build"
+      ]
+    },
+    "repo-build-policy-inference": {
+      "emoji": "🛡️",
+      "slugPattern": "^policy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "repo-build-inference"
+      ]
     }
   },
   "semanticDirectoryMemberKinds": {
@@ -9845,6 +9877,8 @@
         "commands"
       ],
       "memberNames": [
+        "📥️ingest",
+        "🎛️workflow",
         "📐️add-section",
         "📏️add-member-udl",
         "🧊️add-solid",
@@ -11815,6 +11849,10 @@
         "members-of-engine"
       ],
       "memberNames": [
+        "🔺️surface",
+        "🩹️repair",
+        "🗺️atlas",
+        "🎞️h264",
         "🎵️modal-buckling",
         "🕸️meshing",
         "🗺️mesh-preview"
@@ -12984,6 +13022,10 @@
         "schema"
       ],
       "memberNames": [
+        "🎞️media",
+        "🎯️calibration",
+        "⚙️params",
+        "🧵️results",
         "🥞️layered-overview",
         "✂️transfer",
         "✨️derive",
@@ -16248,7 +16290,7 @@
     "nested-cargo-packages-v1": {
       "contractKind": "exact-nested-cargo-package-catalog",
       "authorityCatalogPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/📽️nested-cargo-package-projection/🔣️.json",
-      "authorityCatalogSha256": "e2749b7d7a44bb1f48019e1b22275c5caf87909f9e94f4b329aa8fe080bb242b",
+      "authorityCatalogSha256": "755055dad0b2ed965173c98f50d8796431d88e5a3390d9d2e0a2b7a9d426be74",
       "packageIds": [
         "wgpu-renderer",
         "jcoprobe-guest"
@@ -22481,7 +22523,7 @@
       "scope": {
         "kind": "path-pattern"
       },
-      "verification": "nx show project",
+      "verification": "bun repo show project",
       "expires": null
     },
     "build-owned-node-package-manifest": {
@@ -22493,7 +22535,7 @@
         "kind": "sibling-fixed-filename-contract",
         "fixedFilenameContractId": "build-project-manifest"
       },
-      "verification": "nx show project and bun pm",
+      "verification": "bun repo show project and bun pm",
       "expires": null
     },
     "build-owned-typescript-config": {
@@ -22505,7 +22547,7 @@
         "kind": "sibling-fixed-filename-contract",
         "fixedFilenameContractId": "build-project-manifest"
       },
-      "verification": "nx show project and tsc --showConfig",
+      "verification": "bun repo show project and tsc --showConfig",
       "expires": null
     },
     "python-project-manifest": {
@@ -22643,7 +22685,40 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "nx graph",
+      "verification": "bun repo graph",
+      "expires": null
+    },
+    "root-bazel-configuration": {
+      "pathPattern": ".bazelrc",
+      "authority": "Bazel",
+      "reason": "Bazel runtime configuration discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "bun repo tools setup bazel",
+      "expires": null
+    },
+    "root-bazel-version": {
+      "pathPattern": ".bazelversion",
+      "authority": "Bazel",
+      "reason": "Pinned Bazel distribution version discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "bun repo tools setup bazel",
+      "expires": null
+    },
+    "root-bazel-module": {
+      "pathPattern": "MODULE.bazel",
+      "authority": "Bazel",
+      "reason": "Bazel module workspace discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "repository-root"
+      },
+      "verification": "bun repo tools setup bazel",
       "expires": null
     },
     "root-script": {
@@ -22665,7 +22740,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "nx show projects",
+      "verification": "bun repo show projects",
       "expires": null
     },
     "root-package": {
@@ -22907,7 +22982,7 @@
       "scope": {
         "kind": "repository-root"
       },
-      "verification": "nx graph",
+      "verification": "bun repo graph",
       "expires": null
     },
     "prettierignore": {
@@ -27303,9 +27378,9 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🟦️.ts",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/📣️contribution/🔣️.json",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🟦️.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧬️schema/📣️contribution/🔣️.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🏗️build/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🧬️schema/🔣️.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📥️runtime/🧬️schema/🔣️.json",
@@ -29684,6 +29759,399 @@
     ]
   },
   "mutationDomainOwners": {
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+      "🔋️model": {
+        "🏷️rename": "rename-model",
+        "🔢️change-version": "change-model-version",
+        "🌦️bind-weather-file": "bind-weather-file",
+        "🌤️unbind-weather-file": "unbind-weather-file",
+        "🪢️connect-referenced-model": "connect-referenced-model",
+        "✂️disconnect-referenced-model": "disconnect-referenced-model",
+        "🫧️replace-airflow-network": "replace-airflow-network",
+        "📊️add-output-variable": "add-output-variable",
+        "📉️remove-output-variable": "remove-output-variable"
+      },
+      "📍️site": {
+        "🌍️change-latitude": "change-site-latitude",
+        "🌏️change-longitude": "change-site-longitude",
+        "⛰️change-elevation": "change-site-elevation",
+        "🕰️change-time-zone": "change-site-time-zone",
+        "🔝️change-north-axis": "change-site-north-axis",
+        "🌡️change-ground-building": "change-ground-building",
+        "🌱️change-ground-shallow": "change-ground-shallow",
+        "⛏️change-ground-deep": "change-ground-deep"
+      },
+      "⏯️run": {
+        "🛫️change-start-month": "change-run-start-month",
+        "▶️change-start-day": "change-run-start-day",
+        "🛬️change-end-month": "change-run-end-month",
+        "⏹️change-end-day": "change-run-end-day",
+        "📅️change-year": "change-run-year"
+      },
+      "🏡️zone": {
+        "🏠️rename": "rename-zone",
+        "🧊️change-volume": "change-zone-volume",
+        "✖️change-multiplier": "change-zone-multiplier",
+        "🌬️change-conditioned": "change-zone-conditioned",
+        "📐️change-floor-area-participation": "change-zone-floor-area-participation",
+        "🏘️create": "create-zone",
+        "🏚️delete": "delete-zone"
+      },
+      "🛋️space": {
+        "🪑️create": "create-space",
+        "🧹️delete": "delete-space",
+        "🔤️rename": "rename-space",
+        "🧮️change-floor-area": "change-space-floor-area",
+        "🚚️change-zone": "change-space-zone"
+      },
+      "🧱️surface": {
+        "🟫️create": "create-surface",
+        "🪚️delete": "delete-surface",
+        "🏳️rename": "rename-surface",
+        "🗜️change-zone": "change-surface-zone",
+        "🧩️change-class": "change-surface-class",
+        "🔺️replace-vertices": "replace-surface-vertices",
+        "🧰️change-construction": "change-surface-construction",
+        "🔁️change-multiplier": "change-surface-multiplier"
+      },
+      "🔲️boundary": {
+        "🚧️change-boundary-condition": "change-surface-boundary-condition",
+        "🌅️change-sun-exposed": "change-surface-sun-exposed",
+        "🍃️change-wind-exposed": "change-surface-wind-exposed",
+        "🤝️connect": "connect-surfaces",
+        "💔️disconnect": "disconnect-surfaces"
+      },
+      "🪟️fenestration": {
+        "🪟️create": "create-fenestration",
+        "🚪️delete": "delete-fenestration",
+        "🏁️rename": "rename-fenestration",
+        "🧲️change-surface": "change-fenestration-surface",
+        "🟥️change-area": "change-fenestration-area",
+        "⬆️change-height": "change-fenestration-height",
+        "⬇️change-sill-height": "change-fenestration-sill-height",
+        "🔶️replace-vertices": "replace-fenestration-vertices"
+      },
+      "🔍️glazing": {
+        "🌐️change-u-value": "change-fenestration-u-value",
+        "🌇️change-shgc": "change-fenestration-shgc",
+        "🌈️change-vlt": "change-fenestration-vlt",
+        "🖼️change-frame-conductance": "change-fenestration-frame-conductance",
+        "🧷️change-divider-conductance": "change-fenestration-divider-conductance",
+        "🧊️bind-glazing-construction": "bind-fenestration-glazing-construction",
+        "🫗️clear-glazing-construction": "clear-fenestration-glazing-construction"
+      },
+      "⛱️shading-device": {
+        "🧢️change-overhang-depth": "change-fenestration-overhang-depth",
+        "🎩️change-overhang-offset": "change-fenestration-overhang-offset",
+        "🐬️change-fin-depth": "change-fenestration-fin-depth",
+        "🐋️change-fin-offset": "change-fenestration-fin-offset"
+      },
+      "🌳️shading": {
+        "🌳️create": "create-shading-surface",
+        "🪵️delete": "delete-shading-surface",
+        "🏕️rename": "rename-shading-surface",
+        "🗺️replace-vertices": "replace-shading-surface-vertices",
+        "⛱️change-transmittance-schedule": "change-shading-surface-transmittance-schedule"
+      },
+      "🪨️material": {
+        "🧱️create": "create-material",
+        "🪨️delete": "delete-material",
+        "🪧️rename": "rename-material",
+        "📏️change-thickness": "change-material-thickness",
+        "🔥️change-conductivity": "change-material-conductivity",
+        "⚖️change-density": "change-material-density",
+        "♨️change-specific-heat": "change-material-specific-heat"
+      },
+      "🎨️finish": {
+        "🗻️change-roughness": "change-material-roughness",
+        "🔆️change-thermal-absorptance": "change-material-thermal-absorptance",
+        "☀️change-solar-absorptance": "change-material-solar-absorptance",
+        "👁️change-visible-absorptance": "change-material-visible-absorptance"
+      },
+      "🥂️window-layer": {
+        "🔷️change-glazing-thickness": "change-glazing-material-thickness",
+        "🟠️change-glazing-conductivity": "change-glazing-material-conductivity",
+        "🟡️change-glazing-solar-transmittance": "change-glazing-material-solar-transmittance",
+        "🥽️change-glazing-visible-transmittance": "change-glazing-material-visible-transmittance",
+        "🩻️change-glazing-infrared-emissivity": "change-glazing-material-infrared-emissivity",
+        "🟢️rename-glazing": "rename-glazing-material",
+        "🟣️change-gas-thickness": "change-gas-material-thickness",
+        "🟤️change-gas-type": "change-gas-material-gas",
+        "🔘️rename-gas": "rename-gas-material"
+      },
+      "🏗️construction": {
+        "🏗️create": "create-construction",
+        "🧨️delete": "delete-construction",
+        "🪪️rename": "rename-construction",
+        "➕️add-layer": "add-construction-layer",
+        "➖️remove-layer": "remove-construction-layer",
+        "🔀️reorder-layers": "reorder-construction-layers"
+      },
+      "👥️people-gain": {
+        "👤️create": "create-people-gain",
+        "🚷️delete": "delete-people-gain",
+        "🚶️change-zone": "change-people-gain-zone",
+        "⏰️change-schedule": "change-people-gain-schedule",
+        "🏃️change-activity-schedule": "change-people-gain-activity-schedule",
+        "👥️change-people-per-area": "change-people-gain-people-per-area",
+        "🌞️change-sensible-fraction": "change-people-gain-sensible-fraction",
+        "💧️change-latent-fraction": "change-people-gain-latent-fraction",
+        "📡️change-radiant-fraction": "change-people-gain-radiant-fraction"
+      },
+      "💡️lighting-gain": {
+        "💡️create": "create-lighting-gain",
+        "🕯️delete": "delete-lighting-gain",
+        "🔦️change-zone": "change-lighting-gain-zone",
+        "⏱️change-schedule": "change-lighting-gain-schedule",
+        "🔌️change-watts-per-area": "change-lighting-gain-watts-per-area",
+        "🌟️change-radiant-fraction": "change-lighting-gain-radiant-fraction",
+        "🔅️change-visible-fraction": "change-lighting-gain-visible-fraction",
+        "🎐️change-return-air-fraction": "change-lighting-gain-return-air-fraction"
+      },
+      "🖥️equipment-gain": {
+        "🖥️create": "create-equipment-gain",
+        "🧯️delete": "delete-equipment-gain",
+        "🖨️change-zone": "change-equipment-gain-zone",
+        "⌛️change-schedule": "change-equipment-gain-schedule",
+        "⚡️change-watts-per-area": "change-equipment-gain-watts-per-area",
+        "🌠️change-radiant-fraction": "change-equipment-gain-radiant-fraction",
+        "💦️change-latent-fraction": "change-equipment-gain-latent-fraction"
+      },
+      "💨️infiltration": {
+        "💨️create": "create-infiltration",
+        "🧽️delete": "delete-infiltration",
+        "🌀️change-zone": "change-infiltration-zone",
+        "⏳️change-schedule": "change-infiltration-schedule",
+        "🔬️change-method": "change-infiltration-method",
+        "🔄️change-design-flow-ach": "change-infiltration-design-flow-ach",
+        "🌫️change-flow-per-exterior-area": "change-infiltration-flow-per-exterior-area"
+      },
+      "🕳️leakage": {
+        "🅰️change-constant-term-coefficient": "change-infiltration-constant-term-coefficient",
+        "🅱️change-temperature-term-coefficient": "change-infiltration-temperature-term-coefficient",
+        "🆎️change-velocity-term-coefficient": "change-infiltration-velocity-term-coefficient",
+        "🆑️change-velocity-squared-term-coefficient": "change-infiltration-velocity-squared-term-coefficient",
+        "🚰️change-discharge-coefficient": "change-infiltration-discharge-coefficient",
+        "🕳️change-effective-leakage-area": "change-infiltration-effective-leakage-area",
+        "🏭️change-stack-height": "change-infiltration-stack-height"
+      },
+      "🌪️ventilation": {
+        "🌪️create": "create-mechanical-ventilation",
+        "🚫️delete": "delete-mechanical-ventilation",
+        "🧭️change-zone": "change-mechanical-ventilation-zone",
+        "📆️change-schedule": "change-mechanical-ventilation-schedule",
+        "🚿️change-design-flow": "change-mechanical-ventilation-design-flow",
+        "💠️change-fan-total-efficiency": "change-mechanical-ventilation-fan-total-efficiency",
+        "🎈️change-fan-delta-pressure": "change-mechanical-ventilation-fan-delta-pressure"
+      },
+      "🌡️thermostat": {
+        "🩺️create": "create-thermostat",
+        "🛑️delete": "delete-thermostat",
+        "🛖️change-zone": "change-thermostat-zone",
+        "🥵️change-heating-setpoint-schedule": "change-thermostat-heating-setpoint-schedule",
+        "🐧️change-cooling-setpoint-schedule": "change-thermostat-cooling-setpoint-schedule",
+        "🎚️change-heating-throttle-range": "change-thermostat-heating-throttle-range",
+        "🎛️change-cooling-throttle-range": "change-thermostat-cooling-throttle-range"
+      },
+      "💧️humidistat": {
+        "🌂️create": "create-humidistat",
+        "🏜️delete": "delete-humidistat",
+        "🏙️change-zone": "change-humidistat-zone",
+        "☔️change-humidifying-setpoint-schedule": "change-humidistat-humidifying-setpoint-schedule",
+        "🏝️change-dehumidifying-setpoint-schedule": "change-humidistat-dehumidifying-setpoint-schedule",
+        "🌧️change-humidifying-throttle-range": "change-humidistat-humidifying-throttle-range",
+        "🧻️change-dehumidifying-throttle-range": "change-humidistat-dehumidifying-throttle-range"
+      },
+      "💯️ideal-loads": {
+        "🫁️create": "create-ideal-loads-system",
+        "🫥️delete": "delete-ideal-loads-system",
+        "🏢️change-zone": "change-ideal-loads-system-zone",
+        "🔴️change-max-heating-supply-air-temp": "change-ideal-loads-system-max-heating-supply-air-temp",
+        "🔵️change-min-cooling-supply-air-temp": "change-ideal-loads-system-min-cooling-supply-air-temp",
+        "⛽️change-max-heating-capacity": "change-ideal-loads-system-max-heating-capacity",
+        "🟧️change-max-cooling-capacity": "change-ideal-loads-system-max-cooling-capacity",
+        "🧍️change-outdoor-air-per-person": "change-ideal-loads-system-outdoor-air-per-person",
+        "🔳️change-outdoor-air-per-area": "change-ideal-loads-system-outdoor-air-per-area"
+      },
+      "🔧️zone-equipment": {
+        "🛠️create": "create-zone-equipment",
+        "🗑️delete": "delete-zone-equipment",
+        "🏬️change-zone": "change-zone-equipment-zone",
+        "🔧️change-type": "change-zone-equipment-type",
+        "🎗️change-priority": "change-zone-equipment-priority",
+        "🧇️change-heating-capacity": "change-zone-equipment-heating-capacity",
+        "🍧️change-cooling-capacity": "change-zone-equipment-cooling-capacity"
+      },
+      "🌞️daylight-zone": {
+        "🔭️create": "create-daylight-zone",
+        "🌗️delete": "delete-daylight-zone",
+        "🏫️change-zone": "change-daylight-zone-zone",
+        "🪔️change-illuminance-target": "change-daylight-zone-illuminance-target",
+        "🕶️change-glare-limit": "change-daylight-zone-glare-limit",
+        "🥃️change-window-transmittance": "change-daylight-zone-window-transmittance"
+      },
+      "📏️sizing": {
+        "📶️create": "create-sizing-object",
+        "🪒️delete": "delete-sizing-object",
+        "🏨️change-zone": "change-sizing-object-zone",
+        "🧾️change-sizing-type": "change-sizing-object-sizing-type",
+        "🌥️change-design-day-type": "change-sizing-object-design-day-type"
+      },
+      "🛏️room-air": {
+        "🛏️create-assignment": "create-room-air-model-assignment",
+        "🧺️delete-assignment": "delete-room-air-model-assignment",
+        "🪭️change": "change-room-air-model"
+      },
+      "🎚️setpoint": {
+        "📌️create": "create-setpoint-manager",
+        "🍄️delete": "delete-setpoint-manager",
+        "🖇️rename": "rename-setpoint-manager",
+        "🔃️replace-kind": "replace-setpoint-manager-kind",
+        "🎼️change-schedule": "change-setpoint-manager-schedule"
+      },
+      "🌬️air-loop": {
+        "🛞️create": "create-air-loop",
+        "🥀️delete": "delete-air-loop",
+        "📇️rename": "rename-air-loop",
+        "↗️change-supply-node": "change-air-loop-supply-node",
+        "↘️change-return-node": "change-air-loop-return-node",
+        "🍥️change-design-supply-air-flow": "change-air-loop-design-supply-air-flow",
+        "🪺️add-terminal-zone": "add-air-loop-terminal-zone",
+        "🪹️remove-terminal-zone": "remove-air-loop-terminal-zone"
+      },
+      "🏭️plant-loop": {
+        "⚗️create": "create-plant-loop",
+        "💣️delete": "delete-plant-loop",
+        "📛️rename": "rename-plant-loop",
+        "♻️change-type": "change-plant-loop-type",
+        "☕️change-supply-temperature": "change-plant-loop-supply-temperature",
+        "🫖️change-return-temperature": "change-plant-loop-return-temperature",
+        "🚤️change-design-flow": "change-plant-loop-design-flow",
+        "🔩️add-equipment": "add-plant-loop-equipment",
+        "⚙️remove-equipment": "remove-plant-loop-equipment"
+      },
+      "🍃️outdoor-air": {
+        "🌲️create": "create-outdoor-air-system",
+        "🍂️delete": "delete-outdoor-air-system",
+        "⛓️change-air-loop": "change-outdoor-air-system-air-loop",
+        "🦋️change-min-oa-flow": "change-outdoor-air-system-min-oa-flow",
+        "💰️change-economizer-enabled": "change-outdoor-air-system-economizer-enabled"
+      },
+      "🔌️load-center": {
+        "🏦️create": "create-electrical-load-center",
+        "🔻️delete": "delete-electrical-load-center",
+        "🖊️rename": "rename-electrical-load-center",
+        "☄️add-pv": "add-electrical-load-center-pv",
+        "🌘️remove-pv": "remove-electrical-load-center-pv",
+        "🔋️add-battery": "add-electrical-load-center-battery",
+        "🪝️remove-battery": "remove-electrical-load-center-battery"
+      },
+      "☀️pv-system": {
+        "✨️create": "create-pv-system",
+        "🌒️delete": "delete-pv-system",
+        "⚛️change-dc-capacity": "change-pv-system-dc-capacity",
+        "🟨️change-area": "change-pv-system-area",
+        "📈️change-tilt": "change-pv-system-tilt",
+        "🧿️change-azimuth": "change-pv-system-azimuth",
+        "🎖️change-module-efficiency": "change-pv-system-module-efficiency",
+        "♌️change-inverter-efficiency": "change-pv-system-inverter-efficiency"
+      },
+      "🪫️battery": {
+        "🪙️create": "create-battery",
+        "♒️delete": "delete-battery",
+        "🥫️change-capacity": "change-battery-capacity",
+        "⏫️change-max-charge": "change-battery-max-charge",
+        "⏬️change-max-discharge": "change-battery-max-discharge",
+        "🥉️change-round-trip-efficiency": "change-battery-round-trip-efficiency"
+      },
+      "🚿️shw-system": {
+        "🛀️create": "create-shw-system",
+        "🚱️delete": "delete-shw-system",
+        "🍵️change-heater-capacity": "change-shw-system-heater-capacity",
+        "🛢️change-storage-volume": "change-shw-system-storage-volume",
+        "🏹️change-setpoint": "change-shw-system-setpoint",
+        "🕐️change-schedule": "change-shw-system-schedule"
+      },
+      "🔥️solar-thermal": {
+        "🌄️create": "create-solar-thermal-system",
+        "🌆️delete": "delete-solar-thermal-system",
+        "🟩️change-collector-area": "change-solar-thermal-system-collector-area",
+        "🏅️change-efficiency": "change-solar-thermal-system-efficiency",
+        "🧃️change-storage-volume": "change-solar-thermal-system-storage-volume",
+        "🔼️change-tilt": "change-solar-thermal-system-tilt",
+        "⛵️change-azimuth": "change-solar-thermal-system-azimuth"
+      },
+      "❄️refrigeration": {
+        "❄️create": "create-refrigeration-system",
+        "🫠️delete": "delete-refrigeration-system",
+        "🗄️change-case-count": "change-refrigeration-system-case-count",
+        "🏋️change-design-load": "change-refrigeration-system-design-load",
+        "🕑️change-defrost-schedule": "change-refrigeration-system-defrost-schedule"
+      },
+      "🚰️water-system": {
+        "🚽️create": "create-water-system",
+        "🧼️delete": "delete-water-system",
+        "🪣️change-fixture-count": "change-water-system-fixture-count",
+        "🚾️change-peak-flow": "change-water-system-peak-flow",
+        "🕒️change-schedule": "change-water-system-schedule"
+      },
+      "⚠️fault": {
+        "⚠️create": "create-fault",
+        "🩹️delete": "delete-fault",
+        "🎣️change-target-equipment": "change-fault-target-equipment",
+        "🐛️change-type": "change-fault-type",
+        "🌶️change-severity": "change-fault-severity",
+        "🕓️change-start-schedule": "change-fault-start-schedule"
+      },
+      "📋️space-list": {
+        "📋️create": "create-space-list",
+        "🗒️delete": "delete-space-list",
+        "🪶️rename": "rename-space-list",
+        "➡️add-member": "add-space-list-member",
+        "🪤️remove-member": "remove-space-list-member"
+      },
+      "🔒️enclosure": {
+        "🏟️create": "create-thermal-enclosure",
+        "🏯️delete": "delete-thermal-enclosure",
+        "🖋️rename": "rename-thermal-enclosure",
+        "🔒️add-zone": "add-thermal-enclosure-zone",
+        "🔓️remove-zone": "remove-thermal-enclosure-zone"
+      },
+      "🕐️fixed-schedule": {
+        "🕜️create": "create-constant-schedule",
+        "📍️delete": "delete-constant-schedule",
+        "🕝️change-value": "change-constant-schedule-value"
+      },
+      "🕒️day-schedule": {
+        "🕞️create": "create-daily-schedule",
+        "🌓️delete": "delete-daily-schedule",
+        "🕔️replace-hourly-values": "replace-daily-schedule-hourly-values",
+        "🕕️change-interpolation": "change-daily-schedule-interpolation",
+        "🕟️change-limits": "change-daily-schedule-limits"
+      },
+      "🗓️week-schedule": {
+        "🗓️create": "create-weekly-schedule",
+        "🕖️delete": "delete-weekly-schedule",
+        "🕗️change-day": "change-weekly-schedule-day"
+      },
+      "📆️year-schedule": {
+        "📚️create": "create-annual-schedule",
+        "📕️delete": "delete-annual-schedule",
+        "📗️insert-rule": "insert-annual-schedule-rule",
+        "📙️remove-rule": "remove-annual-schedule-rule",
+        "🗂️reorder-rules": "reorder-annual-schedule-rules",
+        "🎌️change-default-daily-schedule": "change-annual-schedule-default-daily-schedule",
+        "🎄️change-holiday-daily-schedule": "change-annual-schedule-holiday-daily-schedule",
+        "🎉️add-holiday": "add-annual-schedule-holiday",
+        "🎊️remove-holiday": "remove-annual-schedule-holiday"
+      },
+      "📈️time-series": {
+        "🪗️create": "create-time-series-schedule",
+        "🎞️delete": "delete-time-series-schedule",
+        "🕘️replace-values": "replace-time-series-schedule-values",
+        "🕙️change-timestep": "change-time-series-schedule-timestep"
+      }
+    },
     "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
       "🔑️access-rule": {
         "🌱️create": "create-access-rule",

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "schema": "https://json.schemas.assets.semio-tech.com/os/infinite/directed/presentation/schema.json",
+  "ports": [
+    {
+      "id": "out",
+      "label": "Value",
+      "abbreviation": "Val",
+      "fullName": "EvaluatedValue",
+      "shape": "triangle",
+      "visible": true
+    },
+    {
+      "id": "in",
+      "label": "Amount",
+      "shape": "semicircle",
+      "visible": false
+    }
+  ],
+  "labels": [
+    {
+      "name": "sample amount",
+      "abbreviation": "sample_amt",
+      "expected": [
+        "SampleAmount",
+        "SampleAmt"
+      ]
+    },
+    {
+      "name": "VALUE",
+      "abbreviation": "value",
+      "expected": [
+        "Value",
+        "Value"
+      ]
+    }
+  ],
+  "expanded": [
+    "b",
+    "a",
+    "a"
+  ],
+  "expectedExpanded": [
+    "a",
+    "b"
+  ],
+  "emptySnapshot": {
+    "schema": "dag.hostDocument",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "nodes": [],
+    "edges": []
+  },
+  "emptyWire": ""
+}

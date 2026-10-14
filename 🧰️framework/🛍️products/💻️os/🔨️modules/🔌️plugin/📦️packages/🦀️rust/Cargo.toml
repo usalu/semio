@@ -10,6 +10,11 @@ description = "Declarative app plugin SDK for semio framework WASM components"
 role = "framework"
 id = "plugin"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 1048576
+maxSourceFiles = 128
+maxActiveLines = 12000
+
 [lints]
 workspace = true
 
@@ -17,20 +22,13 @@ workspace = true
 path = "🦀️.rs"
 
 [features]
-default = []
-# ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (W6-A, jobs-runtime → B1 world-collapse): selects the
-# guest-side DIRECT host-import path, where a job body awaits `host-async` rather than emitting an
-# effect and waiting for its completion event. Since the collapse both paths live in the SAME
-# `world actor` (there is no second world), so this gates a calling convention, not a world. It MUST be declared even while no consumer enables it yet —
-# an undeclared feature makes every `#[cfg(feature = "component-guest-async")]` block silently unreachable,
-# so the code inside is never type-checked by any build (the standing `cfg`-gated-code trap). `JobCtx::host()`
-# lives behind exactly this gate.
-component-guest-async = []
 artifact-app-testing = []
 media-turn-testing = []
+reserved-producer-testing = []
 original-actor-context-testing = []
 
 [dependencies]
+semio-framework-value-retirement-owner = { path = "../../../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-plugin-mounted-owner = { path = "../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -131,3 +129,8 @@ required-features = ["media-turn-testing"]
 name = "owned-output"
 path = "../../⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🎟️native/🦀️.rs"
 required-features = ["original-actor-context-testing"]
+
+[[test]]
+name = "reserved-producer"
+path = "../../📜️declaration/👷️job/🎟️birth/🧪️tests/🎟️native/🦀️.rs"
+required-features = ["reserved-producer-testing"]

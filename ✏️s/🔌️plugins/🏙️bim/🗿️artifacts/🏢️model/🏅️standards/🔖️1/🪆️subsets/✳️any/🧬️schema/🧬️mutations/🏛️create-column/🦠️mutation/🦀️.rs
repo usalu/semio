@@ -1,6 +1,6 @@
 //! 🏛️ `create-column` payload. Brings a new column onto a storey; its height is never stored, it is inferred from the authored top constraint.
 
-use crate::{Column, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Column, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

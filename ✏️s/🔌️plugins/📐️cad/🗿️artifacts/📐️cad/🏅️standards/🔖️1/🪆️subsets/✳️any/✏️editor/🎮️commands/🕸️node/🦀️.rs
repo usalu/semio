@@ -1,14 +1,15 @@
 //! 🕸️ CAD play app commands — the scene's node tree: create and rename.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{runtime_of, snapshot_of};
-use crate::mutations::create_node::CreateNode as CreateNodeMutation;
-use crate::mutations::rename_node::RenameNode as RenameNodeMutation;
-use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::schema::inferences::next_cad_id;
-use crate::CadNode;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_modes::windows::config::runtime_of;
+use semio_s_artifact_cad_cad_kit::snapshot_of;
+use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode as CreateNodeMutation;
+use semio_s_artifact_cad_cad_mut_nodes::rename_node::RenameNode as RenameNodeMutation;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_inferences::next_cad_id;
+use semio_s_artifact_cad_cad_model::snapshot::CadNode;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

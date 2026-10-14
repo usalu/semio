@@ -12,7 +12,7 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -566,7 +566,7 @@ impl MutationDiff<StepSnapshot> for StepDiff {
             validate_entities_diff(&base.entities, diff)?;
         }
         let next = apply_step_diff_unchecked(self, base);
-        crate::schema::snapshot::references::validate_step_references(&next)?;
+        crate::standards::v_ap214::subsets::base::schema::snapshot::references::validate_step_references(&next)?;
         Ok(next)
     }
 
@@ -642,13 +642,13 @@ mod handcrafted_diff_codec_tests;
 //#endregion 🧪️Tests
 
 //#region 🔁️Re-exports
-pub use crate::schema::snapshot::StepComplexType;
-pub use crate::schema::snapshot::StepEntity;
-pub use crate::schema::snapshot::StepFileDescription;
-pub use crate::schema::snapshot::StepFileName;
-pub use crate::schema::snapshot::StepFileSchema;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepComplexType;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::schema::snapshot::StepValue;
+pub use crate::standards::v_ap214::subsets::base::schema::snapshot::StepValue;
 //#endregion 🔁️Re-exports
 
 /// 🧩️ The carried value of an entity an earlier diff added, once a later diff modified it (absorb).

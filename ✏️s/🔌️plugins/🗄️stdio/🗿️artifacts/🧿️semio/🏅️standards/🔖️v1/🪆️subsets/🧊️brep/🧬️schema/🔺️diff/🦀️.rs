@@ -15,7 +15,9 @@
 //! codec primitives from `🧰️triples` rather than re-deriving them.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
 
 
 

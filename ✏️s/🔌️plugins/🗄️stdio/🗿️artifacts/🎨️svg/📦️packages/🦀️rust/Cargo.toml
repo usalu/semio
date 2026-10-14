@@ -45,7 +45,7 @@ semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mu
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-s-artifact-stdio-svg-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust", features = ["oracles"] }
+semio-s-artifact-stdio-svg-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust" }
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"

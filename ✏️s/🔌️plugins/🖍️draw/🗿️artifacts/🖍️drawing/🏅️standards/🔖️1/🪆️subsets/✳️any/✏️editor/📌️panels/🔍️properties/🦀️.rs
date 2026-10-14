@@ -1,12 +1,13 @@
 //! 🔍️ Selection-aware, localized layer inspection through undoable semantic commands.
 #[path="🎬️actions/🦀️.rs"]
 mod selection_actions;
-use crate::editor::drawing::terminology::DrawingPlayLabels;
-use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text, ui_value_number};
-use crate::schema::{selected_drawing_layers, layer_base};
-fn color_text(color:[f64;4])->UiAssemblyResult<String>{let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(7,&mut accepted);crate::standards::v1::subsets::any::io::text::color::encode_color_text(color,&mut control).map_err(|_|error())}
-fn dash_text(samples:Option<&semio_framework_value::list::PagedList<f64,{usize::MAX}>>)->UiAssemblyResult<String>{let mut values=[0.0;64];let length=samples.map_or(0,|samples|samples.len());if length>64{return Err(error());}if let Some(samples)=samples{for(index,sample)in samples.iter().enumerate(){values[index]=*sample;}}let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(128,&mut accepted);crate::standards::v1::subsets::any::io::text::dash::encode_dash_text(Some(&values[..length]),&mut control).map_err(|_|error())}
-use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, PathSegment};
+use crate::terminology::DrawingPlayLabels;
+use crate::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text, ui_value_number};
+use semio_s_artifact_draw_drawing_model::{selected_drawing_layers, layer_base};
+fn color_text(color:[f64;4])->UiAssemblyResult<String>{let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(7,&mut accepted);semio_s_artifact_draw_drawing_io::text::color::encode_color_text(color,&mut control).map_err(|_|error())}
+fn dash_text(samples:Option<&semio_framework_value::list::PagedList<f64,{usize::MAX}>>)->UiAssemblyResult<String>{let mut values=[0.0;64];let length=samples.map_or(0,|samples|samples.len());if length>64{return Err(error());}if let Some(samples)=samples{for(index,sample)in samples.iter().enumerate(){values[index]=*sample;}}let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(128,&mut accepted);semio_s_artifact_draw_drawing_io::text::dash::encode_dash_text(Some(&values[..length]),&mut control).map_err(|_|error())}
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, PathSegment};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::Label;
@@ -83,7 +84,7 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> UiAssemblyRes
         rows.push(Field { key, label, value, kind, toggle, min, max });
     }
     if let DrawingLayerNode::Shape(shape)=layer {
-        use crate::schema::shape_geometry::{ShapeCoordinateField as Coordinate,shape_coordinate};
+        use semio_s_artifact_draw_drawing_model::shape_geometry::{ShapeCoordinateField as Coordinate, shape_coordinate};
         let geometry=[(Coordinate::RectX,labels.position_x),(Coordinate::RectY,labels.position_y),(Coordinate::RectWidth,labels.width),(Coordinate::RectHeight,labels.height),(Coordinate::EllipseCx,labels.gradient_center_x),(Coordinate::EllipseCy,labels.gradient_center_y),(Coordinate::EllipseRx,labels.radius_x),(Coordinate::EllipseRy,labels.radius_y),(Coordinate::CircleCx,labels.gradient_center_x),(Coordinate::CircleCy,labels.gradient_center_y),(Coordinate::CircleR,labels.gradient_radius),(Coordinate::LineX1,labels.gradient_start_x),(Coordinate::LineY1,labels.gradient_start_y),(Coordinate::LineX2,labels.gradient_end_x),(Coordinate::LineY2,labels.gradient_end_y)];
         for (coordinate,label) in geometry {
             if let Ok(value)=shape_coordinate(shape,&coordinate,None){rows.push(Field{key:coordinate.as_str(),label,value:value.to_string(),kind:InputKind::Number,toggle:false,min:coordinate.nonnegative().then_some(0.0),max:None});}
@@ -117,7 +118,7 @@ fn field_row(document: &DrawingSnapshot, field: &Field, selected: &[&DrawingLaye
     let (action, args) = drawing_play_action("patchLayers", Some(args))?;
     let args = args.ok_or_else(error)?;
     let id = format!("{ROOT}.{}.input", field.key);
-    let disabled = selected.iter().any(|layer| crate::schema::drawing_layer_is_locked(document, &layer_base(layer).id)) && !matches!(field.key, "locked" | "visible");
+    let disabled = selected.iter().any(|layer| semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document, &layer_base(layer).id)) && !matches!(field.key, "locked" | "visible");
     let control = if field.toggle && !mixed {
         ui::toggle(field.value == "true").try_id(&id).map_err(|_| error())?.try_label(field.label.as_str()).map_err(|_| error())?.disabled(disabled)
             .try_on_with(Trigger::Change, action, args).map_err(|_| error())?.try_build().map_err(|_| error())?
@@ -266,7 +267,7 @@ fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&Fil
         row = row.try_child(fill_input(layer_id,"drawing-inspector.fill.alpha",labels.opacity,InputKind::Number,&color[3].to_string(),edit,disabled)?).map_err(|_| error())?;
     }
     if let Some(fill) = fill {
-        let stops = crate::schema::fill::stops(fill);
+        let stops = semio_s_artifact_draw_drawing_model::fill::stops(fill);
         if !disabled && !stops.is_empty() && stops.len() < 64 {
             let offset = (1..stops.len()).max_by(|a,b| (stops[*a].offset-stops[*a-1].offset).total_cmp(&(stops[*b].offset-stops[*b-1].offset))).map_or(0.5,|index| (stops[index-1].offset+stops[index].offset)/2.0);
             let args = ui_value_map([("layerId",ui_value_text(layer_id)?),("edit",ui_value_map([("kind",ui_value_text("addStop")?),("offset",ui_value_number(offset))])?)])?;
@@ -276,7 +277,7 @@ fn fill_controls(layer_id: &(impl std::fmt::Display + ?Sized), fill: Option<&Fil
     row.try_build().map_err(|_| error())
 }
 
-fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &crate::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
+fn stop_row(layer_id: &(impl std::fmt::Display + ?Sized), index: usize, stop: &semio_s_artifact_draw_drawing_model::GradientStop, removable: bool, disabled: bool, labels: &DrawingPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{ROOT}.fill.stop.{index}");
     let mut row = ui::tree_item(ui::Label(text(&format!("{} {}",labels.gradient_stop.as_str(),index+1))?)).default_open(true).try_id(&id).map_err(|_| error())?;
     for (kind,label,input,value) in [("color",labels.fill,InputKind::Color,color_text(stop.color)?),("alpha",labels.opacity,InputKind::Number,stop.color[3].to_string()),("offset",labels.stop_position,InputKind::Number,stop.offset.to_string())] {
@@ -317,10 +318,10 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
     })?;
     if selected.len() == 1 {
         let base = layer_base(first);
-        let disabled = crate::schema::drawing_layer_is_locked(document,&base.id);
+        let disabled = semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document,&base.id);
         tree = tree.window_section(windows,"drawing-inspector.fill",Some(ui::Label(text(labels.fill.as_str())?)),true,&[()],|_| fill_controls(&base.id,base.attributes.fill.as_ref(),disabled,labels))?;
         if let Some(fill) = base.attributes.fill.as_ref() {
-            let stops = crate::schema::fill::stops(fill);
+            let stops = semio_s_artifact_draw_drawing_model::fill::stops(fill);
             let rows = stops.iter().enumerate().collect::<Vec<_>>();
             if !rows.is_empty() { tree = tree.window_section(windows,"drawing-inspector.fill.stops",Some(ui::Label(text(labels.gradient_stops.as_str())?)),true,&rows,|(index,stop)| stop_row(&base.id,*index,stop,stops.len()>2,disabled,labels))?; }
         }
@@ -350,7 +351,7 @@ pub fn render(document: &DrawingSnapshot, ids: &[String], labels: &DrawingPlayLa
                 }
             }
             let nodes = path.segments.iter().enumerate().collect::<Vec<_>>();
-            let disabled = crate::schema::drawing_layer_is_locked(document, &path.base.id);
+            let disabled = semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document, &path.base.id);
             tree = tree.window_section(windows, "drawing-inspector.nodes", Some(ui::Label(text(labels.nodes.as_str())?)), true, &nodes, |(index, segment)| node_row(&path.base.id, *index, segment, joins[*index], disabled, labels))?;
         }
     }

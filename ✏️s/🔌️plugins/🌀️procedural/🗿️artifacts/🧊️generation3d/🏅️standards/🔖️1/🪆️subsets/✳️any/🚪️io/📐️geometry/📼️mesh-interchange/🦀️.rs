@@ -2,8 +2,28 @@
 //!
 //! Writers and readers advance in bounded slices; the format codecs of the mesh engine (STL and GLB encode and decode, JSON encode) run as one unit each.
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::{capacity_fault, export_fault, from_source, import_fault, mesh_output, modeling_slice, ratio, run, tessellation_slice, Flow, KernelResult, Machine, Parse, BATCH};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
+use semio_s_artifact_procedural_3d_mesh_support::export_fault;
+use semio_s_artifact_procedural_3d_mesh_support::from_source;
+use semio_s_artifact_procedural_3d_mesh_support::import_fault;
+use semio_s_artifact_procedural_3d_mesh_support::mesh_output;
+use semio_s_artifact_procedural_3d_mesh_support::modeling_slice;
+use semio_s_artifact_procedural_3d_mesh_support::ratio;
+use semio_s_artifact_procedural_3d_mesh_support::run;
+use semio_s_artifact_procedural_3d_mesh_support::tessellation_slice;
+use semio_s_artifact_procedural_3d_mesh_support::Flow;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_mesh_support::Machine;
+use semio_s_artifact_procedural_3d_mesh_support::Parse;
+use semio_s_artifact_procedural_3d_mesh_support::BATCH;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshModelingJob, MeshModelingStep, MeshObjExport, MeshTessellationJob, MeshTessellationStep};
 use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
 use semio_framework_mesh_engine::{MeshData};
@@ -89,7 +109,7 @@ impl Machine for ExportBinary {
         if let Some(job) = self.tessellation.as_mut() {
             return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.4 * ratio(progress))),
-                MeshTessellationStep::Cancelled(_) => Err(crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::cancelled_fault()),
+                MeshTessellationStep::Cancelled(_) => Err(semio_s_artifact_procedural_3d_mesh_support::cancelled_fault()),
                 MeshTessellationStep::Done(transfer) => {
                     self.tessellation = None;
                     let data = MeshData { positions: transfer.positions, normals: transfer.normals, colors: transfer.colors, indices: transfer.indices, uvs: transfer.uvs, ..MeshData::default() };
@@ -180,7 +200,7 @@ impl Machine for ImportBinary {
         match modeling_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(0.35 + 0.65 * ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
-            MeshModelingStep::Cancelled(_) => Err(crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::cancelled_fault()),
+            MeshModelingStep::Cancelled(_) => Err(semio_s_artifact_procedural_3d_mesh_support::cancelled_fault()),
         }
     }
 
@@ -208,6 +228,8 @@ fn import_glb(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Import
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-interchange", include_str!("../../../🧬️schema/🗂️catalogue/🔣️mesh-interchange.json"));
 /// 🗃️ The `mesh.interchange` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "mesh.interchange.exportObj", start: export_obj },

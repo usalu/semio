@@ -7,7 +7,9 @@ mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
-use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use crate::schema::snapshot::SemioTableColumn;
+use crate::schema::snapshot::SemioTableRow;
+use crate::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 /// 🧪️ Hand-rolled `protocol::DiffCodec`. Unlike `🔤️text` (one mutable field), `table` has TWO —

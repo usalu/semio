@@ -2674,7 +2674,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     async function livenessFixture(): Promise<LivenessFixture> {
       const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧫️fixtures/🔣️.json");
-      const { default: schema } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🧬️schema/🔣️.json");
+      const { actorShardLivenessSchema: schema } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts");
       const { default: Ajv } = await import("ajv");
       const validate = new Ajv({ strict: true }).compile(schema);
       expect(validate(SHARD_LIVENESS_POLICY), JSON.stringify(validate.errors)).toBe(true);

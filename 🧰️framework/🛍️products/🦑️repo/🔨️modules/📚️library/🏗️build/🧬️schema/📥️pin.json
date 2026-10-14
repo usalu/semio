@@ -1,0 +1,1 @@
+{"type":"object","required":["path","digest"],"properties":{"path":{"type":"string","minLength":1},"digest":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false}

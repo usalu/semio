@@ -1,6 +1,14 @@
 //! 🔢️ `math.values` computes: constants that feed numbers, angles, vectors, points and planes into other widgets.
+#![allow(clippy::result_large_err)]
 
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+
 
 fn number(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish(kind, inputs.number("value").map(|value| outputs([("value", GeometryValue::Number(value))])))
@@ -26,6 +34,8 @@ fn plane(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish(kind, inputs.plane("value").map(|value| outputs([("value", GeometryValue::Plane(value))])))
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("math-values", include_str!("../../../🗂️catalogue/🔣️math-values.json"));
 /// 🗃️ The `math.values` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "math.number", start: number },

@@ -1,10 +1,10 @@
 //! 🧰️ Shared checks of the bundled examples: strict decode, schema validation by the third-party jsonschema library, text and pack
 //! round trips, referential integrity, inference sanity, and the replay of a whole example through the mutation API.
 
-use crate::mutations::{apply_model_mutation, ModelMutation, KINDS};
+use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, ModelMutation, KINDS};
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, parse_dsl, print_dsl};
-use crate::{ModelInference, ModelSnapshot, OpeningKind, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, OpeningKind, TopConstraint}};
 use crate::standards::v1::subsets::any::schema::inferences::{diagnostics::Severity, spaces::SpaceStatus};
 use protocol::Inference;
 use std::path::{Path, PathBuf};
@@ -148,11 +148,11 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         need(format!("curtain_walls/{id}/top"), top_storey(&curtain.top).is_none_or(|storey| model.storeys.contains_key(storey)));
         need(format!("curtain_walls/{id}/curtain_wall_type"), model.curtain_wall_types.contains_key(&curtain.curtain_wall_type));
     }
-    let panel_ok = |panel: &crate::CurtainPanel| match panel {
-        crate::CurtainPanel::Glass | crate::CurtainPanel::Empty => true,
-        crate::CurtainPanel::Solid { material } => model.materials.contains_key(material),
-        crate::CurtainPanel::Door { door_type } => model.door_types.contains_key(door_type),
-        crate::CurtainPanel::Window { window_type } => model.window_types.contains_key(window_type),
+    let panel_ok = |panel: &crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel| match panel {
+        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass | crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Empty => true,
+        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Solid { material } => model.materials.contains_key(material),
+        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Door { door_type } => model.door_types.contains_key(door_type),
+        crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Window { window_type } => model.window_types.contains_key(window_type),
     };
     for (id, kind) in &model.curtain_wall_types {
         need(format!("curtain_wall_types/{id}/panel_material"), model.materials.contains_key(&kind.panel_material));
@@ -231,34 +231,34 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         }
     }
     for (id, system) in &model.classification_systems {
-        need(format!("classification_systems/{id}/entries"), crate::entries_problem(&system.entries).is_none());
+        need(format!("classification_systems/{id}/entries"), crate::standards::v1::subsets::any::schema::snapshot::entries_problem(&system.entries).is_none());
     }
     for (id, template) in &model.property_templates {
-        need(format!("property_templates/{id}/definition"), crate::template_problem(&template.name, &template.applies_to, &template.properties).is_none());
+        need(format!("property_templates/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::template_problem(&template.name, &template.applies_to, &template.properties).is_none());
     }
     for (id, view) in &model.views {
-        need(format!("views/{id}/definition"), crate::view_problem(model, id, view).is_none());
+        need(format!("views/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::view_problem(model, id, view).is_none());
     }
     for (id, row) in &model.sheets {
-        need(format!("sheets/{id}/definition"), crate::sheet_problem(model, id, row).is_none());
+        need(format!("sheets/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::sheet_problem(model, id, row).is_none());
     }
     for (id, row) in &model.viewports {
-        need(format!("viewports/{id}/definition"), crate::viewport_problem(model, id, row).is_none());
+        need(format!("viewports/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::viewport_problem(model, id, row).is_none());
     }
     for (id, row) in &model.sheet_revisions {
-        need(format!("sheet_revisions/{id}/definition"), crate::revision_problem(model, id, row).is_none());
+        need(format!("sheet_revisions/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::revision_problem(model, id, row).is_none());
     }
     for (id, row) in &model.clash_sets {
-        need(format!("clash_sets/{id}/definition"), crate::clash_set_problem(model, id, row).is_none());
+        need(format!("clash_sets/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::clash_set_problem(model, id, row).is_none());
     }
     for (id, row) in &model.rules {
-        need(format!("rules/{id}/definition"), crate::rule_problem(model, id, row).is_none());
+        need(format!("rules/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::rule_problem(model, id, row).is_none());
     }
     for (id, row) in &model.issues {
-        need(format!("issues/{id}/definition"), crate::issue_problem(model, id, row).is_none());
+        need(format!("issues/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::issue_problem(model, id, row).is_none());
     }
     for (id, row) in &model.issue_comments {
-        need(format!("issue_comments/{id}/definition"), crate::comment_problem(model, id, row).is_none());
+        need(format!("issue_comments/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::comment_problem(model, id, row).is_none());
     }
     let present = |id: &str| owned(&id.to_string()) || model.grids.contains_key(id);
     for (id, row) in &model.dimensions {
@@ -290,7 +290,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         need(format!("family_solids/{id}/formulas"), crate::standards::v1::subsets::any::schema::authored::formula::solid_slots(row).iter().all(|(_, text)| crate::standards::v1::subsets::any::schema::authored::formula::references(text).iter().all(|name| model.family_parameters.contains_key(&crate::standards::v1::subsets::any::schema::authored::formula::parameter_id(&row.family, name)))));
     }
     for (id, row) in &model.components {
-        need(format!("components/{id}/family"), model.families.get(&row.family).is_some_and(|family| family.category != crate::FamilyCategory::Profile));
+        need(format!("components/{id}/family"), model.families.get(&row.family).is_some_and(|family| family.category != crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile));
         need(format!("components/{id}/host"), row.host.as_ref().is_none_or(|wall| model.walls.get(wall).is_some_and(|host| host.storey == row.storey)));
     }
     for (key, row) in &model.component_overrides {
@@ -303,7 +303,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
     for (id, row) in &model.mep_elements {
         need(format!("mep_elements/{id}/path"), row.path.len() >= 2 && row.path.windows(2).all(|pair| (pair[0].x - pair[1].x).hypot(pair[0].y - pair[1].y).hypot(pair[0].z - pair[1].z) > 1e-9));
     }
-    let profile_ok = |profile: &crate::Profile| crate::standards::v1::subsets::any::schema::inferences::families::family_of_profile(profile).is_none_or(|family| model.families.get(family).is_some_and(|row| row.category == crate::FamilyCategory::Profile));
+    let profile_ok = |profile: &crate::standards::v1::subsets::any::schema::snapshot::Profile| crate::standards::v1::subsets::any::schema::inferences::families::family_of_profile(profile).is_none_or(|family| model.families.get(family).is_some_and(|row| row.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile));
     for (id, kind) in &model.column_types {
         need(format!("column_types/{id}/profile"), profile_ok(&kind.profile));
     }
@@ -314,7 +314,7 @@ pub fn dangling(model: &ModelSnapshot) -> Vec<String> {
         for storey in &schedule.storeys {
             need(format!("schedules/{id}/storeys"), model.storeys.contains_key(storey));
         }
-        need(format!("schedules/{id}/definition"), crate::schedule_kit::schedule_problem(schedule).is_none());
+        need(format!("schedules/{id}/definition"), crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem(schedule).is_none());
     }
     let mut levels = std::collections::BTreeSet::new();
     for (id, storey) in &model.storeys {
@@ -376,7 +376,7 @@ pub fn infer(model: &ModelSnapshot) -> ModelInference {
 
 /// 📋️ A schedule table is consistent with its definition: it has a total row exactly when a column is summed and a row was listed, and every summed column of the total row is the sum of the rows the table lists (the items
 /// when itemized, else the collapsed rows of the outermost level).
-fn schedules_add_up(id: &str, schedule: &crate::Schedule, table: &crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable) {
+fn schedules_add_up(id: &str, schedule: &crate::standards::v1::subsets::any::schema::snapshot::Schedule, table: &crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable) {
     use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
     assert_eq!(table.keys, schedule.columns.iter().map(|column| column.key.clone()).collect::<Vec<_>>(), "schedule {id} keeps its columns");
     let total = table.rows.iter().find(|row| row.kind == RowKind::Total);
@@ -531,7 +531,7 @@ pub fn replay_derived(model: &ModelSnapshot, derivations: &str) -> Replay {
         }
         if kind == "create-family" && KINDS.contains(&"set-family-parameter") {
             for family in model.families.keys() {
-                for row in crate::mutations::family_rules::parameters_in_order(model, family) {
+                for row in crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order(model, family) {
                     let quoted = |text: &String| semio_framework_pack_json::to_json_string(text);
                     state = apply_json(&state, &format!("{{\"mutation\":\"setFamilyParameter\",\"family\":{},\"name\":{},\"kind\":{},\"value\":{}}}", quoted(&row.family), quoted(&row.name), semio_framework_pack_json::to_json_string(&row.kind), quoted(&row.value)));
                     applied += 1;
@@ -594,7 +594,7 @@ pub fn assert_replay_derived(name: &str, model: &ModelSnapshot, derivations: &st
 pub fn assert_views_are_the_commands(name: &str, model: &ModelSnapshot) {
     use crate::editor::bim::commands::create_view::{extents, handle, CreateView, MARGIN};
     use crate::editor::bim::unit_tests::support::{ctx, run};
-    use crate::{Point2, View, ViewPlane};
+    use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewPlane};
     let bare = ModelSnapshot { views: Default::default(), ..model.clone() };
     let made = |kind: &str, parent: &str| -> Vec<View> {
         let mut context = ctx(&[]);

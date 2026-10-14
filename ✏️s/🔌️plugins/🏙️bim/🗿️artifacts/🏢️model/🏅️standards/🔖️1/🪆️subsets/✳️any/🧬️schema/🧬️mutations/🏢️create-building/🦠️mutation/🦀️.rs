@@ -1,6 +1,6 @@
 //! 🏢️ `create-building` payload. Brings a new building onto an existing site.
 
-use crate::{Building, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Building, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

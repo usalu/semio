@@ -5,6 +5,7 @@ const installation=()=>({mode:"prototype" as const,control:phaseCompilerAdmissio
 import { expect, test } from "bun:test";
 import { chmodSync, constants, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 import { captureDashboardSources, digestDashboardSources, installDashboard, dashboardInvocation, mayRunStale, staleDashboard } from "../../📦️installation/🟦️.ts";
 import { dashboardExecutable } from "../../📦️packages/🦀️rust/📜️script.ts";
 
@@ -103,5 +104,30 @@ test("the neutral build runner launches an installed dashboard before discoverin
     const {runOwnedBuildInvocationV1}=await import("../../../📚️library/🏗️build/📜️script.ts");
     await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"dashboard:bridge-test",maximumElapsedMilliseconds:30000},{},Date.now()),invocation=>runOwnedBuildInvocationV1(root,fixture.arguments,invocation));
     expect(JSON.parse(readFileSync(join(root,"observed.json"),"utf8"))).toEqual(fixture.expected);
+    const authored=fixture.authoring,capabilities={workspaceRoot:root,arguments:authored.arguments,selection:authored.arguments,launches:[authored.arguments],buildMode:fixture.mode,native:{...authored.native,artifactDirectory:join(root,authored.native.artifactDirectory)}};
+    const authoringSchema=JSON.parse(readFileSync(new URL("../../../📚️library/🏗️build/🧬️schema/📥️authoring.json",import.meta.url),"utf8"));
+    expect(new Ajv({strict:false}).compile(authoringSchema)(capabilities)).toBe(true);
+    const receiver=new URL("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",import.meta.url).href;
+    writeFileSync(join(root,"daemon"),`import {writeFileSync} from "node:fs";import {receiveScriptProcessInvocation} from ${JSON.stringify(receiver)};await receiveScriptProcessInvocation(process.env,async invocation=>{const remainingBefore=invocation.control.remainingMilliseconds();await Bun.sleep(${authored.receivingDelayMilliseconds});const remainingAfter=invocation.control.remainingMilliseconds(),receivedAt=Date.now(),envelope=JSON.parse(process.env.SEMIO_SCRIPT_PROCESS_INVOCATION);writeFileSync("observed-authored.json",JSON.stringify({arguments:process.argv.slice(2),tool:process.env.SEMIO_BUILD_TOOL,mode:process.env.SEMIO_BUILD_MODE,envelope,remainingBefore,remainingAfter,receivedAt}));console.log("[DEBUG] authored installed dashboard owner="+invocation.policy.owner+" remaining="+remainingAfter);});`);
+    const cli=new URL("../../../📚️library/🏗️build/📜️script.ts",import.meta.url).href;
+    const program=`import {writeFileSync} from "node:fs";import {runBuildCliV1} from ${JSON.stringify(cli)};const startedAt=Date.now();await runBuildCliV1(${JSON.stringify(root)},${JSON.stringify(["repo",...fixture.arguments])},process.env);writeFileSync("cli-clock.json",JSON.stringify({startedAt,completedAt:Date.now()}));`;
+    const environment:NodeJS.ProcessEnv={...process.env,SEMIO_SCRIPT_POLICY:JSON.stringify(authored.policy),SEMIO_SCRIPT_CAPABILITIES:JSON.stringify(capabilities),CARGO_NET_OFFLINE:"false"};
+    delete environment.SEMIO_SCRIPT_PROCESS_INVOCATION;
+    const child=Bun.spawn([process.execPath,"--eval",program],{cwd:root,env:environment,stdout:"pipe",stderr:"pipe"});
+    const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
+    expect(status,stderr).toBe(0);
+    const observed=JSON.parse(readFileSync(join(root,"observed-authored.json"),"utf8")),clock=JSON.parse(readFileSync(join(root,"cli-clock.json"),"utf8"));
+    expect({arguments:observed.arguments,tool:observed.tool,mode:observed.mode}).toEqual(fixture.expected);
+    expect(observed.envelope.policy).toEqual(authored.policy);
+    expect(observed.envelope.capabilities).toEqual({...capabilities,tool:"bazel"});
+    expect(observed.envelope.deadlineEpochMilliseconds-authored.policy.maximumElapsedMilliseconds).toBeGreaterThanOrEqual(clock.startedAt-2);
+    expect(observed.envelope.deadlineEpochMilliseconds-authored.policy.maximumElapsedMilliseconds).toBeLessThanOrEqual(clock.completedAt);
+    expect(observed.remainingBefore).toBeLessThan(authored.policy.maximumElapsedMilliseconds);
+    expect(observed.remainingAfter).toBeGreaterThan(0);
+    expect(observed.remainingAfter).toBeLessThanOrEqual(observed.remainingBefore-authored.receivingDelayMilliseconds+2);
+    expect(Math.abs(observed.envelope.deadlineEpochMilliseconds-observed.receivedAt-observed.remainingAfter)).toBeLessThanOrEqual(2);
+    expect(stdout).toContain("[DEBUG] authored installed dashboard owner="+authored.policy.owner);
+    expect(()=>statSync(buildGraphPathV1(root))).toThrow();
+    console.log(stdout.split("\n").find(line=>line.startsWith("[DEBUG] authored installed dashboard")));
   }finally{if(previousMode===undefined)delete process.env.SEMIO_BUILD_MODE;else process.env.SEMIO_BUILD_MODE=previousMode;rmSync(root,{recursive:true,force:true});}
 });

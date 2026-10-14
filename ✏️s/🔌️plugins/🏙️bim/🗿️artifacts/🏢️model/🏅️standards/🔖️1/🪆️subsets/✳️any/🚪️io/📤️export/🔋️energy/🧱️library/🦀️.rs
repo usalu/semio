@@ -4,8 +4,8 @@
 //! 📎 ISO 6946 <https://www.iso.org/standard/65708.html>
 
 use super::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
-use crate::Layer;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Layer;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🌡️ The thermal absorptance of every surface, the default of EnergyPlus.

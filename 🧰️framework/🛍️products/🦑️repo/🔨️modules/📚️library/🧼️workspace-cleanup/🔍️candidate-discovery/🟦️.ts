@@ -1,7 +1,8 @@
 import { generatedOutputHasLiveLease } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { existsSync, lstatSync, readdirSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
-import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, runProbe, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";
+import { existsSync, lstatSync, readdirSync, type Dirent } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import {HUB_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SPACE_DATA_DIR_NAME} from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
+import {runProbe} from "../../🏃️process/🔍️probe/🟦️.ts";
 import {
   CLEAN_CACHE_DIR_NAME,
   CLEAN_CANONICAL_REPO_DIR,
@@ -12,6 +13,10 @@ import {
   cleanIsCanonicalRepoDir,
   cleanIsCanonicalTicketsDir,
   cleanIsCargoTargetDir,
+  CLEAN_RUST_INCREMENTAL_MAX_BYTES,
+  cleanSelectHugeRustIncremental,
+  cleanRustIncrementalSearchRoots,
+  type CleanRustIncrementalCrate,
   cleanIsMisplacedRepoDir,
   cleanIsMisplacedTicketsDir,
   cleanIsProtected,
@@ -359,6 +364,109 @@ export function cleanCollectWindowsIllegal(root: string, protectedPrefixes: read
     }
   }
   return out;
+}
+
+
+const CLEAN_RUST_INCREMENTAL_HEAVY_DIRS = new Set(["build", "deps", ".fingerprint"]);
+
+/** 🦀️ Reclaims rustc `incremental` directories larger than `maxBytes` under cargo output roots. In-progress `-working` sessions stay; dependency units stay. */
+export function cleanCollectRustIncrementalRemovals(root: string, maxBytes = CLEAN_RUST_INCREMENTAL_MAX_BYTES): CleanRemoval[] {
+  const out: CleanRemoval[] = [];
+  const seen = new Set<string>();
+  for (const searchRoot of cleanRustIncrementalSearchRoots(root)) {
+    const stack: { dir: string; depth: number }[] = [{ dir: searchRoot, depth: 0 }];
+    while (stack.length > 0) {
+      const current = stack.pop()!;
+      let names: string[];
+      try {
+        names = readdirSync(current.dir);
+      } catch {
+        continue;
+      }
+      for (const name of names) {
+        if (name === "node_modules" || name === ".git") continue;
+        const abs = join(current.dir, name);
+        let state;
+        try {
+          state = lstatSync(abs);
+        } catch {
+          continue;
+        }
+        if (!state.isDirectory() || state.isSymbolicLink()) continue;
+        if (name === "incremental") {
+          const removal = cleanRustIncrementalDirectoryRemoval(root, abs, maxBytes);
+          if (removal) {
+            for (const row of removal.rows) {
+              const key = resolve(root, row.path);
+              if (seen.has(key)) continue;
+              seen.add(key);
+              out.push(row);
+            }
+          }
+          continue;
+        }
+        if (current.depth >= 8) continue;
+        if (CLEAN_RUST_INCREMENTAL_HEAVY_DIRS.has(name) && dirname(abs) !== searchRoot) continue;
+        stack.push({ dir: abs, depth: current.depth + 1 });
+      }
+    }
+  }
+  return out;
+}
+
+function cleanRustIncrementalDirectoryRemoval(root: string, incrementalAbs: string, maxBytes: number): { abs: string; rows: CleanRemoval[] } | undefined {
+  let entries: Dirent[];
+  try {
+    entries = readdirSync(incrementalAbs, { withFileTypes: true });
+  } catch {
+    return undefined;
+  }
+  const crates: CleanRustIncrementalCrate[] = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+    const crateAbs = join(incrementalAbs, entry.name);
+    let children: Dirent[];
+    try {
+      children = readdirSync(crateAbs, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    let session = false;
+    let working = false;
+    for (const child of children) {
+      if (!child.isDirectory() || child.isSymbolicLink()) continue;
+      if (child.name.endsWith("-working")) working = true;
+      if (child.name.startsWith("s-") && !child.name.endsWith(".lock")) session = true;
+    }
+    if (!session) continue;
+    crates.push({ name: entry.name, bytes: 0, working });
+  }
+  if (crates.length === 0) return undefined;
+  const path = relative(root, incrementalAbs).split(sep).join("/");
+  const measured = crates.some((crate) => crate.working)
+    ? crates.map((crate) => ({ ...crate, bytes: cleanRustIncrementalBytes(join(incrementalAbs, crate.name)) }))
+    : [{ name: "profile", bytes: cleanRustIncrementalBytes(incrementalAbs), working: false }];
+  const selected = cleanSelectHugeRustIncremental({ path, crates: measured }, maxBytes);
+  const rows = selected.map((item): CleanRemoval => {
+    const abs = join(root, ...item.split("/"));
+    const bytes = item === path ? measured.reduce((sum, crate) => sum + crate.bytes, 0) : measured.find((crate) => crate.name === item.split("/").at(-1))?.bytes ?? 0;
+    return { kind: "cargo-incremental", path: relative(root, abs), bytes };
+  });
+  return { abs: incrementalAbs, rows };
+}
+
+/** 📏 Allocated bytes of one incremental directory. `du` keeps a multi-gigabyte profile cache from being walked file by file. */
+function cleanRustIncrementalBytes(abs: string): number {
+  if (process.platform !== "win32") {
+    try {
+      const probe = runProbe("du", ["-sk", abs], { budgetMs: 600_000 });
+      if ((probe.status ?? 1) === 0) {
+        const kb = Number(probe.stdout.trim().split(/\s+/u)[0]);
+        if (Number.isSafeInteger(kb) && kb >= 0) return kb * 1024;
+      }
+    } catch {}
+  }
+  return cleanPathBytes(abs);
 }
 
 export function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {

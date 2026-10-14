@@ -20,7 +20,7 @@ class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     if (rest.length) throw new Error("The full Puzzle native cohort accepts no test or scenario filters.");
-    for (const artifact of contract.artifacts) await runRepositoryTestCommand(process.execPath, ["repo", "run", `${artifact.project}:test`, "--skip-nx-cache", "--", "--features", "component-app-assembly"], { cwd: resolve(this.root, "../../../.."), budgetMs: 3_600_000 });
+    for (const artifact of contract.artifacts) await runRepositoryTestCommand(process.execPath, ["repo", "run", `${artifact.project}:test`, "--skip-cache"], { cwd: resolve(this.root, "../../../.."), budgetMs: 3_600_000 });
   }
 }
 

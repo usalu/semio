@@ -13,11 +13,8 @@
 //! because the tree carries ONE `interactionSelect` binding instead of one per row.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{
-    puzzle3d_object_display_label, puzzle3d_vortex_full_id, ui_label, Puzzle3dAttraction, Puzzle3dSceneSnapshot, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, Puzzle3dVortex, PUZZLE3D_GRANULARITY_ATTRACTION,
-    PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID,
-};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
+use {crate::editor::puzzle3d::snapshot::puzzle3d_object_display_label, crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id, crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dAttraction, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject, crate::editor::puzzle3d::snapshot::Puzzle3dReference, crate::editor::puzzle3d::snapshot::Puzzle3dTargetVolume, crate::editor::puzzle3d::snapshot::Puzzle3dVortex, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_ATTRACTION, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_REFERENCE, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_TARGET_VOLUME, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_VORTEX, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
+use {semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
 use semio_framework_plugin::tree_window_item;

@@ -4,7 +4,11 @@
 
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
-use crate::{element_id, Fem2dSnapshot, FemDof, FemLoad, Viewport2d};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_os_kernel::Viewport2d;
 use model_window::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::app::InteractionView;
@@ -186,7 +190,7 @@ pub(crate) fn fem2d_load_glyph(doc: &Fem2dSnapshot, load: &FemLoad) -> Option<((
 
 /// 🗺️ A region's outline centroid in model meters — the point a load glyph anchors to and the point
 /// `focusEntity` frames.
-pub(crate) fn fem2d_region_centroid(region: &crate::FemRegion) -> Option<(f64, f64)> {
+pub(crate) fn fem2d_region_centroid(region: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion) -> Option<(f64, f64)> {
     if region.outline.is_empty() {
         return None;
     }
@@ -231,7 +235,7 @@ pub fn fem2d_entity_kind(doc: &Fem2dSnapshot, id: &str) -> Option<&'static str> 
 /// 🏋️ The load case owning one load id, plus the load itself — a load target carries only the raw
 /// load id, so every consumer (inspector patch, focus, highlight) resolves its case through here.
 pub fn fem2d_load_owner<'a>(doc: &'a Fem2dSnapshot, load: &str) -> Option<(&'a str, &'a FemLoad)> {
-    doc.load_cases.iter().find_map(|case| case.loads.iter().find(|candidate| crate::load_id(candidate) == load).map(|found| (case.id.as_str(), found)))
+    doc.load_cases.iter().find_map(|case| case.loads.iter().find(|candidate| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(candidate) == load).map(|found| (case.id.as_str(), found)))
 }
 
 /// 🎯️ The model-space point one entity is framed on — a node's position, a member's midpoint, a
@@ -307,7 +311,7 @@ pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, 
             let Some((start, end)) = fem2d_load_glyph(doc, load) else { continue };
             let score = distance_to_segment(pointer, layer_at(start), layer_at(end));
             if score <= FEM2D_LOAD_PICK_RADIUS_PX {
-                keep(score, (FEM2D_GRANULARITY_LOAD, crate::load_id(load).to_string()), &mut best);
+                keep(score, (FEM2D_GRANULARITY_LOAD, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load).to_string()), &mut best);
             }
         }
     }

@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `ReplaceSurface`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 use crate::schema::diff::{BrepFaceDiff, SemioBrepDiff};
 use crate::schema::snapshot::SemioBrepSnapshot;
 

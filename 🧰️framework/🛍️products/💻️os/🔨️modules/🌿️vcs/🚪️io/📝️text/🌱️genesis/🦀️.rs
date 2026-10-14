@@ -1,5 +1,5 @@
 //! 🌱️ Native stored genesis Pack text framing.
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
+use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl};
 pub fn encode_genesis_hex_controlled(pack:&[u8],control:&mut NativeEncodeControl<'_>)->Result<String,ValueError>{
  let capacity=pack.len().checked_mul(2).filter(|n|*n<=isize::MAX as usize).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Genesis hex capacity overflow"))?;

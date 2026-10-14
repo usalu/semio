@@ -5,10 +5,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::schema::find_drawing_layer;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/➡️after/🔣️.json");
@@ -113,7 +113,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-layer/removes-group-a-with-its-child: committed diff JSON is not canonical");
@@ -123,7 +123,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-layer/removes-group-a-with-its-child: committed diff did not carry before to after");
 }

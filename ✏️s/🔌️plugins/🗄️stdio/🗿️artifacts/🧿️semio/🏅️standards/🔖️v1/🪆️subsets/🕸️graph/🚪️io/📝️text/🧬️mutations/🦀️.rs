@@ -7,12 +7,13 @@
 use crate::schema::mutations::SemioGraphMutation;
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use {crate::schema::mutations::add_node_port::AddNodePort, crate::schema::mutations::add_node_property::AddNodeProperty, crate::schema::mutations::change_node_kind::ChangeNodeKind, crate::schema::mutations::change_node_label::ChangeNodeLabel, crate::schema::mutations::create_edge::CreateEdge, crate::schema::mutations::create_node::CreateNode, crate::schema::mutations::delete_edge::DeleteEdge, crate::schema::mutations::delete_node::DeleteNode, crate::schema::mutations::drag_nodes::DragNodes, crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::remove_node_port::RemoveNodePort, crate::schema::mutations::remove_node_property::RemoveNodeProperty, crate::schema::mutations::rename_node::RenameNode, crate::schema::mutations::resize_node::ResizeNode, crate::schema::mutations::set_node_property::SetNodeProperty, crate::schema::mutations::add_edge_property::AddEdgeProperty, crate::schema::mutations::remove_edge_property::RemoveEdgeProperty, crate::schema::mutations::set_edge_property::SetEdgeProperty};
 use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort};
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -278,17 +279,17 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
         SemioGraphMutation::AddNodeProperty(AddNodeProperty {
             node_id: GraphNodeId::new("n1"),
             index: 0,
-            property: SemioValueEntry { key: "weight".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
+            property: SemioValueEntry { key: "weight".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
         }),
         SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into() }),
         SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(),source_port:None,target_port:None,properties:Vec::new(), at: None }),
         SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new("e1") }),
         SemioGraphMutation::DragNodes(DragNodes { targets: vec![GraphNodeId::new("n1"), GraphNodeId::new("n2")], dx: 12.5, dy: -4.0 }),
-        SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Float { lexeme: "0.25".into() } }),
+        SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Float { lexeme: "0.25".into() } }),
         SemioGraphMutation::ResizeNode(ResizeNode { id: GraphNodeId::new("n1"), width: 120.5, height: 0.1 }),
         SemioGraphMutation::RenameNode(RenameNode { id: GraphNodeId::new("n1"), new_id: GraphNodeId::new("origin") }),
-        SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Str { value: "feeds".into() } }),
-        SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new("e1"), index: 1, property: SemioValueEntry { key: "since".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Int { lexeme: "1972".into() } } }),
+        SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Str { value: "feeds".into() } }),
+        SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new("e1"), index: 1, property: SemioValueEntry { key: "since".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Int { lexeme: "1972".into() } } }),
         SemioGraphMutation::RemoveEdgeProperty(RemoveEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into() }),
     ]
 }

@@ -20,15 +20,15 @@ pub type ParametricEdge = (EdgeId, bool, Option<Curve2Id>, (f64, f64));
 pub type LoopWalk = (Vec<VertexId>, Vec<(EdgeId, bool)>);
 
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
-use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::{dummy_coedge, make_loop, Body, Coedge, Edge, Face, Shell, Solid, Vertex};
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Make
 
@@ -78,7 +78,7 @@ pub fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mu
 /// caller owns them now.
 ///
 /// A scaffold left behind is not inert. It is a second, independent solid that
-/// [`semio_framework_3d_brep_queries::validation::validate_body`]
+/// [`semio_framework_3d_brep_validation::validate_body`]
 /// walks like any other — so when `↔️offset::shell_solid` flips every one of its faces to build
 /// the cavity, the scaffold's own outer shell integrates to −V and the body carries a permanent
 /// `shell-orientation-inward` issue. `Brep::validate_gate_sync` validates the WHOLE body, so that

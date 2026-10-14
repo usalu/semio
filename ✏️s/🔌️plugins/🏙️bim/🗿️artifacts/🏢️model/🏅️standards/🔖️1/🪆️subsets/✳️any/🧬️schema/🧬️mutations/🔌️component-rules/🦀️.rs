@@ -3,7 +3,7 @@
 
 use super::elements;
 use super::family_rules::{self, Fault};
-use crate::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn finite(values: &[f64]) -> bool {

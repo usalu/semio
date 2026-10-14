@@ -3,7 +3,7 @@
 //! stays unique and the numbers stay positive and finite. A patch that restates the current values is a `mutation.no-op`.
 
 use super::SetView;
-use crate::{view_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{view_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetView, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

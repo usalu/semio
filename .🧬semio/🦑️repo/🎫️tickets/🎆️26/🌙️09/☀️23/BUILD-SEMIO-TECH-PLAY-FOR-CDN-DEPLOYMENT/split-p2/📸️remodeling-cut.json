@@ -1,0 +1,581 @@
+{
+ "artifact": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling",
+ "layers": "📸️remodeling-layers.json",
+ "crate": "semio_s_artifact_remodel_remodeling",
+ "aggregator": "aggregator",
+ "above_aggregator": [
+  "it-editor"
+ ],
+ "crates": {
+  "algebra": {
+   "package": "semio-s-artifact-remodel-remodeling-algebra",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/➕️algebra-internals/📦️packages/🦀️rust"
+  },
+  "lie": {
+   "package": "semio-s-artifact-remodel-remodeling-lie",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔷️lie-internals/📦️packages/🦀️rust"
+  },
+  "optimize": {
+   "package": "semio-s-artifact-remodel-remodeling-optimize",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎯️optimize-internals/📦️packages/🦀️rust"
+  },
+  "signal": {
+   "package": "semio-s-artifact-remodel-remodeling-signal",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📶️signal-internals/📦️packages/🦀️rust"
+  },
+  "spatial": {
+   "package": "semio-s-artifact-remodel-remodeling-spatial",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗺️spatial-internals/📦️packages/🦀️rust"
+  },
+  "model": {
+   "package": "semio-s-artifact-remodel-remodeling-model",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+  },
+  "schema": {
+   "package": "semio-s-artifact-remodel-remodeling-schema",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+  },
+  "model-diff": {
+   "package": "semio-s-artifact-remodel-remodeling-model-diff",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-remodel-remodeling-inferences",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+  },
+  "mut-results": {
+   "package": "semio-s-artifact-remodel-remodeling-mut-results",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️results/📦️packages/🦀️rust"
+  },
+  "mut-media": {
+   "package": "semio-s-artifact-remodel-remodeling-mut-media",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️media/📦️packages/🦀️rust"
+  },
+  "mut-calib": {
+   "package": "semio-s-artifact-remodel-remodeling-mut-calib",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️calibration/📦️packages/🦀️rust"
+  },
+  "mut-params": {
+   "package": "semio-s-artifact-remodel-remodeling-mut-params",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️params/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-remodel-remodeling-mutations",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "read": {
+   "package": "semio-s-artifact-remodel-remodeling-read",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
+  },
+  "write": {
+   "package": "semio-s-artifact-remodel-remodeling-write",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
+  },
+  "io": {
+   "package": "semio-s-artifact-remodel-remodeling-io",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+  },
+  "orbit-q1": {
+   "package": "semio-s-artifact-remodel-remodeling-orbit-q1",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🌑️quarter-1/📦️packages/🦀️rust"
+  },
+  "orbit-q2": {
+   "package": "semio-s-artifact-remodel-remodeling-orbit-q2",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🌓️quarter-2/📦️packages/🦀️rust"
+  },
+  "orbit-q3": {
+   "package": "semio-s-artifact-remodel-remodeling-orbit-q3",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🌕️quarter-3/📦️packages/🦀️rust"
+  },
+  "orbit-q4": {
+   "package": "semio-s-artifact-remodel-remodeling-orbit-q4",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛰️synthetic-orbit/🌗️quarter-4/📦️packages/🦀️rust"
+  },
+  "examples": {
+   "package": "semio-s-artifact-remodel-remodeling-examples",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+  },
+  "images": {
+   "package": "semio-s-artifact-remodel-remodeling-images",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖼️images/📦️packages/🦀️rust"
+  },
+  "camera": {
+   "package": "semio-s-artifact-remodel-remodeling-camera",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📷️camera/📦️packages/🦀️rust"
+  },
+  "feature": {
+   "package": "semio-s-artifact-remodel-remodeling-feature",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌟️feature/📦️packages/🦀️rust"
+  },
+  "video-h264": {
+   "package": "semio-s-artifact-remodel-remodeling-video-h264",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🎞️h264/📦️packages/🦀️rust"
+  },
+  "video": {
+   "package": "semio-s-artifact-remodel-remodeling-video",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/📦️packages/🦀️rust"
+  },
+  "dense": {
+   "package": "semio-s-artifact-remodel-remodeling-dense",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🌫️dense/📦️packages/🦀️rust"
+  },
+  "sfm-geometry": {
+   "package": "semio-s-artifact-remodel-remodeling-sfm-geometry",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📸️sfm/📐️geometry/📦️packages/🦀️rust"
+  },
+  "sfm": {
+   "package": "semio-s-artifact-remodel-remodeling-sfm",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📸️sfm/📦️packages/🦀️rust"
+  },
+  "mesh-surface": {
+   "package": "semio-s-artifact-remodel-remodeling-mesh-surface",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🔺️surface/📦️packages/🦀️rust"
+  },
+  "mesh-repair": {
+   "package": "semio-s-artifact-remodel-remodeling-mesh-repair",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🩹️repair/📦️packages/🦀️rust"
+  },
+  "mesh-atlas": {
+   "package": "semio-s-artifact-remodel-remodeling-mesh-atlas",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🗺️atlas/📦️packages/🦀️rust"
+  },
+  "mesh": {
+   "package": "semio-s-artifact-remodel-remodeling-mesh",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/📦️packages/🦀️rust"
+  },
+  "motion": {
+   "package": "semio-s-artifact-remodel-remodeling-motion",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️motion/📦️packages/🦀️rust"
+  },
+  "geo": {
+   "package": "semio-s-artifact-remodel-remodeling-geo",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🗺️geo/📦️packages/🦀️rust"
+  },
+  "reconstruct": {
+   "package": "semio-s-artifact-remodel-remodeling-reconstruct",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏭️reconstruction/📦️packages/🦀️rust"
+  },
+  "engine": {
+   "package": "semio-s-artifact-remodel-remodeling-engine",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust"
+  },
+  "editor-kit": {
+   "package": "semio-s-artifact-remodel-remodeling-editor-kit",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/📦️packages/🦀️rust"
+  },
+  "cmd-ingest": {
+   "package": "semio-s-artifact-remodel-remodeling-cmd-ingest",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️ingest/📦️packages/🦀️rust"
+  },
+  "cmd-workflow": {
+   "package": "semio-s-artifact-remodel-remodeling-cmd-workflow",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️workflow/📦️packages/🦀️rust"
+  },
+  "modes": {
+   "package": "semio-s-artifact-remodel-remodeling-modes",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📦️packages/🦀️rust"
+  },
+  "panels": {
+   "package": "semio-s-artifact-remodel-remodeling-panels",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust"
+  },
+  "session": {
+   "package": "semio-s-artifact-remodel-remodeling-session",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️reconstruction-session/📦️packages/🦀️rust"
+  },
+  "editor": {
+   "package": "semio-s-artifact-remodel-remodeling-editor",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-remodel-remodeling-viewer",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust"
+  },
+  "it-editor": {
+   "package": "semio-s-artifact-remodel-remodeling-it-editor",
+   "dir": "🧪️tests/🔬️editor"
+  }
+ },
+ "header": {
+  "algebra": [
+   "//! 🧮️ remodeling linear algebra internals: dense and fixed-size vectors and matrices, decompositions and solvers.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "lie": [
+   "//! 🔷️ remodeling Lie-group internals: SO(3), SE(3) and Sim(3) with their tangent maps and alignment.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "optimize": [
+   "//! 🎯️ remodeling optimisation internals: Levenberg–Marquardt, RANSAC, robust losses and the Schur bundle solver.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "signal": [
+   "//! 📶️ remodeling signal internals: filters and smoothing over sampled tracks.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "spatial": [
+   "//! 🗺️ remodeling spatial internals: k-d trees and spatial grids.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "model": [
+   "//! 📸️ remodeling model: the snapshot and its domain records, and the snapshot's text, binary and SQLite codecs.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "schema": [
+   "//! 🧬️ remodeling artifact schema: the artifact facet, document ids and the artifact and snapshot format leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "model-diff": [
+   "//! 🔺️ remodeling diff: the sparse document delta and its format leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "inferences": [
+   "//! 💡️ remodeling inferences: bounds and relative-pose inference owners and their descriptor.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mut-results": [
+   "//! 🧵️ remodeling result mutations: the replace-* result leaves and commit-reconstruction.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mut-media": [
+   "//! 🎞️ remodeling media mutations: stream, asset and durable content leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mut-calib": [
+   "//! 🎯️ remodeling calibration mutations: camera calibration, rig extrinsic and ground control point leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mut-params": [
+   "//! ⚙️ remodeling parameter mutations: the eight update-*-params leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mutations": [
+   "//! 🧬️ remodeling mutation vocabulary: the dispatch enum, its apply boundary, text and binary codecs and format leaves.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "read": [
+   "//! 📥️ remodeling import: deserializers from las, ply, png, json, txt, stl, gltf and obj.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "write": [
+   "//! 📤️ remodeling export: serializers to las, ply, png, json, txt, stl, gltf and obj.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "io": [
+   "//! 🚪️ remodeling io: the subset io declaration, builder/analyzer/composer facets and the diff and inference codecs.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "orbit-q1": [
+   "//! 🌑️ synthetic-orbit example: views 0–8.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "orbit-q2": [
+   "//! 🌓️ synthetic-orbit example: views 9–17.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "orbit-q3": [
+   "//! 🌕️ synthetic-orbit example: views 18–26.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "orbit-q4": [
+   "//! 🌗️ synthetic-orbit example: views 27–35.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "examples": [
+   "//! 📚️ remodeling examples: the demo document and the synthetic-orbit capture.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "images": [
+   "//! 🖼️ remodeling engine images: rasters, pyramids, PNG/JPEG codecs and the interactive step ceiling law.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "camera": [
+   "//! 📷️ remodeling engine camera: intrinsics, distortion, poses and calibration.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "feature": [
+   "//! 🌟️ remodeling engine features: detection, description and matching.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "video-h264": [
+   "//! 🎞️ remodeling engine H.264: the baseline decoder and the I_PCM/P_SKIP encoder.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "video": [
+   "//! 🎥️ remodeling engine video: container admission, providers and frame extraction.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "dense": [
+   "//! 🌫️ remodeling engine dense: depth maps and TSDF fusion.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "sfm-geometry": [
+   "//! 📐️ remodeling engine multi-view geometry: two-view models, triangulation, PnP, tracks, averaging and loop closure.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "sfm": [
+   "//! 📸️ remodeling engine structure from motion: incremental reconstruction, bundle adjustment and pose priors.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mesh-surface": [
+   "//! 🔺️ remodeling engine mesh surface: triangle mesh, topology and iso-surface extraction.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mesh-repair": [
+   "//! 🩹️ remodeling engine mesh repair: cleaning, orientation, hole filling and watertightness.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mesh-atlas": [
+   "//! 🗺️ remodeling engine mesh atlas: simplification, unwrapping and texture baking.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "mesh": [
+   "//! 🥽️ remodeling engine mesh pipeline: the bounded watertight surface pipeline and interchange.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "motion": [
+   "//! 🏃️ remodeling engine motion: tracking and trajectory estimation.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "geo": [
+   "//! 🗺️ remodeling engine geo: georeferencing and geo products.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "reconstruct": [
+   "//! 🏭️ remodeling engine reconstruction: the staged reconstruction pipeline.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "engine": [
+   "//! ⚙️ remodeling engine bridge: engine parameters and results from and to the document.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "editor-kit": [
+   "//! 🧰️ remodeling editor kit: shared editor plumbing, window transient state and terminology.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "cmd-ingest": [
+   "//! 📥️ remodeling ingest commands: frame, video and stream import, abort and the example picker.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "cmd-workflow": [
+   "//! 🎛️ remodeling workflow commands: calibration, GCPs, parameters, clearing, view state and QC export.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "modes": [
+   "//! 🎭️ remodeling editor modes: capture, model and analyze modes with their windows and tools.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "panels": [
+   "//! 📌️ remodeling editor panels.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "session": [
+   "//! 🧵️ remodeling reconstruction session: the reconstruction tool run.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "editor": [
+   "//! ✏️ remodeling editor: the command enum, action bridge, play app and manifest.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "viewer": [
+   "//! 👁️ remodeling viewer.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ],
+  "it-editor": [
+   "//! 🧪️ remodeling editor integration tests: every law that drives the play app through its command dispatch.",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;"
+  ]
+ },
+ "consumers": [
+  "🌎️hub/🧩️compositions/📸️remodel",
+  "✏️s/🔌️plugins/📸️remodel/🏭️bridge"
+ ]
+}

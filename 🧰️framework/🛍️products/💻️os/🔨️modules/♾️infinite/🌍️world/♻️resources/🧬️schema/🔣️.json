@@ -27,6 +27,76 @@
       "terminalDrop": 0,
       "cancelledTerrainEmptyStep": "idle"
     },
-    "cancelBeforeClose": true
+    "cancelBeforeClose": true,
+    "nativeSource": {
+      "identity": {
+        "operation": 941,
+        "generation": 17,
+        "revision": 23,
+        "cacheEpoch": 5,
+        "sourceSlot": 7
+      },
+      "surface": "original-preview",
+      "meshKey": "original-native-source-with-an-incremental-key-longer-than-sixty-four-original-bytes",
+      "positions": [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ],
+      "labels": [
+        "Surface 源🌊",
+        "Boundary 源🌊",
+        "Point 源🌊"
+      ],
+      "area": 0.5,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "stages": [
+        "receiver-owner",
+        "world-loan",
+        "gpu-upload",
+        "scene-replacement",
+        "gpu-cache-close",
+        "world-return",
+        "receiver-owner-close"
+      ],
+      "newArena": false,
+      "meshDataClone": false,
+      "earlyAck": false,
+      "terminalDrop": 0,
+      "transportStages": [
+        "validated-receiver-owner",
+        "world-loan",
+        "guest-transport-source-return",
+        "patch-ack",
+        "display-next-frame",
+        "scene-replacement"
+      ],
+      "destinationAliveAfterAck": true,
+      "geometryByteCeiling": 16777216,
+      "maximumComponentsPerDomain": 600000,
+      "sameIdentityForeignLeaseReturnAllowed": false
+    }
   }
 }

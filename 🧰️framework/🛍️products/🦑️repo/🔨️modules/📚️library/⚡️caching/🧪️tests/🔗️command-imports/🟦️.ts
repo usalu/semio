@@ -9,7 +9,7 @@ import { runInNewContext } from "node:vm";
 /** 🔗️ Checks runtime import ownership against esbuild, including source-byte changes and erased types. */
 export async function testCommandImportClosure(workspace: string, output: string): Promise<void> {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/command-imports/🔣️.json"), "utf8"));
-  const { cacheInternals } = await import("../../../🟨️.mjs"), root = mkdtempSync(join(output, "command-imports-"));
+  const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs"), root = mkdtempSync(join(output, "command-imports-"));
   try {
     for (const [path, source] of Object.entries(fixture.files)) writeFileSync(join(root, path), source as string);
     const entry = join(root, fixture.entry), normalize = (paths: string[]) => paths.map(path => path.replace("{workspaceRoot}/", "")).sort();
@@ -24,7 +24,7 @@ export async function testCommandImportClosure(workspace: string, output: string
     const executeBundle = (result: any) => execute(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`, "{result:api.result,lazy:(await api.lazy()).value,sideEffect:globalThis.fixtureLoaded,typeExportSideEffect:Boolean(globalThis.fixtureTypeExportLoaded)}");
     const built = await build();
     assert.deepEqual(original, oracle(built)); assert.deepEqual(executeBundle(built), fixture.execution);
-    const ts = require("typescript"), pluginPath = resolve(import.meta.dir, "../../../🟨️.mjs");
+    const ts = require("typescript"), pluginPath = resolve(import.meta.dir, "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
     const source = ts.createSourceFile("plugin.mjs", readFileSync(pluginPath, "utf8"), ts.ScriptTarget.Latest, true);
     const names = ["createScriptInputCache", "commandImports", "relativeScriptInputs"], reads = new Map<string, number>();
     const definitions = names.map(name => {
@@ -42,7 +42,7 @@ export async function testCommandImportClosure(workspace: string, output: string
       assert.deepEqual(normalize(inputs), normalize(cacheInternals.relativeScriptInputs([join(root, path)], root)));
     }
     for (const [path, count] of reads) assert.ok(count <= fixture.discovery.maximumReadsPerFile, `${path}: read ${count} times in one graph pass`);
-    const nodeClosure = execute(pathToFileURL(resolve(import.meta.dir, "../../../🟨️.mjs")).href, `api.cacheInternals.relativeScriptInputs([${JSON.stringify(entry)}], ${JSON.stringify(root)}).map(path => path.replace("{workspaceRoot}/", "")).sort()`);
+    const nodeClosure = execute(pathToFileURL(resolve(import.meta.dir, "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href, `api.cacheInternals.relativeScriptInputs([${JSON.stringify(entry)}], ${JSON.stringify(root)}).map(path => path.replace("{workspaceRoot}/", "")).sort()`);
     assert.deepEqual(nodeClosure, original, "Node-hosted Nx must resolve the same TypeScript imports as Bun and esbuild");
     writeFileSync(join(root, "🟦️.ts"), fixture.changedSource); writeFileSync(join(root, "replacement.ts"), fixture.replacement);
     const changed = normalize(cacheInternals.relativeScriptInputs([entry], root));

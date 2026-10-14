@@ -1,13 +1,16 @@
 //! 🌉️ FEM document region, material and load conversion into the neutral engine.
 
 use crate::fem2d_engine::Fem2dError;
-use crate::model::{Bar2, BeamEb2, Dof, Elements, NodalLoad, Node};
-use crate::{Fem2dSnapshot, FemElement};
+use semio_s_fem_elements2d::{Bar2, BeamEb2};
+use semio_s_fem_model::{Dof, NodalLoad, Node};
+use semio_s_fem_static::Elements;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use std::collections::HashMap;
 
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight
 /// translation (`self_weight_nodal_loads`, feeding the frozen `fem2d_solve`) and as the `gravity`
-/// argument to `crate::analyses::solve_multi_case` (`fem2d_solve_all`).
+/// argument to `semio_s_fem_analyses::solve_multi_case` (`fem2d_solve_all`).
 pub(crate) const GRAVITY_G: f64 = 9.81;
 
 /// 🌐️ One meshed `FemRegion` — resolved node ids (mesh point-index → doc/synthesized node id, ONE
@@ -66,9 +69,9 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
 
     let mut meshed_regions = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
-        let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
-        let opts = crate::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = crate::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let domain = semio_s_fem_mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
+        let opts = semio_s_fem_mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = semio_s_fem_mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         let material = doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
 
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
@@ -87,7 +90,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
             elements.push(
-                crate::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: crate::elements2d::PlaneKind::Stress, density: material.rho }.into(),
+                semio_s_fem_elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: semio_s_fem_elements2d::PlaneKind::Stress, density: material.rho }.into(),
             );
         }
 

@@ -991,233 +991,7 @@ fn completed_envelope_registry_publication_is_exact_once_and_close_cursor_is_int
     assert!(registry.terminal_is_empty());
 }
 
-pub(super) const OWNED_SCHEMA_TEST_FIELDS: &[OwnedSchemaFieldSpec] = &[
-    OwnedSchemaFieldSpec { id: 1, key: "schema", required: true },
-    OwnedSchemaFieldSpec { id: 2, key: "id", required: true },
-    OwnedSchemaFieldSpec { id: 3, key: "quote\"", required: false },
-    OwnedSchemaFieldSpec { id: 4, key: "slash\\", required: false },
-    OwnedSchemaFieldSpec { id: 5, key: "control\u{0001}", required: false },
-    OwnedSchemaFieldSpec { id: 6, key: "asciiA", required: false },
-    OwnedSchemaFieldSpec { id: 7, key: "escaped/\u{0008}\u{000c}\n\r\t", required: false },
-];
-
-pub(super) fn owned_schema_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaRecordCursor {
-    let byte_count = chunks.iter().map(|chunk| chunk.len()).sum();
-    let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: byte_count }).expect("fixed schema credits");
-    for chunk in chunks {
-        let page = OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded test page");
-        pages.admit_page(page).unwrap_or_else(|_| panic!("pre-admitted test page"));
-    }
-    pages.seal().expect("seal exact test extent");
-    let tokens = OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), pages).unwrap_or_else(|_| panic!("sealed token source"));
-    OwnedSchemaRecordCursor::try_new(OwnedSchemaRecordSpec { fields: OWNED_SCHEMA_TEST_FIELDS }, tokens).unwrap_or_else(|_| panic!("valid fixed test schema"))
-}
-
-pub(super) fn drive_owned_schema(cursor: &mut OwnedSchemaRecordCursor, fuel: u64) -> Result<Vec<(u16, OwnedSchemaTokenKind, bool)>, OwnedSchemaDecodeDiagnostic> {
-    let mut events = Vec::new();
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    for _ in 0..100_000 {
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(fuel, u64::MAX, schema_test_close_grant()),
-            cancel.clone(),
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-            &mut receipt,
-        );
-        match cursor.step(&mut context) {
-            OwnedSchemaRecordStep::Pending => {}
-            OwnedSchemaRecordStep::FieldToken { field_id, token, terminal } => events.push((field_id, token.kind, terminal)),
-            OwnedSchemaRecordStep::Complete => return Ok(events),
-            OwnedSchemaRecordStep::Fault(diagnostic) => return Err(diagnostic),
-            OwnedSchemaRecordStep::Cancelled => panic!("live schema cursor cancelled unexpectedly"),
-        }
-    }
-    panic!("schema cursor failed to terminate under repeated fixed fuel")
-}
-
-#[test]
-fn owned_schema_pages_reject_capacity_plus_one_with_the_exact_page_untouched() {
-    let mut pages = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: OWNED_SCHEMA_DECODE_PAGE_BYTES }).expect("one page credits");
-    let first = OwnedSchemaDecodePage::try_from_slice(&[b'a'; OWNED_SCHEMA_DECODE_PAGE_BYTES]).expect("maximum page");
-    pages.admit_page(first).expect("maximum page admitted");
-    let rejected = OwnedSchemaDecodePage::try_from_slice(b"tail").expect("bounded rejected page");
-    let (fault, rejected) = pages.admit_page(rejected).expect_err("capacity plus one rejected before adoption");
-    assert_eq!(fault, OwnedSchemaDecodeAdmissionFault::PageCapacity);
-    assert_eq!(rejected.len(), 4, "the exact rejected owner is returned untouched");
-    assert_eq!(pages.page_count(), 1);
-
-    let mut byte_limited = OwnedSchemaDecodePages::try_with_credits(OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).expect("three-byte credits");
-    let rejected = OwnedSchemaDecodePage::try_from_slice(b"four").expect("bounded page owner");
-    let (fault, rejected) = byte_limited.admit_page(rejected).expect_err("aggregate byte plus one rejected before adoption");
-    assert_eq!(fault, OwnedSchemaDecodeAdmissionFault::ByteCapacity);
-    assert_eq!(rejected.len(), 4);
-    assert!(!byte_limited.terminal_is_empty(), "the admitted directory backing is retained until its funded release");
-    assert!(matches!(byte_limited.close_backing_step(schema_test_close_grant()), Ok(RetainedCloneStep::Complete(_))));
-    assert!(byte_limited.terminal_is_empty());
-    while let Some(page) = pages.close_take_page() { drop(page); }
-    assert!(matches!(pages.close_backing_step(schema_test_close_grant()), Ok(RetainedCloneStep::Complete(_))));
-    assert!(pages.terminal_is_empty());
-}
-
-#[test]
-fn owned_schema_record_resumes_across_a_partial_terminal_page_and_preserves_field_order() {
-    let mut first = br#"{"schema":""#.to_vec();
-    first.resize(OWNED_SCHEMA_DECODE_PAGE_BYTES, b'a');
-    let second = br#"","id":"document"}"#;
-    let mut cursor = owned_schema_test_cursor(&[&first, second]);
-    let events = drive_owned_schema(&mut cursor, 7).expect("valid cross-page record");
-    assert_eq!(events.iter().filter(|(field, _, terminal)| *field == 1 && *terminal).count(), 1);
-    assert_eq!(events.iter().filter(|(field, _, terminal)| *field == 2 && *terminal).count(), 1);
-    assert_eq!(events.first().map(|event| event.0), Some(1));
-    assert_eq!(events.last().map(|event| event.0), Some(2));
-}
-
-#[test]
-fn owned_schema_record_reports_exact_invalid_utf8_unknown_and_duplicate_diagnostics() {
-    let mut first = br#"{"schema":""#.to_vec();
-    first.resize(OWNED_SCHEMA_DECODE_PAGE_BYTES - 1, b'a');
-    first.push(0xe2);
-    let invalid_tail = br#"!","id":"document"}"#;
-    let invalid = drive_owned_schema(&mut owned_schema_test_cursor(&[&first, invalid_tail]), 11).expect_err("invalid continuation faults");
-    assert_eq!(invalid.code, "schema-json.invalid-utf8");
-    assert_eq!(invalid.offset, OWNED_SCHEMA_DECODE_PAGE_BYTES as u64);
-
-    let unknown = drive_owned_schema(&mut owned_schema_test_cursor(&[br#"{"schema":"v1","unexpected":1,"id":"document"}"#]), 64).expect_err("unknown field faults");
-    assert_eq!(unknown.code, "schema-json.unknown-field");
-    assert_eq!(unknown.path.as_str(), "$");
-
-    let duplicate = drive_owned_schema(&mut owned_schema_test_cursor(&[br#"{"schema":"v1","schema":"v2","id":"document"}"#]), 64).expect_err("duplicate field faults");
-    assert_eq!(duplicate.code, "schema-json.duplicate-field");
-    assert_eq!(duplicate.path.as_str(), "$.schema");
-
-    let truncated = drive_owned_schema(&mut owned_schema_test_cursor(&[br#"{"schema":"unterminated"#]), 9).expect_err("truncated token faults");
-    assert_eq!(truncated.code, "schema-json.truncated-token");
-}
-
-#[test]
-fn owned_schema_record_rejects_stale_operation_and_generation_before_consuming_input() {
-    let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"v1","id":"document"}"#]);
-    let mut preview_sequence = 0;
-    let mut original_retained_progress_0=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(2),
-        semio_framework_job::StepBudget::new(64, u64::MAX, schema_test_close_grant()),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut preview_sequence,
-     &mut original_retained_progress_0);
-    let OwnedSchemaRecordStep::Fault(diagnostic) = cursor.step(&mut context) else { panic!("stale generation must fault before syntax work") };
-    assert_eq!(diagnostic.code, "schema-json.stale-authority");
-    assert_eq!(diagnostic.offset, 0);
-    let grant=schema_test_close_grant();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
-    assert_eq!((allocated,released),(0,0));assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,0);assert!(step.progress().fits(grant));assert!(!cursor.terminal_is_empty());
-    let backing=cursor.next_close_release_byte_demand().unwrap();let pointer=cursor.tokens.pages.slots.as_ptr();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_release_bytes:backing-1,..grant }).unwrap());
-    assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
-    assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
-}
-
-fn next_owned_schema_field_token(cursor: &mut OwnedSchemaRecordCursor, expected_field: u16) -> OwnedSchemaToken {
-    let mut preview_sequence = 0;
-    for _ in 0..1_000 {
-        let mut original_retained_progress_1=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(32, u64::MAX, schema_test_close_grant()),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-         &mut original_retained_progress_1);
-        match cursor.step(&mut context) {
-            OwnedSchemaRecordStep::Pending => {}
-            OwnedSchemaRecordStep::FieldToken { field_id, token, terminal: true } if field_id == expected_field => return token,
-            OwnedSchemaRecordStep::FieldToken { .. } => {}
-            other => panic!("expected field token, got {other:?}"),
-        }
-    }
-    panic!("schema field token did not arrive under repeated grants")
-}
-
-#[test]
-fn owned_schema_string_unescapes_into_fixed_storage_and_rejects_semantic_byte_plus_one() {
-    let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"line\n\uD83D\uDE00","id":"document"}"#]);
-    let token = next_owned_schema_field_token(&mut cursor, 1);
-    let mut string = OwnedSchemaStringAuthority::<32>::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
-    let mut preview_sequence = 0;
-    for _ in 0..100 {
-        let mut original_retained_progress_2=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-            semio_framework_job::OperationId(1),
-            semio_framework_job::Generation(1),
-            semio_framework_job::StepBudget::new(3, u64::MAX, schema_test_close_grant()),
-            semio_framework_job::root_cancel_token(),
-            semio_framework_job::default_now_us,
-            &mut preview_sequence,
-         &mut original_retained_progress_2);
-        match string.step(&cursor, &mut context) {
-            OwnedSchemaStringStep::Pending => {}
-            OwnedSchemaStringStep::Complete => break,
-            other => panic!("bounded escaped string failed: {other:?}"),
-        }
-    }
-    assert_eq!(string.as_str(), Some("line\n😀"));
-    assert_eq!(string.take_string().as_deref(), Some("line\n😀"));
-    assert!(string.take_string().is_none(), "semantic string publishes exactly once");
-    assert!(string.terminal_is_empty());
-
-    let mut cursor = owned_schema_test_cursor(&[br#"{"schema":"four","id":"document"}"#]);
-    let token = next_owned_schema_field_token(&mut cursor, 1);
-    let mut limited = OwnedSchemaStringAuthority::<3>::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), token, OwnedSchemaPath::field("schema").expect("bounded field path")).expect("schema token is a string");
-    let mut preview_sequence = 0;
-    let mut original_retained_progress_3=semio_framework_value::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(
-        semio_framework_job::OperationId(1),
-        semio_framework_job::Generation(1),
-        semio_framework_job::StepBudget::new(32, u64::MAX, schema_test_close_grant()),
-        semio_framework_job::root_cancel_token(),
-        semio_framework_job::default_now_us,
-        &mut preview_sequence,
-     &mut original_retained_progress_3);
-    let OwnedSchemaStringStep::Fault(diagnostic) = limited.step(&cursor, &mut context) else { panic!("semantic byte plus one must fault") };
-    assert_eq!(diagnostic.code, "schema-json.string-byte-capacity");
-    assert_eq!(diagnostic.path.as_str(), "$.schema");
-    assert!(limited.terminal_is_empty(), "fixed inline rejection has no deep owner to retire");
-}
-
-#[test]
-fn cancelled_owned_schema_cursor_retires_one_real_page_per_close_grant() {
-    let first = [b' '; OWNED_SCHEMA_DECODE_PAGE_BYTES];
-    let mut cursor = owned_schema_test_cursor(&[&first, br#"{"schema":"v1","id":"document"}"#]);
-    let cancel = semio_framework_job::root_cancel_token();
-    cancel.cancel_now();
-    let mut preview_sequence = 0;
-    let mut original_retained_progress_4=semio_framework_value::RetainedCloneProgress::default();
-        let mut context =
-        semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX, schema_test_close_grant()), cancel, semio_framework_job::default_now_us, &mut preview_sequence, &mut original_retained_progress_4);
-    assert_eq!(cursor.step(&mut context), OwnedSchemaRecordStep::Cancelled);
-    let grant=schema_test_close_grant();let pointer=cursor.tokens.pages.slots.as_ptr();
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(RetainedCloneGrant { maximum_copy_bytes:0,..grant }).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
-    for _ in 0..2 {
-        let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());
-        assert_eq!((allocated,released),(0,0));assert_eq!(step.progress().copied_items,1);assert_eq!(step.progress().released_bytes,0);assert!(step.progress().fits(grant));assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
-    }
-    assert!(!cursor.terminal_is_empty());let backing=cursor.next_close_release_byte_demand().unwrap();assert_eq!(backing,2*std::mem::size_of::<OwnedSchemaDecodePage>());assert_eq!(std::mem::size_of::<OwnedSchemaDecodePage>(),OWNED_SCHEMA_DECODE_PAGE_BYTES+std::mem::size_of::<u16>());
-    for denied in [RetainedCloneGrant { maximum_items:0,..grant },RetainedCloneGrant { maximum_release_bytes:backing-1,..grant },RetainedCloneGrant { maximum_depth:0,..grant }] {
-        let(result,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(denied));assert_eq!((allocated,released),(0,0));
-        if denied.maximum_depth==0 { assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit); } else { assert_eq!(result.unwrap().progress(),RetainedCloneProgress::default()); }
-        assert!(!cursor.terminal_is_empty());assert_eq!(cursor.tokens.pages.slots.as_ptr(),pointer);
-    }
-    let(step,allocated,released)=crate::test_allocation::observe_backing(||cursor.close_step(grant).unwrap());assert_eq!((allocated,released),(0,backing));assert_eq!(step.progress().released_bytes,backing);assert!(step.progress().fits(grant));assert!(matches!(step,RetainedCloneStep::Complete(_)));assert!(cursor.terminal_is_empty());
-    eprintln!("[DEBUG] schema cancel preserves original directory pointer under denied work/release/depth; inline page work releases0 and final directory releases exact{backing} bytes");
-}
+pub(super) use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 
 struct TestEnvelopeFieldDecoder {
     terminal: bool,
@@ -1768,17 +1542,7 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + super::Mu
     panic!("test catalog retained incomplete original factory tickets");
 }
 
-pub(super) fn physical_test_close_grant() -> RetainedCloneGrant {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).expect("plain physical close policy");
-    let policy=&fixture["physicalCloseGrant"];
-    RetainedCloneGrant { maximum_items:policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap() as usize }
-}
-
-fn schema_test_close_grant() -> RetainedCloneGrant {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧩️composition/📨️emission/📦️owned/🧪️tests/🧫️fixtures/🔣️.json")).expect("plain decode close policy");
-    let policy=&fixture["decodeCloseGrant"];
-    RetainedCloneGrant { maximum_items:policy["maximumItems"].as_u64().unwrap() as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap() as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap() as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap() as usize }
-}
+pub(super) use semio_framework_value::testing::physical_test_close_grant;
 
 /// 🧹️ Drives a test store's owned close to its terminal-empty witness.
 fn close_test_store<P, Mutation>(store: &mut super::ArtifactStore<P, Mutation>)
@@ -12507,42 +12271,6 @@ fn current_typed_option_birth_retains_exact_original_and_paid_shell() {
 }
 
 #[test]
-fn current_message_ledger_retirement_pays_original_pages_and_arrays() {
-    let plain: serde_json::Value = serde_json::from_str(include_str!("../../🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
-    let row = &plain["messageLedgerBirth"]; let supplied = &row["policy"];
-    let paid = RetainedCloneGrant { maximum_items: supplied["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: supplied["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: supplied["maximumCapacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: supplied["maximumReleaseBytes"].as_u64().unwrap() as usize, maximum_depth: supplied["maximumDepth"].as_u64().unwrap() as usize };
-    let (ledger, born, freed) = crate::test_allocation::observe_backing(ArtifactEditMessageLedger::new);
-    assert_eq!(freed, 0);
-    let expected = ledger.slots.pages.iter().map(|page| std::mem::size_of_val(page.as_ref().unwrap().as_ref())).sum::<usize>() + std::mem::size_of_val(ledger.generations.as_ref()) + std::mem::size_of_val(ledger.occupied.as_ref()) + std::mem::size_of_val(ledger.next.as_ref()) + std::mem::size_of_val(ledger.previous.as_ref()) + std::mem::size_of_val(ledger.buckets.as_ref()) + std::mem::size_of_val(ledger.free.as_ref());
-    assert_eq!(born, expected);
-    let pointers = |owner: &ArtifactEditMessageLedgerRetirement| {
-        let pages: [usize; ARTIFACT_EDIT_MESSAGE_SLOT_PAGES] = std::array::from_fn(|index| owner.original.slots.pages[index].as_ref().map_or(0, |page| page.as_ptr() as usize));
-        (pages, [owner.original.generations.as_ptr() as usize, owner.original.occupied.as_ptr() as usize, owner.original.next.as_ptr() as usize, owner.original.previous.as_ptr() as usize, owner.original.buckets.as_ptr() as usize, owner.original.free.as_ptr() as usize])
-    };
-    let mut owner = ArtifactEditMessageLedgerRetirement::new(ledger);
-    let turns = row["capacitySlots"].as_u64().unwrap() / row["pageSlots"].as_u64().unwrap() + 6;
-    let mut total_freed = 0;
-    for turn in 0..turns {
-        let original = pointers(&owner);
-        let demand = owner.demands(0).unwrap();
-        assert!(demand.release_bytes > 0 && demand.release_bytes <= paid.maximum_release_bytes);
-        for denied in [RetainedCloneGrant { maximum_items: 0, ..paid }, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..paid }, RetainedCloneGrant { maximum_depth: 0, ..paid }] {
-            let (result, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(denied));
-            if let Ok(step) = result { assert_eq!(step.progress(), Default::default()); }
-            assert_eq!((allocated, released), (0, 0)); assert_eq!(pointers(&owner), original);
-        }
-        let (step, allocated, released) = crate::test_allocation::observe_backing(|| owner.close_step(paid).unwrap());
-        assert!(step.progress().fits(paid));
-        assert_eq!(allocated, 0); assert_eq!(released, demand.release_bytes);
-        assert_eq!(step.progress().released_bytes, released);
-        total_freed += released; assert_eq!(owner.terminal_is_empty(), turn == turns - 1);
-    }
-    assert_eq!(total_freed, expected); assert!(owner.original.backing_is_empty());
-    let (_, born, freed) = crate::test_allocation::observe_backing(|| drop(owner)); assert_eq!((born, freed), (0, 0));
-    eprintln!("[DEBUG] original message ledger: 128page/6array exact frees, fixed policy, refusal retains every pointer, allocator release={total_freed}");
-}
-
-#[test]
 fn current_catalog_sources_admit_original_allocations_then_fund_each_ticket() {
     type Owners = DocumentStoreOwners<DemoSnapshot, DemoMutation>;
     type Disposer = ArtifactStoreCursorDisposer<DemoSnapshot, DemoMutation>;
@@ -12672,7 +12400,7 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
             attempts: 0,published: false,cancel_requested: false,close_started: true,
             fault: Held::new(None),phase: ArtifactStoreOneItemPublicationPhase::Closing,
         };
-        let pointer = publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const ();
+        let pointer = publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const ();
         let authority = |items,release,depth| ArtifactStoreOneItemGrant { maximum_items: items,maximum_copy_bytes: 0,maximum_capacity_bytes: 0,maximum_release_bytes: release,maximum_depth: depth };
         assert_eq!(publication.retirement_demands(0).unwrap(), semio_framework_value::RetirementDemand { release_bytes: N,depth: 1,..Default::default() });
         for denied in [authority(0,N,1),authority(1,N-1,1),authority(1,N,0)] {
@@ -12680,16 +12408,16 @@ fn ephemeral_member_original_preparation_frame_requires_exact_granted_release() 
             assert_eq!((allocated,released),(0,0));
             if denied.maximum_depth==0 { assert_eq!(step.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit); }
             else { assert_eq!(step.unwrap().progress(),RetainedCloneProgress::default()); }
-            assert_eq!(publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
+            assert_eq!(publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
         }
         let caller=row["callerBytes"].as_u64().unwrap() as usize;let expected=row["releasedBytes"].as_u64().unwrap() as usize;
         let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,caller,1)).unwrap());
         assert_eq!((allocated,released),(0,expected));assert_eq!(step.progress(),RetainedCloneProgress { copied_items: usize::from(expected!=0),released_bytes: expected,..Default::default() });
         if expected==0 {
-            assert_eq!(publication.preparation.as_ref().unwrap().as_ref() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
+            assert_eq!(publication.original_preparation().unwrap() as *const dyn ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> as *const (),pointer);
             let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,N,1)).unwrap());assert_eq!((allocated,released),(0,N));assert_eq!(step.progress().released_bytes,N);
         }
-        assert!(publication.preparation.is_none());assert!(!publication.terminal_is_empty());
+        assert!(publication.original_preparation().is_none());assert!(!publication.terminal_is_empty());
         let(step,allocated,released)=crate::test_allocation::observe_backing(||publication.close_step(authority(1,0,1)).unwrap());assert_eq!((allocated,released),(0,0));assert_eq!(step,RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,..Default::default() }));assert!(publication.terminal_is_empty());
         eprintln!("[DEBUG] ephemeral original member preparation frame extent={N} caller={caller} actual release={expected}; denied pointer retained and child/frame/phase terminal distinct");
     }
@@ -12721,7 +12449,7 @@ fn live_read_factory_admission_preserves_exact_registry_generation_on_refusal() 
     }
     let (result,allocated,released) = crate::test_allocation::observe_backing(||read.admit_retirement::<i32>(registry.as_ref().unwrap(),&factory,grant));
     let(owner,progress)=result.unwrap();assert_eq!((allocated,released),(birth,0));assert_eq!(progress,RetainedCloneProgress { copied_items: 1,retained_capacity_bytes: birth,..Default::default() });
-    assert!(read.owner.is_none()&&read.lease.is_none());assert!(!registry.as_ref().unwrap().contains(index,generation));assert_eq!(registry.as_ref().unwrap().occupied_count(),0);assert_eq!(Arc::as_ptr(&original),pointer);
+    assert!(read.terminal_is_empty());assert!(!registry.as_ref().unwrap().contains(index,generation));assert_eq!(registry.as_ref().unwrap().occupied_count(),0);assert_eq!(Arc::as_ptr(&original),pointer);
     let mut owner=Some(owner);
     for _ in 0..32 {if owner.is_none(){break;}let(step,allocated,released)=crate::test_allocation::observe_backing(||artifact_retirement_box_close_step(&mut owner,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
     assert!(owner.is_none());

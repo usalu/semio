@@ -1,7 +1,7 @@
 import { lstatSync, readdirSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 import { canonicalFilenameForKind, loadCatalogTaxonomy, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";
+import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, SPACE_DATA_DIR_NAME } from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
 import { cleanWalkDirs, cleanPathBytes } from "../🔍️candidate-discovery/🟦️.ts";
 import { CLEAN_CACHE_DIR_NAME, type CleanRemoval, cleanIsBuildArtifactDirName, cleanIsProtected } from "../🛡️protection/🟦️.ts";
 

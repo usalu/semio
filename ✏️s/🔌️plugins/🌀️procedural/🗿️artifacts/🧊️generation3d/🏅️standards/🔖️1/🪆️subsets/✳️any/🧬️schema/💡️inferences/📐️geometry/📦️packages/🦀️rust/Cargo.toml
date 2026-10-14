@@ -1,0 +1,65 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d geometry inference: the geometry field, its engine, the operator registry, the service contract, widget outputs and the original field"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-analysis-check = { workspace = true }
+semio-s-artifact-procedural-3d-analysis-measure = { workspace = true }
+semio-s-artifact-procedural-3d-brep-boolean = { workspace = true }
+semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
+semio-s-artifact-procedural-3d-brep-evaluate = { workspace = true }
+semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
+semio-s-artifact-procedural-3d-brep-intersect = { workspace = true }
+semio-s-artifact-procedural-3d-brep-primitive = { workspace = true }
+semio-s-artifact-procedural-3d-brep-solid = { workspace = true }
+semio-s-artifact-procedural-3d-brep-surface = { workspace = true }
+semio-s-artifact-procedural-3d-brep-topology = { workspace = true }
+semio-s-artifact-procedural-3d-brep-transform = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-math-arithmetic = { workspace = true }
+semio-s-artifact-procedural-3d-math-list = { workspace = true }
+semio-s-artifact-procedural-3d-math-values = { workspace = true }
+semio-s-artifact-procedural-3d-math-vector = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-component = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-convert = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-edit = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-inspect = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-primitive = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-repair = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-shading = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-transform = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-uv = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+parry3d = "0.17"
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }

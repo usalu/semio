@@ -4,9 +4,9 @@
 
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::mutations::remove_space_conditions::RemoveSpaceConditions;
-use crate::mutations::set_space_conditions::SetSpaceConditions;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
+use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

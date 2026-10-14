@@ -1,63 +1,71 @@
 //! 🧬️ En1993 artifact — hierarchical subject mutation dispatch.
 
-use crate::{En1993Diff, En1993Snapshot};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1993_diff::En1993Diff;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 #[path = "🧭️edit-rules/🦀️.rs"]
 mod edit_rules;
-pub use edit_rules::EDIT_RULES;
-pub use crate::standards::v1::subsets::any::io::mutation_bridge::{apply_en1993_mutation, inverse_en1993_mutation};
+pub use crate::edit_rules::EDIT_RULES;
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-use super::change_annex;
-use super::update_bolt_inputs;
-use super::update_bridge_inputs;
-use super::update_cold_formed_inputs;
-use super::update_crane_inputs;
-use super::update_fatigue_inputs;
-use super::update_fire_inputs;
-use super::update_hss_inputs;
-use super::update_member_properties;
-use super::update_pile_inputs;
-use super::update_plated_inputs;
-use super::update_silo_shell_inputs;
-use super::update_stainless_inputs;
-use super::update_tension_component_inputs;
-use super::update_through_thickness_inputs;
-use super::update_tower_inputs;
-use super::update_weld_inputs;
-use super::insert_material;
-use super::remove_material;
-use super::insert_section;
-use super::remove_section;
-use super::insert_member;
-use super::remove_member;
-use super::insert_load_case;
-use super::remove_load_case;
-use super::insert_member_action;
-use super::remove_member_action;
-use super::insert_joint;
-use super::remove_joint;
-use super::insert_fatigue_detail;
-use super::remove_fatigue_detail;
-use super::insert_fire_exposure;
-use super::remove_fire_exposure;
-use super::insert_cold_formed_member;
-use super::remove_cold_formed_member;
-use super::insert_plated_panel;
-use super::remove_plated_panel;
-use super::insert_silo_shell;
-use super::remove_silo_shell;
-use super::insert_tension_component;
-use super::remove_tension_component;
-use super::insert_bridge_fatigue;
-use super::remove_bridge_fatigue;
-use super::insert_tower_leg;
-use super::remove_tower_leg;
-use super::insert_pile;
-use super::remove_pile;
-use super::insert_crane_runway;
-use super::remove_crane_runway;
+use semio_s_artifact_norm_en1993_mut_general::change_annex;
+use semio_s_artifact_norm_en1993_mut_connections::update_bolt_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_bridge_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_cold_formed_inputs;
+use semio_s_artifact_norm_en1993_mut_cranes::update_crane_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_fatigue_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_fire_inputs;
+use semio_s_artifact_norm_en1993_mut_connections::update_hss_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_member_properties;
+use semio_s_artifact_norm_en1993_mut_towers::update_pile_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_plated_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_silo_shell_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_stainless_inputs;
+use semio_s_artifact_norm_en1993_mut_cranes::update_tension_component_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_through_thickness_inputs;
+use semio_s_artifact_norm_en1993_mut_towers::update_tower_inputs;
+use semio_s_artifact_norm_en1993_mut_connections::update_weld_inputs;
+use semio_s_artifact_norm_en1993_mut_general::insert_material;
+use semio_s_artifact_norm_en1993_mut_general::remove_material;
+use semio_s_artifact_norm_en1993_mut_general::insert_section;
+use semio_s_artifact_norm_en1993_mut_general::remove_section;
+use semio_s_artifact_norm_en1993_mut_general::insert_member;
+use semio_s_artifact_norm_en1993_mut_general::remove_member;
+use semio_s_artifact_norm_en1993_mut_connections::insert_load_case;
+use semio_s_artifact_norm_en1993_mut_connections::remove_load_case;
+use semio_s_artifact_norm_en1993_mut_connections::insert_member_action;
+use semio_s_artifact_norm_en1993_mut_connections::remove_member_action;
+use semio_s_artifact_norm_en1993_mut_connections::insert_joint;
+use semio_s_artifact_norm_en1993_mut_connections::remove_joint;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_fatigue_detail;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_fatigue_detail;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_fire_exposure;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_fire_exposure;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_cold_formed_member;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_cold_formed_member;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_plated_panel;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_plated_panel;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_silo_shell;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_silo_shell;
+use semio_s_artifact_norm_en1993_mut_cranes::insert_tension_component;
+use semio_s_artifact_norm_en1993_mut_cranes::remove_tension_component;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_bridge_fatigue;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_bridge_fatigue;
+use semio_s_artifact_norm_en1993_mut_towers::insert_tower_leg;
+use semio_s_artifact_norm_en1993_mut_towers::remove_tower_leg;
+use semio_s_artifact_norm_en1993_mut_towers::insert_pile;
+use semio_s_artifact_norm_en1993_mut_towers::remove_pile;
+use semio_s_artifact_norm_en1993_mut_cranes::insert_crane_runway;
+use semio_s_artifact_norm_en1993_mut_cranes::remove_crane_runway;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -182,13 +190,24 @@ mod tests;
 mod kinds_catalog;
 //#endregion 🧪️KindsCatalog
 
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `mutations` schema facet.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
-//#region 🧫️Vectors
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧫️Vectors
+/// 🌉️ The production dispatch the independent oracle hosts and the vector tests drive: a mutation's diff and inverse through the central applier.
+pub mod mutation_bridge {
+/// 🌉️ Applies one mutation to `base` through the central applier, returning the next snapshot and the raised `<Level>:<code>` messages.
+pub fn apply_en1993_mutation(base: &semio_s_artifact_norm_en1993_model::En1993Snapshot, mutation: &crate::En1993Mutation) -> Result<(semio_s_artifact_norm_en1993_model::En1993Snapshot, Vec<String>), String> {
+    let raised = <crate::En1993Mutation as protocol::Mutation<semio_s_artifact_norm_en1993_model::En1993Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
-mod middle_row;
+/// ↩️ The mutation rows that undo `mutation` applied to `base`, in store order.
+pub fn inverse_en1993_mutation(mutation: &crate::En1993Mutation, base: &semio_s_artifact_norm_en1993_model::En1993Snapshot) -> Result<Vec<crate::En1993Mutation>, semio_framework_value::ValueError> {
+    <crate::En1993Mutation as protocol::Mutation<semio_s_artifact_norm_en1993_model::En1993Snapshot>>::inverse(mutation, base)
+}
+}
+pub use crate::mutation_bridge::*;

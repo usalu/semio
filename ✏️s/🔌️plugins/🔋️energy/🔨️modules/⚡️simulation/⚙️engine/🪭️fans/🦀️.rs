@@ -1,5 +1,9 @@
 //! 🌀️ Fan performance: pressure rise, efficiency curves, fan laws, and part-load power.
 
+extern crate semio_s_plugin_energy_engine_curves as curves;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::curves::PerformanceCurve;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

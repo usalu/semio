@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::{ClassificationItem, ClassificationSystem};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, ClassificationSystem};
 
 fn with_system() -> ModelSnapshot {
     let mut snapshot = demo();

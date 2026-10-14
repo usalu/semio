@@ -25,7 +25,7 @@ pub fn plugin() -> Result<Plugin<BimApps>, PluginAssemblyError> {
         .declare_artifact(crate::artifacts::model::artifact())
         .editor_mutation_roster::<crate::editor::bim::BimModelApp>()
         .viewer_mutation_roster::<crate::viewer::bim::BimModelViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::model::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::model::standards::v1::subsets::any::schema::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist building model edits to the open document".into(), optional: false })
         .try_build()

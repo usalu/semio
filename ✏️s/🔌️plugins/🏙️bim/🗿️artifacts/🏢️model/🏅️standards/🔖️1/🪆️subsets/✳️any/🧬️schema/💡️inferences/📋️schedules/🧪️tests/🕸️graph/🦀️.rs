@@ -2,7 +2,7 @@ use super::kit::{items, scheduled};
 use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::{Entry, ModelDiff, ModelInference, OpeningPatch, SchedulePatch, TopConstraint, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{OpeningPatch, SchedulePatch, WallPatch}}, inferences::ModelInference, snapshot::TopConstraint};
 use protocol::Inference;
 
 fn scheduled_count() -> usize {

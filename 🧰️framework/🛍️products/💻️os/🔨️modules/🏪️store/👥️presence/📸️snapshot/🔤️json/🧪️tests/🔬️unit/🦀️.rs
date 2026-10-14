@@ -1,7 +1,7 @@
 //! 🧪️ Presence JSON native codec round-trips language-agnostic fixtures and agrees with an independent Serde oracle.
 use super::*;
-use crate::os_store::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
-use crate::store::ArtifactPresenceSnapshot;
+use semio_framework_io_sqlite_snapshot::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
+use crate::ArtifactPresenceSnapshot;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{native_decoding::NativeDecodeRetirementRecipient, native_encoding::NativeEncodeRetirementRecipient, NativeDecodeControl, NativeEncodeControl};
 use semio_framework_value_derive::{FromValue, ToValue};

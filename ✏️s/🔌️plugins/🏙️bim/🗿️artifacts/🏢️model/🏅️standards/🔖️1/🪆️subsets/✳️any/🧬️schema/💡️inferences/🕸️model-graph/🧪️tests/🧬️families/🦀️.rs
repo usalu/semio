@@ -1,7 +1,7 @@
 use super::compute::take_hashed;
 use super::*;
 use protocol::Inference;
-use crate::{Entry, FamilyParameterPatch, ModelDiff, Profile, ProjectPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{FamilyParameterPatch, ProjectPatch}, ModelDiff}, snapshot::Profile};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🏛️frame/📸️snapshot/🔣️.json");

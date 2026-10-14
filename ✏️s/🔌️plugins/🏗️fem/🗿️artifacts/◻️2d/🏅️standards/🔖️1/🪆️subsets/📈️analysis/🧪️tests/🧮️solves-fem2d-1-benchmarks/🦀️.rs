@@ -73,10 +73,10 @@ const KINDS: &[&str] = &[
 mod subject {
     use super::Json;
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_buckling_report_json};
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_modal_report_json};
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_mutated_analysis_report_json};
-    use semio_s_artifact_fem_2d::standards::v1::subsets::any::io::text::mutations::{fem2d_analysis_report_json};
+    use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::mutations::fem2d_buckling_report_json;
+    use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::mutations::fem2d_modal_report_json;
+    use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::mutations::fem2d_mutated_analysis_report_json;
+    use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::mutations::fem2d_analysis_report_json;
 
     //#region 🔖️Read
     /// 🧫️ The one declared fixture URI of this scenario's steps containing `needle`.

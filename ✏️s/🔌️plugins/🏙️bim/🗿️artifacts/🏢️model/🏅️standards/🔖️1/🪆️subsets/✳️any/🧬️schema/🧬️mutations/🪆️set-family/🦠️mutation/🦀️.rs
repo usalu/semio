@@ -1,6 +1,6 @@
 //! 🪆️ `set-family` payload. Sets exactly the provided fields of a family, its name and its category; a profile family cannot leave its category while a type uses it as a profile.
 
-use crate::{FamilyCategory, FamilyPatch, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{FamilyCategory, ModelSnapshot}, diff::{patches::FamilyPatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -72,7 +72,7 @@ class InferenceTransportCheckScript extends BundleScript {
       assert.equal(validate(vector.value), vector.valid, vector.name);
     }
     for (const law of ["inference_client::tests::production_manifest_installs_owner_transport_and_schema_vectors", "inference_client::tests::typed_owner_transport_preserves_proposal_binding_and_closed_geometry"]) {
-      runCmd("cargo", ["test", "--manifest-path", resolve(this.repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml"), "-p", "semio-s-artifact-gis-gismap", "--features", "component-app-assembly", "--lib", "--", law, "--exact", "--nocapture"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() });
+      runCmd("cargo", ["test", "--manifest-path", resolve(this.repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml"), "-p", "semio-s-artifact-gis-gismap", "--lib", "--", law, "--exact", "--nocapture"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() });
     }
     console.log("GIS document-http: Ajv schema parity, owner manifest injection, typed submit/events/approval and geometry binding passed");
   }

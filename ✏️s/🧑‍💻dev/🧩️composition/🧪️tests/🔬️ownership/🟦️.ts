@@ -14,7 +14,7 @@ const fixture = JSON.parse(read("🧫️fixtures/🔣️.json")) as { package: s
 export function compositionLawGroups() {
   return [
     ...[...new Set(fixture.suites.map(suite => suite.target))].map(target => ({ package: fixture.package, target: { kind: "test" as const, name: target }, laws: fixture.suites.filter(suite => suite.target === target).flatMap(suite => suite.laws) })),
-    ...(fixture.retainedArtifactUnits.length ? [{ package: "semio-s-artifact-procedural-generation3d", target: { kind: "lib" as const, name: "semio_s_artifact_procedural_generation3d" }, cargoArgs: ["--features", "component-app-assembly"], laws: fixture.retainedArtifactUnits.flatMap(suite => suite.laws) }] : []),
+    ...(fixture.retainedArtifactUnits.length ? [{ package: "semio-s-artifact-procedural-generation3d", target: { kind: "lib" as const, name: "semio_s_artifact_procedural_generation3d" }, laws: fixture.retainedArtifactUnits.flatMap(suite => suite.laws) }] : []),
   ];
 }
 

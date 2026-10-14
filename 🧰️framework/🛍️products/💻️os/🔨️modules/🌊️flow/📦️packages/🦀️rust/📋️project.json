@@ -1,0 +1,21 @@
+{
+  "name": "semio-framework-os-flow",
+  "projectType": "library",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "test-extension-registry": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-extension-registry",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

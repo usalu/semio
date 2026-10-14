@@ -282,4 +282,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitConnect
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitDesign { id, name, pieces, connections });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioKitSnapshot { schema, types, designs, objects, models, properties, representations });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioKitSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioKitSnapshot, schema::mutations::SemioKitMutation);

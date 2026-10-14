@@ -82,7 +82,7 @@ struct ToyRunJobOriginal { writer:ToolRunTickWriter,provisional_counts:Vec<i32> 
 struct ToyRunJob {
     unit:OriginalToyUnit,
     emission:OriginalToyEmission,
-    phase:u8,
+    pub(crate) phase:u8,
     batch_units:u32,
     scan:usize,
     retraction:Option<u32>,
@@ -104,8 +104,8 @@ struct ToyRunJob {
     done: u32,
     resumed_from: u32,
     checkpoint_due: bool,
-    finished: bool,
-    closing: bool,
+    pub(crate) finished: bool,
+    pub(crate) closing: bool,
 }
 
 impl Drop for ToyRunJob {

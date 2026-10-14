@@ -1,6 +1,6 @@
 //! 🎟️ Guest calls borrow the existing paid Core and authentic physical context throughout their retained machine phases.
 use super::{OwnedRuntime,OwnedGuestInstance};
-use crate::interpreter::{OwnedSemioExport,ExportKind,Value,CoreOriginalInvocationStatus};
+use semio_framework_plugin_interpreter::{OwnedSemioExport,ExportKind,Value,CoreOriginalInvocationStatus};
 use semio_framework_actor::{RetainedTurnInput,OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
@@ -8,7 +8,7 @@ use std::mem::size_of;
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Opening,Driving,Capturing,Closing,Ready,Aborting}
 /// 🪢️ The inline call frontier keeps its exact original input and arguments until its actual machine is funded closed.
-pub struct OwnedOriginalCall{export:OwnedSemioExport,arguments:[Value;16],count:usize,input:RetainedTurnInput,phase:Phase,result:Option<Value>}
+pub struct OwnedOriginalCall{export:OwnedSemioExport,arguments:[Value;semio_framework_actor::OriginalJobBudget::SCALAR_ARGUMENT_COUNT],count:usize,input:RetainedTurnInput,phase:Phase,result:Option<Value>}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OwnedOriginalCallStatus{Pending,Ready,Cancelled,Deadline}
 pub struct OwnedOriginalCallProgress{pub result:Result<OwnedOriginalCallStatus,OriginalTurnFailure>,pub execution:Option<OriginalGuestExecutionReceipt>}
@@ -20,7 +20,7 @@ impl OwnedGuestInstance{
 }
 impl OwnedRuntime{
  pub fn begin_original_call_step(&self,state:&mut OwnedGuestInstance,export:OwnedSemioExport,arguments:&[Value],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  validate(state,cx)?;if !std::ptr::fn_addr_eq(self.original_clock,cx.clock_source()){return Err(refused("original guest call requires its actual embedding clock").into())}if state.original_call.is_some(){return Err(refused("original guest call still owns its preceding machine").into())}if arguments.len()>16{return Err(refused("original guest call exceeds its declared inline argument extent").into())}if cx.is_cancelled()||!metadata(cx,size_of::<OwnedOriginalCall>())?{return Ok(false)}let mut values=[Value::I64(0);16];values[..arguments.len()].copy_from_slice(arguments);let input=RetainedTurnInput{operation:cx.operation().0,generation:cx.generation().0,epoch:cx.original_source_epoch().unwrap(),grant:cx.retained_grant()};state.original_call=Some(OwnedOriginalCall{export,arguments:values,count:arguments.len(),input,phase:Phase::Opening,result:None});Ok(true)
+  validate(state,cx)?;if !std::ptr::fn_addr_eq(self.original_clock,cx.clock_source()){return Err(refused("original guest call requires its actual embedding clock").into())}if state.original_call.is_some(){return Err(refused("original guest call still owns its preceding machine").into())}if arguments.len()>semio_framework_actor::OriginalJobBudget::SCALAR_ARGUMENT_COUNT{return Err(refused("original guest call exceeds its declared inline argument extent").into())}if cx.is_cancelled()||!metadata(cx,size_of::<OwnedOriginalCall>())?{return Ok(false)}let mut values=[Value::I64(0);semio_framework_actor::OriginalJobBudget::SCALAR_ARGUMENT_COUNT];values[..arguments.len()].copy_from_slice(arguments);let input=RetainedTurnInput::borrow_original(cx)?;state.original_call=Some(OwnedOriginalCall{export,arguments:values,count:arguments.len(),input,phase:Phase::Opening,result:None});Ok(true)
  }
  pub fn advance_original_call_step(&self,state:&mut OwnedGuestInstance,execution:Option<OriginalGuestExecutionBudget>,cx:&mut StepContext<'_>)->Result<OwnedOriginalCallProgress,OriginalTurnFailure>{
   validate(state,cx)?;let owner=state.original_call.as_mut().ok_or_else(||refused("original guest call has no admitted frontier"))?;if owner.phase==Phase::Aborting{return Err(refused("original guest call cannot resume during its actual cleanup").into())}if execution.is_some()!=(owner.phase==Phase::Driving){return Err(refused("original guest execution authorization differs from its actual machine phase").into())}let module=state.artifact.original_actor_module();let core=state.original_core.as_mut().unwrap();

@@ -6,7 +6,7 @@ use crate::editor::bim::entities::property_text;
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::effective_properties::{self as effective, Issue, Source};
-use crate::{ModelInference, ModelSnapshot, PropertyDef};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, PropertyDef}};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::UiAssemblyResult;

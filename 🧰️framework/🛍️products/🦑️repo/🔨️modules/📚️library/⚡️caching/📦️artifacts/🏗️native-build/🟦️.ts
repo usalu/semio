@@ -1,3 +1,4 @@
+import {withRepositoryCargoInputsV1,type CargoDependencyNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { requestedCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
@@ -9,6 +10,7 @@ import { readBuildMode } from "../../../../../../../🔨️modules/🏃️proces
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { buildCargoArtifacts, type CargoArtifactBuildPolicyV1, type CargoArtifactBuildOptionsV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 
 /** 🏷️ The one version every crate in this workspace carries (`[workspace.package] version`). */
 export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
@@ -25,12 +27,12 @@ export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
 
 /** 🏗️ Authors explicit repository compiler storage for one source owner. */
 export function repositoryCargoArtifactBuildPolicyV1(cwd: string, root = getWorkspaceRoot(), environment: Readonly<Record<string,string|undefined>> = process.env): CargoArtifactBuildPolicyV1 {
-  return { version: 1, compilerConfiguration: join(root,".cargo/config.toml"), mode: readBuildMode(environment.SEMIO_BUILD_MODE), cwd: resolve(cwd), buildDirectory: cargoDirectories(root, environment).build, leaseDirectory: join(root, ".cache", "framework", "leases"), captureDirectory: environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(cwd, "dist"), budgetMs: buildBudgetMs() };
+  return { version: 1, compilerConfiguration: join(root,".cargo/config.toml"), mode: readBuildMode(environment.SEMIO_BUILD_MODE), cwd: resolve(cwd), buildDirectory: cargoDirectories(root, environment).build, leaseDirectory: join(root, ".cache", "b", "l", "m", "data"), captureDirectory: environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(cwd, "dist"), budgetMs: buildBudgetMs() };
 }
 /** 🦀️ Composes selected repository preparation with the neutral compiler capture port. */
-export async function buildRepositoryCargoArtifacts(manifest: string, args: string[], root: string, options: CargoArtifactBuildOptionsV1): Promise<void> {
+export async function buildRepositoryCargoArtifacts(manifest: string, args: string[], root: string, options: Omit<CargoArtifactBuildOptionsV1,"storage"|"sourceBoundary">&Readonly<{network:CargoDependencyNetworkV1}>): Promise<void> {
   const policy = repositoryCargoArtifactBuildPolicyV1(root, root, options.environment ?? process.env), control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs), path = resolve(root, manifest);
   prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(root), root, [options.command ?? "build", "--manifest-path", path, ...args], root, options.environment ?? process.env);
   const environment = options.environment ?? process.env;
-  await buildCargoArtifacts(path, args, { ...policy, captureDirectory: environment.SEMIO_TEST_ARTIFACT_DIR ? resolve(environment.SEMIO_TEST_ARTIFACT_DIR) : resolve(dirname(path), "dist") }, { ...options, control });
+  await withRepositoryCompilerStoreV1(root,policy.mode,control,environment,store=>withRepositoryCargoInputsV1({workspace:root,manifest:path,args,network:options.network,control,storage:store.storage,environment:store.environment},environment=>buildCargoArtifacts(path,args,{...policy,buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory},{...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,environment})));
 }

@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::colu
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{Beam, Column, ModelSnapshot, Profile};
+use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Column, ModelSnapshot, Profile};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::mesh::{sweep_profile_ramped, TriMesh};

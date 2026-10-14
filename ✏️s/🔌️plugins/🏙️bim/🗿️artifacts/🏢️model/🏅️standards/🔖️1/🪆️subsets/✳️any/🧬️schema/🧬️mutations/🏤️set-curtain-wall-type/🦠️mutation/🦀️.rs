@@ -1,6 +1,6 @@
 //! 🏤️ `set-curtain-wall-type` payload. Patches exactly the provided fields of a curtain wall type: name, grid rules, mullion sections, default panel and materials; every curtain wall of the type follows by inference.
 
-use crate::{CurtainGrid, CurtainPanel, CurtainWallTypePatch, ModelDiff, ModelMutation, ModelSnapshot, Profile};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel, ModelSnapshot, Profile}, diff::{patches::CurtainWallTypePatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

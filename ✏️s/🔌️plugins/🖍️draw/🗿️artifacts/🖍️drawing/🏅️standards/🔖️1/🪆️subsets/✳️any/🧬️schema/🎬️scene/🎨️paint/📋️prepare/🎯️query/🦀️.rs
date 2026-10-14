@@ -1,7 +1,7 @@
 //! 🖱️ Pointer selection borrows one complete cache and retains only bounded query metadata.
 use super::{PreparedScene,PreparedPaint};
 use super::super::{PreparedRegionStamp,PreparedRegionQueryJob};
-use crate::schema::{scene_identity::SceneIdentity,scene_preparation::DocumentSceneNode};
+use crate::preparation::DocumentSceneNode;
 #[path="🪢️lasso/🦀️.rs"]
 mod lasso;
 use lasso::{SegmentEnclosureCursor,LassoInteriorCursor};
@@ -68,7 +68,7 @@ impl PreparedScenePickJob{
 pub fn prepared_selection_bounds(scene:&PreparedScene,ids:&[String])->Result<Option<[f64;4]>,String>{
  if ids.len()>256||ids.iter().map(String::len).sum::<usize>()>16384{return Err("Scene selection exceeds identity capacity".into());}
  let selected=ids.iter().filter_map(|id|scene.plan.nodes.iter().find(|node|node.id==*id).map(|node|node.source_path.as_slice())).collect::<Vec<_>>();let mut bounds=None;
- for(index,node)in scene.plan.nodes.iter().enumerate(){if !visible(node)||crate::schema::scene_preparation::scene_selection_relation(&node.source_path,node.locked_ancestors,&selected).map_err(|error|error.to_string())?.bounds_selection.is_none(){continue;}if let Some(next)=scene.geometry[index].bounds.or(scene.geometry[index].geometry_bounds){bounds=Some(crate::schema::scene_view::union(bounds,next));}}
+ for(index,node)in scene.plan.nodes.iter().enumerate(){if !visible(node)||crate::preparation::selection::scene_selection_relation(&node.source_path,node.locked_ancestors,&selected).map_err(|error|error.to_string())?.bounds_selection.is_none(){continue;}if let Some(next)=scene.geometry[index].bounds.or(scene.geometry[index].geometry_bounds){bounds=Some(crate::view::union(bounds,next));}}
  Ok(bounds)
 }
 #[cfg(test)]

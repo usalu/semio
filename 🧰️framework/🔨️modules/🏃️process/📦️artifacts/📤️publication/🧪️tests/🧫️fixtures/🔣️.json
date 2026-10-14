@@ -1,4 +1,5 @@
 {
+  "markerFilename": ".semio-artifact.json",
   "owner": "fixture:browser-support",
   "files": {
     "support.js": "export const ready = true;\n",

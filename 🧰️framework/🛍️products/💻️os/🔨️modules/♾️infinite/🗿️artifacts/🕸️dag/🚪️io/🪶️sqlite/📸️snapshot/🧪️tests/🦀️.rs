@@ -68,13 +68,13 @@ pub(crate) fn full(word: u64) -> DagSnapshot {
     for content in [DagPreviewContent::Empty, DagPreviewContent::Scalar { text: String::new() }, DagPreviewContent::Image { src: text.clone() }, DagPreviewContent::Tree { json: value(word) }] {
         kinds.push(DagNodeKind::Preview { content, expanded: DagExpandedPaths::from([String::new(), text.clone()]), input: port(word) });
     }
-    let properties = graph::manifest::PropertyBag::from([
-        ("null".into(), graph::manifest::PropertyValue::Null),
-        ("bool".into(), graph::manifest::PropertyValue::Bool(false)),
-        ("number".into(), graph::manifest::PropertyValue::Number(f)),
-        ("text".into(), graph::manifest::PropertyValue::String(text.clone())),
-        ("array".into(), graph::manifest::PropertyValue::Array(vec![graph::manifest::PropertyValue::Number(f)])),
-        ("object".into(), graph::manifest::PropertyValue::Object(graph::manifest::PropertyBag::from([(String::new(), graph::manifest::PropertyValue::String(text.clone()))]))),
+    let properties = semio_framework_graph_manifest::PropertyBag::from([
+        ("null".into(), semio_framework_graph_manifest::PropertyValue::Null),
+        ("bool".into(), semio_framework_graph_manifest::PropertyValue::Bool(false)),
+        ("number".into(), semio_framework_graph_manifest::PropertyValue::Number(f)),
+        ("text".into(), semio_framework_graph_manifest::PropertyValue::String(text.clone())),
+        ("array".into(), semio_framework_graph_manifest::PropertyValue::Array(vec![semio_framework_graph_manifest::PropertyValue::Number(f)])),
+        ("object".into(), semio_framework_graph_manifest::PropertyValue::Object(semio_framework_graph_manifest::PropertyBag::from([(String::new(), semio_framework_graph_manifest::PropertyValue::String(text.clone()))]))),
     ]);
     let nodes = kinds
         .into_iter()

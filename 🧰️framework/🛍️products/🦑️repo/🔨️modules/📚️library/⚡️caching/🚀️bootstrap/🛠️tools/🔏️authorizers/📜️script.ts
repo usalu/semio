@@ -16,9 +16,9 @@ if(import.meta.main)await receiveScriptProcessInvocation(process.env,async origi
  const captured=await captureNxAuthorizerSourcesV1(root,manifest.entry,signal);
  if(JSON.stringify(captured.manifest)!==JSON.stringify(manifest))throw Error("Original authorizer source changed");
  const expected=new Map(manifest.sources.map(row=>[row.path,row.sha256])),loaded=new Set<string>(),control=scriptCompilerAdmissionControlV1(original,"nx:authorizers:release",120000);
- const lease=await acquireCompilerCapacityLeaseV1({directory:join(findWorkspaceRoot(import.meta.dir),".cache/framework/leases"),control});
+ const lease=await acquireCompilerCapacityLeaseV1({directory:join(findWorkspaceRoot(import.meta.dir),".cache/b/l/m/data"),control});
  try{
-  const result=await Bun.build({entrypoints:[join(root,manifest.entry)],root,target:"node",format:"esm",naming:"semio-authorizers.mjs",treeShaking:true,minify:true,splitting:false,sourcemap:"none",metafile:true,define:{"import.meta.vitest":"undefined"},external:[...nxAuthorizerExternalModulesV1,"bun:sqlite"],plugins:[{name:"semio-frozen-authorizers",setup(build){
+  const result=await Bun.build({entrypoints:[join(root,manifest.entry)],root,target:"node",format:"esm",naming:"semio-authorizers.mjs",treeShaking:true,minify:true,splitting:false,sourcemap:"none",metafile:true,define:{"import.meta.vitest":"undefined","import.meta.semioFrozenAuthorizers":"true"},external:[...nxAuthorizerExternalModulesV1,"bun:sqlite"],plugins:[{name:"semio-frozen-authorizers",setup(build){
    build.onLoad({filter:/.*/,namespace:"file"},async args=>{
     checkScriptInvocation(original);const path=relative(root,args.path).replaceAll("\\","/"),bytes=await readNxAuthorizerSourceV1(root,path,signal),sha256=createHash("sha256").update(bytes).digest("hex");
     if(expected.get(path)!==sha256)throw Error("Original authorizer source changed: "+path);loaded.add(path);

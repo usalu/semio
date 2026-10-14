@@ -51,12 +51,12 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             assert!(feature.contains(case["operation"].as_str().unwrap()));
             let mut before = Generation3dSnapshot::default();
             std::mem::replace(&mut before.host_snapshot, initial).retire_cold();
-            let before = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(before);
-            let mut actual = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*before).clone());
+            let before = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(before);
+            let mut actual = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new((*before).clone());
             let mut inverses = Vec::new();
             for row in &rows {
-                inverses.push(crate::standards::v1::subsets::any::schema::mutations::inverse_generation3d_mutation(&actual, row).unwrap());
-                crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap();
+                inverses.push(semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation(&actual, row).unwrap());
+                semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap();
             }
             let consumer = actual.host_snapshot.synapses.iter().find(|wire| wire.to == "consumer").unwrap();
             if case["collection"] == true {
@@ -66,7 +66,7 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             assert_eq!(selected.from_port, case["selectedChannel"].as_str().unwrap());
             assert!(actual.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == &selected.from && neuron_kind == "brep.brep")));
             assert!(actual.host_snapshot.synapses.iter().any(|wire| wire.from == selected.from && wire.from_port == "brepOut" && wire.to == feature && wire.to_port == "geometry"));
-            let Widget::Neuron { params, .. } = actual.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == selected.from).unwrap() else { panic!("source selector") };
+            let Widget::Neuron { params, .. } = actual.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == selected.from).unwrap() else { panic!("source selector") };
             assert_eq!(params.get("sourceHandle").and_then(|value| value.as_dictionary()).and_then(|value| value.get("value")).and_then(|value| value.as_atom()).and_then(|value| value.as_str()),Some("a".repeat(64).as_str()));
             if case["collection"] == true {
                 assert!(actual.host_snapshot.synapses.iter().any(|wire| wire.from == selected.from && wire.from_port == "sourceIndex" && wire.to == consumer.from && wire.to_port == "index"));
@@ -74,10 +74,10 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
                 assert!(actual.host_snapshot.synapses.iter().any(|wire| wire.from == feature && wire.to == consumer.from && wire.to_port == "value"));
             }
             assert!(!actual.host_snapshot.synapses.iter().any(|wire| wire.from == feature && wire.to == selected.from));
-            let committed = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*actual).clone());
-            for inverse in inverses.iter().rev() { for row in inverse { crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); } }
+            let committed = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new((*actual).clone());
+            for inverse in inverses.iter().rev() { for row in inverse { semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); } }
             assert_eq!(actual, before);
-            for row in &rows { crate::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); }
+            for row in &rows { semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut actual, row).unwrap(); }
             assert_eq!(actual, committed);
             for inverse in inverses { for row in inverse { row.retire_cold(); } }
             for row in rows { row.retire_cold(); }

@@ -1,6 +1,6 @@
 //! 🧪️ `tests` — moved out of `🏷️field-meta/🦀️.rs` into its canonical test implementation.
-use super::*;
-use crate::En1993Snapshot;
+
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 fn to_template(path: &str) -> String {
     let mut out = String::new();
@@ -37,7 +37,10 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
                         missing.push(child);
                     } else if let Some(meta) = meta {
                         assert!(!meta.label_en.is_empty() && !meta.label_de.is_empty(), "{child}");
-                        let _ = meta.unit; // SI or explicit none
+                        for choice in meta.choices.unwrap_or_default() {
+                            assert!(!choice.label_en.is_empty() && !choice.label_de.is_empty(), "{child}");
+                            assert!(choice.label_en != choice.value || choice.label_de != choice.value, "{child} choice labels must not be raw codes only ({})", choice.value);
+                        }
                     }
                 }
             }
@@ -54,7 +57,15 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
 #[test]
 fn every_default_snapshot_editable_leaf_has_en_de_meta() {
     let doc = En1993Snapshot::default();
-    let json = serde_json::to_value(&doc).expect("serialize");
+    let json = serde_json::Value::from(semio_framework_value::ToValue::to_value(&doc));
+    let mut missing = Vec::new();
+    walk("", &json, &mut missing);
+    assert!(missing.is_empty(), "missing field-meta for: {missing:?}");
+}
+
+#[test]
+fn every_compliant_example_leaf_has_en_de_meta() {
+    let json = serde_json::Value::from(semio_framework_value::ToValue::to_value(&En1993Snapshot::compliant_heb240_frame()));
     let mut missing = Vec::new();
     walk("", &json, &mut missing);
     assert!(missing.is_empty(), "missing field-meta for: {missing:?}");

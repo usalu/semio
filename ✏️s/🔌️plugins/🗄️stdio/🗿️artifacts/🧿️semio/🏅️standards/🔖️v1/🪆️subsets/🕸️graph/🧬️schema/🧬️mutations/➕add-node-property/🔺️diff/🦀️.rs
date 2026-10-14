@@ -1,6 +1,8 @@
 //! 🔺️ Diff for `AddNodeProperty`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::diff::{SemioGraphDiff, SemioGraphNodeDiff};
 use crate::schema::snapshot::SemioGraphSnapshot;
 

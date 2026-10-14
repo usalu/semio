@@ -11,11 +11,6 @@ extern crate semio_framework_os_kernel as vcs;
 use semio_framework_artifact_flow_flow::Widget;
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-#[cfg(feature = "component-app-assembly")]
-#[path = "../../🫀️core/🖼️semantic-ui/🦀️.rs"]
-mod semantic_ui;
-#[cfg(feature = "component-app-assembly")]
-pub(crate) use semantic_ui::*;
 
 pub const GENERATION_2D_SCHEMA: &str = "generation.2d";
 
@@ -149,7 +144,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.generation2d's typed runtime declaration.
-#[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::generation2d_artifact_schema_descriptor())
@@ -599,11 +593,9 @@ pub mod examples {
 
 /// 🧵️ The read-only `previewEval` tool run the editor's previews evaluate through — mounted at the
 /// subset level, exactly where generation3d mounts its twin (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS).
-#[cfg(feature = "component-app-assembly")]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs"]
 pub mod preview_eval;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -756,7 +748,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

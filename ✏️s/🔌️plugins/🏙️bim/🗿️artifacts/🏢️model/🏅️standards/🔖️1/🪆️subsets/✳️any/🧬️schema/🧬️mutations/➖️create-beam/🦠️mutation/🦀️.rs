@@ -1,6 +1,6 @@
 //! ➖️ `create-beam` payload. Brings a new beam onto a storey; its top lies `top_offset` metres from the storey top (positive above, negative below, zero flush), no elevation is stored.
 
-use crate::{Beam, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Beam, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

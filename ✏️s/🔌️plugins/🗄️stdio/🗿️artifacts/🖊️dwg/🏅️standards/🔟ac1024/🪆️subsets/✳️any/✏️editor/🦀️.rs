@@ -4,9 +4,9 @@
 
 use crate::editor::dwg_ac1024::modes::edit;
 use crate::editor::dwg_ac1024::modes::edit::windows::main;
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
 
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -86,8 +86,8 @@ const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.dwg.tool-command.
 const DWG_AC1024_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn dwg_ac1024_editor_example_snapshot(example_id: &str) -> DwgSnapshot {
-    if example_id == crate::examples::demo::ID {
-        <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_dwg_examples::examples::demo::ID {
+        <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_dwg_examples::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         DwgSnapshot::default()
     }
@@ -173,7 +173,7 @@ pub struct DwgAc1024Editor;
 impl ArtifactEditor for DwgAc1024Editor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_dwg_examples::examples::demo::source()]
     }
     type Snapshot = DwgSnapshot;
     type Mutation = DwgMutation;
@@ -300,7 +300,7 @@ impl editing::SnapshotEditingEditor for DwgAc1024Editor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_dwg_ac1024_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(DWG_AC1024_DIALECT).document(["stdio", "dwgac1024"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::DWG_AC1024_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_dwg_examples::examples::demo::ID, semio_s_artifact_stdio_dwg_examples::examples::demo::label())], semio_s_artifact_stdio_dwg_examples::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

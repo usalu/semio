@@ -2,7 +2,13 @@ cargo-features = [ "trim-paths" ]
 
 [workspace]
 resolver = "2"
-members = [ "📇️registry/🧬️contract/📦️packages/🦀️rust" ]
+members = [
+    "⚖️compliance/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust",
+    "🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust",
+    "🪟️results/🎚️config/📦️packages/🦀️rust",
+]
 exclude = [
   "**/🏅️standards/**",
   "**/👽️guest/**",
@@ -51,6 +57,9 @@ path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-plugin]
 path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
 
@@ -59,6 +68,9 @@ path = "../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/�
 
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-derive]
 path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
@@ -70,6 +82,33 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-contract]
+path = "📇️registry/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface]
+path = "📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-compliance]
+path = "⚖️compliance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-results-config]
+path = "🪟️results/🎚️config/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

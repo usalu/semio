@@ -7,6 +7,8 @@
 //! `semio_framework_os_kernel`, renamed from `dsl` by this same wave to free that name for this
 //! module) is this file's own `os_dsl`/`dsl`-derive dependency.
 
+#![allow(async_fn_in_trait)]
+
 // #region ⚠️ Errors
 /// 🚧️ Unified failure mode for jack parsing/execution, wire-literal parsing, and fixture ingestion.
 #[derive(Debug)]
@@ -98,8 +100,8 @@ pub mod queryable {
     // #region queryable
     //! 🔍️ Queryable graph interface for Jack.
 
-    use crate::dsl::GraphDslError;
-    use crate::manifest::{GraphManifest, PropertyBag, PropertyValue};
+    use crate::GraphDslError;
+    use semio_framework_graph_manifest::{GraphManifest, PropertyBag, PropertyValue};
     use semio_framework_pack_json::Value;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -370,8 +372,8 @@ pub mod wire {
     //! layer on top of the shared parse, not a syntax difference. ~8 downstream crates depend on
     //! these exact type/function signatures, unchanged by this unification.
 
-    use crate::dsl::GraphDslError;
-    use crate::manifest::{PropertyBag, PropertyValue};
+    use crate::GraphDslError;
+    use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 
     // #region 🔖️WireTypes
     /// 🧩️ Neutral node row for wire-literal emission.
@@ -396,7 +398,7 @@ pub mod wire {
     // #endregion 🔖️WireTypes
 
     // #region 🔖️PropertyBridge
-    /// 🌉️ `crate::manifest::PropertyValue` <-> `dsl_core::DslValue` — the two crates'
+    /// 🌉️ `semio_framework_graph_manifest::PropertyValue` <-> `dsl_core::DslValue` — the two crates'
     /// dynamic-JSON-equivalent literal types are structurally identical, so this is a pure reshape.
     fn dsl_value_from_property_value(value: &PropertyValue) -> semio_framework_value::DslValue {
         match value {
@@ -541,7 +543,7 @@ pub mod wire {
 pub use queryable::{manifest_edge_kinds, manifest_node_kinds, manifest_port_kinds, manifest_property_names, BoardQueryableGraph, QueryableEdge, QueryableGraph};
 pub use wire::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
 
-use crate::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use std::collections::{BTreeMap, BTreeSet};
 
 // #region jack_impl
@@ -629,7 +631,7 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum QueryResultKind {
     #[default]
@@ -637,7 +639,7 @@ pub enum QueryResultKind {
     Graph,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct QueryResult {
     #[value(default)]
@@ -660,7 +662,7 @@ impl QueryResult {
 // #endregion 🔖️Ast
 
 // #region 🔖️Lexer
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum TokenClass {
     Keyword,
@@ -672,7 +674,7 @@ pub enum TokenClass {
     Error,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct TokenSpan {
     pub class: TokenClass,
@@ -953,7 +955,7 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
 // #endregion 🔖️Lexer
 
 // #region 🔖️Language
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Completion {
     pub label: String,
@@ -1168,7 +1170,7 @@ pub fn complete<G: QueryableGraph>(graph: &G, source: &str, cursor: usize) -> Ve
 // #endregion 🔖️Language
 
 // #region 🔖️LanguageService
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum DiagnosticSeverity {
     Error,
@@ -1177,7 +1179,7 @@ pub enum DiagnosticSeverity {
     Info,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Diagnostic {
     pub start: usize,
@@ -1192,7 +1194,7 @@ pub struct Diagnostic {
     pub code: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct Hover {
     pub start: usize,
@@ -1200,7 +1202,7 @@ pub struct Hover {
     pub contents: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct SemanticToken {
     pub start: usize,
@@ -1589,7 +1591,7 @@ fn idiom_complete(text: &str, offset: usize) -> Vec<semio_framework_dsl::Complet
     // supply — an empty graph still exercises the syntax-only completions (clause/logic keywords).
     struct EmptyGraph;
     impl QueryableGraph for EmptyGraph {
-        fn manifest(&self) -> Option<&crate::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&semio_framework_graph_manifest::GraphManifest> {
             None
         }
         fn node_ids(&self) -> Vec<String> {

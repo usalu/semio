@@ -9,7 +9,7 @@ use super::writer::en;
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
-use crate::Ramp;
+use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
 use semio_framework_geometry::Point;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored ramp record.

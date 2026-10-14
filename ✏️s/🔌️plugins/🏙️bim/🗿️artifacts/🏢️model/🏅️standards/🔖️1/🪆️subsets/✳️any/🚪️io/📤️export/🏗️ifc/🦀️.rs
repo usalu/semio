@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::instanc
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
-use crate::{ModelInference, ModelSnapshot, Phase};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Phase}};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Header, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Value};
 use std::collections::BTreeMap;
 
 #[path = "🧱️codec/🦀️.rs"]

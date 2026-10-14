@@ -71,7 +71,6 @@ use crate::sdk_fault::plugin_sdk_fault;
 use crate::store_lifecycle::ArtifactDisposal;
 use crate::store_lifecycle::ArtifactInitializationAdmission;
 use crate::app_emission::ArtifactMutationOutcome;
-use crate::store_lifecycle::ArtifactSnapshotDisposer;
 use crate::store_lifecycle::bounded_config_store_disposer;
 use crate::store_lifecycle::bounded_document_store_disposer;
 use crate::store_lifecycle::bounded_document_store_initialization_job;
@@ -260,12 +259,10 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.
     /// The completed `Media` crosses back to the host only after the job's fresh commit boundary.
-    fn build_media_export_job(_request: ArtifactMediaExportJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        Ok(None)
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media output lacks its concrete source-preserving producer").into())
     }
-    fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        None
-    }
+
 
     /// 🧬️ Installs the exact domain-owned catalog and nested retirement factories for
     /// retained envelope decode. `None` grants no decoder authority.

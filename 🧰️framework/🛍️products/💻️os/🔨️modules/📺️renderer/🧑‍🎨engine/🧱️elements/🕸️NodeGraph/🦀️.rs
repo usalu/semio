@@ -4,7 +4,9 @@ pub use canvas;
 pub use semio_framework_os_infinite::board::ports::directed_dag as dag;
 
 use dag::{dag_screen_to_world, fit_node_size, DagHost};
-use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
+
+use semio_framework_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
 use protocol::{DomainHover, DomainSelection, SelectionMethod};
 use semio_framework_ui_viewport::Viewport2d;
 // 🌱️ `ToValue`/`FromValue` here is the first-party analog of `Serialize`/`Deserialize` below, for

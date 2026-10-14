@@ -1,0 +1,21 @@
+[package]
+workspace = "../../.."
+name = "semio-s-fem-sqlite"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Borrowed typed SQLite row admission and projection shared by the fem 2d and 3d snapshot codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-io-sqlite-snapshot = { workspace = true }
+semio-framework-value = { workspace = true }

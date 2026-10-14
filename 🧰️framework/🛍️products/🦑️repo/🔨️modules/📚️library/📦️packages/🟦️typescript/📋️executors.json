@@ -1,5 +1,10 @@
 {
   "executors": {
+    "command": {
+      "implementation": "../../🔌️nx-plugin/🏃️execution/🟨️.mjs",
+      "schema": "../../🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json",
+      "description": "Execute literal portable command arguments through the original process authority and Bun shell."
+    },
     "owner-command": {
       "implementation": "../../🔌️nx-plugin/📤️arguments/🟨️.mjs",
       "schema": "../../🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",

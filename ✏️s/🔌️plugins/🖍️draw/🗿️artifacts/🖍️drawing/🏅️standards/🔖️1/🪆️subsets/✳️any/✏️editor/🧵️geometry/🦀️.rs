@@ -1,10 +1,10 @@
 //! 🧵️ Retained document geometry drives the editor through the real reactor.
-use crate::DrawingSnapshot;
-use crate::schema::scene_identity::SceneIdentity;
-use crate::schema::scene_identity::admission::{scene_admission,SceneAdmissionStatus};
-use crate::schema::scene_preparation::{DocumentVectorJob,DocumentVectorRetirement,DocumentSceneLimits,DocumentAlgorithmLimits};
-use crate::schema::scene_retirement::ScenePlanCloseJob;
-use crate::schema::scene_paint::scene::{ScenePaintJob,ScenePaintRetirement,PreparedScene,PreparedSceneCloseJob,PaintedSceneLimits};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
+use semio_s_artifact_draw_drawing_scene::identity::admission::{scene_admission, SceneAdmissionStatus};
+use semio_s_artifact_draw_drawing_scene::preparation::{DocumentVectorJob, DocumentVectorRetirement, DocumentSceneLimits, DocumentAlgorithmLimits};
+use semio_s_artifact_draw_drawing_scene::retirement::ScenePlanCloseJob;
+use semio_s_artifact_draw_drawing_scene::paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
 use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
 use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobBudget,JobStep,SqliteSnapshotControl};
@@ -17,10 +17,10 @@ const INSTANCES:usize=64;
 const SHELLS:usize=256;
 const TAG:u64=0x000d_0000_0000_0000;
 const COUNTER_MAX:u64=u32::MAX as u64;
-pub(crate) fn identity(render:AppRenderOperationContext)->SceneIdentity{SceneIdentity{instance:render.app_instance_id,base:render.base_revision.0,generation:render.generation.0,revision:render.canonical_base_revision}}
-pub(crate) fn limits()->DocumentSceneLimits{Default::default()}
-pub(crate) fn algorithms()->DocumentAlgorithmLimits{Default::default()}
-pub(crate) fn paint_limits()->PaintedSceneLimits{PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000}}
+pub fn identity(render:AppRenderOperationContext)->SceneIdentity{SceneIdentity{instance:render.app_instance_id,base:render.base_revision.0,generation:render.generation.0,revision:render.canonical_base_revision}}
+pub fn limits()->DocumentSceneLimits{Default::default()}
+pub fn algorithms()->DocumentAlgorithmLimits{Default::default()}
+pub fn paint_limits()->PaintedSceneLimits{PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000}}
 struct State{
  identity:SceneIdentity,job_id:u64,producer:Option<DocumentVectorJob<'static>>,cache:Option<ScenePaintJob>,paint_cleanup:Option<ScenePaintRetirement>,cleanup:Option<DocumentVectorRetirement<'static>>,returned:Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotReadReturn>>,
  visual:Option<PreparedScene>,discard:Option<PreparedSceneCloseJob>,raw_discard:Option<ScenePlanCloseJob>,cancelled:bool,work:u64,
@@ -133,7 +133,7 @@ pub fn with_visual<R>(render:Option<AppRenderOperationContext>,build:impl FnOnce
 /// 🎯️ Borrow geometry only while every captured source lane matches the mounted live revision.
 pub struct MountedSceneQuery<'a>{pub scene:&'a PreparedScene,pub source:SceneIdentity,pub build:u64}
 impl MountedSceneQuery<'_>{
- pub fn stamp(&self,entry:usize)->Option<crate::schema::scene_paint::PreparedRegionStamp>{(entry<self.scene.geometry.len()).then_some(crate::schema::scene_paint::PreparedRegionStamp{source:self.source,build:self.build,entry,flatness:self.scene.flatness})}
+ pub fn stamp(&self,entry:usize)->Option<semio_s_artifact_draw_drawing_scene::paint::PreparedRegionStamp>{(entry<self.scene.geometry.len()).then_some(semio_s_artifact_draw_drawing_scene::paint::PreparedRegionStamp{source:self.source,build:self.build,entry,flatness:self.scene.flatness})}
 }
 /// 🔐️ A short borrow supplies the actual complete cache and its exact source/build authority.
 pub fn with_query<R>(captured:SceneIdentity,query:impl FnOnce(SceneAdmissionStatus,Option<MountedSceneQuery<'_>>)->R)->R{

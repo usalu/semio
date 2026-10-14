@@ -11,7 +11,7 @@ impl BodyValidationJob {
   if self.same_pair.is_some(){
    let Some((surface,_,pcurve,_,curve))=self.same_parameter_source(body)else{return Ok(RetirementDemand{depth:1,..Default::default()})};
    {
-    if matches!(surface,Surface::Nurbs{..})||matches!(pcurve,semio_framework_3d_brep_representation::curve::Curve2::Nurbs{..})||matches!(curve,semio_framework_3d_brep_representation::curve::Curve3::Nurbs{..}){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original NURBS same-parameter evaluator has no funded scratch producer"))}
+    if matches!(surface,Surface::Nurbs{..})||matches!(pcurve,semio_framework_3d_brep_curve::Curve2::Nurbs{..})||matches!(curve,semio_framework_3d_brep_curve::Curve3::Nurbs{..}){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original NURBS same-parameter evaluator has no funded scratch producer"))}
    }
    if self.same_samples.capacity()==0{return Ok(RetirementDemand{capacity_bytes:SAMPLE_LIMIT*size_of::<(f64,f64)>(),depth:1,..Default::default()})}
    if self.same_midpoints.capacity()==0{return Ok(RetirementDemand{capacity_bytes:MIDPOINT_LIMIT*size_of::<f64>(),depth:1,..Default::default()})}
@@ -19,7 +19,7 @@ impl BodyValidationJob {
   }
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
- fn same_parameter_source<'a>(&self,body:&'a Body)->Option<(&'a Surface,&'a semio_framework_3d_brep_representation::topology::Coedge,&'a semio_framework_3d_brep_representation::curve::Curve2,&'a semio_framework_3d_brep_representation::topology::Edge,&'a semio_framework_3d_brep_representation::curve::Curve3)>{
+ fn same_parameter_source<'a>(&self,body:&'a Body)->Option<(&'a Surface,&'a semio_framework_3d_brep_representation::topology::Coedge,&'a semio_framework_3d_brep_curve::Curve2,&'a semio_framework_3d_brep_representation::topology::Edge,&'a semio_framework_3d_brep_curve::Curve3)>{
   let(face,coedge)=self.same_pair?;let surface=body.surfaces.get(body.faces.get(face)?.surface)?;let coedge=body.coedges.get(coedge)?;let pcurve=body.curves2.get(coedge.pcurve?)?;let edge=body.edges.get(coedge.edge)?;Some((surface,coedge,pcurve,edge,body.curves3.get(edge.curve)?))
  }
  pub(super) fn probe_same_parameter_funded(&mut self,body:&Body,_grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{

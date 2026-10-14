@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ap214::subsets::base::schema::mutations::*;
-use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::standards::v_ap214::subsets::base::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{dec_value};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{enc_value};
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{dec_value_bin};
@@ -35,8 +35,8 @@ use crate::standards::v_ap214::subsets::base::io::binary::diff::{dec_file_name_b
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{enc_file_name_bin};
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{dec_file_description_bin};
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{enc_file_description_bin};
-use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
 

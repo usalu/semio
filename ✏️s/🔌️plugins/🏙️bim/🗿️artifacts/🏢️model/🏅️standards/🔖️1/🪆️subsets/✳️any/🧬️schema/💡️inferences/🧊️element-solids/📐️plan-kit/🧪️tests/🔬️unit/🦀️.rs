@@ -3,7 +3,7 @@ use super::testing::{case, close};
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-use crate::{Entry, MaterialPatch, ModelDiff, ModelSnapshot, StoreyPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::ModelSnapshot};
 
 const COLUMNS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
 
@@ -24,7 +24,7 @@ fn a_loop_is_rotated_about_the_origin_and_then_moved() {
 
 #[test]
 fn layer_thicknesses_clamp_negative_values_to_zero() {
-    let layer = |thickness: f64| Layer { material: String::new(), thickness, function: crate::LayerFunction::Structure };
+    let layer = |thickness: f64| Layer { material: String::new(), thickness, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure };
     assert_eq!(layer_thicknesses(&[layer(0.1), layer(-0.3)]), vec![0.1, 0.0]);
 }
 

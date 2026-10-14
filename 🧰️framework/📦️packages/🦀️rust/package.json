@@ -1,9 +1,6 @@
 {
   "name": "@semio-tech/framework-rs",
   "private": true,
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test-source-projection": "bun repo run @semio-tech/framework-rs:test-source-projection",
     "test-snapshot-receiving-source": "bun repo run @semio-tech/framework-rs:test-snapshot-receiving-source",

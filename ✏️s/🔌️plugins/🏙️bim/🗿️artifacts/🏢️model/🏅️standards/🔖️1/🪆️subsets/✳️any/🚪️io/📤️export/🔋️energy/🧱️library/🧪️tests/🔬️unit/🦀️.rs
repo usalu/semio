@@ -31,7 +31,7 @@ fn schedules_are_interned() {
 fn a_material_at_a_thickness_and_a_stack_are_interned_and_a_layer_without_conductivity_has_no_id() {
     let mut model = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let id = model.materials.keys().next().cloned().expect("a material");
-    let layer = |thickness| Layer { material: id.clone(), thickness, function: crate::LayerFunction::Structure };
+    let layer = |thickness| Layer { material: id.clone(), thickness, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure };
     let (mut library, mut next) = (Library::default(), 0);
     let a = library.construction(&model, "A", &[layer(0.2)], &mut next).expect("a stack");
     assert_eq!(library.construction(&model, "B", &[layer(0.2)], &mut next), Some(a), "the same stack, the first name");

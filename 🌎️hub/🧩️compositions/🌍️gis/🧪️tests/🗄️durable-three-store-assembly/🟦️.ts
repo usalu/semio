@@ -66,7 +66,7 @@ export class DurableThreeStoreAssemblyNativeCheckScript extends BundleScript {
           "durable_group::tests::durable_map_three_store_assembly_cancellation_before_journal_restores_all_three_frontiers",
           "durable_group::tests::durable_map_three_store_assembly_uncertain_journal_retains_same_host_until_committed_or_proven_absent",
         ] },
-        { package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, cargoArgs: ["--no-default-features", "--features", "component-app-assembly"], laws: [
+        { package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: [
           "editor::gis2d::component::tests::gis_map_durable_three_store_factory_builders_are_exact_role_ports",
         ] },
       ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`gis-durable-three-store-assembly ${event.stage}: ${event.law ?? event.package} artifacts=${event.artifactDir}`); } });

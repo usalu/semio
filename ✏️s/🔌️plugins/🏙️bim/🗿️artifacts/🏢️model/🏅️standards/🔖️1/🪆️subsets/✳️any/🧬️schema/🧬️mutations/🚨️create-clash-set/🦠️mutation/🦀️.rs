@@ -1,6 +1,6 @@
 //! 🚨️ `create-clash-set` payload. Brings a new clash set into the model: side A and side B as selectors (classes, storeys, phases, element ids), the tolerance below which an overlap is no hard clash and the clearance below which two elements are a soft clash. The clashes themselves are inferred.
 
-use crate::{ClashSet, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClashSet, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

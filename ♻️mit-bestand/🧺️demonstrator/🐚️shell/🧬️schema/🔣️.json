@@ -6,7 +6,7 @@
     "owner": {
       "program": "bun",
       "args": [
-        "nx",
+        "repo",
         "run",
         "os-hub:local-hub-owner",
         "--"

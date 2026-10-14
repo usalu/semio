@@ -954,13 +954,7 @@ pub enum UiFrameStep {
     Missing,
     Fault,
 }
-pub const UI_LAYOUT_SURFACE_SLOTS: usize = 64;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct UiSurfaceToken {
-    slot: u8,
-    generation: u64,
-}
+pub use semio_framework_ui_surface_identity::{UiSurfaceToken, UI_LAYOUT_SURFACE_SLOTS};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 struct UiPresentedSourceIdentity{operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,revision:u64,accessibility:u64,interaction:u64,clock:usize,deadline:u64}
@@ -968,15 +962,6 @@ struct UiPresentedSourceIdentity{operation:semio_framework_job::OperationId,gene
 pub struct UiPresentedTreeLoan{surface:UiSurfaceToken,identity:UiPresentedSourceIdentity,active:bool}
 impl Drop for UiPresentedTreeLoan{fn drop(&mut self){assert!(std::thread::panicking()||!self.active,"accepted tree loan reached Drop before original paid return")}}
 
-impl UiSurfaceToken {
-    /// 🧪️ Mints one token for a probe. The gate matches `📌️mounted_layout`'s `layout_tree_now`,
-    /// its only non-`cfg(test)` caller — a bare `cfg(test)` here fails every downstream crate that
-    /// enables the `testkit` feature, because the feature compiles that caller into the LIB.
-    #[cfg(any(test, feature = "testkit"))]
-    pub(crate) const fn new(slot: u8, generation: u64) -> Self {
-        Self { slot, generation }
-    }
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct UiSurfaceAdmissionRejected {
@@ -1009,7 +994,7 @@ impl Default for UiSurfaceRegistry {
 impl UiSurfaceRegistry {
     fn token(&self, id: &str) -> Option<UiSurfaceToken> {
         let slot = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.id.as_ref() == id))?;
-        Some(UiSurfaceToken { slot: slot as u8, generation: self.slots[slot].as_ref()?.generation })
+        Some(UiSurfaceToken::new(slot as u8, self.slots[slot].as_ref()?.generation))
     }
 
     #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
@@ -1020,7 +1005,7 @@ impl UiSurfaceRegistry {
         let Some(slot) = self.slots.iter().position(Option::is_none) else { return Err(UiSurfaceAdmissionRejected { id }) };
         let Some(generation) = self.generations[slot].checked_add(1) else { return Err(UiSurfaceAdmissionRejected { id }) };
         self.generations[slot] = generation;
-        let token = UiSurfaceToken { slot: slot as u8, generation };
+        let token = UiSurfaceToken::new(slot as u8, generation);
         self.slots[slot] = Some(UiSurfaceSlot { window: UiWindow::new(id.as_ref()), id, generation });
         Ok(token)
     }
@@ -1034,13 +1019,13 @@ impl UiSurfaceRegistry {
     }
 
     fn get_token(&self, token: UiSurfaceToken) -> Option<&UiWindow> {
-        let slot = self.slots.get(token.slot as usize)?.as_ref()?;
-        (slot.generation == token.generation).then_some(&slot.window)
+        let slot = self.slots.get(token.slot() as usize)?.as_ref()?;
+        (slot.generation == token.generation()).then_some(&slot.window)
     }
 
     fn get_token_mut(&mut self, token: UiSurfaceToken) -> Option<&mut UiWindow> {
-        let slot = self.slots.get_mut(token.slot as usize)?.as_mut()?;
-        (slot.generation == token.generation).then_some(&mut slot.window)
+        let slot = self.slots.get_mut(token.slot() as usize)?.as_mut()?;
+        (slot.generation == token.generation()).then_some(&mut slot.window)
     }
 
     fn remove_terminal(&mut self, token: UiSurfaceToken) -> bool {
@@ -1048,18 +1033,18 @@ impl UiSurfaceRegistry {
         if window.closing != Some(UiSurfaceClosePhase::Complete)||window.layout_close_failure.is_some(){
             return false;
         }
-        self.slots[token.slot as usize] = None;
+        self.slots[token.slot() as usize] = None;
         true
     }
 
     fn id(&self, token: UiSurfaceToken) -> Option<&SurfaceId> {
-        let slot = self.slots.get(token.slot as usize)?.as_ref()?;
-        (slot.generation == token.generation).then_some(&slot.id)
+        let slot = self.slots.get(token.slot() as usize)?.as_ref()?;
+        (slot.generation == token.generation()).then_some(&slot.id)
     }
 
     fn token_at(&self, index: usize) -> Option<UiSurfaceToken> {
         let slot = self.slots.get(index)?.as_ref()?;
-        Some(UiSurfaceToken { slot: index as u8, generation: slot.generation })
+        Some(UiSurfaceToken::new(index as u8, slot.generation))
     }
 
     fn values(&self) -> impl Iterator<Item = &UiWindow> {

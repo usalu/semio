@@ -1,0 +1,56 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-2d-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 2d text, binary and SQLite codecs, stdio import and export, composers, languages and examples"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+csv = { workspace = true }
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d-analysis = { workspace = true }
+semio-s-artifact-fem-2d-boundary = { workspace = true }
+semio-s-artifact-fem-2d-engine = { workspace = true }
+semio-s-artifact-fem-2d-load = { workspace = true }
+semio-s-artifact-fem-2d-material = { workspace = true }
+semio-s-artifact-fem-2d-mesh = { workspace = true }
+semio-s-artifact-fem-2d-mesh-topology = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-mutations = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-fem-mesh = { workspace = true }
+semio-s-fem-mesh-derived = { workspace = true }
+semio-s-fem-model = { workspace = true }
+semio-s-fem-sqlite = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }

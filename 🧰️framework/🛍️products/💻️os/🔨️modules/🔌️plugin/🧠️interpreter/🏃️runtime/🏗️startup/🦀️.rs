@@ -1,6 +1,6 @@
 //! 🌱️ One original caller opens resources, drives the actual start and reads its borrowed channel under unchanged VM receipts.
 use super::*;
-use crate::interpreter::{CoreInstanceOpening,CoreOriginalInvocationStatus,CoreInstance,ExportKind};
+use semio_framework_plugin_interpreter::{CoreInstanceOpening,CoreOriginalInvocationStatus,CoreInstance,ExportKind};
 use semio_framework_actor::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};

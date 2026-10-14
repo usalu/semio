@@ -6,7 +6,7 @@ pub use schema::*;
 
 impl Default for Fem2dModelWindowConfig {
     fn default() -> Self {
-        Self { camera: crate::Viewport2d::default() }
+        Self { camera: semio_framework_os_kernel::Viewport2d::default() }
     }
 }
 

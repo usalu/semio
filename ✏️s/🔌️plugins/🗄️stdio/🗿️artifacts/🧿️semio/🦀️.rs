@@ -161,7 +161,7 @@ pub fn composable_subsets() -> Vec<&'static str> {
 
 
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_text::schema::snapshot as text;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot as text;
 
 //#endregion 🧹️SnapshotRetirement
 
@@ -171,7 +171,7 @@ dsl::space_members! {
     maximum_history_allocation_bytes:8388608,
     pub enum SemioMembers, SemioMembersOpen {
         Animation("s.stdio.semio", "v1", "animation", "stdio.semio") => (semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot, semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation),
-        Audio("s.stdio.semio", "v1", "audio", "stdio.semio") => (semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation),
+        Audio("s.stdio.semio", "v1", "audio", "stdio.semio") => (semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation),
         Brep("s.stdio.semio", "v1", "brep", "stdio.semio") => (semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation),
         Cad("s.stdio.semio", "v1", "cad", "stdio.semio") => (semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot, semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation),
         Document("s.stdio.semio", "v1", "document", "stdio.semio") => (semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot, semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation),
@@ -184,10 +184,10 @@ dsl::space_members! {
         Model("s.stdio.semio", "v1", "model", "stdio.semio") => (semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation),
         Object("s.stdio.semio", "v1", "object", "stdio.semio") => (semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot, semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation),
         Presentation("s.stdio.semio", "v1", "presentation", "stdio.semio") => (semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot, semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation),
-        Table("s.stdio.semio", "v1", "table", "stdio.semio") => (semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot, semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation),
-        Text("s.stdio.semio", "v1", "text", "stdio.semio") => (semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot, semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation),
-        Value("s.stdio.semio", "v1", "value", "stdio.semio") => (semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation),
-        Video("s.stdio.semio", "v1", "video", "stdio.semio") => (semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot, semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation),
+        Table("s.stdio.semio", "v1", "table", "stdio.semio") => (semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot, semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation),
+        Text("s.stdio.semio", "v1", "text", "stdio.semio") => (semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot, semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation),
+        Value("s.stdio.semio", "v1", "value", "stdio.semio") => (semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation),
+        Video("s.stdio.semio", "v1", "video", "stdio.semio") => (semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot, semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation),
     }
 }
 

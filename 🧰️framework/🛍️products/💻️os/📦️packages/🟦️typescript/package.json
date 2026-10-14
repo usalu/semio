@@ -5,9 +5,6 @@
   "description": "framework · os — composable operating system shell (CQRS, workflow, plugin registry)",
   "type": "module",
   "private": true,
-  "nx": {
-    "includedScripts": []
-  },
   "exports": {
     ".": "./🟦️.ts"
   },

@@ -13,11 +13,11 @@ use super::{export_ifc4, Export};
 use super::data::property_value;
 use super::projection::{json_cell, plain, quote};
 use super::writer::{en, list, opt_text, refs, rf, text, unset, Ifc, Schema};
-use crate::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 use std::collections::BTreeMap;
 
 /// 🪪️ The IFC4 dialect this leaf writes.

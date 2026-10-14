@@ -3,7 +3,7 @@
 //! 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1o.
 
 use super::*;
-use crate::wgpu::theme::Theme;
+use semio_framework_ui_theme::Theme;
 
 const LABELS: [&str; 5] = ["Alpha", "Beta", "Gamma", "Delta", "Épsilon"];
 
@@ -76,7 +76,7 @@ async fn opening_highlights_the_selected_last_or_first_matching_row() {
 #[semio_framework_async_macros::async_test]
 async fn row_metrics_are_the_css_line_box_plus_py_single_not_a_control_height() {
     let theme = Theme::light();
-    let expected_row = crate::wgpu::text::line_height(theme.font_size_body) + theme.padding_standard * 2.0;
+    let expected_row = semio_framework_ui_theme::metrics::line_height(theme.font_size_body) + theme.padding_standard * 2.0;
     assert!((select_row_height(&theme) - expected_row).abs() < f32::EPSILON);
     assert!((select_row_height(&theme) - 25.6).abs() < 0.01, "text-sm line box (19.2) + 2 × --spacing-single (3.2) = 25.6 px, got {}", select_row_height(&theme));
     assert!((select_menu_height(3, &theme) - (expected_row * 3.0 + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
@@ -256,7 +256,7 @@ async fn a_chevron_press_scrolls_the_popup_one_react_step_and_leaves_no_slot_beh
 #[semio_framework_async_macros::async_test]
 async fn a_scroll_button_is_one_tiny_chevron_between_two_single_paddings() {
     let theme = Theme::light();
-    assert!((select_scroll_button_height(&theme) - (crate::wgpu::chrome::ICON_TINY + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
+    assert!((select_scroll_button_height(&theme) - (semio_framework_ui_theme::metrics::ICON_TINY + theme.padding_standard * 2.0)).abs() < f32::EPSILON);
 }
 
 #[semio_framework_async_macros::async_test]

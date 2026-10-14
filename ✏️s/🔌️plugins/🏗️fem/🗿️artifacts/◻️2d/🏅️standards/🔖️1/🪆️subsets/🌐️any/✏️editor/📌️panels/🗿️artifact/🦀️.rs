@@ -17,7 +17,19 @@ use crate::editor::fem2d::interaction::{
 };
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{ui_label, FEM2D_PLAY_CONTROLLER_ID};
-use crate::{element_id, load_id, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport, Fem2dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;
@@ -200,7 +212,7 @@ fn entity_row(id: &str, granularity: &str, label: &str, description: &LabelText,
 
 /// 🔗️ One combination term: read-only, composite-keyed — a term is not a domain target, only the
 /// combination that owns it is.
-fn term_row(combination: &FemCombination, term: &crate::FemCombinationTerm, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
+fn term_row(combination: &FemCombination, term: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let id = format!("{TREE_NAMESPACE}.term.{}.{}", combination.id, term.case_id);
     tree_item_desc(id, UiLabel(UiText::clipped(&format!("{} {}", fem2d_scalar(term.factor), term.case_id))), Some(labels.term.as_str().to_string()))
 }

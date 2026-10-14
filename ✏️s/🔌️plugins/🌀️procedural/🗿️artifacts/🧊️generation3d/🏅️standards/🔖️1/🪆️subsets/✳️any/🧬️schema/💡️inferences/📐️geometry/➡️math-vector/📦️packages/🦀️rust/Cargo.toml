@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-math-vector"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d operator facet math-vector"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-math-arithmetic = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }

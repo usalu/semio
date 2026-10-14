@@ -1,0 +1,13 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["version","widgets","wires","frame","expected","tolerance","sameOriginalCallerClose"],
+ "properties":{
+  "version":{"const":1},
+  "widgets":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","kind","params"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["brep.surface.plane","brep.evaluate.surfacePoint","brep.evaluate.surfaceNormal"]},"params":{"type":"object","additionalProperties":false,"properties":{"plane":{"type":"object","additionalProperties":false,"required":["origin","normal"],"properties":{"origin":{"$ref":"#/definitions/triple"},"normal":{"$ref":"#/definitions/triple"}}},"u":{"type":"number"},"v":{"type":"number"}}}}}},
+  "wires":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["from","fromPort","to","toPort"],"properties":{"from":{"type":"string","minLength":1},"fromPort":{"const":"shape"},"to":{"type":"string","minLength":1},"toPort":{"const":"surface"}}}},
+  "frame":{"type":"object","additionalProperties":false,"required":["x","y","z","origin"],"properties":{"x":{"const":[0,1,0]},"y":{"const":[-1,0,0]},"z":{"const":[0,0,1]},"origin":{"const":[1,2,3]}}},
+  "expected":{"type":"object","additionalProperties":false,"required":["point","normal"],"properties":{"point":{"const":[-2,4,3]},"normal":{"const":[0,0,1]}}},
+  "tolerance":{"const":1e-12},"sameOriginalCallerClose":{"const":true}
+ },
+ "definitions":{"triple":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}}}
+}

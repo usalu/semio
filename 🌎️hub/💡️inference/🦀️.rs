@@ -1,22 +1,18 @@
 //! 🧭️ Hub-owned private inference lifecycle; no client snapshot or global registry authority.
 
-#[cfg(feature = "native-artifact-execution")]
 #[path = "📇️catalog/🦀️.rs"]
 pub(crate) mod catalog;
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-#[cfg(feature = "sqlite")]
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 #[path = "🧾️wal/🦀️.rs"]
 pub mod wal;
-#[cfg(feature = "native-artifact-execution")]
 pub use catalog::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
 #[path = "🛂️authorization/🦀️.rs"]
 pub(crate) mod authorization;
 #[path = "✉️command/🦀️.rs"]
 pub(crate) mod command;
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[path = "🏃️runtime/🦀️.rs"]
 pub mod runtime;
 

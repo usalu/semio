@@ -12,7 +12,9 @@
 //! - Texture bindings retain their actual image source IDs. Sampler settings, alternate UV sets,
 //!   normal scale, occlusion strength and other glTF material extensions remain outside this contract.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor;

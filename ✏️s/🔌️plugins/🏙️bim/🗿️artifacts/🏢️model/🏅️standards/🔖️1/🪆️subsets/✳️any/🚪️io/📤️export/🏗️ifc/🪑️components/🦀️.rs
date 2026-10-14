@@ -11,7 +11,7 @@ use super::writer::{en, opt_text, refs, unset, V};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-use crate::{FamilyCategory, FamilyParameter, FamilySolid};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, FamilyParameter, FamilySolid};
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;
 
@@ -86,7 +86,7 @@ pub fn local_mesh(solid: &ElementSolid, placement: &ComponentPlacement) -> TriMe
 
 
 /// 🧬️ The authored rows of a family type: the family record, its parameters by name and its solids by id, as canonical JSON.
-fn family_rows(family: &crate::Family, parameters: &BTreeMap<String, FamilyParameter>, solids: Option<&BTreeMap<String, FamilySolid>>) -> Vec<(&'static str, V)> {
+fn family_rows(family: &crate::standards::v1::subsets::any::schema::snapshot::Family, parameters: &BTreeMap<String, FamilyParameter>, solids: Option<&BTreeMap<String, FamilySolid>>) -> Vec<(&'static str, V)> {
     let empty = BTreeMap::new();
     vec![
         (FAMILY_ROWS[0], label(&semio_framework_pack_json::to_json_string(family))),
@@ -95,7 +95,7 @@ fn family_rows(family: &crate::Family, parameters: &BTreeMap<String, FamilyParam
     ]
 }
 
-fn family_type(x: &mut Export<'_>, family_id: &str, family: &crate::Family, kind: Kind, primary: bool, solids: &BTreeMap<&str, BTreeMap<String, FamilySolid>>) -> u64 {
+fn family_type(x: &mut Export<'_>, family_id: &str, family: &crate::standards::v1::subsets::any::schema::snapshot::Family, kind: Kind, primary: bool, solids: &BTreeMap<&str, BTreeMap<String, FamilySolid>>) -> u64 {
     let key = if primary { family_id.to_string() } else { format!("{family_id}|{kind:?}") };
     let prefix = format!("{family_id}.");
     let parameters: BTreeMap<String, FamilyParameter> = x.model.family_parameters.range(prefix.clone()..).take_while(|(name, _)| name.starts_with(&prefix)).filter(|(_, row)| row.family == family_id).map(|(_, row)| (row.name.clone(), row.clone())).collect();
@@ -108,7 +108,7 @@ fn family_type(x: &mut Export<'_>, family_id: &str, family: &crate::Family, kind
     object
 }
 
-fn component(x: &mut Export<'_>, id: &str, row: &crate::Component, kind: Kind, object: u64) {
+fn component(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Component, kind: Kind, object: u64) {
     let model = x.model;
     let (Some(storey), Some(value)) = (x.storeys.get(&row.storey).copied(), x.inferred.components.get(id)) else { return };
     let placement = &value.placement;

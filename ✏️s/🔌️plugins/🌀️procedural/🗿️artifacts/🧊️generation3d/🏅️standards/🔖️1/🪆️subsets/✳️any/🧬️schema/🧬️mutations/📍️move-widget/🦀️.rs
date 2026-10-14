@@ -1,9 +1,9 @@
 //! 📍 `move-widget` payload — absolute spatial reposition of a widget's canvas position
 //! (`📓️taxonomy.md`'s `move` row: "Absolute spatial reposition", addr + position).
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 //#region 🔖️MoveWidget
 /// 📍 Places `id`'s position at `layout`, upserting the per-widget override entry.
@@ -18,12 +18,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Move
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "widget", kind: "move-widget", record: "MovedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::move_widget::diff::diff(self, base)
+        crate::move_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        crate::standards::v1::subsets::any::schema::mutations::move_widget::inverse::inverse(self, base)?
+        crate::move_widget::inverse::inverse(self, base)?
     
     })
 }

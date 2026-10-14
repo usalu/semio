@@ -2,9 +2,9 @@
 //! atomically (`Widget` is a discriminated union with no independently-settable scalar fields
 //! exposed here, so whole-body replace is the cohesive facet per `📓️taxonomy.md`'s `update` row).
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️UpdateWidget
 /// 🔁 The widget's own id (via [`crate::widget_id`]) addresses the target
@@ -33,22 +33,22 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "widget", kind: "update-widget", record: "UpdatedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::update_widget::diff::diff(self, base)
+        crate::update_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        crate::standards::v1::subsets::any::schema::mutations::update_widget::inverse::inverse(self, base)?
+        crate::update_widget::inverse::inverse(self, base)?
     
     })
 }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update widget \"{}\"", crate::widget_id(&self.widget)), &format!("Widget \"{}\" aktualisieren", crate::widget_id(&self.widget)))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Update widget \"{}\"", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)), &format!("Widget \"{}\" aktualisieren", semio_s_artifact_procedural_3d_model::widget_id(&self.widget)))
     }
 
     fn target(&self) -> Vec<String> {
-        vec![crate::widget_id(&self.widget).to_string()]
+        vec![semio_s_artifact_procedural_3d_model::widget_id(&self.widget).to_string()]
     }
 }
 //#endregion 🔖️UpdateWidget

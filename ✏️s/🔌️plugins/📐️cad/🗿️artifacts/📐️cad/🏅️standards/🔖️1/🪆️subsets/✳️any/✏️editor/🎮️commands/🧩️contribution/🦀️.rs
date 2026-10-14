@@ -1,8 +1,8 @@
 //! 🧩️ CAD play app commands — host-pushed `CadComputer` extension contributions.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation, SetContributionsEdit};
-use crate::op::CadMutation;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation, SetContributionsEdit};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,7 +17,7 @@ pub mod set_contributions {
         pub json: String,
     }
 
-    pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut crate::editor::cad::CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+    pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _ctx: &mut semio_s_artifact_cad_cad_kit::CadDispatchCtx) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
         Ok(Emit::config(vec![CadConfigMutation::SetContributions(SetContributionsEdit { json: payload.json.clone() })]))
     }
 }

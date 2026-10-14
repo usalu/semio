@@ -1,0 +1,129 @@
+//! 🧪️ `rotate-target-volume` scene_snapshot — `🔄️half-turn-about-z`.
+//!
+//! Replaces `volume-1`'s orientation quaternion with a half turn about Z, reorienting the oriented
+//! box the fill sessions clip against.
+//!
+//! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
+//! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
+//! asserted by the shared codec-matrix harness, not here.
+
+use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
+
+use crate::Puzzle3dSnapshot;
+
+const BEFORE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀rotate-target-volume/🔄️half-turn-about-z/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀rotate-target-volume/🔄️half-turn-about-z/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀rotate-target-volume/🔄️half-turn-about-z/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀rotate-target-volume/🔄️half-turn-about-z/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀rotate-target-volume/🔄️half-turn-about-z/🎯️outcome/🔣️.json");
+
+fn before() -> Puzzle3dSnapshot {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+}
+fn expected_after() -> Puzzle3dSnapshot {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+}
+fn mutation() -> Puzzle3dMutation {
+    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
+}
+
+/// ▶️ The committed `rotate-target-volume` payload carries `before` to exactly the committed `after`, and
+/// lands the change this case is named for.
+#[test]
+fn applies_to_committed_after() {
+    let mut snapshot = before();
+    apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("rotate-target-volume applies to its committed before-snapshot");
+    assert_eq!(snapshot, expected_after(), "rotate-target-volume/half-turn-about-z: applied state differs from committed after-snapshot");
+    let volume = snapshot.target_volumes.iter().find(|volume| volume.id == "volume-1").expect("volume-1 survives its rotation");
+    assert_eq!(volume.orientation, Some([0.0, 0.0, 1.0, 0.0]), "rotate-target-volume/half-turn-about-z: volume-1 did not take the committed quaternion");
+    assert_eq!(volume.origin, before().target_volumes[0].origin, "rotate-target-volume/half-turn-about-z: a rotation must not translate the box");
+}
+
+/// ↩️ Applying `rotate-target-volume` then the inverse it derives from `before` restores `before` exactly.
+#[test]
+fn inverse_restores_before() {
+    let base = before();
+    let mutation = mutation();
+    let inverse = inverse_puzzle3d_mutation(&base, &mutation).expect("valid retained mutation inverse scene_snapshot");
+    let mut snapshot = base.clone();
+    apply_puzzle3d_mutation(&mut snapshot, &mutation).expect("forward applies");
+    for step in inverse.iter().rev() {
+        apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
+    }
+    assert_eq!(snapshot, base, "rotate-target-volume/half-turn-about-z: inverse did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed `rotate-target-volume` payload are already canonical:
+/// decode→encode is a fixed point.
+#[test]
+fn committed_json_is_canonical() {
+    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        assert_eq!(reencoded, original, "rotate-target-volume/half-turn-about-z: committed {label} JSON is not canonical");
+    }
+    let decoded_mutation = mutation();
+    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    assert_eq!(reencoded, original, "rotate-target-volume/half-turn-about-z: committed mutation JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome matches what `rotate-target-volume` actually produces on this base.
+#[test]
+fn declared_outcome_holds() {
+    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    let mut snapshot = before();
+    let applied = apply_puzzle3d_mutation(&mut snapshot, &mutation()).is_ok();
+    match status {
+        "applied" => assert!(applied, "rotate-target-volume/half-turn-about-z: declared applied but the mutation was rejected"),
+        "rejected" => {
+            assert!(!applied, "rotate-target-volume/half-turn-about-z: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "rotate-target-volume/half-turn-about-z: rejected mutation must leave the snapshot untouched");
+        }
+        other => panic!("rotate-target-volume/half-turn-about-z: unknown outcome status {other:?}"),
+    }
+}
+
+/// 🔺️ The sparse delta `rotate-target-volume` produces is exactly the committed diff — the single most
+/// load-bearing assertion in the scene_snapshot: it pins WHICH collections and fields this mutation is
+/// allowed to touch, not merely that the end state matches.
+#[test]
+fn produces_committed_diff() {
+    let base = before();
+    let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &base);
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    assert_eq!(produced, committed, "rotate-target-volume/half-turn-about-z: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(committed["targetVolumes"]["modified"][0]["patch"]["orientation"][2].as_f64(), Some(1.0), "rotate-target-volume/half-turn-about-z: the patch must carry the new quaternion");
+    assert!(committed["objects"].is_null(), "rotate-target-volume/half-turn-about-z: rotating a box never touches an object");
+}
+
+/// 🔣️ The committed `rotate-target-volume` diff is itself canonical and decodes to `Puzzle3dDiff`.
+#[test]
+fn committed_diff_is_canonical() {
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    assert_eq!(reencoded, original, "rotate-target-volume/half-turn-about-z: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed `rotate-target-volume` diff directly to `before` yields the committed `after` —
+/// the diff is a complete description of the change, not a summary of it.
+#[test]
+fn committed_diff_applies_to_after() {
+    let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "rotate-target-volume/half-turn-about-z: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
+}

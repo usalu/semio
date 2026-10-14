@@ -1,6 +1,6 @@
 //! 🔝️ `set-wall-top` payload. Sets how a wall's top is resolved: free height, the own storey's top, or another storey of the same building.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

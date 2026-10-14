@@ -4,9 +4,10 @@
 
 use crate::editor::ifc4_any::modes::edit;
 use crate::editor::ifc4_any::modes::edit::windows::main;
-use crate::standards::v4::subsets::any::schema::mutations::{edit_rules, IfcMutation};
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
 
-use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;

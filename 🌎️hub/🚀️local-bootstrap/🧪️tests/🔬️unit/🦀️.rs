@@ -171,7 +171,6 @@ fn local_bootstrap_hmac_matches_neutral_node_oracle_and_rejects_boundaries() {
     assert!(slots.insert("ffffffffffffffffffffffffffffffff"));
 }
 
-#[cfg(feature = "sqlite")]
 #[tokio::test]
 async fn local_session_commit_survives_cancellation_observed_by_final_progress() {
     let sqlite = crate::directory::sqlite::SqliteDirectory::connect(":memory:").await.expect("sqlite");

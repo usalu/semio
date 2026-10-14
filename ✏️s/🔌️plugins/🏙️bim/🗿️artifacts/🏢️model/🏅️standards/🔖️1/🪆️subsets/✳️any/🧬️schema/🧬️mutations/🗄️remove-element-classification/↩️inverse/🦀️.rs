@@ -2,7 +2,7 @@
 
 use super::super::set_element_classification::SetElementClassification;
 use super::RemoveElementClassification;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &RemoveElementClassification, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.classifications.get(&payload.id).and_then(|set| set.get(&payload.system)) {

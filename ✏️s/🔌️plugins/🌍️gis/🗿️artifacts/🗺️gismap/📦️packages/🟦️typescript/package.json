@@ -15,9 +15,6 @@
     "check": "bun repo run @semio-tech/gis-gismap-js:check",
     "inference-service-receiving-check": "bun repo run @semio-tech/gis-gismap-js:inference-service-receiving-check"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "d3-geo": "3.1.1"
   },

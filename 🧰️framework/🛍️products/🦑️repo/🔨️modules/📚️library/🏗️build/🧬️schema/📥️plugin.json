@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Explicit Build Plugin Lookup Cases",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "reference",
+      "lookup"
+    ],
+    "properties": {
+      "reference": {
+        "type": "string",
+        "minLength": 1
+      },
+      "lookup": {
+        "type": "boolean"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 //! `mutation.no-op`.
 
 use super::SetIssue;
-use crate::{issue_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{issue_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetIssue, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

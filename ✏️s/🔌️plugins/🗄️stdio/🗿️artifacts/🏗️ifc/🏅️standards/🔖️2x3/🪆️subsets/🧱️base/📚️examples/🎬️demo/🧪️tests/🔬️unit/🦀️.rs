@@ -1,7 +1,8 @@
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn demo_source_nonempty() {
-    use crate::standards::v2x3::subsets::base::schema::{demo_ifc2x3_snapshot,snapshot::Ifc2x3Snapshot};
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::demo_ifc2x3_snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     let demo=demo_ifc2x3_snapshot();
     assert_eq!(<Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("authored IFC2x3 example text"),demo);
     assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo),PRIMARY_TEXT);

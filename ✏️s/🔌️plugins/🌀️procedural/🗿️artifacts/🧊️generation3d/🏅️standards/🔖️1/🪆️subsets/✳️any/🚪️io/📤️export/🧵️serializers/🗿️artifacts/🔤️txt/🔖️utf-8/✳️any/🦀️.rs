@@ -9,7 +9,7 @@
 //! parse back. So `txt` is the one FULL-FIDELITY target in this artifact's IO surface (every mesh
 //! format keeps only the evaluated geometry; txt keeps the whole flow graph and generation
 //! history), and the paired import leaf is its exact inverse.
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}

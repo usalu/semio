@@ -118,44 +118,12 @@ async fn incremental_cursor_yields_bounded_pages_matching_the_real_fixture() {
 }
 
 #[test]
-fn playback_snapshot_retirement_preserves_original_observers_and_each_exact_grant() {
-    use semio_framework_plugin::{ArtifactSnapshotDisposer, PluginLifecycleStep};
-    use semio_framework_value::retained_clone::RetainedCloneGrant;
-    for weak in [false, true] {
-        let decoded = decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).unwrap();
-        let mut snapshot = Some(std::sync::Arc::new(decoded));
-        let pointer = std::sync::Arc::as_ptr(snapshot.as_ref().unwrap());
-        let strong = (!weak).then(|| snapshot.as_ref().unwrap().clone());
-        let observer = weak.then(|| std::sync::Arc::downgrade(snapshot.as_ref().unwrap()));
-        let mut disposer = playback::Mp3ExportSnapshotDisposer::default();
-        let demand = disposer.retirement_demands(&snapshot, 0).unwrap();
-        assert_eq!(demand.copy_bytes, std::mem::size_of::<Mp3Snapshot>());
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress().unwrap(), Default::default());
-        assert!(matches!(disposer.close_step(&mut snapshot, grant).unwrap(), PluginLifecycleStep::AwaitingInput { .. }));
-        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
-        if let Some(observer) = observer.as_ref() { assert_eq!(std::sync::Arc::as_ptr(&observer.upgrade().unwrap()), pointer); }
-        drop(strong);
-        drop(observer);
-        let demand = disposer.retirement_demands(&snapshot, 0).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 1, ..grant }).unwrap().progress().unwrap(), Default::default());
-        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
-        assert_eq!(disposer.close_step(&mut snapshot, RetainedCloneGrant { maximum_release_bytes: grant.maximum_release_bytes - 1, ..grant }).unwrap().progress().unwrap(), Default::default());
-        assert_eq!(std::sync::Arc::as_ptr(snapshot.as_ref().unwrap()), pointer);
-        let mut turns = 0;
-        while !disposer.terminal_is_empty(&snapshot) {
-            let demand = disposer.retirement_demands(&snapshot, 4_096).unwrap();
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(4_096), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let step = disposer.close_step(&mut snapshot, grant).unwrap();
-            assert!(step.progress().unwrap().fits(grant));
-            turns += 1;
-            assert!(turns < 100_000);
-        }
-        assert!(turns > 10);
-        eprintln!("[DEBUG] MP3 original observer weak={weak} header/payload closure turns={turns} terminal=true");
-    }
+fn playback_snapshot_installed_supplier_preserves_actual_owned_payload(){
+ use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactorySharedRetirement,ErasedSnapshotRetirement,RetainedCloneGrant};use std::sync::Arc;
+ let snapshot=Arc::new(decode_mp3(include_bytes!("../../../🧪️tests/🧫️fixtures/🔊️.mp3")).unwrap());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<Mp3Snapshot>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Mp3Snapshot>::default());let mut owner=FactorySharedRetirement::new(snapshot,factory);
+ for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());assert!(owner.close_step(grant).unwrap().progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty());
 }
+
 //#region 🔖️Id3v1Retention
 #[semio_framework_async_macros::async_test]
 async fn id3v1_trailer_round_trips() {

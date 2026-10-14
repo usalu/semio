@@ -5,12 +5,30 @@
 //! granted); the other checks are staged units over the shape's own arena, so no check touches a kernel session it does not need.
 //!
 //! 🔗️ [Euler characteristic](https://en.wikipedia.org/wiki/Euler_characteristic) · [Manifold](https://en.wikipedia.org/wiki/Manifold) · [Watertight mesh](https://en.wikipedia.org/wiki/Polygon_mesh)
+#![allow(clippy::result_large_err)]
 
-use super::analysis_measure::{cancelled, lost_state, query_fault, scope_of, staged};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_analysis_measure::cancelled;
+use semio_s_artifact_procedural_3d_analysis_measure::lost_state;
+use semio_s_artifact_procedural_3d_analysis_measure::query_fault;
+use semio_s_artifact_procedural_3d_analysis_measure::scope_of;
+use semio_s_artifact_procedural_3d_analysis_measure::staged;
+use semio_s_artifact_procedural_3d_geometry_compute::failed;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, GeometryHandle, ShapeRoot, ShapeValue};
 use semio_framework_3d_brep_operations::boolean::BooleanOp;
-use semio_framework_3d_brep_queries::analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
+use semio_framework_3d_brep_analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshQualityReport};
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -347,6 +365,8 @@ fn mesh_quality(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Mesh
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("analysis-check", include_str!("../../../🗂️catalogue/🔣️analysis-check.json"));
 /// 🗃️ Every analysis.check catalogue kind and the compute that starts it.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "analysis.validity", start: validity_compute },

@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-mesh-atlas"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine mesh atlas: simplification, unwrapping and texture baking."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+graph = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-camera = { workspace = true }
+semio-s-artifact-remodel-remodeling-dense = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh-surface = { workspace = true }

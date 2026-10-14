@@ -6,14 +6,15 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ `write_str_lp`/`read_str_lp` are IMPORTED from `🔢️value`'s own `🔺️diff` module (real
@@ -52,7 +53,7 @@ pub(crate) fn read_column(reader: &mut store::ByteReader<'_>) -> Result<SemioTab
 pub(crate) fn write_row(out: &mut Vec<u8>, r: &SemioTableRow) {
     store::pack_rt::write_varint_u64(out, r.cells.len() as u64);
     for cell in &r.cells {
-        semio_s_artifact_stdio_semio_value::io::binary::diff::enc_semio_value_bin(cell, out);
+        semio_s_artifact_stdio_semio_value_model::io::binary::diff::enc_semio_value_bin(cell, out);
     }
 }
 
@@ -61,7 +62,7 @@ pub(crate) fn read_row(reader: &mut store::ByteReader<'_>) -> Result<SemioTableR
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        cells.push(semio_s_artifact_stdio_semio_value::io::binary::diff::dec_semio_value_bin(reader)?);
+        cells.push(semio_s_artifact_stdio_semio_value_model::io::binary::diff::dec_semio_value_bin(reader)?);
     }
     Ok(SemioTableRow { cells })
 }
@@ -142,13 +143,13 @@ use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 use crate::io::text::snapshot::*;
 /// 📦️ Encodes a [`SemioTableSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a

@@ -6,7 +6,9 @@
 
 use crate::viewer::fem2d::modes::view;
 use crate::viewer::fem2d::modes::view::windows::model;
-use crate::{Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -49,7 +51,7 @@ pub struct Fem2dViewer;
 
 impl ArtifactViewer for Fem2dViewer {
     type Snapshot = Fem2dSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+    type Mutation = semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -65,7 +67,7 @@ impl ArtifactViewer for Fem2dViewer {
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
     /// too — no editor import, this is `crate::standards::v1::subsets::any::schema`.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config

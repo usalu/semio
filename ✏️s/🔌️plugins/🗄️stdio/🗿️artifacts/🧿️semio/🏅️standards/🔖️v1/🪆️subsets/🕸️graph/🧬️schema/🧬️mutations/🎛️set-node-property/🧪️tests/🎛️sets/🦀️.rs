@@ -73,7 +73,7 @@ async fn declared_outcome_and_diff_hold() {
 async fn guard_branches_report_their_frozen_codes() {
     use crate::schema::mutations::set_node_property::SetNodeProperty;
     use crate::schema::snapshot::GraphNodeId;
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     let base = snapshot(BEFORE);
     let codes = |node: &str, key: &str, value: &str| -> Vec<String> {
         let leaf = SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new(node), key: key.into(), value: SemioValue::Str { value: value.into() } });

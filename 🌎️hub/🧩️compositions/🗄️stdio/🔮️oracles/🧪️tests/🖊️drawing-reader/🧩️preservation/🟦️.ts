@@ -37,7 +37,7 @@ export function originalDrawingSource(path: string, current: string): string {
       if (digest(source.slice(tokens[body]!.start, tokens[pairs.get(body)!]!.end)) !== row.sha256) throw new Error(`changed moved reader body ${row.name}`);
     }
     const support = relative(resolve(root, path, ".."), resolve(root, contract.owner, "🧰️support/🦀️.rs")).replaceAll("\\", "/");
-    const mount = `\n\n#[cfg(feature = "oracles")]\n#[path = ${JSON.stringify(support)}]\nmod reference_support;`;
+    const mount = `\n\n#[path = ${JSON.stringify(support)}]\nmod reference_support;`;
     const retained = current.replace(mount, "").replace("\n    use super::reference_support::{load, point_json, obj};", "");
     if (retained !== extractedDxfMutationSource(original.source)) throw new Error(`changed retained DXF mutation bytes ${path}`);
   } else {

@@ -3,19 +3,19 @@ use super::{SnapshotReadRegistryHandle,SnapshotReadLeaseRegistry,snapshot_regist
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::ManuallyDrop;
 
-pub(crate) struct SnapshotReadRegistryAliasRetirement {
+pub struct SnapshotReadRegistryAliasRetirement {
  registry:ManuallyDrop<Option<SnapshotReadRegistryHandle>>,
  last_registry:ManuallyDrop<Option<SnapshotReadLeaseRegistry>>,
  identity:usize,
 }
 impl SnapshotReadRegistryAliasRetirement {
- pub(crate) fn new(registry:SnapshotReadRegistryHandle)->Self{let identity=registry.identity();Self{registry:ManuallyDrop::new(Some(registry)),last_registry:ManuallyDrop::new(None),identity}}
- pub(super) fn identity(&self)->usize{self.identity}
- pub(super) fn ptr_eq(&self,other:&SnapshotReadRegistryHandle)->bool{self.registry.as_ref().is_some_and(|registry|registry.ptr_eq(other))}
- pub(super) fn strong_count(&self)->usize{self.registry.as_ref().map_or(usize::from(self.last_registry.is_some()),SnapshotReadRegistryHandle::strong_count)}
- pub(super) fn alias_handle(&self)->&SnapshotReadRegistryHandle{self.registry.as_ref().expect("live source registry alias is unavailable after header retirement")}
- pub(super) fn frame_byte_demand(&self)->Result<usize,ValueError>{if self.registry.is_some(){snapshot_registry_frame_bytes()}else{Ok(0)}}
- pub(super) fn custody_byte_demand(&self)->Result<usize,ValueError>{self.demands().map(|demand|demand.release_bytes)}
+ pub fn new(registry:SnapshotReadRegistryHandle)->Self{let identity=registry.identity();Self{registry:ManuallyDrop::new(Some(registry)),last_registry:ManuallyDrop::new(None),identity}}
+ pub fn identity(&self)->usize{self.identity}
+ pub fn ptr_eq(&self,other:&SnapshotReadRegistryHandle)->bool{self.registry.as_ref().is_some_and(|registry|registry.ptr_eq(other))}
+ pub fn strong_count(&self)->usize{self.registry.as_ref().map_or(usize::from(self.last_registry.is_some()),SnapshotReadRegistryHandle::strong_count)}
+ pub fn alias_handle(&self)->&SnapshotReadRegistryHandle{self.registry.as_ref().expect("live source registry alias is unavailable after header retirement")}
+ pub fn frame_byte_demand(&self)->Result<usize,ValueError>{if self.registry.is_some(){snapshot_registry_frame_bytes()}else{Ok(0)}}
+ pub fn custody_byte_demand(&self)->Result<usize,ValueError>{self.demands().map(|demand|demand.release_bytes)}
  fn closed(&self)->bool{self.registry.is_none()&&self.last_registry.is_none()}
  fn demands(&self)->Result<RetirementDemand,ValueError>{
   if self.registry.is_some(){return Ok(RetirementDemand{release_bytes:snapshot_registry_frame_bytes()?,depth:1,..Default::default()});}
@@ -47,8 +47,8 @@ impl std::ops::Deref for SnapshotReadRegistryAliasRetirement {
 impl Drop for SnapshotReadRegistryAliasRetirement {
  fn drop(&mut self){assert!(std::thread::panicking()||self.closed(),"original registry alias retirement dropped before funded terminal custody");}
 }
-pub(crate) fn snapshot_registry_alias_demands(owner:&Option<SnapshotReadRegistryAliasRetirement>)->Result<RetirementDemand,ValueError>{owner.as_ref().map_or(Ok(Default::default()),SnapshotReadRegistryAliasRetirement::demands)}
-pub(crate) fn snapshot_registry_alias_close_step(slot:&mut Option<SnapshotReadRegistryAliasRetirement>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+pub fn snapshot_registry_alias_demands(owner:&Option<SnapshotReadRegistryAliasRetirement>)->Result<RetirementDemand,ValueError>{owner.as_ref().map_or(Ok(Default::default()),SnapshotReadRegistryAliasRetirement::demands)}
+pub fn snapshot_registry_alias_close_step(slot:&mut Option<SnapshotReadRegistryAliasRetirement>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  let Some(owner)=slot.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
  let step=owner.step(grant)?;if owner.closed(){slot.take();}Ok(step)
 }

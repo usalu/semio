@@ -15,10 +15,11 @@
 //! binary/text/json/proto/graphql codecs, same honest remainder as `📊moments`. This field is real
 //! and independently tested via `store::infer_field` directly.
 
-use crate::schema::entropy_internals::estimators::{entropy_discrete, DiscreteMethod};
-use crate::schema::entropy_internals::LogBase;
-use crate::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::estimators::entropy_discrete;
+use semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::estimators::DiscreteMethod;
+use semio_s_artifact_stdio_semio_table_entropy::schema::entropy_internals::LogBase;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use std::collections::BTreeMap;
 
 //#region 🔖️Value

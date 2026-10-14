@@ -17,7 +17,7 @@ use super::super::element_solids::{dep_object, dep_value};
 use super::super::opening_frames::OpeningFrame;
 use super::super::quantities::{ElementQuantity, ModelQuantities, QuantityKind};
 use super::super::spaces::{self, SpaceRoom, SpaceStatus};
-use crate::{Ceiling, ModelSnapshot, Slope, Space, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, ModelSnapshot, Slope, Space, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_2d::Vec2;

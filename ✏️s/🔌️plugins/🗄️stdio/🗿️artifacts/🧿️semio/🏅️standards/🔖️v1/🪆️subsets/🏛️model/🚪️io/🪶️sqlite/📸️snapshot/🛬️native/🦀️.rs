@@ -1,5 +1,7 @@
 //! 🏛️ Admitted Model spatial placements, complete classes, typed properties and relations.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioTransform, SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use crate::schema::snapshot::{SemioModelSnapshot, SpatialNode, SpatialKind, SemioModelElement, ElementClass, GeometryRef, PropertySet, Property, PsetValue, ModelRelation, RelationKind, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;

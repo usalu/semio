@@ -6,8 +6,8 @@
 //!
 //! See `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT) for the layering.
 
-use crate::os_spr::Mutation;
-use crate::os_vcs::VcsError;
+use protocol::Mutation;
+use semio_framework_os_vcs::VcsError;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::ValueError;
 
@@ -201,4 +201,36 @@ pub fn mutation_inverse_rows_declaration_failures<P, M: Mutation<P>>(ops: &[M]) 
         }
     }
     failures
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize)]
+#[value(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase")]
+pub struct LaneItemReceipt {
+    pub generation_before: u64,
+    pub generation_after: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
+pub enum ArtifactStoreOneItemPublicationPhase {
+    Preparing,
+    PreparingCursor,
+    PreflightingCommit,
+    Publishing,
+    AwaitingAck,
+    Closing,
+    Complete,
+    Fault,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactStoreOneItemAdvance {
+    Progress(ArtifactStoreOneItemCheckpoint),
+    PreparationProgress(ArtifactStoreOneItemCheckpoint, RetainedCloneProgress),
+    PreparationRefused,
+    Published(LaneItemReceipt),
+    AwaitingAck(LaneItemReceipt),
+    Complete,
+    Blocked,
 }

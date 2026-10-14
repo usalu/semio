@@ -1,6 +1,6 @@
 //! 📓️ `create-viewport` payload. Places a view on a sheet: a plan, ceiling plan, section or elevation at a scale from 1:1 to 1:1000, with the position of its window on the paper, an optional crop of the drawing and an optional label. The drawing is the inferred linework of the view.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Viewport};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Viewport}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

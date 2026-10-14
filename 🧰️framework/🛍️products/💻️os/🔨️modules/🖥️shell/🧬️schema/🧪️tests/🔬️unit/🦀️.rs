@@ -21,7 +21,7 @@ fn owned_json_schema_defs_match_registry() {
 /// 🟦️ Renders the owned TypeScript mirror. With `SEMIO_TYPEGEN_OUT` set (the `typegen` nx
 /// target) it WRITES `../🤖️generated/🟦️.ts`; without it, it asserts the committed mirror is
 /// exactly what this registry renders today.
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 #[test]
 fn exports_typescript_bindings() {
     schema_registry::validate().unwrap();

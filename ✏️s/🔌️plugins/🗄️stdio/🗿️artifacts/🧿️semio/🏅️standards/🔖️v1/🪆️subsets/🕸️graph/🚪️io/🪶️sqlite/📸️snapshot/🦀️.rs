@@ -6,8 +6,10 @@ use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow 
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
 use crate::schema::snapshot::{SemioGraphSnapshot, SemioGraphNode, SemioGraphEdge, SemioGraphPort, SemioGraphPortKind, GraphNodeId, GraphEdgeId};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
-use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::{project_value_tree, reconstruct_value_forest, ValueSqliteTables};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::project_value_tree;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::reconstruct_value_forest;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::ValueSqliteTables;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer::{reserve,heap_sort,compare_text};
 const VALUES:ValueSqliteTables=ValueSqliteTables{value:"semio_graph_value",list_element:"semio_graph_list_element",map_entry:"semio_graph_map_entry"};
@@ -130,7 +132,7 @@ fn order_relationships(rows:&mut[SqliteRow<'_>],control:&mut SqliteSnapshotContr
  for row in rows.iter(){row.integer(1)?;row.integer(2)?;}heap_sort(rows,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok((a.integer(1)?,a.integer(2)?).cmp(&(b.integer(1)?,b.integer(2)?))))?;
  let mut parent=None;let mut ordinal=0;for(index,row)in rows.iter().enumerate(){let owner=row.integer(1)?;if parent!=Some(owner){parent=Some(owner);ordinal=0;}if row.integer(2)?!=number(ordinal)?{return Err(invalid("Semio graph relationship ordinals must be contiguous"))}ordinal+=1;if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,rows.len())?;}}Ok(())
 }
-fn restore_properties(rows:&[SqliteRow<'_>],owner:i64,indices:&[(i64,usize)],values:&mut[Option<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue>],control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SemioValueEntry>,ValueError>{
+fn restore_properties(rows:&[SqliteRow<'_>],owner:i64,indices:&[(i64,usize)],values:&mut[Option<semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue>],control:&mut SqliteSnapshotControl<'_>)->Result<Vec<SemioValueEntry>,ValueError>{
  let rows=group(rows,owner);let mut properties=Owned::new(reserve(rows.len(),control)?);
  for(ordinal,row)in rows.iter().enumerate(){let mut entry=Owned::new(SemioValueEntry{key:String::new(),value:semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Null});entry.get_mut().key=reconstruct_text(control,row.text(3)?)?;let id=row.integer(4)?;let index=indices.binary_search_by_key(&id,|row|row.0).map_err(|_|ValueError::new(ValueRefusalKind::InvariantViolated,"missing admitted Semio graph property root"))?;let value=values[indices[index].1].take().ok_or_else(||invalid("multiply owned Semio graph property"))?;entry.get_mut().value=value;properties.get_mut().push(entry.take());if ordinal%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,ordinal,rows.len())?;}}
  Ok(properties.take())
@@ -143,7 +145,7 @@ fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,
 
 impl SemioGraphSnapshot{
 /// 📏️ Bounds explicitly owned native fields before encoding.
-pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.nodes.len())?;for node in &self.nodes{b.text(&node.id.value)?;b.text(&node.kind)?;b.text(&node.label)?;b.scalars(4)?;b.entities(node.ports.len())?;for port in &node.ports{b.text(&port.name)?;b.scalars(1)?;b.text(&port.category)?;b.entities(port.properties.len())?;for property in &port.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}b.entities(node.properties.len())?;for property in &node.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}b.entities(self.edges.len())?;for edge in &self.edges{b.text(&edge.id.value)?;b.text(&edge.source.value)?;b.text(&edge.target.value)?;b.text(&edge.kind)?;b.text(&edge.label)?;b.scalars(2)?;if let Some(value)=&edge.source_port{b.text(value)?;}if let Some(value)=&edge.target_port{b.text(value)?;}b.entities(edge.properties.len())?;for property in &edge.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}Ok(())}
+pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.nodes.len())?;for node in &self.nodes{b.text(&node.id.value)?;b.text(&node.kind)?;b.text(&node.label)?;b.scalars(4)?;b.entities(node.ports.len())?;for port in &node.ports{b.text(&port.name)?;b.scalars(1)?;b.text(&port.category)?;b.entities(port.properties.len())?;for property in &port.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}b.entities(node.properties.len())?;for property in &node.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}b.entities(self.edges.len())?;for edge in &self.edges{b.text(&edge.id.value)?;b.text(&edge.source.value)?;b.text(&edge.target.value)?;b.text(&edge.kind)?;b.text(&edge.label)?;b.scalars(2)?;if let Some(value)=&edge.source_port{b.text(value)?;}if let Some(value)=&edge.target_port{b.text(value)?;}b.entities(edge.properties.len())?;for property in &edge.properties{b.text(&property.key)?;semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_values(std::slice::from_ref(&property.value),b)?;}}Ok(())}
 }
 
 impl SemioGraphSnapshot{

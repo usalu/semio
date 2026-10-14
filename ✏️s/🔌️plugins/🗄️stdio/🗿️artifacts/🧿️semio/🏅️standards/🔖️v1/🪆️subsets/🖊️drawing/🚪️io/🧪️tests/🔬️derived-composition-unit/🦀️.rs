@@ -1,6 +1,7 @@
 mod tests {
     use super::*;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use crate::schema::snapshot::{DrawLayer, DrawStyle};
 
     #[semio_framework_async_macros::async_test]

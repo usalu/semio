@@ -9,11 +9,11 @@
 //! displaces three owners into the partition's fixed retirement queue. A transient partition is one
 //! root behind an `Arc` with no history at all — the exact tier for an unbounded stream of frames.
 //! The transport SETTINGS (speed, loop mode, waveform, play/pause) and the RESTING phase the slider
-//! seeks stay in [`crate::app_surface::FemResultsAnimation`] inside each window config; the clock exists
+//! seeks stay in [`semio_s_fem_app_surface::FemResultsAnimation`] inside each window config; the clock exists
 //! only while the window plays, and the tick that finds the transport stopped parks the clock's phase back
 //! into the config and clears it.
 
-use crate::app_surface::{FemLoopMode, FemResultsAnimation, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
 use semio_framework_plugin::{Fault, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientSnapshot};
 
 #[path = "🧬️schema/🦀️.rs"]

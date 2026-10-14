@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetCeilingBoundary`: an absolute `SetCeilingBoundary` back to the base boundary and holes, none when the ceiling is absent.
 
 use super::SetCeilingBoundary;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetCeilingBoundary, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.ceilings.get(&payload.id) {

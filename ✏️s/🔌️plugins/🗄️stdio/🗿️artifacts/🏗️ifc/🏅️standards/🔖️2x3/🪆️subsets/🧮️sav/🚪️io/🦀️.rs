@@ -2,8 +2,8 @@
 //! leaves. Registration flows through `🎹️composer::register`, not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3AnyComposer;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3AnyComposer;
     use crate::standards::v2x3::subsets::sav::io::check_sav_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -68,11 +68,19 @@ use semio_framework_diagnostic::TextSpan;
         }
     }
 
+    impl store::io::SnapshotSubsetValidator for Ifc2x3SavValidator {
+        type Snapshot = Ifc2x3Snapshot;
+
+        fn validate_snapshot(snapshot: &Ifc2x3Snapshot, _database: &semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_os_kernel::io_schema::IoResult<()> {
+            crate::standards::v2x3::subsets::sav::io::check_sav_conformance_controlled(snapshot, control).map(|diagnostics| semio_framework_os_kernel::io_schema::IoOutcome { value: (), diagnostics }).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)
+        }
+    }
+
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn validator_entry() -> &'static SubsetValidatorEntry {
-        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<Ifc2x3SavValidator>)
+        VALIDATOR_ENTRY.get_or_init(store::io::snapshot_subset_validator_entry_of::<Ifc2x3SavValidator>)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -95,11 +103,12 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
     #[cfg(test)]
-    use crate::standards::v2x3::subsets::base::schema::mutations::remove_instance;
-    use crate::standards::v2x3::subsets::base::schema::mutations::{upsert_instance, Ifc2x3Mutation};
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::remove_instance;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::upsert_instance;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::sav::io::check_sav_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -197,13 +206,14 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::base::io::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Analyzer as Ifc2x3AnyAnalyzer;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Parts;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
@@ -265,7 +275,9 @@ use semio_framework_diagnostic::TextSpan;
     /// 🛡️ Checks Structural Analysis View without native encoding or unbounded scans.
     pub fn check_sav_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
 
-        use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::{mvd_header,mvd_instances,MvdDiagnostics};
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_header;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_instances;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::MvdDiagnostics;
         let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"StructuralAnalysisView",control)?;
         for(condition,code,message,error)in [(!schema,CODE_FILE_SCHEMA,"FILE_SCHEMA does not declare IFC2X3",true),(!view,CODE_VIEW_DEFINITION,"FILE_DESCRIPTION's ViewDefinition tuple does not name StructuralAnalysisView",true),(mvd_instances(snapshot,"IFCSTRUCTURALANALYSISMODEL",control)?.is_empty(),CODE_NO_ANALYSIS_MODEL,"no IFCSTRUCTURALANALYSISMODEL instance -- a StructuralAnalysisView document must have at least one",true),(mvd_instances(snapshot,"IFCRELASSIGNSTOGROUP",control)?.is_empty(),CODE_NO_GROUP_ASSIGNMENT,"no IFCRELASSIGNSTOGROUP instance -- structural members/connections are not related to their analysis model",false),(mvd_instances(snapshot,"IFCSTRUCTURALLOADGROUP",control)?.is_empty(),CODE_NO_LOADS,"no IFCSTRUCTURALLOADGROUP instance -- no loads present",false)]{if condition{out.emit(code,if error{Severity::Error}else{Severity::Warning},format_args!("{message}"),control)?;}}
         Ok(out.finish())
@@ -301,7 +313,7 @@ use semio_framework_diagnostic::TextSpan;
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;

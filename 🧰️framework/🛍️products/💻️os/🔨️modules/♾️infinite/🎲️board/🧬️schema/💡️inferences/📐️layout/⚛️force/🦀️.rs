@@ -1,6 +1,6 @@
 //! 🕸️ Typed force graph layout preserves visibility, endpoint resolution and original physics.
 use geometry::Vec2;
-use graph::drawing::force::{self,ForceLayoutOptions as CoreForceLayoutOptions};
+use semio_framework_graph_drawing::force::{self,ForceLayoutOptions as CoreForceLayoutOptions};
 use std::collections::{HashMap,HashSet};
 use crate::infinite::board::board_visible_or_true;
 use crate::infinite::board::schema::layout::*;

@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `CreateLoadCase` — always a `delete-load-case` of the created id.
 use super::CreateLoadCase;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_load_case,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_load_case;
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateLoadCase, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<delete_load_case::DeleteLoadCase>>(payload: &CreateLoadCase, _base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Fem2dMutation::DeleteLoadCase(delete_load_case::DeleteLoadCase { id: payload.load_case.id.clone() })]
+    vec![Op::from(delete_load_case::DeleteLoadCase { id: payload.load_case.id.clone() })]
 
     })())
 }

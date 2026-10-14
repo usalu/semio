@@ -270,4 +270,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepSolid { id,
 semio_framework_value::artifact_retire_struct!(schema::snapshot::BrepCoedge { id, edge, forward, pcurve, prange, loop_id, next, prev });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioBrepSnapshot { schema, vertices, edges, loops, faces, shells, solids, coedges, next_label });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioBrepSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioBrepSnapshot, schema::mutations::SemioBrepMutation);

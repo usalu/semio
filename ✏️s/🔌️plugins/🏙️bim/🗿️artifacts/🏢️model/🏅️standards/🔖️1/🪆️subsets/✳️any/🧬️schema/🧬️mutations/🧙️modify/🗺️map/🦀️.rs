@@ -4,13 +4,13 @@
 //! flight swaps and a door keeps its swing. Points and directions are snapped to a picometre so that quarter turns and reflections about an
 //! axis-parallel line stay exact.
 
-use crate::mutations::elements::{self, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Refusal};
 use super::{AlignAxis, AlignEdge};
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::{Point, Rect};
-use crate::{Axis, Beam, Ceiling, Column, Component, CurtainWall, EndJoin, GridLine, MepElement, ModelSnapshot, Opening, Point2, Point3, Railing, Ramp, Roof, RoofShape, Slab, Slope, Space, SpaceBoundary, Stair, StairFlight, Turn, Vertex, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Ceiling, Column, Component, CurtainWall, EndJoin, GridLine, MepElement, ModelSnapshot, Opening, Point2, Point3, Railing, Ramp, Roof, RoofShape, Slab, Slope, Space, SpaceBoundary, Stair, StairFlight, Turn, Vertex, Wall};
 use protocol::OutcomeCode;
 
 fn snap(value: f64) -> f64 {

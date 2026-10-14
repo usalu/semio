@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-writer-window-state": "bun repo run @semio-tech/writer-writer-rs:verify-writer-window-state",
     "test-snapshot-sqlite": "bun repo run @semio-tech/writer-writer-rs:test-snapshot-sqlite",

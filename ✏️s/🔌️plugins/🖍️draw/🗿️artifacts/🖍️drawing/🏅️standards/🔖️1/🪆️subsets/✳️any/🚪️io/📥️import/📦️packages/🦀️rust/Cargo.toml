@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-read"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Drawing import: the deserializers that read SVG and JSON documents into a drawing"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true }
+semio-s-artifact-draw-drawing-io = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true }
+semio-s-artifact-draw-drawing-write = { workspace = true }
+serde_json = { workspace = true }

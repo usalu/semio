@@ -2,7 +2,7 @@
 
 use super::super::delete_curtain_wall_type::DeleteCurtainWallType;
 use super::CreateCurtainWallType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateCurtainWallType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.curtain_wall_types.contains_key(&payload.id) {

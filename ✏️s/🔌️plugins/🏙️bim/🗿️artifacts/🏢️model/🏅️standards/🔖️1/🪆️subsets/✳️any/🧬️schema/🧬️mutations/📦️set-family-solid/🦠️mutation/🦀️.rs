@@ -1,6 +1,6 @@
 //! 📦️ `set-family-solid` payload. Sets exactly the provided fields of a family solid: name, shape, material, visibility and offset; absent fields stay untouched.
 
-use crate::{ExprPoint3, FamilySolidPatch, ModelDiff, ModelMutation, ModelSnapshot, SolidShape};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, ModelSnapshot, SolidShape}, diff::{patches::FamilySolidPatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

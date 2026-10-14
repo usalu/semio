@@ -1,0 +1,12 @@
+{"order":["eng-algebra","eng-formulation","eng-model","eng-elements2d","eng-elements3d","eng-sparse","eng-mesh","eng-analyses","eng-2d","app-surface","sqlite","model","snapshot","diff","schema","mutations-any","mut-mesh","mut-load","mut-boundary","mut-material","mut-analysis","inferences","io","io-binary","io-text","io-sqlite","io-import","io-export","examples","editor","viewer","apply","aggregator"],
+ "allow":{},
+ "rules":[
+  ["^🦀️\\.rs$","aggregator"],
+  ["➕️algebra","eng-algebra"],["➗️formulation","eng-formulation"],["⚙️engine/🏗️model","eng-model"],["📏️elements2d","eng-elements2d"],["🧱️elements3d","eng-elements3d"],["🔢️sparse","eng-sparse"],["⚙️engine/🕸️mesh","eng-mesh"],["🧮️analyses","eng-analyses"],["⚙️engine/◻️2d","eng-2d"],["🖥️app-surface","app-surface"],["🧩️sqlite","sqlite"],
+  ["🌉️apply","apply"],
+  ["/✏️editor/","editor"],["/👁️viewer/","viewer"],["/📚️examples/","examples"],
+  ["🌐️any/🚪️io/💾️binary","io-binary"],["🌐️any/🚪️io/📝️text","io-text"],["🌐️any/🚪️io/🪶️sqlite","io-sqlite"],["🌐️any/🚪️io/📥️import","io-import"],["🌐️any/🚪️io/📤️export","io-export"],["🌐️any/🚪️io/","io"],
+  ["🌐️any/🧬️schema/📸️snapshot","snapshot"],["🌐️any/🧬️schema/🔺️diff","diff"],["🌐️any/🧬️schema/💡️inferences","inferences"],["🌐️any/🧬️schema/🧬️mutations","mutations-any"],["🌐️any/🧬️schema/","schema"],
+  ["🕸️mesh/🧬️schema","mut-mesh"],["🏋️load/","mut-load"],["🛡️boundary/","mut-boundary"],["🧱️material/","mut-material"],["📈️analysis/","mut-analysis"],
+  ["🏅️standards/🔖️1/🦀️\\.rs","aggregator"],["🌐️any/🦀️\\.rs","aggregator"],
+  [".","?"]]}

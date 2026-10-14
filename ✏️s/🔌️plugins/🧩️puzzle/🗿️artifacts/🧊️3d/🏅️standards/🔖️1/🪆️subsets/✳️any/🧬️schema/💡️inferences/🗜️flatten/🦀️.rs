@@ -3,7 +3,7 @@
 //! Byte-faithful port of `compose/client/lib/rs/lib.rs` `geom::flatten` (constants, matrix algebra,
 //! child-plane solve, BFS). Diagram centers use attraction `x`/`y` (compose `u`/`v`).
 
-use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dSnapshot, Puzzle3dVortex};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// 🎛 Absolute plane + diagram center for one object after flatten. `ToValue`/`FromValue`

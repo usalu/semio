@@ -22,7 +22,6 @@ pub struct Axes {
 /// 📖️ Reads the axes of `input` with the `tiff` crate: every tag through `Decoder::find_tag`, the raster
 /// through `read_image` (a document whose pixels cannot be decoded is degenerate), the IFD count by
 /// walking `more_images`/`next_image`.
-#[cfg(feature = "oracles")]
 pub fn read_axes(input: &[u8]) -> Result<Axes, String> {
     use tiff::tags::Tag;
     let mut decoder = tiff::decoder::Decoder::new(std::io::Cursor::new(input)).map_err(|error| format!("tiff reader refused the document: {error}"))?;
@@ -42,11 +41,6 @@ pub fn read_axes(input: &[u8]) -> Result<Axes, String> {
     Ok(Axes { ifd_count, raster, compression, photometric, bits_per_sample, tile_width, tile_length, strip_offsets })
 }
 
-/// 🚫️ Without the `oracles` feature the registered reader is not linked.
-#[cfg(not(feature = "oracles"))]
-pub fn read_axes(_input: &[u8]) -> Result<Axes, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Axes
 
 //#region 🔖️Semantics
@@ -130,7 +124,6 @@ pub fn project(axes: &Axes) -> Json {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[cfg(feature = "oracles")]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

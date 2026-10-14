@@ -5,7 +5,7 @@
 
 use crate::render::plan::scene;
 use crate::viewer::bim::terminology::BimViewerLabels;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 #[path = "🎚️config/🦀️.rs"]

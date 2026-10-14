@@ -1,8 +1,8 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{ctx, demo, run};
-use crate::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 use crate::standards::v1::subsets::any::io::export::csv::schedule_csv;
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 fn scheduled() -> ModelSnapshot {

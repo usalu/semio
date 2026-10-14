@@ -1,9 +1,10 @@
 //! 🧪️ `drag-layers` fixture — `✋️drags-a-child`. The committed quintet is computed by an independent Python implementation
 //! (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the Rust leaf to it
 //! byte for byte and pin the partial, target-missing, no-op, invariant and label outcomes.
-use crate::mutations::{drag_layers, inverse_drawing_mutation, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::DrawingSnapshot;
+use crate::drag_layers::mutation::drag_layers;
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json");
@@ -37,7 +38,7 @@ fn produces_committed_diff() {
     let outcome = mutation.diff(&before());
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
     assert_eq!(serde_json::to_value(outcome.diff()).unwrap(), serde_json::from_str::<serde_json::Value>(DIFF).unwrap());
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).unwrap();
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).unwrap();
     assert_eq!(protocol::apply_diff(&decoded, &before()).unwrap(), serde_json::from_str::<DrawingSnapshot>(AFTER).unwrap(), "the committed diff alone carries before to after");
 }
 
@@ -73,7 +74,7 @@ fn outcome_laws() {
     let base = before();
     assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "ghost".into()].into(), 5.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
     let mut locked = base.clone();
-    crate::schema::layer_base_mut(&mut locked.layers[1]).locked = true;
+    semio_s_artifact_draw_drawing_model::layer_base_mut(&mut locked.layers[1]).locked = true;
     assert_eq!(codes(&drag_layers(vec!["shape-a".into(), "shape-b".into()].into(), 5.0, 0.0), &locked), vec![("Warning".into(), "mutation.partial".into())], "a child of a locked group is skipped");
     assert_eq!(codes(&drag_layers(vec!["shape-b".into()].into(), 5.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
     assert_eq!(codes(&drag_layers(vec!["ghost".into()].into(), 5.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
@@ -88,7 +89,7 @@ fn a_child_of_a_dragged_group_moves_once() {
     let base = before();
     let mut snapshot = base.clone();
     apply_drawing_mutation(&mut snapshot, &drag_layers(vec!["group-a".into(), "shape-b".into()].into(), 20.0, -10.0)).unwrap();
-    let (crate::DrawingLayerNode::Group(moved), crate::DrawingLayerNode::Group(original)) = (&snapshot.layers[1], &base.layers[1]) else { panic!("group") };
+    let (semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(moved), semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(original)) = (&snapshot.layers[1], &base.layers[1]) else { panic!("group") };
     assert_eq!((moved.base.transform.x, moved.base.transform.y), (120.0, 40.0));
     assert_eq!(moved.children, original.children, "the child keeps its local transform and moves with its group");
 }

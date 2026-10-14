@@ -4,7 +4,7 @@ use super::{TrustedCatalogLoader,VerifiedTrustedCatalog,VerifiedDocumentOpenSele
 use crate::artifact_authority::{AuthorityError,AuthorityLimits,AuthorityOperationControl,AuthorityProgress,OperationContext};
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_framework_plugin_host::Budget;
-use semio_framework_plugin_interpreter::{OwnedCompiledGuest,OwnedRuntime};
+use semio_framework_plugin_interpreter_runtime::{OwnedCompiledGuest,OwnedRuntime};
 use semio_framework_hash::{Hasher,Sha256};
 use directory::{os_directory::io::binary::artifact_hash::hex_lower,os_store};
 const KIND:&str="fixture.neutral-host-fixture.counter";

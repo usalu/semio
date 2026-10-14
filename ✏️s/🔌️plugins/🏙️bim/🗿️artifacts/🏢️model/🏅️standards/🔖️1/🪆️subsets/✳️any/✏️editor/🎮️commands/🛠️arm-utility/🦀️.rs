@@ -3,7 +3,7 @@
 //! P space, G grid, M measure, V select, E move, Q rotate, Shift+S slab from walls, Shift+W split wall). Arming a utility drops the gesture another utility had in progress.
 
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
 
 /// 🛠️ A command that arms one utility.

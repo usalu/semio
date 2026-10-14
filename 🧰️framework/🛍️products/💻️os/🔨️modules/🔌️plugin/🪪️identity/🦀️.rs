@@ -239,7 +239,7 @@ impl ArtifactIdentityNamespace {
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArtifactIdentityClaim {
     namespace: ArtifactIdentityNamespace,
-    value: String,
+    pub(crate) value: String,
 }
 
 impl ArtifactIdentityClaim {
@@ -334,7 +334,7 @@ pub type ArtifactCapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, 
 /// 🧩️ One extension-owned capability and its conflict-checked external identities.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ArtifactCapability {
-    identity: ArtifactIdentity,
+    pub(crate) identity: ArtifactIdentity,
     kind: ArtifactCapabilityKind,
     descriptor: Vec<u8>,
     executable_identity: Option<ArtifactExecutableIdentity>,

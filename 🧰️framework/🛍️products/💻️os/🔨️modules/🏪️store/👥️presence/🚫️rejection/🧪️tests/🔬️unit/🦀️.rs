@@ -7,7 +7,7 @@ fn adopt_fixture(publication: &mut PresencePeersPublication<i32>, actor: String,
 fn adopt_fixture_minted(publication: &mut PresencePeersPublication<i32>, actor: String, presence: i32, grant: RetainedCloneGrant, minted: Option<Arc<dyn SnapshotRetirementFactory<i32>>>) -> Result<RetainedCloneStep, PresencePeerAdmissionRejected<i32>> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let mut actor = Some(actor); let mut presence = Some(presence);
     match publication.adopt(&mut actor, &mut presence, 0, &mut original) {
         Ok(step) => { assert_eq!(step.progress(), original.progress()); Ok(step) },
@@ -18,13 +18,13 @@ fn adopt_fixture_minted(publication: &mut PresencePeersPublication<i32>, actor: 
 fn commit_fixture(publication: &mut PresencePeersPublication<i32>, grant: RetainedCloneGrant) -> PresencePeersCommit<i32> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let (commit, receipt) = publication.take_commit(&mut original).unwrap();
     assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); commit
 }
 use super::*;
 
-use crate::os_store::component::presence_test_retirement::{Factory, CLOSE_GRANT, observed_step, observed_box_close, finish_box};
+use crate::presence_test_retirement::{Factory, CLOSE_GRANT, observed_step, observed_box_close, finish_box};
 
 fn close_publication(original: &mut PresencePeersPublication<i32>) -> usize {
     let mut released = 0;
@@ -88,7 +88,7 @@ fn retained_presence_peer_admission_preserves_rejected_actor_allocation_and_payl
             assert!(receipt.fits(CLOSE_GRANT));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
             for _ in 0..4096 {
-                if matches!(crate::os_store::component::presence_test_retirement::observed_close(&mut transferred, CLOSE_GRANT), RetainedCloneStep::Complete(_)) {
+                if matches!(crate::presence_test_retirement::observed_close(&mut transferred, CLOSE_GRANT), RetainedCloneStep::Complete(_)) {
                     break;
                 }
             }

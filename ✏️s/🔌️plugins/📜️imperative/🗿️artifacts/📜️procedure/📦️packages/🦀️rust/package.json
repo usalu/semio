@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-procedure-document-contract": "bun repo run @semio-tech/imperative-procedure-rs:verify-procedure-document-contract"
   },

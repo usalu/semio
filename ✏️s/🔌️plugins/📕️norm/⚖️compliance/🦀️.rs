@@ -1,5 +1,14 @@
 //! 📏️ Norm core: shared quantities, clause identity, compliance results, and national annex selection.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use protocol::Mutation;
 use semio_framework_dispatch_macros::dyn_enum;
 use std::fmt;
@@ -1063,7 +1072,7 @@ macro_rules! impl_norm_artifact_record {
         $crate::impl_norm_artifact_record!(@binary $Snapshot, extension=$extension, envelope_id=$envelope_id $(,sqlite=$sqlite)?);
     };
     (@text $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal) => {
-        impl $crate::document::NormArtifactRecord for $Snapshot {
+        impl $crate::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
             fn dsl_spec() -> semio_framework_dsl_record::RecordSpec {
@@ -1082,23 +1091,23 @@ macro_rules! impl_norm_artifact_record {
                 $envelope_id
             }
             fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                $crate::document::norm_parse_dsl(text)
+                $crate::norm_parse_dsl(text)
             }
             fn print_dsl(&self) -> String {
-                $crate::document::norm_print_dsl(self)
+                $crate::norm_print_dsl(self)
             }
         }
     };
     (@binary $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal $(,sqlite=$sqlite:path)?) => {
         impl pack::snapshot::ArtifactPack for $Snapshot {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                $crate::document::norm_encode_pack(self, options)
+                $crate::norm_encode_pack(self, options)
             }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                $crate::document::norm_decode_pack(bytes, options)
+                $crate::norm_decode_pack(bytes, options)
             }
             fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-                Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
+                Some(<Self as $crate::NormArtifactRecord>::dsl_spec())
             }
             
         }

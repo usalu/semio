@@ -1,0 +1,40 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🦀️.rs",
+ "crate": "semio_s_artifact_stdio_step",
+ "barrels": {
+  "": [
+   "standards::v_ap214::subsets::base::schema::diff",
+   "standards::v_ap214::subsets::base::schema::mutations",
+   "standards::v_ap214::subsets::base::schema::snapshot",
+   "standards::v_ap214::subsets::base::schema",
+   "standards::v_ap214::subsets::cc1::io",
+   "standards::v_ap214::subsets::cc2::io",
+   "standards::v_ap214::subsets::cc3::io",
+   "standards::v_ap214::subsets::cc4::io",
+   "standards::v_ap214::subsets::cc5::io",
+   "standards::v_ap214::subsets::cc6::io",
+   "standards::v_ap214::subsets::base::io"
+  ],
+  "engine": [
+   "standards::v_ap214::subsets::base::io",
+   "standards::v_ap214::subsets::base::schema"
+  ],
+  "schema": [
+   "standards::v_ap214::subsets::base::schema"
+  ],
+  "standards::v_ap214::engine": [
+   "standards::v_ap214::subsets::base::io",
+   "standards::v_ap214::subsets::base::schema"
+  ]
+ },
+ "aliases": {
+  "semio_s_artifact_stdio_contract": [
+   "apply_mutation_checked",
+   "mutation_from_payload_json",
+   "mutation_inverse",
+   "mutation_payload_json",
+   "MutationRefusal",
+   "part21"
+  ]
+ }
+}

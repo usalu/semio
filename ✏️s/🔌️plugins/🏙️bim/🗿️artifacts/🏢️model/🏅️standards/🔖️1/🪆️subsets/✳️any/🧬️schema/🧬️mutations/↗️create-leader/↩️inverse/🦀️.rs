@@ -2,7 +2,7 @@
 
 use super::super::delete_leader::DeleteLeader;
 use super::CreateLeader;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateLeader, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.leaders.contains_key(&payload.id) {

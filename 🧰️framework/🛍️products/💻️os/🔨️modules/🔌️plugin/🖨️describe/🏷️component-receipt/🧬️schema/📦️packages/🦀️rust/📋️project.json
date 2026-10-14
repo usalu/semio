@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/plugin-component-receipt-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:plugin-component-receipt"
+  ]
+}

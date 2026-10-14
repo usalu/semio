@@ -4,10 +4,10 @@ import {createRequire} from "node:module";
 import {join,dirname} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {test} from "bun:test";
-import {catalogNxContributionV1} from "../../📣️publication/🟦️.ts";
+import {catalogBuildContributionV1} from "../../📣️publication/🟦️.ts";
 test("the actual S preparation receiver retains every contributed closure",async()=>{
  const workspace=process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),require=createRequire(import.meta.url);
- const {cacheInternals,libraryBootstrap}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);await libraryBootstrap;
+ const {cacheInternals,libraryBootstrap}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);await libraryBootstrap;
  const oracle=(rows:any[],roots:readonly (string|{readonly id:string;readonly appScoped:boolean})[])=>cacheInternals.runtimeComponentClosure(rows,roots);
   const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry", dev = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
   const entries = JSON.parse(readFileSync(join(workspace,"✏️s/🧑‍💻dev/🧩️catalog/🤖️generated/🔌️plugins.json"), "utf8"));
@@ -17,7 +17,7 @@ test("the actual S preparation receiver retains every contributed closure",async
     const project = manifest.package.name;
     return { ...metadata.semio, project, pluginId: metadata.component.package.slice(6), cratePath: dirname(path).replaceAll("\\", "/"), extends: metadata.semio.extends, dependsOn: [...(metadata.semio.extends ? [metadata.semio.extends] : []), ...(metadata.semio["depends-on"] ?? [])] };
   });
-  const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev,{},[catalogNxContributionV1()]), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
+  const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev,{},[catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")})]), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
   const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
   testSelectedRuntimeDependencies(targets);
   const vectors = JSON.parse(readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/nx-contract/🔣️.json"), "utf8")).closurePreparation;

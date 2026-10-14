@@ -10,7 +10,7 @@
 //! ticket — unrelated to the brand-new spatial `📦️object` subset (transform + owned brep/mesh/
 //! value children).
 
-use crate::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::census::compute_semio_value_census;

@@ -5,9 +5,14 @@ mod quick {
     use std::collections::VecDeque;
     use std::sync::Arc;
     fn supplied_retained_turn() -> RetainedTurnInput {
-        RetainedTurnInput { operation: 71, generation: 3, epoch: 19, grant: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } }
+        RetainedTurnInput { operation: 71, generation: 3, epoch: 19, work: OriginalActorTurnWork { clock_binding: 1871, absolute_deadline_us: 1000000, fuel: 64 }, grant: protocol::value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: 262144, maximum_depth: 64 } }
     }
 
+
+    fn supplied_retained_loan() -> OriginalActorTurnLoan {
+        let input = supplied_retained_turn();
+        OriginalActorTurnLoan { retained_policy: input.grant, work_fuel: 64, deadline_us: 1000000 }
+    }
 
     //#region 🔖️ErrorContracts
     fn assert_error_contract(error: &(dyn std::error::Error + 'static), expected: &str) {
@@ -45,7 +50,7 @@ mod quick {
 
     async fn ok_turn() -> TurnResult {
         TurnResult {
-            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
+            retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -62,7 +67,7 @@ mod quick {
         kernel.submit(&env(actor, Lane::Interactive, now).await).await;
         let grant = kernel.tick(now).await.run.into_iter().find(|grant|grant.actor==actor).expect("fixture receives an actual issued turn");
         let mut returned = result.clone();
-        returned.retained_receipt = grant.retained.return_original(Default::default()).unwrap();
+        returned.retained_receipt = grant.retained.return_original(Default::default(), 0).unwrap();
         kernel.complete(actor, &returned, now).await
     }
 
@@ -826,7 +831,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trip_actor_record() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let id = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let record = kernel.actor_record(id).await.unwrap();
         let mut bytes = Vec::new();
         record.pack_encode(&mut bytes).await;
@@ -894,7 +899,7 @@ mod quick {
         // the exact order, so this test stays correct even if that internal tie-break ever changes.
         let mut by_shard: std::collections::BTreeMap<u16, Vec<ActorId>> = std::collections::BTreeMap::new();
         for ordinal in 0..6u32 {
-            let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+            let id = kernel.activate(background_package.clone(), 1, ActorKind::PluginApp { plugin: background_package.clone(), app_id: "hog".into(), instance_id: ordinal }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
             let shard = kernel.actor_record(id).await.unwrap().shard;
             by_shard.entry(shard.0).or_default().push(id);
         }
@@ -907,7 +912,7 @@ mod quick {
         let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
         let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
         let hot_turn = TurnResult {
-            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
+            retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -925,7 +930,7 @@ mod quick {
             }
         }
 
-        let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let interactive_id = kernel.activate(PackageId("editor".into()), 2, ActorKind::PluginApp { plugin: PackageId("editor".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let interactive_shard = kernel.actor_record(interactive_id).await.unwrap().shard;
         assert_eq!(interactive_shard.0, *safe_shard, "interactive actor must land on the one shard with no CPU-saturating co-resident, got {interactive_shard:?} (hot shards: {hot_shards:?})");
     }
@@ -1124,10 +1129,10 @@ mod quick {
         let quiet_package = PackageId("s.quiet".into());
         let mut busy_actors = Vec::new();
         for i in 0..50u32 {
-            let id = kernel.activate(busy_package.clone(), 1, ActorKind::PluginApp { plugin: busy_package.clone(), app_id: format!("busy-{i}"), instance_id: i }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+            let id = kernel.activate(busy_package.clone(), 1, ActorKind::PluginApp { plugin: busy_package.clone(), app_id: format!("busy-{i}"), instance_id: i }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
             busy_actors.push(id);
         }
-        let quiet_actor = kernel.activate(quiet_package.clone(), 2, ActorKind::PluginApp { plugin: quiet_package, app_id: "quiet".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let quiet_actor = kernel.activate(quiet_package.clone(), 2, ActorKind::PluginApp { plugin: quiet_package, app_id: "quiet".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
 
         for &id in &busy_actors {
             for seq in 0..30u64 {
@@ -1149,7 +1154,7 @@ mod quick {
                     busy_grants += 1;
                 }
                 let mut result = ok_turn().await;
-                result.retained_receipt = grant.retained.return_original(Default::default()).unwrap();
+                result.retained_receipt = grant.retained.return_original(Default::default(), 0).unwrap();
                 kernel.complete(grant.actor, &result, now).await.unwrap();
             }
         }
@@ -1166,8 +1171,8 @@ mod quick {
         let budget = lane_defaults::budget_for(Lane::Background);
         let bg_actor = ActorId::new(1, 0, 0, 0).await;
         let interactive_actor = ActorId::new(1, 0, 1, 0).await;
-        scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0), supplied_retained_turn()).await;
-        scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0), supplied_retained_turn()).await;
+        scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0), supplied_retained_turn(), supplied_retained_loan()).await;
+        scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0), supplied_retained_turn(), supplied_retained_loan()).await;
         scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
         scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
         let decision = scheduler.tick(10).await;
@@ -1204,12 +1209,12 @@ mod quick {
     async fn failure_ladder_trap_then_quarantine_is_package_wide() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
         let package = PackageId("s.flaky".into());
-        let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
-        let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let a = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package.clone(), app_id: "a".into(), instance_id: 0 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
+        let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
 
         for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
             let faulted = TurnResult {
-            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
+            retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -1346,14 +1351,14 @@ mod quick {
     async fn kernel_activate_submit_tick_complete_round_trip() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
         let window = WindowId(1);
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }, supplied_retained_turn()).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, Some(window), ActivationEvent::WindowOpen { window }, supplied_retained_turn(), supplied_retained_loan()).await;
         let bp = kernel.submit(&env(actor, Lane::Interactive, 1).await).await;
         assert_eq!(bp, Backpressure::Accept);
         let decision = kernel.tick(0).await;
         assert_eq!(decision.run.len(), 1);
         assert_eq!(decision.run[0].actor, actor);
         let mut result = ok_turn().await;
-        result.retained_receipt = decision.run[0].retained.return_original(Default::default()).unwrap();
+        result.retained_receipt = decision.run[0].retained.return_original(Default::default(), 0).unwrap();
         let escalation = kernel.complete(actor, &result, 1).await.unwrap();
         assert_eq!(escalation, FailureEscalation::None);
         assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Active));
@@ -1362,7 +1367,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_suspend_resume_round_trip() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Extension { plugin: PackageId("s.cad".into()), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.suspend(actor, Some(vec![1, 2, 3])).await.unwrap();
         assert_eq!(kernel.actor_status(actor).await, Some(&ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) }));
         kernel.resume(actor).await.unwrap();
@@ -1372,7 +1377,7 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_request_exclusive_then_release() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 1, 4).await;
-        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let actor = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::Job { owner: ActorId::new(0, 0, 0, 0).await, job_id: 1 }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let shard = kernel.request_exclusive(actor).await.unwrap();
         assert!(shard.0 >= 3, "exclusive shards must come from the reserved tail of the pool");
         kernel.release_exclusive(actor).await;
@@ -1381,8 +1386,8 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn kernel_metrics_counts_actors_shards_packages() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
-        kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
-        kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        kernel.activate(PackageId("s.a".into()), 1, ActorKind::Extension { plugin: PackageId("s.a".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
+        kernel.activate(PackageId("s.b".into()), 2, ActorKind::Extension { plugin: PackageId("s.b".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let metrics = kernel.metrics().await;
         assert_eq!(metrics.actors, 2);
         assert_eq!(metrics.packages, 2);
@@ -1398,11 +1403,11 @@ mod quick {
     async fn activate_pinned_places_extension_on_parents_shard() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let parent_shard = kernel.shard_of(parent).await.expect("parent must be pinned by activate");
 
         let ext_pkg = PackageId("s.cad.aec-extension".into());
-        let extension = kernel.activate_pinned(ext_pkg, 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, parent_shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let extension = kernel.activate_pinned(ext_pkg, 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, parent_shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
 
         assert_eq!(kernel.shard_of(extension).await, Some(parent_shard), "extension must land on the parent's exact shard, never wherever least-loaded would pick");
     }
@@ -1413,10 +1418,10 @@ mod quick {
     async fn deactivate_parent_cascades_leaves_first_with_zero_orphans() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let e1 = kernel.activate_pinned(PackageId("s.cad.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
-        let e2 = kernel.activate_pinned(PackageId("s.cad.e2".into()), 3, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e2".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let e1 = kernel.activate_pinned(PackageId("s.cad.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
+        let e2 = kernel.activate_pinned(PackageId("s.cad.e2".into()), 3, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e2".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.link_extension(parent, e1).await.unwrap();
         kernel.link_extension(parent, e2).await.unwrap();
         assert_eq!(kernel.metrics().await.actors, 3);
@@ -1438,9 +1443,9 @@ mod quick {
     async fn kill_parent_takes_extensions_down() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.flow".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "flow".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let e1 = kernel.activate_pinned(PackageId("s.flow.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let e1 = kernel.activate_pinned(PackageId("s.flow.e1".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "e1".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.link_extension(parent, e1).await.unwrap();
 
         let removed = kernel.kill(parent).await.unwrap();
@@ -1459,16 +1464,16 @@ mod quick {
     async fn trapping_extension_never_faults_the_parent() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         complete_admitted(&mut kernel, parent, &ok_turn().await, 0).await.unwrap();
         assert_eq!(kernel.actor_status(parent).await, Some(&ActorStatus::Active));
 
         let shard = kernel.shard_of(parent).await.unwrap();
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.link_extension(parent, extension).await.unwrap();
 
         let faulted = TurnResult {
-            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
+            retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),
             ui_patches: vec![],
             effects: vec![],
             command_ingress: vec![],
@@ -1488,7 +1493,7 @@ mod quick {
         // because this test gave the extension its own PackageId (distinct from the parent's).
         for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
             let faulted = TurnResult {
-            retained_receipt: supplied_retained_turn().return_original(Default::default()).unwrap(),
+            retained_receipt: supplied_retained_turn().return_original(Default::default(), 0).unwrap(),
                 ui_patches: vec![],
                 effects: vec![],
                 command_ingress: vec![],
@@ -1512,12 +1517,12 @@ mod quick {
     async fn extension_capability_grant_is_the_intersection_not_the_request() {
         let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.set_capabilities(parent, vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "net.fetch".into(), scope: None }]).await.unwrap();
 
         let shard = kernel.shard_of(parent).await.unwrap();
         let requested = vec![CapabilityGrant { capability: "fs.read".into(), scope: None }, CapabilityGrant { capability: "fs.admin".into(), scope: None }];
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), requested, supplied_retained_turn()).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), requested, supplied_retained_turn(), supplied_retained_loan()).await;
 
         let record = kernel.actor_record(extension).await.expect("extension must be live");
         assert_eq!(record.capabilities.len(), 1, "only the grant the parent ALSO held may survive");
@@ -1531,9 +1536,9 @@ mod quick {
     async fn suspend_cascade_leaves_first_resume_cascade_parent_first() {
         let mut kernel = Kernel::new(ShardKind::Native, 4, 0, 4).await;
         let plugin = PackageId("s.cad".into());
-        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let parent = kernel.activate(plugin.clone(), 1, ActorKind::PluginApp { plugin: plugin.clone(), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
         let shard = kernel.shard_of(parent).await.unwrap();
-        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn()).await;
+        let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![], supplied_retained_turn(), supplied_retained_loan()).await;
         kernel.link_extension(parent, extension).await.unwrap();
 
         let order = kernel.suspend_cascade(parent, Some(vec![9, 9])).await.unwrap();
@@ -1555,14 +1560,14 @@ mod quick {
     #[semio_framework_async_macros::async_test]
     async fn runtime_metrics_snapshot_reflects_real_kernel_activity() {
         let mut kernel = Kernel::new(ShardKind::Native, 2, 0, 8).await;
-        let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn()).await;
-        let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn()).await;
+        let cad = kernel.activate(PackageId("s.cad".into()), 1, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "editor".into(), instance_id: 0 }, Lane::Interactive, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
+        let stdio = kernel.activate(PackageId("s.stdio".into()), 2, ActorKind::Extension { plugin: PackageId("s.stdio".into()), extension_id: "e".into() }, Lane::Background, None, ActivationEvent::Manual, supplied_retained_turn(), supplied_retained_loan()).await;
 
         kernel.submit(&env(cad, Lane::Interactive, 1).await).await;
         let decision = kernel.tick(0).await;
         assert_eq!(decision.run.len(), 1, "only `cad` has a pending envelope this tick");
         let mut result = ok_turn().await;
-        result.retained_receipt = decision.run[0].retained.return_original(Default::default()).unwrap();
+        result.retained_receipt = decision.run[0].retained.return_original(Default::default(), 0).unwrap();
         kernel.complete(cad, &result, 5).await.unwrap();
 
         let snapshot = kernel.runtime_metrics_snapshot(5).await;
@@ -1849,7 +1854,7 @@ mod quick {
 }
 
 //#region 🔖️Typegen
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 #[semio_framework_async_macros::async_test]
 async fn exports_typescript_bindings() {
     crate::schema_metadata::validate().unwrap();

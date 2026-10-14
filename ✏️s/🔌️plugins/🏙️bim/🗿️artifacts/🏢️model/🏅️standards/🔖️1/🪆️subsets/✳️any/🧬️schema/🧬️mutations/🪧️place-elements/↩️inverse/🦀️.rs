@@ -4,7 +4,7 @@
 
 use super::super::elements::{self, Placement};
 use super::PlaceElements;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use std::collections::BTreeMap;
 
 pub fn inverse(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<ModelMutation> {

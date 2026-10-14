@@ -1,11 +1,27 @@
 //! 🏗️ `brep.solid` computes: extrusions, revolve, loft, sweep, pipe and helical sweep as stepped lane J operation jobs over a fresh kernel session.
 //!
 //! Profiles arrive as faces or closed wires (a wire is filled with the planar face of its own orientation); paths arrive as wires, edges or curves (an edge or a curve is read as a one-edge wire). Every refusal that the kernel would only report as an opaque failure is stated first, in English and German, at the port it concerns.
+#![allow(clippy::result_large_err)]
 
-use super::brep_curve::{direction, dot, guarded, norm, path_wire, refusal};
-use super::brep_surface::{fit_plane, profile_face, wire_corners, WIRE};
-use super::phased_job::Pipeline;
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::direction;
+use semio_s_artifact_procedural_3d_brep_curve::dot;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_brep_curve::norm;
+use semio_s_artifact_procedural_3d_brep_curve::path_wire;
+use semio_s_artifact_procedural_3d_brep_curve::refusal;
+use semio_s_artifact_procedural_3d_brep_surface::fit_plane;
+use semio_s_artifact_procedural_3d_brep_surface::profile_face;
+use semio_s_artifact_procedural_3d_brep_surface::wire_corners;
+use semio_s_artifact_procedural_3d_brep_surface::WIRE;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::BrepOperation;
 use std::f64::consts::TAU;
 
@@ -125,6 +141,8 @@ fn helical_sweep(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-solid", include_str!("../../../🗂️catalogue/🔣️brep-solid.json"));
 /// 🗃️ The `brep.solid` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.solid.extrudeWire", start: extrude_wire },

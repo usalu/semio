@@ -61,7 +61,7 @@ if (segments[0] === "fem-pcg-publication-owners") {
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_", "pcg_construction_", "solver_jobs_reject_stale_and_cancelled_"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_", "pcg_construction_", "solver_jobs_reject_stale_and_cancelled_"], this.repoRoot);
       }
       return;
     }
@@ -73,7 +73,7 @@ if (segments[0] === "fem-assembly-physical-owners") {
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "assembly_triplet_pages_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "assembly_triplet_pages_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
       }
       return;
     }
@@ -85,7 +85,7 @@ if (segments[0] === "fem-numerical-page-owners") {
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "subspace_job_resume_", "p6h_subspace_"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "numerical_page_", "ldlt_job_checkpoint_resume_", "p6h_ldlt_", "subspace_job_resume_", "p6h_subspace_"], this.repoRoot);
       }
       return;
     }
@@ -97,7 +97,7 @@ if (segments[0] === "fem-mesh-preparation-owners") {
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mesh_preparation_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "mesh_preparation_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
       }
       return;
     }
@@ -108,7 +108,7 @@ if (segments[0] === "fem-scalar-owners-native") {
       testFemScalarOwnerOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", testPath], { cwd: this.repoRoot });
       const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_initial_precondition_", "subspace_factor_cursor_", "subspace_publication_"], this.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "--", "--nocapture", "--test-threads=1", "pcg_job_initial_precondition_", "subspace_factor_cursor_", "subspace_publication_"], this.repoRoot);
       return;
     }
 if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-window-config-contract") {
@@ -134,7 +134,7 @@ if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-win
       if (segments[1] === "native") {
         const { runCargo } = await import("../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         if (dimension === "2d") {
-          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "fem2d_window_config_", "--", "--nocapture"], this.repoRoot);
+          await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "fem2d_window_config_", "--", "--nocapture"], this.repoRoot);
         } else {
           const failures: unknown[] = [];
           for (const [packageName, filters] of [
@@ -142,7 +142,7 @@ if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-win
             ["semio-s-artifact-fem-3d", ["fem3d_window_config_", "live_visual::tests::"]],
           ] as const) {
             try {
-              await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.repoRoot);
+              await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", packageName, "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.repoRoot);
             } catch (error) {
               failures.push(error);
             }

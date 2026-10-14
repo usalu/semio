@@ -6,9 +6,9 @@ use protocol::causal::transition::HistoryFoldIndex;
 use crate::{OrderedMap, OrderedSet};
 use std::collections::HashSet;
 
-use graph::manifest::{PropertyBag, PropertyValue};
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{cluster_operator_info, Atom, ChannelSpec, Dictionary, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
-use semio_framework_artifact_infinite_dag::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
+use semio_framework_os_infinite_directed_presentation::{normalize_node_display, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

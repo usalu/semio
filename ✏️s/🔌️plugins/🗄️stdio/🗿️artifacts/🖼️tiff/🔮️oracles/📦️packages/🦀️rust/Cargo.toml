@@ -20,12 +20,9 @@ role = "test"
 name = "semio_s_artifact_stdio_tiff_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = ["dep:tiff"]
-
 [dependencies]
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
-"tiff" = { version = "0.11", optional = true }
+"tiff" = { version = "0.11" }
 
 [dev-dependencies]
 "image" = { version = "0.25", default-features = false, features = ["bmp", "tiff", "jpeg"] }

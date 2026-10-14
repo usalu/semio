@@ -10,12 +10,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use crate::bounded_ownership::PluginLifecycleStep;
 use crate::sdk_fault::plugin_sdk_fault;
 
-pub trait ArtifactSnapshotDisposer<T>: Send {
-    /// 📏️ Exact per-axis grant the next [`Self::close_step`] turn needs.
-    fn retirement_demands(&self, snapshot: &Option<std::sync::Arc<T>>, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, snapshot: &mut Option<std::sync::Arc<T>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
-    fn terminal_is_empty(&self, snapshot: &Option<std::sync::Arc<T>>) -> bool;
-}
+
 
 /// 🧹️ Optional exact-owner disposer retained until the associated artifact value is empty.
 pub type ArtifactDisposal<T> = Option<Box<dyn ArtifactOwnedDisposer<T>>>;
@@ -167,7 +162,7 @@ struct BoundedConfigPreparation<C: 'static, M: 'static> {
     checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
-    closing: bool,
+    pub(crate) closing: bool,
     snapshot_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<C>>>,
     mutation_factory: Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>>,
     active_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
@@ -456,7 +451,7 @@ where
         true
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.authority.is_none() && !self.cancel_arc_live && self.terminal_handoff
     }
 }
@@ -524,103 +519,7 @@ where
     }
 }
 
-trait ErasedArtifactSnapshotDisposer: Send {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
-    fn terminal_is_empty(&self) -> bool;
-}
-
-struct TypedArtifactSnapshotDisposer<T> {
-    snapshot: Option<std::sync::Arc<T>>,
-    disposer: Box<dyn ArtifactSnapshotDisposer<T>>,
-}
-
-impl<T: Send + Sync + 'static> ErasedArtifactSnapshotDisposer for TypedArtifactSnapshotDisposer<T> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.disposer.retirement_demands(&self.snapshot, body)
-    }
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        self.disposer.close_step(&mut self.snapshot, grant)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.disposer.terminal_is_empty(&self.snapshot)
-    }
-}
-
-#[derive(Clone)]
-pub struct ArtifactSnapshotCloseLease<T> {
-    identity: std::sync::Weak<T>,
-    runtime_retained: std::sync::Arc<std::sync::atomic::AtomicBool>,
-}
-
-impl<T> ArtifactSnapshotCloseLease<T> {
-    pub(crate) fn new(external_owner: &std::sync::Arc<T>, disposer: Box<dyn ArtifactSnapshotDisposer<T>>) -> (Self, ArtifactSnapshotCloseRetention)
-    where
-        T: Send + Sync + 'static,
-    {
-        let runtime_retained = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
-        let retention = ArtifactSnapshotCloseRetention { inner: ManuallyDrop::new(Some(Box::new(TypedArtifactSnapshotDisposer { snapshot: Some(external_owner.clone()), disposer }))), runtime_retained: runtime_retained.clone() };
-        (Self { identity: std::sync::Arc::downgrade(external_owner), runtime_retained }, retention)
-    }
-
-    pub fn can_release(&self, snapshot: &std::sync::Arc<T>) -> bool {
-        self.runtime_retained.load(std::sync::atomic::Ordering::Acquire) && self.identity.ptr_eq(&std::sync::Arc::downgrade(snapshot))
-    }
-}
-
-pub(crate) struct ArtifactSnapshotCloseRetention {
-    inner: ManuallyDrop<Option<Box<dyn ErasedArtifactSnapshotDisposer>>>,
-    runtime_retained: std::sync::Arc<std::sync::atomic::AtomicBool>,
-}
-
-impl ArtifactSnapshotCloseRetention {
-    /// 📏️ Quotes the next snapshot-disposer turn; an already released retention quotes nothing.
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        let Some(inner) = self.inner.as_ref() else { return Ok(RetirementDemand::default()) };
-        if ErasedArtifactSnapshotDisposer::terminal_is_empty(&**inner) {
-            return Ok(RetirementDemand { release_bytes: size_of_val(&**inner), depth: 1, ..Default::default() });
-        }
-        let mut demand = ErasedArtifactSnapshotDisposer::retirement_demands(&**inner, body)?;
-        demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "snapshot disposer depth overflow"))?;
-        Ok(demand)
-    }
-
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-        if self.inner.is_none() {
-            return Ok(PluginLifecycleStep::Complete(Default::default()));
-        }
-        let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| plugin_sdk_fault(error.into_message()))?;
-        if grant.maximum_depth < demand.depth {
-            return Err(plugin_sdk_fault("snapshot disposer exceeds its admitted depth"));
-        }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(PluginLifecycleStep::Progress(Default::default()));
-        }
-        let Some(inner) = self.inner.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
-        if ErasedArtifactSnapshotDisposer::terminal_is_empty(&**inner) {
-            drop(self.inner.take());
-            return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
-        }
-        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        Ok(match ErasedArtifactSnapshotDisposer::close_step(&mut **inner, child)? {
-            PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => {
-                semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "snapshot disposer").map_err(|error| plugin_sdk_fault(error.into_message()))?;
-                PluginLifecycleStep::Progress(progress)
-            }
-            blocked => blocked,
-        })
-    }
-
-    pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.inner.is_none()
-    }
-}
-
-impl Drop for ArtifactSnapshotCloseRetention {
-    fn drop(&mut self) {
-        self.runtime_retained.store(false, std::sync::atomic::Ordering::Release);
-        debug_assert!(std::thread::panicking() || self.inner.is_none(), "incomplete snapshot retirement reached Drop without bounded disposal");
-    }
-}
+#[path="../🎞️media/📥️snapshot/🦀️.rs"]
+mod snapshot_source;
+pub use snapshot_source::ArtifactSnapshotCloseLease;
+pub(crate) use snapshot_source::{ArtifactMediaSnapshotSource,ArtifactSnapshotCloseRetention};

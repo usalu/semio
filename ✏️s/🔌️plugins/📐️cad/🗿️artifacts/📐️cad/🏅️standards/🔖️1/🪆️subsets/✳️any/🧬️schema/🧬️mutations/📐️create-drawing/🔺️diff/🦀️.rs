@@ -1,12 +1,12 @@
 //! 🔺️ `create-drawing` — sparse diff construction from an exact composed drawing child handle.
 
 use super::CreateDrawing;
-use crate::diff::{CadDiff, CadDrawingsDelta};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadDrawingsDelta};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateDrawing, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
-    let candidate = match crate::cad_drawing_child(&payload.child_id, &payload.target) {
+    let candidate = match semio_s_artifact_cad_cad_model::snapshot::cad_drawing_child(&payload.child_id, &payload.target) {
         Ok(candidate) => candidate,
         Err(reason) => return protocol::MutationOutcome::fatal("mutation.invariant", reason, [payload.child_id.clone()]),
     };

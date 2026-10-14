@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use crate::schema::snapshot::demo_object_snapshot;
 use protocol::{Mutation, SemanticMutation};
 

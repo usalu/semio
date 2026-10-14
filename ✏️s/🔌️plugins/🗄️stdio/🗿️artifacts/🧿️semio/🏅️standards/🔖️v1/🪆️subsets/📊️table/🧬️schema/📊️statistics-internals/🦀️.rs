@@ -7,9 +7,13 @@
 //! CONCURRENT wave M3d dissolved `semio_framework_math::algebra` entirely) sibling-subset
 //! `🔢️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
-use crate::schema::probability_internals::{ChiSquared, Continuous, Normal, StudentT};
-use crate::schema::tabular_internals::Table;
-use semio_s_artifact_stdio_semio_value::schema::algebra_internals::{MatD, VecD};
+use semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ChiSquared;
+use semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Continuous;
+use semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Normal;
+use semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::StudentT;
+use semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table;
+use semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD;
+use semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD;
 use std::collections::HashMap;
 
 // #region 🔖️Error
@@ -21,8 +25,8 @@ pub enum StatisticsError {
     SingularMatrix,
     NoConvergence { iterations: usize },
     InvalidArgument(&'static str),
-    Tabular(crate::schema::tabular_internals::TabularError),
-    Probability(crate::schema::probability_internals::ProbabilityError),
+    Tabular(semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError),
+    Probability(semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError),
 }
 
 impl std::fmt::Display for StatisticsError {
@@ -49,14 +53,14 @@ impl std::error::Error for StatisticsError {
     }
 }
 
-impl From<crate::schema::tabular_internals::TabularError> for StatisticsError {
-    fn from(error: crate::schema::tabular_internals::TabularError) -> Self {
+impl From<semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError> for StatisticsError {
+    fn from(error: semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError) -> Self {
         Self::Tabular(error)
     }
 }
 
-impl From<crate::schema::probability_internals::ProbabilityError> for StatisticsError {
-    fn from(error: crate::schema::probability_internals::ProbabilityError) -> Self {
+impl From<semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError> for StatisticsError {
+    fn from(error: semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError) -> Self {
         Self::Probability(error)
     }
 }
@@ -373,14 +377,14 @@ pub fn logistic_predict(fit: &LogisticFit, x: &MatD, intercept: bool) -> Result<
 fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, given_levels: &[usize]) -> HashMap<usize, MatD> {
     let mut tables: HashMap<usize, MatD> = HashMap::new();
     for row in 0..x.len() {
-        if x[row] == crate::schema::tabular_internals::MISSING_CODE || y[row] == crate::schema::tabular_internals::MISSING_CODE {
+        if x[row] == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE || y[row] == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         let mut stratum = 0usize;
         let mut stride = 1usize;
         let mut missing = false;
         for (k, g) in given.iter().enumerate() {
-            if g[row] == crate::schema::tabular_internals::MISSING_CODE {
+            if g[row] == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
                 missing = true;
                 break;
             }
@@ -427,7 +431,7 @@ pub fn crosstab(x: &[u32], y: &[u32], nx: usize, ny: usize) -> Result<MatD, Stat
     }
     let mut m = MatD::zeros(nx, ny);
     for (&xi, &yi) in x.iter().zip(y) {
-        if xi == crate::schema::tabular_internals::MISSING_CODE || yi == crate::schema::tabular_internals::MISSING_CODE {
+        if xi == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE || yi == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         m.add_at(xi as usize, yi as usize, 1.0);
@@ -537,7 +541,7 @@ pub fn entropy(codes: &[u32], n_levels: usize) -> Result<f64, StatisticsError> {
     let mut counts = vec![0usize; n_levels];
     let mut total = 0usize;
     for &c in codes {
-        if c == crate::schema::tabular_internals::MISSING_CODE {
+        if c == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
             continue;
         }
         counts[c as usize] += 1;

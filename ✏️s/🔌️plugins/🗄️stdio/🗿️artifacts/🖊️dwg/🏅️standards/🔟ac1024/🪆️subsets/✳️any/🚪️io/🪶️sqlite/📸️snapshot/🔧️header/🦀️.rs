@@ -1,12 +1,39 @@
 //! 🔧️ DWG header units, flags, measurements, spaces, dimensions and handle references.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::reader::{boolean,byte,document,full_unsigned,high,low,optional_unsigned,ordinal,real,signed_integer,signed_word,unsigned,word,Reader};
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgDimensionSettings;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgDrawingPolicy;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderIntegerSettings;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderModes;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderRelations;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderScalars;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderSpaceGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderStrings;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderTimeState;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderUnits;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderVariables;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgJulianDate;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::boolean;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::byte;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::document;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::real;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_word;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
-use super::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use Cell::{Integer as I,Real as R,Text as T};
 
-pub(super) fn project(projection:&mut Projection<'_,'_>,header:&DwgHeaderVariables)->Result<(),ValueError>{
+pub fn project(projection:&mut Projection<'_,'_>,header:&DwgHeaderVariables)->Result<(),ValueError>{
     projection.insert("dwg_header",&[I(1)])?;
     let v=&header.units;
     projection.insert("dwg_header_units",&[I(1),R(v.unit1_conversion),R(v.unit2_conversion),R(v.unit3_conversion),R(v.unit4_conversion),T(&v.unit1_name),T(&v.unit2_name),T(&v.unit3_name),T(&v.unit4_name)])?;
@@ -35,7 +62,6 @@ fn project_space(projection:&mut Projection<'_,'_>,id:i64,kind:&str,v:&DwgHeader
     }
     Ok(())
 }
-fn optional_words(value:Option<u64>)->[Cell<'static>;2]{match value{Some(value)=>[I(high(value)),I(low(value))],None=>[Cell::Null,Cell::Null]}}
 fn project_relations(projection:&mut Projection<'_,'_>,v:&DwgHeaderRelations)->Result<(),ValueError>{
     let paper_ucs_name=optional_words(v.paper_ucs_name);let paper_ucs_orthographic_reference=optional_words(v.paper_ucs_orthographic_reference);let paper_ucs_base=optional_words(v.paper_ucs_base);
     let model_ucs_name=optional_words(v.model_ucs_name);let model_ucs_orthographic_reference=optional_words(v.model_ucs_orthographic_reference);let model_ucs_base=optional_words(v.model_ucs_base);
@@ -45,7 +71,7 @@ fn project_relations(projection:&mut Projection<'_,'_>,v:&DwgHeaderRelations)->R
     projection.insert("dwg_header_relations",&[I(1),I(high(v.handle_seed)),I(low(v.handle_seed)),I(high(v.current_layer)),I(low(v.current_layer)),I(high(v.text_style)),I(low(v.text_style)),I(high(v.current_linetype)),I(low(v.current_linetype)),I(high(v.current_material)),I(low(v.current_material)),I(high(v.dimension_style)),I(low(v.dimension_style)),I(high(v.multiline_style)),I(low(v.multiline_style)),paper_ucs_name[0],paper_ucs_name[1],paper_ucs_orthographic_reference[0],paper_ucs_orthographic_reference[1],paper_ucs_base[0],paper_ucs_base[1],model_ucs_name[0],model_ucs_name[1],model_ucs_orthographic_reference[0],model_ucs_orthographic_reference[1],model_ucs_base[0],model_ucs_base[1],I(high(v.dimension_text_style)),I(low(v.dimension_text_style)),dimension_leader_block[0],dimension_leader_block[1],dimension_block[0],dimension_block[1],dimension_block1[0],dimension_block1[1],dimension_block2[0],dimension_block2[1],dimension_linetype[0],dimension_linetype[1],dimension_extension_linetype1[0],dimension_extension_linetype1[1],dimension_extension_linetype2[0],dimension_extension_linetype2[1],I(high(v.block_control)),I(low(v.block_control)),I(high(v.layer_control)),I(low(v.layer_control)),I(high(v.style_control)),I(low(v.style_control)),I(high(v.linetype_control)),I(low(v.linetype_control)),I(high(v.view_control)),I(low(v.view_control)),I(high(v.ucs_control)),I(low(v.ucs_control)),I(high(v.viewport_control)),I(low(v.viewport_control)),I(high(v.appid_control)),I(low(v.appid_control)),I(high(v.dimension_style_control)),I(low(v.dimension_style_control)),I(high(v.group_dictionary)),I(low(v.group_dictionary)),I(high(v.multiline_style_dictionary)),I(low(v.multiline_style_dictionary)),I(high(v.named_objects_dictionary)),I(low(v.named_objects_dictionary)),I(high(v.layout_dictionary)),I(low(v.layout_dictionary)),I(high(v.plot_settings_dictionary)),I(low(v.plot_settings_dictionary)),I(high(v.plot_style_name_dictionary)),I(low(v.plot_style_name_dictionary)),I(high(v.material_dictionary)),I(low(v.material_dictionary)),I(high(v.color_dictionary)),I(low(v.color_dictionary)),I(high(v.visual_style_dictionary)),I(low(v.visual_style_dictionary)),I(high(v.paper_space_block_record)),I(low(v.paper_space_block_record)),I(high(v.model_space_block_record)),I(low(v.model_space_block_record)),I(high(v.by_layer_linetype)),I(low(v.by_layer_linetype)),I(high(v.by_block_linetype)),I(low(v.by_block_linetype)),I(high(v.continuous_linetype)),I(low(v.continuous_linetype)),interfere_object_visual_style[0],interfere_object_visual_style[1],interfere_viewport_visual_style[0],interfere_viewport_visual_style[1],drag_visual_style[0],drag_visual_style[1]])?;
     Ok(())
 }
-pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>)->Result<DwgHeaderVariables,ValueError>{
+pub fn reconstruct(reader:&mut Reader<'_,'_,'_>)->Result<DwgHeaderVariables,ValueError>{
     document(reader.one("dwg_header")?)?;
     let r=reader.one("dwg_header_units")?;document(r)?;
     let units=DwgHeaderUnits{unit1_conversion:real(r,2)?,unit2_conversion:real(r,3)?,unit3_conversion:real(r,4)?,unit4_conversion:real(r,5)?,unit1_name:r.text(6)?.into(),unit2_name:r.text(7)?.into(),unit3_name:r.text(8)?.into(),unit4_name:r.text(9)?.into()};

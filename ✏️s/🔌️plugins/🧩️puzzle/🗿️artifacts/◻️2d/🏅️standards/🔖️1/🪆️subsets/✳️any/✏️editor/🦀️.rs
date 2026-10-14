@@ -366,7 +366,7 @@ pub fn kind_catalog_entries<'a>(snapshot: &'a Value, key: &str) -> Option<&'a [V
     snapshot.get("meta").and_then(|value| value.get("kindCatalogs")).and_then(|value| value.get(key)).and_then(|value| value.as_array()).map(|values| values.as_slice())
 }
 
-fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> Value {
+fn manifest_catalog_rows(kinds: &[semio_framework_graph_manifest::KindDef]) -> Value {
     Value::Array(
         kinds
             .iter()
@@ -392,7 +392,7 @@ fn manifest_catalog_rows(kinds: &[semio_framework_graph::manifest::KindDef]) -> 
 /// engine rejects a colourless handle kind outright, which would discard the whole catalog push.
 pub fn manifest_board_kind_catalogs_json(manifest_id: &str) -> Option<String> {
     let manifest = crate::graph_manifest::manifest_by_id(manifest_id)?;
-    let visual_port_kinds: Vec<semio_framework_graph::manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
+    let visual_port_kinds: Vec<semio_framework_graph_manifest::KindDef> = manifest.port_kinds.iter().filter(|kind| kind.presentation.as_ref().is_some_and(|p| p.get("color").is_some())).cloned().collect();
     Some(
         json!({
             "handleKinds": manifest_catalog_rows(&visual_port_kinds),

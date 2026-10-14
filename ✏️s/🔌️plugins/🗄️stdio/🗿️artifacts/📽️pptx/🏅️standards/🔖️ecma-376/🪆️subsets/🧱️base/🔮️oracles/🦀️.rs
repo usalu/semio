@@ -35,7 +35,6 @@ use semio_repo_test_host::Json;
 pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position", "replace-xml-node", "set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 //#endregion 🔖️Vocabulary
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
     use quick_xml::escape::resolve_xml_entity;
@@ -1024,7 +1023,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -1037,7 +1035,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence, proving
 /// the same `apply(inverse(m, base), apply(m, base)) == base` law `PptxMutation::inverse` proves
 /// at the Rust-model level, here against the registered reference implementation instead.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -1049,52 +1046,28 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 
 /// 🔁️ The identity round trip: decode with the independent reader, re-encode with the reference
 /// writer, no mutation applied.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's own semantic projection. @see [`oracles::project`].
-#[cfg(feature = "oracles")]
 pub fn project_pptx_mutation(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
 /// 🪢️ The package plumbing (`[Content_Types].xml` entries and every owner's relationships, in the order the package states them). @see [`oracles::project_plumbing`].
-#[cfg(feature = "oracles")]
 pub fn project_pptx_plumbing(bytes: &[u8]) -> Result<Json, String> {
     oracles::project_plumbing(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_pptx_plumbing(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_pptx_mutation(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

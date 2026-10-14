@@ -15,17 +15,17 @@ use super::*;
 use crate::standards::v_ap214::subsets::base::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::schema::snapshot::StepComplexType;
-use crate::schema::snapshot::StepEntity;
-use crate::schema::snapshot::StepFileDescription;
-use crate::schema::snapshot::StepFileName;
-use crate::schema::snapshot::StepFileSchema;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepComplexType;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::schema::snapshot::{StepTypedValue, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepTypedValue, StepValue};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
@@ -194,7 +194,7 @@ pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
 pub(crate) fn dec_populated_str_list(s: &str) -> Result<Vec<String>, String> {
     let inner = strip_brackets(s)?;
     if inner.is_empty() {
-        return Ok(crate::schema::snapshot::unpopulated_string_list());
+        return Ok(crate::standards::v_ap214::subsets::base::schema::snapshot::unpopulated_string_list());
     }
     split_top_level(inner, ',').into_iter().map(dec_str).collect()
 }

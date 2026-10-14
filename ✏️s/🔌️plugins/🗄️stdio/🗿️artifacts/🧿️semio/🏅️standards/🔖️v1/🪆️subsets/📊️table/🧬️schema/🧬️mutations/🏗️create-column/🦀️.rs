@@ -4,7 +4,8 @@
 //! alignment invariant (see `📸️snapshot/🦀️.rs`'s own doc comment).
 
 use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

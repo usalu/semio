@@ -1,14 +1,25 @@
 use semio_s_artifact_stdio_contract::apply_mutation;
 use super::*;
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::bits::DwgBitWriter;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::container::compress_r2004_section;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::container::r2004_page_checksum;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_application_info;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_dependencies;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_r2010_classes_section;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_summary_info;
+use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_template;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
 
 /// 🏛️ The real ~145KB AC1024 drawing the architectural example ships, read directly from its asset.
-const ARCHITECTURAL_DWG: &[u8] = include_bytes!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🖼️assets/🏛️architectural/🏛️architectural.dwg");
+/// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.
+fn fixture(relative: &str) -> Vec<u8> {
+    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+}
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
-    let snapshot = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::empty_dwg_snapshot();
+    let snapshot = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::empty_dwg_snapshot();
     assert_eq!(snapshot.schema, STDIO_DWG_DOCUMENT_SCHEMA);
 }
 
@@ -161,7 +172,7 @@ async fn dwg_rejects_unsupported_version() {
 
 #[semio_framework_async_macros::async_test]
 async fn dwg_reader_skips_unmodelled_object_types_without_failing() {
-    let bytes = include_bytes!("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+    let bytes = &fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
     let sections = decode_r2004_sections(bytes).expect("sections");
     let handles = sections.iter().find(|section| section.name == "AcDb:Handles").expect("handles");
     let objects = decode_r2004_handle_map(&r2004_section_data(handles).expect("handle data")).expect("handle map").len();
@@ -230,14 +241,14 @@ async fn lz_rejects_out_of_bounds_backref() {
 //#endregion 🔖️Lz77VariantUnit
 
 //#region 🔖️RealFixture
-const ARCHITECTURAL_FIXTURE: &[u8] = include_bytes!("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+static ARCHITECTURAL_FIXTURE: std::sync::LazyLock<Vec<u8>> = std::sync::LazyLock::new(|| fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg"));
 
 /// 🧪️ D1: file header decrypts cleanly and every section+page is located by name, on the
 /// real ~145KB AC1024 fixture -- the actual regression test for "sentinel + passthrough"
 /// (the pre-ticket behavior, which never found a single real section on this file).
 #[semio_framework_async_macros::async_test]
 async fn real_fixture_d1_locates_every_named_section() {
-    let sections = locate_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D1 section location");
+    let sections = locate_r2004_sections(&ARCHITECTURAL_FIXTURE[..]).expect("D1 section location");
     let expected_names =
         ["AcDb:Header", "AcDb:AuxHeader", "AcDb:Classes", "AcDb:Handles", "AcDb:Template", "AcDb:ObjFreeSpace", "AcDb:AcDbObjects", "AcDb:RevHistory", "AcDb:SummaryInfo", "AcDb:Preview", "AcDb:AppInfo", "AcDb:AppInfoHistory", "AcDb:FileDepList"];
     for name in expected_names {
@@ -266,7 +277,7 @@ async fn real_fixture_d1_locates_every_named_section() {
 /// the sections D4/D5 (stretch) would need to interpret further.
 #[semio_framework_async_macros::async_test]
 async fn real_fixture_d2_decompresses_every_section() {
-    let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
+    let sections = decode_r2004_sections(&ARCHITECTURAL_FIXTURE[..]).expect("D2 section decode");
     let mut any_errors = Vec::new();
     for section in &sections {
         for page in &section.pages {
@@ -288,7 +299,7 @@ async fn real_fixture_d2_decompresses_every_section() {
 
 #[semio_framework_async_macros::async_test]
 async fn real_fixture_r2010_object_frames_are_logically_identified() {
-    let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
+    let sections = decode_r2004_sections(&ARCHITECTURAL_FIXTURE[..]).expect("D2 section decode");
     let inventory = r2010_object_inventory(&sections).expect("R2010 object framing");
     let mut counts = std::collections::BTreeMap::new();
     for (_, object_type) in &inventory {
@@ -300,7 +311,7 @@ async fn real_fixture_r2010_object_frames_are_logically_identified() {
 
 #[semio_framework_async_macros::async_test]
 async fn real_fixture_classes_roundtrip_as_logical_records() {
-    let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
+    let sections = decode_r2004_sections(&ARCHITECTURAL_FIXTURE[..]).expect("D2 section decode");
     let section = sections.iter().find(|section| section.name == "AcDb:Classes").expect("classes section");
     let classes = decode_r2010_classes_section(&r2004_section_data(section).expect("class data")).expect("typed classes");
     assert!(!classes.is_empty(), "real fixture must contain dynamic class records");
@@ -311,8 +322,8 @@ async fn real_fixture_classes_roundtrip_as_logical_records() {
 
 #[semio_framework_async_macros::async_test]
 async fn real_fixture_named_sections_roundtrip_as_logical_records() {
-    let sections = decode_r2004_sections(ARCHITECTURAL_FIXTURE).expect("D2 section decode");
-    let document = decode_r2004_document_sections(ARCHITECTURAL_FIXTURE).expect("typed document sections");
+    let sections = decode_r2004_sections(&ARCHITECTURAL_FIXTURE[..]).expect("D2 section decode");
+    let document = decode_r2004_document_sections(&ARCHITECTURAL_FIXTURE[..]).expect("typed document sections");
     let original = |name: &str| r2004_section_data(sections.iter().find(|section| section.name == name).unwrap_or_else(|| panic!("{name} section"))).expect("section data");
     assert_eq!(encode_summary_info(&document.summary).expect("summary encode"), original("AcDb:SummaryInfo"));
     assert_eq!(encode_application_info(&document.application).expect("application encode"), original("AcDb:AppInfo"));
@@ -357,9 +368,9 @@ async fn real_fixture_page_directory_matches_header_cross_check() {
 /// 🔁 Exact imported bytes survive every persisted snapshot/diff/mutation/raw-I/O route.
 #[semio_framework_async_macros::async_test]
 async fn well_known_fixture_lossless_system_roundtrip() {
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::diff::DwgDiff;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::set_version_info;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+    use semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::schema::diff::DwgDiff;
+    use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::set_version_info;
+    use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
     use crate::standards::v_ac1024::subsets::any::io::export::encode_dwg;
     use protocol::command::DiffAlgebra;
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
@@ -367,35 +378,35 @@ async fn well_known_fixture_lossless_system_roundtrip() {
 
     assert_eq!(ARCHITECTURAL_FIXTURE.len(), 148_638);
     assert_eq!(&ARCHITECTURAL_FIXTURE[..6], b"AC1024");
-    let snapshot = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(ARCHITECTURAL_FIXTURE).expect("import fixture");
-    assert_eq!(encode_dwg(&snapshot).expect("direct export"), ARCHITECTURAL_FIXTURE);
+    let snapshot = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&ARCHITECTURAL_FIXTURE[..]).expect("import fixture");
+    assert_eq!(encode_dwg(&snapshot).expect("direct export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let raw = BinarySnapshot { schema: STDIO_BINARY_DOCUMENT_SCHEMA.into(), bytes: ARCHITECTURAL_FIXTURE.to_vec() };
     let raw_snapshot = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any::deserialize(&raw).expect("raw deserialize");
     let raw_export = crate::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any::serialize(&raw_snapshot).expect("raw serialize");
-    assert_eq!(raw_export.bytes, ARCHITECTURAL_FIXTURE);
+    assert_eq!(raw_export.bytes, &ARCHITECTURAL_FIXTURE[..]);
 
     let dsl = pack::snapshot::ArtifactDsl::print_dsl(&snapshot);
     let fixture_hex: String = ARCHITECTURAL_FIXTURE.iter().map(|byte| format!("{byte:02x}")).collect();
     assert!(!dsl.contains("physical"));
     assert!(!dsl.contains(&fixture_hex), "DSL must serialize typed snapshot state, not a native DWG hex replay");
     let dsl_snapshot = <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&dsl).expect("DSL parse");
-    assert_eq!(encode_dwg(&dsl_snapshot).expect("DSL export"), ARCHITECTURAL_FIXTURE);
+    assert_eq!(encode_dwg(&dsl_snapshot).expect("DSL export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let pack = pack::snapshot::ArtifactPack::encode_pack(&snapshot);
-    assert!(!pack.windows(ARCHITECTURAL_FIXTURE.len()).any(|window| window == ARCHITECTURAL_FIXTURE), "pack must serialize typed snapshot state, not embed the native DWG document",);
+    assert!(!pack.windows(ARCHITECTURAL_FIXTURE.len()).any(|window| window == &ARCHITECTURAL_FIXTURE[..]), "pack must serialize typed snapshot state, not embed the native DWG document",);
     let pack_snapshot = <DwgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("pack decode");
-    assert_eq!(encode_dwg(&pack_snapshot).expect("pack export"), ARCHITECTURAL_FIXTURE);
+    assert_eq!(encode_dwg(&pack_snapshot).expect("pack export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let self_diff = DwgDiff::default();
     assert!(self_diff.is_empty());
-    assert_eq!(encode_dwg(&protocol::apply_diff(&self_diff, &snapshot).expect("self-diff must apply")).expect("self-diff export"), ARCHITECTURAL_FIXTURE);
+    assert_eq!(encode_dwg(&protocol::apply_diff(&self_diff, &snapshot).expect("self-diff must apply")).expect("self-diff export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let same_version_info = DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage });
     let mut no_op_snapshot = snapshot.clone();
     let no_op_diff = apply_mutation(&mut no_op_snapshot, &same_version_info);
     assert!(no_op_diff.diff().is_empty());
-    assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), ARCHITECTURAL_FIXTURE);
+    assert_eq!(encode_dwg(&no_op_snapshot).expect("no-op export"), &ARCHITECTURAL_FIXTURE[..]);
 
     let set_text = same_version_info.print_op();
     let set_from_text = DwgMutation::parse_op(&set_text).expect("set-version-info text decode");
@@ -408,13 +419,13 @@ async fn well_known_fixture_lossless_system_roundtrip() {
     let mut header_snapshot = snapshot.clone();
     apply_mutation(&mut header_snapshot, &header_mutation);
     let header_bytes = encode_dwg(&header_snapshot).expect("supported header export");
-    assert_ne!(header_bytes, ARCHITECTURAL_FIXTURE);
+    assert_ne!(header_bytes, &ARCHITECTURAL_FIXTURE[..]);
     assert_eq!(header_bytes[0x12], header_snapshot.maintenance_version);
     assert_eq!(u16::from_le_bytes([header_bytes[0x13], header_bytes[0x14]]), 1252);
     for inverse in header_mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture").into_iter().rev() {
         apply_mutation(&mut header_snapshot, &inverse);
     }
-    assert_eq!(encode_dwg(&header_snapshot).expect("inverse export"), ARCHITECTURAL_FIXTURE);
+    assert_eq!(encode_dwg(&header_snapshot).expect("inverse export"), &ARCHITECTURAL_FIXTURE[..]);
     assert_eq!(header_snapshot, snapshot);
 }
 //#endregion 🔖️RealFixture
@@ -428,10 +439,18 @@ async fn well_known_fixture_lossless_system_roundtrip() {
 /// — mirrors `stdio.binary`/`stdio.txt`'s own `conformance_laws` module shape exactly.
 mod conformance_laws {
     use super::*;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::diff;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot;
-    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::inferences;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::bits::DwgBitWriter;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::container::compress_r2004_section;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::container::r2004_page_checksum;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_application_info;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_dependencies;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_r2010_classes_section;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_summary_info;
+    use semio_s_artifact_stdio_dwg_write_records::standards::v_ac1024::subsets::any::io::export::records::document::encode_template;
+    use semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::schema::diff;
+    use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations;
+    use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot;
+    use semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::schema::inferences;
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -439,19 +458,19 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn committed_facet_files_parse() {
         for (label, text) in [
-            ("snapshot grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-            ("mutations grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-            ("diff grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-            ("inference grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::inferences::COMPONENT_GRAMMAR_SEMIO),
+            ("snapshot grammar", semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+            ("mutations grammar", semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+            ("diff grammar", semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+            ("inference grammar", semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::io::text::inferences::COMPONENT_GRAMMAR_SEMIO),
         ] {
             let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
             assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
         }
         for (label, text) in [
-            ("snapshot protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-            ("mutations protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-            ("diff protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
-            ("inference protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::inferences::COMPONENT_PROTOCOL_SEMIO),
+            ("snapshot protocol", semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+            ("mutations protocol", semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+            ("diff protocol", semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
+            ("inference protocol", semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::io::binary::inferences::COMPONENT_PROTOCOL_SEMIO),
         ] {
             semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
         }
@@ -492,14 +511,14 @@ mod conformance_laws {
             }
         }
         for (language, source) in [
-            ("snapshot grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-            ("snapshot protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-            ("diff grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-            ("diff protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
-            ("mutation grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-            ("mutation protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-            ("inference grammar", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::inferences::COMPONENT_GRAMMAR_SEMIO),
-            ("inference protocol", semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::inferences::COMPONENT_PROTOCOL_SEMIO),
+            ("snapshot grammar", semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+            ("snapshot protocol", semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+            ("diff grammar", semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+            ("diff protocol", semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO),
+            ("mutation grammar", semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+            ("mutation protocol", semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+            ("inference grammar", semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::io::text::inferences::COMPONENT_GRAMMAR_SEMIO),
+            ("inference protocol", semio_s_artifact_stdio_dwg_inferences::standards::v_ac1024::subsets::any::io::binary::inferences::COMPONENT_PROTOCOL_SEMIO),
         ] {
             for term in forbidden {
                 assert!(!source.contains(term), "{language} retains forbidden DWG shadow term {term}");
@@ -509,8 +528,8 @@ mod conformance_laws {
             }
         }
         for term in ["hex-body", "chain remainder", "field magic fixed", "BINARY-NATIVE"] {
-            assert!(!semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO.contains(term), "snapshot grammar retains native-document persistence term {term}");
-            assert!(!semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO.contains(term), "snapshot protocol retains native-document persistence term {term}");
+            assert!(!semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO.contains(term), "snapshot grammar retains native-document persistence term {term}");
+            assert!(!semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO.contains(term), "snapshot protocol retains native-document persistence term {term}");
         }
     }
 
@@ -519,14 +538,14 @@ mod conformance_laws {
     /// second, genuinely non-trivial real-fixture recognition, beyond the minimal demo stub).
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = pack::snapshot::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot());
+        let text = pack::snapshot::ArtifactDsl::print_dsl(&semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
-        let real_snap = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(ARCHITECTURAL_DWG).expect("decode real fixture");
+        let real_snap = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg")).expect("decode real fixture");
         let real_text = pack::snapshot::ArtifactDsl::print_dsl(&real_snap);
         let (real_envelope, real_body) = store::semio_format::split_text_preamble(&real_text).expect("split preamble");
         let real_reconstructed = format!("{}\n{real_body}", real_envelope.envelope_id());
@@ -537,7 +556,7 @@ mod conformance_laws {
     /// output for every `mutations::demo_mutation_cases()` variant.
     #[semio_framework_async_macros::async_test]
     async fn ops_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for mutation in mutations::demo_mutation_cases() {
             let printed = mutation.print_op();
@@ -550,7 +569,7 @@ mod conformance_laws {
     /// `sections` triple case.
     #[semio_framework_async_macros::async_test]
     async fn diff_grammar_conformance_law() {
-        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+        let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
         for d in diff::demo_diff_cases() {
             let printed = d.print_diff();
@@ -564,26 +583,26 @@ mod conformance_laws {
     /// `encode_diff` — asserting `consumed == bytes.len()`.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
-        let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = pack::snapshot::ArtifactPack::encode_pack(&semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot());
+        let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+        let packed = pack::snapshot::ArtifactPack::encode_pack(&semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-        let real_snap = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(ARCHITECTURAL_DWG).expect("decode real fixture");
+        let real_snap = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg")).expect("decode real fixture");
         let real_packed = pack::snapshot::ArtifactPack::encode_pack(&real_snap);
         let (_, real_inner) = store::semio_format::unwrap_binary(&real_packed).expect("unwrap semio envelope (real fixture)");
         let real_trace = semio_framework_dsl::walk_protocol(&pack_spec, &real_inner).unwrap_or_else(|e| panic!("walk_protocol(pack, real fixture) failed @{}: {}", e.offset, e.message));
         assert_eq!(real_trace.consumed, real_inner.len(), "real-fixture pack walk did not consume every byte");
 
-        let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+        let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
             let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
         }
 
-        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+        let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
         for d in diff::demo_diff_cases() {
             let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
             let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));
@@ -595,18 +614,18 @@ mod conformance_laws {
     /// `print_dsl`/`encode_pack` output of `demo_dwg_snapshot()`.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
-        const FIXTURE_DSL: &str = include_str!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
-        const FIXTURE_PACK: &[u8] = include_bytes!("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
+        let fixture_dsl = String::from_utf8(fixture("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).expect("utf-8 fixture");
+        let fixture_pack = fixture("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
 
-        let demo = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot();
+        let demo = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot();
 
-        let parsed = <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <DwgSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&fixture_dsl).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_dwg_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_dwg_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactDsl::print_dsl(&demo), fixture_dsl.as_str(), "print_dsl(demo_dwg_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <DwgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <DwgSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&fixture_pack).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_dwg_snapshot()");
-        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_dwg_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(pack::snapshot::ArtifactPack::encode_pack(&demo), fixture_pack.as_slice(), "encode_pack(demo_dwg_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
     /// 🖊️ The ONLY way the two shipped fixtures are ever refreshed: real `print_dsl`/`encode_pack`
@@ -618,7 +637,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     #[ignore]
     async fn zzz_write_demo_fixtures() {
-        let demo = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot();
+        let demo = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot();
         let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets");
         std::fs::write(assets.join("🗣️.dsl.semio"), pack::snapshot::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
         std::fs::write(assets.join("🎒️.pack.semio"), pack::snapshot::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");

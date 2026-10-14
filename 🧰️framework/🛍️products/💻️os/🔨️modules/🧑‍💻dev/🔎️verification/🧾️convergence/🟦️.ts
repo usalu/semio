@@ -32,7 +32,7 @@ export function stagedConvergence(repoRoot: string, variant: string): Readonly<{
     const moduleRoot = join(modules, moduleDirectoryName(entry.pluginId, inventory));
     const stagedReceipt = join(moduleRoot, COMPONENT_RECEIPT_FILE);
     const staged = existsSync(stagedReceipt) ? readComponentReceiptV1(stagedReceipt).wasmSha256 : "-";
-    const manifest = join(moduleRoot, ".nx-artifact.json");
+    const manifest = join(moduleRoot, ".semio-artifact.json");
     const files = existsSync(manifest) ? (JSON.parse(readFileSync(manifest, "utf8")) as { files: string[] }).files : [];
     const missing = [...files.filter((file) => !existsSync(join(moduleRoot, file))), ...(files.some((file) => file.endsWith("_component.core.wasm")) ? [] : ["*_component.core.wasm"])];
     const ok = committed !== "-" && committed === dist && dist === staged && activated.has(entry.pluginId) && missing.length === 0;

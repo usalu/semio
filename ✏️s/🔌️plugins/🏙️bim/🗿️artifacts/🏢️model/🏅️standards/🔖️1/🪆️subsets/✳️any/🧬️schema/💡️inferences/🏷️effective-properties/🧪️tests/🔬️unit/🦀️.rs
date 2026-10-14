@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{ClassificationItem, ClassificationSystem, Entry, ModelDiff, PropertyDef, PropertyKind, PropertySet, PropertyTemplatePatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ClassificationSystem, PropertyDef, PropertyKind, PropertySet}, diff::{Entry, ModelDiff, patches::PropertyTemplatePatch}};
 use protocol::Inference;
 
 fn text(value: &str) -> PropertyValue {
@@ -126,7 +126,7 @@ fn a_template_edit_reaches_every_holder_it_applies_to_and_a_type_edit_its_instan
     let incremental = session.update(&after, &edit).clone();
     assert_eq!(incremental, infer(&after));
     assert!(incremental.effective_properties["wt-300"].get("Pset_WallCommon", "ThermalTransmittance").is_none(), "the type fell out of the template");
-    let retype = ModelDiff::properties("wt-300", Entry::Patched(crate::PropertySetPatch { assigned: std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), Some(text("EI30")))]))]) }));
+    let retype = ModelDiff::properties("wt-300", Entry::Patched(crate::standards::v1::subsets::any::schema::diff::PropertySetPatch { assigned: std::collections::BTreeMap::from([("Pset_WallCommon".to_string(), std::collections::BTreeMap::from([("FireRating".to_string(), Some(text("EI30")))]))]) }));
     let next = protocol::apply_diff(&retype, &after).expect("applies");
     let served = session.update(&next, &retype).clone();
     assert_eq!(served, infer(&next));

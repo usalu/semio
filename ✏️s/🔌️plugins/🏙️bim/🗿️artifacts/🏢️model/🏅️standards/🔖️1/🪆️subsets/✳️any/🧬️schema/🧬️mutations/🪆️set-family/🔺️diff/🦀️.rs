@@ -3,7 +3,7 @@
 
 use super::super::family_rules;
 use super::SetFamily;
-use crate::{Entry, FamilyCategory, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{FamilyCategory, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetFamily, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

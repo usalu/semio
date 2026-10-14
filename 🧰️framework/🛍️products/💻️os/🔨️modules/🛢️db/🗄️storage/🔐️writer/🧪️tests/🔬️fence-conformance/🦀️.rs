@@ -6,7 +6,6 @@
 //! <postgres|neo4j> -- …` and cross-check the lock through that server's own client (`psql` on the run
 //! database, `cypher-shell`), so they are `#[ignore]`d outside `wal-writer-fence-live` under a claim.
 use crate::db_ids::{ArtifactId, DbError};
-#[cfg(any(feature = "postgres", feature = "neo4j"))]
 use crate::db_storage::claimed_backend;
 use crate::db_storage::{db_io_copy_pages, db_io_test_pool, DbIoPages, WalStorage, WalWriterPermit};
 use std::process::Command;
@@ -27,17 +26,13 @@ async fn pages(bytes: &[u8]) -> DbIoPages {
 #[derive(Clone)]
 enum FenceTarget {
     Sqlite { path: String },
-    #[cfg(feature = "postgres")]
     Postgres { url: String },
-    #[cfg(feature = "neo4j")]
     Neo4j { uri: String, user: String, password: String },
 }
 
 enum FenceStorage {
     Sqlite(crate::db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(crate::db_storage_neo4j::Neo4jStorage),
 }
 
@@ -45,9 +40,7 @@ impl FenceStorage {
     async fn acquire(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
         match self {
             Self::Sqlite(storage) => storage.acquire_writer(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.acquire_writer(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.acquire_writer(document).await,
         }
     }
@@ -55,9 +48,7 @@ impl FenceStorage {
     async fn create(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Sqlite(storage) => storage.create_segment(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.create_segment(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.create_segment(writer, index).await,
         }
     }
@@ -66,9 +57,7 @@ impl FenceStorage {
         let bytes = pages(bytes).await;
         match self {
             Self::Sqlite(storage) => storage.append(writer, index, bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.append(writer, index, bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.append(writer, index, bytes).await,
         }
     }
@@ -76,9 +65,7 @@ impl FenceStorage {
     async fn seal(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Sqlite(storage) => storage.seal(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.seal(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.seal(writer, index).await,
         }
     }
@@ -86,9 +73,7 @@ impl FenceStorage {
     async fn delete(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Sqlite(storage) => storage.delete_segment(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.delete_segment(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.delete_segment(writer, index).await,
         }
     }
@@ -96,9 +81,7 @@ impl FenceStorage {
     async fn length(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         match self {
             Self::Sqlite(storage) => storage.segment_len(document, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.segment_len(document, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.segment_len(document, index).await,
         }
     }
@@ -106,9 +89,7 @@ impl FenceStorage {
     async fn close(self) {
         match self {
             Self::Sqlite(storage) => storage.close().await.unwrap(),
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.close().await.unwrap(),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.close().await.unwrap(),
         }
     }
@@ -118,9 +99,7 @@ impl FenceTarget {
     fn backend(&self) -> &'static str {
         match self {
             Self::Sqlite { .. } => "sqlite",
-            #[cfg(feature = "postgres")]
             Self::Postgres { .. } => "postgres",
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { .. } => "neo4j",
         }
     }
@@ -128,9 +107,7 @@ impl FenceTarget {
     fn encode(&self) -> String {
         match self {
             Self::Sqlite { path } => format!("sqlite\n{path}"),
-            #[cfg(feature = "postgres")]
             Self::Postgres { url } => format!("postgres\n{url}"),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { uri, user, password } => format!("neo4j\n{uri}\n{user}\n{password}"),
         }
     }
@@ -139,9 +116,7 @@ impl FenceTarget {
         let parts: Vec<&str> = encoded.split('\n').collect();
         match parts[0] {
             "sqlite" => Self::Sqlite { path: parts[1].to_string() },
-            #[cfg(feature = "postgres")]
             "postgres" => Self::Postgres { url: parts[1].to_string() },
-            #[cfg(feature = "neo4j")]
             "neo4j" => Self::Neo4j { uri: parts[1].to_string(), user: parts[2].to_string(), password: parts[3].to_string() },
             other => panic!("unknown fence target {other}"),
         }
@@ -151,9 +126,7 @@ impl FenceTarget {
         let pool = db_io_test_pool();
         match self {
             Self::Sqlite { path } => FenceStorage::Sqlite(crate::db_storage_sqlite::SqliteStorage::open(pool, std::path::Path::new(path)).await.unwrap()),
-            #[cfg(feature = "postgres")]
             Self::Postgres { url, .. } => FenceStorage::Postgres(crate::db_storage_postgres::PostgresStorage::connect(pool, url).await.unwrap()),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { uri, user, password } => FenceStorage::Neo4j(crate::db_storage_neo4j::Neo4jStorage::connect(pool, uri, user, password).await.unwrap()),
         }
     }
@@ -164,13 +137,11 @@ impl FenceTarget {
     fn independent_holders(&self, document: &str) -> Option<u64> {
         match self {
             Self::Sqlite { .. } => None,
-            #[cfg(feature = "postgres")]
             Self::Postgres { .. } => {
                 let sql = "SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid WHERE l.locktype = 'advisory' AND l.granted AND a.application_name = 'semio-wal-writer' AND a.datname = current_database()";
                 let _ = document;
                 Some(claimed_backend::client(sql).parse().unwrap())
             }
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) WHERE w.holder IS NOT NULL AND w.expiresAtMs > timestamp() RETURN count(w) AS live");
                 Some(claimed_backend::client(&cypher).lines().last().unwrap().trim().parse().unwrap())
@@ -182,12 +153,10 @@ impl FenceTarget {
     fn lose_ownership(&self, document: &str) {
         match self {
             Self::Sqlite { .. } => panic!("a SQLite sidecar lock is only lost with its process"),
-            #[cfg(feature = "postgres")]
             Self::Postgres { .. } => {
                 let sql = "SELECT count(*) FROM (SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = 'semio-wal-writer' AND datname = current_database()) AS terminated";
                 assert_eq!(claimed_backend::client(sql), "1");
             }
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) SET w.expiresAtMs = 0 RETURN w.token AS token");
                 claimed_backend::client(&cypher);
@@ -197,7 +166,6 @@ impl FenceTarget {
 
     fn token(&self, document: &str) -> Option<u64> {
         match self {
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { .. } => {
                 let cypher = format!("MATCH (w:WalWriter {{document: '{document}'}}) RETURN w.token AS token");
                 Some(claimed_backend::client(&cypher).lines().last().unwrap().trim().parse().unwrap())
@@ -352,7 +320,6 @@ async fn sqlite_wal_writer_fence_holds_every_shared_law() {
     let _ = std::fs::remove_dir_all(root);
 }
 
-#[cfg(feature = "postgres")]
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- bun repo run @semio-tech/framework-os-kernel:wal-writer-fence-live postgres`"]
 async fn postgres_wal_writer_fence_holds_every_shared_law() {
@@ -363,7 +330,6 @@ async fn postgres_wal_writer_fence_holds_every_shared_law() {
     run_fence_laws(FenceTarget::Postgres { url }, "db_storage::writer::fence_conformance::postgres_wal_writer_fence_holds_every_shared_law").await;
 }
 
-#[cfg(feature = "neo4j")]
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- bun repo run @semio-tech/framework-os-kernel:wal-writer-fence-live neo4j`"]
 async fn neo4j_wal_writer_fence_holds_every_shared_law() {

@@ -67,9 +67,9 @@ fn preview_view_state() -> String {
 /// 🍄️ Loads the bundled example and renders its preview so the retained evaluation session, the
 /// window-transient partitions and the tessellation request table are all live at close time.
 async fn arm_generation3d_preview(runtime: &ProceduralRuntime) {
-    let dsl = semio_s_artifact_procedural_generation3d::examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT;
+    let dsl = semio_s_artifact_procedural_3d_examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT;
     let booted = plugin_document_text(runtime, CLOSE_INSTANCE).await.expect("booted generation3d document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("hexagonal-mushroom-column loads into the booted instance");
+    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("hexagonal-mushroom-column loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
@@ -151,7 +151,7 @@ const CLOSE_COST_FIXTURE: &str = include_str!("../🧫️fixtures/🚪️close-l
 /// 📚️ The bundled generation3d examples, in the order a long editor session picks them — each load
 /// retains another document, another history frame and another tessellation generation.
 fn example_documents() -> Vec<&'static str> {
-    use semio_s_artifact_procedural_generation3d::examples as art;
+    use semio_s_artifact_procedural_3d_examples as art;
     vec![
         art::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT,
         art::art_generation3d_rectangle_extrude_volume::PRIMARY_TEXT,
@@ -171,7 +171,7 @@ async fn replay_session(runtime: &ProceduralRuntime, documents: usize, renders_p
     let view_state = preview_view_state();
     for dsl in example_documents().into_iter().take(documents) {
         let booted = settled_document_text(runtime).await;
-        semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("session example loads");
+        semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("session example loads");
         for _ in 0..renders_per_document {
             let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
             turn(runtime, Vec::new()).await;

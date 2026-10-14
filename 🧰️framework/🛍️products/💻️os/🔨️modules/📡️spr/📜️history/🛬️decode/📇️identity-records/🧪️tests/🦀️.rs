@@ -1,6 +1,6 @@
 use super::*;
 use semio_framework_value::ErasedSnapshotRetirement;
-use super::super::retained_history_transition::tests::close_original;
+use crate::test_retirement::close_original;
 use semio_framework_value::native_decoding::{NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeRetirementRecipient};
 #[derive(Clone,Copy)]struct OriginalPages<'a>{pages:&'a[&'a[u8]],page_bytes:usize,identity:OriginalWireSourceIdentity}
 impl RetainedWireByteSource for OriginalPages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.get(index/self.page_bytes)?.get(index%self.page_bytes).copied()}}

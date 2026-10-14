@@ -12,8 +12,8 @@
 //! `0.0`, same convention `🏗️ifc`'s bounds fold uses for honestly-2D placements. A pure
 //! whole-snapshot scalar (one min/max fold) — no `InferredField` needed.
 
-use crate::schema::snapshot::StepValue;
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepValue;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ STEP AP214's `CARTESIAN_POINT`-derived spatial bounding box.

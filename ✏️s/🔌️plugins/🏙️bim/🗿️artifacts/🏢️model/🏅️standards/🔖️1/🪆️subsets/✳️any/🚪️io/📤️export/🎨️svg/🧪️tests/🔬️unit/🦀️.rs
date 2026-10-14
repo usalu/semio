@@ -3,14 +3,14 @@ use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags, HOUSE_DIR};
 use crate::standards::v1::subsets::any::io::io;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
-use crate::ViewKind;
+use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
 use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 
 #[test]
 fn the_declaration_lists_the_svg_export_between_the_bim_and_the_svg_dialect() {
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == SVG_DIALECT).expect("the SVG entry");
-    assert_eq!((entry.from, entry.direction), (crate::BIM_MODEL_DIALECT, IoEntryDirection::Export));
+    assert_eq!((entry.from, entry.direction), (crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
     assert_eq!((SVG_DIALECT.artifact_kind, SVG_DIALECT.standard.0), ("s.stdio.svg", "1.1"));
 }
 

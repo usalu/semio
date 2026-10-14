@@ -1,12 +1,13 @@
 //! 🧪️ Registry laws: one compute per catalogue kind, no unknown or duplicate ids, every registered compute honours the output contract.
 
-use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::compute::{WidgetStep,GeometryComputeContext};
-use crate::standards::v1::subsets::any::io::geometry::NativeGeometryComputeContext;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::contract_checked;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::inputs::resolve_inputs;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext;
+use semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext;
+use crate::contract_checked;
+use semio_s_artifact_procedural_3d_geometry_inputs::resolve_inputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use std::collections::BTreeSet;
 
@@ -17,11 +18,11 @@ fn localized(fault: &WidgetFault) -> bool {
 #[test]
 fn every_registered_id_is_a_catalogue_kind_and_registered_once() {
     let mut seen = BTreeSet::new();
-    for entry in TABLES.iter().chain(crate::standards::v1::subsets::any::io::geometry::TABLES).flat_map(|table| table.iter()) {
+    for entry in TABLES.iter().chain(semio_s_artifact_procedural_3d_io_geometry::TABLES).flat_map(|table| table.iter()) {
         assert!(catalogue().kind(entry.id).is_some(), "{} is not a catalogue kind", entry.id);
         assert!(seen.insert(entry.id), "{} is registered twice", entry.id);
     }
-    assert_eq!(registered().len()+crate::standards::v1::subsets::any::io::geometry::index().len(),seen.len());
+    assert_eq!(registered().len()+semio_s_artifact_procedural_3d_io_geometry::index().len(),seen.len());
     assert!(["math.number", "math.plane", "brep.primitive.box", "brep.primitive.sphere"].iter().all(|id| lookup(id).is_some()));
 }
 

@@ -7,24 +7,24 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::CadMutation;
-use crate::CadSnapshot;
+use crate::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::Mutation;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json").leak());
+static AFTER: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/➡️after/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/➡️after/🔣️.json").leak());
+static MUTATION: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🦠️mutation/🔣️.json").leak());
+static DIFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🔺️diff/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🔺️diff/🔣️.json").leak());
+static OUTCOME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🎯️outcome/🔣️.json")).expect("../../../../🧪️tests/🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/🎯️outcome/🔣️.json").leak());
 
 fn before() -> CadSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: before snapshot decodes")
+    semio_framework_pack_json::from_json_str(*BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: before snapshot decodes")
 }
 fn expected_after() -> CadSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: after snapshot decodes")
+    semio_framework_pack_json::from_json_str(*AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: after snapshot decodes")
 }
 fn mutation() -> CadMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: mutation decodes")
+    semio_framework_pack_json::from_json_str(*MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: mutation decodes")
 }
 fn applied() -> CadSnapshot {
     let base = before();
@@ -70,21 +70,21 @@ async fn inverse_reinstalls_the_escrowed_structure_classic_handle() {
 /// 🔣️ Both committed snapshots and the committed mutation are canonical: decode→encode is a fixed point.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", *BEFORE), ("after", *AFTER)] {
         let decoded: CadSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-structure-classic-model/vacates-the-structure-classic-slot: committed {label} JSON is not canonical");
     }
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&(mutation()))).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let original: serde_json::Value = serde_json::from_str(*MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-structure-classic-model/vacates-the-structure-classic-slot: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `delete-structure-classic-model`'s own diff builder actually produces.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
+    let declared: serde_json::Value = serde_json::from_str(*OUTCOME).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-structure-classic-model/vacates-the-structure-classic-slot: this fixture declares an applied outcome");
     let base = before();
     let produced = mutation().diff(&base);
@@ -104,7 +104,7 @@ async fn produces_committed_diff() {
     let base = before();
     let outcome = mutation().diff(&base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let committed: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-structure-classic-model/vacates-the-structure-classic-slot: delete-structure-classic-model must touch nothing but `structureClassicModel`, whose vacated arm renders as `null`");
 }
 
@@ -113,9 +113,9 @@ async fn produces_committed_diff() {
 /// the wire and the untouched ones must be committed as explicit `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let original: serde_json::Value = serde_json::from_str(*DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-structure-classic-model/vacates-the-structure-classic-slot: committed diff JSON is not canonical");
 }
 
@@ -134,8 +134,8 @@ async fn committed_diff_applies_to_after() {
     let in_memory = mutation().diff(&base).diff().clone();
     assert_eq!(protocol::apply_diff(&in_memory, &base).expect("the in-memory diff applies"), expected_after(), "delete-structure-classic-model/vacates-the-structure-classic-slot: the in-memory diff must carry before to after");
 
-    let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    assert_eq!(decoded, crate::diff::CadDiff::default(), "delete-structure-classic-model/vacates-the-structure-classic-slot: a `null` structureClassicModel is indistinguishable from an untouched one, so the decoded diff is empty");
+    let decoded: semio_s_artifact_cad_cad_model::diff::CadDiff = semio_framework_pack_json::from_json_str(*DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
+    assert_eq!(decoded, semio_s_artifact_cad_cad_model::diff::CadDiff::default(), "delete-structure-classic-model/vacates-the-structure-classic-slot: a `null` structureClassicModel is indistinguishable from an untouched one, so the decoded diff is empty");
     assert_eq!(protocol::apply_diff(&decoded, &base).expect("the decoded diff applies"), base, "delete-structure-classic-model/vacates-the-structure-classic-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
 }
 

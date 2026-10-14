@@ -45,7 +45,7 @@ pub fn render(document: &Generation2dSnapshot, generation: &GenerationPlayState,
     let Some(current) = selected_generation(generation) else {
         return built_text_node(semio_framework_ui_locale::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
-    crate::generation_form(&spec, &current.values, GENERATION2D_PLAY_APP_ID, "updateGenerationValues", &current.id)
+    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION2D_PLAY_APP_ID, "updateGenerationValues", &current.id)
 }
 //#endregion 🔖️Render
 

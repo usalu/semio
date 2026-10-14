@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "nodes",
+    "expected",
+    "slices",
+    "cancelledValues",
+    "resumeComputes",
+    "caller",
+    "turnItems",
+    "minimumComputeSteps"
+  ],
+  "properties": {
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "weight",
+          "parents"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "integer"
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "slices": {
+      "const": 3
+    },
+    "cancelledValues": {
+      "const": {
+        "root": 1
+      }
+    },
+    "resumeComputes": {
+      "const": 4
+    },
+    "caller": {
+      "const": {
+        "operation": 971,
+        "generation": 19,
+        "clockUs": 1,
+        "deadlineUs": 1000000,
+        "fuel": 65536,
+        "stock": [
+          32768,
+          1048576,
+          16777216,
+          16777216,
+          64
+        ]
+      }
+    },
+    "turnItems": {
+      "const": [
+        1,
+        2,
+        3,
+        12
+      ]
+    },
+    "minimumComputeSteps": {
+      "const": 12
+    }
+  },
+  "additionalProperties": false
+}

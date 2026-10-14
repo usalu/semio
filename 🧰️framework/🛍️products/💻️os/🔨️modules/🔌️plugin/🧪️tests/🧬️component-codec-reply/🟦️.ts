@@ -10,7 +10,11 @@ type TestSource = { readonly directory: string; readonly url: string };
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
   const { default: fixture } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🧪️tests/🧫️fixtures/🔣️.json");
-  const { actorCodecAnswer, ACTOR_CODEC_REFUSAL } = await import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts");
+  const { actorCodecAnswer } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts");
+  const { OriginalOperationSource } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts");
+  const { KernelOriginalBootstrapStock, originalBootstrapStockFromWire } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🟦️.ts");
+  const { default: stockFixture } = await import("../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/🏛️bootstrap/🧪️tests/🧫️fixtures/📋️composition.json");
+  type CodecExports = import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecExports;
   type Case = (typeof fixture.cases)[number];
   type Pair = { readonly packHex: string; readonly sprHex: string };
 
@@ -19,17 +23,18 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
   const pair = (value: Pair) => ({ pack: bytes(value.packHex), spr: bytes(value.sprHex) });
   const request = (row: Case): Record<string, unknown> => ("pair" in row.request && row.request.pair ? { ...row.request, pair: pair(row.request.pair as Pair) } : { ...row.request });
   const componentFault = (value: unknown): Error => Object.defineProperty(new Error(`${String(value)} (see error.payload)`), "payload", { value, enumerable: true });
-  const codecFor = (row: Case) => {
+  const codecFor = (row: Case): CodecExports | undefined => {
     const behaviour = row.component as Record<string, unknown>;
     if (behaviour.exported === false) return undefined;
-    const answer = async (): Promise<unknown> => {
+    const refuse = (): void => {
       if (typeof behaviour.throws === "string") throw new Error(behaviour.throws);
       if (typeof behaviour.faultHex === "string") throw componentFault({ tag: "fault", val: bytes(behaviour.faultHex) });
-      if (typeof behaviour.bytesHex === "string") return bytes(behaviour.bytesHex);
-      if (behaviour.pair) return pair(behaviour.pair as Pair);
-      return behaviour.mirror;
     };
-    return { packSchemaHash: answer, genesis: answer, printMirror: answer } as never;
+    return {
+      packSchemaHash: async () => { refuse(); return bytes(behaviour.bytesHex as string); },
+      genesis: async () => { refuse(); return pair(behaviour.pair as Pair); },
+      printMirror: async () => { refuse(); const mirror = behaviour.mirror as readonly [string, string]; return mirror; },
+    };
   };
   const verdict = async (call: () => Promise<unknown>): Promise<Record<string, unknown>> => {
     try {
@@ -46,35 +51,49 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
   };
 
   describe("ShardComponentCodecLane", () => {
-    it("names the exact refusals the codec leaf declares", async () => {
-      expect(fixture.refusals).toEqual({ ...ACTOR_CODEC_REFUSAL });
-    });
-
-    it("answers every fixture case identically in the leaf arm and in the generated bridge", async () => {
-      const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs");
-      const { tmpdir } = await import("node:os");
+    it("answers every General codec fixture through the generated product bridge", async () => {
+      const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
       const { join } = await import("node:path");
       const { pathToFileURL } = await import("node:url");
-      const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { pluginComponentBridgeSource, hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
       const { APP_CHANNEL_VERSION } = await import("../../../../🟦️.ts");
-      const directory = mkdtempSync(join(tmpdir(), "semio-codec-bridge-"));
+      const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!artifactBase) throw Error("SEMIO_TEST_ARTIFACT_DIR is required for generated bridge evidence");
+      mkdirSync(artifactBase, { recursive: true });
+      const directory = mkdtempSync(join(artifactBase, "codec-bridge-"));
+      const stock = new KernelOriginalBootstrapStock(originalBootstrapStockFromWire(stockFixture));
+      const clock = () => BigInt(Math.floor(performance.now() * 1000));
       try {
         writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
-        writeFileSync(join(directory, "🟨️.js"), "export const __resolveEffect = () => {}; export const __rejectEffect = () => {};\n");
+        writeFileSync(join(directory, "🟨️.js"), hostShimSource());
         writeFileSync(join(directory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
         const observed: Record<string, unknown>[] = [];
         for (const [index, row] of fixture.cases.entries()) {
           const codec = codecFor(row);
-          const leaf = await verdict(() => actorCodecAnswer(codec, request(row) as never));
           (globalThis as { __semioCodecFixture?: unknown }).__semioCodecFixture = codec;
           const bridge = await import(`${pathToFileURL(join(directory, "🌉️bridge.js")).href}?case=${index}`);
-          const api = await bridge.createActorApi(`a${index}`, 1n);
-          const generated = await verdict(() => api.codec(request(row)));
-          expect(leaf, `${row.id} (leaf)`).toEqual(row.expected);
-          expect(generated, `${row.id} (generated bridge)`).toEqual(row.expected);
-          observed.push({ id: row.id, ...generated });
+          const original = stock.admit();
+          let api: { readonly originalSource: Pick<InstanceType<typeof OriginalOperationSource>, "close" | "issue">; readonly codec: (request: Record<string, unknown>) => Promise<unknown> } | undefined;
+          try {
+            api = await bridge.createActorApi(`a${index}`, 1n, original, clock, { receipt: (receipt: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts").OriginalOperationReceipt) => stock.receive(original, receipt), hold: (refusal: unknown) => stock.hold(original, refusal) });
+            if (!api) throw Error("Missing generated codec bridge API");
+            const mounted = api;
+            const generated = await verdict(() => mounted.codec(request(row)));
+            expect(generated, `${row.id} (generated bridge)`).toEqual(row.expected);
+            observed.push({ id: row.id, ...generated });
+          } catch (failure) {
+            if (!api) stock.hold(original, failure);
+            throw failure;
+          } finally {
+            if (api) {
+              api.originalSource.close();
+              expect(() => api.originalSource.issue()).toThrow("original-turn.closed");
+              stock.returnClosed(original, true);
+            }
+          }
         }
-        console.log(`shard-component-codec.bridge ${JSON.stringify(observed)}`);
+        expect(stock.liveSources).toBe(0);
+        console.log(`[DEBUG] shard-component-codec.bridge ${JSON.stringify(observed)}`);
       } finally {
         delete (globalThis as { __semioCodecFixture?: unknown }).__semioCodecFixture;
         rmSync(directory, { recursive: true, force: true });
@@ -87,6 +106,9 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const posted: Record<string, unknown>[] = [];
       let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
       let row = fixture.cases[0]!;
+      const stock = new KernelOriginalBootstrapStock(originalBootstrapStockFromWire(stockFixture)), original = stock.admit();
+      const originalSource = new OriginalOperationSource(original, () => BigInt(Math.floor(performance.now() * 1000)));
+      try {
       const context = vm.createContext({
         WebAssembly: { Suspending: class {}, promising: (value: unknown) => value },
         TextDecoder,
@@ -94,7 +116,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         setInterval: () => null,
         clearInterval: () => {},
         self: { postMessage: (message: Record<string, unknown>) => posted.push(message), addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } },
-        api: { codec: (codecRequest: never) => actorCodecAnswer(codecFor(row), codecRequest) },
+        api: { originalSource, codec: (codecRequest: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ShardCodecRequest) => actorCodecAnswer(codecFor(row), codecRequest) },
       });
       new vm.Script(shardWorkerSource()).runInContext(context);
       new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(context);
@@ -119,6 +141,12 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       await send({ data: { kind: "codec", requestId: "stale", actorId: "a", activationGeneration: 2n, request: request(row) } });
       expect(answered("stale")?.ok).toBe(false);
       expect(answered("stale")?.error).toContain("actor-lifecycle.activation-mismatch");
+      } finally {
+        originalSource.close();
+        expect(() => originalSource.issue()).toThrow("original-turn.closed");
+        stock.returnClosed(original, true);
+      }
+      expect(stock.liveSources).toBe(0);
     });
   });
 }

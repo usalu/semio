@@ -2,9 +2,9 @@
 //! `set-element-phase` or `set-element-storey` mutation. One definition serves every kind that carries the field, so the properties panel offers the same combobox on a wall, a slab or a space.
 
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::set_element_phase::SetElementPhase;
-use crate::mutations::set_element_storey::SetElementStorey;
-use crate::{ModelMutation, ModelSnapshot, Phase};
+use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Phase}};
 
 //#region 🔖️Phase
 /// 🕰️ The four construction phases by their localized names, in the order of a project's life.

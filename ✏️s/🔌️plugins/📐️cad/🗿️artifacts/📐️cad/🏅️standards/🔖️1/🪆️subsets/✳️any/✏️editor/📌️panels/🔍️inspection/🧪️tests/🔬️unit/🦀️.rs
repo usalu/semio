@@ -1,9 +1,10 @@
-use super::*;
-use crate::editor::cad::terminology::cad_labels;
-use crate::editor::cad::unit_tests::context::*;
-use crate::editor::cad::{forest_working_scene, CadPlayRuntime};
-use crate::standards::v1::subsets::any::schema::inferences::CAD_EXAMPLE_FOREST_LEFT;
-use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_ENERGY};
+use semio_s_artifact_cad_cad_panels::inspection::*;
+use semio_s_artifact_cad_cad_kit::editor::cad::terminology::cad_labels;
+use semio_s_artifact_cad_cad_editor::unit_tests::context::*;
+use semio_s_artifact_cad_cad_editor::forest_working_scene;
+use semio_s_artifact_cad_cad_kit::CadPlayRuntime;
+use semio_s_artifact_cad_cad_inferences::CAD_EXAMPLE_FOREST_LEFT;
+use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene, CAD_MODEL_DEFINITION_ENERGY};
 use semio_framework_ui_locale::Locale;
 use semio_framework_ui_locale::Terminology;
 use semio_framework_plugin::TreeWindows;

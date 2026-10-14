@@ -4,7 +4,7 @@
 
 use super::super::elements;
 use super::SetElementProperty;
-use crate::{Entry, ModelDiff, ModelSnapshot, PropertySet, PropertySetPatch, PropertyValue};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, PropertySetPatch}, snapshot::{ModelSnapshot, PropertySet, PropertyValue}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

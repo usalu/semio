@@ -1,0 +1,11 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/🦀️.rs",
+ "budget": {"lines": 3800, "bytes": 250000, "files": 30},
+ "order": ["records", "objects", "write"],
+ "rules": [
+  ["/🚪️io/📤️export/🧱️records/", "records"],
+  ["/🚪️io/📤️export/📦️objects/", "objects"],
+  [".", "write"]
+ ]
+}

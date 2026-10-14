@@ -3,6 +3,9 @@ import { lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, 
 import { dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
+import custodySchema from "./🧬️schema/🎟️custody.json" with {type:"json"};
+import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
+import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/🟦️.ts";
 
 export type ResourceAccess = { readonly resource: string; readonly mode: "shared" | "exclusive" };
 export type LeaseWait = ResourceAccess & { readonly elapsedMs: number };
@@ -12,6 +15,7 @@ export type LeaseOptions = ResourceAccess & {
   readonly timeoutMs?: number;
   readonly onWait?: (progress: LeaseWait) => void | Promise<void>;
   readonly control?: ResourceLeaseControl;
+  readonly maximumDatabaseBytes?: number;
 };
 /** 🎛️ Preserves an admitted caller's existing signal, deadline and awaited wait transitions. */
 export interface ResourceLeaseControl {
@@ -67,6 +71,9 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 export type ResourceLease = ResourceAccess & { release(): void };
 type LeaseDatabase = { exec(sql: string): void; read(sql: string, ...values: string[]): Record<string, unknown> | undefined; close(): void };
 const APPLICATION_ID = 0x534d4c53;
+
+/** 🗜️ Gives system SQLite a closed page limit before its first bootstrap write. */
+export function resourceLeaseMaximumPagesV1(maximumDatabaseBytes:number):number{if(validateJsonSchemaSubset(boundedSchema,{version:1,maximumDatabaseBytes}).length||maximumDatabaseBytes%4096!==0)throw Error("Closed bootstrap SQLite capacity required");return maximumDatabaseBytes/4096;}
 
 /** 🗃️ Bun's own SQLite, named through a constant rather than inline. The specifier is a Bun BUILTIN:
  * a bundler asked to analyse this module refuses it outright ("Cannot bundle built-in module"), which
@@ -126,7 +133,9 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
   if (!["shared", "exclusive"].includes(options.mode)) throw new Error("Invalid resource access mode");
   if (options.timeoutMs !== undefined && (!Number.isFinite(options.timeoutMs) || options.timeoutMs < 0)) throw new Error("Invalid resource lease timeout");
   const started = Date.now(); remaining(options, started);
-  const database = await openDatabase(databasePath(options.directory, options.resource));
+  const maximumPages=options.maximumDatabaseBytes===undefined?undefined:resourceLeaseMaximumPagesV1(options.maximumDatabaseBytes),path=databasePath(options.directory,options.resource);
+  if(maximumPages!==undefined){try{if(lstatSync(path).size>options.maximumDatabaseBytes!)throw Error("Original bootstrap SQLite exceeds capacity");}catch(error){if((error as NodeJS.ErrnoException).code!=="ENOENT")throw error;}}
+  const database = await openDatabase(path);
   let nextProgress = 0, acquired = false;
   try {
     database.exec("PRAGMA busy_timeout = 0; PRAGMA trusted_schema = OFF");
@@ -134,6 +143,7 @@ export async function acquireResourceLease(options: LeaseOptions): Promise<Resou
       const budget = remaining(options, started);
       if (options.timeoutMs !== 0 && budget <= 0) throw new Error(`Resource lease timed out: ${options.resource}`);
       try {
+    if(maximumPages!==undefined){database.exec("PRAGMA page_size=4096");if(database.read("PRAGMA page_size")?.page_size!==4096||Number(database.read(`PRAGMA max_page_count=${maximumPages}`)?.max_page_count)!==maximumPages)throw Error("Actual bootstrap SQLite page cap refused");}
         if (database.read("PRAGMA journal_mode")?.journal_mode !== "delete") throw new Error("Resource lease requires rollback journal mode");
         initialize(database, options.resource);
         database.exec(options.mode === "exclusive" ? "BEGIN EXCLUSIVE" : "BEGIN");
@@ -174,7 +184,7 @@ export function resourceQueueTicketV1(request:{readonly arrivedAtMs:number;reado
   const rule=queueSchema.definitions.Protocol.const;return `${request.arrivedAtMs.toString(rule.arrivalBase).padStart(rule.arrivalDigits,"0")}-${String(request.pid).padStart(rule.pidDigits,"0")}-${request.owner}`;
 }
 
-function arrival(name:string):number{const field=name.split("-")[0]!;return field.length===queueSchema.definitions.Protocol.const.arrivalDigits?Number.parseInt(field,queueSchema.definitions.Protocol.const.arrivalBase):Number(field);}
+function arrival(name:string):number{const field=name.split("-")[0]!;return Number.parseInt(field,queueSchema.definitions.Protocol.const.arrivalBase);}
 
 /** 🔁️ Retries an interrupted filesystem read while preserving cancellation and original permanent errors. */
 export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, read: () => T, control?: ResourceLeaseControl): Promise<T> {
@@ -188,21 +198,10 @@ export async function retryInterruptedFilesystemRead<T>(signal: AbortSignal, rea
   }
 }
 
-/** 🚦️ Whether the process that wrote a queue ticket still exists (EPERM means it exists under another user). */
-function ticketAlive(pid: number): boolean {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return false;
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return (error as NodeJS.ErrnoException).code === "EPERM";
-  }
-}
+/** 🎟️ Names the independently held original queue custody before publishing any arrival ticket. */
+export function resourceQueueClaimV1(directory:string,resource:string,ticket:string):Readonly<{directory:string;resource:string}>{const claimDirectory=requireMaterializedPathV1(join(directory,custodySchema.properties.claimDirectory.const)),claimResource=custodySchema.properties.resourcePrefix.const+createHash("sha256").update(resource).digest("hex")+":"+ticket;resourceLeasePathV1(claimDirectory,claimResource);return Object.freeze({directory:claimDirectory,resource:claimResource});}
 
-/** 🚦️ Serves one resource in ARRIVAL order: every waiter files a ticket named by its arrival time, only the oldest live
- * ticket may try the lease, and a ticket whose process is gone is swept, so a crashed waiter never blocks the queue and a
- * long queue (a fleet of agents sharing one wasm build) is neither starved nor overtaken. The lease itself is
- * {@link acquireResourceLease}, so the kernel still releases a crashed holder. The ticket is removed on every exit. */
+/** 🚦️ Serves original kernel-held tickets in arrival order; an exclusive SQLite claim alone proves abandoned custody. */
 export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): Promise<ResourceLease> {
   options.signal.throwIfAborted();
   if(options.sharedCohort!==undefined&&(typeof options.sharedCohort!=="boolean"||options.sharedCohort&&options.mode!=="shared"))throw Error("Shared lease cohorts require shared access");
@@ -213,17 +212,15 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
   const queue = databasePath(options.directory, options.resource).replace(/\.sqlite$/u, ".queue");
   if (queue !== admitted.replace(/\.sqlite$/u, ".queue")) throw Error("Resource queue materialized path changed");
   mkdirSync(queue, { recursive: true });
-  writeFileSync(join(queue, ticket), JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true}), { flag: "wx" });
+  const claim=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,ticket),mode:"shared",signal:options.signal,control:options.control,onWait:options.onWait,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});
+  try{writeFileSync(join(queue, ticket), JSON.stringify({version:1,pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true}), { flag: "wx" });}catch(error){claim.release();throw error;}
   let nextProgress = 0;
   try {
     for (;;) {
       if (remaining(options, started) <= 0 && options.timeoutMs !== 0) throw new Error(`Resource lease timed out: ${options.resource}`);
-      const live = (await retryInterruptedFilesystemRead(options.signal, () => readdirSync(queue), options.control)).sort((left,right)=>arrival(left)-arrival(right)||left.localeCompare(right,"en")).filter((name) => {
-        const pid = Number(name.split("-")[1]);
-        if (name === ticket || ticketAlive(pid)) return true;
-        rmSync(join(queue, name), { force: true });
-        return false;
-      });
+      const live:string[]=[];for(const name of(await retryInterruptedFilesystemRead(options.signal,()=>readdirSync(queue),options.control)).sort((left,right)=>arrival(left)-arrival(right)||left.localeCompare(right,"en"))){
+       if(name===ticket){live.push(name);continue;}let retired:ResourceLease|undefined;try{retired=await acquireResourceLease({...resourceQueueClaimV1(options.directory,options.resource,name),mode:"exclusive",signal:options.signal,control:options.control,timeoutMs:0,maximumDatabaseBytes:custodySchema.properties.maximumDatabaseBytes.const});rmSync(join(queue,name),{force:true});}catch(error){if(!String(error).includes("Resource lease timed out"))throw error;live.push(name);}finally{retired?.release();}
+      }
       remaining(options, started);
       const cohort=options.sharedCohort===true&&await retryInterruptedFilesystemRead(options.signal,()=>live.slice(0,live.indexOf(ticket)).every(name=>{let claim:unknown;try{claim=JSON.parse(readFileSync(join(queue,name),"utf8"));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return true;if(error instanceof SyntaxError)return false;throw error;}const row=claim as Record<string,unknown>|undefined;return row!==null&&typeof row==="object"&&Object.keys(row).sort().join(",")==="mode,pid,sharedCohort,version"&&row.version===1&&row.pid===Number(name.split("-")[1])&&row.mode==="shared"&&row.sharedCohort===true;}),options.control);
       remaining(options, started);
@@ -231,7 +228,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
         const lease = await acquireResourceLease({ ...options, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
         try { remaining(options, started); } catch (error) { lease.release(); throw error; }
         return { resource: lease.resource, mode: lease.mode, release() {
-          try { lease.release(); } finally { rmSync(join(queue, ticket), { force: true }); }
+          try { lease.release(); } finally { try{rmSync(join(queue, ticket), { force: true });}finally{claim.release();} }
         } };
       }
       const elapsedMs = Date.now() - started;
@@ -245,7 +242,7 @@ export async function acquireQueuedResourceLease(options: QueuedLeaseOptions): P
       remaining(options, started);
     }
   } catch (error) {
-    rmSync(join(queue, ticket), { force: true });
+    try{rmSync(join(queue, ticket), { force: true });}finally{claim.release();}
     throw error;
   }
 }

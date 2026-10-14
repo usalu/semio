@@ -5,7 +5,7 @@
 //! = 2 graph children" attributes the two-child shape to the SEPARATE `rewriting` app's LHS/RHS rule
 //! windows, not to jack. jack's own persisted `nodes`/`edges` instance data is replaced by a single
 //! composed graph-capability CHILD slot (`🔖️ContentBridge` below); the compile-time `manifest`
-//! (kind/property/port DEFINITIONS, resolved from `manifestId` — see `semio_framework_graph::manifest::GraphManifest`)
+//! (kind/property/port DEFINITIONS, resolved from `manifestId` — see `semio_framework_graph_manifest::GraphManifest`)
 //! is distinct from the instance graph capability (nodes with
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
@@ -50,11 +50,11 @@ pub mod content_read;
 pub use content_read::{JackContentRead,JackContentVisual,JackContentProjection,JackContentLayout,JackOwnedContent,JackComposition,JackContentNodeView,JackContentPortView,JackContentEdgeView,JackContentMove,JackContentMoveCodec};
 pub use language_service as core;
 
-use semio_framework_graph::manifest::{GraphManifest, ManifestValidationError};
+use semio_framework_graph_manifest::{GraphManifest, ManifestValidationError};
 use crate::graph_manifest::manifest_by_id;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use semio_framework_graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
+pub use semio_framework_graph_manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 
 #[path = "🛂️manifest/🦀️.rs"]
 pub mod manifest;

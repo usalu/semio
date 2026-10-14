@@ -1,5 +1,8 @@
 use super::*;
-use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioRational;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSample;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn populated() -> SemioVideoSnapshot {

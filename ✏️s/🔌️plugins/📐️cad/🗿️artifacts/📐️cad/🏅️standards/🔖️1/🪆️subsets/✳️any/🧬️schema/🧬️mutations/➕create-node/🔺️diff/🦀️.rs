@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateNode`.
 use super::CreateNode;
-use crate::diff::{CadDiff, CadNodesDelta};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadNodesDelta};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateNode, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

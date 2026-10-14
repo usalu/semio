@@ -60,7 +60,6 @@
 //!      already conforms to.
 
 //#region 🔖️Part21
-#[cfg(feature = "oracles")]
 pub(crate) mod part21 {
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use semio_repo_test_host::Json;
@@ -545,7 +544,6 @@ pub(crate) mod part21 {
 //#endregion 🔖️Part21
 
 //#region 🔖️Ladder
-#[cfg(feature = "oracles")]
 pub(crate) mod ladder {
     use super::part21;
     use ruststep::ast::{EntityInstance, Exchange, Parameter, Record};
@@ -808,7 +806,7 @@ pub(crate) mod ladder {
 //#endregion 🔖️Ladder
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

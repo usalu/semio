@@ -11,7 +11,7 @@ use super::super::plan_kit::seg;
 use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 use super::super::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
-use crate::{CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::mesh::{extrude, sweep_profile, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};

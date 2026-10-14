@@ -1,6 +1,8 @@
 //! 📷️ Resumable authored path coverage and local paint into straight RGBA.
-use crate::{FillStyle,StrokeStyle,PathSegment,FillRule,StrokeCap,StrokeJoin};
-use crate::schema::fill::sampling::{PreparedFill,PreparedFillRetirement};
+use semio_s_artifact_draw_drawing_model::{FillStyle, StrokeStyle, PathSegment};
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
+use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
+use semio_s_artifact_draw_drawing_model::fill::sampling::{PreparedFill, PreparedFillRetirement};
 use semio_framework_2d::physical_work_retirement;
 use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour}};
 use semio_framework_pixels::{RasterImage,coverage::{CoverageJob,CoverageInput,CoverageMask,CoverageRule,CoverageRetirement},editing::validate_extent};
@@ -59,7 +61,7 @@ impl PathRasterJob {
  fn step(&mut self)->Result<(),PathRasterError> {
   match self.phase {
    PathRasterPhase::Preparing=>{
-    if let Some(segment)=self.source.get(self.at) {self.segments.push(super::super::to_kernel_segment(segment));self.at+=1;self.completed=self.at;}
+    if let Some(segment)=self.source.get(self.at) {self.segments.push(crate::to_kernel_segment(segment));self.at+=1;self.completed=self.at;}
     else {self.flatten=Some(PathFlattenJob::new(PathFlattenInput {segments:std::mem::take(&mut self.segments),transform:self.transform,tolerance:self.tolerance}).map_err(invalid)?);self.at=0;self.enter(PathRasterPhase::Flattening,0);}
    }
    PathRasterPhase::Flattening=>{

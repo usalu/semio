@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::place_elements::PlaceElements;
 use super::MoveElements;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &MoveElements, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let vector = payload.vector;

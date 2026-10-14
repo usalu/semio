@@ -9,9 +9,9 @@ use super::reader::{text, Doc, Section};
 use super::spatial::authoring_of;
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::mep::RECORD_ROW;
-use crate::{MepElement, MepShape, MepSystem, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, Point3};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 /// 🌀️ The occurrence classes a routed element can be.
 pub const SEGMENTS: [&str; 4] = ["IFCFLOWSEGMENT", "IFCDUCTSEGMENT", "IFCPIPESEGMENT", "IFCCABLECARRIERSEGMENT"];

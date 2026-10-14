@@ -4,7 +4,7 @@
 use super::super::family_rules;
 use super::RemoveFamilyParameter;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &RemoveFamilyParameter, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

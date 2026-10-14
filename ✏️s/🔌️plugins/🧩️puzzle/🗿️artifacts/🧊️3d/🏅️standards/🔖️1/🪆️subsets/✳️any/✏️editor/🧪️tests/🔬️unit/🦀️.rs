@@ -997,7 +997,7 @@ pub(crate) mod context {
         for url in collect_mesh_urls(&scene_snapshot) {
             assert!(crate::editor::puzzle3d::precompute::derive_brush_mesh(&url, &positions, &indices).is_some(), "scene_snapshot mesh {url}");
         }
-        tool_run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), Value::from(fill_tool::TOOL_ID))])).await
+        tool_run_action(app, semio_framework_tool_run::TOOL_RUN_START_ACTION_ID, object([(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID.to_string(), Value::from(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID))])).await
     }
 
     /// 🧭️ The live fill run's `{runId, generation}` exactly as the main window's Escape binding carries it
@@ -1623,7 +1623,7 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
@@ -1638,7 +1638,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
 fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1668,7 +1668,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
 fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1696,7 +1696,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn create_attraction_extent_fits_within_cap_for_nakagin() {
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
@@ -1716,7 +1716,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
 fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1753,7 +1753,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
     let work = Puzzle3dAcceptSuggestionWork::default();
@@ -1770,7 +1770,7 @@ fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
 fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -1815,7 +1815,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
 #[test]
 fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
@@ -1842,7 +1842,7 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
 fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -2308,7 +2308,7 @@ async fn document_and_inspector_panels_render() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
-    use crate::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::Puzzle3dObject as TypedObject, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
@@ -2677,12 +2677,12 @@ async fn main_window_utilities_lead_with_transform_without_select_tool_and_no_de
     let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
     assert!(!utility_ids.contains(&"select"), "puzzle 3d must not declare a select utility");
     assert!(!utility_ids.contains(&"scale"), "puzzle 3d must not declare a scale utility");
-    assert!(!utility_ids.contains(&fill_tool::TOOL_ID), "fill is a mode-level tool, not a window utility");
+    assert!(!utility_ids.contains(&crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID), "fill is a mode-level tool, not a window utility");
     let window = definition.window_kinds.iter().find(|window| window.id == main::WINDOW_KIND_ID).expect("main window");
     let main_utilities: Vec<&str> = window.utilities.iter().map(|utility| utility.as_str()).collect();
     assert_eq!(main_utilities.first().copied(), Some(utilities::transform::UTILITY_ID));
     assert!(!main_utilities.contains(&"select"));
-    assert!(!main_utilities.contains(&fill_tool::TOOL_ID), "fill must not be bound to the main window as a utility");
+    assert!(!main_utilities.contains(&crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID), "fill must not be bound to the main window as a utility");
     assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "", "unset/cleared host utility must not impersonate transform");
 }
 
@@ -2691,8 +2691,8 @@ async fn main_window_utilities_lead_with_transform_without_select_tool_and_no_de
 async fn tool_registry_declares_fill_tool() {
     let definition = create_puzzle3d_app();
     let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
-    assert_eq!(tool_ids, vec![fill_tool::TOOL_ID]);
-    assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill_tool::TOOL_ID).await]);
+    assert_eq!(tool_ids, vec![crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID]);
+    assert_eq!(definition.modes[0].tools, vec![ToolRef::new(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).await]);
     assert!(dispatchable_actions(&definition).iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
 }
 
@@ -2709,7 +2709,7 @@ async fn fill_flow_only_disarms_the_tool_when_the_user_aborts() {
         result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty()))
     };
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("arm fill");
     let count = dispatch(&mut app, "setFillCount", Some(&json!({ "count": 3 })), None).await.expect("setFillCount");
     assert!(!empty_tool(&count), "adjusting the count mid-plan must not bounce-disarm: {:?}", count.requested_effects);
     let abort = dispatch(&mut app, "engagementAbort", None, None).await.expect("engagementAbort");
@@ -3465,7 +3465,7 @@ async fn settings_panel_steppers_carry_their_value_and_the_trigger_they_dispatch
 /// fall through to (one grid toggle re-rendered the whole shell before its own checkbox could move).
 #[semio_framework_async_macros::async_test]
 async fn window_option_verbs_paint_only_their_window_their_rail_and_the_settings_panel() {
-    use crate::editor::puzzle3d::{puzzle3d_command_scope_class, puzzle3d_scope, Puzzle3dScopeClass};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_command_scope_class, crate::editor::puzzle3d::dispatch::puzzle3d_scope, crate::editor::puzzle3d::dispatch::Puzzle3dScopeClass};
     for action in [
         "setGridVisible",
         "setGridSnapEnabled",
@@ -3735,12 +3735,12 @@ async fn vortex_direction_option_is_local_to_the_window_instance() {
 #[test]
 fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     let mut runtime = Puzzle3dRuntime::default();
-    runtime.active_tool_id = Some(fill_tool::TOOL_ID.into());
+    runtime.active_tool_id = Some(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into());
     let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
     view.active_utility_by_window_id.insert("pane".into(), "select".into());
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
-    assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), fill_tool::TOOL_ID, "guest world lane must stay fill while the tool is armed");
+    assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID, "guest world lane must stay fill while the tool is armed");
     runtime.active_tool_id = None;
     assert!(!puzzle3d_fill_tool_active(&runtime));
     assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), "select");
@@ -3755,7 +3755,7 @@ async fn the_fill_tool_declares_its_tool_run_through_the_manifest() {
     use crate::standards::v1::subsets::any::schema::FillRunReason;
     use semio_framework_tool_run::{ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunTraceKind, TOOL_RUN_ACTION_IDS};
     let definition = create_puzzle3d_app();
-    let fill = definition.tools.iter().find(|tool| tool.id == fill_tool::TOOL_ID).expect("fill tool");
+    let fill = definition.tools.iter().find(|tool| tool.id == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool");
     let run = fill.run.as_ref().expect("the fill tool declares its ToolRunDefinition");
     run.validate().expect("the fill run definition validates");
     assert!(run.mutating, "fill writes the document, so its run is transactional");
@@ -3839,7 +3839,7 @@ async fn cancelling_a_stepping_fill_job_never_panics_and_reports_a_cancelled_run
 async fn engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside_one() {
     let mut app = app().await;
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 40 })), None).await.expect("setFillCount");
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("arm fill");
     let committed = committed_document(&app);
     start_fill_run(&mut app).await;
     pump_fill_run(&mut app, "a provisional placement", |presence| presence.completed > 0).await;
@@ -3875,7 +3875,7 @@ async fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_req
     async fn fill_count_entry(app: &mut Puzzle3dApp) -> Option<f64> {
         let view = app.window_view(main::WINDOW_KIND_ID);
         let measures = app.tool_measures(&view).await;
-        find_measure_number(measures.get(fill_tool::TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
+        find_measure_number(measures.get(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
     }
     let mut app = app().await;
     assert_eq!(fill_count_entry(&mut app).await, Some(100.0), "a fresh document asks for the default of 100");
@@ -3933,11 +3933,11 @@ async fn raising_and_lowering_the_fill_count_during_a_run_continues_and_retracts
 #[semio_framework_async_macros::async_test]
 async fn the_fill_count_has_no_ceiling_and_the_entry_declares_none() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("select fill tool");
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 5_000 })), None).await.expect("setFillCount");
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures = app.tool_measures(&view).await;
-    let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
+    let tool_measures = measures.get(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures");
     assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(5_000.0), "a request far above anything planned is kept verbatim — no clamp");
     assert_eq!(find_measure_number_max(tool_measures, "puzzle3d-fill-count"), Some(None), "the count entry declares no maximum");
     assert_eq!(crate::editor::puzzle3d::commands::set_fill_count::parse_count(Some(&json!({ "value": 4_000_000_000u32 }))), 4_000_000_000, "parse_count carries the whole u32 range");
@@ -3954,7 +3954,7 @@ async fn fill_count_is_shared_across_split_panes() {
     for window in [top, perspective] {
         let view = app.window_view(window);
         let measures = app.tool_measures(&view).await;
-        assert_eq!(find_measure_number(measures.get(fill_tool::TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count"), Some(6.0), "{window} shows the shared count");
+        assert_eq!(find_measure_number(measures.get(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count"), Some(6.0), "{window} shows the shared count");
     }
 }
 
@@ -3963,7 +3963,7 @@ async fn fill_count_is_shared_across_split_panes() {
 /// is live.
 #[test]
 fn fill_count_measure_is_an_unbounded_number_entry_reporting_the_requested_count() {
-    let scene = Puzzle3dScene { scene_snapshot: nakagin_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot: nakagin_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into() };
     match fill_tool::count_measure(&scene, &Puzzle3dLabels::NATIVE_EN, None) {
         WindowMeasure::Number { label: Some(label), value, min, max, ready, loading, .. } => {
             assert_eq!(label, Puzzle3dLabels::NATIVE_EN.count.as_str());
@@ -3978,14 +3978,14 @@ fn fill_count_measure_is_an_unbounded_number_entry_reporting_the_requested_count
 #[semio_framework_async_macros::async_test]
 async fn a_committed_fill_count_survives_the_renders_that_follow_it() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("select fill tool");
     dispatch(&mut app, "setFillCount", Some(&json!({ "value": 250 })), None).await.expect("setFillCount");
     for _ in 0..3 {
         render_composite(&mut app).await;
     }
     let view = app.window_view(main::WINDOW_KIND_ID);
     let measures = app.tool_measures(&view).await;
-    let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
+    let tool_measures = measures.get(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID).expect("fill tool measures");
     assert_eq!(find_measure_number(tool_measures, "puzzle3d-fill-count"), Some(250.0), "three renders later the requested count is still what the user asked for");
 }
 //#endregion 🔖️Fill
@@ -4045,7 +4045,7 @@ async fn puzzle3d_distribution_lists_global_vortices_and_joints_sum_to_one() {
     assert!(vortex_ids.len() >= 2, "default scene_snapshot needs multiple vortex kinds");
     let object_kind_weights = puzzle3d_uniform_kind_weights(&object_ids);
     let vortex_kind_weights = puzzle3d_uniform_kind_weights(&vortex_ids);
-    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, vortex_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, vortex_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into() };
     let distribution_children = puzzle3d_distribution_children(&scene, Some(true));
     assert_eq!(distribution_children.len(), object_ids.len());
     let mut joint_sum = 0.0;
@@ -4112,7 +4112,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
     let mut object_kind_weights = puzzle3d_uniform_kind_weights(&object_ids);
     object_kind_weights = puzzle3d_normalize_kind_weight_group(&object_kind_weights, &object_ids, &zeroed_id, 0.0);
     assert!(object_kind_weights.get(&zeroed_id).copied().unwrap_or(1.0) <= f64::EPSILON);
-    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: fill_tool::TOOL_ID.into() };
+    let scene = Puzzle3dScene { scene_snapshot, runtime: Puzzle3dRuntime { object_kind_weights, ..Puzzle3dRuntime::default() }, active_utility: crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");
     let distribution_children = fill_measures
@@ -4147,7 +4147,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
     {
     let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).expect("admitted host axis");
-    let fill_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
+    let fill_scene = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&fill_scene, labels, None);
     let distribution_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution");
     assert!(!fill_measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "puzzle3d-play-tool-options-fill")), "fill must not wrap its options in a nested Fill group — the tool toggle already owns that row");
@@ -4224,7 +4224,7 @@ async fn assert_brush_options_after_open_vortex_suggestions() {
 /// newly declared command that nobody has classified yet is slow rather than wrong.
 #[semio_framework_async_macros::async_test]
 async fn command_scope_classes_name_the_panels_they_change() {
-    use crate::editor::puzzle3d::{puzzle3d_command_scope_class, puzzle3d_scope};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_command_scope_class, crate::editor::puzzle3d::dispatch::puzzle3d_scope};
     let definition = create_puzzle3d_app();
     let mut mutating = 0_usize;
     let mut narrowed = 0_usize;
@@ -4260,7 +4260,7 @@ async fn command_scope_classes_name_the_panels_they_change() {
 /// lists object KINDS and cannot move when only the selection moves.
 #[semio_framework_async_macros::async_test]
 async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
-    use crate::editor::puzzle3d::{puzzle3d_scope, Puzzle3dScopeClass};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_scope, crate::editor::puzzle3d::dispatch::Puzzle3dScopeClass};
     let UiDirtyScope::Partial { panel_bodies, measures, utilities, engagements, labels, .. } = puzzle3d_scope(Puzzle3dScopeClass::Selection) else {
         panic!("the selection class is a narrowed scope");
     };
@@ -4284,7 +4284,7 @@ async fn selection_scope_names_the_inspector_and_not_the_catalogue() {
 /// queued behind for 10–14 s).
 #[semio_framework_async_macros::async_test]
 async fn interaction_verbs_declare_exactly_the_lanes_they_move() {
-    use crate::editor::puzzle3d::{puzzle3d_interaction_chrome_scope, puzzle3d_selection_scope, puzzle3d_viewport_scope, PUZZLE3D_INTERACTION_DOMAIN};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_interaction_chrome_scope, crate::editor::puzzle3d::dispatch::puzzle3d_selection_scope, crate::editor::puzzle3d::modes::edit::windows::main::puzzle3d_viewport_scope, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN};
     use semio_framework_plugin::InteractionVerb;
     let domain = [PUZZLE3D_INTERACTION_DOMAIN];
     assert_eq!(Puzzle3dPlayApp::interaction_scope(InteractionVerb::Hover, &domain), Some(puzzle3d_viewport_scope()), "a hover moves the world body's hover lane and nothing else");
@@ -4306,7 +4306,7 @@ async fn interaction_verbs_declare_exactly_the_lanes_they_move() {
 /// so widening either answer has to widen this law with it.
 #[semio_framework_async_macros::async_test]
 async fn a_hover_paints_only_the_world_body_and_a_pick_adds_exactly_the_selection_panels() {
-    use crate::editor::puzzle3d::{puzzle3d_interaction_chrome_scope, puzzle3d_selection_scope, puzzle3d_viewport_scope};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_interaction_chrome_scope, crate::editor::puzzle3d::dispatch::puzzle3d_selection_scope, crate::editor::puzzle3d::modes::edit::windows::main::puzzle3d_viewport_scope};
     let UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels } = puzzle3d_viewport_scope() else {
         panic!("the hover scope is a narrowed scope");
     };
@@ -4333,7 +4333,7 @@ async fn a_hover_paints_only_the_world_body_and_a_pick_adds_exactly_the_selectio
 /// of them has to widen this law too.
 #[semio_framework_async_macros::async_test]
 async fn viewport_and_fill_option_scope_classes_name_no_panel_body() {
-    use crate::editor::puzzle3d::{puzzle3d_scope, Puzzle3dScopeClass};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_scope, crate::editor::puzzle3d::dispatch::Puzzle3dScopeClass};
     for class in [Puzzle3dScopeClass::Viewport, Puzzle3dScopeClass::FillOptions] {
         let UiDirtyScope::Partial { panel_bodies, window_bodies, .. } = puzzle3d_scope(class) else {
             panic!("{class:?} is a narrowed scope");
@@ -4342,7 +4342,7 @@ async fn viewport_and_fill_option_scope_classes_name_no_panel_body() {
         assert!(panel_bodies.is_empty(), "{class:?} claims to paint no panel: {panel_bodies:?}");
     }
     assert!(matches!(puzzle3d_scope(Puzzle3dScopeClass::Quiet), UiDirtyScope::None));
-    assert_eq!(crate::editor::puzzle3d::puzzle3d_command_scope_class("targetBrushSuggestions"), Puzzle3dScopeClass::Quiet);
+    assert_eq!(crate::editor::puzzle3d::dispatch::puzzle3d_command_scope_class("targetBrushSuggestions"), Puzzle3dScopeClass::Quiet);
     assert!(matches!(puzzle3d_scope(Puzzle3dScopeClass::Chrome), UiDirtyScope::Full));
 }
 
@@ -4351,7 +4351,7 @@ async fn viewport_and_fill_option_scope_classes_name_no_panel_body() {
 #[semio_framework_async_macros::async_test]
 async fn set_fill_count_declares_the_fill_options_ui_scope() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("select fill tool");
     let result = dispatch(&mut app, "setFillCount", Some(&json!({ "value": 1 })), None).await.expect("setFillCount");
     match result.ui_scope {
         UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
@@ -4370,7 +4370,7 @@ async fn set_fill_count_declares_the_fill_options_ui_scope() {
 #[semio_framework_async_macros::async_test]
 async fn set_object_kind_weight_declares_fill_options_ui_scope() {
     let mut app = app().await;
-    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+    dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("select fill tool");
     let object_ids = puzzle3d_kind_ids(&nakagin_scene_snapshot(), "objects");
     let kind_id = object_ids.first().expect("object kind");
     let result = dispatch(&mut app, "setObjectKindWeight", Some(&json!({ "kindId": kind_id.as_str(), "value": 0.75 })), None).await.expect("setObjectKindWeight");
@@ -4436,8 +4436,8 @@ async fn add_object_kind_materializes_the_declared_kind_default() {
 /// its fill/brush candidates read `mesh-unavailable`.
 #[semio_framework_async_macros::async_test]
 async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_mesh_url() {
-    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
-    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let scene_snapshot = crate::editor::puzzle3d::snapshot::default_scene_snapshot();
+    let entry = crate::editor::puzzle3d::snapshot::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
     let kind_id = entry.get("id").and_then(semio_framework_value::DslValue::as_str).expect("catalogued kind id").to_string();
     let expected = entry
         .get("representations")
@@ -4464,9 +4464,9 @@ async fn adding_a_catalogued_concrete_forest_kind_places_an_object_carrying_its_
 /// use. Pins the real seats of a real shipped kind.
 #[test]
 fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
-    let scene_snapshot = crate::editor::puzzle3d::default_scene_snapshot();
-    let entry = crate::editor::puzzle3d::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
-    let seats = crate::editor::puzzle3d::puzzle3d_vortices_from_kind_template(&entry);
+    let scene_snapshot = crate::editor::puzzle3d::snapshot::default_scene_snapshot();
+    let entry = crate::editor::puzzle3d::snapshot::puzzle3d_catalog_entries(&scene_snapshot, "objects").first().cloned().expect("the default document catalogues object kinds");
+    let seats = crate::editor::puzzle3d::snapshot::puzzle3d_vortices_from_kind_template(&entry);
     let templates = entry.get("vortices").and_then(semio_framework_value::DslValue::as_array).expect("the catalogued kind declares vortex templates");
     assert_eq!(seats.len(), templates.len(), "one seeded vortex per declared template");
     assert!(seats.iter().any(|seat| seat.position != [0.0, 0.0, 0.0]), "a catalogued kind's seats must not all collapse onto the object origin: {seats:?}");
@@ -4481,7 +4481,7 @@ fn catalogued_kind_templates_seed_vortices_at_their_catalog_points() {
 /// own `replace_kind_catalogs` mutation and could therefore drop them independently of the scene_snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_initial_snapshot_and_set_active_example_both_carry_the_concrete_forest_catalogue() {
-    let declared: Vec<String> = crate::editor::puzzle3d::puzzle3d_catalog_entries(&crate::editor::puzzle3d::default_scene_snapshot(), "objects")
+    let declared: Vec<String> = crate::editor::puzzle3d::snapshot::puzzle3d_catalog_entries(&crate::editor::puzzle3d::snapshot::default_scene_snapshot(), "objects")
         .iter()
         .filter_map(|entry| entry.get("id").and_then(semio_framework_value::DslValue::as_str).map(str::to_string))
         .collect();
@@ -4560,7 +4560,7 @@ async fn set_active_utility_emits_no_ops_and_no_history_entry() {
 
 #[test]
 fn set_active_utility_dirties_the_world_body() {
-    use crate::editor::puzzle3d::{puzzle3d_command_scope_class, puzzle3d_scope, Puzzle3dScopeClass};
+    use {crate::editor::puzzle3d::dispatch::puzzle3d_command_scope_class, crate::editor::puzzle3d::dispatch::puzzle3d_scope, crate::editor::puzzle3d::dispatch::Puzzle3dScopeClass};
     assert_eq!(puzzle3d_command_scope_class(SET_ACTIVE_UTILITY_ACTION_ID), Puzzle3dScopeClass::Viewport, "utility switch must republish the world body (interaction + vortices), not Full chrome and not None");
     match puzzle3d_scope(Puzzle3dScopeClass::Viewport) {
         UiDirtyScope::Partial { window_bodies, .. } => assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]),
@@ -5269,7 +5269,7 @@ fn history_edit_reference_chips_name_entities_as_the_outliner_does() {
     let kind = snapshot.objects[0].object_kind.clone().expect("the seed names its kind");
     snapshot.objects[0].label = None;
     snapshot.meta.kind_catalogs.as_mut().expect("the example ships its kind catalogs").objects.iter_mut().find(|entry| entry.id == kind).expect("the seed's kind is catalogued").label = "Forest Left".into();
-    snapshot.attractions.push(crate::Puzzle3dAttraction { id: "attraction-chip".into(), attracting: vortex.clone(), attracted: vortex.clone(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    snapshot.attractions.push(crate::standards::v1::subsets::any::schema::Puzzle3dAttraction { id: "attraction-chip".into(), attracting: vortex.clone(), attracted: vortex.clone(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
     let chip = |kinds: &[&str], id: &str| puzzle3d_entity_label(&snapshot, &kinds.iter().map(|kind| kind.to_string()).collect::<Vec<_>>(), id).map(|label| label.resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).to_string());
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_TARGET_VOLUME], &object).as_deref(), Some("Forest Left"), "an unlabelled object reads its kind's catalog label");
     assert_eq!(chip(&[PUZZLE3D_GRANULARITY_VORTEX], &vortex), Some(format!("Forest Left \u{b7} {vortex_label}")), "a vortex reads its object and its own label");
@@ -5632,7 +5632,7 @@ fn measured_view_state() -> semio_framework_plugin::ViewModel {
 }
 
 fn measured_nakagin_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
+    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END: `openVortexSuggestions` syncs the whole precompute session
@@ -5664,7 +5664,7 @@ fn accept_suggestion_every_step_stays_below_the_interactive_ceiling_for_nakagin(
 }
 
 fn measured_concrete_forest_snapshot() -> Puzzle3dPlaySnapshot {
-    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
+    Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"))
 }
 
 /// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END W-P3: swapping the Concrete Forest document for the
@@ -5725,7 +5725,7 @@ fn puzzle3d_next_object_label_increments_from_the_authored_seed_name() {
 #[test]
 fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
     for (label, scene_snapshot) in [("empty", empty_scene_snapshot()), ("concrete-forest", CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()), ("nakagin", NAKAGIN_EXAMPLE_SNAPSHOT.clone())] {
-        let seed = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("typed fixture admits"));
+        let seed = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("typed fixture admits"));
         let snapshot = Puzzle3dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(seed.typed())).expect("typed fixture admits"));
         let bridged = Puzzle3dScene { scene_snapshot: semio_framework_value::FromValue::from_value(snapshot.value().clone()).expect("native fixture view admits"), runtime: Puzzle3dRuntime::default(), active_utility: "utility".into() };
         let typed = scene_from_snapshot(snapshot.typed(), Puzzle3dRuntime::default(), "utility");
@@ -5735,8 +5735,8 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
         assert_eq!(typed.scene_snapshot.attractions, bridged.scene_snapshot.attractions, "{label}: attractions disagree");
         assert_eq!(typed.scene_snapshot.target_volumes, bridged.scene_snapshot.target_volumes, "{label}: target volumes disagree");
         assert_eq!(typed.scene_snapshot.references, bridged.scene_snapshot.references, "{label}: references disagree");
-        let catalogs = |meta: &Puzzle3dSceneMetadata| -> crate::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::Puzzle3dKindCatalogs::default, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind catalogs decode")) };
-        let compatibility = |meta: &Puzzle3dSceneMetadata| -> Vec<crate::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind compatibility decodes")) };
+        let catalogs = |meta: &Puzzle3dSceneMetadata| -> crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs { meta.kind_catalogs.clone().map_or_else(crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs::default, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind catalogs decode")) };
+        let compatibility = |meta: &Puzzle3dSceneMetadata| -> Vec<crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility> { meta.kind_compatibility.clone().map_or_else(Vec::new, |rows| semio_framework_value::FromValue::from_value(rows).expect("kind compatibility decodes")) };
         assert_eq!(catalogs(&typed.scene_snapshot.meta), catalogs(&bridged.scene_snapshot.meta), "{label}: kind catalogs disagree");
         assert_eq!(compatibility(&typed.scene_snapshot.meta), compatibility(&bridged.scene_snapshot.meta), "{label}: kind compatibility disagrees");
         assert_eq!(typed.active_utility, bridged.active_utility, "{label}: active utility disagrees");
@@ -5750,7 +5750,7 @@ fn puzzle3d_typed_fixture_matches_the_projection_bridge_for_every_example() {
 #[test]
 fn world_attraction_segments_match_the_vortex_position_resolver_for_every_example() {
     let mut grown = NAKAGIN_EXAMPLE_SNAPSHOT.clone();
-    let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| crate::editor::puzzle3d::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
+    let ends: Vec<String> = grown.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
     assert!(ends.len() > 2, "nakagin declares vortices to attract");
     grown.attractions = ends.windows(2).enumerate().map(|(index, pair)| Puzzle3dAttraction { id: format!("a{index}"), attracting: pair[0].clone(), attracted: pair[1].clone(), ..Default::default() }).collect();
     grown.attractions.push(Puzzle3dAttraction { id: "dangling".into(), attracting: ends[0].clone(), attracted: "no-such-object:no-such-vortex".into(), ..Default::default() });
@@ -5759,8 +5759,8 @@ fn world_attraction_segments_match_the_vortex_position_resolver_for_every_exampl
             .attractions
             .iter()
             .filter_map(|attraction| {
-                let from = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracting)?;
-                let to = crate::editor::puzzle3d::resolve_vortex_world_position(&scene_snapshot, &attraction.attracted)?;
+                let from = crate::editor::puzzle3d::snapshot::resolve_vortex_world_position(&scene_snapshot, &attraction.attracting)?;
+                let to = crate::editor::puzzle3d::snapshot::resolve_vortex_world_position(&scene_snapshot, &attraction.attracted)?;
                 Some(json!({ "id": attraction.id, "from": from, "to": to, "color": "#60a5fa" }))
             })
             .collect();
@@ -5959,7 +5959,7 @@ async fn exactly_one_add_object_row_is_menu_vocabulary_and_it_opens_the_dialog()
 /// verbs move the viewport's `selection.method`, and `clear` empties the framework-owned domain.
 #[semio_framework_async_macros::async_test]
 async fn every_advertised_engagement_verb_is_implemented() {
-    use crate::editor::puzzle3d::commands::engagement_submit::PUZZLE3D_ENGAGEMENT_VERBS;
+    use crate::editor::puzzle3d::snapshot::PUZZLE3D_ENGAGEMENT_VERBS;
     let mut app = app().await;
     let envelope = Puzzle3dScene { scene_snapshot: default_scene_snapshot(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     let placeholder = main::engagement(&envelope, &Puzzle3dLabels::NATIVE_EN, None).input.and_then(|input| input.placeholder).unwrap_or_default();
@@ -5993,7 +5993,7 @@ async fn the_engagement_fill_verb_arms_the_fill_tool_and_hands_over_its_count() 
     let mut app = app().await;
     let result = dispatch(&mut app, "engagementSubmit", Some(&json!({ "value": "fill 5" })), None).await.expect("engagementSubmit fill 5");
     assert!(
-        result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id == fill_tool::TOOL_ID)),
+        result.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID)),
         "typing `fill 5` must arm the fill tool: {:?}",
         result.requested_effects,
     );
@@ -6012,7 +6012,7 @@ async fn the_engagement_fill_verb_arms_the_fill_tool_and_hands_over_its_count() 
         .expect("typing `fill 5` must hand the count to the retained setFillCount command");
     assert_eq!(count, 5.0, "the typed count reaches setFillCount verbatim");
     assert!(
-        result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args.get(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID).and_then(semio_framework_value::DslValue::as_str) == Some(fill_tool::TOOL_ID))),
+        result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_tool_run::TOOL_RUN_START_ACTION_ID && args.get(semio_framework_tool_run::TOOL_RUN_ARG_TOOL_ID).and_then(semio_framework_value::DslValue::as_str) == Some(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID))),
         "typing `fill 5` starts a fill tool run through the framework: {:?}",
         result.requested_effects,
     );
@@ -6064,7 +6064,7 @@ async fn the_engagement_brush_verb_arms_the_utility_of_a_pane_instance_never_the
         })
         .collect();
     assert!(
-        fallback.iter().all(|window_id| !crate::editor::puzzle3d::puzzle3d_window_id_is_kind(window_id)),
+        fallback.iter().all(|window_id| !crate::editor::puzzle3d::snapshot::puzzle3d_window_id_is_kind(window_id)),
         "a verb that carries no window of its own must still resolve a pane INSTANCE, never the bare kind: {fallback:?}",
     );
 }
@@ -6080,7 +6080,7 @@ async fn the_engagement_brush_verb_arms_the_utility_of_a_pane_instance_never_the
 #[semio_framework_async_macros::async_test]
 async fn escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool() {
     let mut armed = app().await;
-    dispatch(&mut armed, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("arm fill");
+    dispatch(&mut armed, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID })), None).await.expect("arm fill");
     let aborted = dispatch(&mut armed, "engagementAbort", None, None).await.expect("engagementAbort");
     assert!(
         aborted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id.is_empty())),
@@ -6088,7 +6088,7 @@ async fn escaping_the_armed_fill_tool_cancels_the_plan_and_disarms_the_tool() {
         aborted.requested_effects,
     );
     assert!(
-        !aborted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id == fill_tool::TOOL_ID)),
+        !aborted.requested_effects.iter().any(|effect| matches!(effect, Effect::SetActiveTool { tool_id } if tool_id == crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID)),
         "and must never re-arm the tool it is leaving: {:?}",
         aborted.requested_effects,
     );
@@ -7556,7 +7556,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         work();
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
-    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
+    let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
     let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
@@ -7566,10 +7566,10 @@ fn the_initial_snapshot_costs_only_its_document() {
 /// 🛡️ The host twin carries every object of the typed document and refuses a scale the typed record cannot admit.
 #[test]
 fn puzzle3d_host_twin_round_trips_its_vocabulary_and_refuses_bad_scale() {
-    let document=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored fixture admits");
+    let document=crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored fixture admits");
     let mut host=puzzle3d_scene_snapshot_from_document(&document);
-    let admitted=crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).expect("the twin readmits");
+    let admitted=crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&host).expect("the twin readmits");
     assert_eq!(admitted.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>(),document.objects.iter().map(|object|object.id.as_str()).collect::<Vec<_>>());
     host.objects[0].scale=Some(semio_framework_value::DslValue::String("invalid".into()));
-    assert!(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&host).is_err());
+    assert!(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&host).is_err());
 }

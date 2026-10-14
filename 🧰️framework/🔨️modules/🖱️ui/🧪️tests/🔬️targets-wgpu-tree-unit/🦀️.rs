@@ -1,6 +1,6 @@
 use super::*;
-use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
-use crate::wgpu::Label;
+use semio_framework_ui_declaration::ui::{UiNode, UiPresence, UiTextNode};
+use semio_framework_ui_locale::Label;
 use ui_contract::{Component, SeparatorProps};
 
 fn text(value: &str) -> UiNode {

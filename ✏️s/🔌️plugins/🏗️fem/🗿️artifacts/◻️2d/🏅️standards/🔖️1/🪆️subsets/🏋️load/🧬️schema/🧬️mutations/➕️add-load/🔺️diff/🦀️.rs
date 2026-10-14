@@ -6,9 +6,15 @@
 //! load id. The middle guard is what makes the two doors into `loads` agree: the same nodal load on
 //! a missing node is now refused whether it arrives inside a new case or is attached to an old one.
 use super::AddLoad;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasePatch, Fem2dLoadCasesDelta, Fem2dLoadCasesModification, Fem2dLoadInsertion, Fem2dLoadsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::{load_id, Fem2dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasePatch;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadCasesModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadInsertion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dLoadsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &AddLoad, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

@@ -1,8 +1,8 @@
-use crate::os_directory::io::text::directory_command_sha256;
+use crate::io::text::directory_command_sha256;
 use super::*;
-use crate::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
-use crate::os_directory::schema::{DocumentOpenCheckpointV1, DocumentScope};
-use crate::os_directory::io::binary::checkpoint_pair::CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1;
+use crate::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use crate::schema::{DocumentOpenCheckpointV1, DocumentScope};
+use crate::io::binary::checkpoint_pair::CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1;
 use semio_framework_async::{CancelToken, TraceId};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -420,7 +420,7 @@ fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocke
 /// English and German text and live-region role, and the twin has no code the corpus lacks.
 #[test]
 fn execution_target_status_vocabulary_matches_the_corpus() {
-    use crate::os_directory::schema::{DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1};
+    use crate::schema::{DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
     let status = corpus["expected"]["status"].as_object().expect("corpus status vocabulary");
     for (code, text) in status {
@@ -711,8 +711,8 @@ async fn space_exposes_the_durable_document_descriptor() {
     let space = MemberSpaceViewV1 {
         id: "space-a".into(),
         name: "Fixture".into(),
-        kind: crate::os_directory::DirectorySpaceKind::Studio,
-        visibility: crate::os_directory::DirectorySpaceVisibility::Private,
+        kind: crate::DirectorySpaceKind::Studio,
+        visibility: crate::DirectorySpaceVisibility::Private,
         owner_user_id: "user-owner".into(),
         role: DirectorySpaceRole::Author,
         member_count: 1,
@@ -722,7 +722,7 @@ async fn space_exposes_the_durable_document_descriptor() {
         updated_at_ms: 2,
     };
     let mut page = DirectorySpaceAdministrationPageV1::Author {
-        schema: crate::os_directory::DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
+        schema: crate::DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA.into(),
         session_binding_sha256: "a".repeat(64),
         authorization_generation: 7,
         space_id: "space-a".into(),
@@ -1264,8 +1264,8 @@ async fn a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint() {
         let text = pair["bodyHex"].as_str().unwrap();
         let body: Vec<u8> = (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap()).collect();
         let raw = &case["control"];
-        let hash = |value: &serde_json::Value| crate::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(value.as_str().unwrap()).unwrap();
-        let control = crate::os_directory::RebootstrapRequired {
+        let hash = |value: &serde_json::Value| crate::io::binary::artifact_hash::parse_artifact_hash_hex(value.as_str().unwrap()).unwrap();
+        let control = crate::RebootstrapRequired {
             scope: DocumentScope::new(raw["scope"]["spaceId"].as_str().unwrap(), raw["scope"]["documentId"].as_str().unwrap()),
             checkpoint_id: hash(&raw["checkpointId"]),
             descriptor_digest_v1: hash(&raw["descriptorDigestV1"]),

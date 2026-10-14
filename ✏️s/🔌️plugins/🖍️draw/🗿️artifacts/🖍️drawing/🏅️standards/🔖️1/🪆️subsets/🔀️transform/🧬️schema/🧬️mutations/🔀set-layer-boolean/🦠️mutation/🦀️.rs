@@ -1,7 +1,7 @@
 //! 🔀 Drawing mutation — `SetLayerBooleanOperation`: sets a boolean layer's `operation` scalar.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔀 `set-layer-boolean-operation` payload.
@@ -18,17 +18,17 @@ pub struct SetLayerBooleanOperation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_boolean_operation(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, boolean_operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id, boolean_operation })
+pub fn set_layer_boolean_operation<Op: From<SetLayerBooleanOperation>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, boolean_operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> Op {
+    Op::from(SetLayerBooleanOperation { layer_id, boolean_operation })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBooleanOperation {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerBooleanOperation where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerBooleanOperation> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-boolean-operation", record: "SetLayerBooleanOperation" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

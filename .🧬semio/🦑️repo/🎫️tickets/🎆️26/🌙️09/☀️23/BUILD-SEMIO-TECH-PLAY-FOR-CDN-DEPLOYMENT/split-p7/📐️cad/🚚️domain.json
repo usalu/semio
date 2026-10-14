@@ -1,0 +1,12 @@
+{"moves": [
+ {"from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs", "from_module": "crate",
+  "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs", "to_module": "crate::standards::v1::subsets::any::schema::snapshot",
+  "root_relative": ["standards", "schema", "mutations", "diff", "snapshot", "editor", "viewer", "host", "interaction_spec"],
+  "items": ["CAD_DOCUMENT_SCHEMA", "CAD_PLAY_DOCUMENT_SCHEMA", "CAD_DIALECT", "CadPaneId", "CadModelChild", "CadDrawingChild", "CadBrepChild", "cad_child", "cad_model_child", "cad_drawing_child", "cad_brep_child",
+            "CadWorkingScene", "cad_model_child_handle", "cad_model_child_pane_slug", "cad_named_pane_child", "cad_empty_pane_child", "cad_pane_model_slot", "CAD_DRAWINGS_SLOT", "cad_child_restore_projection", "cad_scene_pane_objects", "cad_scene_pane_geometry",
+            "CadReference", "default_image_media_kind", "default_width_world", "CadReferenceList", "CadProjectionDsl", "CadCamera", "default_camera_position", "default_camera_target", "default_fov", "one_f64", "CadNode", "cad_pane_model", "cad_pane_model_mut", "empty_cad_snapshot", "cad_pane_from_model_definition_id"]},
+ {"from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs", "from_module": "crate",
+  "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️.rs", "to_module": "crate::standards::v1::subsets::any::io::geometry_import",
+  "root_relative": ["standards", "schema", "mutations", "diff", "snapshot", "editor", "viewer", "host", "interaction_spec"],
+  "items": ["cad_bundled_pane_scene", "cad_genesis_child_pack", "CadComposedPane", "CadComposedPanes"]}
+]}

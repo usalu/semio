@@ -1,11 +1,11 @@
 //! ↩️ Inverse for `ReorderLayer` — the OLD `(parent_id, index)` address captured from BASE. Missing
 //! target ⇒ `Vec::new()`.
-use crate::mutations::DrawingMutation;
-use crate::schema::find_drawing_layer_location;
-use crate::DrawingSnapshot;
+
+use semio_s_artifact_draw_drawing_model::find_drawing_layer_location;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::reorder_layer::mutation::ReorderLayer>>(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match find_drawing_layer_location(base, &payload.layer_id) {
         Some(location) => vec![super::mutation::reorder_layer(payload.layer_id.clone(), location.parent_id, location.index)],
         None => Vec::new(),

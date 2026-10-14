@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "maximumSnapshotBytes", "maximumRetainedBytes"],
+  "properties": {
+    "version": {"const": 1},
+    "maximumSnapshotBytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
+    "maximumRetainedBytes": {"type": "integer", "minimum": 1, "maximum": 2147483648}
+  }
+}

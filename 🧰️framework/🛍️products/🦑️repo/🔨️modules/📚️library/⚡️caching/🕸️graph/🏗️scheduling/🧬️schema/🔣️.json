@@ -17,17 +17,11 @@
         "additionalProperties": false,
         "required": [
           "file",
-          "hash",
           "imports",
-          "productionImports",
-          "trackedHash"
+          "productionImports"
         ],
         "properties": {
           "file": {
-            "type": "string",
-            "minLength": 1
-          },
-          "hash": {
             "type": "string",
             "minLength": 1
           },
@@ -44,12 +38,6 @@
               "type": "string"
             },
             "uniqueItems": true
-          },
-          "trackedHash": {
-            "type": [
-              "string",
-              "null"
-            ]
           }
         }
       }

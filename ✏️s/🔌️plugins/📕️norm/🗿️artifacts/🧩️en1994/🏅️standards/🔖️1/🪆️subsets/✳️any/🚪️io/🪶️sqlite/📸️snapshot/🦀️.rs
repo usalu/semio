@@ -35,7 +35,6 @@ fn read_actions(rows:&[FloatRow<'_>],control:&mut SqliteSnapshotControl<'_>)->Re
 fn bound_sheeting(bound:&mut NativeEncodingBound<'_,'_>,value:&ProfiledSheeting)->Result<(), ValueError>{bound.add(16384)?;bound.repeated(value.profile.len(),24)}
 fn bound_actions(bound:&mut NativeEncodingBound<'_,'_>,values:&[CharacteristicAction])->Result<(), ValueError>{for value in values{bound.add(16384)?;for text in [&value.id,&value.kind,&value.category,&value.stage]{bound.repeated(text.len(),24)?;}}Ok(())}
 
-
 impl En1994Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {
         out.insert_key_float("en1994_document",1,&[Cell::Text(annex(self.annex)),Cell::Text(&self.structure_kind),Cell::Real(self.steel_f_y_pa),Cell::Text(&self.fire_rating),Cell::Real(self.insulation_thickness_m),Cell::Text(&self.fatigue_detail)],DOCUMENT)?;

@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, relative, sep } from "node:path";
 
 export const STDIO_RELATIVE_ROOT = "✏️s/🔌️plugins/🗄️stdio";
 export const CARGO_CONTRACT_NAME = "semio-s-artifact-stdio-contract";
-export const NX_CONTRACT_NAME = "@semio-tech/stdio-artifact-contract-rs";
+export const BUILD_CONTRACT_NAME = "@semio-tech/stdio-artifact-contract-rs";
 
 export type JsonMap = Record<string, any>;
 export type StdioArtifactPackageRecord = {
@@ -13,8 +13,8 @@ export type StdioArtifactPackageRecord = {
   identity: string;
   source: string;
   dependencies: string[];
-  rust: { cargoName: string; nxName: string; manifest: string };
-  typescript: { name: string; nxName: string; manifest: string; entry: { types: "./dist/🟦️.d.ts"; import: "./dist/🟦️.js" } };
+  rust: { cargoName: string; projectName: string; manifest: string };
+  typescript: { name: string; projectName: string; manifest: string; entry: { types: "./dist/🟦️.d.ts"; import: "./dist/🟦️.js" } };
 };
 
 export function slashStdioPath(path: string): string {
@@ -25,8 +25,8 @@ export function readStdioJson(path: string): JsonMap {
   return JSON.parse(readFileSync(path, "utf8")) as JsonMap;
 }
 
-export function canonicalStdioArtifactNames(artifact: string): { cargo: string; rustNx: string; typescript: string } {
-  return { cargo: `semio-s-artifact-stdio-${artifact}`, rustNx: `@semio-tech/stdio-${artifact}-rs`, typescript: `@semio-tech/stdio-${artifact}` };
+export function canonicalStdioArtifactNames(artifact: string): { cargo: string; rustProject: string; typescript: string } {
+  return { cargo: `semio-s-artifact-stdio-${artifact}`, rustProject: `@semio-tech/stdio-${artifact}-rs`, typescript: `@semio-tech/stdio-${artifact}` };
 }
 
 function admittedDirectory(path: string, label: string): void {
@@ -116,8 +116,8 @@ function packageRecord(repoRoot: string, definitionPath: string): StdioArtifactP
     identity,
     source: slashStdioPath(relative(repoRoot, definitionPath)),
     dependencies: Array.isArray(definition.dependencies) ? definition.dependencies.map(String) : [],
-    rust: { cargoName: names.cargo, nxName: names.rustNx, manifest: slashStdioPath(relative(repoRoot, join(artifactRoot, "📦️packages/🦀️rust/Cargo.toml"))) },
-    typescript: { name: names.typescript, nxName: names.typescript, manifest: slashStdioPath(relative(repoRoot, join(artifactRoot, "📦️packages/🟦️typescript/package.json"))), entry: { types: "./dist/🟦️.d.ts", import: "./dist/🟦️.js" } },
+    rust: { cargoName: names.cargo, projectName: names.rustProject, manifest: slashStdioPath(relative(repoRoot, join(artifactRoot, "📦️packages/🦀️rust/Cargo.toml"))) },
+    typescript: { name: names.typescript, projectName: names.typescript, manifest: slashStdioPath(relative(repoRoot, join(artifactRoot, "📦️packages/🟦️typescript/package.json"))), entry: { types: "./dist/🟦️.d.ts", import: "./dist/🟦️.js" } },
   };
 }
 

@@ -57,7 +57,7 @@ pub fn segment_distance(p1: Xyz, p2: Xyz, q1: Xyz, q2: Xyz) -> f64 {
     dot3(gap, gap).sqrt()
 }
 
-fn at(point: &crate::Point3) -> Xyz {
+fn at(point: &crate::standards::v1::subsets::any::schema::snapshot::Point3) -> Xyz {
     [point.x, point.y, point.z]
 }
 

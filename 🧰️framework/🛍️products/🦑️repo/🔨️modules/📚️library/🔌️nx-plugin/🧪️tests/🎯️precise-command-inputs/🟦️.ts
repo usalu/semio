@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 /** 🎯️ Proves a script-backed target hashes exactly its own import closure, with a safe fallback when its command names no script. */
 export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Promise<void> {
   const require = createRequire(import.meta.url);
-  const pluginPath = join(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs");
+  const pluginPath = join(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const { cacheInternals } = await import(pathToFileURL(pluginPath).href);
   const root = realpathSync(mkdtempSync(join(scratchRoot, "precise-command-inputs-")));
   try {
@@ -19,7 +19,8 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
 
     const fallback = ["{workspaceRoot}/fallback-marker.ts"];
     const target = { options: { cwd: "entry", command: "bun ./📜️script.ts run" } };
-    const inputs: string[] = cacheInternals.genericTargetCommandInputs(target, root, fallback);
+    const declarations: unknown[] = cacheInternals.genericTargetCommandInputs(target, root, fallback), inputs = declarations.filter((input): input is string => typeof input === "string");
+    assert.deepEqual(declarations.filter(input => typeof input !== "string"), [{ externalDependencies: [] }]);
 
     assert.ok(inputs.includes("{workspaceRoot}/entry/📜️script.ts"), "closure must include the target's own script");
     assert.ok(inputs.includes("{workspaceRoot}/closure.ts"), "closure must include a statically imported file");
@@ -42,7 +43,7 @@ export async function testPreciseCommandInputs(scratchRoot = process.cwd()): Pro
 
     const unparseable = { options: { cwd: ".", command: "echo hello" } };
     const fallbackResult = cacheInternals.genericTargetCommandInputs(unparseable, root, fallback);
-    assert.deepEqual(fallbackResult, fallback, "a command naming no script must fall back to the previous broad contract, never under-hash");
+    assert.deepEqual(fallbackResult, [...fallback, "{workspaceRoot}/package.json", "{workspaceRoot}/bun.lock"], "a command naming no script must fall back to the previous broad contract, never under-hash");
 
     const hashOfListedBytes = () => createHash("sha256").update(inputs.map((path: string) => readFileSync(join(root, path.replace("{workspaceRoot}/", "")))).join("\0")).digest("hex");
     const hashBefore = hashOfListedBytes();

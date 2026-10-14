@@ -3,10 +3,10 @@
 //! Points snap to a nanometre and bulges to 1e-12, so every device derives the same numbers from the same payload. All curve work is the
 //! framework bulge kernel (`semio-framework-geometry`); this file only decides which of its results is the one a tool means.
 
-use crate::mutations::wall_geometry::snap;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::snap;
 use super::WallEnd;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::{Axis, Point2, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, Vertex};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::vector::{angle_between, cross, LENGTH_EPS};

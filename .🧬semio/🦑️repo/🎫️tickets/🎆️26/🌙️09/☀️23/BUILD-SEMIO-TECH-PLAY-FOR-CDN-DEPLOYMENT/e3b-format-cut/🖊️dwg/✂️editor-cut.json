@@ -1,0 +1,46 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs",
+ "layers": "🧮️editor-layers.json",
+ "crate": "semio_s_artifact_stdio_dwg_editor",
+ "aggregator": "editor",
+ "crates": {
+  "examples": {
+   "package": "semio-s-artifact-stdio-dwg-examples",
+   "dir": "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+  },
+  "editor-ac1018": {
+   "package": "semio-s-artifact-stdio-dwg-editor-ac1018",
+   "dir": "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "examples": [
+   "//! 📚️ `stdio.dwg` examples: the demo document and the committed architectural drawing.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as store;"
+  ],
+  "editor-ac1018": [
+   "//! ✏️ `stdio.dwg` AC1018 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as store;"
+  ]
+ },
+ "descriptions": {
+  "examples": "Stdio dwg examples",
+  "editor-ac1018": "Stdio dwg AC1018 editor and viewer"
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ]
+}

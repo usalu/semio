@@ -6,7 +6,7 @@
 
 use super::{number, InferredRow};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
-use crate::{ModelInference, ModelSnapshot, SpaceConditions};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, SpaceConditions}};
 
 //#region 🔖️Conditions
 /// 🌡️ The text of one condition of a space: empty while the space states no conditions or not this one; `None` for a space that does not exist.

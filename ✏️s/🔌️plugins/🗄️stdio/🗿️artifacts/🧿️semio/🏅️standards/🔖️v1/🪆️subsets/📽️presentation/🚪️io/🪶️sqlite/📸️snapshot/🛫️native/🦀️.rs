@@ -1,7 +1,8 @@
 //! 📽️ Emits every Presentation owner and its actual typed Document block vocabulary under one control.
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use crate::schema::snapshot::{SemioPresentationSnapshot, SlideShape, SlideFrame, PlaceholderKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_encoding as document;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(value:&SemioPresentationSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.presentation.dsl v1\n","s.stdio.semio.presentation.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}

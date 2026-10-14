@@ -18,7 +18,12 @@
 //! `DocBlock` is a value struct it does not own the internals of, so it is never sub-diffed here.
 
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
 
 
 

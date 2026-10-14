@@ -1,11 +1,11 @@
 //! 🌍 MCP projection of the same closed GIS client contract used by native and browser hosts.
-use crate::inference_schema::*;
+use semio_s_artifact_gis_gismap::inference_schema::*;
 use semio_framework_value::{DslValue,ToValue,FromValue};
 use semio_framework_os_mcp::inference::*;
 
 /// 📦 Actual installed owner codecs for the outward MCP executable.
 pub fn gis_map_mcp_protocol_v1()->RemoteInferenceProtocolV1 {
-    RemoteInferenceProtocolV1 {owner:"gis",service_id:GIS_MAP_INFERENCE_SERVICE_ID,route:"inference/gis-map",declaration:crate::inference_client::declaration,encode,receipt,page,approval,undo,error}
+    RemoteInferenceProtocolV1 {owner:"gis",service_id:GIS_MAP_INFERENCE_SERVICE_ID,route:"inference/gis-map",declaration:semio_s_artifact_gis_gismap::inference_client::declaration,encode,receipt,page,approval,undo,error}
 }
 
 fn json(value:&DslValue)->Result<serde_json::Value,InferenceRouteErrorV1> {serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).map_err(|_|InferenceRouteErrorV1::Invalid)}

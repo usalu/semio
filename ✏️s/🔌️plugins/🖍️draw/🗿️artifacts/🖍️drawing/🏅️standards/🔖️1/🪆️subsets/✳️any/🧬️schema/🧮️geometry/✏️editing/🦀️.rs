@@ -1,5 +1,5 @@
 //! ✏️ Pure path-local edits shared by numeric controls and canvas gestures.
-use crate::PathSegment;
+use semio_s_artifact_draw_drawing_model::PathSegment;
 #[path="🎛️node/🦀️.rs"]
 mod node;
 #[path="📉️simplify/🦀️.rs"]
@@ -132,7 +132,7 @@ fn reverse_path_ranges(source: &(impl PathGeometrySource + ?Sized), ranges: &[(u
 }
 
 pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEdit) -> Result<Vec<PathSegment>, &'static str> {
-    if !source.path_segments().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
+    if !source.path_segments().all(semio_s_artifact_draw_drawing_model::valid_path_segment) { return Err("Invalid path geometry"); }
     let ranges = contours(source)?;
     if let PathEdit::Node {index,mode}=*operation {return node::edit(source,index,mode);}
     if let PathEdit::Simplify {tolerance}=*operation {
@@ -210,7 +210,7 @@ pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEd
                     PathSegment::Quad { ctrl, .. } => vec![PathSegment::Cubic { ctrl1: mix(from,ctrl,2.0/3.0),ctrl2: mix(to,ctrl,2.0/3.0),to }],
                     PathSegment::Cubic { .. } => vec![item.clone()],
                     PathSegment::Arc { rx,ry,rotation,large_arc,sweep,.. } => {
-                        let mut curves = super::super::arc_segment_to_cubics(from,rx,ry,rotation,large_arc,sweep,to).into_iter().map(|(ctrl1,ctrl2,to)| PathSegment::Cubic { ctrl1,ctrl2,to }).collect::<Vec<_>>();
+                        let mut curves = crate::arc_segment_to_cubics(from,rx,ry,rotation,large_arc,sweep,to).into_iter().map(|(ctrl1,ctrl2,to)| PathSegment::Cubic { ctrl1,ctrl2,to }).collect::<Vec<_>>();
                         if let Some(PathSegment::Cubic { to: end, .. }) = curves.last_mut() { *end=to; }
                         if curves.is_empty() { curves.push(line()); }
                         curves
@@ -276,7 +276,7 @@ pub fn edit_path(source: &(impl PathGeometrySource + ?Sized), operation: &PathEd
         PathEdit::Node {..}|PathEdit::Simplify {..}|PathEdit::Reverse | PathEdit::Join { .. } | PathEdit::Translate { .. } | PathEdit::DeletePoints { .. } => unreachable!(),
     }
     if matches!(operation,PathEdit::Delete {..}) && end-start==3 && matches!(source.path_segment(end-1),Some(PathSegment::Close)) {output.remove(start+1);}
-    if !output.iter().all(crate::schema::valid_path_segment) { return Err("The edit exceeds finite coordinates"); }
+    if !output.iter().all(semio_s_artifact_draw_drawing_model::valid_path_segment) { return Err("The edit exceeds finite coordinates"); }
     Ok(output)
 }
 
@@ -303,7 +303,7 @@ pub fn drag_path_point(segment: &PathSegment,point: PathPoint,matrix: [f64;6],st
 
 /// 🩹 Copies only a positioned node and, when needed, its outgoing tangent segment.
 pub fn patch_path_point(segment: &PathSegment,next: Option<&PathSegment>,point: PathPoint,to: [f64;2]) -> Result<(PathSegment,Option<PathSegment>),&'static str> {
-    if !to.iter().all(|value|value.is_finite()) || !crate::schema::valid_path_segment(segment) {return Err("Invalid coordinate");}
+    if !to.iter().all(|value|value.is_finite()) || !semio_s_artifact_draw_drawing_model::valid_path_segment(segment) {return Err("Invalid coordinate");}
     let mut output=segment.clone();
     let mut following=None;
     if point==PathPoint::Anchor {
@@ -329,7 +329,7 @@ pub fn patch_path_point(segment: &PathSegment,next: Option<&PathSegment>,point: 
             _=>return Err("This node has no selected handle"),
         }
     }
-    if !crate::schema::valid_path_segment(&output) || following.as_ref().is_some_and(|segment|!crate::schema::valid_path_segment(segment)) {return Err("The edit exceeds finite coordinates");}
+    if !semio_s_artifact_draw_drawing_model::valid_path_segment(&output) || following.as_ref().is_some_and(|segment|!semio_s_artifact_draw_drawing_model::valid_path_segment(segment)) {return Err("The edit exceeds finite coordinates");}
     Ok((output,following))
 }
 
@@ -378,7 +378,7 @@ fn translate_owned_path_points(mut source: Vec<PathSegment>,points:&[PathPointRe
             PathSegment::Cubic {to,ctrl1,ctrl2}=>{shift(to,1);shift(ctrl1,2);shift(ctrl2,4);},
             PathSegment::Close=>{},
         }
-        if !crate::schema::valid_path_segment(segment) {return Err("The edit exceeds finite coordinates");}
+        if !semio_s_artifact_draw_drawing_model::valid_path_segment(segment) {return Err("The edit exceeds finite coordinates");}
     }
     Ok(source)
 }
@@ -388,7 +388,7 @@ pub fn translate_world_path_points<'a>(source:impl IntoIterator<Item = &'a PathS
     let basis=super::inverse([matrix[0],matrix[1],matrix[2],matrix[3],0.0,0.0]).ok_or("Cannot move points through a singular transform")?;
     if !matrix.iter().chain(delta.iter()).all(|value|value.is_finite()) {return Err("Cannot move points by a nonfinite displacement");}
     let source: Vec<PathSegment> = source.into_iter().cloned().collect();
-    if !source.iter().all(crate::schema::valid_path_segment) { return Err("Invalid path geometry"); }
+    if !source.iter().all(semio_s_artifact_draw_drawing_model::valid_path_segment) { return Err("Invalid path geometry"); }
     contours(&source)?;
     translate_owned_path_points(source,points,[basis[0]*delta[0]+basis[2]*delta[1],basis[1]*delta[0]+basis[3]*delta[1]])
 }

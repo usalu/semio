@@ -3,12 +3,12 @@
   "caller": {
     "operation": 961,
     "generation": 13,
-    "fuel": 1,
+    "fuel": 64,
     "deadlineUs": 1000000,
     "clockUs": 1,
     "sourceGrant": [
-      1,
       64,
+      4096,
       65536,
       65536,
       64
@@ -48,5 +48,84 @@
     "relativeDeadline",
     "unlimitedFuel",
     "postDebitAgain"
-  ]
+  ],
+  "sourceIdentity": {
+    "original": {
+      "parent": "source-a",
+      "recipient": "recipient-a",
+      "clock": "clock-a",
+      "deadlineUs": 1000000,
+      "clockBinding": 41
+    },
+    "cases": [
+      {
+        "identity": {
+          "parent": "source-a",
+          "recipient": "recipient-a",
+          "clock": "clock-a",
+          "deadlineUs": 1000000,
+          "clockBinding": 41
+        },
+        "accepted": true
+      },
+      {
+        "identity": {
+          "parent": "source-b",
+          "recipient": "recipient-a",
+          "clock": "clock-a",
+          "deadlineUs": 1000000,
+          "clockBinding": 41
+        },
+        "accepted": false
+      },
+      {
+        "identity": {
+          "parent": "source-a",
+          "recipient": "recipient-b",
+          "clock": "clock-a",
+          "deadlineUs": 1000000,
+          "clockBinding": 41
+        },
+        "accepted": false
+      },
+      {
+        "identity": {
+          "parent": "source-a",
+          "recipient": "recipient-a",
+          "clock": "clock-b",
+          "deadlineUs": 1000000,
+          "clockBinding": 41
+        },
+        "accepted": false
+      },
+      {
+        "identity": {
+          "parent": "source-a",
+          "recipient": "recipient-a",
+          "clock": "clock-a",
+          "deadlineUs": 1000001,
+          "clockBinding": 41
+        },
+        "accepted": false
+      },
+      {
+        "identity": {
+          "parent": "source-a",
+          "recipient": "recipient-a",
+          "clock": "clock-a",
+          "deadlineUs": 1000000,
+          "clockBinding": 42
+        },
+        "accepted": false
+      }
+    ],
+    "nativeFuel": 64,
+    "nativeStock": [
+      64,
+      4096,
+      65536,
+      65536,
+      64
+    ]
+  }
 }

@@ -4,7 +4,7 @@
 use crate::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]

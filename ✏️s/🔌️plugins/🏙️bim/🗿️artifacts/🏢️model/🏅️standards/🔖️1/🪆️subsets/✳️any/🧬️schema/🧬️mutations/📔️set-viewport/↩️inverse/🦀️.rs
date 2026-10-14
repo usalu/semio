@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetViewport`: an absolute `SetViewport` restoring the base value of exactly the fields the forward really changes, none when the viewport is absent or nothing changes.
 
 use super::SetViewport;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetViewport, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.viewports.get(&payload.id) else {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::scene_identity::parse_scene_identity_u64;
+
 use serde_json::Value;
 fn decode(value:&Value)->SceneIdentity{SceneIdentity{instance:u32::try_from(value["instance"].as_u64().unwrap()).unwrap(),base:parse_scene_identity_u64(value["base"].as_str().unwrap()).unwrap(),generation:parse_scene_identity_u64(value["generation"].as_str().unwrap()).unwrap(),revision:value["revision"].as_array().unwrap().iter().map(|byte|u8::try_from(byte.as_u64().unwrap()).unwrap()).collect::<Vec<_>>().try_into().unwrap()}}
 fn observed(base:&Value,patch:&Value)->Option<SceneIdentity>{if patch.is_null(){return None;}let mut value=base.clone();for(key,field)in patch.as_object().unwrap(){value[key]=field.clone();}Some(decode(&value))}

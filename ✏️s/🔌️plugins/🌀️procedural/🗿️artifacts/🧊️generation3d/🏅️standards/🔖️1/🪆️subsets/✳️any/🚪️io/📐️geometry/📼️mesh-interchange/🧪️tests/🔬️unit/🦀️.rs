@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::mesh_support::harness as h;
+use semio_s_artifact_procedural_3d_mesh_support::harness as h;
 
 const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
 

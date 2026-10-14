@@ -3,8 +3,11 @@
 //! carry ⇒ Error `mutation.target-missing` too (the referential half of `delete-stream`'s own guard), the exact
 //! observation already present ⇒ Warning `mutation.no-op`. The observation lands at its canonical
 //! `(stream_id, frame_index)` position so `remove-gcp-observation` puts it back where it was.
-use crate::diff::{RemodelingDiff, RemodelingRow, GroundControlPointPatch, RemodelingMembers};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::GroundControlPointPatch;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingMembers;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

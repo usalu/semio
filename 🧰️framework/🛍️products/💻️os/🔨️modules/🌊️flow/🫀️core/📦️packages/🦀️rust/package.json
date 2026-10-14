@@ -1,9 +1,5 @@
 {
   "name": "@semio-tech/flow-core-build",
-  "nx": {
-    "name": "semio-framework-os-flow-core",
-    "includedScripts": []
-  },
   "private": true,
   "type": "module",
   "exports": {

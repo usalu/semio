@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Building, Point2, Storey};
+use crate::standards::v1::subsets::any::schema::snapshot::{Building, Point2, Storey};
 
 fn demo() -> ModelSnapshot {
     crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()

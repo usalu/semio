@@ -5,7 +5,7 @@ use super::*;
 fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛤️to-path/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {
-        let mut value=serde_json::to_value(crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Original")).to_string().into()).expect("nonempty authored identity"), "Original")).unwrap();
+        let mut value=serde_json::to_value(semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Original")).to_string().into()).expect("nonempty authored identity"), "Original")).unwrap();
         let kind=case["kind"].as_str().unwrap();
         value["shapeKind"]=case["kind"].clone();
         value[kind]=case["geometry"].clone();
@@ -15,33 +15,33 @@ fn shape_conversion_fixtures_preserve_identity_style_transform_and_order() {
         layer_base_mut(&mut layer).transform.scale_x=2.0;
         layer_base_mut(&mut layer).opacity=0.4;
         let original=layer_base(&layer).clone();
-        let mut document=DrawingSnapshot { layers:vec![crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Behind")).to_string().into()).expect("nonempty authored identity"), "Behind"),layer,crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Ahead")).to_string().into()).expect("nonempty authored identity"), "Ahead")].into(),..Default::default() };
+        let mut document=DrawingSnapshot { layers:vec![semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Behind")).to_string().into()).expect("nonempty authored identity"), "Behind"),layer,semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Ahead")).to_string().into()).expect("nonempty authored identity"), "Ahead")].into(),..Default::default() };
         let order=document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
         let mutations=admitted_plan(&document,&["converted".into()],"toPath").unwrap();
         assert_eq!(mutations.len(),2);
-        for mutation in mutations { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
+        for mutation in mutations { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut document,&mutation).unwrap(); }
         assert_eq!(document.layers.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>(),order);
         let DrawingLayerNode::Path(path)=&document.layers[1] else { panic!("Expected path") };
         assert_eq!(path.base,original);
-        assert_eq!(path.segments,serde_json::from_value::<Vec<crate::PathSegment>>(case["segments"].clone()).unwrap().into());
+        assert_eq!(path.segments,serde_json::from_value::<Vec<semio_s_artifact_draw_drawing_model::PathSegment>>(case["segments"].clone()).unwrap().into());
         assert!(admitted_plan(&document,&["converted".into()],"toPath").unwrap().is_empty());
     }
 }
 
 #[test]
 fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selections() {
-    let mut a=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+    let mut a=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
     layer_base_mut(&mut a).id="a".into();
-    let mut b=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
+    let mut b=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     layer_base_mut(&mut b).id="b".into();
-    let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
+    let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
     layer_base_mut(&mut group).id="group".into();
     let DrawingLayerNode::Group(body)=&mut group else { unreachable!() };
     body.children.push(b);
     let original=DrawingSnapshot { layers:vec![a,group].into(),..Default::default() };
     let ids=vec!["a".into(),"b".into()];
     let mut converted=original.clone();
-    for mutation in admitted_plan(&original,&ids,"toPath").unwrap() { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut converted,&mutation).unwrap(); }
+    for mutation in admitted_plan(&original,&ids,"toPath").unwrap() { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut converted,&mutation).unwrap(); }
     for id in &ids {
         assert!(matches!(find_drawing_layer(&converted,id),Some(DrawingLayerNode::Path(_))));
         assert_eq!(find_drawing_layer_location(&original,id).unwrap().parent_id,find_drawing_layer_location(&converted,id).unwrap().parent_id);
@@ -55,9 +55,9 @@ fn conversion_preserves_distinct_parents_and_rejects_locked_or_unsupported_selec
 fn selection_operation_fixtures() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let layers = fixture["layers"].as_array().unwrap().iter().map(|value| {
-        let mut layer = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((value["id"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), value["id"].as_str().unwrap());
-        crate::schema::layer_base_mut(&mut layer).id = value["id"].as_str().unwrap().into();
-        if let DrawingLayerNode::Shape(shape) = &mut layer { shape.rect = Some(crate::DrawingRect { x: value["x"].as_f64().unwrap(), y: value["y"].as_f64().unwrap(), width: value["width"].as_f64().unwrap(), height: value["height"].as_f64().unwrap() }); }
+        let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((value["id"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), value["id"].as_str().unwrap());
+        semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).id = value["id"].as_str().unwrap().into();
+        if let DrawingLayerNode::Shape(shape) = &mut layer { shape.rect = Some(semio_s_artifact_draw_drawing_model::DrawingRect { x: value["x"].as_f64().unwrap(), y: value["y"].as_f64().unwrap(), width: value["width"].as_f64().unwrap(), height: value["height"].as_f64().unwrap() }); }
         layer
     }).collect();
     let document = DrawingSnapshot { layers, ..Default::default() };
@@ -65,12 +65,12 @@ fn selection_operation_fixtures() {
         let ids = serde_json::from_value::<Vec<String>>(case["ids"].clone()).unwrap();
         let operations = admitted_plan(&document, &ids, case["operation"].as_str().unwrap()).unwrap();
         let mut output = document.clone();
-        for operation in operations { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output, &operation).unwrap(); }
+        for operation in operations { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut output, &operation).unwrap(); }
         if let Some(count) = case["rootCount"].as_u64() { assert_eq!(output.layers.len(), count as usize, "{case}"); }
         if let Some(order) = case["order"].as_array() { assert_eq!(output.layers.iter().map(|layer| layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(), order.iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "{case}"); }
         if let Some(bounds) = case["bounds"].as_array() {
             for (layer, expected) in output.layers.iter().zip(bounds) {
-                let actual = crate::schema::drawing_layer_world_bounds(layer).unwrap();
+                let actual = semio_s_artifact_draw_drawing_geometry::drawing_layer_world_bounds(layer).unwrap();
                 let expected: (f64,f64,f64,f64) = serde_json::from_value(expected.clone()).unwrap();
                 assert_eq!(actual, expected, "{case}");
             }
@@ -80,13 +80,13 @@ fn selection_operation_fixtures() {
 
 #[test]
 fn repeated_duplication_preserves_unique_descendant_ids() {
-    let child = crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Child")).to_string().into()).expect("nonempty authored identity"), "Child");
-    let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
+    let child = semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Child")).to_string().into()).expect("nonempty authored identity"), "Child");
+    let mut group = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
     let id = layer_base(&group).id.clone();
     let mut document = DrawingSnapshot { layers: vec![group].into(), ..Default::default() };
     for _ in 0..2 {
-        for mutation in admitted_plan(&document, &[id.to_string_owner()], "duplicate").unwrap() { crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
+        for mutation in admitted_plan(&document, &[id.to_string_owner()], "duplicate").unwrap() { semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut document, &mutation).unwrap(); }
     }
     let ids = document.layers.iter().flat_map(|layer| match layer { DrawingLayerNode::Group(group) => vec![group.base.id.clone(), layer_base(&group.children[0]).id.clone()], _ => unreachable!() }).collect::<std::collections::BTreeSet<_>>();
     assert_eq!(ids.len(), 6);
@@ -97,28 +97,28 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
     fn node(value:&serde_json::Value)->DrawingLayerNode {
         let id=value["id"].as_str().unwrap();
         let mut layer=if let Some(children)=value["children"].as_array() {
-            let mut layer=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);
+            let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);
             let DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};
             group.children=children.iter().map(node).collect();layer
         }else {
-            let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);
+            let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id);
             let DrawingLayerNode::Shape(shape)=&mut layer else {unreachable!()};
             let [x,y,width,height]:[f64;4]=serde_json::from_value(value["rect"].clone()).unwrap();
-            shape.rect=Some(crate::DrawingRect {x,y,width,height});layer
+            shape.rect=Some(semio_s_artifact_draw_drawing_model::DrawingRect {x,y,width,height});layer
         };
         let base=layer_base_mut(&mut layer);base.id=id.into();
         base.locked=value["locked"].as_bool().unwrap_or(false);
         let t=&value["transform"];
-        base.transform=crate::DrawingTransform {x:t["x"].as_f64().unwrap_or(0.0),y:t["y"].as_f64().unwrap_or(0.0),scale_x:t["scaleX"].as_f64().unwrap_or(1.0),scale_y:t["scaleY"].as_f64().unwrap_or(1.0),rotation:t["rotation"].as_f64().unwrap_or(0.0),shear:t["shear"].as_f64().unwrap_or(0.0)};
+        base.transform=semio_s_artifact_draw_drawing_model::DrawingTransform {x:t["x"].as_f64().unwrap_or(0.0),y:t["y"].as_f64().unwrap_or(0.0),scale_x:t["scaleX"].as_f64().unwrap_or(1.0),scale_y:t["scaleY"].as_f64().unwrap_or(1.0),rotation:t["rotation"].as_f64().unwrap_or(0.0),shear:t["shear"].as_f64().unwrap_or(0.0)};
         layer
     }
     fn visit(layers:&semio_framework_value::list::PagedList<DrawingLayerNode,{usize::MAX}>,parent:[f64;6],actual:&mut std::collections::BTreeMap<String,[f64;4]>) {
         for layer in layers {
             let base=layer_base(layer);
             if let DrawingLayerNode::Group(group)=layer {
-                visit(&group.children,crate::schema::geometry::multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform)),actual);
+                visit(&group.children,semio_s_artifact_draw_drawing_geometry::multiply(parent,semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform)),actual);
             }else {
-                let (x,y,width,height)=crate::schema::drawing_layer_bounds_with_parent(layer,parent).unwrap();
+                let (x,y,width,height)=semio_s_artifact_draw_drawing_geometry::drawing_layer_bounds_with_parent(layer,parent).unwrap();
                 actual.insert(base.id.to_string_owner(),[x,y,width,height]);
             }
         }
@@ -133,7 +133,7 @@ fn arrangement_preserves_ancestor_coordinates_and_atomicity() {
         if case["after"].is_null() {assert!(result.is_err(),"{}",case["name"]);continue;}
         let mutations=result.unwrap();
         let mut output=document.clone();
-        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let mut actual=std::collections::BTreeMap::new();visit(&output.layers,[1.0,0.0,0.0,1.0,0.0,0.0],&mut actual);
         let expected:std::collections::BTreeMap<String,[f64;4]>=serde_json::from_value(case["after"].clone()).unwrap();
         assert_eq!(actual.len(),expected.len());
@@ -146,11 +146,11 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../🗂️stack/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap() {for nested in [false,true] {
         let layers=case["order"].as_array().unwrap().iter().map(|id| {
-            let mut layer=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((id.as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), id.as_str().unwrap());
+            let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id.as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), id.as_str().unwrap());
             layer_base_mut(&mut layer).id=id.as_str().unwrap().into();layer
         }).collect::<Vec<_>>();
         let layers=if nested {
-            let mut layer=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
+            let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Parent")).to_string().into()).expect("nonempty authored identity"), "Parent");
             let DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};
             group.base.id="parent".into();group.children=layers.into();vec![layer]
         }else {layers};
@@ -161,7 +161,7 @@ fn layer_stack_steps_match_shared_order_in_root_and_group() {
         assert_eq!(document,saved);
         if case["order"]==case["after"] {assert!(mutations.is_empty(),"{}",case["name"]);}
         let mut output=document.clone();
-        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         let layers=if nested {let DrawingLayerNode::Group(group)=&output.layers[0] else {unreachable!()}; &group.children}else {&output.layers};
         assert_eq!(layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["after"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>(),"{}",case["name"]);
     }}
@@ -180,11 +180,11 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
         let (mutations,selection)=result.unwrap();
         assert_eq!(selection,serde_json::from_value::<Vec<String>>(case["selection"].clone()).unwrap());
         let mut output=document.clone();
-        for mutation in mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut output,&mutation).unwrap();}
+        for mutation in mutations {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut output,&mutation).unwrap();}
         assert_eq!(output.layers.iter().map(|layer|layer_base(layer).id.to_string_owner()).collect::<Vec<_>>(),case["order"].as_array().unwrap().iter().map(|id|id.as_str().unwrap()).collect::<Vec<_>>());
         for (id,expected) in case["matrices"].as_object().unwrap() {
             let base=layer_base(find_drawing_layer(&output,id).unwrap());
-            let matrix=crate::schema::drawing_transform_to_matrix(&base.transform);
+            let matrix=semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform);
             let expected:[f64;6]=serde_json::from_value(expected.clone()).unwrap();
             for (a,b) in matrix.iter().zip(expected) {assert!((a-b).abs()<1e-9,"{} {id}: {a} != {b}",case["name"]);}
             assert_eq!(base.visible,!case["hidden"].as_array().unwrap().iter().any(|value|value==id));
@@ -195,10 +195,10 @@ fn ungroup_matches_shared_structure_transform_and_selection_cases() {
 
 #[test]
 fn ungroup_refuses_explicit_isolation_even_at_normal_blend_and_unit_opacity() {
-    let mut layer=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Isolated")).to_string().into()).expect("nonempty authored identity"), "Isolated");
-    let crate::DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};group.isolation=true;group.base.id="group".into();
-    let document=crate::DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
+    let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Isolated")).to_string().into()).expect("nonempty authored identity"), "Isolated");
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(group)=&mut layer else {unreachable!()};group.isolation=true;group.base.id="group".into();
+    let document=semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
     assert!(admitted_plan(&document,&["group".into()],"ungroup").is_err());
 }
 
-fn admitted_plan(document:&crate::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<crate::DrawingMutation>,semio_framework_plugin::Fault>{let admission=crate::editor::drawing::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}
+fn admitted_plan(document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot,ids:&[String],operation:&str)->Result<Vec<semio_s_artifact_draw_drawing_mutations::DrawingMutation>,semio_framework_plugin::Fault>{let admission=crate::identity_test::operation();let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);super::plan(document,ids,operation,&admission,&mut control)}

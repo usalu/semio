@@ -1,9 +1,10 @@
 //! 🔄️ Drawing mutation — `UpdateLayerTransform`: sets one layer's `transform` facet atomically
 //! (position + scale + rotation are one field in the schema, never independently persisted —
 //! the `update` verb's cohesive-multi-field-facet exception).
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::{DrawingSnapshot, DrawingTransform};
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::DrawingTransform;
 
 //#region 🔖️Mutation
 /// 🔄️ `update-layer-transform` payload.
@@ -21,17 +22,17 @@ pub struct UpdateLayerTransform {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_layer_transform(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, transform: DrawingTransform) -> DrawingMutation {
-    DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id, transform })
+pub fn update_layer_transform<Op: From<UpdateLayerTransform>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, transform: DrawingTransform) -> Op {
+    Op::from(UpdateLayerTransform { layer_id, transform })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdateLayerTransform {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdateLayerTransform where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "layer", kind: "update-layer-transform", record: "UpdatedLayerTransform" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

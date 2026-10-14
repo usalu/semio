@@ -1,7 +1,7 @@
 //! 🖌️ Drawing mutation — `SetLayerBlendMode`: sets one layer's `blend_mode` scalar.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🖌️ `set-layer-blend-mode` payload.
@@ -18,17 +18,17 @@ pub struct SetLayerBlendMode {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_blend_mode(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, blend_mode: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id, blend_mode })
+pub fn set_layer_blend_mode<Op: From<SetLayerBlendMode>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, blend_mode: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> Op {
+    Op::from(SetLayerBlendMode { layer_id, blend_mode })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerBlendMode {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerBlendMode where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerBlendMode> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-blend-mode", record: "SetLayerBlendMode" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

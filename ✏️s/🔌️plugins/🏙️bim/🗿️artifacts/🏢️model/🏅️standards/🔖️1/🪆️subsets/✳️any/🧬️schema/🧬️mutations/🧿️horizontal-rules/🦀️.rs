@@ -1,7 +1,7 @@
 //! 📐️ Shared validity rules of the horizontal elements (slabs and roofs): closed bulged loops, holes strictly inside their boundary,
 //! slope and pitch ranges. Pure checks over authored parameters; each returns the reason a value is refused, none when it is fine.
 
-use crate::{RoofShape, Slope, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{RoofShape, Slope, Vertex};
 use semio_framework_geometry::bulge::{intersect, Extent};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::vector::LENGTH_EPS;

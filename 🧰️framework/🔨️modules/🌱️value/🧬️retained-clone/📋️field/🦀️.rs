@@ -13,6 +13,9 @@ impl<T: RetainedClone> Default for RetainedFieldCursor<T> {
 }
 
 impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
+    fn output_ready(&self)->bool{self.child.as_ref().is_some_and(|child|child.output_ready())}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,T>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"typed field original clone is closing"))}if let Some(child)=self.child.as_ref(){let mut demand=child.advance_demands(source,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"typed field original quote depth overflow"))?;Ok(demand)}else{Ok(crate::RetirementDemand{capacity_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}}
+
     fn advance(&mut self, source: RetainedCloneRef<'_, T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
         if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained field cursor is closing")); }
         if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }

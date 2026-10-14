@@ -76,7 +76,7 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 }
 
 /// 🛍️ Document-derived operator records — one per neuron KIND the open graph actually holds.
-fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+fn document_operator_records(dag: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
     let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
@@ -146,7 +146,7 @@ pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMain
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let _ = GENERATION2D_PLAY_APP_ID;
-    crate::scene_surface(
+    semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_MAIN,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::NodeGraph,
         &NodeGraphScene {

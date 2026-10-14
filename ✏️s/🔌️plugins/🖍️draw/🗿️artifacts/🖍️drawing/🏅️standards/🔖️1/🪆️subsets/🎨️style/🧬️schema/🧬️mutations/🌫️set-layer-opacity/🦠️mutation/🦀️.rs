@@ -1,7 +1,7 @@
 //! 🌫️ Drawing mutation — `SetLayerOpacity`: sets one layer's `opacity` scalar.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🌫️ `set-layer-opacity` payload.
@@ -18,17 +18,17 @@ pub struct SetLayerOpacity {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_opacity(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, opacity: f64) -> DrawingMutation {
-    DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id, opacity })
+pub fn set_layer_opacity<Op: From<SetLayerOpacity>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, opacity: f64) -> Op {
+    Op::from(SetLayerOpacity { layer_id, opacity })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerOpacity {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerOpacity where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerOpacity> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-opacity", record: "SetLayerOpacity" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

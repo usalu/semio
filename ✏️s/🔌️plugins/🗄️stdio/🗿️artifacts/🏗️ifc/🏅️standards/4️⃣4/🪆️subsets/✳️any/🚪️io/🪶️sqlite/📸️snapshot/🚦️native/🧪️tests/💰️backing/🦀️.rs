@@ -1,5 +1,5 @@
 //! 💰️ Inline IFC4 roots have no concrete heap storage request.
-use super::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::sqlite::snapshot::native::*;
 #[test]
 fn sqlite_snapshot_ifc4_inline_root_has_only_concrete_backing(){
  let mut progress=|_|true;let mut control=NativeDecodeControl::new(0,&mut progress);

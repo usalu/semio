@@ -10,22 +10,13 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
-pub use semio_s_artifact_stdio_contract::part21;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use crate::standards::v_ap214::subsets::base::schema::mutations::StepMutation;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
 
-pub use schema::diff::StepDiff;
-pub use schema::mutations::StepMutation;
-pub use schema::snapshot::StepSnapshot;
-pub use schema::StepArtifact;
-/// 🧾️ The shared Part-21 codec and the leaf wire bridges, re-exported for the case adapters that link only this crate.
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_STEP_DOCUMENT_SCHEMA: &str = "stdio.step";
 
-/// 🧬️ Artifact schema descriptor id.
-pub const STEP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.step";
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -56,44 +47,23 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 }
 
 //#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
-/// replaces the old side-effecting `crate::engine::register()`, which the plugin
-/// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
-/// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
-/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::os_store::codec_registry::register_document_codec(store::bare_artifact_codec::<StepSnapshot, StepMutation>(...))`.
-/// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
-/// owned rows, already the full `any` + `cc1`..`cc6` union) by its full path through the `engine`
-/// shim (`🦀️.rs`'s `pub mod engine { pub use super::standards::v_ap214::engine::*; }`) —
-/// deliberately NOT this file's own `io_registry` module below, whose `entries()` returns
-/// `&'static [&'static ComposerEntry]` (references) and would silently rebind under a bare call
-/// (this ticket's "SILENT REBIND" hazard).
-///
-/// `register_subset_validators()` — step's ONE extra call beyond schema/inferences/languages/codec
-/// — fans out to each of the six `cc1`..`cc6` conformance-class subsets' own `io::register()`,
-/// each of which is exactly one `register_subset_validator(...)` call (confirmed by reading
-/// `🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs`, identical shape for cc2-cc6). That IS
-/// `.subset_validators(...)`'s own job, so it is folded in here rather than left imperative — each
-/// subset's `SubsetValidator` type (`StepCc1Validator`..`StepCc6Validator`) is `pub`, reached via
-/// `subset_validator_entry_of::<T>()` the same way each subset's own `register()` builds its entry,
-/// just combined into one owned `&'static [SubsetValidatorEntry]` slice here since `.subset_
-/// validators()` takes one slice, not six separate calls. `dialect.artifact_kind` on all six is
-/// `"s.stdio.step"` (verified against `🪆️subsets/1️⃣cc1/🚪️io/🦀️.rs`'s own `DIALECT_SELF`),
-/// matching this declaration's `kind` exactly — the ownership check in `register_all` holds.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
     semio_s_artifact_stdio_contract::runtime_assembly("step", definition()?, declaration)
 }
 
+/// 🔖️ This artifact's declaration: a headless library artifact whose `.composers(...)` are the `ap214` composer union of
+/// [`io_registry::composers`] and whose `.subset_validators(...)` register each conformance class's snapshot validator, which the
+/// base subset's SQLite codec dispatches through `store::io::validate_registered_snapshot_subset`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::step_artifact_schema_descriptor())
+        .schema(standards::v_ap214::subsets::base::schema::step_artifact_schema_descriptor())
         .formats(formats)
-        .inferences([schema::inferences::step_artifact_inference_descriptor()])
-        .composers(engine::io_registry::entries())
+        .inferences([standards::v_ap214::subsets::base::schema::inferences::step_artifact_inference_descriptor()])
+        .composers(io_registry::composers())
         .subset_validators(step_subset_validators())
         .languages(pilot_languages())
         .document_codec_bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.step", standard: semio_framework_artifact_reference::StandardId("ap214"), subset: semio_framework_artifact_reference::SubsetId("*") })
@@ -111,17 +81,16 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn step_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
-    use semio_framework_plugin::io::subset_validator_entry_of;
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
-                subset_validator_entry_of::<standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc1::io::StepCc1Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc2::io::StepCc2Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc3::io::StepCc3Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc4::io::StepCc4Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc5::io::StepCc5Validator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v_ap214::subsets::cc6::io::StepCc6Validator>(),
             ]
         })
         .as_slice()
@@ -215,15 +184,40 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v_ap214::engine::io_registry as v_ap214;
-    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
+    use crate::standards::v_ap214::subsets::base::io::StepComposer as StepRawAnyComposer;
+    use crate::standards::v_ap214::subsets::cc1::io::StepCc1Composer;
+    use crate::standards::v_ap214::subsets::cc2::io::StepCc2Composer;
+    use crate::standards::v_ap214::subsets::cc3::io::StepCc3Composer;
+    use crate::standards::v_ap214::subsets::cc4::io::StepCc4Composer;
+    use crate::standards::v_ap214::subsets::cc5::io::StepCc5Composer;
+    use crate::standards::v_ap214::subsets::cc6::io::StepCc6Composer;
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
+    static COMPOSERS: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
+
+    /// 🎹️ The `ap214` composer union: the base subset and every conformance class.
+    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
+    pub fn composers() -> &'static [ComposerEntry] {
+        COMPOSERS
+            .get_or_init(|| {
+                vec![
+                    composer_entry_of::<StepRawAnyComposer>(),
+                    composer_entry_of::<StepCc1Composer>(),
+                    composer_entry_of::<StepCc2Composer>(),
+                    composer_entry_of::<StepCc3Composer>(),
+                    composer_entry_of::<StepCc4Composer>(),
+                    composer_entry_of::<StepCc5Composer>(),
+                    composer_entry_of::<StepCc6Composer>(),
+                ]
+            })
+            .as_slice()
+    }
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [&'static ComposerEntry] {
-        ENTRIES.get_or_init(|| v_ap214::entries().iter().collect()).as_slice()
+        ENTRIES.get_or_init(|| composers().iter().collect()).as_slice()
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -234,7 +228,7 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        register_composer_entries(v_ap214::entries()).expect("static Stdio registration must be available and conflict-free");
+        register_composer_entries(composers()).expect("static Stdio registration must be available and conflict-free");
     }
 }
 //#endregion 🚪️DerivedIoRegistry
@@ -243,13 +237,6 @@ pub mod io_registry {
 pub mod standards {
     #[path = "."]
     pub mod v_ap214 {
-        // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
-        // so every existing `standards::v_ap214::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::base::io::*;
-            pub use super::subsets::base::schema::*;
-        }
         #[path = "."]
         pub mod subsets {
             #[path = "."]
@@ -409,13 +396,6 @@ pub mod standards {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod schema {
-    pub use super::standards::v_ap214::subsets::base::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v_ap214::engine::*;
-}
 
 
 #[path = "."]
@@ -915,16 +895,6 @@ pub mod viewer {
 #[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🦀️.rs"]
 pub mod geometry;
 
-pub use crate::standards::v_ap214::subsets::cc2::io::{StepCc2BuilderConstruction, StepCc2AnalyzerAnalysis, StepCc2BuilderFacets, StepCc2Builder, StepCc2Analyzer, StepCc2Composer};
-
-pub use crate::standards::v_ap214::subsets::cc6::io::{StepCc6BuilderConstruction, StepCc6AnalyzerAnalysis, StepCc6BuilderFacets, StepCc6Builder, StepCc6Analyzer, StepCc6Composer};
-
-pub use crate::standards::v_ap214::subsets::cc3::io::{StepCc3BuilderConstruction, StepCc3AnalyzerAnalysis, StepCc3BuilderFacets, StepCc3Builder, StepCc3Analyzer, StepCc3Composer};
-
-pub use crate::standards::v_ap214::subsets::cc4::io::{StepCc4BuilderConstruction, StepCc4AnalyzerAnalysis, StepCc4BuilderFacets, StepCc4Builder, StepCc4Analyzer, StepCc4Composer};
-
-pub use crate::standards::v_ap214::subsets::cc5::io::{StepCc5BuilderConstruction, StepCc5AnalyzerAnalysis, StepCc5BuilderFacets, StepCc5Builder, StepCc5Analyzer, StepCc5Composer};
-
-pub use crate::standards::v_ap214::subsets::cc1::io::{StepCc1BuilderConstruction, StepCc1AnalyzerAnalysis, StepCc1BuilderFacets, StepCc1Builder, StepCc1Analyzer, StepCc1Composer};
-
-pub use crate::standards::v_ap214::subsets::base::io::{StepBuilderConstruction, StepParts, StepAnalyzerAnalysis, StepBuilderFacets, StepBuilder, StepAnalyzer, StepComposer};
+#[cfg(test)]
+#[path = "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
+mod base_sqlite_snapshot_tests;

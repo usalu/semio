@@ -1685,6 +1685,15 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
       ]
     },
+    "test-build-discovery": {
+      "executor":"repo:script",
+      "cache":false,
+      "dependsOn":[],
+      "inputs":["default","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*","{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/**/*"],
+      "outputs":[],
+      "metadata":{"semio":{"execution":{"version":1,"kind":"source"}}},
+      "options":{"cwd":".","command":"bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts\" test build-discovery"}
+    },
     "test-nx-project-inference": {
       "executor": "repo:script",
       "cache": false,

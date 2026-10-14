@@ -1,8 +1,8 @@
 use super::{QUANTITY_SET, SWEEP_SET};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, count, document, number_of, property_sets, quantity_of, real, rows, string, tags, target, text_of};
-use crate::{Profile, WallSide};
+use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
 fn lengths(document: &Part21Document, sweep: &str) -> Vec<f64> {
     let mut found: Vec<f64> = rows(document, "IFCMEMBER").into_iter().filter(|(_, args)| string(args, 7).as_deref() == Some(sweep)).map(|(instance, _)| quantity_of(document, instance.id, QUANTITY_SET, "Length").expect("a length")).collect();

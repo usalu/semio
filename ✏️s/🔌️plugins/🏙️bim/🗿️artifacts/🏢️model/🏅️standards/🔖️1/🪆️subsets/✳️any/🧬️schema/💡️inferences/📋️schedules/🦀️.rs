@@ -1,12 +1,12 @@
-//! 📋️ `schedules`: the user-defined schedules of the model. A [`crate::Schedule`] is authored (category, columns, sort, filter, grouping, storey and phase scope); its table is inferred: one row per
+//! 📋️ `schedules`: the user-defined schedules of the model. A [`crate::standards::v1::subsets::any::schema::snapshot::Schedule`] is authored (category, columns, sort, filter, grouping, storey and phase scope); its table is inferred: one row per
 //! element (or, for the material category, per layer or material run of each element; for the finish category, per finished surface of each room, read from the `finishes` of its quantities) read from the `Quantity` nodes of the model graph and from the authored fields, filtered, sorted, grouped and
 //! summed. No row is ever stored, so a quantity edit, a rename or a property edit reaches the table through the inference gate alone.
 //!
 //! The submodules: [`rows`] reads the authored facts of the elements and turns one source row into cells, [`table`] filters, sorts, groups and totals. The vocabulary of keys, the validity of a definition and the
-//! presets of the library are authored values and live with the snapshot (`crate::schedule_kit`).
+//! presets of the library are authored values and live with the snapshot (`crate::standards::v1::subsets::any::schema::snapshot::schedule_kit`).
 
 use super::super::quantities::ElementQuantity;
-use crate::{ModelSnapshot, Schedule, ScheduleKey};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule, ScheduleKey};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

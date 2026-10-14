@@ -1,7 +1,7 @@
 //! 🧬️ StepMutation — document mutation dispatch. Every leaf builds its sparse `StepDiff` directly and a concrete,
 //! key/index-aware inverse from its payload and reads of `base`.
 
-use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::standards::v_ap214::subsets::base::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 
 
 
@@ -32,8 +32,8 @@ use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff,
 
 
 
-use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 
 #[cfg(test)] use protocol::Mutation;
 
@@ -121,7 +121,7 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
-    use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepTypedValue, StepValue as SV};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepTypedValue, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),

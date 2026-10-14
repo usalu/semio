@@ -1,0 +1,208 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+ "layers": "🧮️model-layers.json",
+ "crate": "semio_s_artifact_stdio_dwg_model",
+ "aggregator": "model",
+ "crates": {
+  "geometry": {
+   "package": "semio-s-artifact-stdio-dwg-geometry",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+  },
+  "objects": {
+   "package": "semio-s-artifact-stdio-dwg-snapshot-objects",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust"
+  },
+  "drawing": {
+   "package": "semio-s-artifact-stdio-dwg-snapshot-drawing",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+  },
+  "document": {
+   "package": "semio-s-artifact-stdio-dwg-snapshot-document",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust"
+  },
+  "sqlite-objects": {
+   "package": "semio-s-artifact-stdio-dwg-sqlite-objects",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust"
+  },
+  "sqlite-drawing": {
+   "package": "semio-s-artifact-stdio-dwg-sqlite-drawing",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+  },
+  "snapshot": {
+   "package": "semio-s-artifact-stdio-dwg-snapshot",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+  },
+  "diff": {
+   "package": "semio-s-artifact-stdio-dwg-diff",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-dwg-mutations",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-dwg-inferences",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "geometry": [
+   "//! 🧮️ `stdio.dwg` native drawing geometry: layers, entities and geometry conversions to meshes, paths and SVG.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "objects": [
+   "//! 📦️ `stdio.dwg` snapshot objects: the object body union, symbol tables, entities, styles, dynamic blocks, associativity and constraints.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "drawing": [
+   "//! ✏️ `stdio.dwg` snapshot drawing: the logical object graph and its logical geometry projection.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "document": [
+   "//! 📄️ `stdio.dwg` snapshot document: file-level sections and header variables.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "sqlite-objects": [
+   "//! 📦️ `stdio.dwg` SQLite projection of objects: numeric cells, readers, colors, xrecords, tables, entities, blocks and evaluation.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "sqlite-drawing": [
+   "//! ✏️ `stdio.dwg` SQLite projection of the drawing graph: header, drawing, associativity, actions, styles, layouts and constraints.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "snapshot": [
+   "//! 📸️ `stdio.dwg` snapshot: the AC1024 document and its text, binary and SQLite codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "diff": [
+   "//! 🔺️ `stdio.dwg` diff and its text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "mutations": [
+   "//! 🧬️ `stdio.dwg` mutations and their text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "inferences": [
+   "//! 💡️ `stdio.dwg` inferences and their text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ]
+ },
+ "descriptions": {
+  "geometry": "Stdio dwg native drawing geometry",
+  "objects": "Stdio dwg snapshot object model",
+  "drawing": "Stdio dwg snapshot logical drawing",
+  "document": "Stdio dwg snapshot file sections and header variables",
+  "sqlite-objects": "Stdio dwg SQLite object projections",
+  "sqlite-drawing": "Stdio dwg SQLite drawing projections",
+  "snapshot": "Stdio dwg snapshot and its codecs",
+  "diff": "Stdio dwg diff and its codecs",
+  "mutations": "Stdio dwg mutations and their codecs",
+  "inferences": "Stdio dwg inferences and their codecs"
+ },
+ "keep": [
+  "semio-framework-value",
+  "semio-framework-dsl-record",
+  "semio-framework-schema-state",
+  "semio-framework-schema-composition",
+  "semio-framework-pack-json",
+  "semio-framework-os-kernel",
+  "semio-framework-schema",
+  "semio-framework-value-derive"
+ ],
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ],
+ "extra": {
+  "model": [
+   "semio-s-artifact-stdio-dwg-exports-code = { workspace = true }",
+   "semio-s-artifact-stdio-dwg-exports-graphql = { workspace = true }",
+   "semio-s-artifact-stdio-dwg-exports-json = { workspace = true }",
+   "semio-s-artifact-stdio-dwg-exports-proto = { workspace = true }"
+  ]
+ }
+}

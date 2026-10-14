@@ -2,12 +2,12 @@ use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_d
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_viewer_never_mutates() {
-    assert_viewer_never_mutates::<semio_s_artifact_fem_2d::viewer::fem2d::Fem2dViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_editor_and_viewer_share_dialect() {
-    assert_editor_and_viewer_share_dialect::<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp, semio_s_artifact_fem_2d::viewer::fem2d::Fem2dViewer>().await;
+    assert_editor_and_viewer_share_dialect::<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp, semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>().await;
 }
 
 #[semio_framework_async_macros::async_test]

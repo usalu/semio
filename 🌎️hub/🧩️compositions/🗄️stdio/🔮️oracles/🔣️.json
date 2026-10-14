@@ -478,10 +478,7 @@
     {
       "implementation": "rust",
       "package": "semio-hub-stdio-test-oracle",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
     },
     {
       "implementation": "python",

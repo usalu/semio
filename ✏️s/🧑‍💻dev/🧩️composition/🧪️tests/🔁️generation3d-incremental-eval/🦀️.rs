@@ -23,9 +23,9 @@ use semio_framework_os_flow::neural::{ColdRetire as _, Registry};
 use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, merge_unanswered_eval_entries, preview_tessellate_node_hash, FlowEvalSession, FlowExtensionSpec, FlowHost, FlowHostRetirement, PreviewTessellateOutcome};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_payload, PreviewInteractionMarks};
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use serde::Deserialize;
 
 //#region 🔖️Fixture

@@ -2,11 +2,9 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 #[path = "🧰️support/🦀️.rs"]
 mod reference_support;
 
-#[cfg(feature = "oracles")]
 mod reader {
     use super::Json;
     use super::reference_support::{load, point_json, obj};
@@ -75,15 +73,9 @@ mod reader {
     }
 }
 
-#[cfg(feature = "oracles")]
 pub use reader::project_dxf_r12;
 
-/// 🚫️ Refuses an unlinked reference implementation using the original feature contract.
-#[cfg(not(feature = "oracles"))]
-pub fn project_dxf_r12(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️semantic/🦀️.rs"]
 mod semantic_tests;

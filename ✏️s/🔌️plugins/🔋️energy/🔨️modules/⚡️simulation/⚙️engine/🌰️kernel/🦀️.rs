@@ -9,6 +9,32 @@
 //! the zone air stores heat by the third-order backward difference. The thermostat pins the air at
 //! its active setpoint and the ideal loads deliver exactly the heat that keeps it there.
 
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+extern crate semio_s_plugin_energy_engine_coils as coils;
+extern crate semio_s_plugin_energy_engine_controls as controls;
+extern crate semio_s_plugin_energy_engine_curves as curves;
+extern crate semio_s_plugin_energy_engine_daylight as daylight;
+extern crate semio_s_plugin_energy_engine_electrical as electrical;
+extern crate semio_s_plugin_energy_engine_envelope as envelope;
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_fans as fans;
+extern crate semio_s_plugin_energy_engine_fenestration as fenestration;
+extern crate semio_s_plugin_energy_engine_gains as gains;
+extern crate semio_s_plugin_energy_engine_ideal_hvac as ideal_hvac;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_num as num;
+extern crate semio_s_plugin_energy_engine_plant as plant;
+extern crate semio_s_plugin_energy_engine_precompute as precompute;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_plugin_energy_engine_site as site;
+extern crate semio_s_plugin_energy_engine_solar as solar;
+extern crate semio_s_plugin_energy_engine_units as units;
+extern crate semio_s_plugin_energy_engine_zone_air as zone_air;
+extern crate semio_s_plugin_energy_engine_zone_hvac as zone_hvac;
+
 use crate::air_exchange::{infiltration_flow_m3_s, InfiltrationSpec};
 use crate::calendar::{RunPeriod, SimDate};
 use crate::controls::{HumidistatSpec, ThermostatSpec};
@@ -17,10 +43,10 @@ use crate::daylight::{dimmed_lighting_power_w, lighting_dimming_fraction, refere
 use crate::electrical::{grid_balance, PvSystem, Transformer};
 use crate::envelope::{eliminate_chain, exterior_convection_w_m2k, exterior_radiation_w_m2k, interior_convection_w_m2k, is_windward, substitute_chain, wind_speed_at_height};
 use crate::error::Error;
-use crate::fenestration::{gap_conductance_w_m2k, glazing_interior_convection_w_m2k, MAX_PANES};
+use crate::fenestration::{gap_conductance_w_m2k, glazing_interior_convection_w_m2k};
 use crate::gains::{compute_equipment_gain_w, compute_lighting_gain_w, compute_people_gain_w, ActivityLevel, GainDecomposition};
 use crate::ideal_hvac::{ideal_loads_deliver, IdealLoadsConfig, IdealLoadsInput};
-use crate::model::{EntityId, FixedTable, Model, OutsideBoundary};
+use crate::model::{EntityId, FixedTable, Model, OutsideBoundary, MAX_PANES};
 use crate::num::solve_dense_in_place;
 use crate::plant::{PlantLoopSimulation, PlantStream, Pump};
 use crate::precompute::{EnclosureFace, EnclosureRadiation, PrecomputedModel};
@@ -80,7 +106,7 @@ pub struct SimulationConfig {
     pub run_period_end_day: u8,
     pub tolerances: ConvergenceTolerances,
     pub schedules: ScheduleSet,
-    pub weather: Option<crate::site::WeatherData>,
+    pub weather: Option<site::WeatherData>,
 }
 
 impl Default for SimulationConfig {
@@ -163,7 +189,7 @@ pub struct ZoneState {
 }
 
 impl ZoneState {
-    pub(crate) fn new(temp_c: f64, humidity_ratio: f64) -> Self {
+    pub fn new(temp_c: f64, humidity_ratio: f64) -> Self {
         Self {
             air: ZoneAirState::new(temp_c, humidity_ratio),
             mean_air_temp_c: temp_c,
@@ -220,10 +246,10 @@ pub struct SolverWorkspace {
 
 impl SolverWorkspace {
     /// 🧮️ Reserves every buffer for enclosures of up to `faces` faces and chains of `nodes` nodes.
-    pub(crate) fn reserve(&mut self, faces: usize, nodes: usize) -> Result<(), Error> {
+    pub fn reserve(&mut self, faces: usize, nodes: usize) -> Result<(), Error> {
         let order = faces + 1;
         let reject = || Error::severe("energy heat-balance workspace backing rejected");
-        let exact = faces.min(crate::precompute::EXACT_ENCLOSURE_FACES) + 1;
+        let exact = faces.min(precompute::EXACT_ENCLOSURE_FACES) + 1;
         for (buffer, length) in [
             (&mut self.matrix, exact * exact),
             (&mut self.scratch, exact * exact),
@@ -248,16 +274,16 @@ impl SolverWorkspace {
 /// 🔄️ Full simulation state.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SimulationModel {
-    pub(crate) zones: FixedTable<EntityId, ZoneState>,
-    pub(crate) surfaces: FixedTable<EntityId, SurfaceState>,
-    pub(crate) windows: FixedTable<EntityId, WindowState>,
-    pub(crate) solver: SolverWorkspace,
+    pub zones: FixedTable<EntityId, ZoneState>,
+    pub surfaces: FixedTable<EntityId, SurfaceState>,
+    pub windows: FixedTable<EntityId, WindowState>,
+    pub solver: SolverWorkspace,
     /// 🧱️ Per-surface energy integrated over the RUN period only — every accumulate site is gated on
     /// `warmup_complete`, so the warmup days never contribute.
-    pub(crate) per_surface: crate::results::SurfaceEnergyTable,
-    pub(crate) warmup_complete: bool,
-    pub(crate) hour: u32,
-    pub(crate) delivered_total: DeliveredEnergy,
+    pub per_surface: results::SurfaceEnergyTable,
+    pub warmup_complete: bool,
+    pub hour: u32,
+    pub delivered_total: DeliveredEnergy,
     pub(crate) battery_soc: f64,
     pub(crate) plant_supply_c: f64,
 }
@@ -269,7 +295,7 @@ impl Default for SimulationModel {
             surfaces: FixedTable::default(),
             windows: FixedTable::default(),
             solver: SolverWorkspace::default(),
-            per_surface: crate::results::SurfaceEnergyTable::default(),
+            per_surface: results::SurfaceEnergyTable::default(),
             warmup_complete: false,
             hour: 0,
             delivered_total: DeliveredEnergy::default(),
@@ -283,7 +309,7 @@ impl Default for SimulationModel {
 // #region 🔖️TimestepJob
 /// 🧭️ Bounded phase of one persistent hourly timestep.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum TimestepStage {
+pub enum TimestepStage {
     Zone,
     Balance,
     ZoneCommit,
@@ -298,7 +324,7 @@ pub(crate) enum TimestepStage {
 
 /// 🧭️ One-semantic-unit preparation cursor for a zone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum ZonePreparationStage {
+pub enum ZonePreparationStage {
     Begin,
     DaylightConfig,
     DaylightArea,
@@ -356,7 +382,7 @@ pub(crate) struct ZoneLoads {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum ScheduleLookupStage {
+pub enum ScheduleLookupStage {
     Constant,
     Annual,
     AnnualHoliday,
@@ -369,7 +395,7 @@ pub(crate) enum ScheduleLookupStage {
 
 /// 🧭️ Bounded phase of one zone's heat-balance step.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum BalanceStage {
+pub enum BalanceStage {
     Weather,
     Clear,
     WindowSolar,
@@ -385,8 +411,7 @@ pub(crate) enum BalanceStage {
     Commit,
 }
 
-#[cfg(test)]
-pub(crate) const P7C1_TIMESTEP_STAGES: [TimestepStage; 10] = [
+pub const P7C1_TIMESTEP_STAGES: [TimestepStage; 10] = [
     TimestepStage::Zone,
     TimestepStage::Balance,
     TimestepStage::ZoneCommit,
@@ -399,8 +424,7 @@ pub(crate) const P7C1_TIMESTEP_STAGES: [TimestepStage; 10] = [
     TimestepStage::Complete,
 ];
 
-#[cfg(test)]
-pub(crate) const P7C1_ZONE_PREPARATION_STAGES: [ZonePreparationStage; 15] = [
+pub const P7C1_ZONE_PREPARATION_STAGES: [ZonePreparationStage; 15] = [
     ZonePreparationStage::Begin,
     ZonePreparationStage::DaylightConfig,
     ZonePreparationStage::DaylightArea,
@@ -418,8 +442,7 @@ pub(crate) const P7C1_ZONE_PREPARATION_STAGES: [ZonePreparationStage; 15] = [
     ZonePreparationStage::Publish,
 ];
 
-#[cfg(test)]
-pub(crate) const P7C1_BALANCE_STAGES: [BalanceStage; 13] = [
+pub const P7C1_BALANCE_STAGES: [BalanceStage; 13] = [
     BalanceStage::Weather,
     BalanceStage::Clear,
     BalanceStage::WindowSolar,
@@ -435,11 +458,9 @@ pub(crate) const P7C1_BALANCE_STAGES: [BalanceStage; 13] = [
     BalanceStage::Commit,
 ];
 
-#[cfg(test)]
-pub(crate) const P7C1_PLANT_STAGES: [PlantStage; 4] = [PlantStage::ReduceZoneLoad, PlantStage::BuildPriority, PlantStage::Dispatch, PlantStage::Simulate];
+pub const P7C1_PLANT_STAGES: [PlantStage; 4] = [PlantStage::ReduceZoneLoad, PlantStage::BuildPriority, PlantStage::Dispatch, PlantStage::Simulate];
 
-#[cfg(test)]
-pub(crate) const P7C1_SCHEDULE_LOOKUP_STAGES: [ScheduleLookupStage; 8] = [
+pub const P7C1_SCHEDULE_LOOKUP_STAGES: [ScheduleLookupStage; 8] = [
     ScheduleLookupStage::Constant,
     ScheduleLookupStage::Annual,
     ScheduleLookupStage::AnnualHoliday,
@@ -452,16 +473,16 @@ pub(crate) const P7C1_SCHEDULE_LOOKUP_STAGES: [ScheduleLookupStage; 8] = [
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 struct ScheduleLookupWork {
-    requested_id: crate::model::ScheduleId,
+    requested_id: schedule::ScheduleId,
     stage: ScheduleLookupStage,
     cursor: usize,
     annual_index: Option<usize>,
-    daily_id: Option<crate::model::ScheduleId>,
+    daily_id: Option<schedule::ScheduleId>,
     daily_fallback: ScheduleLookupStage,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum PlantStage {
+pub enum PlantStage {
     ReduceZoneLoad,
     BuildPriority,
     Dispatch,
@@ -545,15 +566,15 @@ impl BalanceWork {
 
 /// 🌦️ The three hourly weather records one hour interpolates between.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) struct HourWeather {
-    pub(crate) previous: WeatherRecord,
-    pub(crate) current: WeatherRecord,
-    pub(crate) next: WeatherRecord,
+pub struct HourWeather {
+    pub previous: WeatherRecord,
+    pub current: WeatherRecord,
+    pub next: WeatherRecord,
 }
 
 /// ⏱️ Cursor-owned execution state for one hourly timestep.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) struct TimestepWork {
+pub struct TimestepWork {
     stage: TimestepStage,
     context: ScheduleContext,
     weather: HourWeather,
@@ -580,7 +601,7 @@ pub(crate) struct TimestepWork {
 
 /// 🧱️ Persistent backing constructor for one timestep.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) struct TimestepBuilder {
+pub struct TimestepBuilder {
     stage: u8,
     cursor: usize,
     context: ScheduleContext,
@@ -590,15 +611,14 @@ pub(crate) struct TimestepBuilder {
     zone_loads: Vec<ZoneLoads>,
 }
 
-#[cfg(test)]
-pub(crate) const P7C1_TIMESTEP_BUILDER_STAGES: [u8; 3] = [0, 1, 2];
+pub const P7C1_TIMESTEP_BUILDER_STAGES: [u8; 3] = [0, 1, 2];
 
 impl TimestepBuilder {
-    pub(crate) fn retained_wire_signature(&self) -> [u64; 6] {
+    pub fn retained_wire_signature(&self) -> [u64; 6] {
         [self.stage as u64, self.cursor as u64, self.zone_loads.len() as u64, self.zone_loads.capacity() as u64, self.date.day_of_year() as u64, self.hour.to_bits()]
     }
 
-    pub(crate) fn new(weather: HourWeather, date: SimDate, hour: f64) -> Self {
+    pub fn new(weather: HourWeather, date: SimDate, hour: f64) -> Self {
         let current = weather.current;
         Self {
             stage: 0,
@@ -611,7 +631,7 @@ impl TimestepBuilder {
         }
     }
 
-    pub(crate) fn step(&mut self, model: &Model, pre: &PrecomputedModel) -> Result<Option<TimestepWork>, Error> {
+    pub fn step(&mut self, model: &Model, pre: &PrecomputedModel) -> Result<Option<TimestepWork>, Error> {
         let zones = pre.zone_order.len();
         match self.stage {
             0 => {
@@ -659,17 +679,15 @@ impl TimestepBuilder {
         Ok(None)
     }
 
-    #[cfg(test)]
-    pub(crate) fn stage_for_gate(&self) -> u8 {
+    pub fn stage_for_gate(&self) -> u8 {
         self.stage
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_stage_for_gate(&mut self, stage: u8) {
+    pub fn set_stage_for_gate(&mut self, stage: u8) {
         self.stage = stage;
     }
 
-    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 {
             return false;
         }
@@ -678,7 +696,7 @@ impl TimestepBuilder {
 }
 
 impl TimestepWork {
-    pub(crate) fn retained_wire_signature(&self) -> [u64; 16] {
+    pub fn retained_wire_signature(&self) -> [u64; 16] {
         [
             self.stage as u64,
             self.substep_cursor as u64,
@@ -699,8 +717,7 @@ impl TimestepWork {
         ]
     }
 
-    #[cfg(test)]
-    pub(crate) fn new(model: &Model, pre: &PrecomputedModel, weather: HourWeather, date: SimDate, hour: f64) -> Self {
+    pub fn new(model: &Model, pre: &PrecomputedModel, weather: HourWeather, date: SimDate, hour: f64) -> Self {
         let mut builder = TimestepBuilder::new(weather, date, hour);
         loop {
             if let Some(work) = builder.step(model, pre).expect("headless timestep admission") {
@@ -709,69 +726,59 @@ impl TimestepWork {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn stage(&self) -> TimestepStage {
+    pub fn stage(&self) -> TimestepStage {
         self.stage
     }
 
-    #[cfg(test)]
-    pub(crate) fn zone_preparation_stage(&self) -> Option<ZonePreparationStage> {
+    pub fn zone_preparation_stage(&self) -> Option<ZonePreparationStage> {
         self.zone_preparation.as_ref().map(|work| work.stage)
     }
 
-    #[cfg(test)]
-    pub(crate) fn balance_stage(&self) -> Option<BalanceStage> {
+    pub fn balance_stage(&self) -> Option<BalanceStage> {
         self.balance.as_ref().map(|work| work.stage)
     }
 
-    #[cfg(test)]
-    pub(crate) fn plant_stage(&self) -> Option<PlantStage> {
+    pub fn plant_stage(&self) -> Option<PlantStage> {
         self.plant_work.as_ref().map(|work| work.stage)
     }
 
-    #[cfg(test)]
-    pub(crate) fn schedule_lookup_stage(&self) -> Option<ScheduleLookupStage> {
+    pub fn schedule_lookup_stage(&self) -> Option<ScheduleLookupStage> {
         self.schedule_lookup.as_ref().map(|work| work.stage)
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_stage_for_gate(&mut self, stage: TimestepStage) {
+    pub fn set_stage_for_gate(&mut self, stage: TimestepStage) {
         self.stage = stage;
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_zone_preparation_stage_for_gate(&mut self, stage: ZonePreparationStage) -> bool {
+    pub fn set_zone_preparation_stage_for_gate(&mut self, stage: ZonePreparationStage) -> bool {
         let Some(work) = self.zone_preparation.as_mut() else { return false };
         work.stage = stage;
         true
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_balance_stage_for_gate(&mut self, stage: BalanceStage) -> bool {
+    pub fn set_balance_stage_for_gate(&mut self, stage: BalanceStage) -> bool {
         let Some(work) = self.balance.as_mut() else { return false };
         work.stage = stage;
         true
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_plant_stage_for_gate(&mut self, stage: PlantStage) -> bool {
+    pub fn set_plant_stage_for_gate(&mut self, stage: PlantStage) -> bool {
         let Some(work) = self.plant_work.as_mut() else { return false };
         work.stage = stage;
         true
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_schedule_lookup_stage_for_gate(&mut self, stage: ScheduleLookupStage) -> bool {
+    pub fn set_schedule_lookup_stage_for_gate(&mut self, stage: ScheduleLookupStage) -> bool {
         let Some(work) = self.schedule_lookup.as_mut() else { return false };
         work.stage = stage;
         true
     }
 
-    pub(crate) fn is_complete(&self) -> bool {
+    pub fn is_complete(&self) -> bool {
         self.stage == TimestepStage::Complete
     }
 
-    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 {
             return false;
         }
@@ -785,7 +792,7 @@ impl TimestepWork {
         true
     }
 
-    pub(crate) fn step(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel) {
+    pub fn step(&mut self, model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationModel) {
         match self.stage {
             TimestepStage::Zone => self.step_zone_preparation(model, config, pre, state),
             TimestepStage::Balance => self.step_balance(model, pre, state),
@@ -1089,7 +1096,7 @@ impl TimestepWork {
                 solver.pane_absorbed_w_m2[..faces * MAX_PANES].fill(0.0);
                 solver.inside_convection_w_m2k[..faces].fill(0.0);
                 solver.reduction[..faces * 3].fill(0.0);
-                if faces <= crate::precompute::EXACT_ENCLOSURE_FACES {
+                if faces <= precompute::EXACT_ENCLOSURE_FACES {
                     let order = faces + 1;
                     solver.matrix[..order * order].fill(0.0);
                     solver.rhs[..order].fill(0.0);
@@ -1193,11 +1200,11 @@ impl TimestepWork {
                 if let Some(assignment) = model.zone_equipment.get(work.equipment_cursor) {
                     if assignment.zone_id == zone_id && (work.remaining_heating_w > 0.0 || work.remaining_cooling_w > 0.0) {
                         let equipment = match assignment.equipment_type {
-                            crate::model::ZoneEquipmentType::FanCoil => ZoneEquipment::FanCoil {
+                            model::ZoneEquipmentType::FanCoil => ZoneEquipment::FanCoil {
                                 heating: None,
                                 cooling: None,
-                                fan: crate::fans::Fan {
-                                    fan_type: crate::fans::FanType::VariableVolume,
+                                fan: fans::Fan {
+                                    fan_type: fans::FanType::VariableVolume,
                                     max_flow_m3_s: 0.5,
                                     max_pressure_rise_pa: 500.0,
                                     motor_efficiency: 0.85,
@@ -1207,7 +1214,7 @@ impl TimestepWork {
                                 },
                                 max_flow_m3_s: 0.5,
                             },
-                            _ => ZoneEquipment::Baseboard { heating: crate::coils::HeatingCoil::Electric { capacity_w: assignment.heating_capacity_w, efficiency: 1.0 } },
+                            _ => ZoneEquipment::Baseboard { heating: coils::HeatingCoil::Electric { capacity_w: assignment.heating_capacity_w, efficiency: 1.0 } },
                         };
                         let zone_state = state.zones.get(&zone_id);
                         let output = equipment.simulate(&ZoneEquipmentRequest {
@@ -1911,7 +1918,7 @@ fn advance_zone_preparation(work: &mut ZonePreparationWork, stage: ZonePreparati
     work.cursor = 0;
 }
 
-fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &ScheduleSet, requested_id: crate::model::ScheduleId, context: &ScheduleContext) -> Option<f64> {
+fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &ScheduleSet, requested_id: schedule::ScheduleId, context: &ScheduleContext) -> Option<f64> {
     let cursor = work.get_or_insert(ScheduleLookupWork { requested_id, stage: ScheduleLookupStage::Constant, cursor: 0, annual_index: None, daily_id: None, daily_fallback: ScheduleLookupStage::Weekly });
     debug_assert_eq!(cursor.requested_id, requested_id);
     match cursor.stage {
@@ -1995,7 +2002,7 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
             if let Some(schedule) = schedules.weekly.get(cursor.cursor) {
                 cursor.cursor += 1;
                 if schedule.id == requested_id {
-                    cursor.daily_id = Some(schedule.daily_schedule_ids[crate::schedule::weekly_day_slot(context.day_of_week)]);
+                    cursor.daily_id = Some(schedule.daily_schedule_ids[schedule::weekly_day_slot(context.day_of_week)]);
                     cursor.daily_fallback = ScheduleLookupStage::DirectDaily;
                     cursor.stage = ScheduleLookupStage::ResolveDaily;
                     cursor.cursor = 0;
@@ -2057,8 +2064,7 @@ pub struct SimulationKernel;
 
 impl SimulationKernel {
     /// 🔄️ Initialize state from model and precomputed data.
-    #[cfg(test)]
-    pub(crate) fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationModel {
+    pub fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationModel {
         let mut state = SimulationModel::default();
         state.zones.admit(model.zones.len()).expect("test zone state backing");
         state.surfaces.admit(pre.surfaces.len()).expect("test surface state backing");

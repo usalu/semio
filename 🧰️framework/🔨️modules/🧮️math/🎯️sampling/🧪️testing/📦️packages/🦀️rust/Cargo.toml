@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-math-sampling-testing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Shared test vocabulary and step views for the token-sampling unit tests."
+
+[package.metadata.semio]
+role = "framework"
+id = "math-sampling-testing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_math_sampling_testing"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-math-sampling-vocabulary = { path = "../../../🔤️vocabulary/📦️packages/🦀️rust" }
+semio-framework-math-sampling-workspace = { path = "../../../🧺️workspace/📦️packages/🦀️rust" }

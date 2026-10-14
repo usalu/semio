@@ -39,45 +39,13 @@ pub const CAMERA_ID: &str = "synthetic-cam";
 /// 🖼️ Mime of every committed frame — the import path decodes it with the plugin's own PNG codec.
 pub const FRAME_MIME: &str = "image/png";
 
+/// 🎞️ The four orbit quarters, nine views each, in capture order.
+pub const QUARTERS: [&[(&str, &[u8])]; 4] = [&semio_s_artifact_remodel_remodeling_orbit_q1::examples::synthetic_orbit::quarter_1::FRAMES, &semio_s_artifact_remodel_remodeling_orbit_q2::examples::synthetic_orbit::quarter_2::FRAMES, &semio_s_artifact_remodel_remodeling_orbit_q3::examples::synthetic_orbit::quarter_3::FRAMES, &semio_s_artifact_remodel_remodeling_orbit_q4::examples::synthetic_orbit::quarter_4::FRAMES];
+
 /// 🎞️ `(asset id, PNG bytes)` for every view, in capture order.
-pub const FRAMES: [(&str, &[u8]); 36] = [
-    ("synthetic-orbit-frame-0", include_bytes!("🖼️assets/🎞️frame-00.png")),
-    ("synthetic-orbit-frame-1", include_bytes!("🖼️assets/🎞️frame-01.png")),
-    ("synthetic-orbit-frame-2", include_bytes!("🖼️assets/🎞️frame-02.png")),
-    ("synthetic-orbit-frame-3", include_bytes!("🖼️assets/🎞️frame-03.png")),
-    ("synthetic-orbit-frame-4", include_bytes!("🖼️assets/🎞️frame-04.png")),
-    ("synthetic-orbit-frame-5", include_bytes!("🖼️assets/🎞️frame-05.png")),
-    ("synthetic-orbit-frame-6", include_bytes!("🖼️assets/🎞️frame-06.png")),
-    ("synthetic-orbit-frame-7", include_bytes!("🖼️assets/🎞️frame-07.png")),
-    ("synthetic-orbit-frame-8", include_bytes!("🖼️assets/🎞️frame-08.png")),
-    ("synthetic-orbit-frame-9", include_bytes!("🖼️assets/🎞️frame-09.png")),
-    ("synthetic-orbit-frame-10", include_bytes!("🖼️assets/🎞️frame-10.png")),
-    ("synthetic-orbit-frame-11", include_bytes!("🖼️assets/🎞️frame-11.png")),
-    ("synthetic-orbit-frame-12", include_bytes!("🖼️assets/🎞️frame-12.png")),
-    ("synthetic-orbit-frame-13", include_bytes!("🖼️assets/🎞️frame-13.png")),
-    ("synthetic-orbit-frame-14", include_bytes!("🖼️assets/🎞️frame-14.png")),
-    ("synthetic-orbit-frame-15", include_bytes!("🖼️assets/🎞️frame-15.png")),
-    ("synthetic-orbit-frame-16", include_bytes!("🖼️assets/🎞️frame-16.png")),
-    ("synthetic-orbit-frame-17", include_bytes!("🖼️assets/🎞️frame-17.png")),
-    ("synthetic-orbit-frame-18", include_bytes!("🖼️assets/🎞️frame-18.png")),
-    ("synthetic-orbit-frame-19", include_bytes!("🖼️assets/🎞️frame-19.png")),
-    ("synthetic-orbit-frame-20", include_bytes!("🖼️assets/🎞️frame-20.png")),
-    ("synthetic-orbit-frame-21", include_bytes!("🖼️assets/🎞️frame-21.png")),
-    ("synthetic-orbit-frame-22", include_bytes!("🖼️assets/🎞️frame-22.png")),
-    ("synthetic-orbit-frame-23", include_bytes!("🖼️assets/🎞️frame-23.png")),
-    ("synthetic-orbit-frame-24", include_bytes!("🖼️assets/🎞️frame-24.png")),
-    ("synthetic-orbit-frame-25", include_bytes!("🖼️assets/🎞️frame-25.png")),
-    ("synthetic-orbit-frame-26", include_bytes!("🖼️assets/🎞️frame-26.png")),
-    ("synthetic-orbit-frame-27", include_bytes!("🖼️assets/🎞️frame-27.png")),
-    ("synthetic-orbit-frame-28", include_bytes!("🖼️assets/🎞️frame-28.png")),
-    ("synthetic-orbit-frame-29", include_bytes!("🖼️assets/🎞️frame-29.png")),
-    ("synthetic-orbit-frame-30", include_bytes!("🖼️assets/🎞️frame-30.png")),
-    ("synthetic-orbit-frame-31", include_bytes!("🖼️assets/🎞️frame-31.png")),
-    ("synthetic-orbit-frame-32", include_bytes!("🖼️assets/🎞️frame-32.png")),
-    ("synthetic-orbit-frame-33", include_bytes!("🖼️assets/🎞️frame-33.png")),
-    ("synthetic-orbit-frame-34", include_bytes!("🖼️assets/🎞️frame-34.png")),
-    ("synthetic-orbit-frame-35", include_bytes!("🖼️assets/🎞️frame-35.png")),
-];
+pub fn frames() -> impl Iterator<Item = &'static (&'static str, &'static [u8])> {
+    QUARTERS.iter().flat_map(|quarter| quarter.iter())
+}
 
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)

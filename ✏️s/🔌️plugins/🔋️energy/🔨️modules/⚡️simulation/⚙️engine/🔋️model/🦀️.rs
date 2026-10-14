@@ -1,6 +1,13 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_geometry as geometry;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+
 use crate::error::{Diagnostics, Error, Severity};
+use crate::schedule::ScheduleId;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
@@ -47,25 +54,25 @@ impl semio_framework_dsl_record::DslField for EntityId {
     }
 }
 
-semio_framework_value::artifact_retire_leaf!(EntityId, ScheduleId);
+semio_framework_value::artifact_retire_leaf!(EntityId);
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for EntityId {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
         Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(u64::from(self.0)))
     }
 }
-
-impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ScheduleId {
-    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
-        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(u64::from(self.0)))
-    }
-}
 // #endregion 🔖️Ids
+
+// #region 🔖️GlazingLimits
+/// 🪟️ Largest glazing stack one glazing construction may alternate with gas gaps — the stack the
+/// window heat balance (`crate::fenestration`) solves.
+pub const MAX_PANES: usize = 4;
+// #endregion 🔖️GlazingLimits
 
 // #region 🔖️FixedTable
 /// 🧺️ One-time admitted stable table with sorted deterministic lookup and no post-admission growth.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub(crate) struct FixedTable<K, V> {
+pub struct FixedTable<K, V> {
     slots: Box<[Option<(K, V)>]>,
     len: usize,
     admitted: bool,
@@ -152,7 +159,7 @@ impl<K: semio_framework_value::retirement::RetireOwned, V: semio_framework_value
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FixedTableError {
+pub enum FixedTableError {
     AlreadyAdmitted,
     Allocation,
     Overflow,
@@ -160,7 +167,7 @@ pub(crate) enum FixedTableError {
 }
 
 impl<K: Ord, V> FixedTable<K, V> {
-    pub(crate) fn admit(&mut self, observed_capacity: usize) -> Result<(), FixedTableError> {
+    pub fn admit(&mut self, observed_capacity: usize) -> Result<(), FixedTableError> {
         if self.admitted {
             self.faulted = true;
             return Err(FixedTableError::AlreadyAdmitted);
@@ -176,7 +183,7 @@ impl<K: Ord, V> FixedTable<K, V> {
         Ok(())
     }
 
-    pub(crate) fn insert(&mut self, key: K, value: V) -> Result<Option<V>, FixedTableError> {
+    pub fn insert(&mut self, key: K, value: V) -> Result<Option<V>, FixedTableError> {
         if !self.admitted {
             self.faulted = true;
             return Err(FixedTableError::Overflow);
@@ -195,7 +202,7 @@ impl<K: Ord, V> FixedTable<K, V> {
         }
     }
 
-    pub(crate) fn insert_stable(&mut self, key: K, value: V) -> Result<(), FixedTableError> {
+    pub fn insert_stable(&mut self, key: K, value: V) -> Result<(), FixedTableError> {
         if !self.admitted || self.len >= self.slots.len() {
             self.faulted = true;
             return Err(FixedTableError::Overflow);
@@ -205,47 +212,47 @@ impl<K: Ord, V> FixedTable<K, V> {
         Ok(())
     }
 
-    pub(crate) fn get(&self, key: &K) -> Option<&V> {
+    pub fn get(&self, key: &K) -> Option<&V> {
         self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok().map(|index| &self.slots[index].as_ref().expect("occupied fixed slot").1)
     }
 
-    pub(crate) fn get_mut(&mut self, key: &K) -> Option<&mut V> {
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let index = self.occupied().binary_search_by(|slot| slot.as_ref().expect("occupied fixed slot").0.cmp(key)).ok()?;
         Some(&mut self.slots[index].as_mut().expect("occupied fixed slot").1)
     }
 
-    pub(crate) fn contains_key(&self, key: &K) -> bool {
+    pub fn contains_key(&self, key: &K) -> bool {
         self.get(key).is_some()
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&K, &V)> {
         self.slots[..self.len].iter().map(|slot| {
             let (key, value) = slot.as_ref().expect("occupied fixed slot");
             (key, value)
         })
     }
 
-    pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
+    pub fn values(&self) -> impl Iterator<Item = &V> {
         self.slots[..self.len].iter().map(|slot| &slot.as_ref().expect("occupied fixed slot").1)
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.len
     }
 
-    pub(crate) fn capacity(&self) -> usize {
+    pub fn capacity(&self) -> usize {
         self.slots.len()
     }
 
-    pub(crate) fn faulted(&self) -> bool {
+    pub fn faulted(&self) -> bool {
         self.faulted
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    pub(crate) fn pop(&mut self) -> Option<(K, V)> {
+    pub fn pop(&mut self) -> Option<(K, V)> {
         if self.len == 0 {
             return None;
         }
@@ -253,22 +260,17 @@ impl<K: Ord, V> FixedTable<K, V> {
         self.slots[self.len].take()
     }
 
-    pub(crate) fn last_mut(&mut self) -> Option<(&mut K, &mut V)> {
+    pub fn last_mut(&mut self) -> Option<(&mut K, &mut V)> {
         let (key, value) = self.slots.get_mut(self.len.checked_sub(1)?)?.as_mut()?;
         Some((key, value))
     }
 
-    pub(crate) fn get_index(&self, index: usize) -> Option<&V> {
+    pub fn get_index(&self, index: usize) -> Option<&V> {
         self.slots.get(index)?.as_ref().map(|(_, value)| value)
     }
 
-    pub(crate) fn get_index_mut(&mut self, index: usize) -> Option<&mut V> {
+    pub fn get_index_mut(&mut self, index: usize) -> Option<&mut V> {
         self.slots.get_mut(index)?.as_mut().map(|(_, value)| value)
-    }
-
-    #[cfg(test)]
-    pub(crate) fn test_index_of(&self, predicate: impl Fn(&K) -> bool) -> Option<usize> {
-        self.iter().position(|(key, _)| predicate(key))
     }
 
     fn occupied(&self) -> &[Option<(K, V)>] {
@@ -544,40 +546,6 @@ pub struct Construction {
     pub layer_material_ids: Vec<EntityId>,
 }
 // #endregion 🔖️Material
-
-// #region 🔖️Schedule
-/// 📅️ Schedule reference by id.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub struct ScheduleId(pub u32);
-
-// 🌱️ Hand-written, not derived — same tuple-struct reason as `EntityId` above.
-impl ToValue for ScheduleId {
-    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
-    fn to_value(&self) -> DslValue {
-        self.0.to_value()
-    }
-}
-impl FromValue for ScheduleId {
-    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
-    fn from_value(value: DslValue) -> Result<Self, ValueError> {
-        u32::from_value(value).map(ScheduleId)
-    }
-}
-
-/// 🔗️ `ScheduleId` as a mutation-payload field — the schedule-reference slots every thermostat,
-/// humidistat, gain and setpoint-manager mutation addresses. Hand-written, same reason as above.
-impl semio_framework_dsl_record::DslField for ScheduleId {
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::UInt
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::UInt(u64::from(self.0))
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        <u32 as semio_framework_dsl_record::DslField>::from_value(value).map(ScheduleId)
-    }
-}
-// #endregion 🔖️Schedule
 
 // #region 🔖️Gains
 /// 👤️ People internal gain object.
@@ -977,7 +945,7 @@ pub struct Infiltration {
     pub id: EntityId,
     pub zone_id: EntityId,
     pub schedule_id: ScheduleId,
-    pub method: crate::air_exchange::InfiltrationMethod,
+    pub method: air_exchange::InfiltrationMethod,
     pub design_flow_ach: f64,
     pub flow_per_exterior_area_m3_s_m2: f64,
     pub effective_leakage_area_m2: f64,
@@ -1039,8 +1007,8 @@ pub struct Model {
     pub daylight_zones: Vec<DaylightZoneConfig>,
     pub room_air_models: Vec<RoomAirModelAssignment>,
     pub ground_temperature: GroundTemperatureConfig,
-    pub run_period: crate::calendar::RunPeriod,
-    pub schedules: crate::schedule::ScheduleSet,
+    pub run_period: calendar::RunPeriod,
+    pub schedules: schedule::ScheduleSet,
 }
 
 impl Model {
@@ -1116,8 +1084,8 @@ impl Model {
             let all_glazing_layers = !construction.layer_material_ids.is_empty() && construction.layer_material_ids.iter().all(|id| glazing_ids.contains(id) || gas_ids.contains(id));
             if glazing_construction_ids.contains(&construction.id) || all_glazing_layers {
                 let alternates = construction.layer_material_ids.iter().enumerate().all(|(index, id)| if index % 2 == 0 { glazing_ids.contains(id) } else { gas_ids.contains(id) });
-                if !alternates || construction.layer_material_ids.len() % 2 == 0 || construction.layer_material_ids.len() > 2 * crate::fenestration::MAX_PANES - 1 {
-                    diag.push(Error::severe(format!("glazing construction {} must alternate one to {} glazing panes with gas gaps", construction.name, crate::fenestration::MAX_PANES)));
+                if !alternates || construction.layer_material_ids.len() % 2 == 0 || construction.layer_material_ids.len() > 2 * MAX_PANES - 1 {
+                    diag.push(Error::severe(format!("glazing construction {} must alternate one to {} glazing panes with gas gaps", construction.name, MAX_PANES)));
                 }
             } else {
                 for mid in &construction.layer_material_ids {
@@ -1252,7 +1220,7 @@ impl Model {
                 if fen.vertices_m.len() < 3 {
                     diag.push(Error::severe(format!("fenestration {} has fewer than 3 vertices", fen.name)));
                 } else if let Some(host) = self.surfaces.iter().find(|surface| surface.id == fen.surface_id) {
-                    if !crate::geometry::polygon_lies_on_plane(&fen.vertices_m, &host.vertices_m, FENESTRATION_PLANE_TOLERANCE_M) {
+                    if !geometry::polygon_lies_on_plane(&fen.vertices_m, &host.vertices_m, FENESTRATION_PLANE_TOLERANCE_M) {
                         diag.push(Error::severe(format!("fenestration {} has a polygon outside its host surface's plane", fen.name)));
                     }
                 }
@@ -1294,4 +1262,61 @@ mod tests;
 
 impl semio_framework_dsl_record::BorrowedDslField for EntityId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
 
-impl semio_framework_dsl_record::BorrowedDslField for ScheduleId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
+// #region 🔖️Fixtures
+/// 🧪️ Build a minimal test model for integration tests.
+pub fn test_model_single_zone() -> Model {
+    Model {
+        name: "BESTEST Single Zone".into(),
+        version: "1.0".into(),
+        site: Site { latitude_deg: 45.0, longitude_deg: 0.0, elevation_m: 100.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
+        zones: vec![Zone { id: EntityId(1), name: "Zone1".into(), volume_m3: 106.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
+        materials: vec![Material {
+            id: EntityId(10),
+            name: "Insulation".into(),
+            roughness: SurfaceRoughness::MediumRough,
+            thickness_m: 0.1,
+            conductivity_w_m_k: 0.04,
+            density_kg_m3: 50.0,
+            specific_heat_j_kg_k: 1000.0,
+            thermal_absorptance: 0.9,
+            solar_absorptance: 0.7,
+            visible_absorptance: 0.7,
+        }],
+        constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
+        surfaces: vec![Surface {
+            id: EntityId(30),
+            name: "ExtWall".into(),
+            zone_id: EntityId(1),
+            class: SurfaceClass::ExteriorWall,
+            vertices_m: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 3.0], [0.0, 0.0, 3.0]],
+            construction_id: EntityId(20),
+            outside_boundary_condition: OutsideBoundary::OutdoorAir,
+            sun_exposed: true,
+            wind_exposed: true,
+            multiplier: 1,
+        }],
+        ideal_loads: vec![IdealLoadsSystem {
+            id: EntityId(40),
+            zone_id: EntityId(1),
+            max_heating_supply_air_temp_c: 50.0,
+            min_cooling_supply_air_temp_c: 13.0,
+            max_heating_capacity_w: None,
+            max_cooling_capacity_w: None,
+            outdoor_air_per_person_m3_s: 0.00944,
+            outdoor_air_per_area_m3_s_m2: 0.0,
+        }],
+        ..Default::default()
+    }
+}
+
+/// 🧪️ Full topology test model with plant, PV, AFN, daylight.
+pub fn test_model_full_topology() -> Model {
+    let mut model = test_model_single_zone();
+    model.name = "Full Topology".into();
+    model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
+    model.plant_loops.push(PlantLoopConfig { id: EntityId(60), name: "Hot Water".into(), loop_type: PlantLoopType::Heating, supply_temperature_c: 55.0, return_temperature_c: 45.0, design_flow_kg_s: 2.0, equipment_ids: vec![EntityId(61)] });
+    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96 });
+    model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
+    model
+}
+// #endregion 🔖️Fixtures

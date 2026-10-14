@@ -1,5 +1,7 @@
 //! 🗒️ Actual Note component open and codec laws under both independent host runtimes.
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,GuestInstance,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,retryable_lifecycle_turn}; use semio_framework_plugin_interpreter::{OwnedRuntime,TurnFault};
+use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,GuestInstance,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,retryable_lifecycle_turn};
+use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_framework_plugin_guest_contract::TurnFault;
 use semio_framework::kernel::{Budget,Event,TurnResult,TurnStatus};
 use semio_framework_actor::ActorId as RuntimeActorId;
 use std::path::PathBuf;

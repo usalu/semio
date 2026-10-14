@@ -19,7 +19,7 @@ fn pack_round_trips_and_agrees_with_dsl() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-    use crate::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
+    use {crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 

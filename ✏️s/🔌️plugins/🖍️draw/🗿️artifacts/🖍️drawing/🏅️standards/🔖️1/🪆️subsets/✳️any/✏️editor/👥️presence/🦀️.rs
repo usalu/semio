@@ -73,7 +73,6 @@ impl store::SnapshotRetirementFactory<DrawingPresence> for DrawingPresenceRetire
 }
 
 
-
 impl store::ArtifactPresenceSnapshot for DrawingPresence {}
 
 impl pack::snapshot::ArtifactDsl for DrawingPresence {
@@ -218,3 +217,8 @@ impl protocol::OpBinary for DrawingPresenceMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

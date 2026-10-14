@@ -1,6 +1,6 @@
 //! 🏭️ A retained Host opening borrows the root's actual context and returns the callee's unchanged execution receipt.
 use super::{CompiledHandle,GuestInstance,GuestInstanceState,GuestRuntimes,RuntimeActorId,owned_compiled};
-use semio_framework_plugin_interpreter::{OwnedActorStartup,OwnedActorStartupCall,OwnedGuestInstance};
+use semio_framework_plugin_interpreter_runtime::{OwnedActorStartup,OwnedActorStartupCall,OwnedGuestInstance};
 use semio_framework_actor::{OriginalGuestExecutionBudget,RetainedTurnInput};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};

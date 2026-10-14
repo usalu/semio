@@ -9,14 +9,14 @@ use crate::editor::fem2d::interaction::gumball::{fem2d_gumball_tick, set_gumball
 use crate::editor::fem2d::modes::edit::windows::{model as model_window, results as results_window};
 use crate::editor::fem2d::transient::{fem_gumball_drive, FemGumballTransientMutation};
 use crate::editor::fem2d::Fem2dPlayApp;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 /// 🪟️ The dirty scope a gumball dispatch declares: both canvas windows paint the gesture or its commit.
 fn fem2d_gumball_scope() -> UiDirtyScope {

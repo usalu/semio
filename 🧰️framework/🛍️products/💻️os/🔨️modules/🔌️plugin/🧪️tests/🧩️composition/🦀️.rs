@@ -200,8 +200,8 @@ enum ComposedParentSnapshotDecodeState {
 }
 
 struct ComposedParentSnapshotDecodeAuthority {
-    operation: semio_framework_job::OperationId,
-    generation: semio_framework_job::Generation,
+    pub(crate) operation: semio_framework_job::OperationId,
+    pub(crate) generation: semio_framework_job::Generation,
     path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: ComposedParentSnapshotDecodeState,
     value: std::mem::ManuallyDrop<Option<ComposedParentSnapshot>>,
@@ -224,7 +224,7 @@ impl ComposedParentSnapshotDecodeAuthority {
         store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         matches!(self.state, ComposedParentSnapshotDecodeState::Published | ComposedParentSnapshotDecodeState::Complete) && self.value.is_none() && self.retirement.is_none()
     }
 
@@ -875,7 +875,7 @@ impl RecursiveBranchSnapshotOpen {
             return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot);
         }
         if self.request.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, maximum_copy_bytes);
+            return semio_framework_value_retirement_owner::retirement_owner_demands(&self.request, maximum_copy_bytes);
         }
         Ok(semio_framework_value::RetirementDemand { release_bytes: self.input.capacity(), depth: usize::from(!self.terminal), ..Default::default() })
     }
@@ -905,7 +905,7 @@ impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
             return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant);
         }
         if self.request.is_some() {
-            let step = store::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.request, grant)?;
+            let step = semio_framework_value_retirement_owner::retirement_owner_close(&mut self.request, grant)?;
             return Ok(store::RetainedCloneStep::Progress(step.progress()));
         }
         if self.input.capacity() != 0 {
@@ -1046,7 +1046,7 @@ struct ReadyComposedParentInitialization {
     lane_index: usize,
     operation_index: usize,
     phase: ReadyComposedParentInitializationPhase,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl ReadyComposedParentInitialization {

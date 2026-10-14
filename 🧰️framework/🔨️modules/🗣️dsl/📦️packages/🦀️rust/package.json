@@ -9,9 +9,6 @@
     "test-reference": "bun repo run @semio-tech/framework-dsl-rs:test-reference"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

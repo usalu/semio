@@ -1,9 +1,10 @@
 //! 🌉️ Central apply entry points: the only code of this artifact that turns a mutation's diff into the next snapshot with `protocol::apply_diff`; the schema and mutation leaves only build diffs and inverses.
 #![allow(unused_imports)]
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::{widget_id, Generation3dSnapshot};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use crate::Generation3dMutation;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};

@@ -108,9 +108,7 @@ pub mod os_pack {
     #[cfg(not(target_arch = "wasm32"))]
     #[path = "../../🔨️modules/🎒️pack/🚦️control/🦀️.rs"]
     pub mod control;
-    #[path = "../../🔨️modules/🎒️pack/🦀️.rs"]
-    mod component;
-    pub use component::*;
+    pub use semio_framework_os_pack::*;
 
     #[cfg(not(target_arch = "wasm32"))]
     #[path = "../../🔨️modules/🎒️pack/⌨️cli/🦀️.rs"]
@@ -131,12 +129,9 @@ pub mod os_pack {
     // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
     // re-exporting it a second time here would make every primitive an ambiguous glob.
 
-    #[cfg(any(test, feature = "record-codec-laws"))]
-    #[path = "../../🔨️modules/🎒️pack/🧪️tests/🧬️record-codec-laws/🦀️.rs"]
-    pub mod record_codec_laws;
 
-    #[path = "../../🔨️modules/🎒️pack/🌱️value/🦀️.rs"]
-    pub mod value;
+
+
 }
 
 /// 🪡️ Generic positional list deltas — `{removed, inserted, moved, patched}` rows with base/after coordinates, never an id order list.
@@ -161,8 +156,7 @@ pub mod os_spr {
     pub use protocol::scalar;
     pub use protocol::wire;
 
-    #[path = "../../🔨️modules/📡️spr/🧵️channel/🦀️.rs"]
-    pub mod channel;
+    pub use semio_framework_os_channel as channel;
 
     #[cfg(not(target_arch = "wasm32"))]
     #[path = "../../🔨️modules/📡️spr/⌨️cli/🦀️.rs"]
@@ -171,20 +165,17 @@ pub mod os_spr {
     // 🎞️ The os authoring half of the command layer (inference, semantics, diff kit, descriptor
     // registry, composite planner). It re-exports `protocol::mutation`'s contract from its own file,
     // so `os_spr::command::Mutation` and friends still resolve here.
-    #[path = "../../🔨️modules/📡️spr/🎮️command/🦀️.rs"]
-    pub mod command;
+    pub use semio_framework_os_command as command;
 
     // 🧮️ Composite-plan folding and the fold-footprint law, kept apart from the command layer's leaf-facing kit.
-    #[path = "../../🔨️modules/📡️spr/🧮️fold/🦀️.rs"]
-    pub mod fold;
+    pub use semio_framework_os_command::fold;
 
     pub use self::crypto::*;
     pub use self::dictionary::*;
     pub use self::ids::*;
     pub use self::wire::*;
 
-    #[path = "../../🔨️modules/📡️spr/📜️history/🦀️.rs"]
-    pub mod history;
+    pub use semio_framework_os_history as history;
 
     #[path = "../../🔨️modules/📡️spr/🔌️io/🦀️.rs"]
     pub mod io;
@@ -199,11 +190,9 @@ pub mod os_spr {
 
 use semio_framework_ui_locale::{AppLabels, Label, LabelText, Locale, LocalizedLabel, Terminology};
 
-#[path = "../../🔨️modules/🌿️vcs/🦀️.rs"]
-pub mod os_vcs;
+pub use semio_framework_os_vcs as os_vcs;
 
-#[path = "../../🔨️modules/🪪️identity/🦀️.rs"]
-pub mod os_identity;
+pub use semio_framework_os_identity as os_identity;
 
 // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS C1: directory event log
 // schema + pure read model (`DirectoryEvent`/`DirectoryReadModel`/`fold`) — plain serde data, no
@@ -211,11 +200,13 @@ pub mod os_identity;
 #[path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🦀️.rs"]
 pub mod os_plugin_module_schema;
 
-#[path = "../../🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🦀️.rs"]
-pub mod os_component_receipt;
+pub use semio_framework_plugin_component_receipt as os_component_receipt;
 
-#[path = "../../🔨️modules/📇️directory/🦀️.rs"]
-pub mod os_directory;
+pub mod os_directory {
+ pub use semio_framework_os_directory::*;
+ pub use semio_framework_os_directory_client as client;
+ pub use semio_framework_os_directory_client::identity;
+}
 
 // 🔁️ ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W1: `🔁️workflow/🦀️.rs`
 // is NOT mounted here (tried, reverted — see this file's own header comment "pending dep-DAG
@@ -262,12 +253,7 @@ pub mod os_store {
     pub mod worker;
 }
 
-#[path = "."]
-pub mod os_inference {
-    #[path = "../../🔨️modules/💡️inference/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
+pub use semio_framework_os_inference as os_inference;
 
 pub use crate::os_dsl::*;
 pub use crate::os_inference::*;
@@ -331,3 +317,11 @@ mod canonical_intrinsic_retirement_tests;
 
 #[path="../../🔨️modules/🔌️plugin/📇️registry/📥️runtime/🦀️.rs"]
 pub mod native_catalog;
+
+#[cfg(test)]
+#[path = "../../🔨️modules/📡️spr/🧵️channel/🧪️tests/📤️return-content/🦀️.rs"]
+mod channel_return_content_tests;
+
+#[cfg(test)]
+#[path = "../../🔨️modules/🌿️vcs/🧪️tests/🧪️branch-provenance/🦀️.rs"]
+mod vcs_branch_provenance_tests;

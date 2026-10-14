@@ -2,7 +2,7 @@
 
 use super::super::cascade;
 use super::DeleteDoorType;
-use crate::{CurtainPanel, Entry, KeyedDelta, ModelDiff, ModelSnapshot, OpeningKind};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot, OpeningKind}, diff::{Entry, KeyedDelta, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

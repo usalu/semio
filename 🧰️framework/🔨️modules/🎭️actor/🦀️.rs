@@ -23,7 +23,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub use semio_framework_job as job;
 #[path="🎟️retained-turn/🦀️.rs"]
 pub mod retained_turn;
-pub use retained_turn::{OriginalActorParkRefusal,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn,IssuedRetainedBatch,IssuedRetainedRecipient,RetainedTurnInput,RetainedTurnReceipt,OriginalActorInput,ActorGuestPhase,OriginalActorGuestReturn,OriginalActorJobProvider,OriginalJobStep,OriginalJobOutputState,OriginalJobOutcome,OriginalJobOutputChunk,OriginalJobOutputReply,OriginalJobOutputAckReply,OriginalJobSource,OriginalJobSourceCursor,OriginalJobTurnLoan,OriginalJobBudget,OriginalJobStartReply,OriginalJobStepReply,OriginalJobCancelReply,OriginalJobCallFailure};
+pub use retained_turn::{OriginalActorParkRefusal,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn,IssuedRetainedBatch,IssuedRetainedRecipient,OriginalActorTurnLoan,OriginalActorTurnWork,RetainedTurnInput,RetainedTurnReceipt,OriginalActorInput,ActorGuestPhase,OriginalActorGuestReturn,OriginalActorJobProvider,OriginalJobStep,OriginalJobOutputState,OriginalJobOutcome,OriginalJobOutputChunk,OriginalJobOutputReply,OriginalJobOutputAckReply,OriginalJobSource,OriginalJobSourceCursor,OriginalJobTurnLoan,OriginalJobBudget,OriginalJobStartReply,OriginalJobStepReply,OriginalJobCancelReply,OriginalJobCallFailure};
 pub use retained_turn::{OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt,OriginalJobSourceWireCursor,OriginalJobSourceWireHeader};
 
 #[path = "🎠️activation-reservation/🦀️.rs"]
@@ -54,7 +54,7 @@ mod return_page_tests;
 mod cold_pair_tests;
 
 //#region 🧬️SchemaMetadata
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 pub mod schema_metadata {
     use std::collections::HashSet;
 
@@ -138,6 +138,8 @@ pub mod schema_metadata {
         SchemaMetadata { name: "KernelMetrics", version: 1, typescript: "export type KernelMetrics = { actors: number, shards: number, packages: number, };" },
         SchemaMetadata { name: "Lane", version: 1, typescript: r#"export type Lane = "Interactive" | "UserVisible" | "Background" | "Maintenance";"# },
         SchemaMetadata { name: "Mailbox", version: 1, typescript: "export type Mailbox = { capacity: number, len: number, };" },
+        SchemaMetadata { name: "OriginalActorTurnWork", version: 1, typescript: "export type OriginalActorTurnWork = { clockBinding: bigint, absoluteDeadlineUs: bigint, fuel: bigint };" },
+        SchemaMetadata { name: "OriginalActorTurnLoan", version: 1, typescript: "export type OriginalActorTurnLoan = { retainedPolicy: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, workFuel: bigint, deadlineUs: bigint };" },
         SchemaMetadata { name: "Origin", version: 1, typescript: r#"export type Origin = { "kind": "ui", window: WindowId, } | { "kind": "actor", id: ActorId, } | { "kind": "kernel" } | { "kind": "bus", topic: string, };"# },
         SchemaMetadata { name: "PackageHash", version: 1, typescript: "export type PackageHash = number[];" },
         SchemaMetadata { name: "PackageId", version: 1, typescript: "export type PackageId = string;" },
@@ -146,8 +148,8 @@ pub mod schema_metadata {
             version: 1,
             typescript: r#"export type Payload = { "kind": "event", bytes: Array<number>, } | { "kind": "suspend", operation: JobOperation, appliedProgress: bigint, } | { "kind": "resume", operation: JobOperation, checkpoint: JobCheckpoint, } | { "kind": "cancel", seq: bigint, } | { "kind": "jobStep", turn: JobTurn, };"#,
         },
-        SchemaMetadata { name: "RetainedTurnInput", version: 1, typescript: "export type RetainedTurnInput = { operation: bigint, generation: bigint, epoch: bigint, grant: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
-        SchemaMetadata { name: "RetainedTurnReceipt", version: 1, typescript: "export type RetainedTurnReceipt = { input: RetainedTurnInput, spent: { copiedItems: number, copiedBytes: number, retainedCapacityBytes: number, releasedBytes: number }, remaining: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
+        SchemaMetadata { name: "RetainedTurnInput", version: 3, typescript: "export type RetainedTurnInput = { operation: bigint, generation: bigint, epoch: bigint, work: OriginalActorTurnWork, grant: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
+        SchemaMetadata { name: "RetainedTurnReceipt", version: 3, typescript: "export type RetainedTurnReceipt = { input: RetainedTurnInput, spent: { copiedItems: number, copiedBytes: number, retainedCapacityBytes: number, releasedBytes: number }, workUnitsSpent: bigint, remainingFuel: bigint, remaining: import(\"../../../🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts\").RetainedCloneGrant, };" },
         SchemaMetadata { name: "RuntimeMetricsSnapshot", version: 1, typescript: "export type RuntimeMetricsSnapshot = { kernel: KernelMetrics, actors: Array<ActorMetricsSample>, shards: Array<ShardMetricsSample>, sampled_at_ms: bigint, };" },
         SchemaMetadata { name: "SceneSnapshot", version: 1, typescript: "export type SceneSnapshot = { revision: bigint, committed_ms: bigint, patches: Array<number>, node_count: number, };" },
         SchemaMetadata { name: "ShardId", version: 1, typescript: "export type ShardId = number;" },
@@ -155,7 +157,7 @@ pub mod schema_metadata {
         SchemaMetadata { name: "ShardMetrics", version: 1, typescript: "export type ShardMetrics = { actors: number, busy_ratio: number, heartbeat_age_ms: number, };" },
         SchemaMetadata { name: "ShardMetricsSample", version: 1, typescript: "export type ShardMetricsSample = { shard: ShardId, metrics: ShardMetrics, };" },
         SchemaMetadata { name: "ShardTable", version: 1, typescript: "export type ShardTable = { kind: ShardKind, shard_count: number, exclusive_reserve: number, assignment: Record<string, ShardId>, exclusive_leases: Record<string, ActorId>, };" },
-        SchemaMetadata { name: "TurnGrant", version: 1, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, retained: RetainedTurnInput, envelopes: Array<Envelope>, };" },
+        SchemaMetadata { name: "TurnGrant", version: 2, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, retained: RetainedTurnInput, loan: OriginalActorTurnLoan, envelopes: Array<Envelope>, };" },
         SchemaMetadata {
             name: "TurnResult",
             version: 1,
@@ -3985,6 +3987,8 @@ impl ShardTable {
 #[derive(Clone, Debug)]
 struct ScheduledActor {
     retained: RetainedTurnInput,
+    loan:OriginalActorTurnLoan,
+    actual_received_work:u128,
     issued: Option<RetainedTurnInput>,
     returned: bool,
     actual_received_spent:protocol::value::RetainedCloneProgress,
@@ -4002,7 +4006,7 @@ struct ScheduledActor {
 
 impl ScheduledActor {
     fn can_issue(&self) -> bool {
-        self.active && self.issued.is_none() && self.refused_return.is_none() && (self.continuation||!self.mailbox.is_empty()) && self.retained.validate().is_ok() && self.retained.grant.maximum_items != 0 && (!self.returned || self.retained.epoch.checked_add(1).is_some())
+        self.active && self.issued.is_none() && self.refused_return.is_none() && (self.continuation||!self.mailbox.is_empty()) && self.retained.validate().is_ok() && self.loan.validate_for(self.retained).is_ok() && self.loan.retained_policy.maximum_items!=0 && self.loan.work_fuel!=0 && self.retained.grant.maximum_items != 0 && (!self.returned || self.retained.epoch.checked_add(1).is_some())
     }
 }
 
@@ -4037,6 +4041,7 @@ pub struct TurnGrant {
     pub shard: ShardId,
     pub budget: Budget,
     pub retained: RetainedTurnInput,
+    pub loan:OriginalActorTurnLoan,
     pub envelopes: Vec<Envelope>,
 }
 
@@ -4049,7 +4054,7 @@ impl TurnGrant {
         self.actor.pack_encode(out).await;
         self.shard.pack_encode(out).await;
         self.budget.pack_encode(out).await?;
-        self.retained.pack_encode(out).await?;
+        self.retained.pack_encode(out).await?;self.loan.pack_encode(out).await;
         pack::write_vec(out, &self.envelopes, Envelope::pack_encode).await;
         Ok(())
     }
@@ -4059,6 +4064,7 @@ impl TurnGrant {
             shard: ShardId::pack_decode(bytes, pos).await?,
             budget: Budget::pack_decode(bytes, pos).await?,
             retained: RetainedTurnInput::pack_decode(bytes, pos).await?,
+            loan:OriginalActorTurnLoan::pack_decode(bytes,pos).await?,
             envelopes: pack::read_vec(bytes, pos, "TurnGrant::envelopes", Envelope::pack_decode).await?,
         })
     }
@@ -4083,15 +4089,15 @@ impl Scheduler {
         Self { actors: BTreeMap::new(), plugin_deficit: HashMap::new(), plugin_order: Vec::new(), plugin_cursor: 0, grants_per_tick: grants_per_tick.max(1) }
     }
 
-    pub async fn register_actor(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId, retained: RetainedTurnInput) {
-        self.register_actor_state(actor, package, lane, budget, shard, true, retained).await;
+    pub async fn register_actor(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId, retained: RetainedTurnInput,loan:OriginalActorTurnLoan) {
+        self.register_actor_state(actor, package, lane, budget, shard, true, retained,loan).await;
     }
 
-    async fn register_actor_state(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId, active: bool, retained: RetainedTurnInput) {
+    async fn register_actor_state(&mut self, actor: ActorId, package: PackageId, lane: Lane, budget: Budget, shard: ShardId, active: bool, retained: RetainedTurnInput,loan:OriginalActorTurnLoan) {
         if !self.plugin_order.contains(&package) {
             self.plugin_order.push(package.clone());
         }
-        self.actors.insert(actor, ScheduledActor { retained, issued: None, returned: false, actual_received_spent:Default::default(),refused_return:None,continuation:false,package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active, throttle: 1.0, deficit: 0 });
+        self.actors.insert(actor, ScheduledActor { retained,loan,actual_received_work:0, issued: None, returned: false, actual_received_spent:Default::default(),refused_return:None,continuation:false,package, lane, budget, shard, mailbox: Mailbox::new(budget.mailbox_len).await, active, throttle: 1.0, deficit: 0 });
     }
 
     pub async fn unregister_actor(&mut self, actor: ActorId) {
@@ -4228,7 +4234,7 @@ impl Scheduler {
 
     async fn drain_original_call(&mut self, actor_id: ActorId) -> Option<TurnGrant> {
         let entry = self.actors.get_mut(&actor_id)?;
-        if entry.issued.is_some() || entry.refused_return.is_some() || (!entry.continuation&&entry.mailbox.is_empty()) || entry.retained.validate().is_err() || entry.retained.grant.maximum_items == 0 { return None; }
+        if entry.issued.is_some() || entry.refused_return.is_some() || (!entry.continuation&&entry.mailbox.is_empty()) || entry.retained.validate().is_err() || entry.loan.validate_for(entry.retained).is_err() || entry.loan.retained_policy.maximum_items==0 || entry.loan.work_fuel==0 || entry.retained.grant.maximum_items == 0 { return None; }
         let epoch = if entry.returned { entry.retained.epoch.checked_add(1)? } else { entry.retained.epoch };
         let retained = RetainedTurnInput { epoch, ..entry.retained };
         let mut envelopes = Vec::new();
@@ -4239,7 +4245,7 @@ impl Scheduler {
         entry.retained = retained;
         entry.issued = Some(retained);
         entry.deficit -= Self::actor_weight(entry);
-        Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle).await, retained, envelopes })
+        Some(TurnGrant { actor: actor_id, shard: entry.shard, budget: entry.budget.scaled(entry.throttle).await, retained, loan:entry.loan,envelopes })
     }
 }
 //#endregion ⏱️Scheduler
@@ -4835,7 +4841,7 @@ impl Kernel {
     /// `pin_avoiding`'s own doc for why: a wholesale avoid-saturated-shards policy for EVERY lane
     /// would just relocate the count imbalance `pin`'s own budget-3 guarantee depends on, not fix
     /// interactive latency).
-    pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, retained: RetainedTurnInput) -> ActorId {
+    pub async fn activate(&mut self, package: PackageId, plugin_ordinal: u16, kind: ActorKind, lane: Lane, window: Option<WindowId>, _event: ActivationEvent, retained: RetainedTurnInput,loan:OriginalActorTurnLoan) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
@@ -4846,7 +4852,7 @@ impl Kernel {
         } else {
             self.shards.pin(id).await
         };
-        self.scheduler.register_actor(id, package.clone(), lane, budget, shard, retained).await;
+        self.scheduler.register_actor(id, package.clone(), lane, budget, shard, retained,loan).await;
         self.actors.insert(id, ActorMeta { reservation: None, transport_key: None, kind, package, capabilities: Vec::new(), budget, status: ActorStatus::Activating, failure: FailureState::new(), metrics: ActorMetrics::default(), window });
         id
     }
@@ -4897,14 +4903,19 @@ impl Kernel {
         self.scheduler.actors.get(&actor).map(|entry| entry.retained)
     }
 
+    pub fn retained_turn_loan(&self,actor:ActorId)->Option<OriginalActorTurnLoan>{self.scheduler.actors.get(&actor).map(|entry|entry.loan)}
+    pub fn original_call_work_received(&self,actor:ActorId)->Option<u128>{self.scheduler.actors.get(&actor).map(|entry|entry.actual_received_work)}
+
     /// 📥️ Adopts one actual raw export receipt before another input or semantic result is admitted.
     pub fn receive_original_call(&mut self,actor:ActorId,returned:retained_turn::OriginalActorGuestReturn,continuation:bool)->Result<RetainedTurnReceipt,KernelError>{
         let entry=self.scheduler.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
         if entry.refused_return.is_some(){return Err(KernelError::InvalidRetainedReceipt)}
         let issued=entry.issued.ok_or(KernelError::TurnNotIssued)?;
         match entry.actual_received_spent.checked_add(returned.spent){Ok(spent)=>entry.actual_received_spent=spent,Err(_)=>{entry.refused_return=Some(returned);return Err(KernelError::InvalidRetainedReceipt)}}
-        let receipt=match issued.return_original(returned.spent){Ok(receipt)if returned.input==issued&&returned.claimed_remaining.is_none_or(|remaining|remaining==receipt.remaining)=>receipt,_=>{entry.refused_return=Some(returned);return Err(KernelError::InvalidRetainedReceipt)}};
-        entry.retained=RetainedTurnInput{grant:receipt.remaining,..issued};entry.issued=None;entry.returned=true;entry.continuation=continuation;Ok(receipt)
+        entry.actual_received_work=match entry.actual_received_work.checked_add(u128::from(returned.work_units_spent)){Some(work)=>work,None=>{entry.refused_return=Some(returned);return Err(KernelError::InvalidRetainedReceipt)}};
+        let receipt=match issued.return_original(returned.spent,returned.work_units_spent){Ok(receipt)if returned.input==issued&&returned.claimed_remaining.is_none_or(|remaining|remaining==receipt.remaining)&&returned.claimed_remaining_fuel.is_none_or(|remaining|remaining==receipt.remaining_fuel)=>receipt,_=>{entry.refused_return=Some(returned);return Err(KernelError::InvalidRetainedReceipt)}};
+        let loan=match entry.loan.remaining(returned.spent,returned.work_units_spent){Ok(loan)=>loan,Err(_)=>{entry.refused_return=Some(returned);return Err(KernelError::InvalidRetainedReceipt)}};
+        entry.loan=loan;entry.retained=RetainedTurnInput{grant:receipt.remaining,work:OriginalActorTurnWork{fuel:receipt.remaining_fuel,..issued.work},..issued};entry.issued=None;entry.returned=true;entry.continuation=continuation;Ok(receipt)
     }
 
     /// 🧾️ Borrows actual raw spending and any refused owner before a scheduler continuation.
@@ -4914,7 +4925,7 @@ impl Kernel {
     /// turn vs. `Faulted`), and status transition. Returns the escalation the caller (host) must
     /// act on for `Trapped`/`Quarantined` outcomes.
     pub async fn complete(&mut self, actor: ActorId, result: &TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
-        self.receive_original_call(actor,retained_turn::OriginalActorGuestReturn{input:result.retained_receipt.input,spent:result.retained_receipt.spent,claimed_remaining:Some(result.retained_receipt.remaining)},matches!(result.status,TurnStatus::MoreWork))?;
+        self.receive_original_call(actor,retained_turn::OriginalActorGuestReturn{input:result.retained_receipt.input,spent:result.retained_receipt.spent,work_units_spent:result.retained_receipt.work_units_spent,claimed_remaining:Some(result.retained_receipt.remaining),claimed_remaining_fuel:Some(result.retained_receipt.remaining_fuel)},matches!(result.status,TurnStatus::MoreWork))?;
         let meta = self.actors.get_mut(&actor).ok_or(KernelError::UnknownActor)?;
         if meta.reservation.is_some() {
             return Err(KernelError::InvalidTransition);
@@ -5125,13 +5136,14 @@ impl Kernel {
         parent: Option<ActorId>,
         requested_capabilities: Vec<CapabilityGrant>,
         retained: RetainedTurnInput,
+        loan:OriginalActorTurnLoan,
     ) -> ActorId {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
         let budget = lane_defaults::budget_for(lane);
         let shard = self.shards.pin_to(id, shard).await;
-        self.scheduler.register_actor(id, package.clone(), lane, budget, shard, retained).await;
+        self.scheduler.register_actor(id, package.clone(), lane, budget, shard, retained,loan).await;
         let capabilities = match parent {
             Some(parent_id) => {
                 let granted = self.actors.get(&parent_id).map(|meta| meta.capabilities.clone()).unwrap_or_default();

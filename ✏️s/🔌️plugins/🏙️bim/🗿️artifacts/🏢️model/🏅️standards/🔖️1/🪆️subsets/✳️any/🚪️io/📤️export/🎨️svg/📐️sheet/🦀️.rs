@@ -4,7 +4,7 @@
 
 use super::path::{mm_per_metre, Frame};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::{ModelSnapshot, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
 use std::collections::BTreeMap;
 
 /// 📏️ Space around the whole sheet.
@@ -57,7 +57,7 @@ fn rank(kind: ViewKind) -> u8 {
 /// 📐️ The layout of the views of `snapshot` that have a drawing: plans highest level first, then ceiling plans, sections and elevations, each by name and id.
 pub fn layout(snapshot: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework>) -> Layout {
     let level = |id: &str| snapshot.views[id].storey.as_deref().and_then(|storey| snapshot.storeys.get(storey)).map_or(0, |storey| storey.level);
-    let mut order: Vec<(&String, &crate::View)> = snapshot.views.iter().filter(|(id, view)| is_drawn(view.kind) && drawings.contains_key(*id)).collect();
+    let mut order: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::View)> = snapshot.views.iter().filter(|(id, view)| is_drawn(view.kind) && drawings.contains_key(*id)).collect();
     order.sort_by(|a, b| (&a.1.building, rank(a.1.kind), std::cmp::Reverse(level(a.0)), &a.1.name, a.0).cmp(&(&b.1.building, rank(b.1.kind), std::cmp::Reverse(level(b.0)), &b.1.name, b.0)));
     let (mut slots, mut y, mut widest) = (Vec::new(), MARGIN, 0.0_f64);
     for (id, view) in order {

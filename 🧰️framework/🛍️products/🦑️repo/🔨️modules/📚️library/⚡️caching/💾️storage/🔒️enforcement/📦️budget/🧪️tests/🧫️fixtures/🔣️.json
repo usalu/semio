@@ -1,0 +1,57 @@
+{
+  "schema": "repository-cache-budget/v1",
+  "expectedPartitionBytes": 66639101952,
+  "expectedHeadroomBytes": 2079326208,
+  "cases": [
+    {
+      "id": "authored",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "id": "control-overlap",
+      "mutation": "control-overlap",
+      "accepted": false
+    },
+    {
+      "id": "oversubscribed",
+      "mutation": "oversubscribed",
+      "accepted": false
+    },
+    {
+      "id": "overlapping",
+      "mutation": "overlapping",
+      "accepted": false
+    },
+    {
+      "id": "escaping",
+      "mutation": "escaping",
+      "accepted": false
+    },
+    {
+      "id": "unaligned",
+      "mutation": "unaligned",
+      "accepted": false
+    },
+    {
+      "id": "missing",
+      "mutation": "missing",
+      "accepted": false
+    }
+  ],
+  "cleanupSuffixes": [
+    "",
+    "m/incremental/fixture",
+    "fixed.dmg"
+  ],
+  "protectedAncestors": [
+    ".cache",
+    ".cache/b"
+  ],
+  "bootstrapControlDirectory": ".cache/b/c",
+  "probe": {
+    "stdout": "bounded\u0000capture\n",
+    "stderr": "diagnostic\n",
+    "status": 0
+  }
+}

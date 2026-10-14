@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-plugin-energy-engine-sim-retirement"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `sim` retirement: close-turn vocabulary and bounded close ladders of the engine owners"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-plugin-energy-engine-kernel = { workspace = true }
+semio-s-plugin-energy-engine-meters = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-output = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }

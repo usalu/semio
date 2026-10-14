@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot:
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const DOCUMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(6)];
 const ZONE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(4)];
 const WINDOW_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
@@ -26,7 +25,6 @@ fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)
 fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'static[FloatColumn],control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>, ValueError>{let rows=&database.table(table)?.rows;let mut result=Entities::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;let row=FloatRow::new(row,floats)?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||result.insert(row.rowid,row).is_some(){return Err(invalid(format!("{table} requires exact fields and unique positive aliased identities")));}}Ok(result)}
 fn groups<'a>(rows:&Entities<'a>,parents:&Entities<'a>,control:&mut SqliteSnapshotControl<'_>)->Result<Groups<'a>, ValueError>{let mut grouped:BTreeMap<i64,BTreeMap<usize,FloatRow<'a>>>=BTreeMap::new();for(position,row)in rows.values().copied().enumerate(){checkpoint(control,position,rows.len())?;let parent=row.integer(1)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error| invalid(error.to_string()))?;if !parents.contains_key(&parent)||grouped.entry(parent).or_default().insert(ordinal,row).is_some(){return Err(invalid("DIN4108 entity has a foreign parent or duplicate ordinal"));}}let mut result=Groups::new();for(parent,siblings)in grouped{for(position,ordinal)in siblings.keys().copied().enumerate(){checkpoint(control,position,siblings.len())?;if position!=ordinal{return Err(invalid("DIN4108 ordinals must be dense"));}}result.insert(parent,siblings.into_values().collect());}Ok(result)}
 fn siblings<'a>(groups:&'a Groups<'a>,parent:i64)-> &'a[FloatRow<'a>]{groups.get(&parent).map(Vec::as_slice).unwrap_or_default()}
-
 
 impl Din4108Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

@@ -78,7 +78,7 @@ export async function stageArtifacts(staging: string, owner: string, files: Read
   const lease = await acquireResourceLease({ directory: options.leaseDirectory, resource: `artifact:${resolve(staging)}`, mode: "exclusive", signal, control, onWait: options.onWait });
   let temporary: string | undefined;
   try {
-    const marker = ".nx-artifact.json";
+    const marker = ".semio-artifact.json";
     for (let parent = resolve(staging); dirname(parent) !== parent; parent = dirname(parent)) if (existsSync(parent) && lstatSync(parent).isSymbolicLink()) throw new Error(`Symlink artifact destination: ${parent}`);
     for (const name of files.keys()) if (isAbsolute(name) || name.split(/[\\/]/).includes("..")) throw new Error(`Invalid artifact path ${name}`);
     if (existsSync(staging)) {

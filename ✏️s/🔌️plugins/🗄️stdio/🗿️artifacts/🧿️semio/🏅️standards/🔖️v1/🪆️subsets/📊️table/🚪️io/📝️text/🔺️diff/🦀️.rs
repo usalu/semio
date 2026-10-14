@@ -6,11 +6,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt, split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexedTripleDiff, Replace};
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
 use crate::io::text::snapshot::{dec_cell_kind, enc_cell_kind};
-use {semio_s_artifact_stdio_semio_value::io::text::diff::{dec_semio_value, enc_semio_value}, semio_s_artifact_stdio_semio_base::io::text::codec::{dec_str, enc_str}};
-use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use {semio_s_artifact_stdio_semio_value_model::io::text::diff::{dec_semio_value, enc_semio_value}, semio_s_artifact_stdio_semio_base::io::text::codec::{dec_str, enc_str}};
+use crate::schema::snapshot::SemioTableColumn;
+use crate::schema::snapshot::SemioTableRow;
+use crate::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 /// 🧪️ Hand-rolled `protocol::DiffCodec`. Unlike `🔤️text` (one mutable field), `table` has TWO —

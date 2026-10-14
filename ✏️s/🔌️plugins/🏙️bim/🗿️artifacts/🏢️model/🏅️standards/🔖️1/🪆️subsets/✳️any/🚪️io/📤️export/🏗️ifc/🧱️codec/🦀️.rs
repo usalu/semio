@@ -1,8 +1,10 @@
 //! 🧱️ The one place that names the IFC codecs of the `s.stdio.ifc` artifact: Part-21 documents in and out of file bytes, validated against the schema header (IFC2X3 through the stdio 2x3 codec, IFC4 through the generic Part-21 reader and writer).
 
-use semio_s_artifact_stdio_ifc::part21::{parse_part21, write_part21, Part21Document};
-use semio_s_artifact_stdio_ifc::standards::v2x3::engine::{decode_ifc2x3, encode_ifc2x3};
-use semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document};
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3;
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
 use std::collections::BTreeSet;
 
 /// 📤️ The file bytes of an IFC 2x3 document (CRLF layout, validated header and unique instance ids).

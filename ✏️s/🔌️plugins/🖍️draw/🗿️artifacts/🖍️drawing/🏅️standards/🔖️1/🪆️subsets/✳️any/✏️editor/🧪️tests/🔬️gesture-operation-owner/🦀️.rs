@@ -171,10 +171,10 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
 
 #[test]
 fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
-    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
-    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(crate::editor::drawing::commands::canvas_pointer_up::CanvasPointerUp { alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
+    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(crate::commands::canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
+    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(crate::commands::canvas_pointer_up::CanvasPointerUp { alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
     assert!(decode_retained("canvasPointerMove", &pointer_move));
-    assert!(decode_retained("canvasEscape", &wire(&DrawingCommand::CanvasEscape(crate::editor::drawing::commands::canvas_escape::CanvasEscape {}))));
+    assert!(decode_retained("canvasEscape", &wire(&DrawingCommand::CanvasEscape(crate::commands::canvas_escape::CanvasEscape {}))));
     assert!(!decode_retained("canvasPointerMove", &pointer_up), "a variant swap rejects");
     assert!(!decode_retained("canvasPointerMove", &pointer_move[..pointer_move.len() - 1]), "truncation rejects");
     assert!(!decode_retained("canvasPointerMove", &vec![0; DRAWING_GESTURE_RAW_BYTES + 1]), "an oversized owner rejects");
@@ -203,7 +203,7 @@ fn drawing_preview_rejects_a_stale_revision_and_cancels_the_owner() {
 fn mounted_vector_gesture_preview_requires_all_captured_full_width_source_lanes(){
  let cases:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🎬️scene/🪪️identity/🔣️.json")).unwrap();
  let decode=|value:&serde_json::Value|SceneIdentity{instance:u32::try_from(value["instance"].as_u64().unwrap()).unwrap(),base:crate::schema::scene_identity::parse_scene_identity_u64(value["base"].as_str().unwrap()).unwrap(),generation:crate::schema::scene_identity::parse_scene_identity_u64(value["generation"].as_str().unwrap()).unwrap(),revision:value["revision"].as_array().unwrap().iter().map(|byte|u8::try_from(byte.as_u64().unwrap()).unwrap()).collect::<Vec<_>>().try_into().unwrap()};
- for row in cases.as_array().unwrap(){let captured=decode(&row["captured"]);let live=decode(&row["live"]);let mut owner=DrawingInstanceOperationOwner::new();let operation=key(901,captured.generation);let mut gesture=DrawingGestureOperationOwner::new("selectDirect","");let document=crate::standards::v1::subsets::any::schema::default_drawing_document("empty",None);
+ for row in cases.as_array().unwrap(){let captured=decode(&row["captured"]);let live=decode(&row["live"]);let mut owner=DrawingInstanceOperationOwner::new();let operation=key(901,captured.generation);let mut gesture=DrawingGestureOperationOwner::new("selectDirect","");let document=semio_s_artifact_draw_drawing_model::default_drawing_document("empty",None);
   gesture.session.as_mut().unwrap().point_query=Some(canvas_pointer_down::DrawingPointQuery::new("canvasPointerDown",canvas_pointer_down::TracePointerJob::new_query(&document,[0.0,0.0],0.0,false),false,"replace".into(),false));assert!(owner.operations.admit(operation,gesture).is_ok());owner.active=Some((operation,captured));let expected=row["matches"].as_bool().unwrap();assert_eq!(owner.preview_projection(live,"selectDirect").is_some(),expected,"{}",row["name"]);assert_eq!(owner.active.is_some(),expected);owner.operations.cancel(operation);owner.active=None;drain(&mut owner.operations);
   eprintln!("[DEBUG] Actual gesture preview {} matched={expected} base={} generation={} and retired its query owner",row["name"],captured.base,captured.generation);
  }

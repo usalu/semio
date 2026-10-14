@@ -1,8 +1,8 @@
-use super::*;
-use crate::default_remodeling_scene;
-use crate::editor::remodeling::commands::set_report_table::SetReportTable;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze::windows::report::*;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_report_table::SetReportTable;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, render_in_window};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn every_dataset_name_yields_its_own_column_set_and_unknown_falls_back_to_frames() {

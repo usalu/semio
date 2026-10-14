@@ -1,0 +1,9 @@
+[
+ {"package":"semio-hub-gis","feature":"component-receipt-acceptance","mode":"off"},
+ {"package":"semio-framework-replication","feature":"history-index-serde","mode":"on"},
+ {"package":"semio-framework-replication","feature":"ordered-set-serde","mode":"on"},
+ {"package":"semio-framework-value","feature":"ordered-set-serde","mode":"on"},
+ {"package":"semio-framework-machine","feature":"macros","mode":"on"},
+ {"package":"semio-framework-machine","feature":"serde","mode":"on"},
+ {"package":"semio-framework-test-mutation-inventory","feature":"replication","mode":"on"}
+]

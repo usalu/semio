@@ -77,7 +77,7 @@ async fn edit_rows(app: &mut Generation3dApp) -> Vec<HistoryEntry> {
 async fn place_every_widget(app: &mut Generation3dApp) -> Vec<(String, (f64, f64))> {
     dispatch(app, Generation3dCommand::Reorganize(crate::editor::generation3d::commands::reorganize::Reorganize {})).await;
     let read = snapshot(app);
-    read.host_snapshot.widgets.iter().map(|widget| crate::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
+    read.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).filter_map(|id| read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).map(|base| (id, base))).collect()
 }
 
 fn english(entry: &HistoryEntry) -> String {
@@ -223,14 +223,14 @@ async fn a_delete_row_deletes_exactly_the_named_widget_and_wire_as_one_edit() {
     let (wire, widget) = {
         let read = snapshot(&app);
         let wire = read.host_snapshot.synapses.first().expect("a wire").clone();
-        let widget = read.host_snapshot.widgets.iter().map(crate::widget_id).find(|id| *id != wire.from && *id != wire.to).expect("a widget the wire does not hold").to_string();
+        let widget = read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).find(|id| *id != wire.from && *id != wire.to).expect("a widget the wire does not hold").to_string();
         (wire.id, widget)
     };
     let before = edit_rows(&mut app).await.len();
     send(&mut app, serde_json::json!({ "operations": [{ "operation": "delete", "nodeIds": [widget], "synapseIds": [wire] }] })).await;
     let read = snapshot(&app);
     assert!(!read.host_snapshot.synapses.iter().any(|synapse| synapse.id == wire), "the named wire is gone");
-    assert!(!read.host_snapshot.widgets.iter().any(|candidate| crate::widget_id(candidate) == widget), "the named widget is gone");
+    assert!(!read.host_snapshot.widgets.iter().any(|candidate| semio_s_artifact_procedural_3d_model::widget_id(candidate) == widget), "the named widget is gone");
     drop(read);
     assert_eq!(edit_rows(&mut app).await.len() - before, 1, "one delete row, one edit");
 }

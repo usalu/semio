@@ -1,0 +1,47 @@
+{
+  "tool": "nx",
+  "workspaceRoot": "/Users/ueli/Documents/semio",
+  "arguments": [
+    "repo",
+    "run",
+    "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+    "--skip-cache",
+    "--exclude-dependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "selection": [
+    "repo",
+    "run",
+    "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+    "--skip-cache",
+    "--exclude-dependencies",
+    "--parallel=1",
+    "--configuration=prototype"
+  ],
+  "launches": [
+    [
+      "repo",
+      "run",
+      "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+      "--skip-cache",
+      "--exclude-dependencies",
+      "--parallel=1",
+      "--configuration=prototype"
+    ]
+  ],
+  "buildMode": "prototype",
+  "native": {
+    "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "transport": {
+      "maximumBytes": 134217728,
+      "maximumLines": 1000000
+    },
+    "child": {
+      "maximumElapsedMilliseconds": 1200000
+    },
+    "network": {
+      "offline": false
+    }
+  }
+}

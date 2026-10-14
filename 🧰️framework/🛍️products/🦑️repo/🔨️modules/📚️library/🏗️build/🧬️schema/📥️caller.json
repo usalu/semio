@@ -9,7 +9,8 @@
     "buildMode",
     "native",
     "selection",
-    "tool"
+    "tool",
+    "launches"
   ],
   "properties": {
     "buildMode": {

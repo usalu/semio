@@ -76,7 +76,7 @@ test("a seal is refused for another process's receipts or a graph older than the
 
 test("verified immutable whole graph authorizers preserve the portable custody corpus",async()=>{
  const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity||!/^[a-f0-9]{64}$/u.test(identity))throw Error("Actual incoming immutable SDK identity required");
- const sdk=createRequire(join(process.cwd(),".🧬semio/🦑️repo/⚡️cache/tools/nx",identity,"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
+ const sdk=createRequire(join(process.cwd(),".cache/b/t/m/nx",identity,"package.json")),frozen=await sdk("nx/src/utils/workspace-context").loadSemioGraphAuthorizersV1();expect(frozen.toolingIdentity).toBe(identity);
  for(const scenario of fixture.scenarios){const {root,data,pid,startedAt}=workspace();try{
   const membership=await frozen.authorizers.nxGraphSourceMembershipV2(root);expect(membership).toEqual(await nxGraphSourceMembershipV2(root));
   expect(await frozen.authorizers.writeNxGraphSeal(root,data,pid,startedAt,membership.digest),scenario.id).toBe(true);expect(validate(JSON.parse(readFileSync(join(data,"semio-graph-seal.json"),"utf8"))),JSON.stringify(validate.errors)).toBe(true);

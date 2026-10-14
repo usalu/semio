@@ -19,6 +19,12 @@
 //! `MESH_STYLE_PAINT.disabled` entry is the only style with `opacity < 1` (0.45) and which also turns
 //! the instance's raycast off entirely. That is exactly what a zone volume wants, and what it uses.
 
+extern crate semio_s_plugin_energy_engine_geometry as geometry;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_precompute as precompute;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_bestest as bestest;
+
 use crate::model::{EntityId, Fenestration, Model, Surface, SurfaceClass};
 use serde_json::{json, Value};
 use std::collections::HashMap;

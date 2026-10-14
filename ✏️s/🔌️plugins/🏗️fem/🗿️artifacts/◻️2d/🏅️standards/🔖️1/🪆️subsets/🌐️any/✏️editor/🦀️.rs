@@ -7,7 +7,7 @@
 //! `🔖️Manifest` region that calls one passthrough per node (fem2d's mode/window declarations stay
 //! scalar/inline — no `mode_def`/`window_kind_def` object is built anywhere in the pre-migration code).
 
-use crate::app_surface::ResultDisplay;
+use semio_s_fem_app_surface::ResultDisplay;
 use crate::editor::fem2d::commands::{
     add_area_load, add_bar, add_beam, add_combination, add_load_case, add_material, add_member_udl, add_nodal_load, add_node, add_region, add_section, add_support, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, focus_entity, patch_combination,
     patch_element, patch_load, patch_load_case, patch_material, patch_node, patch_region, patch_section, patch_support, remove_selection, result_animation_tick, set_active_example, set_analysis_settings, set_camera, set_result_animation, set_result_display,
@@ -21,9 +21,9 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::editor::fem2d::modes::edit;
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
-use crate::model::{Dof, ElementResult};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::Fem2dSnapshot;
+use semio_s_fem_model::{Dof, ElementResult};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_pack_json::Value;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -76,7 +76,7 @@ pub const FEM2D_PLAY_CONTROLLER_ID: &str = FEM2D_APP_ID;
 /// 📦️ The `fem2d-play` "default" example — read directly by the `setActiveExample` handler
 /// (`crate::editor::fem2d::commands::set_active_example`) and every test fixture (`EditorBuilder` has
 /// no `.example(...)` registration — see the SDK-gap doc comment on `create_fem2d_app` below).
-pub const FEM2D_EXAMPLE_DSL: &str = crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT;
+pub const FEM2D_EXAMPLE_DSL: &str = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT;
 //#endregion 🔖️Constants
 
 //#region 🔖️Commands
@@ -380,7 +380,7 @@ impl ToolJobFactory for Fem2dRetainedCommandJobFactory {
 impl ArtifactOwnedToolJobFactory for Fem2dRetainedCommandJobFactory {
     type Owner = EditorApp<Fem2dPlayApp>;
     const TOOL_IDS: &'static [&'static str] = FEM2D_RETAINED_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = FEM2D_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedCommands
@@ -529,8 +529,8 @@ fn config_result_display(cfg: &results_window::config::Fem2dResultsWindowConfig)
     ResultDisplay { source_id: cfg.result_source_id.clone(), mode }
 }
 
-/// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
-/// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
+/// 🎨️ Manual `semio_s_fem_model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
+/// — `semio_s_fem_model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
 /// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `semio_framework_pack_json::to_json_string` would
 /// have produced, using `Dof`'s existing `{:?}` formatting (already used for the reaction-label layers
 /// in the results window's render).
@@ -561,7 +561,7 @@ fn element_result_json(result: &ElementResult) -> Value {
     }
 }
 
-fn static_result_json(result: &crate::model::StaticResult) -> Value {
+fn static_result_json(result: &semio_s_fem_model::StaticResult) -> Value {
     semio_framework_pack_json::json!({
         "displacements": result.displacements.iter().map(|d| semio_framework_pack_json::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
         "reactions": result.reactions.iter().map(|r| semio_framework_pack_json::json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
@@ -570,7 +570,7 @@ fn static_result_json(result: &crate::model::StaticResult) -> Value {
     })
 }
 
-fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
+fn results_map_json(results: &HashMap<String, semio_s_fem_model::StaticResult>) -> Value {
     Value::Object(results.iter().map(|(id, result)| (id.clone(), static_result_json(result))).collect())
 }
 //#endregion 🔖️ExportImportHelpers
@@ -579,12 +579,12 @@ fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Va
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — the implicit document port pair
 /// (`fem.2d` × 2D-Vector) plus `geometry:in` (importing an externally authored 2D outline as a new
 /// `FemRegion` — see `import_media` above) and `results:out` (every load case/combination's solved
-/// `crate::model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
-/// `crate::computation_artifact_kind` — see `export_media` above). Moved out of the
+/// `semio_s_fem_model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
+/// `crate::standards::v1::subsets::any::io::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
 pub fn fem2d_io() -> AppIo {
     AppIo {
-        artifact_schema: crate::FEM_2D_SCHEMA.into(),
+        artifact_schema: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA.into(),
         artifact_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
         ports: vec![fem2d_geometry_in_port(), fem2d_results_out_port()],
         export_formats: vec![],
@@ -607,7 +607,7 @@ pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
+/// 🔌️ `results:out` — every load case/combination's solved `semio_s_fem_model::StaticResult`, pinned to the
 /// `computation.fem2d` artifact kind.
 pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
@@ -626,8 +626,8 @@ pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// 🛡️ Reads one `FemDof` out of an action arg's free text (`"tx"`, `"Ty"`, `"rz"`, …) — the shells
 /// stage every declared arg as a JSON scalar, so the typed enum is resolved here rather than by the
 /// stringly action wire.
-fn fem2d_dof(value: Option<&str>) -> Option<crate::FemDof> {
-    use crate::FemDof;
+fn fem2d_dof(value: Option<&str>) -> Option<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof> {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
     match value?.trim().to_ascii_lowercase().as_str() {
         "tx" => Some(FemDof::Tx),
         "ty" => Some(FemDof::Ty),
@@ -641,8 +641,8 @@ fn fem2d_dof(value: Option<&str>) -> Option<crate::FemDof> {
 
 /// 🛡️ Reads `addSupport`'s separator-delimited `fixed` list, defaulting to the pinned support
 /// (`tx,ty`) every fem2d fixture starts from when nothing is staged.
-fn fem2d_dofs(value: Option<&str>) -> Vec<crate::FemDof> {
-    use crate::FemDof;
+fn fem2d_dofs(value: Option<&str>) -> Vec<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof> {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
     let parsed: Vec<FemDof> = value.map(|text| text.split([',', ' ', ';']).filter_map(|token| fem2d_dof(Some(token))).collect()).unwrap_or_default();
     if parsed.is_empty() {
         vec![FemDof::Tx, FemDof::Ty]
@@ -676,9 +676,9 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     type Command = Fem2dCommand;
 
-    const DIALECT: Dialect = crate::FEM2D_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT;
 
-    const DOCUMENT_SCHEMA: &'static str = crate::FEM_2D_SCHEMA;
+    const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
 
 
 
@@ -846,7 +846,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
     /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
     fn initial_snapshot() -> Fem2dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -898,7 +898,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 if doc.snapshot.load_cases.is_empty() {
                     return Err(MediaError::Payload("results:out".into(), "no load cases defined".into()));
                 }
-                let results = crate::fem2d_engine::fem2d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
+                let results = semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve_all(doc.snapshot).map_err(|error| MediaError::Payload("results:out".into(), error.to_string()))?;
                 let json = results_map_json(&results).to_string();
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.fem2d".into(), json } })
             }
@@ -933,9 +933,9 @@ impl ArtifactEditor for Fem2dPlayApp {
                     None => Vec::new(),
                 };
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
-                let id = crate::app_surface::next_id(doc.snapshot.regions.iter().map(|r| r.id.clone()), "r");
-                let region = crate::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
-                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
+                let id = semio_s_fem_app_surface::next_id(doc.snapshot.regions.iter().map(|r| r.id.clone()), "r");
+                let region = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
+                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
             }
             _ => Err(MediaError::NotImplemented),
         }
@@ -996,7 +996,7 @@ impl ArtifactEditor for Fem2dPlayApp {
             "addSupport" => Ok(Fem2dCommand::AddSupport(add_support::AddSupport { node_id: text("nodeId").unwrap_or_default(), fixed: fem2d_dofs(text("fixed").as_deref()) })),
             "addNodalLoad" => Ok(Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad {
                 node_id: text("nodeId").unwrap_or_default(),
-                dof: fem2d_dof(text("dof").as_deref()).unwrap_or(crate::FemDof::Ty),
+                dof: fem2d_dof(text("dof").as_deref()).unwrap_or(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty),
                 value: number("value").unwrap_or_default(),
                 case_id: text("caseId").filter(|id| !id.is_empty()),
             })),
@@ -1295,7 +1295,7 @@ pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem2dSnapshot as pack::snapshot::ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -1319,13 +1319,13 @@ fn fem2d_patch_action(id: &str, label: LocalizedLabel) -> semio_framework_plugin
 /// (a `BatchOnlyPendingRewrite` classification would make the switcher a dead control). `.workflow(...)`
 /// stays dropped: `WorkflowDefinition` was deleted from framework-core, with no replacement surface.
 pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::FEM2D_DIALECT)
+    Editor::builder(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT)
             .document(["semio", "fem", "fem2d"])
             // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see
             // `fem2d_io` above) — deliberately a different `media_type`
             // (`Computation`×`Value`) than the PORT's wire-level `Data`×`Value`.
-            .artifact_kind(crate::document_artifact_kind())
-            .artifact_kind(crate::computation_artifact_kind())
+            .artifact_kind(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::document_artifact_kind())
+            .artifact_kind(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::computation_artifact_kind())
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id(edit::MODE_ID)
@@ -1441,13 +1441,13 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             // did not match that id could never be reached from the switcher.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(
-                    crate::examples::demo::ID,
-                    crate::examples::demo::label(),
+                    semio_s_artifact_fem_2d_io::examples::demo::ID,
+                    semio_s_artifact_fem_2d_io::examples::demo::label(),
                 )])
-                .default_value(&crate::examples::demo::ID),
+                .default_value(&semio_s_artifact_fem_2d_io::examples::demo::ID),
             ])
             .view_action("setResultDisplay", LocalizedLabel::native("Set Result Display", "Ergebnisanzeige festlegen"))
-            .action_args("setResultDisplay", crate::app_surface::result_display_action_args())
+            .action_args("setResultDisplay", semio_s_fem_app_surface::result_display_action_args())
             // 🖱️ Viewport gesture vocabulary — the Canvas2d host emits these; picks become framework
             // `interactionSelect`/`interactionHover` requests, never a document mutation.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer-click") })

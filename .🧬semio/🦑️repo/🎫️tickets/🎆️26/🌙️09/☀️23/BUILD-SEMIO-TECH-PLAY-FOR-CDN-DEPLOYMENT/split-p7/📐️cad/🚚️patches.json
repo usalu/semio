@@ -1,0 +1,5 @@
+{"moves": [
+ {"from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", "from_module": "crate::standards::v1::subsets::any::schema::mutations",
+  "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs", "to_module": "crate::standards::v1::subsets::any::schema::diff",
+  "items": ["CadNodePatch", "CadReferencePatch", "CadOrientationSet", "CadScaleSet", "CadOpacitySet"]}
+]}

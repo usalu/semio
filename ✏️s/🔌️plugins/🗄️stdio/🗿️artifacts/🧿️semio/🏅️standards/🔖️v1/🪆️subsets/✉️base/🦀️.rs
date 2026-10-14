@@ -56,39 +56,6 @@ pub mod editor {
     pub mod edit_plumbing;
 }
 
-#[path = "."]
-pub mod examples {
-    #[path = "📚️examples/🏢️building/🦀️.rs"]
-    pub mod building;
-    #[path = "📚️examples/🎥️clip/🦀️.rs"]
-    pub mod clip;
-    #[path = "📚️examples/📽️deck/🦀️.rs"]
-    pub mod deck;
-    #[path = "📚️examples/🎬️demo/🦀️.rs"]
-    pub mod demo;
-    #[path = "📚️examples/📐️drawing/🦀️.rs"]
-    pub mod drawing;
-    #[path = "📚️examples/🌐️envelope/🦀️.rs"]
-    pub mod envelope;
-    #[path = "📚️examples/🕸️graph/🦀️.rs"]
-    pub mod graph;
-    #[path = "📚️examples/🗒️memo/🦀️.rs"]
-    pub mod memo;
-    #[path = "📚️examples/📃️note/🦀️.rs"]
-    pub mod note;
-    #[path = "📚️examples/🌊️pipeline/🦀️.rs"]
-    pub mod pipeline;
-    #[path = "📚️examples/🖍️sketch/🦀️.rs"]
-    pub mod sketch;
-    #[path = "📚️examples/🧊️solid/🦀️.rs"]
-    pub mod solid;
-    #[path = "📚️examples/🖼️swatch/🦀️.rs"]
-    pub mod swatch;
-    #[path = "📚️examples/🎵️tone/🦀️.rs"]
-    pub mod tone;
-    #[path = "📚️examples/🚶️walk/🦀️.rs"]
-    pub mod walk;
-}
 
 /// 🧬️ Artifact schema descriptor id of the semio artifact.
 pub const SEMIO_ARTIFACT_SCHEMA_ID: &str = "s.stdio.semio";
@@ -108,19 +75,15 @@ pub fn applied<P: Clone, M: protocol::Mutation<P>>(base: &P, mutation: &M) -> (P
     (next, outcome)
 }
 
-/// 🧹️ Retires a subset's shared snapshot through the bounded shared-retirement admission; `semio_member_owner!` gives
-/// each subset snapshot its implementation.
+/// 🧹️ Retires a subset's shared snapshot through the bounded shared-retirement admission; `semio_snapshot_retirement!`
+/// gives each subset snapshot its implementation.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct SemioSnapshotRetirementFactory<P>(pub std::marker::PhantomData<fn() -> P>);
 
-/// 🧸️ Implements one subset's snapshot retirement factory and member store owner: retained snapshots open through
-/// the framework's bounded pack decoder unless `open = <decoder>` names the subset's own streaming decoder.
+/// 🧸️ Implements one subset snapshot's retirement factory; the crate that owns the snapshot type invokes it.
 #[macro_export]
-macro_rules! semio_member_owner {
-    ($snapshot:ty, $mutation:ty) => {
-        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::PackMemberSnapshotOpen<$snapshot>);
-    };
-    ($snapshot:ty, $mutation:ty, open = $open:ty) => {
+macro_rules! semio_snapshot_retirement {
+    ($snapshot:ty) => {
         impl ::semio_framework_os_kernel::SnapshotRetirementFactory<$snapshot> for $crate::SemioSnapshotRetirementFactory<$snapshot> {
             fn retirement_birth_bytes(&self, _snapshot: &::std::sync::Arc<$snapshot>) -> usize {
                 ::semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<$snapshot>()
@@ -134,7 +97,17 @@ macro_rules! semio_member_owner {
                 ::semio_framework_value::retirement::shared::admit_shared_retirement(snapshot, grant, true)
             }
         }
+    };
+}
 
+/// 🗝️ Implements one subset's member store owner: retained snapshots open through the framework's bounded pack decoder
+/// unless `open = <decoder>` names the subset's own streaming decoder; the crate that owns the mutation type invokes it.
+#[macro_export]
+macro_rules! semio_member_owner {
+    ($snapshot:ty, $mutation:ty) => {
+        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::PackMemberSnapshotOpen<$snapshot>);
+    };
+    ($snapshot:ty, $mutation:ty, open = $open:ty) => {
         impl ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreOwner<$mutation> for $snapshot {
             type SnapshotOpen = $open;
 

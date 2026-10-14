@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-presentation-document-contract": "bun repo run @semio-tech/animate-presentation-rs:verify-presentation-document-contract"
   },

@@ -93,9 +93,8 @@
         "command": "bun ./📜️script.ts dev",
         "env": {
           "NODE_OPTIONS": "",
-          "NX_NATIVE_COMMAND_RUNNER": "false",
-          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
-          "NX_TUI": "false",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
           "VSCODE_INSPECTOR_OPTIONS": ""
         },
         "forwardAllArgs": true
@@ -124,9 +123,8 @@
         "command": "bun ./📜️script.ts dev-site",
         "env": {
           "NODE_OPTIONS": "",
-          "NX_NATIVE_COMMAND_RUNNER": "false",
-          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
-          "NX_TUI": "false",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
           "VSCODE_INSPECTOR_OPTIONS": ""
         },
         "forwardAllArgs": true

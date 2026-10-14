@@ -1,4 +1,5 @@
 //! 🖼️ Shared semantic UI builders for procedural generation surfaces.
+#![allow(clippy::result_large_err)]
 
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_ui_locale::{Locale, Terminology};
@@ -7,11 +8,11 @@ fn ui_assembly_error(code: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new(code, "fixed UI admission failed")
 }
 
-pub(crate) fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
+pub fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
     UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_assembly_error("ui.text"))
 }
 
-pub(crate) fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
+pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> {
     Label::try_from(value.as_ref()).map_err(|_| ui_assembly_error("ui.label"))
 }
 
@@ -27,11 +28,11 @@ fn ui_build<B: Buildable>(builder: B) -> UiAssemblyResult<BuiltNode> {
     builder.try_build().map_err(|_| ui_assembly_error("ui.node.build"))
 }
 
-pub(crate) fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
+pub fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
     UiText::try_from_str(value.as_ref()).map(UiValue::Text).ok_or_else(|| ui_assembly_error("ui.value.text"))
 }
 
-pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
+pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiValue)>) -> UiAssemblyResult<UiValue> {
     let mut builder = UiMapBuilder::try_new().ok_or_else(|| ui_assembly_error("ui.value.map"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| ui_assembly_error("ui.value.map.entry"))?;
@@ -40,7 +41,7 @@ pub(crate) fn ui_value_map(values: impl IntoIterator<Item = (&'static str, UiVal
 }
 
 /// 🖼️ Encodes one typed scene into the renderer-neutral semantic surface contract.
-pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
+pub fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into<String>, kind: SurfaceKind, scene: &T) -> UiAssemblyResult<BuiltNode> {
     let id = id.into();
     semio_framework_plugin::scene_surface(&id, kind, scene)
 }
@@ -57,7 +58,7 @@ pub(crate) fn scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(id: impl Into
 /// fail the whole refresh, and its full text is always reachable in the window's own outline.
 ///
 /// @see ../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🦀️.rs
-pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
+pub fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
     id: impl Into<String>,
     kind: SurfaceKind,
     scene: &T,
@@ -81,7 +82,7 @@ pub(crate) fn accessible_scene_surface<T: semio_framework_ui::wgpu::SceneDoc>(
 /// is the only way a user who cannot see the canvas learns the chord exists.
 ///
 /// @see ../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx
-pub(crate) fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static str, action: &str, shortcut: &str) -> UiAssemblyResult<BuiltNode> {
+pub fn activatable_scene_surface(mut node: BuiltNode, controller_id: &'static str, action: &str, shortcut: &str) -> UiAssemblyResult<BuiltNode> {
     let (action_id, _) = ActionFactory::new(controller_id).action(action, None)?;
     node.bindings
         .try_push(ActionBinding { trigger: Trigger::Activate, action: action_id, args: None, capability: None })
@@ -124,7 +125,7 @@ fn generation_rename_field(factory: &ActionFactory, surface_prefix: &str, id: &s
 /// generations scrolls instead of refusing at the fixed-list ceiling — and, because every row costs
 /// three `UiValue` argument maps (select + rename + remove), the window is also what keeps the shared
 /// argument arena affordable (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
-pub(crate) fn generation_tree(
+pub fn generation_tree(
     controller_id: &'static str,
     surface_prefix: &str,
     generation: &semio_framework_artifact_playbook_playbook::GenerationPlayState,
@@ -201,7 +202,7 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
 }
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
-pub(crate) fn generation_form(
+pub fn generation_form(
     spec: &semio_framework_artifact_playbook_playbook::PlaybookSpec,
     values: &semio_framework_artifact_playbook_playbook::PlaybookValues,
     controller_id: &'static str,

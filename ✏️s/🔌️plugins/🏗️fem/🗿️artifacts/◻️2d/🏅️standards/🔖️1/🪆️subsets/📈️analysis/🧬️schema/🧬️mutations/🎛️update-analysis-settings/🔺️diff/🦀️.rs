@@ -5,9 +5,10 @@
 //! `mutation.no-op` when the settings are already what the payload asks for. The bounds run FIRST
 //! so a document already holding out-of-range settings cannot launder them through as a no-op.
 use super::UpdateAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dAnalysisPatch, Fem2dDiff};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dAnalysisPatch;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &UpdateAnalysisSettings, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

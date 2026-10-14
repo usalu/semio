@@ -17,7 +17,7 @@ mod grammar_shape_tests;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -49,7 +49,7 @@ impl pack::snapshot::ArtifactDsl for DwgSnapshot {
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};

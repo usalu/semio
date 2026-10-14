@@ -3,9 +3,11 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::material_plausibility` elasticity bounds (`mutation.invariant`, Fatal).
 use super::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialInsertion, Fem2dMaterialsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialInsertion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateMaterial, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

@@ -31,7 +31,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::Fem2dAnalyzer;
-    use crate::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
@@ -71,6 +71,118 @@ pub use derived_composition::*;
 
 //#region 🚫️GeometryImport
 
+/// 🪪️ W2 packet P7 (26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the canonical `ArtifactEditor`/
+/// `ArtifactViewer::DIALECT` and composer dialect of this artifact — `artifact_kind` is the 3-part schema id
+/// (`#[artifact_schema(id = "s.fem.fem2d")]` on `Fem2dSnapshot`), NOT the 2-part `ArtifactIdentity::parse("s.fem2d")`
+/// string the artifact `definition()` uses. Lives in io, the lowest layer every editor, viewer and composer names.
+pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.fem.fem2d", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+/// 🪪️ The fem 2D model document kind — the id `fem2d_io`'s `ArtifactPresentation` already names (`2d.fem`),
+/// with the ONE schema the hub's codec rows, document-open targets and genesis key on (`FEM_2D_SCHEMA`). Declared
+/// beside [`computation_artifact_kind`], which stays the results kind `results:out` pins itself to.
+pub fn document_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "2d.fem".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 2D Model", "FEM-2D-Modell"),
+        source_format: FEM_2D_SCHEMA.into(),
+        component_kind: "fem2d".into(),
+        dimension: "2d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        schema: FEM_2D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
+/// 🔌️ The computed-results output artifact kind (`results:out`'s `kind_id`, see
+/// `crate::editor::fem2d::fem2d_io`) — the OS-catalog-level resource descriptor for
+/// `computation.fem2d`; deliberately a different `media_type` (`Computation`×`Value`) than the PORT's
+/// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
+/// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
+/// `.artifact_kind(...)` call so the app's manifest can call this instead of inlining the literal.
+pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "computation.fem2d".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("FEM 2D Results", "FEM-2D-Ergebnisse"),
+        source_format: "computation.fem2d".into(),
+        component_kind: "fem2d-results".into(),
+        dimension: "computation".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Value },
+        schema: "computation.fem2d".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.stl".into(), "stdio.txt".into()],
+        import_stdio_kinds: vec!["stdio.json".into(), "stdio.txt".into()],
+    }
+}
+
+/// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
+/// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
+/// `🗒️note`'s own `pilot_languages()` convention.
+pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
+    static LANGUAGES: std::sync::OnceLock<Vec<semio_framework_dsl::LanguageSpec>> = std::sync::OnceLock::new();
+    LANGUAGES
+        .get_or_init(|| {
+            vec![
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem2d",
+                    extension: Some("fem2d"),
+                    role: semio_framework_dsl::LanguageRole::Document,
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem2d.op",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Ops,
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.op"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem.fem2d.diff",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Diff,
+                    grammar: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    protocol: None,
+                    protocol_path: None,
+                    hooks: semio_framework_dsl::passthrough_hooks("fem.fem2d.diff"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem2d.pack",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Pack,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem2d.pack"),
+                },
+                semio_framework_dsl::LanguageSpec {
+                    id: "fem2d.spr",
+                    extension: None,
+                    role: semio_framework_dsl::LanguageRole::Spr,
+                    grammar: None,
+                    grammar_path: None,
+                    protocol: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::standards::v1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    hooks: semio_framework_dsl::passthrough_hooks("fem2d.spr"),
+                },
+            ]
+        })
+        .as_slice()
+}
+
 //#region 🔖️IoDeclaration
 /// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
 /// the seven typed foreign entries. `pilot_languages()` indices are fixed by that function's own
@@ -79,7 +191,10 @@ pub use derived_composition::*;
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::{Fem2dMutation, Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+    use crate::standards::v1::subsets::any::io::FEM2D_DIALECT;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
@@ -103,7 +218,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             .as_slice()
     }
 
-    let langs = crate::pilot_languages();
+    let langs = crate::standards::v1::subsets::any::io::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
             snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
@@ -133,7 +248,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{Fem2dDiff, Fem2dMutation, Fem2dSnapshot};
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+    use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -183,7 +300,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

@@ -2,12 +2,8 @@
 extern crate self as semio_framework_dsl;
 pub use semio_framework_diagnostic::{TextError,Limits,TextSpan,FaultCode,DiagnosticCode,Severity,ExpectedSet,Diagnostic,FaultOrigin,FaultScope,FaultCause,Fault};
 pub use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeProgress};
-#[path = "../../🔤️token/🦀️.rs"]
-pub mod token;
-#[path = "../../🔍️lexer/🦀️.rs"]
-pub mod lexer;
-#[path = "../../🎖️trust/🦀️.rs"]
-pub mod trust;
+pub use semio_framework_dsl_token as token;
+pub use semio_framework_dsl_lexical::{lexer,trust};
 #[path = "../../📖️grammar/🦀️.rs"]
 pub mod grammar;
 #[path = "../../🗣️idiom/🦀️.rs"]

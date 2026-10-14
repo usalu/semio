@@ -1,11 +1,13 @@
 //! 🚂️ The instance-owned geometry engine: the typed inference cache, the retained base snapshot and the stepped run.
 
-use super::value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use super::{Generation3dGeometry, GeometryInput};
-use crate::standards::v1::subsets::any::schema::catalogue::Catalogue;
-use crate::Generation3dSnapshot;
-use protocol::{infer_field_step, InferenceCache, InferenceCacheConfig, InferenceCacheStats, InferenceCursor, InferenceWorkFailure};
-use std::collections::BTreeMap;
+use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use protocol::{infer_field_step, InferenceCache, InferenceCacheConfig, InferenceCacheStats, InferenceCursor, InferenceValues, InferenceWorkFailure};
+use std::mem::ManuallyDrop;
+use semio_framework_job::{StepContext,OriginalCallerSourceLoan};
+use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::{controlled::ControlledRetirement}};
 use std::sync::Arc;
 
 /// ⚖️ The bytes the engine's inference cache may hold.
@@ -57,6 +59,7 @@ pub struct EngineTotals {
     pub hits: u64,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 struct Base {
     digest: String,
     snapshot: Generation3dSnapshot,
@@ -64,107 +67,138 @@ struct Base {
 
 struct Run {
     cursor: InferenceCursor<String>,
-    values: BTreeMap<String, Arc<WidgetEvaluation>>,
+    values: InferenceValues<Arc<WidgetEvaluation>>,
     bypass: bool,
     cancellation_id: String,
 }
 
-impl Drop for Run {
-    fn drop(&mut self) {
-        self.cursor.cancel();
-    }
+type BaseClose = (Option<Base>,Option<String>);
+
+struct Owners {
+    base:Option<Base>,
+    run:Option<Run>,
+    closing:Option<ControlledRetirement<BaseClose>>,
+    source:Option<OriginalCallerSourceLoan>,
+    scope:Option<Source>,
+    admission_identity:Option<AdmissionIdentity>,
 }
 
-/// 🚂️ The geometry engine of one artifact instance.
+#[derive(PartialEq,Eq)]
+struct AdmissionIdentity{snapshot:usize,digest:usize,digest_bytes:usize,cancellation:usize,cancellation_bytes:usize}
+impl AdmissionIdentity{fn of(request:&EngineAdmission)->Option<Self>{let(digest,snapshot,cancellation)=request.payload.as_ref()?;Some(Self{snapshot:snapshot as*const Generation3dSnapshot as usize,digest:digest.as_ptr()as usize,digest_bytes:digest.len(),cancellation:cancellation.as_ptr()as usize,cancellation_bytes:cancellation.len()})}}
+
+struct Source {operation:u64,generation:u64,parent:usize,recipient:usize,clock:fn()->Option<u64>,clock_binding:Option<u64>,deadline:u64}
+impl Source {
+    fn capture(cx:&StepContext<'_>)->Result<Self,ValueError>{Ok(Self{operation:cx.operation().0,generation:cx.generation().0,parent:cx.original_source_parent()?.source_identity()?,recipient:cx.original_recipient_identity(),clock:cx.clock_source(),clock_binding:cx.original_clock_binding(),deadline:cx.original_absolute_deadline_us()})}
+    fn matches(&self,cx:&StepContext<'_>)->Result<bool,ValueError>{Ok(self.operation==cx.operation().0&&self.generation==cx.generation().0&&self.parent==cx.original_source_parent()?.source_identity()?&&self.recipient==cx.original_recipient_identity()&&std::ptr::fn_addr_eq(self.clock,cx.clock_source())&&self.clock_binding==cx.original_clock_binding()&&self.deadline==cx.original_absolute_deadline_us())}
+}
+
+/// 📥️ The actual request donor survives a refused engine admission without copying its snapshot or IDs.
+pub struct EngineAdmission {payload:ManuallyDrop<Option<(String,Generation3dSnapshot,String)>>,mode:CacheMode,closing:Option<ControlledRetirement<(String,Generation3dSnapshot,String)>>,scope:Option<Source>}
+impl EngineAdmission {
+    pub fn new(digest:String,snapshot:Generation3dSnapshot,mode:CacheMode,cancellation_id:String)->Self{Self{payload:ManuallyDrop::new(Some((digest,snapshot,cancellation_id))),mode,closing:None,scope:None}}
+    pub fn digest(&self)->Option<&str>{self.payload.as_ref().map(|(digest,_,_)|digest.as_str())}
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        if let Some(source)=self.scope.as_ref(){if !source.matches(cx)?{return Err(changed().into())}}else{self.scope=Some(Source::capture(cx)?);}
+        if self.closing.is_none()&&self.payload.is_some(){if !metadata(cx,size_of::<(String,Generation3dSnapshot,String)>())?{return Ok(false)}let original=self.payload.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>self.closing=Some(owner),Err((error,original))=>{*self.payload=Some(original);return Err(error.into())}}return Ok(false)}
+        if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}self.closing=None;}self.scope=None;Ok(true)
+    }
+    pub fn terminal_is_empty(&self)->bool{self.payload.is_none()&&self.closing.is_none()}
+}
+impl Drop for EngineAdmission{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"geometry request donor requires paid original closure");}}
+
+/// 🚂️ One original inference source owns its retained snapshot and every completed evaluation.
 pub struct GeometryEngine {
-    catalogue: Arc<Catalogue>,
-    computes:Arc<dyn super::compute::GeometryComputeContext>,
-    cache: InferenceCache,
-    base: Option<Base>,
-    run: Option<Run>,
-    previous: BTreeMap<String, Arc<WidgetEvaluation>>,
-    totals: EngineTotals,
-    pub(super) failure:Option<InferenceWorkFailure>,
+    catalogue:Arc<Catalogue>,
+    computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>,
+    cache:InferenceCache,
+    owners:ManuallyDrop<Owners>,
+    totals:EngineTotals,
+    pub(super) failure:ManuallyDrop<Option<InferenceWorkFailure>>,
 }
+impl Drop for GeometryEngine{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"geometry engine requires paid same-caller closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 
-impl Drop for GeometryEngine {
-    fn drop(&mut self) {
-        self.run = None;
-        if let Some(base) = self.base.take() {
-            base.snapshot.retire_cold();
-        }
-    }
-}
+fn changed()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"geometry engine original caller or owner changed")}
+fn metadata(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,InferenceWorkFailure>{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
 
 impl GeometryEngine {
     /// 🏗️ An engine whose cache holds at most `budget_bytes`; a zero budget disables the cache.
-    pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn super::compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
+    pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
         let config = InferenceCacheConfig { enabled: budget_bytes > 0, budget_bytes, record_stats: true, ..Default::default() };
-        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), base: None, run: None, previous: BTreeMap::new(), totals: EngineTotals::default(),failure:None }
+        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), owners:ManuallyDrop::new(Owners{base:None,run:None,closing:None,source:None,scope:None,admission_identity:None}), totals: EngineTotals::default(),failure:ManuallyDrop::new(None) }
     }
 
     /// 🧷️ Whether the retained run of the request with this digest is open: neither finished nor replaced. A cancelled run stays open, so continuing it reports the cancellation.
     pub fn is_running(&self, digest: &str) -> bool {
-        self.base.as_ref().is_some_and(|base| base.digest == digest) && self.run.as_ref().is_some_and(|run| !run.cursor.is_done())
+        self.owners.base.as_ref().is_some_and(|base| base.digest == digest) && self.owners.run.as_ref().is_some_and(|run| !run.cursor.is_done())
     }
 
     /// 🧷️ Whether the retained base belongs to the request with this digest.
     pub fn holds(&self, digest: &str) -> bool {
-        self.base.as_ref().is_some_and(|base| base.digest == digest)
+        self.owners.base.as_ref().is_some_and(|base| base.digest == digest)
     }
 
-    /// 🚀️ Starts a run over `snapshot` (ownership moves in; it is retired when replaced), addressable for cancellation by `cancellation_id`. A run in flight is cancelled. The cache survives unless `mode` is `Cold`.
-    pub fn start(&mut self, digest: String, snapshot: Generation3dSnapshot, mode: CacheMode, cancellation_id: &str) {
-        self.run = None;
-        if mode == CacheMode::Cold {
-            semio_framework_async::poll::resolve_ready(self.cache.clear());
-        }
-        if let Some(displaced) = self.base.replace(Base { digest, snapshot }) {
-            displaced.snapshot.retire_cold();
-        }
-        self.run = Some(Run { cursor: InferenceCursor::new(), values: BTreeMap::new(), bypass: mode == CacheMode::Bypass, cancellation_id: cancellation_id.to_string() });
-        self.totals.runs += 1;
+    /// 🎟️ Admits one actual retained snapshot and request IDs under their original source.
+    pub fn start_original_step(&mut self,donor:&mut Option<EngineAdmission>,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        self.validate(cx)?;
+        if self.owners.base.is_some()||self.owners.run.is_some()||self.owners.closing.is_some()||self.failure.is_some(){return Err(changed().into())}
+        let request=donor.as_ref().ok_or_else(changed)?;
+        let identity=AdmissionIdentity::of(request).ok_or_else(changed)?;
+        if request.closing.is_some()||self.owners.admission_identity.as_ref().is_some_and(|original|*original!=identity){return Err(changed().into())}
+        if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+        if self.owners.source.is_none(){let scope=Source::capture(cx)?;let parent=cx.original_source_parent()?;let Some(source)=parent.admit_loan(cx)?else{return Ok(false)};self.owners.source=Some(source);self.owners.scope=Some(scope);self.owners.admission_identity=Some(identity);return Ok(false)}
+        if !metadata(cx,size_of::<Base>()+size_of::<Run>())?{return Ok(false)}
+        let mut request=donor.take().unwrap();let(digest,snapshot,cancellation_id)=request.payload.take().unwrap();
+        self.owners.base=Some(Base{digest,snapshot});self.owners.run=Some(Run{cursor:InferenceCursor::new(),values:InferenceValues::new(),bypass:request.mode==CacheMode::Bypass,cancellation_id});self.owners.admission_identity=None;self.totals.runs+=1;Ok(true)
     }
 
-    /// 🔁️ Restarts the retained base from its first widget; the warm cache makes unchanged widgets free.
-    pub fn restart(&mut self, mode: CacheMode, cancellation_id: &str) {
-        self.run = None;
-        if mode == CacheMode::Cold {
-            semio_framework_async::poll::resolve_ready(self.cache.clear());
+    fn validate(&self,cx:&StepContext<'_>)->Result<(),InferenceWorkFailure>{if let Some(source)=self.owners.scope.as_ref(){if !source.matches(cx)?{return Err(changed().into())}}Ok(())}
+
+    /// ♻️ Closes compute, plan, typed values, snapshot and request IDs before returning the initiating source loan.
+    pub fn close_original_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        self.validate(cx)?;
+        if self.failure.is_some(){return Ok(false)}
+        if let Some(run)=self.owners.run.as_mut(){
+            run.cursor.cancel();
+            if !run.cursor.close_original_plan_step(cx)?{return Ok(false)}
+            if !run.values.close_step(cx)?{return Ok(false)}
+            if !metadata(cx,size_of::<BaseClose>())?{return Ok(false)}
+            let mut retired_run=self.owners.run.take().unwrap();let cancellation=Some(std::mem::take(&mut retired_run.cancellation_id));let payload=(self.owners.base.take(),cancellation);
+            match ControlledRetirement::new(payload){Ok(owner)=>self.owners.closing=Some(owner),Err((error,(base,cancellation)))=>{self.owners.base=base;retired_run.cancellation_id=cancellation.unwrap();self.owners.run=Some(retired_run);return Err(error.into())}}return Ok(false)
         }
-        self.run = Some(Run { cursor: InferenceCursor::new(), values: BTreeMap::new(), bypass: mode == CacheMode::Bypass, cancellation_id: cancellation_id.to_string() });
-        self.totals.runs += 1;
+        if let Some(owner)=self.owners.closing.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}self.owners.closing=None;}
+        if let Some(source)=self.owners.source.as_mut(){let parent=cx.original_source_parent()?;source.close_step(parent,cx)?;if !source.terminal_is_empty(){return Ok(false)}self.owners.source=None;}
+        self.owners.scope=None;self.owners.admission_identity=None;Ok(true)
     }
 
     /// 🪜️ Spends at most `fuel` units on the run. A finished run becomes the retained evaluation.
     pub fn step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<EngineStep,InferenceWorkFailure> {
-        let (Some(base), Some(run)) = (self.base.as_ref(), self.run.as_mut()) else {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"geometry engine has no original run").into())};
+        self.validate(cx)?;
+        let owners=&mut *self.owners;
+        let (Some(base), Some(run)) = (owners.base.as_ref(), owners.run.as_mut()) else {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"geometry engine has no original run").into())};
         let cache = if run.bypass { None } else { Some(&mut self.cache) };
         let report = infer_field_step::<GeometryInput<'_>, Generation3dGeometry>(&GeometryInput::new(&base.snapshot,&self.catalogue,self.computes.as_ref()), cache, &mut run.cursor, &mut run.values,cx)?;
         self.totals.computed += report.computed as u64;
         self.totals.hits += report.hits as u64;
-        if report.done {
-            self.previous = run.values.clone();
-        }
         Ok(EngineStep { done: report.done, fuel_used: report.fuel_used, computed: report.computed, hits: report.hits, completed: run.cursor.completed(), total: run.cursor.total(), fraction: report.progress })
     }
 
     /// 🪢️ Retains the whole field refusal until the actual caller pays its original envelope handoff.
-    pub fn hold_failure(&mut self,original:InferenceWorkFailure){assert!(self.failure.is_none(),"original geometry engine already retains its field refusal");self.failure=Some(original);}
+    pub fn hold_failure(&mut self,original:InferenceWorkFailure){assert!(self.failure.is_none(),"original geometry engine already retains its field refusal");*self.failure=Some(original);}
     pub fn has_failure(&self)->bool{self.failure.is_some()}
     pub fn admit_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
         protocol::admit_inference_failure(&mut self.failure,cx)
     }
     /// 🛑️ Cancels the run in flight: the in-flight widget job is cancelled and finished widgets stay valid.
     pub fn cancel(&mut self) {
-        if let Some(run) = self.run.as_mut() {
+        if let Some(run) = self.owners.run.as_mut() {
             run.cursor.cancel();
         }
     }
 
     /// 🛑️ Cancels the run in flight when it was started under `cancellation_id`; answers whether it was.
     pub fn cancel_run(&mut self, cancellation_id: &str) -> bool {
-        match self.run.as_mut().filter(|run| run.cancellation_id == cancellation_id && !run.cursor.is_done()) {
+        match self.owners.run.as_mut().filter(|run| run.cancellation_id == cancellation_id && !run.cursor.is_done()) {
             Some(run) => {
                 run.cursor.cancel();
                 true
@@ -173,27 +207,20 @@ impl GeometryEngine {
         }
     }
 
-    /// 📦️ The evaluation of a widget: from the current run when it got that far, else from the last finished run.
-    pub fn evaluation(&self, widget: &str) -> Option<&Arc<WidgetEvaluation>> {
-        self.run.as_ref().and_then(|run| run.values.get(widget)).or_else(|| self.previous.get(widget))
+    /// 📦️ Borrows the actual value row through its retained snapshot's source ordinal.
+    pub fn evaluation(&self,widget:&str)->Option<&Arc<WidgetEvaluation>>{self.evaluations().find(|(key,_)|key.as_str()==widget).map(|(_,value)|value)}
+
+    /// 📦️ Borrows source IDs and completed values without allocating keys or duplicating shared payloads.
+    pub fn evaluations(&self)->impl Iterator<Item=(&String,&Arc<WidgetEvaluation>)>{
+        self.owners.base.as_ref().zip(self.owners.run.as_ref()).into_iter().flat_map(move|(base,run)|run.values.iter().filter_map(move|(source,value)|super::source_widget_key(&base.snapshot,source).map(|key|(key,value))))
     }
 
-    /// 📦️ Every evaluation of the current run, else of the last finished run.
-    pub fn evaluations(&self) -> &BTreeMap<String, Arc<WidgetEvaluation>> {
-        match &self.run {
-            Some(run) if !run.values.is_empty() => &run.values,
-            _ => &self.previous,
-        }
-    }
-
-    /// 🔗️ The dependency hash of a finished widget of the current run, hex encoded.
-    pub fn dependency_hash(&self, widget: &str) -> Option<String> {
-        self.run.as_ref().and_then(|run| run.cursor.hash(&widget.to_string())).map(|hash| hash.0.iter().map(|byte| format!("{byte:02x}")).collect())
-    }
+    /// 🔗️ Formats a cold diagnostic hash from the existing borrowed source key.
+    pub fn dependency_hash(&self,widget:&str)->Option<String>{let(key,_)=self.evaluations().find(|(key,_)|key.as_str()==widget)?;self.owners.run.as_ref()?.cursor.hash(key).map(|hash|hash.0.iter().map(|byte|format!("{byte:02x}")).collect())}
 
     /// 🧮️ Finished and total widgets of the current run.
     pub fn progress(&self) -> (usize, usize) {
-        self.run.as_ref().map_or((0, 0), |run| (run.cursor.completed(), run.cursor.total()))
+        self.owners.run.as_ref().map_or((0, 0), |run| (run.cursor.completed(), run.cursor.total()))
     }
 
     /// 📊️ The cache's hit, miss and eviction counters.
@@ -211,25 +238,15 @@ impl GeometryEngine {
         self.cache.used_bytes()
     }
 
-    /// 🧹️ Closes every owner the engine holds: the run, the retained evaluations, the cache and the retired base snapshot.
-    pub fn retire_cold(&mut self) {
-        if self.failure.is_some(){return}
-        self.run = None;
-        self.previous.clear();
-        semio_framework_async::poll::resolve_ready(self.cache.clear());
-        if let Some(base) = self.base.take() {
-            base.snapshot.retire_cold();
-        }
-    }
+    /// 🧊️ An empty engine needs no cold cleanup; original sources remain held for their paid closure.
+    pub fn retire_cold(&mut self){if self.terminal_is_empty(){semio_framework_async::poll::resolve_ready(self.cache.clear());}}
 
-    /// 🧾️ Whether the engine holds no run, no evaluation and no base.
-    pub fn terminal_is_empty(&self) -> bool {
-        self.failure.is_none() && self.run.is_none() && self.previous.is_empty() && self.base.is_none()
-    }
+    /// 🧾️ Every original request, value and source loan has returned through its paid closure.
+    pub fn terminal_is_empty(&self)->bool{self.failure.is_none()&&self.owners.base.is_none()&&self.owners.run.is_none()&&self.owners.closing.is_none()&&self.owners.source.is_none()&&self.owners.scope.is_none()&&self.owners.admission_identity.is_none()}
 
     /// 📸️ The base snapshot of the current run.
     pub fn base(&self) -> Option<&Generation3dSnapshot> {
-        self.base.as_ref().map(|base| &base.snapshot)
+        self.owners.base.as_ref().map(|base| &base.snapshot)
     }
 }
 

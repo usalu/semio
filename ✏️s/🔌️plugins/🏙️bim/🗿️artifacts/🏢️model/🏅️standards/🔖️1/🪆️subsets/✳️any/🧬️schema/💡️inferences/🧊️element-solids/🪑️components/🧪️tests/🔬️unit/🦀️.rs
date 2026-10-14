@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

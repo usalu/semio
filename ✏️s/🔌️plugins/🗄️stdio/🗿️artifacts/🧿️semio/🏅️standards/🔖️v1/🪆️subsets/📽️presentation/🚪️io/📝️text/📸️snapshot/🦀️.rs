@@ -10,7 +10,8 @@ use super::*;
 use crate::io::text::diff::{enc_list, dec_list};
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns
@@ -159,10 +160,15 @@ use framework_schema::ArtifactSchema;
 mod diff_codec {
 use super::*;
 use crate::io::text::diff::{enc_list, dec_list, enc_master, dec_master, enc_layout, dec_layout, enc_slide, dec_slide};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_str, dec_str};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec

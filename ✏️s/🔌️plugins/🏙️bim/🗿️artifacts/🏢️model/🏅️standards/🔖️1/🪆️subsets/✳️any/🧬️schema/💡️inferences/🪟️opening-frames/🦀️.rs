@@ -22,7 +22,7 @@ use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, 
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::attach::{elevation_at, ElevationPoint};
 use super::super::wall_layout::{face_ends, WallLayout};
-use crate::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Profile, Swing, Wall, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Profile, Swing, Wall, WindowType};
 use semio_framework_geometry::placement::Affine3;
 use semio_framework_geometry::vector::{perp, LENGTH_EPS};
 use semio_framework_geometry::{Point, Vec2};

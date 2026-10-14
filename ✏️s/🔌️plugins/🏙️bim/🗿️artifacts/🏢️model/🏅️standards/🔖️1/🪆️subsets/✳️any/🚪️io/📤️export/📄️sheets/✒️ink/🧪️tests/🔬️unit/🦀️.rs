@@ -3,7 +3,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::layout_of;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::{ModelSnapshot, Point2, Sheet, SheetRevision, View, ViewKind, Viewport};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, Sheet, SheetRevision, View, ViewKind, Viewport};
 use super::super::testkit::labels;
 use std::collections::BTreeMap;
 

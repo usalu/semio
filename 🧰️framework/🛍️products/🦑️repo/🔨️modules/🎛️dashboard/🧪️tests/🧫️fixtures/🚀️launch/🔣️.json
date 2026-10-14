@@ -169,6 +169,18 @@
           "env": {
             "SEMIO_PROCESS_INVOCATION": "{\"launches\":[[\"bun\",\"x\",\"nx\",\"run\",\"p:test\"]]}"
           }
+        },
+        {
+          "name": "Private Bootstrap",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run p:test --skip-nx-cache --excludeTaskDependencies --outputStyle=stream"
+        },
+        {
+          "name": "Quoted Private Bootstrap",
+          "type": "node-terminal",
+          "request": "launch",
+          "command": "bun \"./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts\" nx run p:test --skip-nx-cache"
         }
       ],
       "inputs": [
@@ -206,6 +218,16 @@
         "op": "replace",
         "path": "/configurations/1/env/SEMIO_PROCESS_INVOCATION",
         "value": "{\"launches\":[[\"bun\",\"repo\",\"run\",\"p:test\"]]}"
+      },
+      {
+        "op": "replace",
+        "path": "/configurations/2/command",
+        "value": "bun repo run p:test --skip-cache --exclude-dependencies --output=stream"
+      },
+      {
+        "op": "replace",
+        "path": "/configurations/3/command",
+        "value": "bun repo run p:test --skip-cache"
       }
     ]
   }

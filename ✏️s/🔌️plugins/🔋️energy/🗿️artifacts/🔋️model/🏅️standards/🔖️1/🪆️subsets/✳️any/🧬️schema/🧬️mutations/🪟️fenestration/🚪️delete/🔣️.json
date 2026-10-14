@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️fenestration/🚪️delete",
+  "semanticKind": "delete-fenestration",
+  "displayName": "Delete Fenestration",
+  "emoji": "🚪️",
+  "aggregateVariant": "DeleteFenestration",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "delete-fenestration",
+  "binaryTag": 36,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

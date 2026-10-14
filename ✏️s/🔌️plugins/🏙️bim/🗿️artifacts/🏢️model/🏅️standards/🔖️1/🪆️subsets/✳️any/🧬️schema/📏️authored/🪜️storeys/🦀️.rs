@@ -1,7 +1,7 @@
 //! 🪜️ `storeys`: the stacking of the storeys of a building and the elevation of a storey as the pure sum of authored heights. Level 0 is the building datum; storeys with a positive level stack upward
 //! from it, storeys with a negative level stack downward, and each storey has at most one parent, the storey directly below it (positive side) or directly above it (negative side).
 
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 /// 🧭️ The storeys of one building ordered by level, with the id of each storey's single parent.
 pub fn stacking(snapshot: &ModelSnapshot, building: &str) -> Vec<(String, Option<String>)> {

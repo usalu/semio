@@ -40,11 +40,11 @@
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
 //! @see ../🔣️oracle.json — the `step-ap214-cc6` catalog `KINDS` is checked against.
 
-use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
 #[cfg(test)]
-use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
-use crate::standards::v_ap214::engine::ladder;
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::io::ladder::ShapeRepresentationRow;
+use crate::standards::v_ap214::subsets::base::io::ladder;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 #[cfg(test)] use protocol::Mutation;
 
 #[cfg(test)]

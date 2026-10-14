@@ -238,7 +238,7 @@ async fn wal_recovery_aborts_only_incomplete_active_transactions_idempotently() 
     }
 }
 
-#[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧾️committed-transactions/🔣️.json")).unwrap();
@@ -999,7 +999,7 @@ async fn wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries
     for (ordinal, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let storage = MemoryStorage::new(crate::db_storage::db_io_test_pool()).await.unwrap();
         capacity_backend(&storage, &fixture, case).await;
-        #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+        #[cfg(not(target_arch = "wasm32"))]
         {
             let base = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
             let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();

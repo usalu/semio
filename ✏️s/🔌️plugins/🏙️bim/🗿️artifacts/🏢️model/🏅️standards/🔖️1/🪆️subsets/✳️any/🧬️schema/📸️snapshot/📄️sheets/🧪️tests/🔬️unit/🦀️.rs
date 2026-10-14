@@ -1,14 +1,14 @@
 //! 🧪️ The sheet rules: paper sizes, orientation, dates and why a sheet, a viewport or a revision row cannot be written.
 
 use super::*;
-use crate::{View, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
-    model.buildings.insert("bldg-1".into(), crate::Building { site: "site-1".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    model.storeys.insert("st-ground".into(), crate::Storey { building: "bldg-1".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    model.buildings.insert("bldg-1".into(), crate::standards::v1::subsets::any::schema::snapshot::Building { site: "site-1".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    model.storeys.insert("st-ground".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     model.views.insert("v-ground".into(), View::of_storey("bldg-1", "Ground plan", ViewKind::Plan, "st-ground"));
-    model.views.insert("v-eye".into(), View { camera: Some(crate::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.5, azimuth: 0.0, pitch: 0.2, distance: 10.0 }), ..View::standard("bldg-1", "Eye", ViewKind::Perspective) });
+    model.views.insert("v-eye".into(), View { camera: Some(crate::standards::v1::subsets::any::schema::snapshot::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.5, azimuth: 0.0, pitch: 0.2, distance: 10.0 }), ..View::standard("bldg-1", "Eye", ViewKind::Perspective) });
     model.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Ground floor"));
     model
 }

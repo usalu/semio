@@ -85,8 +85,8 @@ const SEMIO_ANIMATION_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "s.stdio.semio.anim
 const SEMIO_ANIMATION_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_animation_editor_example_snapshot(example_id: &str) -> SemioAnimationSnapshot {
-    if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
-        <SemioAnimationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_semio_base_examples::examples::demo::ID {
+        <SemioAnimationSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base_examples::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioAnimationSnapshot::default()
     }
@@ -175,7 +175,7 @@ pub struct SemioAnimationEditor;
 impl ArtifactEditor for SemioAnimationEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![semio_s_artifact_stdio_semio_base::examples::demo::source()]
+        vec![semio_s_artifact_stdio_semio_base_examples::examples::demo::source()]
     }
     type Snapshot = SemioAnimationSnapshot;
     type Mutation = SemioAnimationMutation;
@@ -307,7 +307,7 @@ pub fn create_semio_animation_editor() -> semio_framework_plugin::AppDefinition 
         .window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition())
         .default_layout(edit::layout())
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base::examples::demo::ID, semio_s_artifact_stdio_semio_base::examples::demo::label())], semio_s_artifact_stdio_semio_base::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base_examples::examples::demo::ID, semio_s_artifact_stdio_semio_base_examples::examples::demo::label())], semio_s_artifact_stdio_semio_base_examples::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

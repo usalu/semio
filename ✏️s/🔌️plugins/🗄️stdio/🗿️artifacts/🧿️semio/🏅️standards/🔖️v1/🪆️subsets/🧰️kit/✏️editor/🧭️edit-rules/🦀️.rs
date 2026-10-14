@@ -1,6 +1,18 @@
 //! 🧭️ The kit editor's edit rules: which snapshot pointer raises which ONE concrete kit mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, slot_edit, spread_snake, Entries, Reshape, Slot, ITEM};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::complete_by;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::slot_edit;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_snake;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Slot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
 use crate::schema::mutations::SemioKitMutation;
 use crate::schema::snapshot::SemioKitSnapshot;
 use semio_framework_plugin::Fault;

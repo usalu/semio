@@ -22,7 +22,7 @@ fn the_window_shows_its_sheet_while_it_exists_else_the_first_in_print_order() {
     assert_eq!(shown("sh-sections").as_deref(), Some("sh-sections"));
     assert_eq!(shown("sh-gone").as_deref(), Some("sh-plans"));
     assert_eq!(shown("").as_deref(), Some("sh-plans"));
-    assert_eq!(active_sheet(&crate::ModelSnapshot::default(), &BimSheetWindowConfig::default()), None);
+    assert_eq!(active_sheet(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &BimSheetWindowConfig::default()), None);
 }
 
 #[test]
@@ -52,7 +52,7 @@ fn a_selected_viewport_is_outlined_in_the_accent_colour_and_a_finding_in_red() {
     assert!(ids(&selected).contains(&"selected:vp-first".to_string()));
     assert!(!ids(&selected).contains(&"selected:vp-ground".to_string()));
     let mut crowded = house_with_sheets();
-    crowded.viewports.get_mut("vp-first").unwrap().position = crate::Point2 { x: 40.0, y: 40.0 };
+    crowded.viewports.get_mut("vp-first").unwrap().position = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 40.0, y: 40.0 };
     let inference = inferred(&crowded);
     let crowded = records(inference.sheet_layouts.get("sh-plans"), &inference, &[], "select", &BimLabels::NATIVE_EN);
     assert!(ids(&crowded).iter().any(|id| id.starts_with("finding:")), "two windows on top of each other raise a finding");
@@ -60,7 +60,7 @@ fn a_selected_viewport_is_outlined_in_the_accent_colour_and_a_finding_in_red() {
 
 #[test]
 fn a_missing_sheet_paints_the_empty_text_in_both_languages() {
-    let inference = crate::ModelInference::default();
+    let inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::default();
     for labels in [&BimLabels::NATIVE_EN, &BimLabels::NATIVE_DE] {
         let found = records(None, &inference, &[], "select", labels);
         let text = found.iter().find(|record| record.get("id").and_then(DslValue::as_str) == Some("empty")).expect("the empty text");
@@ -75,7 +75,7 @@ fn the_records_of_a_view_are_renamed_below_the_viewport_and_scaled_into_its_wind
         viewport: "vp-1".into(),
         view: "v-1".into(),
         label: "Plan".into(),
-        kind: crate::ViewKind::Plan,
+        kind: crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan,
         scale: 100,
         window: PaperRect { x: 30.0, y: 40.0, width: 90.0, height: 70.0 },
         map: ViewMap { min_x: -0.5, max_y: 6.5, mm: 10.0 },
@@ -94,7 +94,7 @@ fn the_records_of_a_view_are_renamed_below_the_viewport_and_scaled_into_its_wind
 
 #[test]
 fn a_transform_the_record_already_had_is_composed_not_replaced() {
-    let placed = PlacedViewport { viewport: "vp-1".into(), view: "v-1".into(), label: String::new(), kind: crate::ViewKind::Plan, scale: 50, window: PaperRect { x: 10.0, y: 10.0, width: 50.0, height: 50.0 }, map: ViewMap { min_x: 0.0, max_y: 0.0, mm: 20.0 }, empty: false, cropped: false };
+    let placed = PlacedViewport { viewport: "vp-1".into(), view: "v-1".into(), label: String::new(), kind: crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan, scale: 50, window: PaperRect { x: 10.0, y: 10.0, width: 50.0, height: 50.0 }, map: ViewMap { min_x: 0.0, max_y: 0.0, mm: 20.0 }, empty: false, cropped: false };
     let rotated = text_record("note", (1.0, 2.0), "x", 0.2, INK);
     let moved = placed_records(vec![rotated], &placed);
     let matrix: Vec<f64> = moved[0].get("transform").and_then(DslValue::as_array).expect("a transform").iter().filter_map(DslValue::as_f64).collect();

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "project": {
+    "name": "configured-inputs",
+    "targets": {
+      "build": {
+        "executor": "repo:script",
+        "cache": true,
+        "options": {"cwd": "owner", "command": "bun ./📜️script.ts base"},
+        "configurations": {
+          "release": {"cwd": "alternate", "command": "bun ./📜️script.ts configured"},
+          "relocated": {"cwd": "alternate"}
+        }
+      }
+    }
+  },
+  "files": {
+    "owner/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+    "owner/value.ts": "export const value = 'base';\n",
+    "alternate/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+    "alternate/value.ts": "export const value = 'configured-before';\n",
+    "unrelated/value.ts": "export const value = 'unrelated';\n"
+  },
+  "configuredSources": ["alternate/📜️script.ts", "alternate/value.ts"],
+  "mutation": {"path": "alternate/value.ts", "bytes": "export const value = 'configured-after';\n"}
+}

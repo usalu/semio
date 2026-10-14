@@ -15,8 +15,8 @@ async fn cad_plugin_assembles_with_editor_and_viewer_apps() {
 /// "some composer") is responsible when `cad_plugin_assembles_with_editor_and_viewer_apps` fails.
 #[semio_framework_async_macros::async_test]
 async fn cad_composer_entries_have_declared_capabilities() {
-    let definition = crate::artifacts::cad::definition().expect("cad definition() must build");
-    let entries = crate::artifacts::cad::standards::v1::subsets::any::io::io_registry::entries();
+    let definition = semio_s_artifact_cad_cad::definition().expect("cad definition() must build");
+    let entries = semio_s_artifact_cad_cad_io::io_registry::entries();
     let mut missing = Vec::new();
     for entry in entries {
         let coordinate = semio_framework::ArtifactDialect::from(entry.writes).to_coordinate();

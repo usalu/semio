@@ -1,11 +1,11 @@
 //! ↩️ `delete-generation` inverse — reconstructs a `create-generation` from BASE state; a
 //! generation already absent from `base` has nothing to undo.
 
-use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::delete_generation::DeleteGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::select_generation::SelectGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use crate::create_generation::CreateGeneration;
+use crate::delete_generation::DeleteGeneration;
+use crate::select_generation::SelectGeneration;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 pub fn inverse(payload: &DeleteGeneration, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok((|| {

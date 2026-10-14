@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-table-dependence"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🤝️ Dependence measures over table columns: divergences, mutual and transfer information, partial information decomposition, matrix entropies and Fisher criteria."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-semio-table-entropy = { workspace = true }

@@ -1,6 +1,7 @@
-use super::*;
-use crate::schema::diff::IfcEntitiesDiff;
-use crate::schema::snapshot::{IfcComplexType, IfcHeader};
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcEntitiesDiff;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -164,8 +165,8 @@ fn absorb_law_associativity() {
 //#region 🔖️codec_retention_law
 #[test]
 fn codec_retention_law() {
-    let document = semio_s_artifact_stdio_contract::part21::parse_part21(crate::examples::ifc4_demo::EXCHANGE_TEXT).expect("parse external IFC4 fixture");
-    let decoded = crate::schema::snapshot::from_part21_document(crate::STDIO_IFC_DOCUMENT_SCHEMA, &document);
+    let document = semio_s_artifact_stdio_contract::part21::parse_part21(semio_s_artifact_stdio_ifc_4::examples::ifc4_demo::EXCHANGE_TEXT).expect("parse external IFC4 fixture");
+    let decoded = semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA, &document);
     let reencoded = pack::snapshot::ArtifactDsl::print_dsl(&decoded);
     let redecoded = <IfcSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&reencoded).expect("re-decode fixture");
     assert_eq!(decoded.header, redecoded.header);

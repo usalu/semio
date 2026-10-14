@@ -14,7 +14,7 @@ fn results_view() -> ViewModel {
 /// configuration partition and never into the document.
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_is_config_only() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -37,7 +37,7 @@ async fn set_result_display_applies_one_named_field() {
     };
     assert_eq!(apply("sourceId", "dead").expect("source").result_source_id.as_deref(), Some("dead"));
     assert_eq!(apply("sourceId", "").expect("cleared source").result_source_id, None);
-    assert_eq!(apply("mode", "buckling").expect("mode").result_mode, crate::app_surface::ResultMode::Buckling);
+    assert_eq!(apply("mode", "buckling").expect("mode").result_mode, semio_s_fem_app_surface::ResultMode::Buckling);
     assert_eq!(apply("modeIndex", "2").expect("index").result_mode_index, 2);
     assert_eq!(apply("modeIndex", "3.0").expect("a number control's own spelling").result_mode_index, 3);
     assert!(apply("harmonic", "1").is_err(), "an unknown field is refused");

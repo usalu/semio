@@ -3,7 +3,7 @@
 //! same diff from the same mutation. Arc geometry follows `semio-framework-geometry::bulge` (`bulge = tan(sweep / 4)`, parameters
 //! proportional to arc length), which cross-checks it in the unit tests.
 
-use crate::{Axis, CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelDiff, ModelSnapshot, Point2, Profile, Slope, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot, Point2, Profile, Slope, TopConstraint}, diff::ModelDiff};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::f64::consts::TAU;
 
@@ -253,7 +253,7 @@ pub fn offsets_flaw(top_offset: f64, end_top_offset: Option<f64>) -> Option<Flaw
 #[cfg(test)]
 pub mod testing {
     use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{compute_wall_layout, WallLayout};
-    use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+    use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
     use protocol::Mutation;
     use semio_framework_diagnostic::Severity;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};

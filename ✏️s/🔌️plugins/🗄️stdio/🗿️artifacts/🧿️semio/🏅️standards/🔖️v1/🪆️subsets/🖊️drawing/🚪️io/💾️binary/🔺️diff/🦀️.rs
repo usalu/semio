@@ -9,9 +9,16 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_triple;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};

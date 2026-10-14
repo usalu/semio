@@ -10,7 +10,7 @@ const PREVIEW_EVAL_RUN_FIXTURE_JSON: &str = include_str!("../../../../../../../.
 fn the_release_hop_emits_the_declared_kernel_release_through_the_command_row() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let fixture: serde_json::Value = serde_json::from_str(PREVIEW_EVAL_RUN_FIXTURE_JSON).expect("fixture");
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
     let config = Generation3dConfig::default();
     let history = empty_history_view();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -20,8 +20,8 @@ fn the_release_hop_emits_the_declared_kernel_release_through_the_command_row() {
     let emit = handle(&payload, &doc, &cfg, &mut session).expect("the release hop never faults");
     let expected: Vec<&str> = fixture["release"]["capabilities"].as_array().unwrap().iter().filter_map(serde_json::Value::as_str).collect();
     let capabilities: Vec<&str> = emit.extension_invocations.iter().map(|invocation| invocation.capability.as_str()).collect();
-    println!("[STATS] release hop capabilities={capabilities:?} addressable={}", semio_s_artifact_procedural_generation3d::preview_eval::geometry_extension_address().is_ok());
-    if semio_s_artifact_procedural_generation3d::preview_eval::geometry_extension_address().is_ok() {
+    println!("[STATS] release hop capabilities={capabilities:?} addressable={}", semio_s_artifact_procedural_3d_preview_eval::geometry_extension_address().is_ok());
+    if semio_s_artifact_procedural_3d_preview_eval::geometry_extension_address().is_ok() {
         assert_eq!(capabilities, expected);
     } else {
         assert!(capabilities.is_empty(), "an unaddressable geometry extension has no actor to tell");

@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{ExprPoint, ExprPoint3, Family, FamilyParameter, FamilySolid, ParametricProfile, SolidShape};
+use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, ExprPoint3, Family, FamilyParameter, FamilySolid, ParametricProfile, SolidShape};
 
 /// 🧰️ Builders of authored families for the tests of this module and its children.
 pub mod kit {
@@ -8,7 +8,7 @@ pub mod kit {
 
     pub fn model() -> ModelSnapshot {
         let mut snapshot = ModelSnapshot::default();
-        snapshot.materials.insert("m-steel".into(), crate::Material { name: "Steel".into(), category: crate::MaterialCategory::Metal, color: crate::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
+        snapshot.materials.insert("m-steel".into(), crate::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Metal, color: crate::standards::v1::subsets::any::schema::snapshot::Rgb { r: 0.5, g: 0.5, b: 0.55 }, density: 7850.0, conductivity: 50.0, specific_heat: 450.0 });
         snapshot
     }
 
@@ -174,20 +174,20 @@ fn the_value_survives_the_wire_form() {
     assert_eq!(back, value);
 }
 
-fn railing(profile: Profile, post: Profile, baluster: Option<Profile>) -> crate::Railing {
-    crate::Railing {
+fn railing(profile: Profile, post: Profile, baluster: Option<Profile>) -> crate::standards::v1::subsets::any::schema::snapshot::Railing {
+    crate::standards::v1::subsets::any::schema::snapshot::Railing {
         storey: "st-ground".into(),
         path: Vec::new(),
         height: 1.0,
         post_spacing: 1.0,
         profile,
         post_profile: post,
-        baluster: baluster.map(|profile| crate::Baluster { profile, spacing: 0.12 }),
-        infill: crate::Infill::None,
+        baluster: baluster.map(|profile| crate::standards::v1::subsets::any::schema::snapshot::Baluster { profile, spacing: 0.12 }),
+        infill: crate::standards::v1::subsets::any::schema::snapshot::Infill::None,
         material: "m-steel".into(),
         base_offset: 0.0,
         host: None,
-        phase: crate::Phase::New,
+        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
         name: "Rail".into(),
     }
 }

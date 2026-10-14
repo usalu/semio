@@ -15,7 +15,7 @@ pub use super::super::storey_levels::top_of;
 use crate::standards::v1::subsets::any::schema::authored::plan::{axis_length, segment_of as seg};
 use super::super::element_solids::plan_kit::mark;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
-use crate::{Axis, LocationLine, ModelSnapshot, Point2, Vertex, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, LocationLine, ModelSnapshot, Point2, Vertex, Wall};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::vector::angle_between;
@@ -159,18 +159,18 @@ pub fn thickness_of(snapshot: &ModelSnapshot, wall: &Wall) -> f64 {
     snapshot.wall_types.get(&wall.wall_type).map_or(0.0, |kind| kind.layers.iter().map(|layer| layer.thickness).sum())
 }
 
-fn core_centre(layers: &[crate::Layer], thickness: f64) -> f64 {
-    let span = |function: crate::LayerFunction| {
+fn core_centre(layers: &[crate::standards::v1::subsets::any::schema::snapshot::Layer], thickness: f64) -> f64 {
+    let span = |function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction| {
         let first = layers.iter().position(|layer| layer.function == function)?;
         let last = layers.iter().rposition(|layer| layer.function == function)?;
         Some((layers[..first].iter().map(|layer| layer.thickness).sum::<f64>(), layers[..=last].iter().map(|layer| layer.thickness).sum::<f64>()))
     };
-    span(crate::LayerFunction::Core).or_else(|| span(crate::LayerFunction::Structure)).map_or(thickness / 2.0, |(start, end)| (start + end) / 2.0)
+    span(crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Core).or_else(|| span(crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Structure)).map_or(thickness / 2.0, |(start, end)| (start + end) / 2.0)
 }
 
 /// ↔️ The face distances of a wall from its location line and the layers of its type.
 pub fn offsets_of(snapshot: &ModelSnapshot, wall: &Wall) -> Offsets {
-    let layers: &[crate::Layer] = snapshot.wall_types.get(&wall.wall_type).map_or(&[][..], |kind| &kind.layers[..]);
+    let layers: &[crate::standards::v1::subsets::any::schema::snapshot::Layer] = snapshot.wall_types.get(&wall.wall_type).map_or(&[][..], |kind| &kind.layers[..]);
     let thickness: f64 = layers.iter().map(|layer| layer.thickness).sum();
     let left = match wall.location {
         LocationLine::Center => thickness / 2.0,

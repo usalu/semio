@@ -20,10 +20,7 @@ role = "test"
 name = "semio_s_artifact_stdio_txt_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = ["dep:bstr", "dep:csv"]
-
 [dependencies]
-"bstr" = { version = "1.13", optional = true, default-features = false, features = ["std"] }
-"csv" = { version = "1", optional = true }
+"bstr" = { version = "1.13", default-features = false, features = ["std"] }
+"csv" = { version = "1" }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

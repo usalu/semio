@@ -11,7 +11,9 @@
 //! shared `Part21Document` only at the parse/write boundary, never storing it.
 //! https://www.iso.org/standard/70303.html (IFC4) / https://www.iso.org/standard/63141.html (Part 21)
 
-use crate::STDIO_IFC_DOCUMENT_SCHEMA;
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";
+
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 #[cfg(test)] use semio_s_artifact_stdio_contract::part21::{parse_part21};

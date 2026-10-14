@@ -59,7 +59,7 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
 }
 
 fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    crate::os_store::snapshot_read::artifact_retirement_owner_close(input, grant)
+    crate::os_store::snapshot_read::retirement_owner_close(input, grant)
 }
 
 impl<M: MemberFactory> MemberFactorySelection<M> {
@@ -182,7 +182,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for MemberFactorySelection<M> {
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> MemberFactorySelection<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.input, body) }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for MemberFactorySelection<M> {
     fn drop(&mut self) {
@@ -245,7 +245,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryInput<M
 }
 impl<M: MemberFactory> SelectedMemberHistoryInput<M> {
     pub(crate) fn history_limits(&self)->protocol::codec::HistoryReadLimits{self.declaration.history_limits}
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.input, body) }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryInput<M> {
     fn drop(&mut self) {
@@ -284,7 +284,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedMemberHistoryDiction
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedMemberHistoryDictionary<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.owner, body) }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.owner, body) }
 }
 impl<M: MemberFactory> Drop for SelectedMemberHistoryDictionary<M> {
     fn drop(&mut self) {
@@ -343,7 +343,7 @@ impl<M: MemberFactory> ErasedSnapshotRetirement for SelectedVerifiedMemberHistor
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.depth) }
 }
 impl<M: MemberFactory> SelectedVerifiedMemberHistory<M> {
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.input, body) }
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { crate::os_store::snapshot_read::retirement_owner_demands(&self.input, body) }
 }
 impl<M: MemberFactory> Drop for SelectedVerifiedMemberHistory<M> {
     fn drop(&mut self) {

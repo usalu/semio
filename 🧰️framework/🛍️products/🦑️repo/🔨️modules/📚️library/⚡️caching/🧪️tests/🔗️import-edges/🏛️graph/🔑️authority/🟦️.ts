@@ -40,7 +40,7 @@ test("retained Nx reuse admits only current roots manifests lock scope and imple
         previous = authority;
       }
     }
-    const { cacheInternals } = await import("../../../../../🟨️.mjs");
+    const { cacheInternals } = await import("../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
     const { TargetProjectLocator } = require("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator");
     for (const row of fixture.lockScopes) {
       const directory = join(root, row.id), source = join(directory, row.file), projects = { caller: { root: dirname(row.file) } };

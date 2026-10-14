@@ -10,7 +10,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   const entry = resolve(import.meta.dir, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts");
   const packageRoot = resolve(entry, "../../📦️packages/🟦️typescript"), project = JSON.parse(readFileSync(join(packageRoot, "📋️project.json"), "utf8"));
   assert.equal(project.targets["check-browser-worker"].cache, true, "Generated-file freshness checks must stay cached — a repeat check without a source change is otherwise a wasted 🧵️Trunk-less bundle rebuild every single run");
-  const { cacheInternals } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
+  const { cacheInternals } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"));
   const bootOutput = resolve(packageRoot, "../../🚀️browser-boot/🤖️generated/🟨️.js"), frameWorkerOutput = resolve(packageRoot, "../../🎞️frame-worker/🤖️generated/🟨️.js");
   const projectRoot = packageRoot.slice(workspace.length + 1).split(sep).join("/");
   const couplingInputs = (name: string) => cacheInternals.generatorOutputCouplingInputs(name, project.targets[name], project.targets, projectRoot, workspace);

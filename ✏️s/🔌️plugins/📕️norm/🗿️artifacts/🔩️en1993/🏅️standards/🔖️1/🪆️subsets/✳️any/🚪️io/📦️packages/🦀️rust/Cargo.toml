@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-en1993-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1993 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-norm-compliance = { workspace = true }
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+semio-s-artifact-norm-en1993-diff = { workspace = true }
+semio-s-artifact-norm-en1993-model = { workspace = true }
+semio-s-artifact-norm-en1993-mut-connections = { workspace = true }
+semio-s-artifact-norm-en1993-mut-cranes = { workspace = true }
+semio-s-artifact-norm-en1993-mut-fire-fatigue = { workspace = true }
+semio-s-artifact-norm-en1993-mut-general = { workspace = true }
+semio-s-artifact-norm-en1993-mut-thin-walled = { workspace = true }
+semio-s-artifact-norm-en1993-mut-towers = { workspace = true }
+semio-s-artifact-norm-en1993-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-norm-en1993-checks = { workspace = true }

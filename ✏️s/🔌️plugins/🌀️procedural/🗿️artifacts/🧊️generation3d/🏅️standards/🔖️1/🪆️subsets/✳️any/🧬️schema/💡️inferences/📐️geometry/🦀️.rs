@@ -4,41 +4,42 @@
 //! input is its kind, stored literals and incoming wiring, and its compute resolves typed inputs from the parents'
 //! evaluations and starts the catalogue kind's compute as a stepped job. The heavy values live in the instance-owned
 //! [`engine::GeometryEngine`]; the inference record carries per-widget summaries.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
 
-#[path = "⚙️compute/🦀️.rs"]
-pub mod compute;
 #[path = "🚂️engine/🦀️.rs"]
 pub mod engine;
-#[path = "🔌️inputs/🦀️.rs"]
-pub mod inputs;
 #[path = "🗃️registry/🦀️.rs"]
 pub mod registry;
 #[path = "🛰️service/🦀️.rs"]
 pub mod service;
-#[path = "💎️value/🦀️.rs"]
-pub mod value;
 #[path = "🪄️widgets/🦀️.rs"]
 pub mod widgets;
 
-use crate::standards::v1::subsets::any::schema::catalogue::{Catalogue, Kind, Port, PortType, Quality};
-use crate::{widget_id, Generation3dSnapshot};
-use compute::{WidgetJob, WidgetStep};
-use inputs::resolve_inputs;
+#[path="🚀️original-field/🦀️.rs"]
+pub mod original_field;
+
+use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Port;
+use semio_s_artifact_procedural_3d_model::catalogue::PortType;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
+use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::resolve_inputs;
 use protocol::{ComputeStep, InferenceWorkFailure, InferenceFault, InferencePending, InferenceStep, InferredField};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use std::any::Any;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
-use value::{GeometryValue, WidgetEvaluation, WidgetFault, FAULT_PREFIX};
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
+use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
 
-/// 🧰️ What a compute module imports: the value, input, job and fault vocabulary of a widget compute.
-pub mod prelude {
-    pub use super::compute::{failed, finish, finish_with_quality, ComputeEntry, KernelSession, StartFn, WidgetJob, WidgetStep};
-    pub use super::inputs::WidgetInputs;
-    pub use super::value::{body_fault, kernel_fault, outputs, GeometryValue, Outputs, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
-    pub use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType, Quality};
-}
 
 //#region 🔖️Graph
 /// 🔗️ The distinct existing widgets wired into `key`, in synapse order — the parents of its plan step.
@@ -196,7 +197,7 @@ fn matches_port(port: &Port, found: &GeometryValue) -> bool {
         (PortType::Vector, GeometryValue::Vector(_)) => true,
         (PortType::Point, GeometryValue::Point(_)) => true,
         (PortType::Plane, GeometryValue::Plane(_)) => true,
-        (PortType::Shape | PortType::Shapes, GeometryValue::Shape(shape)) => port.shape_kinds.as_deref().is_none_or(|kinds| kinds.contains(&value::shape_kind(shape.kind()))),
+        (PortType::Shape | PortType::Shapes, GeometryValue::Shape(shape)) => port.shape_kinds.as_deref().is_none_or(|kinds| kinds.contains(&semio_s_artifact_procedural_3d_geometry_value::shape_kind(shape.kind()))),
         (PortType::Mesh, GeometryValue::Mesh(_)) => true,
         (PortType::Selection, GeometryValue::Selection(_)) => true,
         (PortType::Any, _) => true,
@@ -249,12 +250,12 @@ pub struct Generation3dGeometry;
 pub struct GeometryInput<'a> {
     pub snapshot: &'a Generation3dSnapshot,
     pub catalogue: &'a Arc<Catalogue>,
-    pub computes: &'a dyn compute::GeometryComputeContext,
+    pub computes: &'a dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext,
 }
 
 impl<'a> GeometryInput<'a> {
     /// 🏗️ Binds a snapshot to an explicitly admitted immutable catalogue.
-    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: &'a Arc<Catalogue>, computes:&'a dyn compute::GeometryComputeContext) -> Self { Self { snapshot, catalogue, computes } }
+    pub fn new(snapshot: &'a Generation3dSnapshot, catalogue: &'a Arc<Catalogue>, computes:&'a dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext) -> Self { Self { snapshot, catalogue, computes } }
 }
 
 impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
@@ -294,13 +295,19 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
 
     fn plan_source_extent(snapshot:&GeometryInput<'_>)->Option<(usize,usize)>{Some((snapshot.snapshot.host_snapshot.widgets.len(),snapshot.snapshot.host_snapshot.synapses.len()))}
     fn plan_source_node(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<&str>{snapshot.snapshot.host_snapshot.widgets.get(ordinal).map(widget_id)}
+    fn plan_source_key(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<&Self::Key>{source_widget_key(snapshot.snapshot,ordinal)}
+    fn clone_original_parent(original:&Self::Value,output:&mut Option<Self::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        let _=cx.original_source_parent()?.source_identity()?;if let Some(output)=output.as_ref(){if !Arc::ptr_eq(original,output){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original inferred parent donor changed its source owner").into())}return Ok(true)}
+        let grant=cx.retained_grant();let bytes=std::mem::size_of::<Self::Value>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);*output=Some(Arc::clone(original));Ok(true)
+    }
+
     fn plan_source_link(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<(&str,&str)>{snapshot.snapshot.host_snapshot.synapses.get(ordinal).map(|link|(link.from.as_str(),link.to.as_str()))}
 
     fn source_identity(snapshot:&GeometryInput<'_>)->usize{snapshot.snapshot as*const Generation3dSnapshot as usize}
 
-    fn compute_step(_snapshot:&GeometryInput<'_>,_key:&Self::Key,_parents:&[Self::Value],_pending:&mut Option<Box<dyn InferencePending>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{
-        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original geometry widget input and job admission have no funded producer").into())
-    }
+    fn compute_step(snapshot:&GeometryInput<'_>,key:&Self::Key,parents:&[Self::Value],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_step(snapshot,key,parents,pending,cx)}
+    fn compute_cyclic_step(snapshot:&GeometryInput<'_>,key:&Self::Key,pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_cyclic_step(snapshot,key,pending,cx)}
 }
 
 impl Generation3dGeometry{
@@ -388,3 +395,6 @@ pub fn infer_geometry(snapshot: &GeometryInput<'_>) -> BTreeMap<String, Arc<Widg
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🧭️ The retained source widget ID is borrowed directly from its snapshot ordinal.
+pub(super) fn source_widget_key(snapshot:&Generation3dSnapshot,ordinal:usize)->Option<&String>{snapshot.host_snapshot.widgets.get(ordinal).map(|widget|match widget{Widget::Neuron{id,..}|Widget::InputSlider{id,..}|Widget::InputNote{id,..}|Widget::InputImage{id,..}|Widget::Variable{id,..}|Widget::OutputPreview{id,..}|Widget::OutputAction{id,..}|Widget::OutputExport{id,..}|Widget::Cluster{id,..}=>id})}

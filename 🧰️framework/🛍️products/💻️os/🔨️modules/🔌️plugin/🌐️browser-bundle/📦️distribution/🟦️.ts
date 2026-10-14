@@ -34,7 +34,7 @@ export async function copyBrowserArtifacts(outputRoot: string, sources: readonly
   const files: { source: string; output: string; name: string; shimPrefix?: string }[] = [], destinations = new Set<string>();
   for (const source of sources) {
     options.signal?.throwIfAborted();
-    const destination = artifactPath(source.destination), manifestPath = join(source.root, ".nx-artifact.json");
+    const destination = artifactPath(source.destination), manifestPath = join(source.root, ".semio-artifact.json");
     await regularParents(manifestPath);
     const stat = await lstat(manifestPath);
     if (!stat.isFile() || stat.size > 1024 * 1024) throw new Error(`Invalid browser artifact manifest: ${manifestPath}`);

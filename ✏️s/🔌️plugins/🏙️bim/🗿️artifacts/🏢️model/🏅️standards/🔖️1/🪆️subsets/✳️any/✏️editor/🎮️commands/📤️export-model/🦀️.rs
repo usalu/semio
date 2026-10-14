@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::io::export::ifc::{Schema, StagedExport};
 use crate::standards::v1::subsets::any::io::export::{csv, gltf, ifc, svg};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
-use crate::{ModelInference, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
@@ -103,7 +103,7 @@ pub fn schema_of(format: &str) -> Option<Schema> {
     }
 }
 
-fn document_output(format: &str, stem: &str, document: semio_s_artifact_stdio_ifc::part21::Part21Document) -> Result<Output, Fault> {
+fn document_output(format: &str, stem: &str, document: semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<Output, Fault> {
     let bytes = ifc::encode(schema_of(format).unwrap_or(Schema::Ifc2x3), document).map_err(|error| failed(format, error))?;
     let (data, encoding) = binary(&bytes);
     Ok(Output { filename: format!("{stem}.ifc"), mime_type: "application/x-step", data, encoding })

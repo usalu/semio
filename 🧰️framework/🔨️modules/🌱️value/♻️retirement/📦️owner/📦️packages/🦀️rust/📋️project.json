@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/value-retirement-owner-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:value-retirement-owner"
+  ]
+}

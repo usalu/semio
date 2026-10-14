@@ -1,7 +1,7 @@
 use super::*;
-use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
-use crate::wgpu::tree::NodeFlags;
+use semio_framework_ui_declaration::layout::ActionDescriptor;
+use semio_framework_ui_declaration::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
+use crate::tree::NodeFlags;
 
 fn action() -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
@@ -302,7 +302,7 @@ fn open_select(tree: &mut UiTree, ui: &UiNode) -> NodeId {
 /// neutral tone and the brand roles carry none, and a toneless row costs nothing on the wire.
 #[test]
 fn a_tree_row_carries_only_a_semantic_tone() {
-    let theme = crate::wgpu::Theme::light();
+    let theme = semio_framework_ui_theme::Theme::light();
     for (tone, carried) in [
         (ui_contract::Tone::Info, true),
         (ui_contract::Tone::Success, true),
@@ -449,7 +449,7 @@ fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
 #[test]
 fn changing_only_a_field_error_dirties_layout_for_the_new_error_band() {
     let field = |error: Option<&str>| {
-        UiNode::Field(crate::wgpu::component::ui::UiFieldNode {
+        UiNode::Field(semio_framework_ui_declaration::ui::UiFieldNode {
             id: "field".into(),
             label: Label::data("Field"),
             description: Some("Description".into()),

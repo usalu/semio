@@ -9,8 +9,8 @@ async fn invalid_collection_targets_are_rejected_before_mutation() {
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, StepSnapshot::default());
 }
-use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
-use crate::STDIO_STEP_DOCUMENT_SCHEMA;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepHeader};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {

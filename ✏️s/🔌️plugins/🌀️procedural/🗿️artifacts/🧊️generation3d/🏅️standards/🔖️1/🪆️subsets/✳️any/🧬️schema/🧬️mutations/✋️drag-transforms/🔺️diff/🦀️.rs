@@ -1,11 +1,14 @@
 //! 🔺️ `drag-transforms` sparse diff — every addressed translate operator's offset grows by the payload offset, read
 //! off its BASE offset.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_param_vector,generation3d_transform_diff,generation3d_vector_value,GENERATION3D_TRANSLATE_KINDS};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::drag_transforms::DragTransforms;
+use crate::generation3d_param_vector;
+use crate::generation3d_transform_diff;
+use crate::generation3d_vector_value;
+use crate::GENERATION3D_TRANSLATE_KINDS;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Composes `offset + (dx, dy, dz)` into each operator; a non-finite payload is `mutation.invariant`.
 pub fn diff(payload: &DragTransforms, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {

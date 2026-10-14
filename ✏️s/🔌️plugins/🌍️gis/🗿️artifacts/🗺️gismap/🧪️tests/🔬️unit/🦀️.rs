@@ -50,7 +50,6 @@ async fn inference_service_exposes_whole_map_metadata() {
     definition().expect("service-bearing definition builds");
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[semio_framework_async_macros::async_test]
 async fn declaration_exposes_one_executable_whole_map_inference() {
     declaration().expect("service-bearing declaration builds");

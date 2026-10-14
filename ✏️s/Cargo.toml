@@ -5,6 +5,22 @@ resolver = "2"
 members = [
     "🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
     "🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/⚖️static/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/➕️algebra/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/➗️formulation/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/📏️elements2d/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🎵️subspace/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔺️ldlt/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🧪️tests/🧰️support/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/📦️packages/🦀️rust",
     "🔨️modules/📜️imperative/📦️packages/🦀️rust",
     "🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust",
 ]
@@ -43,6 +59,7 @@ exclude = [
     "🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting",
     "🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground",
     "🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence",
+    "🔌️plugins/🏗️fem",
     "🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
     "🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust",
     "🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d",
@@ -88,10 +105,12 @@ exclude = [
     "🔌️plugins/📜️imperative/🧩️extensions/🧠️logic",
     "🔌️plugins/📜️imperative/🧩️extensions/🧮️math",
     "🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling",
+    "🔌️plugins/🔋️energy",
     "🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
     "🔌️plugins/🔱️trinity",
     "🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting",
     "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",
+    "🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪆️graph-query/📦️packages/🦀️rust",
     "🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag",
     "🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing",
     "🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🧩️json/📦️packages/🦀️rust",
@@ -237,6 +256,7 @@ exclude = [
     "🧑‍💻dev/🎭️variants/🌍️gis/💡️services",
     "🧑‍💻dev/💡️services",
     "🧑‍💻dev/📐️cad",
+    "🧑‍💻dev/🔱️trinity/🪆️graph/📦️packages/🦀️rust",
     "🧑‍💻dev/🧩️composition",
     "🧑‍💻dev/🧹️fixture-sweep",
 ]
@@ -260,6 +280,73 @@ member-manifests = [ "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml" 
 
 [workspace.dependencies.semio-framework-job]
 path = "../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async]
+path = "../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dispatch-macros]
+path = "../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-pack]
+path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+
+[workspace.dependencies.replication]
+path = "../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust"
+package = "semio-framework-replication"
+
+[workspace.dependencies.semio-framework-value]
+path = "../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-algebra]
+path = "🔨️modules/🏗️fem/⚙️engine/➕️algebra/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-analyses]
+path = "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-analyses-assembly]
+path = "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-analyses-model]
+path = "🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-elements2d]
+path = "🔨️modules/🏗️fem/⚙️engine/📏️elements2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-elements3d]
+path = "🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-formulation]
+path = "🔨️modules/🏗️fem/⚙️engine/➗️formulation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-mesh]
+path = "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-mesh-derived]
+path = "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-model]
+path = "🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sparse]
+path = "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sparse-ldlt]
+path = "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔺️ldlt/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sparse-pcg]
+path = "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sparse-subspace]
+path = "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🎵️subspace/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-static]
+path = "🔨️modules/🏗️fem/⚙️engine/⚖️static/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-test-support]
+path = "🔨️modules/🏗️fem/⚙️engine/🧪️tests/🧰️support/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde]
 version = "1.0.228"

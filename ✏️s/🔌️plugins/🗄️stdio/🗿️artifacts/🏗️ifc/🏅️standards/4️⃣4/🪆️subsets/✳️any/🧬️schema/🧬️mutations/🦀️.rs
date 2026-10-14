@@ -6,28 +6,13 @@
 //! `diff()` is handcrafted (constructs `IfcDiff` directly via the `schema::diff` builders) —
 //! apply-and-capture is never used.
 
-use crate::schema::diff::{self, IfcDiff};
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcDiff;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-use crate::schema::snapshot::{IfcEntity, IfcValue};
-#[cfg(test)] use crate::schema::snapshot::{IfcHeader, IfcTypedValue};
-use crate::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcEntity;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue;
+#[cfg(test)] use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcHeader, IfcTypedValue};
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 
 #[cfg(test)] use protocol::{Mutation};
 
@@ -106,7 +91,6 @@ pub enum IfcMutation {
 pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
-
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
@@ -125,24 +109,9 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
 
 //#region OpCodecs
 
-
-
-
-
-
-
-
-
-
 //#region 🔖️OpBinaryCodec
 
-
-
-
 //#endregion 🔖️OpBinaryCodec
-
-
-
 
 //#endregion OpCodecs
 
@@ -185,11 +154,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
 }
 //#endregion 🔖️DemoCases
 
-
 //#region Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion Tests
 
 //#region 🧪️FixtureTests

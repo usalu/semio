@@ -14,8 +14,8 @@ fn class_native_committed_intents_have_canonical_codecs_and_exact_semantics() {
         let wire = std::fs::read_to_string(directory.join("🦠️mutation/🔣️.json")).unwrap();
         let parsed = semio_framework_pack_json::parse(&wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let fixture = semio_framework_pack_json::to_dsl_value(&parsed);
-        let before = crate::StepSnapshot::from_value(fixture.get("before").unwrap().clone()).unwrap();
-        let after = crate::StepSnapshot::from_value(fixture.get("after").unwrap().clone()).unwrap();
+        let before = crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("before").unwrap().clone()).unwrap();
+        let after = crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot::from_value(fixture.get("after").unwrap().clone()).unwrap();
         let mutation = StepCc4Mutation::from_value(fixture.get("mutation").unwrap().clone()).unwrap();
         assert_eq!(StepCc4Mutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let binary = mutation.encode_op().unwrap();

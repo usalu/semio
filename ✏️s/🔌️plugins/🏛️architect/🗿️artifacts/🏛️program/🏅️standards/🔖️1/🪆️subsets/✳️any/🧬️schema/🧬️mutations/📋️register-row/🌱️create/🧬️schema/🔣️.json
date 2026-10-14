@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/create-register-row/schema.json",
+  "title": "CreateRegisterRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "row"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "createRegisterRow"
+    },
+    "row": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterRow",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "payload",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "The typed row to create, tagged by its register.",
+          "de": "Zu erstellende typisierte Zeile, markiert mit ihrem Register."
+        },
+        "group": "payload",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "number",
+        "role": "position",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Position in the register; appended when absent.",
+          "de": "Position im Register; ohne Angabe wird angehängt."
+        },
+        "group": "position",
+        "order": 20
+      }
+    }
+  }
+}

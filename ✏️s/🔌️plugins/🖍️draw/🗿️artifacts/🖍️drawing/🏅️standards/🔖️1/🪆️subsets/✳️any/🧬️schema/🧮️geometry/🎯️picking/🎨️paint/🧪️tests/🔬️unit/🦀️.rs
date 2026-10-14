@@ -7,7 +7,7 @@ fn query(row:&serde_json::Value)->PaintedPathQuery{
 fn painted_query_neutral_regions_are_granted_and_borrowed(){
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json")).unwrap();
  for row in rows.as_array().unwrap(){for grant in [1,7,4096]{
-  let source:Vec<crate::PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();let before=serde_json::to_value(&source).unwrap();let mut job=PaintedPathHitJob::new(query(row)).unwrap();let mut work=0;let mut reads=0;let mut done=false;
+  let source:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();let before=serde_json::to_value(&source).unwrap();let mut job=PaintedPathHitJob::new(query(row)).unwrap();let mut work=0;let mut reads=0;let mut done=false;
   assert!(job.result().is_err());
   for _ in 0..2000000{let p=job.advance(grant,|index|{reads+=1;source.get(index).cloned()}).unwrap();assert!(p.work>work&&p.work-work<=grant as u64);work=p.work;if p.done{done=true;break;}}
   assert!(done);assert_eq!(reads,source.len()+1);assert_eq!(job.result().unwrap().contains,row["expected"].as_bool().unwrap(),"{}",row["name"]);if !row["bounds"].is_null(){assert_eq!(job.result().unwrap().bounds,Some(serde_json::from_value(row["bounds"].clone()).unwrap()));}assert_eq!(serde_json::to_value(&source).unwrap(),before);
@@ -17,7 +17,7 @@ fn painted_query_neutral_regions_are_granted_and_borrowed(){
 }
 #[test]
 fn painted_query_cancellation_preserves_actual_owners_until_retired(){
- let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json")).unwrap();let row=&rows[6];let source:Vec<crate::PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();
+ let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json")).unwrap();let row=&rows[6];let source:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(row["segments"].clone()).unwrap();
  let phases:Vec<String>=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🧹️retirement/🔣️.json")).unwrap();
  for phase in phases{for grant in [1,7,4096]{
   let mut job=PaintedPathHitJob::new(query(row)).unwrap();let mut reached=false;

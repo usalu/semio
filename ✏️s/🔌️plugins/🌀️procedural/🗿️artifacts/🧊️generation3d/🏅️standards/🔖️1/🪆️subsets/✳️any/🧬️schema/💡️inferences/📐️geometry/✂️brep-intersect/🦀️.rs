@@ -1,16 +1,31 @@
 //! ✂️ The `brep.intersect` widgets: planar section and split of solids as stepped lane J operation jobs, and curve/curve, curve/surface and surface/surface intersection of edges, wires, curves, faces and surfaces.
 //!
 //! Intersections of edges and wires keep only the hits inside the edge ranges; intersections with a face use its supporting surface. Hits closer than the tolerance are one point, so the joint of two wire members is reported once.
+#![allow(clippy::result_large_err)]
 
-use super::brep_sources::{curve_input, surface_input, CurveSource, SurfaceSource};
-use super::brep_curve::guarded;
-use super::phased_job::{Pipeline, Work};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_sources::curve_input;
+use semio_s_artifact_procedural_3d_brep_sources::surface_input;
+use semio_s_artifact_procedural_3d_brep_sources::CurveSource;
+use semio_s_artifact_procedural_3d_brep_sources::SurfaceSource;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::failed;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepOperation, GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
 use semio_framework_3d_brep_operations::euler::{make_edge, make_vertex};
-use semio_framework_3d_brep_queries::intersect::{intersect_curve_curve, intersect_curve_surface, intersect_surface_surface};
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_intersect::{intersect_curve_curve, intersect_curve_surface, intersect_surface_surface};
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
 use std::sync::Arc;
@@ -170,6 +185,8 @@ fn surface_surface(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Wire
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-intersect", include_str!("../../../🗂️catalogue/🔣️brep-intersect.json"));
 /// 🗃️ Every `brep.intersect` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.intersect.section", start: section },

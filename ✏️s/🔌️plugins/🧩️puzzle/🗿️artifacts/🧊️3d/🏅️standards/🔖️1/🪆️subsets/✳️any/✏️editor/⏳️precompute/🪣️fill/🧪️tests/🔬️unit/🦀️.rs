@@ -703,14 +703,14 @@ fn example_fill_roots(document: &str, seed: u32) -> (FillPreparationRoots, Vec<S
         other => panic!("unknown example document {other}"),
     };
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
-    let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "fill");
-    let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(crate::editor::puzzle3d::scene_config_value(&envelope)).expect("scene config decodes");
+    let envelope = crate::editor::puzzle3d::snapshot::scene_from_snapshot(&snapshot, Default::default(), "fill");
+    let mut scene: SceneConfig = semio_framework_value::FromValue::from_value(crate::editor::puzzle3d::session::scene_config_value(&envelope)).expect("scene config decodes");
     scene.seed = seed;
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let positions: Vec<f32> = fallback.positions.iter().map(|value| value * FILL_RUN_BOX_SCALE).collect();
     let body = collision_body_from_buffers(&positions, &fallback.indices).expect("fallback body");
-    let mut lane = crate::editor::puzzle3d::collect_mesh_urls(&envelope.scene_snapshot);
-    lane.push(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
+    let mut lane = crate::editor::puzzle3d::snapshot::collect_mesh_urls(&envelope.scene_snapshot);
+    lane.push(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND.to_string());
     lane.sort();
     lane.dedup();
     let meshes = lane.iter().map(|url| (url.clone(), body.clone())).collect();
@@ -911,7 +911,7 @@ fn own_mesh_fill_roots(document: &str, seed: u32, scale: f32) -> (FillPreparatio
         object.mesh_url = Some(FILL_RUN_OWN_MESH_URL.into());
     }
     let own: Vec<f32> = positions.iter().map(|value| value * scale).collect();
-    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND);
+    let fallback = semio_framework_plugin::mesh_from_kind(crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND);
     let mut meshes = (*roots.meshes).clone();
     meshes.insert(FILL_RUN_OWN_MESH_URL.into(), collision_body_from_buffers(&own, &fallback.indices).expect("own mesh body"));
     lane.push(FILL_RUN_OWN_MESH_URL.into());
@@ -947,7 +947,7 @@ fn fill_run_parry3d_tally(roots: FillPreparationRoots, lane: Vec<String>, positi
     let placed = &job.builder().placed;
     let base = placed.len() - job.builder().sequence.len();
     assert_eq!(base, scene.scene_snapshot.objects.len(), "every document body is a collision body");
-    let box_positions = &positions[crate::editor::puzzle3d::PUZZLE3D_FALLBACK_MESH_KIND];
+    let box_positions = &positions[crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND];
     let rendered = |url: Option<&str>| url.map(str::trim).filter(|url| !url.is_empty()).and_then(|url| positions.get(url)).unwrap_or(box_positions);
     let bodies: Vec<(String, parry3d::shape::ConvexPolyhedron)> = scene
         .scene_snapshot

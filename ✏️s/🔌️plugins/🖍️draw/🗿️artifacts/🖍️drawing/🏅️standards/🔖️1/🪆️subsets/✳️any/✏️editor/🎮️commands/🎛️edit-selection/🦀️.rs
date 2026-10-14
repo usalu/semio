@@ -3,11 +3,12 @@
 mod stack;
 #[path="🧩️ungroup/🦀️.rs"]
 mod ungroup;
-use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
-use crate::schema::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
-#[cfg(test)] use crate::schema::{layer_base_mut};
-use crate::{DrawingLayerNode, DrawingSnapshot};
-use crate::op::DrawingMutation;
+use crate::commands::canvas_pointer_down::DrawingSession;
+use semio_s_artifact_draw_drawing_model::{drawing_layer_is_locked, find_drawing_layer, find_drawing_layer_location, layer_base, selected_drawing_layers};
+#[cfg(test)] use semio_s_artifact_draw_drawing_model::layer_base_mut;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -32,22 +33,22 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admissio
             for (layer,location) in selected.iter().zip(&locations) {
                 if matches!(layer,DrawingLayerNode::Path(_)) { continue; }
                 if !matches!(layer,DrawingLayerNode::Shape(_)) { return Err(Fault::from("Select geometric shapes to convert")); }
-                let segments=crate::schema::layer_to_path_segments(layer);
-                if segments.is_empty() || !segments.iter().all(crate::schema::valid_path_segment) { return Err(Fault::from("The shape has no valid path geometry")); }
-                let path=DrawingLayerNode::Path(crate::DrawingPathBody { base:layer_base(layer).clone(),segments:segments.into_iter().collect() });
-                operations.push(crate::mutations::delete_layer(layer_base(layer).id.clone()));
-                operations.push(crate::mutations::create_layer(location.parent_id.clone(),Some(location.index),path));
+                let segments=semio_s_artifact_draw_drawing_geometry::layer_to_path_segments(layer);
+                if segments.is_empty() || !segments.iter().all(semio_s_artifact_draw_drawing_model::valid_path_segment) { return Err(Fault::from("The shape has no valid path geometry")); }
+                let path=DrawingLayerNode::Path(semio_s_artifact_draw_drawing_model::DrawingPathBody { base:layer_base(layer).clone(),segments:segments.into_iter().collect() });
+                operations.push(semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(layer_base(layer).id.clone()));
+                operations.push(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(location.parent_id.clone(),Some(location.index),path));
             }
         }
-        "delete" => operations.extend(selected.iter().map(|layer| crate::mutations::delete_layer(layer_base(layer).id.clone()))),
+        "delete" => operations.extend(selected.iter().map(|layer| semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(layer_base(layer).id.clone()))),
         "duplicate" => {
-            crate::standards::v1::subsets::any::io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
+            semio_s_artifact_draw_drawing_io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
             for layer in &selected {
                 let mut ordinal = 1usize;
                 let identities = loop {
                     control.checkpoint().map_err(|error|Fault::from(error.to_string()))?;
                     let suffix = format!("{}:{}:{}:{} copy {ordinal}",admission.authoring_seed,admission.app_instance_id,admission.operation_id,admission.generation);
-                    let identities=crate::standards::v1::subsets::any::io::text::identity::clone::admit_clone_identities(layer,&suffix,control).map_err(|error|Fault::from(error.to_string()))?;
+                    let identities=semio_s_artifact_draw_drawing_io::text::identity::clone::admit_clone_identities(layer,&suffix,control).map_err(|error|Fault::from(error.to_string()))?;
                     let mut collision=false;
                     for identity in &identities {
                         control.checkpoint().map_err(|error|Fault::from(error.to_string()))?;
@@ -56,24 +57,24 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admissio
                     if !collision {break identities;}
                     ordinal=ordinal.checked_add(1).ok_or_else(||Fault::from("Drawing duplicate ordinal overflow"))?;
                 };
-                let mutation=crate::mutations::duplicate_layer(layer_base(layer).id.clone(),identities);
+                let mutation=semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer(layer_base(layer).id.clone(),identities);
                 operations.push(mutation);
             }
         }
         "group" => {
-            crate::standards::v1::subsets::any::io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
+            semio_s_artifact_draw_drawing_io::text::identity::creation::validate_operation(admission).map_err(|error|Fault::from(error.to_string()))?;
             let mut facts=control.allocate_vec(selected.len()+3).map_err(|error|Fault::from(error.to_string()))?;
             facts.push(control.copy_text(&document.id.to_string_owner()).map_err(|error|Fault::from(error.to_string()))?);
             facts.push(control.copy_text(&admission.parent_document_id).map_err(|error|Fault::from(error.to_string()))?);
             facts.push(control.copy_text(&admission.authoring_seed).map_err(|error|Fault::from(error.to_string()))?);
             for layer in &selected{facts.push(control.copy_text(&layer_base(layer).id.to_string_owner()).map_err(|error|Fault::from(error.to_string()))?);}
             let mut parts=control.allocate_vec(facts.len()).map_err(|error|Fault::from(error.to_string()))?;parts.extend(facts.iter().map(|fact|fact.as_bytes()));
-            let identity=crate::standards::v1::subsets::any::io::text::identity::publication::admit_identity(crate::schema::identity::DrawingIdentityKind::Group,&parts,control).map_err(|error|Fault::from(error.to_string()))?;
-            let group=crate::schema::create_drawing_group_layer(identity,"Group");
+            let identity=semio_s_artifact_draw_drawing_io::text::identity::publication::admit_identity(semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind::Group,&parts,control).map_err(|error|Fault::from(error.to_string()))?;
+            let group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(identity,"Group");
             let group_id = layer_base(&group).id.clone();
             if find_drawing_layer(document, &group_id).is_some() { return Err(Fault::from("This group already exists")); }
-            operations.push(crate::mutations::create_layer(parent, Some(locations[0].index), group));
-            for (index, layer) in selected.iter().enumerate() { operations.push(crate::mutations::reorder_layer(layer_base(layer).id.clone(), Some(group_id.clone()), index)); }
+            operations.push(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(parent, Some(locations[0].index), group));
+            for (index, layer) in selected.iter().enumerate() { operations.push(semio_s_artifact_draw_drawing_structure::reorder_layer::mutation::reorder_layer(layer_base(layer).id.clone(), Some(group_id.clone()), index)); }
         }
         "bringToFront" | "sendToBack" | "bringForward" | "sendBackward" => {
             let siblings=match parent.as_ref().and_then(|id|find_drawing_layer(document,id)) {
@@ -83,7 +84,7 @@ pub fn plan(document: &DrawingSnapshot, ids: &[String], operation: &str,admissio
             let order=siblings.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
             let ids=selected.iter().map(|layer|layer_base(layer).id.clone()).collect::<Vec<_>>();
             let moves=stack::stack_moves(&order,&ids,operation).ok_or_else(||Fault::from("Invalid layer stack selection"))?;
-            operations.extend(moves.into_iter().map(|(id,index)|crate::mutations::reorder_layer(id.into(),parent.clone(),index)));
+            operations.extend(moves.into_iter().map(|(id,index)|semio_s_artifact_draw_drawing_structure::reorder_layer::mutation::reorder_layer(id.into(),parent.clone(),index)));
         }
         _ => return Err(Fault::from("Unknown selection operation")),
     }
@@ -107,21 +108,21 @@ fn plan_arrangement(document:&DrawingSnapshot,selected:&[&DrawingLayerNode],oper
         if chosen {
             if !editable {return Err(Fault::from("Unlock and show selected layers before arranging"));}
             if !ancestor_selected {
-                let (x,y,width,height)=crate::schema::drawing_layer_bounds_with_parent(layer,parent).ok_or_else(||Fault::from("The layer has no editable bounds"))?;
+                let (x,y,width,height)=semio_s_artifact_draw_drawing_geometry::drawing_layer_bounds_with_parent(layer,parent).ok_or_else(||Fault::from("The layer has no editable bounds"))?;
                 items.push((layer,parent,[x,y,width,height]));
             }
         }
-        let matrix=crate::schema::geometry::multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform));
+        let matrix=semio_s_artifact_draw_drawing_geometry::multiply(parent,semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform));
         if let DrawingLayerNode::Group(group)=layer {stack.push((&group.children,0,matrix,editable,ancestor_selected || chosen));}
     }
     let bounds=items.iter().map(|(_,_,bounds)|*bounds).collect::<Vec<_>>();
-    let deltas=crate::schema::geometry::arrangement::arrange(&bounds,operation).ok_or_else(||Fault::from(if operation.starts_with("distribute") {"Select at least three layers with finite bounds to distribute"}else {"Select at least two layers with finite bounds to align"}))?;
+    let deltas=semio_s_artifact_draw_drawing_geometry::arrangement::arrange(&bounds,operation).ok_or_else(||Fault::from(if operation.starts_with("distribute") {"Select at least three layers with finite bounds to distribute"}else {"Select at least two layers with finite bounds to align"}))?;
     let mut mutations=Vec::new();
     for ((layer,parent,_),delta) in items.into_iter().zip(deltas) {
         let source=&layer_base(layer).transform;
-        let [x,y,scale_x,scale_y,rotation]=crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],[parent[0],parent[1],parent[2],parent[3],0.0,0.0],delta).ok_or_else(||Fault::from("Cannot arrange through a singular or nonfinite transform"))?;
-        let transform=crate::DrawingTransform {x,y,scale_x,scale_y,rotation,shear:source.shear};
-        if transform!=*source {mutations.push(crate::mutations::update_layer_transform(layer_base(layer).id.clone(),transform));}
+        let [x,y,scale_x,scale_y,rotation]=semio_s_artifact_draw_drawing_geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],[parent[0],parent[1],parent[2],parent[3],0.0,0.0],delta).ok_or_else(||Fault::from("Cannot arrange through a singular or nonfinite transform"))?;
+        let transform=semio_s_artifact_draw_drawing_model::DrawingTransform {x,y,scale_x,scale_y,rotation,shear:source.shear};
+        if transform!=*source {mutations.push(semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::update_layer_transform(layer_base(layer).id.clone(),transform));}
     }
     Ok(mutations)
 }
@@ -131,7 +132,7 @@ pub fn handle(payload: &EditSelection, doc: &ArtifactView<'_, DrawingSnapshot>, 
     if payload.operation=="ungroup" {
         let (mutations,selection)=ungroup::plan(doc.snapshot,&ids)?;
         let mut emit=Emit::mutations(mutations);
-        emit.effects.push(crate::editor::drawing::commands::canvas_pointer_down::interaction_select_effect(&selection,"replace"));
+        emit.effects.push(crate::commands::canvas_pointer_down::interaction_select_effect(&selection,"replace"));
         return Ok(emit);
     }
     let admission=doc.operation()?;

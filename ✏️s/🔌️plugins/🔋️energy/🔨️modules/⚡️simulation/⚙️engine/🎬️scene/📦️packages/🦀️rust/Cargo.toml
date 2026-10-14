@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-scene"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `scene`: World3d scene of an energy model"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-s-plugin-energy-engine-geometry = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-precompute = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-energy-engine-bestest = { workspace = true }

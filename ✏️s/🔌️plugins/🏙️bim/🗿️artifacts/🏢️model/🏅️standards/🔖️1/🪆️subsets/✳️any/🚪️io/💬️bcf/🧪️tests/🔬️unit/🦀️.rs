@@ -1,7 +1,7 @@
 //! 🧪️ The BCF 2.1 exchange: guids, moments, the topics of a model, the container bytes, the round trip into the same model and the committed container of the frame.
 
 use super::*;
-use crate::{IssueViewpoint, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::{IssueViewpoint, Point2};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const FRAME: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
@@ -53,7 +53,7 @@ fn a_moment_becomes_an_xs_date_time() {
     assert_eq!(date_time("2026-10-09T08:30:00+02:00"), "2026-10-09T08:30:00+02:00");
     assert_eq!(date_time("2026-10-09T08:30:00"), "2026-10-09T08:30:00+00:00");
     for moment in ["2026-10-09", "2026-10-09T08:30:00", "2026-10-09T08:30:00-05:30"] {
-        assert!(crate::valid_timestamp(&date_time(moment)), "{moment}");
+        assert!(crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&date_time(moment)), "{moment}");
     }
 }
 
@@ -132,7 +132,7 @@ fn an_export_imports_into_the_issues_it_was_made_of() {
     assert!((viewpoint.camera.azimuth - expected.camera.azimuth).abs() < 1e-6 && (viewpoint.camera.pitch - expected.camera.pitch).abs() < 1e-6);
     let comments: Vec<&IssueComment> = imported.comments.values().filter(|comment| comment.issue == guid_of("is-1")).collect();
     assert_eq!(comments.len(), 2);
-    assert!(imported.issues.values().all(|issue| crate::valid_timestamp(&issue.created)));
+    assert!(imported.issues.values().all(|issue| crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&issue.created)));
 }
 
 #[test]

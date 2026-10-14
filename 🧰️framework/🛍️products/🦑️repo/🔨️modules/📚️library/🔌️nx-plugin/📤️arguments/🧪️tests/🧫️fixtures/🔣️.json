@@ -87,6 +87,7 @@
       "network": {
         "offline": true
       }
-    }
+    },
+    "buildMode": "prototype"
   }
 }

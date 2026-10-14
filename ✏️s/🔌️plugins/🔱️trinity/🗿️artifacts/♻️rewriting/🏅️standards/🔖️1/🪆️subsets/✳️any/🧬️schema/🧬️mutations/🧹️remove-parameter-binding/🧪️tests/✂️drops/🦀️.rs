@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use crate::{apply_rewrite_rule_mutation, inverse_rewrite_rule_mutation};
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹️remove-parameter-binding/✂️drops/📸️snapshot/➡️after/🔣️.json");

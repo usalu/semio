@@ -1,5 +1,7 @@
 //! 🧱️ Construction thermal properties: U-value, R-value, and thermal mass.
 
+extern crate semio_s_plugin_energy_engine_model as model;
+
 use crate::model::Material;
 
 // #region 🔖️FilmResistance

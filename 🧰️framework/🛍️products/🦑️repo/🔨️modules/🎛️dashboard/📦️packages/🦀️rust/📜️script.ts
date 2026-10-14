@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {repositoryCargoNetworkV1} from "./../../../📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {scriptCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readBuildMode,buildModeEnvironment} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -15,7 +16,7 @@ import { BundleScript, ScriptRouter, type ScriptInvocation } from "../../../../.
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const crate = "semio-framework-repo-dashboard";
-const dashboardOptions=(invocation:ScriptInvocation):DashboardExecutionOptions=>({mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
+const dashboardOptions=(invocation:ScriptInvocation,workspace:string):DashboardExecutionOptions=>({network:repositoryCargoNetworkV1(invocation,workspace),mode:readBuildMode(process.env.SEMIO_BUILD_MODE),control:scriptCompilerAdmissionControlV1(invocation,"dashboard:execution",0)});
 
 /** 🧭️ Publishes scoped owner controls and runs their native registry identities. */
 class LaunchScript extends BundleScript {
@@ -31,7 +32,7 @@ class LaunchScript extends BundleScript {
     if(action==="run"){
       const command=commands.find(command=>command.id===selection);
       if(!command)throw new Error(`Dashboard command is not declared: ${selection}`);
-      const status=runCmdStatus(await dashboardExecutable(this.root,this.repoRoot,dashboardOptions(this.invocation)),["run",command.id,...launchParameterArguments(command,process.env)],{cwd:this.repoRoot,env:devToolingEnv()});
+      const status=runCmdStatus(await dashboardExecutable(this.root,this.repoRoot,dashboardOptions(this.invocation,this.repoRoot)),["run",command.id,...launchParameterArguments(command,process.env)],{cwd:this.repoRoot,env:devToolingEnv()});
       process.exit(status);
     }
     if(action!=="generate"&&action!=="check")throw new Error(`Unknown dashboard launch action ${action}`);
@@ -44,38 +45,38 @@ class LaunchScript extends BundleScript {
 }
 
 class BuildScript extends BundleScript {
-  async run(): Promise<void> { await buildAndInstallDashboard(this.root, this.repoRoot,dashboardOptions(this.invocation)); }
+  async run(): Promise<void> { await buildAndInstallDashboard(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot)); }
 }
 
 class InstallScript extends BundleScript {
-  async run(): Promise<void> { console.log(`[dashboard] Installed ${await installDashboard(this.root, this.repoRoot,dashboardOptions(this.invocation))}`); }
+  async run(): Promise<void> { console.log(`[dashboard] Installed ${await installDashboard(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot))}`); }
 }
 
 class PreferencesScript extends BundleScript {
-  async run(segments: string[]): Promise<void> { process.exit(runCmdStatus(await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation)), ["preferences", ...segments], { cwd: this.repoRoot, env: devToolingEnv() })); }
+  async run(segments: string[]): Promise<void> { process.exit(runCmdStatus(await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot)), ["preferences", ...segments], { cwd: this.repoRoot, env: devToolingEnv() })); }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "unit") {
       const { rest } = resolveTestLevel(segments.slice(1));
-      await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest); return;
+      await runRepositoryCargoTests([crate], this.repoRoot, this.invocation, rest); return;
     }
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧭️authority/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
     if (segments[0] === "authority") return;
     if (segments[0] === "execution") {
       const artifacts = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.repoRoot, ".🧬semio/🦑️repo/⚡️cache/tests/dashboard-execution");
       await mkdir(artifacts, { recursive: true });
-      await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],this.repoRoot,"dashboard:execution-test",compilerAdmissionBudgetV1(dashboardOptions(this.invocation).control),{env:devToolingEnv({SEMIO_TEST_ARTIFACT_DIR:artifacts}),signal:this.invocation.control.signal});return;
+      await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/🧊️execution/🟦️.ts")],this.repoRoot,"dashboard:execution-test",compilerAdmissionBudgetV1(dashboardOptions(this.invocation,this.repoRoot).control),{env:devToolingEnv({SEMIO_TEST_ARTIFACT_DIR:artifacts}),signal:this.invocation.control.signal});return;
     }
-    if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,dashboardOptions(this.invocation)); return; }
+    if (BATTLE_SUITES.includes(segments[0] ?? "")) { await battle(this.root, this.repoRoot, segments[0]!,dashboardOptions(this.invocation,this.repoRoot)); return; }
     const { rest } = resolveTestLevel(segments);
     process.env.SEMIO_TEST_PATH ??= process.env.PATH;
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🌀️control-plane/🟦️.ts")], { cwd: this.repoRoot, env: devToolingEnv() });
-    const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation)) });
+    const native = devToolingEnv({ SEMIO_DASHBOARD_BIN: await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot)) });
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🎮️registry/🟦️.ts")], { cwd: this.repoRoot, env: native });
     runCmd("bun", ["test", "--timeout", "240000", join(this.root, "../../🧪️tests/🧭️cli/🟦️.ts")], { cwd: this.repoRoot, env: native });
-    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -105,7 +106,7 @@ async function battle(root: string, repoRoot: string, suite: string,options:Dash
 /** ▶️ Runs the installed native dashboard without a build prerequisite. */
 class RunScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const bin = await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation));
+    const bin = await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
     const status = runCmdStatus(bin, segments, { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
@@ -116,7 +117,7 @@ class RunScript extends BundleScript {
  */
 class DaemonScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const bin = await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation));
+    const bin = await dashboardExecutable(this.root, this.repoRoot,dashboardOptions(this.invocation,this.repoRoot));
     const status = runCmdStatus(bin, ["daemon", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
@@ -126,7 +127,7 @@ class DaemonScript extends BundleScript {
 export async function buildAndInstallDashboard(packageRoot: string, workspace: string, options:DashboardExecutionOptions): Promise<string> {
   compilerAdmissionBudgetV1(options.control);const mode=readBuildMode(options.mode);
   const sources = await captureDashboardSources(packageRoot, workspace);compilerAdmissionBudgetV1(options.control);
-  await buildRepositoryCargoArtifacts(join(packageRoot, "Cargo.toml"), ["--bin", "semio"], workspace, { control:options.control,environment:devToolingEnv(buildModeEnvironment(mode)) });
+  await buildRepositoryCargoArtifacts(join(packageRoot, "Cargo.toml"), ["--bin", "semio"], workspace, {network:options.network, control:options.control,environment:devToolingEnv(buildModeEnvironment(mode)) });
   return await installDashboard(packageRoot, workspace, options,sources);
 }
 

@@ -25,7 +25,7 @@ pub(crate) struct MountedGroupMemberReceipts {
     pending_triple: Option<(KernelMutation,MutationId,InverseMutation)>,
     pending_close_field: usize,
     close_cursor: usize,
-    closing: bool,
+    pub(crate) closing: bool,
     transferred: bool,
     issuer_closed: bool,
 }

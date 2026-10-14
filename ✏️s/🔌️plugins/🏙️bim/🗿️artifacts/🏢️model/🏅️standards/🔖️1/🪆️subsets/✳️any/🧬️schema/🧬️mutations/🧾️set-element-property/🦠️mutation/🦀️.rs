@@ -1,6 +1,6 @@
 //! 🧾️ `set-element-property` payload. Sets one typed property of an element's property set; an element without properties gets its first entry, an existing value is replaced.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, PropertyValue};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, PropertyValue}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

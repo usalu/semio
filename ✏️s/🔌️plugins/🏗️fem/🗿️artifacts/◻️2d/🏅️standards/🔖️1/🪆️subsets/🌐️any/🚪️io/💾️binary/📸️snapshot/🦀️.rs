@@ -1,6 +1,6 @@
 //! 📦️ FEM 2D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -32,12 +32,19 @@ mod semio_protocol_conformance;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::*;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 impl pack::snapshot::ArtifactPack for Fem2dSnapshot {
     

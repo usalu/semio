@@ -1,5 +1,7 @@
 //! ⚡️ Energy and resource meters with end-use categories.
 
+extern crate semio_s_plugin_energy_engine_model as model;
+
 use crate::model::FixedTable;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
@@ -69,7 +71,7 @@ impl Meter {
 /// 📦️ All meters in a simulation run.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct MeterTable {
-    pub(crate) meters: FixedTable<String, Meter>,
+    pub meters: FixedTable<String, Meter>,
 }
 
 impl MeterTable {
@@ -78,7 +80,8 @@ impl MeterTable {
         if self.meters.capacity() == 0 {
             self.meters.admit(64).expect("test meter backing");
         }
-        if let Some(index) = self.meters.test_index_of(|candidate| candidate == name) {
+        let found = self.meters.iter().position(|(candidate, _)| candidate == name);
+        if let Some(index) = found {
             return self.meters.get_index_mut(index).expect("test fixed meter slot");
         }
         let name = name.to_string();
@@ -86,8 +89,7 @@ impl MeterTable {
         self.meters.last_mut().expect("test fixed meter slot").1
     }
 
-    #[cfg(test)]
-    pub(crate) fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
+    pub fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
         self.meters.values().filter(|m| m.fuel == fuel).map(|m| m.energy_kwh()).sum()
     }
 

@@ -16,6 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -47,6 +51,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-3d-brep-validation.workspace = true
 semio-framework-3d-brep-queries.workspace = true
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

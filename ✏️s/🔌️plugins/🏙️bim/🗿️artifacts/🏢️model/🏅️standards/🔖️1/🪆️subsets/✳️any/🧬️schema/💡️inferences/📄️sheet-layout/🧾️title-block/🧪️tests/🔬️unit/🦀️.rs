@@ -1,7 +1,7 @@
 //! 🧪️ The title block and the revision table: cells tile the block without gaps, empty fields fall back to what the sheet shows, the revision table grows upward from the block.
 
 use super::*;
-use crate::SheetRevision;
+use crate::standards::v1::subsets::any::schema::snapshot::SheetRevision;
 
 fn frame() -> PaperRect {
     PaperRect { x: 20.0, y: 10.0, width: 390.0, height: 277.0 }

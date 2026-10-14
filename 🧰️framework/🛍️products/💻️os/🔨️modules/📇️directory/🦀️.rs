@@ -18,11 +18,9 @@ pub mod schema;
 // 🎫️ Lane 1-D (ticket §A ownership: "none" before this wave, ours per `📋️ownership-and-handoffs.md`
 // row `🔨️modules/📇️directory/**`): the hub client + native identity mint/restore helper. Both are
 // additive sub-modules beside `schema`, consuming `fold`/the wire types below without touching them.
-#[path = "🔌️client/🦀️.rs"]
-pub mod client;
 
-#[path = "🪪️identity/🦀️.rs"]
-pub mod identity;
+
+
 
 #[path = "🛡️access-policy/🧬️schema/🦀️.rs"]
 pub mod access_policy;
@@ -226,3 +224,7 @@ mod tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+pub use semio_framework_value::{DslValue,ToValue,FromValue,ValueError};
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+extern crate semio_framework_async as wasm_bindgen_futures;

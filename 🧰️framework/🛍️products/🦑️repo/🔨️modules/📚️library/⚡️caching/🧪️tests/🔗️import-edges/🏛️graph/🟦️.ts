@@ -19,7 +19,7 @@ async function graphEpoch() {
   const graph = JSON.parse(graphSource), fileMap = JSON.parse(mapSource).fileMap;
   const projects = Object.fromEntries(Object.entries(graph.nodes).map(([name, node]: any) => [name, { ...node.data, name }]));
   const files = Object.fromEntries(Object.entries(fileMap.projectFileMap).map(([name, rows]: [string, any]) => [name, rows.map(({ file, hash }: File) => ({ file, hash }))]));
-  const { cacheInternals } = await import("../../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const fresh: Edge[] = await cacheInternals.createDependenciesImplementation({ analyzeLockfile: true }, { workspaceRoot: workspace, projects, fileMap: { projectFileMap: files, nonProjectFiles: [] }, filesToProcess: { projectFileMap: files, nonProjectFiles: [] }, externalNodes: graph.externalNodes, nxJsonConfiguration: JSON.parse(readFileSync(join(workspace, "nx.json"), "utf8")) });
   const selectedManifest = existsSync(join(workspace, ".nx/installation/package.json")) ? join(workspace, ".nx/installation/package.json") : join(workspace, "package.json");
   const require = createRequire(selectedManifest), { getPluginsSeparated } = require("nx/src/project-graph/plugins/get-plugins"), { buildProjectGraphUsingProjectFileMap } = require("nx/src/project-graph/build-project-graph");

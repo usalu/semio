@@ -14,7 +14,7 @@ fn inputs(kind_id: &str, entries: Vec<(&str, GeometryValue)>) -> (&'static Kind,
 
 fn start(kind_id: &str, entries: Vec<(&str, GeometryValue)>) -> Box<dyn WidgetJob> {
     let (kind, values) = inputs(kind_id, entries);
-    super::super::mesh_edit::COMPUTES.iter().find(|entry| entry.id == kind_id).map(|entry| (entry.start)(kind, values)).expect("a mesh.edit kind")
+    semio_s_artifact_procedural_3d_mesh_edit::COMPUTES.iter().find(|entry| entry.id == kind_id).map(|entry| (entry.start)(kind, values)).expect("a mesh.edit kind")
 }
 
 #[test]

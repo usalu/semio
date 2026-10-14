@@ -11,8 +11,10 @@
 //! ephemeral SFM/BA working state, which this codebase deliberately never persists — see
 //! `MotionTrackSummary`'s own docstring on why raw tracks/observations stay plugin-runtime scratch).
 
-use crate::lie::{Se3, So3};
-use crate::{CameraPosePreview, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraPosePreview;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +31,7 @@ pub struct RemodelingPoseDelta {
 }
 
 fn se3_from_preview(pose: &CameraPosePreview) -> Se3 {
-    let q = crate::lie::Quatd { w: pose.rotation_wxyz[0] as f64, x: pose.rotation_wxyz[1] as f64, y: pose.rotation_wxyz[2] as f64, z: pose.rotation_wxyz[3] as f64 };
+    let q = semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Quatd { w: pose.rotation_wxyz[0] as f64, x: pose.rotation_wxyz[1] as f64, y: pose.rotation_wxyz[2] as f64, z: pose.rotation_wxyz[3] as f64 };
     Se3 { r: So3::from_quat(q.normalize()), t: [pose.translation[0] as f64, pose.translation[1] as f64, pose.translation[2] as f64] }
 }
 
@@ -86,7 +88,7 @@ impl store::InferredField<RemodelingSnapshot> for RemodelingRelativeCameraPose {
             return RemodelingPoseDelta::default();
         }
         let relative = se3_from_preview(&poses[index - 1]).inverse().semio_compose_rs(&se3_from_preview(&poses[index]));
-        RemodelingPoseDelta { translation_delta: relative.t, rotation_angle_rad: crate::algebra::vec3d_length(relative.r.log()) }
+        RemodelingPoseDelta { translation_delta: relative.t, rotation_angle_rad: semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_length(relative.r.log()) }
     }
 }
 //#endregion 🔖️InferredField

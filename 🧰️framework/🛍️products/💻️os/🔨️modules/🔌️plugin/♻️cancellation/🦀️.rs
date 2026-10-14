@@ -48,7 +48,7 @@ pub(crate) struct ToolKeyedDocumentCancellationScope {
 pub(crate) struct ToolCancellationState {
     slots: Box<[std::mem::MaybeUninit<ToolDocumentCancellationScope>]>,
     occupied: [u64; TOOL_CANCELLATION_WORDS],
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
     pub(crate) keyed_operations: ArtifactFixedRegistry<ToolDocumentCancellationScope>,
     pub(crate) keyed_documents: ArtifactFixedRegistry<ToolKeyedDocumentCancellationScope>,
 }
@@ -230,3 +230,5 @@ impl Drop for ToolCancellationLease {
         assert!(std::thread::panicking(),"original cancellation lease requires its paid terminal cursor");
     }
 }
+
+include!("📦️lease/🦀️.rs");

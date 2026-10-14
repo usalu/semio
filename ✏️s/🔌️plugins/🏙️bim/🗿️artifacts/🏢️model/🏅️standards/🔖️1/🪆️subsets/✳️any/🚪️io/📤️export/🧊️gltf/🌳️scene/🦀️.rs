@@ -9,7 +9,7 @@ use super::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
 use super::materials::Palette;
 use crate::render::element_name;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

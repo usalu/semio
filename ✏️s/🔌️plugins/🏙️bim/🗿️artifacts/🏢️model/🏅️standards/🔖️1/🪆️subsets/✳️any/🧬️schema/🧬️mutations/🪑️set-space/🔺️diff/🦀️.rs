@@ -3,7 +3,7 @@
 //! finish must name a material; providing only equal values is a no-op. Outline, area, volume and finish areas stay inferred.
 
 use super::SetSpace;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch, SpaceBoundary, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{ModelSnapshot, SpaceBoundary, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn shoelace(outline: &[Vertex]) -> f64 {

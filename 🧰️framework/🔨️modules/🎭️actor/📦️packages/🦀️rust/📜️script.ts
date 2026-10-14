@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildWasmWebV1, readWasmBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ Registers the actor package tasks and semantic typegen commands. */
 
@@ -15,7 +17,7 @@ import { PreviewGeneratedScript, TypegenScript } from "../../🧬️typegen/🏃
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-actor"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-actor"], cwd: this.root, extraArgs: rest, signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -29,7 +31,7 @@ class OriginalReceivingSourceScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Expected test-original-receiving-source");
     const { runOwnedCommand } = await import("../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    const tests = ["🧪️tests/🟦️.ts", "📃️policy/🧪️tests/🟦️.ts", "🫴️receiving/🧪️tests/🟦️.ts", "🏛️bootstrap/🧪️tests/🟦️.ts", "🎟️supplier/🧪️tests/🟦️.ts"].map(test => resolve(this.root, "../../🎟️retained-turn", test)).concat(resolve(this.root, "../../🧪️tests/📄️checkpoint/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🏛️boundary/🟦️.ts"));
+    const tests = ["🧪️tests/🟦️.ts", "📃️policy/🧪️tests/🟦️.ts", "🫴️receiving/🧪️tests/🟦️.ts", "🏛️bootstrap/🧪️tests/🟦️.ts", "🎟️supplier/🧪️tests/🟦️.ts", "💼️job/📋️arguments/🧪️tests/🟦️.ts","🪙️loan/🧪️tests/🟦️.ts"].map(test => resolve(this.root, "../../🎟️retained-turn", test)).concat(resolve(this.root, "../../🧪️tests/📄️checkpoint/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🟦️.ts"),resolve(this.root,"../../🎟️retained-turn/🎟️context/🧪️tests/🏛️boundary/🟦️.ts"));
     await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "actor:original-receiving:types", this.childBudget(), { signal: this.invocation.control.signal });
     await runOwnedCommand(process.execPath, ["test", ...tests], this.repoRoot, "actor:original-receiving:source", this.childBudget(), { signal: this.invocation.control.signal });
   }
@@ -46,7 +48,7 @@ class OriginalOwnedAsyncScript extends BundleScript {
       await runOwnedCommand(process.execPath,["test",...laws],this.repoRoot,"actor:original-owned-async:source",left,{signal:this.invocation.control.signal});return;
     }
     const {runExactCargoLaws,configuredExactCargoLawPolicyV1}=await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts");
-    await runExactCargoLaws({invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-actor":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-actor",target:{kind:"test",name:"original-owned-async-turn"},laws:["original_owned_async_actor_turn_keeps_exact_wallet_recipient_and_epoch","original_owned_async_actor_turn_refuses_fresh_polling_wallet_without_losing_loan","original_owned_async_actor_turn_preserves_full_failure_and_raw_overspent_work","original_owned_async_actor_issuer_moves_and_rejoins_before_polling","original_source_loan_cancellation_witness_borrows_exact_parent_without_alias_birth","original_native_decode_source_receives_actual_physical_producer_and_preserves_denial","original_native_decode_source_preserves_outcome_on_raw_work_receiving_refusal"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR});
+    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:left,listMilliseconds:left,lawMilliseconds:left},manifestPaths:{"semio-framework-actor":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-actor",target:{kind:"test",name:"original-owned-async-turn"},laws:["original_owned_async_actor_turn_keeps_exact_wallet_recipient_and_epoch","original_owned_async_actor_turn_refuses_fresh_polling_wallet_without_losing_loan","original_owned_async_actor_turn_preserves_full_failure_and_raw_overspent_work","original_owned_async_actor_issuer_moves_and_rejoins_before_polling","original_source_loan_cancellation_witness_borrows_exact_parent_without_alias_birth","original_native_decode_source_receives_actual_physical_producer_and_preserves_denial","original_native_decode_source_preserves_outcome_on_raw_work_receiving_refusal"]}]});
   }
 }
 
@@ -64,10 +66,10 @@ class OriginalContextNativeScript extends BundleScript {
     const mode = readBuildMode(capabilities.buildMode);
     if (readBuildMode(process.env.SEMIO_BUILD_MODE) !== mode) throw Error("Original context build mode differs from its admitted caller");
     const { runExactCargoLaws, configuredExactCargoLawPolicyV1 } = await import("../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts");
-    await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-actor": resolve(this.root, "Cargo.toml") }, cargoTargetDir: targetDirectory, cargoArgs: ["--profile", buildModePolicy(mode).cargoProfile], cwd: this.repoRoot, groups: [
-      { package: "semio-framework-actor", target: { kind: "lib" }, laws: ["component::retained_turn::context::tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "component::retained_turn::context::tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "component::retained_turn::context::tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
+    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-actor": resolve(this.root, "Cargo.toml") },cargoArgs: ["--profile", buildModePolicy(mode).cargoProfile],cwd: this.repoRoot,groups: [
+      { package: "semio-framework-actor", target: { kind: "lib" }, laws: ["component::retained_turn::original_loan_tests::original_actor_semantic_loan_preserves_exact_source_total_and_cutoff","component::retained_turn::context::tests::original_actor_epoch_is_exact_and_cannot_be_rebound_by_a_child", "component::retained_turn::context::tests::original_actor_context_preserves_input_and_paid_authorities_across_admission_loans_and_close", "component::retained_turn::context::tests::original_actor_retirement_binding_preserves_private_source_on_refusal"] },
       { package: "semio-framework-actor", target: { kind: "test", name: "original-retained-receiving" }, laws: ["original_paired_admission::original_public_actor_paired_admission_retains_exact_host_input_and_native_guest_births", "original_paired_admission::original_public_actor_guest_call_returns_actual_failed_body_receipt_and_paid_same_context_close"] },
-    ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+    ]});
   }
 }
 

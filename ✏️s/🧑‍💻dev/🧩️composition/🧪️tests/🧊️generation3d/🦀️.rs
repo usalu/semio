@@ -72,7 +72,7 @@ pub(crate) mod test_serial;
 #[path = "."]
 mod preview_eval_tests_laws {
 use super::*;
-use semio_s_artifact_procedural_generation3d::preview_eval::*;
+use semio_s_artifact_procedural_3d_preview_eval::*;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -81,14 +81,17 @@ mod laws;
 mod viewer_generation3d_eval_chain_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_generation3d::preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
-use semio_s_artifact_procedural_generation3d::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️eval-chain/🦀️.rs"]
 mod laws;
 }
@@ -97,14 +100,17 @@ mod laws;
 mod viewer_domain {
 use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_generation3d::preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
-use semio_s_artifact_procedural_generation3d::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod viewer_laws;
 }
@@ -113,14 +119,17 @@ pub(crate) mod viewer_laws;
 mod viewer_generation3d_status_contract_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::*;
-use semio_s_artifact_procedural_generation3d::preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
-use semio_s_artifact_procedural_generation3d::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️status-contract/🦀️.rs"]
 mod laws;
 }
@@ -130,8 +139,10 @@ mod viewer_generation3d_modes_view_windows_preview_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::Generation3dViewConfig;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-use semio_s_artifact_procedural_generation3d::preview_eval::{self, PreviewChannelItem, PreviewInlineGeometry};
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval::self;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -142,7 +153,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_azimuth::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🧭️set-sun-azimuth/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -153,7 +164,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_elevation::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌄️set-sun-elevation/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -164,7 +175,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_sun_intensity::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔆️set-sun-intensity/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -175,7 +186,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_camera::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation, Generation3dViewCamera};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/📷️set-camera/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -184,10 +195,10 @@ mod laws;
 mod viewer_generation3d_commands_set_active_example_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_active_example::*;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::is_generation3d_example_id;
+use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -198,7 +209,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_show_mode::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/👁️set-show-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -209,7 +220,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::set_lod_mode::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -220,7 +231,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::commands::toggle_sun::*;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -230,9 +241,10 @@ mod editor_generation3d_panels_artifact_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::artifact::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -241,9 +253,9 @@ mod laws;
 mod editor_generation3d_panels_inspection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::inspection::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::widget_id;
+use semio_s_artifact_procedural_3d_model::widget_id;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -252,7 +264,7 @@ mod laws;
 mod editor_generation3d_panels_catalogue_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::catalogue::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -273,10 +285,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs"]
 mod laws;
 }
@@ -296,10 +310,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🕹️interaction-scope/🦀️.rs"]
 mod laws;
 }
@@ -319,10 +335,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️generate-interactions/🦀️.rs"]
 mod laws;
 }
@@ -342,10 +360,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️example-switch/🦀️.rs"]
 mod laws;
 }
@@ -365,10 +385,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod editor_laws;
 }
@@ -388,10 +410,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️tick-addressing/🦀️.rs"]
 mod laws;
 }
@@ -411,10 +435,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️work-capacity/🦀️.rs"]
 mod laws;
 }
@@ -434,10 +460,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mode-panels/🦀️.rs"]
 mod laws;
 }
@@ -457,10 +485,12 @@ use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit:
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::{edit, generate};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🎚️slider-values/🦀️.rs"]
 mod laws;
 }
@@ -471,10 +501,20 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::preview::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::show_mode_measure;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewPayload, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{generation_by_id, generation_host_snapshot_for};
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewPayload;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::generation_by_id;
+use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -483,7 +523,7 @@ mod laws;
 mod editor_generation3d_modes_generate_windows_form_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::generate::windows::form::*;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/📝️form/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
@@ -503,10 +543,18 @@ mod editor_generation3d_modes_edit_windows_preview_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_camera_json;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -516,14 +564,15 @@ mod editor_generation3d_modes_edit_windows_flow_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::Generation3dConfig;
-use semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️flow/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -533,9 +582,9 @@ mod editor_generation3d_commands_flow_eval_tick_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏱️flow-eval-tick/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -545,9 +594,10 @@ mod editor_generation3d_commands_scale_selection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::scale_selection::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{gumball_widget_json, with_host};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -557,9 +607,10 @@ mod editor_generation3d_commands_node_graph_edit_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::node_graph_edit::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -569,8 +620,10 @@ mod editor_generation3d_commands_set_widget_input_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_widget_input::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host, mutations::text::Generation3dMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::text::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -580,9 +633,9 @@ mod editor_generation3d_commands_flow_tessellate_cancel_resolve_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_tessellate_cancel_resolve::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧯️flow-tessellate-cancel-resolve/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -593,9 +646,9 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_resolve::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -606,9 +659,9 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_resolve::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️flow-eval-resolve/🧪️tests/🔬️budget/🦀️.rs"]
 mod laws;
 }
@@ -618,8 +671,8 @@ mod editor_generation3d_commands_cycle_lod_mode_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::cycle_lod_mode::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{next_lod_mode, Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -629,9 +682,10 @@ mod editor_generation3d_commands_delete_selection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::delete_selection::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/❌️delete-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -641,9 +695,10 @@ mod editor_generation3d_commands_rotate_selection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::rotate_selection::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{gumball_widget_json, with_host};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -653,9 +708,10 @@ mod editor_generation3d_commands_remove_widget_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::remove_widget::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-widget/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -665,9 +721,10 @@ mod editor_generation3d_commands_add_widget_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_widget::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️add-widget/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -677,8 +734,8 @@ mod editor_generation3d_commands_set_contributions_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_contributions::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -689,9 +746,9 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_tessellate_resolve::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_tick;
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔺️flow-tessellate-resolve/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -701,9 +758,10 @@ mod editor_generation3d_commands_reorganize_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::reorganize::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️reorganize/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -713,9 +771,9 @@ mod editor_generation3d_commands_flow_eval_release_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::flow_eval_release::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::preview_eval;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️flow-eval-release/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -725,9 +783,13 @@ mod editor_generation3d_commands_set_active_example_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_active_example::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::{generation3d_host_snapshot_operations, generation_mutation_to_generation3d, Generation3dMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, example_snapshot, is_generation3d_example_id};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_host_snapshot_operations;
+use semio_s_artifact_procedural_3d_io_text::mutations::generation_mutation_to_generation3d;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
+use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -737,9 +799,10 @@ mod editor_generation3d_commands_patch_flow_widgets_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::patch_flow_widgets::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::{generation3d_host_snapshot_operations, Generation3dMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_host_snapshot_operations;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-flow-widgets/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -750,8 +813,8 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_generation::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::generation::generation_command_result;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-generation/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -761,8 +824,8 @@ mod editor_generation3d_commands_navigate_graph_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::navigate_graph::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-graph/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -772,8 +835,8 @@ mod editor_generation3d_commands_set_lod_mode_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_lod_mode::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -783,8 +846,10 @@ mod editor_generation3d_knife_mesh_selection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::knife_mesh_selection::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::{config::{Generation3dConfig, Generation3dConfigMutation}, selection::{component_group, DOMAIN}};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{commit_host_snapshot, with_host, mutations::text::Generation3dMutation};
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::commit_host_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::text::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -794,8 +859,8 @@ mod editor_generation3d_commands_toggle_sun_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::toggle_sun::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️toggle-sun/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -805,8 +870,8 @@ mod editor_generation3d_commands_cycle_show_mode_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::cycle_show_mode::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{next_show_mode, Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-show-mode/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }
@@ -816,9 +881,10 @@ mod editor_generation3d_commands_translate_selection_tests_laws {
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::translate_selection::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::mutations::Generation3dMutation;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{gumball_widget_json, with_host};
+use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::gumball_widget_json;
+use semio_s_artifact_procedural_3d_model::with_host;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️translate-selection/🧪️tests/🔬️unit/🦀️.rs"]
 mod laws;
 }

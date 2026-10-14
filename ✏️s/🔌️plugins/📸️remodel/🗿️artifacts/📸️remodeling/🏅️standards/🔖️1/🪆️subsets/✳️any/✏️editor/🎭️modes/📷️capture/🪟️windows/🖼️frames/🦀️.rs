@@ -2,7 +2,8 @@
 //! ground control point observations planted on it.
 
 use crate::editor::remodeling::modes::capture::windows::frames::config::{RemodelingFrameCursor, RemodelingFramesWindowConfig};
-use crate::{MediaStream, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::Canvas2dScene;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
@@ -64,7 +65,7 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
     let stream_id = &stream.id;
     let mut origin = (0.0_f64, 0.0_f64);
     if let Some(frame) = stream.frames.iter().find(|frame| frame.index == frame_index) {
-        if let Some(asset) = crate::remodeling_asset(scene, &frame.asset_id) {
+        if let Some(asset) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset(scene, &frame.asset_id) {
             let width = f64::from(asset.width);
             let height = f64::from(asset.height);
             origin = (-width / 2.0, -height / 2.0);
@@ -121,7 +122,4 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingFramesWindowConfig)
 //#endregion 🔖️Scene
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

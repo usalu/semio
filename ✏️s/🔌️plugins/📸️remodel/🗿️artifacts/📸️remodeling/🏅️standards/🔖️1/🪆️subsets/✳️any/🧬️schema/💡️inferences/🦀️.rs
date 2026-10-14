@@ -12,7 +12,7 @@
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d as this artifact's
 //! first genuine `DepHash`-chained CQRS path (see `🔄relative-pose/🦀️.rs`).
 
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

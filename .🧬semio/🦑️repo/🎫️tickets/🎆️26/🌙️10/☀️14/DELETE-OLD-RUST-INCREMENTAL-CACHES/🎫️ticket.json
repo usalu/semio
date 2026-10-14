@@ -1,0 +1,12 @@
+{
+  "title": "Delete Old Rust Incremental Caches",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Free disk space by deleting every superseded Rust incremental compilation session under the shared Cargo stores, keeping the newest finalized session and any in-progress working session for each crate.",
+  "summary": "Removed 16564 superseded Cargo compilation units measured at 150.03 GiB. Volume free space rose from 11.17 GiB to 149.92 GiB. The newest unit of each package remains.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪a965e8cfa6af446fbdb732d5f80e868a",
+    "⚪51be04294ef04b99b145d7fddc881a68"
+  ]
+}

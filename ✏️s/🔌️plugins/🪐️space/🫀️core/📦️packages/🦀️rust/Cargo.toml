@@ -15,20 +15,16 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-os", "dep:semio-framework-os-kernel", "dep:semio-framework-plugin"]
-
 [dependencies]
 semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework = { workspace = true, optional = true }
-semio-framework-artifact-space-space = { workspace = true, optional = true }
-semio-framework-os-kernel = { workspace = true, optional = true }
-semio-framework-plugin = { workspace = true, optional = true }
-semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os", optional = true }
+semio-framework = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

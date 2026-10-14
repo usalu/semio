@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::*;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
 use std::sync::OnceLock;
@@ -14,8 +14,8 @@ fn exact_fixture_bytes() -> &'static [u8] {
     static BYTES: OnceLock<Vec<u8>> = OnceLock::new();
     BYTES.get_or_init(|| {
         let committed = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc")).expect("read the street-level IFC2X3 fixture");
-        let canonical = crate::standards::v2x3::engine::encode_ifc2x3(&crate::standards::v2x3::engine::decode_ifc2x3(&committed).expect("import IFC2X3 fixture")).expect("export IFC2X3 fixture");
-        let again = crate::standards::v2x3::engine::encode_ifc2x3(&crate::standards::v2x3::engine::decode_ifc2x3(&canonical).expect("import canonical IFC2X3")).expect("export canonical IFC2X3");
+        let canonical = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(&committed).expect("import IFC2X3 fixture")).expect("export IFC2X3 fixture");
+        let again = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(&canonical).expect("import canonical IFC2X3")).expect("export canonical IFC2X3");
         assert!(again == canonical, "the canonical IFC2X3 layout must be a fixed point of decode then encode");
         canonical
     })
@@ -24,7 +24,7 @@ fn exact_fixture_bytes() -> &'static [u8] {
 // 🚫️async: E1 pure fixture reader (OnceLock initializer, consumed inside a sync closure) — see R9
 fn exact_fixture() -> Ifc2x3Snapshot {
     static SNAPSHOT: OnceLock<Ifc2x3Snapshot> = OnceLock::new();
-    SNAPSHOT.get_or_init(|| crate::standards::v2x3::engine::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture")).clone()
+    SNAPSHOT.get_or_init(|| semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(exact_fixture_bytes()).expect("import IFC2X3 fixture")).clone()
 }
 
 async fn assert_exact(label: &str, actual: &[u8]) {
@@ -114,19 +114,19 @@ async fn op_text_binary_roundtrip_law() {
 #[semio_framework_async_macros::async_test]
 async fn exact_native_direct_pack_and_dsl_roundtrips() {
     let imported = exact_fixture();
-    let direct = crate::standards::v2x3::engine::encode_ifc2x3(&imported).expect("direct export");
+    let direct = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&imported).expect("direct export");
     assert_exact("direct export", &direct).await;
-    assert_eq!(crate::standards::v2x3::engine::encode_ifc2x3(&imported).expect("repeat export"), direct);
+    assert_eq!(semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&imported).expect("repeat export"), direct);
 
     let packed = pack::snapshot::ArtifactPack::encode_pack(&imported);
     let unpacked = <Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&packed).expect("pack decode");
     assert!(unpacked == imported, "pack must retain the complete logical IFC model");
-    assert_exact("pack export", &crate::standards::v2x3::engine::encode_ifc2x3(&unpacked).expect("pack export")).await;
+    assert_exact("pack export", &semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&unpacked).expect("pack export")).await;
 
     let printed = pack::snapshot::ArtifactDsl::print_dsl(&imported);
     let parsed = <Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("DSL parse");
     assert!(parsed == imported, "DSL must retain the complete logical IFC model");
-    assert_exact("DSL export", &crate::standards::v2x3::engine::encode_ifc2x3(&parsed).expect("DSL export")).await;
+    assert_exact("DSL export", &semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&parsed).expect("DSL export")).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -134,9 +134,9 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     let imported = exact_fixture();
     let mut edited = imported.clone();
     edited.document.instances[1].entities[0].0 = "IFCCHANGEDENTITY".into();
-    let edited_bytes = crate::standards::v2x3::engine::encode_ifc2x3(&edited).expect("logical edit export");
+    let edited_bytes = semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&edited).expect("logical edit export");
     assert_ne!(edited_bytes, exact_fixture_bytes());
-    assert_eq!(crate::standards::v2x3::engine::decode_ifc2x3(&edited_bytes).expect("logical edit import"), edited);
+    assert_eq!(semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3(&edited_bytes).expect("logical edit import"), edited);
 
     let target = imported.document.instances[1].clone();
     let mut replacement = target.clone();
@@ -149,7 +149,7 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     let restored_outcome = Mutation::diff(&inverse, &changed);
     let restored = protocol::apply_diff(restored_outcome.diff(), &changed).expect("valid inverse diff");
     assert_eq!(restored, imported);
-    assert_exact("interior upsert inverse", &crate::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export")).await;
+    assert_exact("interior upsert inverse", &semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3(&restored).expect("inverse export")).await;
 
     let mut op = Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 0 }).encode_op().expect("encode op");
     op.push(0);

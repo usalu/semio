@@ -517,7 +517,7 @@ include!("../🧪️tests/🔬️app-window-kits/🦀️.rs");
 /// (`UiValue`), just returned alongside the id rather than folded into one struct — call
 /// `.on_with(trigger, id, args)` when `args.is_some()`, `.on(trigger, id)` otherwise.
 pub struct ActionFactory {
-    controller_id: &'static str,
+    pub(crate) controller_id: &'static str,
 }
 
 impl ActionFactory {
@@ -816,3 +816,7 @@ impl AppActionRegistry {
         self.actions.get(id).and_then(|action| action.category.clone())
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/📤️json-bridge/🦀️.rs"]
+mod command_json_bridge_tests;

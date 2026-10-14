@@ -3,7 +3,7 @@
 use super::super::create_roof_type::CreateRoofType;
 use super::super::cascade;
 use super::DeleteRoofType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteRoofType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.roof_types.get(&payload.id) {

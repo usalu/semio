@@ -3,10 +3,59 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/📦️packages/🦀️rust",
+    "🔨️modules/🏠️host/📐️geometry-service/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️mesh-bridge/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🗺️mesh-uv/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🌗️mesh-shading/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔎️mesh-inspect/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🩹️mesh-repair/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✏️mesh-edit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎚️mesh-component/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/↔️mesh-transform/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔀️mesh-convert/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🥽️mesh-primitive/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏗️brep-solid/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧊️brep-primitive/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧵️brep-sources/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📚️math-list/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/➡️math-vector/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧮️math-arithmetic/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔢️math-values/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⚙️compute/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔌️inputs/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
     "**/👽️guest/**",
     "**/🔮️oracles/**",
@@ -15,7 +64,6 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
   "**/👽️guest/**",
   "**/🔮️oracles/**",
   "**/🏭️bridge/**"
@@ -40,11 +88,32 @@ path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages
 [workspace.dependencies.semio-framework-3d-brep-engine]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-3d-brep-curve]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-surface]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-tolerance]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-vector]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-3d-brep-operations]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-analysis]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-intersect]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-tessellation]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-3d-brep-representation]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust"
@@ -118,10 +187,15 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive
 [workspace.dependencies.semio-s-artifact-stdio-dwg]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust"
 
-
 [workspace.dependencies.semio-s-artifact-stdio-dwg-model]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
+path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
+path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-dwg-read]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
 
@@ -129,7 +203,6 @@ path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟a
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-gltf]
 path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust"
-
 
 [workspace.dependencies.semio-s-artifact-stdio-gltf-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
@@ -179,6 +252,162 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-model]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-terminology]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-geometry-value]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-geometry-inputs]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔌️inputs/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-geometry-compute]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⚙️compute/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-phased-job]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-support]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-math-values]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔢️math-values/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-math-arithmetic]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧮️math-arithmetic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-math-vector]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/➡️math-vector/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-math-list]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📚️math-list/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-analysis-measure]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-analysis-check]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-sources]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧵️brep-sources/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-curve]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-primitive]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧊️brep-primitive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-surface]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-solid]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏗️brep-solid/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-boolean]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-feature]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-transform]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-intersect]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-evaluate]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-brep-topology]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-primitive]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🥽️mesh-primitive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-convert]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔀️mesh-convert/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-transform]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/↔️mesh-transform/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-component]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎚️mesh-component/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-edit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✏️mesh-edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-repair]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🩹️mesh-repair/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-inspect]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔎️mesh-inspect/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-shading]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🌗️mesh-shading/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-uv]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🗺️mesh-uv/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-geometry]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-inferences]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-procedural-core-semantic-ui]
+path = "../../🫀️core/🖼️semantic-ui/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-procedural-core-generation-sqlite]
+path = "../../🫀️core/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mesh-bridge]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🔺️mesh-bridge/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-import]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-export]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-geometry]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-text]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-sqlite]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io-binary]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-io]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-geometry-service]
+path = "🔨️modules/🏠️host/📐️geometry-service/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-host]
+path = "🔨️modules/🏠️host/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-host-envelope]
+path = "🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-host-initialization]
+path = "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-preview-eval]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-examples]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

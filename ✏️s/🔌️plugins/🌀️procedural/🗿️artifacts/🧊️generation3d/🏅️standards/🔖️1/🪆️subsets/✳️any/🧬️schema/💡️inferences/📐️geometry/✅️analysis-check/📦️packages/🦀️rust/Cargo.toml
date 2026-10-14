@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-analysis-check"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d operator facet analysis-check"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-operations = { workspace = true }
+semio-s-artifact-procedural-3d-analysis-measure = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

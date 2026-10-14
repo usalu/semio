@@ -2,9 +2,6 @@
   "name": "@semio-tech/compute-ownership-runner",
   "private": true,
   "type": "module",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test": "bun repo run @semio-tech/compute-ownership-runner:test"
   },

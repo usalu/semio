@@ -906,7 +906,7 @@ mod persist {
     /// 💾️ A machine's logical state, addressed by stable string ids so adding/renumbering
     /// states never invalidates a previously persisted snapshot.
     #[derive(Debug, Clone)]
-    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[derive(serde::Serialize, serde::Deserialize)]
     pub struct PersistedSnapshot {
         pub version: u32,
         pub fingerprint: u64,
@@ -1277,7 +1277,7 @@ mod step {
 
     //#endregion 🔖️StepEntryPoints
 }
-#[cfg(any(test, feature = "testing"))]
+#[cfg(test)]
 mod testing {
     //! 🧭️ Model-based testing — reachability exploration, invariants, and inline conformance fixtures.
     //!
@@ -1623,16 +1623,15 @@ pub use persist::{persist, restore, Migration, NoMigrations, PersistedSnapshot, 
 pub use runtime::{route_command, ActorLogic, ActorSystem, MachineLogic};
 pub use step::{start, step, MachineStep};
 
-#[cfg(any(test, feature = "testing"))]
+#[cfg(test)]
 pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, Coverage, FsmError, Invariant, Model};
 
 // 🪄️ `StatechartEvent` here re-exports the derive macro — it shares its name with the
 // `StatechartEvent` trait above without conflict since macros and traits live in
 // separate namespaces (the same pattern `serde`/`serde_derive` use).
-#[cfg(feature = "macros")]
 pub use machine_derive::{statechart, StatechartEvent, StatechartSchema};
 
-#[cfg(all(feature = "macros", target_arch = "wasm32", not(target_env = "p2")))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use machine_derive::export_wasm_machine;
 
 //#endregion 🔖️Reexports
@@ -1775,7 +1774,6 @@ mod tests;
 
 /// 🎫️ End-to-end proof that `statechart!` DSL → kernel → runtime → [`TestHost`] timers/invoke
 /// → persist/restore → inspection trace → model coverage all semio_compose_rs over one real machine.
-#[cfg(feature = "macros")]
 #[cfg(test)]
 #[path = "🧪️tests/🔬️checkout-integration/🦀️.rs"]
 mod checkout_integration;

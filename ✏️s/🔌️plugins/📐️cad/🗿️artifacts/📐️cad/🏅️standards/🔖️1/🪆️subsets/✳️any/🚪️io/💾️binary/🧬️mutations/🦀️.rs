@@ -3,7 +3,7 @@
 //! cad host binds. Renamed from the pre-consolidation `📡️protocol` module; the wire format is
 //! unchanged (`dsl::DslOps`'s generated `OpBinary`).
 
-use crate::op::CadMutation;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
 use protocol::OpBinary;
 
 
@@ -48,8 +48,7 @@ mod tests;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-pub use crate::mutations::{CadMutation};
-#[cfg(test)] pub use crate::mutations::{CadNodePatch, CadReferencePatch};
+#[cfg(test)] pub use semio_s_artifact_cad_cad_mutations::{CadNodePatch, CadReferencePatch};
 
 impl protocol::OpBinary for CadMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

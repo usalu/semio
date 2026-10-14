@@ -82,7 +82,7 @@ class TestScript extends BundleScript {
     }
     assertRendererOutputOwnership();
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation, rest);
     await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
@@ -91,7 +91,7 @@ class TestScript extends BundleScript {
 class SocketSnapshotSqliteScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||!["source","native"].includes(segments[0]))throw Error("test-socket-snapshot-sqlite requires source or native");
-  if(segments[0]==="native"){await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, ["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
+  if(segments[0]==="native"){await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation, ["--lib","native_socket_sqlite_snapshot_","--","--nocapture"]);return;}
   const file=resolve(this.root,"../../🧊️renderer/🪶️sqlite/🧪️tests/🟦️.ts");
   await runRepositoryTestCommand(process.execPath,["test",file],{cwd:this.repoRoot,budgetMs:120000});
   await runRepositoryTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file],{cwd:this.repoRoot,budgetMs:120000});
@@ -116,18 +116,18 @@ class OriginalFrameSourceScript extends BundleScript {
 
 /** 📤️ Checks exact nonempty media output and the actual original Source scalar adapter. */
 class OriginalBrowserOutputSourceScript extends BundleScript {
- async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-original-browser-output-source");const sources=["../../🎬️media-slots/🎟️collect/🧪️tests/🟦️.ts","../../🎬️media-slots/📤️slot/🧪️tests/🟦️.ts","../../🎬️media-slots/📥️props/🧪️tests/🟦️.ts","../../🌐️browser-worker/📤️output/🧪️tests/🟦️.ts","../../🎞️frame-worker/🎟️original/🧪️tests/🟦️.ts","../../🎟️native-caller/🧪️tests/🟦️.ts"].map(path=>resolve(this.root,path)).concat(resolve(this.repoRoot,"🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🎟️presented-source/🧪️tests/🟦️.ts"),resolve(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🟦️.ts")),remaining=this.invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original browser output command authority exhausted");const execute=(args:string[])=>{const left=this.invocation.control.remainingMilliseconds();if(left!==null&&left<1)throw Error("Original browser output child authority exhausted");return runRepositoryTestCommand(process.execPath,args,{cwd:this.repoRoot,env:scriptInvocationEnvironment(this.invocation,process.env),budgetMs:left===null?0:Math.floor(left),signal:this.invocation.control.signal})};await execute([Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",...sources]);await execute(["test",...sources]);}
 }
 /** 🦀️ Runs the actual retained native output with its same finite caller and complete nonempty snapshot. */
 class OriginalBrowserOutputNativeScript extends OriginalBrowserOutputSourceScript {
- async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests([crateName],this.repoRoot,this.invocation.control,["--offline","--lib","-E","test(original_browser_nonempty_output_same_media_system_denials_and_full_paid_close) | test(original_presented_params_same_source_native_cause_denials_and_full_paid_close) | test(original_presented_slot_exact_identity_system_denial_donation_and_full_paid_close) | test(original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close)","--","--nocapture"]);}
+ async run(args:string[]):Promise<void>{await super.run(args);await runRepositoryCargoTests(["semio-framework-plugin-interpreter"],this.repoRoot,this.invocation,["--offline","--test","original_native_frame_caller","--","--nocapture"]);await runRepositoryCargoTests(["semio-framework-os-infinite"],this.repoRoot,this.invocation,["--offline","--test","original_world_resources","--","--nocapture"]);await runRepositoryCargoTests([crateName],this.repoRoot,this.invocation,["--offline","--lib","-E","test(original_browser_nonempty_output_same_media_system_denials_and_full_paid_close) | test(original_presented_params_same_source_native_cause_denials_and_full_paid_close) | test(original_presented_slot_exact_identity_system_denial_donation_and_full_paid_close) | test(original_presented_roster_nonempty_same_source_system_receipts_cancellation_and_full_paid_close)","--","--nocapture"]);}
 }
 
 /** 🦀️ Runs the existing budgeted Cargo tests without invoking browser tests. */
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation, rest);
   }
 }
 
@@ -148,7 +148,7 @@ class NativeTestScript extends BundleScript {
 class WgpuUnitTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "long");
-    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation.control, ["--lib", ...rest]);
+    await runRepositoryCargoTests([crateName], this.repoRoot, this.invocation, ["--lib", ...rest]);
   }
 }
 
@@ -298,7 +298,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
       throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     }
     const checks = directoryRetainedHomeBootstrapOracle();
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: repoRoot,env: { ...process.env, CARGO_BUILD_JOBS: "1" },groups: [{
         package: crateName,
         target: { kind: "lib" },
         laws: [
@@ -306,7 +306,7 @@ class DirectoryRetainedHomeBootstrapNativeCheckScript extends BundleScript {
           "shell::command_registry_tests::directory_home_bootstrap_retries_cancels_and_rebootstraps_without_cursor_loss",
           "shell::command_registry_tests::directory_home_terminal_receipt_rejects_unknown_fields_and_nonreceipt_effects",
         ],
-      }], progress(event) { console.log(`directory-retained-home-bootstrap ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      }],progress(event) { console.log(`directory-retained-home-bootstrap ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
     console.log(`directory-retained-home-bootstrap-native-receipts: ${JSON.stringify(receipts)}`);
     console.log(`directory-retained-home-bootstrap-native-check: sourceChecks=${checks} nativeLaws=3 clean`);
   }
@@ -342,7 +342,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
     const ticketRoot = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets");
     if (!artifactDir || !isAbsolute(artifactDir) || !resolve(artifactDir).startsWith(`${ticketRoot}${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be an absolute ticket-local directory");
     const checks = normalizedPresenceRowsOracle();
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: repoRoot, artifactDir: resolve(artifactDir), env: { ...process.env, CARGO_BUILD_JOBS: "1" }, groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }] });
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: repoRoot,env: { ...process.env, CARGO_BUILD_JOBS: "1" },groups: [{ package: crateName, target: { kind: "lib" }, laws: ["shell::command_registry_tests::presence_rows_require_each_normalized_surface_and_preserve_hub_color"] }]});
     assert.equal(receipts[0]!.assertions, 1);
     console.log(`normalized-presence-rows-native-check: sourceChecks=${checks} nativeLaws=1 clean`);
   }

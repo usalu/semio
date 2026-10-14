@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::PropertyValue;
+use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue;
 
 fn described() -> ModelSnapshot {
     let mut snapshot = demo();

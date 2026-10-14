@@ -1,5 +1,8 @@
 //! 🚿️ Service hot water: mixed/stratified/HP heaters, fixtures, standby, drain recovery.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::{water_cp_j_per_kg_k, water_density};
 use crate::units::RHO_WATER;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

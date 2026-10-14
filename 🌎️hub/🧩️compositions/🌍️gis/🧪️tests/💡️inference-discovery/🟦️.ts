@@ -135,7 +135,7 @@ export class InferenceDiscoveryCheckScript extends BundleScript {
   async run(): Promise<void> {
     await new InferenceDiscoveryOracleScript(this.root,this.repoRoot,this.invocation).run();
     await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, lawMilliseconds: 60_000 }, cwd:this.repoRoot, artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR, groups:[
-        {package:"semio-s-artifact-gis-gismap",target:{kind:"lib"},cargoArgs:["--features","mcp-service"],laws:["inference_mcp::tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
+        {package:"semio-s-artifact-gis-gismap-mcp",target:{kind:"lib"},laws:["tests::installed_gis_descriptor_discovery_uses_the_registered_tool_without_granting_execution"]},
         {package:"semio-hub-gis",target:{kind:"lib"},laws:["surface_tests::gis_component_assembly_declares_exact_package_identity_before_descriptor_emission"]},
         {package:"semio-hub-gis",target:{kind:"test",name:"native_codecs"},laws:["gis_native_controlled_inference_executes_literal_progress_cancel_and_deadline_trace"]}
       ], progress(event){console.log("GIS discovery "+event.stage+": "+(event.law??event.package));} });

@@ -10,7 +10,7 @@
 //! real, honest, reduced-fidelity signal (non-zero `object_count` again once a real per-child
 //! element/vertex inference exists over the composed children), not a silently wrong one.
 
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 📦Bounds
 /// 📦 Axis-aligned 3d bounding box.

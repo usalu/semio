@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::{com
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::compute_stair_runs;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
-use crate::{Entry, ModelDiff, ModelInference, ModelSnapshot, StairPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StairPatch}, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
 use std::collections::BTreeMap;
 
@@ -15,7 +15,7 @@ fn geometry(snapshot: &ModelSnapshot, id: &str) -> StairGeometry {
     let levels = compute_storey_levels(snapshot);
     let stair = &snapshot.stairs[id];
     let target = match &stair.top {
-        crate::TopConstraint::Storey { storey, .. } => levels.get(storey),
+        crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Storey { storey, .. } => levels.get(storey),
         _ => None,
     };
     stair_geometry(stair, &levels[&stair.storey], target)
@@ -222,7 +222,7 @@ fn editing_the_construction_or_the_landing_of_a_stair_recomputes_it_and_equals_a
     session.update(&snapshot, &ModelDiff::default());
     let edits = [
         ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { nosing: Some(0.02), ..Default::default() })),
-        ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { stringer: Some(crate::StairStringer { kind: StringerKind::Mono, width: 0.1, depth: 0.2 }), ..Default::default() })),
+        ModelDiff::stairs("st-straight", Entry::Patched(StairPatch { stringer: Some(crate::standards::v1::subsets::any::schema::snapshot::StairStringer { kind: StringerKind::Mono, width: 0.1, depth: 0.2 }), ..Default::default() })),
         ModelDiff::stairs("st-l-left", Entry::Patched(StairPatch { landing_depth: Some(1.7), ..Default::default() })),
     ];
     let mut current = snapshot;

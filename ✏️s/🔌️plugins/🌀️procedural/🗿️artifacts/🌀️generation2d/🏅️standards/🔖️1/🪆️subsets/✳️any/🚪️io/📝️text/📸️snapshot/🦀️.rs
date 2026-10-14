@@ -383,16 +383,12 @@ mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::*;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
-use semio_framework_artifact_infinite_dag::DagHostSnapshot;
+use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
 use ::semio_framework_schema::ArtifactSchema;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
@@ -400,7 +396,6 @@ use pack::snapshot::ArtifactDsl;
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 
-#[cfg(feature = "component-app-assembly")]
 pub fn collect_drawing_handles_from_eval(value: &semio_framework_pack_json::Value, handles: &mut Vec<String>) {
     match value {
         semio_framework_pack_json::Value::Object(map) => {
@@ -422,7 +417,6 @@ pub fn collect_drawing_handles_from_eval(value: &semio_framework_pack_json::Valu
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 pub fn affine_transform_array(value: &semio_framework_pack_json::Value) -> [f64; 6] {
     if let Some(matrix) = value.as_array() {
         let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
@@ -438,7 +432,6 @@ pub fn affine_transform_array(value: &semio_framework_pack_json::Value) -> [f64;
     [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
 }
 
-#[cfg(feature = "component-app-assembly")]
 pub fn path_segments_from_node(node: &semio_framework_pack_json::Value) -> Vec<semio_framework_pack_json::Value> {
     if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
         return segments.clone();
@@ -453,7 +446,6 @@ pub fn path_segments_from_node(node: &semio_framework_pack_json::Value) -> Vec<s
     Vec::new()
 }
 
-#[cfg(feature = "component-app-assembly")]
 pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<semio_framework_pack_json::Value> {
     let scene_json = render_scene_json(handle);
     let Ok(scene) = semio_framework_pack_json::parse(&scene_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else {
@@ -486,7 +478,6 @@ pub fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<semio
         .collect()
 }
 
-#[cfg(feature = "component-app-assembly")]
 pub fn generation_preview_host(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> FlowHost {
     let snapshot_json = semio_framework_pack_json::to_json_string(host_snapshot);
     let object: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
@@ -498,7 +489,6 @@ pub fn generation_preview_host(host_snapshot: &FlowHostSnapshot, values: &semio_
 /// 📤️ The drawings a program OUTPUTS: every drawing a synapse delivers into an output widget
 /// (`output-preview`, `output-export`), read off the evaluation at the synapse's source port, in
 /// synapse order without repeats. Intermediate drawings (a shape before its style) are not outputs.
-#[cfg(feature = "component-app-assembly")]
 pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &semio_framework_pack_json::Value) -> Vec<String> {
     use semio_framework_artifact_flow_flow::Widget;
     let is_output = |id: &str| host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::OutputPreview { id: output, .. } | Widget::OutputExport { id: output, .. } if output == id));
@@ -520,13 +510,11 @@ pub fn output_drawing_handles(host_snapshot: &FlowHostSnapshot, outputs: &semio_
 }
 
 /// 🖼️ [`output_drawing_handles`] as the scene layers the `drawing:out` port publishes.
-#[cfg(feature = "component-app-assembly")]
 pub fn generation_output_layers(host_snapshot: &FlowHostSnapshot, eval_json: &str) -> String {
     let layers: Vec<semio_framework_pack_json::Value> = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map(|outputs| output_drawing_handles(host_snapshot, &outputs).iter().flat_map(|handle| scene_layers_from_drawing_handle(handle, "generation2d-drawing-out")).collect()).unwrap_or_default();
     semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers))
 }
 
-#[cfg(feature = "component-app-assembly")]
 pub fn generation_preview_layers(eval_json: &str) -> String {
     let prefix = "generation2d-generate-preview";
     let mut layers = Vec::new();
@@ -548,16 +536,12 @@ pub use snapshot_codec::*;
 mod snapshot_wire_codec {
 use crate::standards::v1::subsets::any::schema::*;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
-use semio_framework_artifact_infinite_dag::DagHostSnapshot;
+use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::forms_bridge::apply_generation_values_to_host_snapshot;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::render_scene_json;
 use ::semio_framework_schema::ArtifactSchema;
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map, FlowEvalSession, FlowHost};
-#[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
@@ -573,7 +557,6 @@ pub fn default_snapshot() -> Generation2dSnapshot {
 }
 pub use snapshot_wire_codec::*;
 
-#[cfg(feature = "component-app-assembly")]
 pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let mut host = generation_preview_host(host_snapshot, values);
     let evaluated = host.evaluate().unwrap_or_default();

@@ -1,6 +1,6 @@
 //! 🎞️ `set-beam-type` payload. Changes exactly the provided fields of a beam type; every element of the type follows by inference.
 
-use crate::{BeamTypePatch, ModelDiff, ModelMutation, ModelSnapshot, Profile};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::BeamTypePatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

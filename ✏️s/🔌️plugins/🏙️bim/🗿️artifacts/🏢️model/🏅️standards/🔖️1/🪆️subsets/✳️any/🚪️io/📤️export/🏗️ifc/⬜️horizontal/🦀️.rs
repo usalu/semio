@@ -8,7 +8,7 @@ use super::writer::{en, real, rf, unset};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
-use crate::{RoofShape, Slab};
+use crate::standards::v1::subsets::any::schema::snapshot::{RoofShape, Slab};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored roof record: the shape, overhang and offsets IFC has no slot for.
 pub const RECORD_ROW: &str = "Roof";
@@ -86,7 +86,7 @@ fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     });
 }
 
-fn roof(x: &mut Export<'_>, id: &str, row: &crate::Roof) {
+fn roof(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Roof) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("roof", id, "its storey is missing");
         return;

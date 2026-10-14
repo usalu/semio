@@ -243,7 +243,6 @@ mod quick {
         fenced_delete_law(storage, "memory-delete-space").await;
     }
 
-    #[cfg(feature = "sqlite")]
     #[tokio::test]
     async fn artifact_chunk_cas_sqlite_roundtrip_crosses_legacy_payload_ceiling() {
         let storage = Arc::new(SqliteArtifactChunkCasStorage::memory().await.expect("SQLite CAS"));

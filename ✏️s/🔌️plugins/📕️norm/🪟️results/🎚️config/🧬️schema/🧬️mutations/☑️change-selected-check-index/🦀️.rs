@@ -1,7 +1,8 @@
 //! ☑️ Changes the selected compliance result without replacing unrelated config.
 
-use crate::results_window_config::diff::NormResultsWindowConfigDiff;
-use crate::results_window_config::{NormResultsWindowConfig, NormResultsWindowConfigMutation};
+use crate::diff::NormResultsWindowConfigDiff;
+use crate::schema::NormResultsWindowConfig;
+use crate::mutations::NormResultsWindowConfigMutation;
 
 #[path = "🔺️diff/🦀️.rs"]
 mod diff;

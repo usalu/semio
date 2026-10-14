@@ -1,6 +1,6 @@
 //! 🏟️ `create-curtain-wall-type` payload. Brings a new curtain wall type into the library: the grid rules of both directions, the mullion sections of the interior grid lines and of the border, the default panel and the materials.
 
-use crate::{CurtainWallType, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainWallType, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

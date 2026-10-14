@@ -2,13 +2,12 @@
 //! position + full payload); a machine already absent from `base` has nothing to undo.
 
 use crate::mutations::create_machine::CreateMachine;
-use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteMachine, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::create_machine::CreateMachine>>(payload: &super::DeleteMachine, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.workshop.machines.iter().position(|machine| machine.id == payload.id).map(|index| vec![Process3dMutation::CreateMachine(CreateMachine { index, machine: base.workshop.machines[index].clone() })]).unwrap_or_default()
+    base.workshop.machines.iter().position(|machine| machine.id == payload.id).map(|index| vec![Op::from(CreateMachine { index, machine: base.workshop.machines[index].clone() })]).unwrap_or_default()
 
     })())
 }

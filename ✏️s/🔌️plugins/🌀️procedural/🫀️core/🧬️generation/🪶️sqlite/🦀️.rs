@@ -1,4 +1,5 @@
 //! 🌀️ Typed relational support for the identical owned procedural host and generation fields.
+#![allow(clippy::result_large_err)]
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot,FlowUi,Widget,NodeChrome,CameraJson,neural::{Dictionary,Value as NeuralValue,Atom,Tree}};
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;

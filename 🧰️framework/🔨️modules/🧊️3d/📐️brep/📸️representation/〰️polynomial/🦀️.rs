@@ -1,11 +1,13 @@
 //! ∿ Univariate polynomials in monomial and Bernstein form, closed-form low-degree solvers, and a
 //! certified general root isolator (Bernstein sign-variation subdivision + safeguarded Newton).
-//! The Bernstein form is the workhorse for [`crate::curve::bezier`] and [`crate::curve::bspline`]: its control
+//! The Bernstein form is the workhorse for [`semio_framework_3d_brep_curve::bezier`] and [`semio_framework_3d_brep_curve::bspline`]: its control
 //! polygon convex-hulls the curve, so a control-polygon sign change is a *necessary* condition for
 //! a root, which is exactly what Descartes' rule of signs turns into a certified root count.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/〰️polynomial` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4.
+//!
+//! Crate cut of `semio-framework-3d-brep-representation` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
 
 // #region 🔖️Poly
 
@@ -224,7 +226,7 @@ fn binomial(n: usize, k: usize) -> f64 {
 /// ∿ Recursively subdivides `b` over `[0, 1]` until every sub-interval has `0` or `1` sign
 /// variation (certified root-free or root-isolating), returning the isolating `(lo, hi)`
 /// intervals in increasing order. `max_depth` bounds recursion for pathological clustered-root
-/// inputs — see [`crate::error`] for how callers should react if isolation is incomplete
+/// inputs — see [`semio_framework_3d_brep_representation::error`] for how callers should react if isolation is incomplete
 /// (the kernel's "never wrong, fail loud" invariant: a caller hitting `max_depth` should treat
 /// the sub-interval as unresolved rather than guess).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

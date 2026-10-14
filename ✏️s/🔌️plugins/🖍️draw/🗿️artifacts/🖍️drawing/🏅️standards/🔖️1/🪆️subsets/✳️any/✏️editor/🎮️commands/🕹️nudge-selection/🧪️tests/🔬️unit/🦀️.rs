@@ -4,13 +4,13 @@ use super::*;
 /// ⌨️ The emission of one right-nudge verb of `session`'s selection by `delta`.
 fn plan(document:&DrawingSnapshot,session:&DrawingSession,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
     let history=semio_framework_plugin::HistoryView::empty();
-    nudge(&ArtifactView::with_operation(document,&history,crate::editor::drawing::identity_test::operation()),session,"nudgeSelectionRight",delta)
+    nudge(&ArtifactView::with_operation(document,&history,crate::identity_test::operation()),session,"nudgeSelectionRight",delta)
 }
 
 fn document()->DrawingSnapshot {
-    let mut child=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
-    crate::schema::layer_base_mut(&mut child).id="child".into();
-    let mut group=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit((("group")).to_string().into()).expect("nonempty authored identity"), "group");
+    let mut child=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("shape:rect")).to_string().into()).expect("nonempty authored identity"), "shape:rect");
+    semio_s_artifact_draw_drawing_model::layer_base_mut(&mut child).id="child".into();
+    let mut group=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("group")).to_string().into()).expect("nonempty authored identity"), "group");
     if let DrawingLayerNode::Group(group)=&mut group {
         group.base.id="parent".into();group.base.transform.rotation=std::f64::consts::FRAC_PI_2;group.base.transform.scale_x=2.0;group.base.transform.scale_y=4.0;group.children=vec![child].into();
     }
@@ -23,12 +23,12 @@ fn selected_ancestor_owns_descendant_movement_once() {
         let before=document();let mut after=before.clone();
         let mut session=DrawingSession::default();session.interaction.ids=ids.iter().map(|id|(*id).into()).collect();
         let emit=plan(&before,&session,[10.0,-5.0]).unwrap();assert_eq!(emit.artifact_mutations.len(),1);
-        for mutation in emit.artifact_mutations {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
-        let original=crate::schema::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
-        let moved=crate::schema::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
+        for mutation in emit.artifact_mutations {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut after,&mutation).unwrap();}
+        let original=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
+        let moved=semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
         assert!((moved[4]-original[4]-10.0).abs()<1e-10 && (moved[5]-original[5]+5.0).abs()<1e-10);
         for i in 0..4 {assert!((moved[i]-original[i]).abs()<1e-10);}
-        if ids.len()==2 {assert_eq!(crate::schema::find_drawing_layer(&after,"child"),crate::schema::find_drawing_layer(&before,"child"));}
+        if ids.len()==2 {assert_eq!(semio_s_artifact_draw_drawing_model::find_drawing_layer(&after,"child"),semio_s_artifact_draw_drawing_model::find_drawing_layer(&before,"child"));}
     }
 }
 
@@ -36,7 +36,7 @@ fn selected_ancestor_owns_descendant_movement_once() {
 fn nudge_rejects_unavailable_targets_without_mutating_source() {
     for mode in ["locked","hidden","singular","missing"] {
         let mut before=document();
-        let base=crate::schema::layer_base_mut(&mut before.layers[0]);
+        let base=semio_s_artifact_draw_drawing_model::layer_base_mut(&mut before.layers[0]);
         match mode {"locked"=>base.locked=true,"hidden"=>base.visible=false,"singular"=>base.transform.scale_x=0.0,_=>{}}
         let saved=before.clone();let mut session=DrawingSession::default();
         session.interaction.ids=vec![if mode=="missing" {"missing"} else {"child"}.into()];
@@ -54,20 +54,20 @@ fn other_utilities_and_empty_point_selection_do_not_move_layers() {
 
 #[test]
 fn stale_point_reference_rejects_the_entire_selection() {
-    let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
+    let segments=vec![semio_s_artifact_draw_drawing_model::PathSegment::Move {to:[0.0,0.0]},semio_s_artifact_draw_drawing_model::PathSegment::Line {to:[10.0,0.0]}];
     let mut paths=Vec::new();
-    for id in ["first","second"] {let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id,segments.clone().into());crate::schema::layer_base_mut(&mut path).id=id.into();paths.push(path);}
+    for id in ["first","second"] {let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((id)).to_string().into()).expect("nonempty authored identity"), id,segments.clone().into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id=id.into();paths.push(path);}
     let source=DrawingSnapshot {layers:paths.into(),..Default::default()};let saved=source.clone();
-    let mut session=crate::editor::drawing::identity_test::session("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
+    let mut session=crate::identity_test::session("editNodes","");session.interaction.ids=vec!["first".into(),"second".into()];
     let geometry=points::geometry_id(&segments).unwrap();
-    session.interaction.points=vec![points::point_id("first",&geometry,1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap(),points::point_id("second",&"0".repeat(64),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()];
+    session.interaction.points=vec![points::point_id("first",&geometry,1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap(),points::point_id("second",&"0".repeat(64),1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()];
     assert!(plan(&source,&session,[1.0,0.0]).is_err());assert_eq!(source,saved);
 }
 
 #[test]
 fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
     let source=document();
-    let mut session=crate::editor::drawing::identity_test::session("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
+    let mut session=crate::identity_test::session("selectDirect","nudge-seed");session.interaction.ids=vec!["parent".into(),"child".into()];
     let first=plan(&source,&session,[10.0,-5.0]).unwrap();
     assert_eq!(first.artifact_mutations,vec![drag_layers(vec!["parent".into()].into(),10.0,-5.0)],"the ancestor owns its descendant's movement");
     let transaction=first.transaction.clone().expect("a nudge commits as one tool transaction");
@@ -83,17 +83,17 @@ fn one_nudge_is_one_tool_transaction_of_one_relative_leaf() {
 
 #[test]
 fn a_node_nudge_drags_the_selected_points_and_rebinds_them() {
-    let segments=vec![crate::PathSegment::Move {to:[0.0,0.0]},crate::PathSegment::Line {to:[10.0,0.0]}];
-    let mut path=crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());crate::schema::layer_base_mut(&mut path).id="path".into();
+    let segments=vec![semio_s_artifact_draw_drawing_model::PathSegment::Move {to:[0.0,0.0]},semio_s_artifact_draw_drawing_model::PathSegment::Line {to:[10.0,0.0]}];
+    let mut path=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",segments.clone().into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut path).id="path".into();
     let source=DrawingSnapshot {layers:vec![path].into(),..Default::default()};
     let geometry=points::geometry_id(&segments).unwrap();
-    let mut session=crate::editor::drawing::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
-    session.interaction.points=vec![points::point_id("path",&geometry,1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap()];
+    let mut session=crate::identity_test::session("editNodes","");session.interaction.ids=vec!["path".into()];
+    session.interaction.points=vec![points::point_id("path",&geometry,1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap()];
     let emit=plan(&source,&session,[1.0,0.0]).unwrap();
     assert_eq!(emit.artifact_mutations,vec![drag_path_points(vec![DrawingPathPointTarget {layer_id:"path".into(),index:1,point:crate::schema::geometry::editing::PathPoint::Anchor}].into(),1.0,0.0)]);
     assert!(emit.transaction.is_some());
-    let mut moved=source.clone();crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut moved,&emit.artifact_mutations[0]).unwrap();
+    let mut moved=source.clone();semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut moved,&emit.artifact_mutations[0]).unwrap();
     let DrawingLayerNode::Path(path)=&moved.layers[0] else {panic!("a path")};
-    let rebound=points::point_id("path",&points::geometry_id(&path.segments).unwrap(),1,crate::schema::geometry::editing::PathPoint::Anchor).unwrap();
+    let rebound=points::point_id("path",&points::geometry_id(&path.segments).unwrap(),1,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor).unwrap();
     assert!(emit.effects.contains(&point_selection_effect(&[rebound])),"the point selection follows the moved geometry");
 }

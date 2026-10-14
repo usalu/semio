@@ -12,22 +12,22 @@
 use std::collections::{HashMap, HashSet};
 
 use {crate::euler::{add_shell, add_solid, make_vertex, retire_solid_scaffold}, semio_framework_3d_brep_representation::topology::make_loop};
-use semio_framework_3d_brep_queries::intersect::{intersect_surface_surface, IntCurve};
+use semio_framework_3d_brep_intersect::{intersect_surface_surface, IntCurve};
 use crate::primitives::{attach_face, finish_solid, line_edge};
 use crate::staged::{drive_face, drive_solid};
 use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
-use semio_framework_3d_brep_representation::curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
-use semio_framework_3d_brep_representation::curve::Curve2;
-use semio_framework_3d_brep_representation::curve::{Curve3, NurbsCurve3};
+use semio_framework_3d_brep_curve::bspline::KnotVector;
+use semio_framework_3d_brep_curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
+use semio_framework_3d_brep_curve::Curve2;
+use semio_framework_3d_brep_curve::{Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::{IsoDirection, Surface};
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::{IsoDirection, Surface};
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3, Mat3};
-use semio_framework_3d_brep_representation::vector::{Pnt2, Vec2};
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::{Affine3, Frame3, Mat3};
+use semio_framework_3d_brep_vector::{Pnt2, Vec2};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 /// ↔️ Default working tolerance for offset topology surgery (edge/vertex recomputation and NURBS
 /// offset refinement).
@@ -181,10 +181,10 @@ fn max_offset_deviation(original: &Surface, candidate: &Surface, distance: f64, 
 
 /// ↔️ Inserts one `u`-knot across every `v`-row of a control/weight grid via Boehm's algorithm
 /// applied to the homogeneous (weighted) coordinates — the standard "insert per channel, divide
-/// by the refined weight" technique ([`semio_framework_3d_brep_representation::curve::bspline::insert_knot`]'s own docstring).
+/// by the refined weight" technique ([`semio_framework_3d_brep_curve::bspline::insert_knot`]'s own docstring).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn insert_u_knot_surface(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
-    use semio_framework_3d_brep_representation::curve::bspline::insert_knot;
+    use semio_framework_3d_brep_curve::bspline::insert_knot;
     let rows = controls.len();
     let cols = if rows > 0 { controls[0].len() } else { 0 };
     let mut new_knots = u_knots.clone();
@@ -535,7 +535,7 @@ fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<Ve
         };
         let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
         let point = curve.eval(t_param);
-        let cu = semio_framework_3d_brep_representation::surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
+        let cu = semio_framework_3d_brep_surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
         normal_with_pole_fallback(surf, cu.u, cu.v)?
     };
     if face_data.flipped {
@@ -769,7 +769,7 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
 /// The `-thickness` offset is only ever a SCAFFOLD here: `offset_solid_with_corner` wraps its
 /// faces in a solid of its own, and those faces are then flipped to face into the cavity. Left in
 /// the body that wrapper is a solid whose outer shell integrates to −V, which
-/// [`semio_framework_3d_brep_queries::validation::validate_body`]
+/// [`semio_framework_3d_brep_validation::validate_body`]
 /// reports as `shell-orientation-inward` forever after — and since `Brep::validate_gate_sync`
 /// validates the whole body, it refused EVERY preview taken from that kernel, not only the shelled
 /// solid (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `🐚️box-shell-preview`: the served preview

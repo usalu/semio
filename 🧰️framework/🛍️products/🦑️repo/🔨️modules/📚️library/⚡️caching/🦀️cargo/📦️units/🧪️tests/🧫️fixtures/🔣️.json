@@ -1,0 +1,343 @@
+{
+  "units": [
+    {
+      "version": 1,
+      "id": "base",
+      "package": "base",
+      "manifest": "base/Cargo.toml",
+      "target": {
+        "name": "base",
+        "kind": "library",
+        "role": "target",
+        "triple": "x86_64-unknown-linux-gnu",
+        "entry": "base/lib.rs"
+      },
+      "mode": "prototype",
+      "profile": "prototype",
+      "features": [],
+      "cfg": [],
+      "compiler": {
+        "program": "rustc",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sysrootDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "linkerDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "arguments": [
+        "--crate-type=lib"
+      ],
+      "environment": {},
+      "inputs": [
+        {
+          "path": "base/lib.rs",
+          "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "bytes": 32,
+          "kind": "source"
+        },
+        {
+          "path": "base/Cargo.toml",
+          "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "bytes": 64,
+          "kind": "configuration"
+        }
+      ],
+      "dependencies": [],
+      "outputs": [
+        "libbase.rlib"
+      ],
+      "limits": {
+        "maximumSourceBytes": 4096,
+        "maximumSourceFiles": 8,
+        "maximumArtifactBytes": 1048576
+      },
+      "cfgSnapshot": []
+    },
+    {
+      "version": 1,
+      "id": "consumer",
+      "package": "consumer",
+      "manifest": "consumer/Cargo.toml",
+      "target": {
+        "name": "consumer",
+        "kind": "library",
+        "role": "target",
+        "triple": "x86_64-unknown-linux-gnu",
+        "entry": "consumer/lib.rs"
+      },
+      "mode": "prototype",
+      "profile": "prototype",
+      "features": [],
+      "cfg": [],
+      "compiler": {
+        "program": "rustc",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sysrootDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "linkerDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "arguments": [
+        "--crate-type=lib"
+      ],
+      "environment": {},
+      "inputs": [
+        {
+          "path": "consumer/lib.rs",
+          "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "bytes": 32,
+          "kind": "source"
+        },
+        {
+          "path": "consumer/Cargo.toml",
+          "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "bytes": 64,
+          "kind": "configuration"
+        }
+      ],
+      "dependencies": [
+        {
+          "unit": "base",
+          "artifactDigest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "externName": "base"
+        }
+      ],
+      "outputs": [
+        "libconsumer.rlib"
+      ],
+      "limits": {
+        "maximumSourceBytes": 4096,
+        "maximumSourceFiles": 8,
+        "maximumArtifactBytes": 1048576
+      },
+      "cfgSnapshot": []
+    },
+    {
+      "version": 1,
+      "id": "sibling",
+      "package": "sibling",
+      "manifest": "sibling/Cargo.toml",
+      "target": {
+        "name": "sibling",
+        "kind": "library",
+        "role": "target",
+        "triple": "x86_64-unknown-linux-gnu",
+        "entry": "sibling/lib.rs"
+      },
+      "mode": "prototype",
+      "profile": "prototype",
+      "features": [],
+      "cfg": [],
+      "compiler": {
+        "program": "rustc",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sysrootDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "linkerDigest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "arguments": [
+        "--crate-type=lib"
+      ],
+      "environment": {},
+      "inputs": [
+        {
+          "path": "sibling/lib.rs",
+          "digest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "bytes": 32,
+          "kind": "source"
+        },
+        {
+          "path": "sibling/Cargo.toml",
+          "digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "bytes": 64,
+          "kind": "configuration"
+        }
+      ],
+      "dependencies": [],
+      "outputs": [
+        "libsibling.rlib"
+      ],
+      "limits": {
+        "maximumSourceBytes": 4096,
+        "maximumSourceFiles": 8,
+        "maximumArtifactBytes": 1048576
+      },
+      "cfgSnapshot": []
+    }
+  ],
+  "mutations": [
+    {
+      "id": "source",
+      "unit": "base",
+      "field": "input",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "dependency-artifact",
+      "unit": "consumer",
+      "field": "artifact",
+      "expect": [
+        "consumer"
+      ]
+    },
+    {
+      "id": "feature",
+      "unit": "base",
+      "field": "feature",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "mode",
+      "unit": "sibling",
+      "field": "mode",
+      "expect": [
+        "sibling"
+      ]
+    },
+    {
+      "id": "configuration",
+      "unit": "base",
+      "field": "configuration",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "toolchain",
+      "unit": "base",
+      "field": "toolchain",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "generated",
+      "unit": "base",
+      "field": "generated",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "environment",
+      "unit": "base",
+      "field": "environment",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    },
+    {
+      "id": "actual-cfg-snapshot",
+      "unit": "base",
+      "field": "cfg-snapshot",
+      "expect": [
+        "base",
+        "consumer"
+      ]
+    }
+  ],
+  "refusals": [
+    "cycle",
+    "missing-dependency",
+    "duplicate-unit",
+    "duplicate-input",
+    "source-limit",
+    "file-limit",
+    "unsafe-output",
+    "unknown-field"
+  ],
+  "cargo": {
+    "cold": [
+      "base",
+      "consumer",
+      "sibling"
+    ],
+    "warm": [],
+    "changed": [
+      "base",
+      "consumer"
+    ]
+  },
+  "selectedOwners": [
+    {
+      "id": "canonical",
+      "kind": "native",
+      "owner": "canonical",
+      "operation": "build",
+      "suffix": "",
+      "accepted": true
+    },
+    {
+      "id": "foreign-owner",
+      "kind": "native",
+      "owner": "foreign",
+      "operation": "build",
+      "suffix": "",
+      "accepted": false
+    },
+    {
+      "id": "source-owner",
+      "kind": "source",
+      "owner": "canonical",
+      "operation": "build",
+      "suffix": "",
+      "accepted": false
+    },
+    {
+      "id": "check-operation",
+      "kind": "native",
+      "owner": "canonical",
+      "operation": "check",
+      "suffix": "",
+      "accepted": false
+    },
+    {
+      "id": "appended-command",
+      "kind": "native",
+      "owner": "canonical",
+      "operation": "build",
+      "suffix": " && cargo build",
+      "accepted": false
+    }
+  ],
+  "dataCapture": {
+    "repetitions": 32768,
+    "symbol": "🦀",
+    "maximumBytes": 131073,
+    "maximumLines": 1
+  },
+  "ordinaryNx": {
+    "phases": [
+      "cold",
+      "warm",
+      "restore",
+      "changed"
+    ],
+    "misses": {
+      "cold": [
+        "base",
+        "consumer",
+        "sibling"
+      ],
+      "warm": [],
+      "restore": [],
+      "changed": [
+        "base",
+        "consumer"
+      ]
+    },
+    "tasks": 3,
+    "graphEdgeType": "implicit"
+  },
+  "selectedScope": {
+    "required": "parser.mjs",
+    "unrelated": "removed.rs",
+    "before": "export const value=1;",
+    "changed": "export const value=2;"
+  }
+}

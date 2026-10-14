@@ -40,18 +40,7 @@ pub fn named_space_token(token: Option<&str>) -> Option<SpaceToken> {
     }
 }
 
-/// 📐️ The inverse of [`named_space_token`].
-pub fn space_token_name(token: SpaceToken) -> &'static str {
-    match token {
-        SpaceToken::None => "none",
-        SpaceToken::Xs => "xs",
-        SpaceToken::Sm => "sm",
-        SpaceToken::Md => "md",
-        SpaceToken::Lg => "lg",
-        SpaceToken::Xl => "xl",
-        SpaceToken::Xxl => "xxl",
-    }
-}
+pub use semio_framework_ui_layout::space_token_name;
 
 /// 📐️ The [`SpaceToken`] a legacy declarative `UiStackNode.padding` string names — one step looser
 /// than [`gap_space_token`] at `tight`/`loose`, the same relation the two private literal tables had.
@@ -152,9 +141,7 @@ pub const TREE_ROW_CONTROL_WIDTH: f32 = (ui_styling::metrics::dom::CONTROL_VALUE
 /// 🌳️ React's compact property-tree value column, measured from the actual mounted DOM.
 pub const TREE_ROW_COMPACT_CONTROL_WIDTH: f32 = 104.0;
 
-/// 🌳️ Depth past which a tree's own spec is refused rather than recursed — the same ceiling
-/// `paint::RETAINED_TREE_DEPTH` walks with, so neither side can out-recurse the other.
-pub const TREE_ROW_MAX_DEPTH: usize = 64;
+pub use semio_framework_ui_retained_tree::tree::TREE_ROW_MAX_DEPTH;
 
 impl TreeRowMetrics {
     pub fn from_theme(theme: &Theme) -> Self {
@@ -267,11 +254,7 @@ pub fn tree_section_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics
     tree_section_height_with_open(section, metrics, tree_section_default_open(section))
 }
 
-/// 🌲️ React sections default closed when they own chrome; a headerless grouping remains transparent
-/// and always exposes its rows.
-pub fn tree_section_default_open(section: &UiTreeSectionNode) -> bool {
-    section.default_open.unwrap_or(section.label.is_none() && section.header_toolbar.is_none())
-}
+pub use semio_framework_ui_retained_tree::tree::tree_section_default_open;
 
 pub fn tree_section_height_with_open(section: &UiTreeSectionNode, metrics: &TreeRowMetrics, open: bool) -> f32 {
     if !section.presence.visible() {
@@ -392,7 +375,7 @@ pub fn table_column_rect(row_width: f32, row_height: f32, column: usize, columns
 /// tree window observer's measurement share.
 pub fn tree_window_row_extent_px(extent: UiTreeWindowRowExtent) -> f32 {
     match extent {
-        UiTreeWindowRowExtent::Standard => crate::wgpu::widgets::TREE_ROW_HEIGHT,
+        UiTreeWindowRowExtent::Standard => semio_framework_ui_theme::metrics::TREE_ROW_HEIGHT,
         UiTreeWindowRowExtent::CompactText => crate::wgpu::chrome::SIZE_TINY * 1.5,
         UiTreeWindowRowExtent::CompactSmallControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_SMALL_UI_SPACING) as f32,
         UiTreeWindowRowExtent::CompactControl => (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::CONTROL_HEIGHT_UI_SPACING) as f32,

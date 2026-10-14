@@ -40,5 +40,30 @@
         "../process/types.ts"
       ]
     }
-  ]
+  ],
+  "analysis": {
+    "module": {
+      "file": "app/module.ts",
+      "initial": "import {value} from '../leaf/core.ts';export const answer=value+1;",
+      "body": "import {value} from '../leaf/core.ts';export const answer=value+2;",
+      "changed": "import {value} from '../other/core.ts';export const answer=value+2;",
+      "imports": [
+        "../leaf/core.ts"
+      ]
+    },
+    "rust": {
+      "entry": "src/lib.rs",
+      "initial": "mod leaf; pub const VALUE:usize=1;",
+      "body": "mod leaf; pub const VALUE:usize=2;",
+      "changed": "mod other; pub const VALUE:usize=2;",
+      "files": {
+        "src/leaf.rs": "pub const VALUE:usize=1;",
+        "src/other.rs": "pub const VALUE:usize=2;"
+      },
+      "inputs": [
+        "src/leaf.rs",
+        "src/lib.rs"
+      ]
+    }
+  }
 }

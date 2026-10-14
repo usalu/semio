@@ -1,12 +1,15 @@
 #!/usr/bin/env bun
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {configuredExactCargoLawPolicyV1} from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runScriptMain} from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand} from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {cmdBudgetMs} from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import {runCargoTestsV1,readCargoTestPolicyV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import {runExactCargoLaws} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+
 /** 🧾️ Verifies portable encoded byte sources through the shared task runner. */
 class TestScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
@@ -16,9 +19,9 @@ class TestScript extends BundleScript{
    await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
   }else if(language==="funding-native"){
    if(rest.length||!process.env.SEMIO_TEST_ARTIFACT_DIR||!process.env.CARGO_TARGET_DIR)throw Error("funding-native requires original caller artifact and target directories");
-   const receipts=await runExactCargoLaws({manifestPaths:{"semio-framework-io-binary-source":resolve(this.root,"📦️packages/🦀️rust/Cargo.toml")},cargoTargetDir:process.env.CARGO_TARGET_DIR,cwd:this.repoRoot,groups:[{package:"semio-framework-io-binary-source",target:{kind:"lib"},laws:["tests::original_binary_source_funding_preserves_axes_and_allocator_receipts","tests::binary_sources_match_neutral_font_image_bytes_and_independent_oracles","tests::binary_sources_refuse_malformed_contracts_and_private_failures","tests::binary_sources_load_actual_bundled_font_resources"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3600000,listBudgetMs:60000,lawBudgetMs:120000});
+   const receipts=await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:3600000,listMilliseconds:60000,lawMilliseconds:120000},invocation:this.invocation,manifestPaths:{"semio-framework-io-binary-source":resolve(this.root,"📦️packages/🦀️rust/Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-io-binary-source",target:{kind:"lib"},laws:["tests::original_binary_source_funding_preserves_axes_and_allocator_receipts","tests::binary_sources_match_neutral_font_image_bytes_and_independent_oracles","tests::binary_sources_refuse_malformed_contracts_and_private_failures","tests::binary_sources_load_actual_bundled_font_resources"]}]});
    console.log(`[DEBUG] Original binary source native receipts=${receipts.length}`);
-  }else if(language==="rust")await runCargoTestsV1({manifestPath:resolve(this.root,"📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-io-binary-source"],cwd:this.root,extraArgs:rest},readCargoTestPolicyV1(process.env));
+  }else if(language==="rust")await runCargoTestsV1({manifestPath:resolve(this.root,"📦️packages/🦀️rust/Cargo.toml"),packages:["semio-framework-io-binary-source"],cwd:this.root,extraArgs:rest},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   else throw Error("Expected typescript or rust");
  }
 }

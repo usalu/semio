@@ -176,7 +176,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
   return candidates;
 }
 
-/** @emoji 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
+/** @emoji 🧱️ Stubs missing wasm pkg imports until `bun repo run …:wasm` artifacts exist. */
 export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlugin {
   return {
     name: "playground-flow-wasm-dev-stub",

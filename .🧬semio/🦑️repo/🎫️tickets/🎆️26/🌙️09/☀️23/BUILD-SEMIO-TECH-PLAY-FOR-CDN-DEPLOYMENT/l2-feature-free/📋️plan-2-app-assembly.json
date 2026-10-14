@@ -1,0 +1,107 @@
+[
+ {
+  "package": "semio-s-artifact-block-2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-block-3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-block-5d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-fem-2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-fem-3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-gis-gismap",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-gis-gisterrain",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-procedural-generation2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-procedural-generation3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-puzzle-2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-puzzle-3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-puzzle-5d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-space-home",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-space-space",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-trinity-rewriting",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-wfc-2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-wfc-3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-wfc-bitmap",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-wfc-grid2d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-wfc-grid3d",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-space-core",
+  "feature": "component-app-assembly",
+  "mode": "on"
+ }
+]

@@ -3,12 +3,24 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "⚙️engine/◻️2d/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
-    "**/🏅️standards/**",
     "**/🏭️bridge/**",
+    "**/🏭️generator/**",
     "**/👽️guest/**",
+    "**/🔬️probes/**",
     "**/🔮️oracles/**",
     "🏅️standards/🔖️1/🪆️subsets/🌐️any/🏭️generator/🧩️json/📦️packages/🦀️rust",
 ]
@@ -16,10 +28,11 @@ exclude = [
 [workspace.metadata.semio.repository]
 schema-version = 1
 exclude-patterns = [
-  "**/🏅️standards/**",
+  "**/🏭️generator/**",
+  "**/🔬️probes/**",
+  "**/🏭️bridge/**",
   "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**"
+  "**/🔮️oracles/**"
 ]
 member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 
@@ -105,6 +118,111 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-fem-analyses]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-analyses-assembly]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-analyses-model]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-elements2d]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/📏️elements2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-mesh]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-mesh-derived]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-model]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sparse-pcg]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-static]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/⚖️static/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-test-support]
+path = "../../../../🔨️modules/🏗️fem/⚙️engine/🧪️tests/🧰️support/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-app-surface]
+path = "../../⚙️engine/🖥️app-surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-sqlite]
+path = "../../🧩️sqlite/📦️packages/🦀️rust"
+
+[workspace.dependencies.csv]
+version = "1"
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-command]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-state]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-analysis]
+path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-boundary]
+path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-engine]
+path = "⚙️engine/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-io]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-load]
+path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-material]
+path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-mesh]
+path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-mesh-topology]
+path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-model]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-fem-2d-viewer]
+path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

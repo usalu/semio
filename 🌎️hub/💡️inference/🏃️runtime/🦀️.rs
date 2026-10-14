@@ -451,8 +451,8 @@ type GisMapParentSnapshotV1 = semio_s_artifact_gis_gismap::GisMapSnapshot;
 type GisMapParentMutationV1 = semio_s_artifact_gis_gismap::mutations::GisMapMutation;
 type GisMapDrawingSnapshotV1 = semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 type GisMapDrawingMutationV1 = semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation;
-type GisMapValueSnapshotV1 = semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
-type GisMapValueMutationV1 = semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation;
+type GisMapValueSnapshotV1 = semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+type GisMapValueMutationV1 = semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
 type GisMapParentStoreV1 = directory::os_store::ArtifactStore<GisMapParentSnapshotV1, GisMapParentMutationV1>;
 type GisMapDrawingStoreV1 = directory::os_store::ArtifactStore<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>;
 type GisMapValueStoreV1 = directory::os_store::ArtifactStore<GisMapValueSnapshotV1, GisMapValueMutationV1>;
@@ -1002,7 +1002,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     fn value_store(id: &str, parent: semio_framework_artifact_reference::ArtifactRef, snapshot: GisMapValueSnapshotV1, actor: protocol::ActorId) -> GisMapValueStoreV1 {
         use directory::os_store::document_store_owners::MemberStoreOwner;
-        let schema = semio_s_artifact_stdio_semio_value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+        let schema = semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
         let mut envelope = directory::os_store::document_materialize::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot, None);
         envelope.dialect = Some(semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() });
         envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() });

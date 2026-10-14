@@ -9,7 +9,7 @@
 //!
 //! 🔖 Documented lossiness is `SemioMeshToObj`'s own: triangles only (a wire/point preview is a
 //! typed error, never invented faces), and no material/colour model crosses.
-use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;

@@ -1,6 +1,18 @@
+import admissionSchema from "./🧬️schema/🔣️.json";
 import { readdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { isAbsolute, join, resolve } from "node:path";
+
+/** 🧵️ Bounds concurrent original reads and drains every admitted reader before release. */
+export async function boundedAdmissionWalkV1<T>(initial:readonly T[],limit:number,visit:(item:T,enqueue:(next:T)=>void)=>Promise<void>):Promise<void>{
+ const bounds=admissionSchema.properties.maximumConcurrentReads;if(!Number.isSafeInteger(limit)||limit<bounds.minimum||limit>bounds.maximum)throw Error("Bounded admission concurrency required");
+ const pending=[...initial],active=new Set<Promise<void>>();let failure:{error:unknown}|undefined;
+ while(pending.length||active.size){
+  while(!failure&&active.size<limit&&pending.length){const item=pending.pop()!,operation=Promise.resolve().then(()=>visit(item,next=>{if(!failure)pending.push(next);})).catch(error=>{failure??={error};}).finally(()=>{active.delete(operation);});active.add(operation);}
+  if(!active.size)break;await Promise.race(active);
+ }
+ if(failure)throw failure.error;
+}
 
 type AdmissionPolicy = { generatedDirectories: readonly string[]; manifestBasenames: readonly string[] };
 type CollectionPolicy = { names: readonly string[]; moduleMember: string };
@@ -53,7 +65,8 @@ export async function collectionManifestsFromInventory(root: string, inventory: 
     for (let index = 0; index < parts.length; index++) if (parts[index] === collections.moduleMember) modules.add(parts.slice(0, index + 1).join("/"));
   }
   const found = new Set<string>(), excluded = new Set([".🧬semio", "🤖️generated", "pkg", ...policy.generatedDirectories]);
-  const walk = async (path: string): Promise<void> => {
+  const roots=[...modules].flatMap(module=>collections.names.map(collection=>`${module}/${collection}`));
+  await boundedAdmissionWalkV1(roots,64,async(path,enqueue)=>{
     signal?.throwIfAborted();
     let entries;
     try { entries = await readdir(join(root, path), { withFileTypes: true }); }
@@ -61,11 +74,10 @@ export async function collectionManifestsFromInventory(root: string, inventory: 
     for (const entry of entries) {
       if (entry.isSymbolicLink() || excluded.has(entry.name)) continue;
       const child = `${path}/${entry.name}`;
-      if (entry.isDirectory()) await walk(child);
+      if (entry.isDirectory()) enqueue(child);
       else if (entry.isFile() && collectionManifestCandidate(child, policy, collections)) found.add(child);
     }
-  };
-  for (const module of modules) for (const collection of collections.names) await walk(`${module}/${collection}`);
+  });
   return [...found].sort();
 }
 
@@ -83,7 +95,7 @@ async function untrackedStructuralModules(root: string, indexed: string, policy:
   }
   const excluded = new Set([".🧬semio", ".codex", ".claude", "compose", "temp", "🤖️generated", "pkg", ...policy.generatedDirectories]);
   let inspected = 0;
-  const inspect = async (directory: string, fresh: boolean): Promise<void> => {
+  await boundedAdmissionWalkV1([...observed].map(directory=>({directory,fresh:false})),64,async({directory,fresh},enqueue)=>{
     if (++inspected % 1024 === 0) console.log(`[nx] Admitting structural source membership (${inspected} directories)`);
     signal?.throwIfAborted();
     let entries;
@@ -93,9 +105,8 @@ async function untrackedStructuralModules(root: string, indexed: string, policy:
       if (!entry.isDirectory() || entry.isSymbolicLink() || excluded.has(entry.name)) continue;
       const child = directory ? `${directory}/${entry.name}` : entry.name;
       if (entry.name === collections.moduleMember) modules.add(`${child}/`);
-      if (fresh || !indexedDirectories.has(child)) await inspect(child, true);
+      if (fresh || !indexedDirectories.has(child)) enqueue({directory:child,fresh:true});
     }
-  };
-  for (const directory of observed) await inspect(directory, false);
+  });
   return [...modules].join("\0");
 }

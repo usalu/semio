@@ -3,7 +3,7 @@
 //! dialect STAMP on top of that existing schema, not a new one -- a subset is a conformance
 //! marker, never a fork of the snapshot type (see `🪆️subsets/✳️base/🧬️schema`).
 
-pub use crate::standards::v2x3::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per Coordination View 2.0 conformance rule,

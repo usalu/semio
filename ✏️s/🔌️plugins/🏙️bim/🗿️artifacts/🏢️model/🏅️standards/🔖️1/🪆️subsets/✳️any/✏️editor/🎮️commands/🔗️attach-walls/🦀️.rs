@@ -5,7 +5,7 @@
 use crate::editor::bim::entities::wall_sweeps::write_top_attach;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

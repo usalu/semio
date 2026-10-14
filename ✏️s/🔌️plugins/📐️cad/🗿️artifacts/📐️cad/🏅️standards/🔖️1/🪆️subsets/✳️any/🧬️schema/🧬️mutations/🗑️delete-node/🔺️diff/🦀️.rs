@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteNode`.
 use super::DeleteNode;
-use crate::diff::{CadDiff, CadNodesDelta};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadNodesDelta};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteNode, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

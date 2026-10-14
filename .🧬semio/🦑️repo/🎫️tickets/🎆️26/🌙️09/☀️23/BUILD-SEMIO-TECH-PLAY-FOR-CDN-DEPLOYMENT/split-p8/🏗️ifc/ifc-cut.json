@@ -1,0 +1,79 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "ifc-layers.json",
+ "crate": "semio_s_artifact_stdio_ifc",
+ "aggregator": "ifc",
+ "crates": {
+  "4-descriptor": {
+   "package": "semio-s-artifact-stdio-ifc-4-descriptor",
+   "dir": "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+   "doc": "//! 📇️ The IFC4 schema descriptor: every schema facet leaf, for the schema registry."
+  },
+  "4-inferences": {
+   "package": "semio-s-artifact-stdio-ifc-4-inferences",
+   "dir": "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The IFC4 inferences with their text and binary codecs."
+  },
+  "4-mutations": {
+   "package": "semio-s-artifact-stdio-ifc-4-mutations",
+   "dir": "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The IFC4 mutation vocabulary with its text and binary codecs."
+  },
+  "4-model": {
+   "package": "semio-s-artifact-stdio-ifc-4-model",
+   "dir": "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The IFC4 model: schema, snapshot and diff with their text, binary, SQLite and Part-21 codecs."
+  },
+  "4": {
+   "package": "semio-s-artifact-stdio-ifc-4",
+   "dir": "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
+   "doc": "//! 🏗️ The IFC4 subset surfaces: composer, builder and analyzer, editor, viewer and examples."
+  },
+  "2x3-base-descriptor": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-base-descriptor",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+   "doc": "//! 📇️ The IFC2x3 base schema descriptor: every schema facet leaf, for the schema registry."
+  },
+  "2x3-base-inferences": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-base-inferences",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The IFC2x3 base inferences with their text and binary codecs."
+  },
+  "2x3-base-mutations": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-base-mutations",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The IFC2x3 base mutation vocabulary with its text and binary codecs."
+  },
+  "2x3-base-model": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-base-model",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The IFC2x3 base model: schema, snapshot and diff with their text, binary, SQLite and Part-21 codecs, and the shared model-view-definition editing primitives."
+  },
+  "2x3-base": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-base",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+   "doc": "//! 🏗️ The IFC2x3 base subset surfaces: composer, builder and analyzer, editor, viewer and examples."
+  },
+  "2x3-cobie": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-cobie",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust",
+   "doc": "//! 🏢️ The IFC2x3 COBie model view definition: its mutations, codecs, composer, editor and viewer."
+  },
+  "2x3-cv20": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-cv20",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust",
+   "doc": "//! 🤝️ The IFC2x3 Coordination View 2.0 model view definition: its mutations, codecs, composer, editor and viewer."
+  },
+  "2x3-sav": {
+   "package": "semio-s-artifact-stdio-ifc-2x3-sav",
+   "dir": "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust",
+   "doc": "//! 🧮️ The IFC2x3 Structural Analysis View model view definition: its mutations, codecs, composer, editor and viewer."
+  }
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

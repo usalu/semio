@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Bounded Build Admission Concurrency",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumConcurrentReads"
+  ],
+  "properties": {
+    "maximumConcurrentReads": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 64
+    }
+  }
+}

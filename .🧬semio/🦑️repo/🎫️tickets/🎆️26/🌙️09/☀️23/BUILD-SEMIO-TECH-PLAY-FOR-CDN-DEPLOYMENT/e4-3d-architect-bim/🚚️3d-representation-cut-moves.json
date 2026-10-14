@@ -1,0 +1,460 @@
+[
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/〰️polynomial"
+  ],
+  "moves": [
+   {
+    "from": "crate::polynomial",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::polynomial",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "crate::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "crate::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "crate::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   },
+   {
+    "from": "crate::arena",
+    "to": "semio_framework_3d_brep_representation::arena",
+    "names": "*"
+   },
+   {
+    "from": "crate::contract",
+    "to": "semio_framework_3d_brep_representation::contract",
+    "names": "*"
+   },
+   {
+    "from": "crate::error",
+    "to": "semio_framework_3d_brep_representation::error",
+    "names": "*"
+   },
+   {
+    "from": "crate::topology",
+    "to": "semio_framework_3d_brep_representation::topology",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector"
+  ],
+  "moves": [
+   {
+    "from": "crate::vector",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::vector",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "crate::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "crate::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "crate::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   },
+   {
+    "from": "crate::arena",
+    "to": "semio_framework_3d_brep_representation::arena",
+    "names": "*"
+   },
+   {
+    "from": "crate::contract",
+    "to": "semio_framework_3d_brep_representation::contract",
+    "names": "*"
+   },
+   {
+    "from": "crate::error",
+    "to": "semio_framework_3d_brep_representation::error",
+    "names": "*"
+   },
+   {
+    "from": "crate::topology",
+    "to": "semio_framework_3d_brep_representation::topology",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance"
+  ],
+  "moves": [
+   {
+    "from": "crate::tolerance",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::tolerance",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "crate::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "crate::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "crate::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   },
+   {
+    "from": "crate::arena",
+    "to": "semio_framework_3d_brep_representation::arena",
+    "names": "*"
+   },
+   {
+    "from": "crate::contract",
+    "to": "semio_framework_3d_brep_representation::contract",
+    "names": "*"
+   },
+   {
+    "from": "crate::error",
+    "to": "semio_framework_3d_brep_representation::error",
+    "names": "*"
+   },
+   {
+    "from": "crate::topology",
+    "to": "semio_framework_3d_brep_representation::topology",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve"
+  ],
+  "moves": [
+   {
+    "from": "crate::curve",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::curve",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "crate::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "crate::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "crate::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   },
+   {
+    "from": "crate::arena",
+    "to": "semio_framework_3d_brep_representation::arena",
+    "names": "*"
+   },
+   {
+    "from": "crate::contract",
+    "to": "semio_framework_3d_brep_representation::contract",
+    "names": "*"
+   },
+   {
+    "from": "crate::error",
+    "to": "semio_framework_3d_brep_representation::error",
+    "names": "*"
+   },
+   {
+    "from": "crate::topology",
+    "to": "semio_framework_3d_brep_representation::topology",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface"
+  ],
+  "moves": [
+   {
+    "from": "crate::surface",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::surface",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "crate::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "crate::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "crate::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "crate::arena",
+    "to": "semio_framework_3d_brep_representation::arena",
+    "names": "*"
+   },
+   {
+    "from": "crate::contract",
+    "to": "semio_framework_3d_brep_representation::contract",
+    "names": "*"
+   },
+   {
+    "from": "crate::error",
+    "to": "semio_framework_3d_brep_representation::error",
+    "names": "*"
+   },
+   {
+    "from": "crate::topology",
+    "to": "semio_framework_3d_brep_representation::topology",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏟️arena",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🔖️contract",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🚨️error",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🕸️topology",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "crate::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "crate::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "crate::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "crate::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "crate::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/💡️inferences/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🦀️.rs",
+   "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/🏃️benches/⏱️brep-kernel.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/📐️brep-invoke/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔢️math-values/🧪️tests/🎟️original/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🚀️original-field/🧪️tests/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🧰️construction-support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/🧪️tests/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⚙️compute/🎟️original/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⚙️compute/🎟️original/📐️read/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧵️brep-sources/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🎟️planning/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🎟️parameter/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🎟️loop/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🏷️classification/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🏷️classification/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties/🧪️tests/🔬️oracle-standalone/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties/🧪️tests/🔬️oracle-unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/➰️curve-curve/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/🏄️surface-surface/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/➿️curve-surface/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/🤝️shared/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/🤝️shared/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🧮️topology/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🛞️mass/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📏distance/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📋tables/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🩺validity/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/🌀curvature/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📦️bounds/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🌳bounding-volume/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🌳bounding-volume/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/♻️retention/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🪅️shape-value/🎟️original/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🪅️shape-value/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🪅️shape-value/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔎️analysis-session/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/⏱️operation-jobs/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/⏱️staged/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🧮️core/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🐍️frame/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🥞️loft/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🌀️revolve/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew/🧪️tests/🔬️heal/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧭️arrangement/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️differential/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/⏱️jobs/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔺️euler/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🧪️tests/🔬️topology-reachability/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🧪️tests/🔬️topology-compaction/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🧪️tests/🔬️topology-seed/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔁️transform/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔁️transform/🧪️tests/🔬️unit/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "semio_framework_3d_brep_representation::polynomial",
+    "to": "semio_framework_3d_brep_polynomial",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_representation::vector",
+    "to": "semio_framework_3d_brep_vector",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_representation::tolerance",
+    "to": "semio_framework_3d_brep_tolerance",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_representation::curve",
+    "to": "semio_framework_3d_brep_curve",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_representation::surface",
+    "to": "semio_framework_3d_brep_surface",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_representation",
+    "to": "semio_framework_3d_brep_vector",
+    "names": [
+     "retire_geometry_variants"
+    ]
+   }
+  ]
+ }
+]

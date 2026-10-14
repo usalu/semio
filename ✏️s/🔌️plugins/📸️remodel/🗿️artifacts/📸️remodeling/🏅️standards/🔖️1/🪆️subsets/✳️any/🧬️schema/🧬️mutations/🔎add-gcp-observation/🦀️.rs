@@ -1,8 +1,9 @@
 //! 🔎 Remodeling mutation — `AddGcpObservation`: appends one `GcpObservation` to an existing GCP.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{GcpObservation, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::remove_gcp_observation::RemoveGcpObservation;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GcpObservation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +22,20 @@ pub struct AddGcpObservation {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_gcp_observation(id: String, observation: GcpObservation) -> RemodelingMutation {
-    RemodelingMutation::AddGcpObservation(AddGcpObservation { id, observation })
+pub fn add_gcp_observation<Op: From<AddGcpObservation>>(id: String, observation: GcpObservation) -> Op {
+    Op::from(AddGcpObservation { id, observation })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AddGcpObservation {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for AddGcpObservation
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<RemoveGcpObservation>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "gcp", kind: "add-gcp-observation", record: "AddedGcpObservation" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

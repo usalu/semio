@@ -1,5 +1,6 @@
 //! 🧬️ DAG mutation, diff, and document codecs.
-use crate::snapshot::*;
+use crate::dag_demo_host_snapshot;
+use semio_framework_os_infinite_directed_presentation::*;
 use ::graph::manifest::PropertyBag;
 #[cfg(test)]
 use ::graph::manifest::PropertyValue;
@@ -52,7 +53,7 @@ pub fn empty_dag_document() -> DagSnapshot {
 
 /// 🌱️ The demo document seed (nodes/edges from `🕸️demo.dag`), sharing the fixture's example.
 pub fn default_dag_document() -> DagSnapshot {
-    dag_document_from_host_snapshot(&DagHostSnapshot::default())
+    dag_document_from_host_snapshot(&dag_demo_host_snapshot())
 }
 
 /// 🔁️ Projects a {@link DagHostSnapshot} (which also carries a camera) down to the persistent {@link DagSnapshot}.
@@ -80,18 +81,6 @@ pub fn dag_host_snapshot_from_document(document: &DagSnapshot, camera: DagCamera
 // definition from its registration is a race" failure this ticket's own doctrine warns against —
 // so this file keeps them, unrelated to and independent of the `CollectionMutation<TId,TItem,TPatch>`
 // elimination below (this crate's own `DagMutation` never wraps them in that banned generic type).
-impl Identified<String> for DagNodeSpec {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-impl Identified<String> for DagHostSnapshotEdge {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
 /// 🩹️ Sparse patch of a {@link DagNodeSpec} — layout fields plus a whole-`kind` replacement for
 /// kind-specific edits (slider value/min/max, note text, …). Consumed by `✏️s/🔌️plugins/🕸️dag`'s own
 /// `DagNodeExtraPatch` deviation (fields this type has no slot for: `id`/`icon`/`abbreviation`/

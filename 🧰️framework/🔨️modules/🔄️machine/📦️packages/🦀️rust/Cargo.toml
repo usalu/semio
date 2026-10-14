@@ -22,17 +22,11 @@ wasm-opt = false
 [lib]
 path = "🦀️.rs"
 
-[features]
-default = ["macros", "serde"]
-macros = ["dep:machine_derive"]
-serde = ["dep:serde", "dep:serde_json"]
-testing = []
-
 [dependencies]
-machine_derive = { path = "../../✨️derive/📦️packages/🦀️rust", optional = true, package = "semio-framework-machine-derive" }
+machine_derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-machine-derive" }
 semio-framework-dispatch-macros = { path = "../../../🔀️dispatch/📦️packages/🦀️rust" }
-serde = { version = "1.0.219", features = ["derive"], optional = true }
-serde_json = { version = "1.0.140", optional = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = { version = "1.0.140" }
 
 # 🌉️ Browser-only `WasmHost` (JS timer/effect-callback bridge, `wasm_bridge` mod in `🦀️.rs`).
 # Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component

@@ -2,7 +2,7 @@
 //! model, so the id names at most one of them; a door type has no g-value and no frame fraction. The written values must stay in range (see `window_thermal_problem`); providing only equal values is a no-op.
 
 use super::SetTypeThermalData;
-use crate::{curtain_thermal_problem, door_thermal_problem, window_thermal_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{curtain_thermal_problem, door_thermal_problem, window_thermal_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetTypeThermalData, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

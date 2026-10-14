@@ -3,7 +3,7 @@
 
 use super::super::placement::{host_length, placement_issue, width_of};
 use super::MoveOpening;
-use crate::{Entry, ModelDiff, ModelSnapshot, OpeningPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::OpeningPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &MoveOpening, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

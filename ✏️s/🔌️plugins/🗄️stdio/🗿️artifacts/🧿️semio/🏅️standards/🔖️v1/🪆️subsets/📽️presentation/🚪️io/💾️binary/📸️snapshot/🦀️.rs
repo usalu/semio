@@ -8,7 +8,8 @@ mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 /// 🧱️ REUSE, don't reinvent — the sibling `🔺️diff` facet re-exports document's own real, already-
 /// tested `DocBlock` codec (`enc_block`/`dec_block`) plus the entity value-codecs it owns

@@ -123,6 +123,54 @@ The header is now format 4, and `receipt` is a required package key. A dev hub h
   sit under the library crate's `dist/components`. After L1 regenerates the registry, the deliverables must be rebuilt under the
   component crates. The receipt-level dry run above is the part runnable today.
 
+## Re-verification on 2026-10-14 (tree moved about 24 h; all rerun in this session)
+
+### Receipt ownership
+
+The Codex fleet extracted the receipt into the crate `semio-framework-plugin-component-receipt`. Its ticket is
+`26/10/13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES`; see `crate-production-boundaries.md`. That crate's `[lib] path` is this
+lane's single source file, `🏷️component-receipt/🧬️schema/🦀️.rs`, so there is exactly one Rust definition of `ComponentReceiptV1`.
+- **Kernel:** no longer `#[path]`-mounts the file. It re-exports the crate explicitly
+  (`pub use semio_framework_plugin_component_receipt as os_component_receipt;`) for the hub and kernel test callers.
+- **Directory schema:** names the crate directly.
+
+No duplicate remained, so no edit to their packages was needed.
+
+### Results
+
+| Check | Result |
+|---|---|
+| `cargo test -p semio-framework-plugin-component-receipt` | 4/4 pass |
+| Receipt TS + lease TS law (bun) | 31/31 pass |
+| Catalog binding TS (wgpu sqlite) | 7/7 pass |
+| Kernel identity `plugin-load-progress` | 17/17 pass. Vitest now needs an explicit `SEMIO_VITEST_POLICY` |
+| os plugin-module bundle/resolution/store (node vitest) | 84/84 pass. Under the bun runtime, the two retry laws time out |
+| os-dev `🚀️local-hub` catalog laws | pass. The 7 serve-fixture failures are unrelated |
+| Store worker in-source | 20/20 pass |
+| Registry catalog-complete, catalog-publication, deployment, hub-source (vitest) | 70/70 pass. Fixture paths repointed, see below |
+| `publishNativeRuntime` receipt law | pass: 3 refusals, 1 admission. The peer renamed the profile `dev` to `prototype` |
+| Dry receipt run over bim, animate, architect | 3/3 bind. The oracle is now direct third-party Ajv over the three schema documents |
+
+### Peer churn that blocks the rest (not this lane)
+
+- **Repo-wide fixture relocation `<owner>/🧫️fixtures` → `<owner>/🧪️tests/🧫️fixtures` (about 15 h ago).** References were not
+  rewritten:
+  - The GIS service-composition suite fails 76 tests on ENOENT.
+  - The registry `descriptor-verification` test now reads a doubled `🧪️tests/🧪️tests/🧫️fixtures`.
+  - The registry `rebuild` test fails on a changed rebuild-step schema.
+  - In my own two registry tests (catalog-complete, catalog-publication) I only repointed `../../🧫️fixtures` to `../🧫️fixtures`.
+- **`bun nx` refuses with "Original immutable graph publication authorizer required".** This is the fleet's nx patch.
+- **The hub script cannot load:** `repositoryCargoPreparationStorageV1` was removed from the cargo preparation storage module and
+  its consumers were not updated. So `trusted-stdio-gis-bundle-check --source`, `open-plan-check`, `execution-target-lease-check`
+  and `execution-target-relay-check` could not be rerun today. They passed on 2026-10-13.
+- **`hubSchemaExport` refuses** because the new peer schema module `🗄️stdio/🧩️component/🏗️compiler/♻️capture/🧬️schema` is not
+  catalogued. Regenerating the catalog did not admit it.
+- **Shipped deliverables need rebuilding:** they now belong under `dist/components/release` (profile policy change). The existing
+  bim, animate and architect deliverables still sit in `dist/components`, and their bytes still bind.
+- **Hub Rust:** polled for 9 minutes. The build is blocked below the hub by 6–7 crates from the extraction, among them
+  `os-pack`, `ui-theme`, `ui-layout`, `job`, `os-command` and `store-message-ledger`. The hub-side Rust of this lane is still
+  **uncompiled**.
+
 ## Deviations and decisions
 
 1. **Shipped acquisition stays a follow-up.** Materialization still cold-builds, because actor custody (`🏗️bootstrap/🎭️actors`)
@@ -192,4 +240,4 @@ Other:
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts`
 - the generated `🔣️schema-catalog.json`
 
-Ticket inputs: `trusted-catalog-receipts/{🏗️cargo.sh,🧪️dry-receipts.ts}`.
+Ticket inputs: `trusted-catalog-receipts/{🏗️cargo.sh,🧪️dry-receipts.ts}`. Re-verification edits: `📇️registry/🧪️tests/{✅️catalog-complete,✅️catalog-publication}/🟦️.ts` (fixture paths), the generated `🔣️schema-catalog.json`.

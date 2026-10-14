@@ -118,7 +118,10 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use crate::schema::diff::NodePath;
     use crate::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
 

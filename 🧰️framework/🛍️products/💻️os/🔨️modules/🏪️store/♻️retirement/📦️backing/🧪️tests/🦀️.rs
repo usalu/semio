@@ -320,7 +320,7 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
     let zero = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(zero).unwrap());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    assert_eq!(Arc::as_ptr(&cursor.owner.original().unwrap().group.as_ref().unwrap().visibility), original);
+    assert_eq!(cursor.owner.original().unwrap().group_visibility().unwrap() as *const _, original);
     drop((view, visibility));
     let owners: [Box<dyn ErasedSnapshotRetirement>; 3] = [
         Box::new(ArtifactStoreStringVectorRetirement::new(vec![body()])),

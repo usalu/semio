@@ -36,7 +36,7 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
 fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
@@ -160,7 +160,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 fn set_active_example_history_is_one_set_active_example_row() {
     use crate::retained_command::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
+    let snapshot = Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();

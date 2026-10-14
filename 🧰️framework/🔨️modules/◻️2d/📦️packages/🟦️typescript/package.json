@@ -17,9 +17,6 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

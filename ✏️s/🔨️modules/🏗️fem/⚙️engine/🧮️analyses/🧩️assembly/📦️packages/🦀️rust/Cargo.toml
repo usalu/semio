@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-fem-analyses-assembly"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Deterministic checkpointed sparse stiffness assembly of fem analyses"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+replication = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-fem-algebra = { workspace = true }
+semio-s-fem-analyses-model = { workspace = true }
+semio-s-fem-model = { workspace = true }
+semio-s-fem-sparse = { workspace = true }
+semio-s-fem-sparse-ldlt = { workspace = true }
+semio-s-fem-static = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-elements2d = { workspace = true }
+semio-s-fem-test-support = { workspace = true }
+serde_json = { workspace = true }

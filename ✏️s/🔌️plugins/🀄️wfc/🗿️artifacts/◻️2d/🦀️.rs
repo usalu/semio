@@ -49,7 +49,6 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🔖️Declaration
 /// 🧾️ The app bounds every declaration function in this crate carries — one editor app and one
 /// viewer app, exactly like `semio_s_artifact_puzzle_2d::ArtifactApps`.
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc2d::Wfc2dEditor>>>
@@ -57,7 +56,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc2d::Wfc2dEditor>>>
@@ -100,7 +98,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
 /// editor rows.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -118,20 +115,16 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️1/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
 
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 #[path = "."]
@@ -396,7 +389,6 @@ pub mod standards {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -443,7 +435,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]
@@ -526,11 +517,11 @@ pub use crate::standards::v1::subsets::any::schema::diff::Wfc2dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Wfc2dMutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::Wfc2dSnapshot;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 #[path = "./🧪️tests/🔬️store-fixture/🦀️.rs"]
 mod store_fixture;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;
 

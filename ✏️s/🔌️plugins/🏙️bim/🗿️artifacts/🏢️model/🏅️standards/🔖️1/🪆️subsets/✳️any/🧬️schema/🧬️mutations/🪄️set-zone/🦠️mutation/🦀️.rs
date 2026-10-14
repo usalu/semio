@@ -1,6 +1,6 @@
 //! 🪄️ `set-zone` payload. Sets any of a zone's name, category and occupancy density; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, ZonePatch};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ZonePatch}, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

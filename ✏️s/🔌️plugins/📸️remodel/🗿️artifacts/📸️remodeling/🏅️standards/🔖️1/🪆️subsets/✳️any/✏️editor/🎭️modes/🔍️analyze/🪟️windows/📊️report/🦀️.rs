@@ -2,7 +2,7 @@
 //! config's `report_table` selects.
 
 use crate::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfig;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::SurfaceKind;
@@ -139,7 +139,4 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingReportWindowConfig)
 //#endregion 🔖️Scene
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::mep::mep_of;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};
 
 fn point(x: f64, y: f64, z: f64) -> Point3 {
     Point3 { x, y, z }

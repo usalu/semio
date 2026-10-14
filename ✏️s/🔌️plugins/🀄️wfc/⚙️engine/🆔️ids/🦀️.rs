@@ -56,7 +56,7 @@ id_newtype!(
     TileId; get: all(), index: all(), from_index: all()
 );
 id_newtype!(
-    /// 📍️ One solver variable (grid cell or graph node). Distinct from `semio_framework_graph::NodeId`
+    /// 📍️ One solver variable (grid cell or graph node). Distinct from `semio_framework_graph_engine::NodeId`
     /// (a `u64`); the only conversion boundary is `GraphTopology::from_graph_view`.
     NodeId; get: all(), index: all(), from_index: all()
 );

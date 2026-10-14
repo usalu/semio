@@ -1,6 +1,6 @@
 //! 🧬️ Puzzle3d snapshot schema — artifact-lane fields only.
 
-use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, PUZZLE_3D_SCHEMA};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

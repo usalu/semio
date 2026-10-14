@@ -1,5 +1,8 @@
 //! 💦️ Humidity equipment: steam/water humidifiers, dehumidifiers, solid desiccant.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::{latent_heat_vaporization, saturation_pressure_pa};
 use crate::units::H_FG_0C;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

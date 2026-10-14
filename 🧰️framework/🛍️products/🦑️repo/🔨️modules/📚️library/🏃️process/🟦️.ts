@@ -1,3 +1,7 @@
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
@@ -73,12 +77,14 @@ const observesCargoInvocation = (args: readonly string[], env: NodeJS.ProcessEnv
  * `EAGAIN` — output cut mid-line, exit 101 — as soon as a slow reader lets the 64 KiB pipe fill (ticket 26/09/23 W4: flaky
  * component builds, the trusted-catalog publish's `os-hub` build). Bun's own writer waits the pipe out. Returns cargo's exit
  * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
-export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, operation:Readonly<{invocation:ScriptInvocation;policy:CargoArtifactBuildPolicyV1}>): Promise<number> {
+export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, operation:Readonly<{invocation:ScriptInvocation;policy:CargoArtifactBuildPolicyV1;storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1}>): Promise<number> {
   if(!operation||!operation.invocation)throw Error("Original Cargo relay operation required");checkScriptInvocation(operation.invocation);const policy=readCargoArtifactBuildPolicyV1({SEMIO_CARGO_ARTIFACT_POLICY:JSON.stringify(operation.policy)},cwd),budgetMs=policy.budgetMs,control=scriptCompilerAdmissionControlV1(operation.invocation,"cargo:relay",budgetMs);
-  checkResourceLeaseControl(control);
+  checkResourceLeaseControl(control);requireNativeStorageReservationV1(operation.storage,control);if(operation.storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await operation.storage.recheck();
+  for(const name of ["CARGO_HOME","CARGO_TARGET_DIR","CARGO_BUILD_BUILD_DIR","TMPDIR","TMP","TEMP"]){const path=env[name];if(!path)throw Error("Bounded original Cargo relay environment required: "+name);requireNativeStoragePathV1(operation.storage.backing.root,path);}
   prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot(env)),getWorkspaceRoot(env),args,cwd,env);
   const compiles=["build","rustc","check","run","clippy","test","bench","doc"].includes(args[0]??""),observes=observesCargoInvocation(args,env),directories=cargoDirectories(getWorkspaceRoot(env),env),buildDirectory=observes?directories.build:undefined,provenanceRoot=env.SEMIO_TEST_ARTIFACT_DIR??(buildDirectory?join(buildDirectory,"semio-cargo-provenance"):undefined),builtAtMs=Date.now(),units:any[]=[],buildScripts:any[]=[];
-  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles)args=cargoArtifactArgumentsV1(args,policy);
+  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles){args=cargoArtifactArgumentsV1(args,policy);const workspace=getWorkspaceRoot(env),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args,environment:env,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,operation.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,cwd));await operation.storage.recheck();}
+  if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
   const lease=compiles?await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:directories.build,targetDirectory:directories.target,args,signal:control.signal,control}):undefined;
   try{
   checkResourceLeaseControl(control);
@@ -139,8 +145,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
       }
     }
   }
-  const relayed = cmd === "cargo" && (process.platform !== "win32" || observesCargoInvocation(formattedArgs, opts.env ?? process.env));
-  if (cmd === "cargo" && !relayed) prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),args,opts.cwd ?? process.cwd(),opts.env ?? process.env);
+  const relayed = cmd === "cargo";
   const result = relayed
     ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
         stdio: "inherit",

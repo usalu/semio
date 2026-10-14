@@ -1,9 +1,12 @@
+import dependencySchema from "../🧬️schema/📥️dependencies.json";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {readFileSync} from "node:fs";
 import {join} from "node:path";
 import {resolveTestLevel} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {semioBuildParallelFlag} from "../../🏃️process/🌿️environment/🟦️.ts";
 import {buildModeEnvironment,readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import {fixedTargetBuildMode} from "../../🔌️nx-plugin/🎚️mode/🟨️.mjs";
+import {createRequire} from "node:module";
+const {fixedTargetBuildMode}=createRequire(import.meta.url)("../../🏗️build/🎚️mode/🟨️.mjs") as {fixedTargetBuildMode(name:string):"prototype"|"release"|undefined};
 import policy from "../🔣️policy.json";
 /** 🧭️ Resolves public selections before Nx creates the single task graph. */
 export function resolveBuildSelectionV1(root:string,segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
@@ -30,18 +33,18 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
     const catalog = JSON.parse(readFileSync(join(root, "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🔣️.json"), "utf8")) as { documents: { id: string }[] };
     if (selected.length) throw new Error("Report targets accept no compiler arguments");
     if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
-    return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
+    return { args: ["run", target!, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target!.replace(":watch", ":build") } : {}) };
   }
   const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(prototype|release)|prepare|build|activate-prototype|activate-release|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
   if (demonstrator) {
     if (selected.length) throw new Error("Demonstrator targets accept no compiler arguments");
-    const release = demonstrator[1].endsWith("-release");
-    return { args: segments, env: { ...(["prepare", "build"].includes(demonstrator[1]) ? {} : { SEMIO_BUILD_MODE: release ? "release" : "prototype" }), SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-prototype" } : {}) };
+    const release = demonstrator[1]!.endsWith("-release");
+    return { args: segments, env: { ...(["prepare", "build"].includes(demonstrator[1]!) ? {} : { SEMIO_BUILD_MODE: release ? "release" : "prototype" }), SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-prototype" } : {}) };
   }
   const nativeRuntime = target?.match(/^@semio-tech\/framework-os-dev:(prepare|run|smoke)-(.+)-native-(prototype|release)$/);
-  if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2], SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "release" : "prototype" } };
+  if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2]!, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "release" : "prototype" } };
   const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-(react|wgpu)-(prototype|release)$/);
-  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "release" : "prototype", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
+  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "release" : "prototype", SEMIO_PLUGIN: preparation[2]!, SEMIO_RENDERER: preparation[3]! }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
   if (target === "workspace:setup" && selected.length) {
     const command = selected[0] === "deps" ? `deps-${selected[1]}` : selected[0] === "prepare" ? "prepare" : `setup-${selected[0]}`;
     return { args: ["run", `workspace:${command}`, ...options], env: {} };
@@ -51,8 +54,8 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
     let renderer = "native";
     const args: string[] = [];
     for (let index = 1; index < selected.length; index++) {
-      const argument = selected[index];
-      if (argument === "--renderer") renderer = selected[++index];
+      const argument = selected[index]!;
+      if (argument === "--renderer") renderer = selected[++index]??"";
       else if (argument.startsWith("--renderer=")) renderer = argument.slice(11);
       else args.push(argument);
     }
@@ -61,7 +64,7 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
   }
   if (target === "workspace:cpp" && selected.length) {
     const [command, ...args] = selected;
-    if (!["setup", "configure", "build", "test", "all"].includes(command)) throw new Error(`Unknown CMake operation: ${command}`);
+    if (!["setup", "configure", "build", "test", "all"].includes(command??"")) throw new Error(`Unknown CMake operation: ${command}`);
     return { args: ["run", command === "all" ? "workspace:cpp" : `workspace:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
   }
   if (target === "workspace:test") {
@@ -69,12 +72,12 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
     if (!rest.length) return { args: ["run", "workspace:test", ...options, "--", level], env: { SEMIO_TEST_LEVEL: level } };
     if (rest[0] === "repo-client" || rest[0] === "repo-mcp") return { args: ["run", `${rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp"}:test`, ...options, "--", level, ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
     const taxonomy = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
-    if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
+    if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0]??"" )) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]??"" ) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
   }
   if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   if (target === "workspace:build" && selected.length) {
     const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
-    const resolved = targets[selected[0]];
+    const resolved = targets[selected[0]!];
     if (!resolved) throw new Error(`Unknown build selection: ${selected[0]}`);
     return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   }
@@ -85,11 +88,11 @@ type Selection = { args: string[]; env: NodeJS.ProcessEnv; watch?: string };
 /** 🎯️ Resolves mode options before the task graph and daemon receive the environment. */
 export function resolveBuildModeV1(selection: Selection, environment: NodeJS.ProcessEnv): Selection {
   const delimiter = selection.args.indexOf("--"), head = selection.args.slice(0, delimiter < 0 ? undefined : delimiter), tail = delimiter < 0 ? [] : selection.args.slice(delimiter);
-  if (!["run", "run-many", "affected"].includes(head[0])) return selection;
+  if (!["run", "run-many", "affected"].includes(head[0]??"")) return selection;
   const configurations: string[] = [], args: string[] = [];
   for (let index = 0; index < head.length; index++) {
-    const argument = head[index];
-    if (argument === "--configuration" || argument === "-c") configurations.push(head[++index]);
+    const argument = head[index]!;
+    if (argument === "--configuration" || argument === "-c") {const value=head[++index];if(!value||value.startsWith("-"))throw Error("Explicit compiler configuration value required");configurations.push(value);}
     else if (/^(?:--configuration|-c)=/.test(argument)) configurations.push(argument.slice(argument.indexOf("=") + 1));
     else args.push(argument);
   }
@@ -114,9 +117,9 @@ export function parseBuildInvocationV1(args:readonly string[],environment:NodeJS
   let tool=environment.SEMIO_BUILD_TOOL??policy.defaultTool;
   const selected:string[]=[];
   for(let index=0;index<args.length;index++){
-    const argument=args[index];
+    const argument=args[index]!;
     if(argument==="--"){selected.push(...args.slice(index));break;}
-    if(argument==="--tool"){tool=args[++index];continue;}
+    if(argument==="--tool"){tool=args[++index]??"";continue;}
     if(argument.startsWith("--tool=")){tool=argument.slice(7);continue;}
     selected.push(argument);
   }
@@ -129,7 +132,7 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
   const aliases:Record<string,string>={"--skip-cache":"--skip-nx-cache","--skip-remote-cache":"--skip-remote-cache","--exclude-dependencies":"--excludeTaskDependencies","--exclude-task-dependencies":"--excludeTaskDependencies","--output":"--output-style","--bail":"--nx-bail","--dry-run":"--graph=stdout","--include-global-files":"--includeGlobalWorkspaceFiles"};
   const translated:string[]=[];
   for(let index=0;index<args.length;index++){
-    const argument=args[index];
+    const argument=args[index]!;
     if(argument==="--"){translated.push(...args.slice(index));break;}
     const separator=argument.indexOf("="),name=separator<0?argument:argument.slice(0,separator);
     if(name==="--dry-run"){if(!argument.endsWith("=false"))translated.push("--graph=stdout");continue;}
@@ -140,3 +143,14 @@ export function nxBuildArgumentsV1(args:readonly string[]):string[] {
 
 /** 🧭️ Resolves the public selection and compiler configuration before any backend prepares. */
 export function resolveBuildInvocationV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv=process.env):Selection { return resolveBuildModeV1(resolveBuildSelectionV1(root,[...args]),environment); }
+
+
+/** 📥️ An explicit dependency selection enters its original owner before any installed graph tool. */
+export type BuildDependencyInvocationV1=Readonly<{mode:"sync"|"lock";selection:Readonly<{kind:"all"}>|Readonly<{kind:"scope";owner:string}>}>;
+
+/** 🗝️ Admits only the schema-defined whole or scoped installer operation. */
+export function readBuildDependencyInvocationV1(args:readonly string[]):BuildDependencyInvocationV1 {
+  const [command,mode,selection,owner]=args,value=selection==="--all"&&args.length===3?{mode,selection:{kind:"all"}}:selection==="--scope"&&args.length===4?{mode,selection:{kind:"scope",owner}}:undefined;
+  if(command!=="dependencies"||value===undefined||validateJsonSchemaSubset(dependencySchema,value).length)throw Error("Expected repo dependencies sync|lock --all|--scope <owner>");
+  return value as BuildDependencyInvocationV1;
+}

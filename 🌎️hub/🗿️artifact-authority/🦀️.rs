@@ -728,10 +728,9 @@ pub mod trusted_catalog;
 /// 🔒️ The process-wide codec registry holds the REAL linked stdio/GIS/VCS schemas once any law assembles them, and a
 /// registration is immutable for the process lifetime. Every in-process law that registers or observes those real
 /// schemas holds this guard, so a before/after observation is never interleaved with another law's registration.
-#[cfg(all(test, feature = "native-artifact-execution"))]
+#[cfg(test)]
 pub(crate) static REAL_LINKED_CODEC_REGISTRY: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-#[cfg(feature = "native-artifact-execution")]
 #[path = "📇️native-openable-provider/🦀️.rs"]
 pub mod native_openable_provider;
 

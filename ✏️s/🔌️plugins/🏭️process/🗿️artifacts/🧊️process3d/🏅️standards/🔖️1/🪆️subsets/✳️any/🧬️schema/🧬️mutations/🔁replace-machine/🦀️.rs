@@ -3,7 +3,6 @@
 //! `📓️derivation-rules.md` rule 2).
 
 use crate::diff::Process3dDiff;
-use crate::mutations::Process3dMutation;
 use crate::{Capability, Process3dSnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -17,14 +16,17 @@ pub struct ReplaceMachineCapabilities {
     pub new_capabilities: Vec<Capability>,
 }
 
-impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceMachineCapabilities {
+impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ReplaceMachineCapabilities
+where
+    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "machine", kind: "replace-machine-capabilities", record: "ReplacedMachineCapabilities" };
 
     fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

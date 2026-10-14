@@ -563,16 +563,17 @@ fn carrier_projection(text: &str) -> Json {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::mutations::{apply_en1993_mutation,inverse_en1993_mutation,En1993Mutation};
+    use semio_s_artifact_norm_en1993_mutations::mutation_bridge::{apply_en1993_mutation, inverse_en1993_mutation};
+    use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
 
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::mutations::{decode_en1993_mutation_json};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::schema::snapshot::{En1993Snapshot};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::binary::snapshot::{encode_en1993_pack};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::binary::snapshot::{decode_en1993_pack};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{encode_en1993_dsl};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{decode_en1993_dsl};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{decode_en1993_snapshot_json};
-    use semio_s_artifact_norm_en1993::standards::v1::subsets::any::io::text::snapshot::{encode_en1993_snapshot_json};
+    use semio_s_artifact_norm_en1993_io::text::mutations::decode_en1993_mutation_json;
+    use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+    use semio_s_artifact_norm_en1993_io::binary::snapshot::encode_en1993_pack;
+    use semio_s_artifact_norm_en1993_io::binary::snapshot::decode_en1993_pack;
+    use semio_s_artifact_norm_en1993_io::text::snapshot::encode_en1993_dsl;
+    use semio_s_artifact_norm_en1993_io::text::snapshot::decode_en1993_dsl;
+    use semio_s_artifact_norm_en1993_io::text::snapshot::decode_en1993_snapshot_json;
+    use semio_s_artifact_norm_en1993_io::text::snapshot::encode_en1993_snapshot_json;
     use semio_repo_test_host::law;
 
     //#region 🔖️FixtureDecode

@@ -1,10 +1,12 @@
 //! 🔃️ `rotate-transforms` payload — one gumball rotation as intent: the world-axis rotation every addressed rotate
 //! operator of the generator graph composes after its own. Editing it in history re-derives the operator on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items,generation3d_label_number,Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::generation3d_label_items;
+use crate::generation3d_label_number;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️RotateTransforms
 /// 🔃️ Composes the rotation by `angle` radians about the world axis `(ax, ay, az)` after every addressed operator's own.
@@ -27,12 +29,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Rota
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "transforms", kind: "rotate-transforms", record: "RotatedTransforms" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::rotate_transforms::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::rotate_transforms::inverse::inverse(self, base)?
     
     })
 }

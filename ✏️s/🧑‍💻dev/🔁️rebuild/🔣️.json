@@ -5,7 +5,7 @@
       "id": "s-guest-framework",
       "stage": "inputs",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/s-rebuild:guest-framework-check"
       ]
@@ -14,7 +14,7 @@
       "id": "generate-s-catalog",
       "stage": "registry",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/s-dev-composition:generate"
       ]
@@ -23,7 +23,7 @@
       "id": "check-s-catalog",
       "stage": "registry",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/s-dev-composition:check-generated"
       ]
@@ -32,7 +32,7 @@
       "id": "activate-s",
       "stage": "guests",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/framework-os-dev:activate-s-react-prototype",
         "--catalog",
@@ -43,7 +43,7 @@
       "id": "verify-s",
       "stage": "guests",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/framework-os-dev:verify-staged",
         "--variant",
@@ -56,7 +56,7 @@
       "id": "flow-core-bindings",
       "stage": "guests",
       "command": [
-        "nx",
+        "repo",
         "run",
         "semio-framework-os-flow-core:wasm"
       ]

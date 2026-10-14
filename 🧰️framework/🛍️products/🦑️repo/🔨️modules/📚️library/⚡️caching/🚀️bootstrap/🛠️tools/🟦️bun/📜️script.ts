@@ -1,8 +1,12 @@
+import type {RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { createHash } from "node:crypto";
 import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { inflateRawSync } from "node:zlib";
-import {repositoryCargoPreparationStorageV1, runTool } from "../../📦️dependencies/📜️script.ts";
+import {runTool} from "../../📦️dependencies/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 
 type BunDistribution = { platform: string; arch: string; musl: boolean; archive: string; bytes: number; sha256: string };
@@ -39,23 +43,23 @@ export function bunArchiveExecutable(archive: Buffer, member: string): Buffer {
 }
 
 /** 🔐️ Acquires and atomically publishes a pinned workspace-owned installer with cancellation. */
-export async function prepareBun(workspace: string, version: string, signal: AbortSignal): Promise<string> {
-  signal.throwIfAborted();
+export async function prepareBun(workspace: string, version: string, store:RepositoryToolingStoreV1): Promise<string> {
+  requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=store.control.signal;signal.throwIfAborted();
   if (process.versions.bun === version) return process.execPath;
   const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
   const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && !report?.header?.glibcVersionRuntime);
-  const base = join(workspace, ".🧬semio/🦑️repo/⚡️cache/tools/bun"), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? "bun.exe" : "bun");
+  const base = requireNativeStoragePathV1(store.root,join(store.root,"bun")), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? "bun.exe" : "bun");
   for (let current = base; ; current = dirname(current)) {
     try { const stat = lstatSync(current); if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Invalid Bun directory: ${current}`); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
     if (dirname(current) === current) break;
   }
   mkdirSync(base, { recursive: true });
-  return withResourceLeases({ directory: join(workspace, ".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"), signal, resources: [{ resource: `bun-${row.sha256}`, mode: "exclusive" }] }, async () => {
+  return withResourceLeases({ directory: join(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: `bun-${row.sha256}`, mode: "exclusive" }] }, async () => {
     const validate = async (): Promise<string> => {
       const stat = lstatSync(executable), receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
       if (!stat.isFile() || stat.isSymbolicLink() || lstatSync(directory).isSymbolicLink() || receipt.archive !== row.sha256 || receipt.executable !== createHash("sha256").update(readFileSync(executable)).digest("hex")) throw new Error("Bun installation checksum mismatch");
-      if ((await runTool(executable,["--version"],directory,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim() !== version) throw new Error("Bun executable version mismatch");
+      if ((await runTool(executable,["--version"],directory,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim() !== version) throw new Error("Bun executable version mismatch");
       return executable;
     };
     try { lstatSync(directory); return await validate(); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
@@ -70,7 +74,7 @@ export async function prepareBun(workspace: string, version: string, signal: Abo
       if (size !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Bun archive checksum mismatch");
       const payload = bunArchiveExecutable(Buffer.concat(chunks), `${row.archive.slice(0, -4)}/bun${process.platform === "win32" ? ".exe" : ""}`), staged = join(staging, process.platform === "win32" ? "bun.exe" : "bun");
       writeFileSync(staged, payload, { flag: "wx" }); chmodSync(staged, 0o755);
-      if ((await runTool(staged,["--version"],staging,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim() !== version) throw new Error("Bun release version mismatch");
+      if ((await runTool(staged,["--version"],staging,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim() !== version) throw new Error("Bun release version mismatch");
       writeFileSync(join(staging, ".toolchain.json"), JSON.stringify({ archive: row.sha256, executable: createHash("sha256").update(payload).digest("hex") }));
       signal.throwIfAborted(); renameSync(staging, directory); return executable;
     } finally { clearInterval(progress); rmSync(staging, { recursive: true, force: true }); }

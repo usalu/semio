@@ -18,7 +18,7 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchNode) -> Result<Emit<Fem2dMutati
 #[semio_framework_async_macros::async_test]
 async fn patch_node_moves_an_ordinate_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchNode(PatchNode { id: "n2".into(), field: "x".into(), value: "1.5".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "n2").expect("n2 survives the patch");

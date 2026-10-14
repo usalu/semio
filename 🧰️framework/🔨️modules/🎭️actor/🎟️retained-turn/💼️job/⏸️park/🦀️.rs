@@ -6,7 +6,7 @@ use std::mem::ManuallyDrop;
 /// 🚫️ A denied park retains both the original Actor input and any complete admission failure.
 pub struct OriginalActorParkRefusal<T>{pub issuer:OriginalActorInput<T>,pub failure:Option<OriginalTurnFailure>}
 /// 🧳️ Owns the actual admitted Actor input and its outstanding finite source crossing throughout suspension.
-pub struct OriginalActorParkedTurn<T>{issuer:ManuallyDrop<Option<OriginalActorInput<T>>>,turn:ManuallyDrop<Option<OriginalOwnedCallerTurn>>,input:RetainedTurnInput,admission_failure:ManuallyDrop<Option<ValueError>>}
+pub struct OriginalActorParkedTurn<T>{issuer:ManuallyDrop<Option<OriginalActorInput<T>>>,turn:ManuallyDrop<Option<OriginalOwnedCallerTurn>>,input:Option<RetainedTurnInput>,admission_failure:ManuallyDrop<Option<ValueError>>}
 impl<T> OriginalActorInput<T>{
  /// 🎟️ Transfers an already-ready actual issuer; admission is paid before the sole body checkout.
  pub fn park_owned_job_turn(mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<OriginalActorParkedTurn<T>,OriginalActorParkRefusal<T>>{
@@ -14,19 +14,19 @@ impl<T> OriginalActorInput<T>{
   if !valid||self.phase()!=ActorGuestPhase::Ready{return Err(OriginalActorParkRefusal{issuer:self,failure:Some(refusal("owned asynchronous Actor turn requires its actual ready issuer and original epoch").into())})}
   if cx.should_yield()||cx.is_cancelled()||cx.fuel_remaining()<2||cx.retained_grant().maximum_items<2||cx.retained_grant().maximum_depth==0{return Err(OriginalActorParkRefusal{issuer:self,failure:None})}
   let admission=match self.checkout_guest(cx.retained_grant()){Ok(Some(input))=>input,Ok(None)=>return Err(OriginalActorParkRefusal{issuer:self,failure:None}),Err(error)=>return Err(OriginalActorParkRefusal{issuer:self,failure:Some(error.into())})};
-  if admission.grant!=cx.retained_grant(){let received=self.receive_guest_spent(admission,Default::default(),ActorGuestPhase::Ready);return Err(OriginalActorParkRefusal{issuer:self,failure:Some(received.err().unwrap_or_else(||refusal("owned original Actor wallet differs from the actual issuer remaining grant")).into())})}
-  let before=cx.retained_progress();let parked=parent.park_owned_turn(cx);let after=cx.retained_progress();let spent=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
-  let received=self.receive_guest_spent(admission,spent,ActorGuestPhase::Ready);
+  if self.guest_policy(admission).ok()!=Some(cx.retained_grant()){let received=self.receive_guest_spent(admission,Default::default(),0,ActorGuestPhase::Ready);return Err(OriginalActorParkRefusal{issuer:self,failure:Some(received.err().unwrap_or_else(||refusal("owned original Actor wallet differs from the actual issuer remaining grant")).into())})}
+  let before=cx.retained_progress();let before_work=cx.original_work_units_spent();let parked=parent.park_owned_turn(cx);let after=cx.retained_progress();let spent=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+  let received=self.receive_guest_spent(admission,spent,u64::try_from(cx.original_work_units_spent()-before_work).unwrap_or(u64::MAX),ActorGuestPhase::Ready);
   let turn=match parked{Ok(Some(turn))=>turn,Ok(None)=>return Err(OriginalActorParkRefusal{issuer:self,failure:received.err().map(Into::into)}),Err(mut failure)=>{if let Err(error)=received{failure.context_refusal=Some(error)}return Err(OriginalActorParkRefusal{issuer:self,failure:Some(failure)})}};
-  let mut admission_failure=received.err();let input=if admission_failure.is_none(){match self.checkout_guest(turn.original_grant()){Ok(Some(input))=>input,Ok(None)=>{admission_failure=Some(refusal("funded original parked Actor body has no receiving grant"));RetainedTurnInput{grant:turn.original_grant(),..admission}},Err(error)=>{admission_failure=Some(error);RetainedTurnInput{grant:turn.original_grant(),..admission}}}}else{RetainedTurnInput{grant:turn.original_grant(),..admission}};
+  let mut admission_failure=received.err();let input=if admission_failure.is_none(){match self.checkout_guest(turn.original_grant()){Ok(Some(input))=>Some(input),Ok(None)=>{admission_failure=Some(refusal("funded original parked Actor body has no receiving grant"));None},Err(error)=>{admission_failure=Some(error);None}}}else{None};
   Ok(OriginalActorParkedTurn{issuer:ManuallyDrop::new(Some(self)),turn:ManuallyDrop::new(Some(turn)),input,admission_failure:ManuallyDrop::new(admission_failure)})
  }
 }
 impl<T> OriginalActorParkedTurn<T>{
  /// 🤝️ The genuine issuer stays owned while its producer checks out and receives in the same parked context.
  pub async fn execute<R>(mut self,phase:ActorGuestPhase,run:impl for<'turn> AsyncFnOnce(RetainedTurnInput,&mut StepContext<'turn>)->Result<R,OriginalTurnFailure>)->OriginalActorParkedReturn<T,R>{
-  let input=self.input;let failure=self.admission_failure.take();let returned=self.turn.take().unwrap().execute(async move|cx|{if let Some(error)=failure{return Err(error.into())}run(input,cx).await}).await;
-  let mut issuer=self.issuer.take().unwrap();let received=issuer.receive_guest_spent(input,returned.receipt(),if returned.receiving_refusal().is_none(){phase}else{ActorGuestPhase::Ready});let receipt=if received.is_ok(){issuer.return_actor_turn()}else{Err(received.err().unwrap())};let(receipt,refusal)=match receipt{Ok(receipt)=>(Some(receipt),None),Err(error)=>(None,Some(error))};
+  let input=self.input;let failure=self.admission_failure.take();let returned=self.turn.take().unwrap().execute(async move|cx|{if let Some(error)=failure{return Err(error.into())}run(input.ok_or_else(||refusal("original parked producer has no actual issuer checkout"))?,cx).await}).await;
+  let mut issuer=self.issuer.take().unwrap();let received=match input{Some(input)=>issuer.receive_guest_spent(input,returned.receipt(),u64::try_from(returned.work_units_spent()).unwrap_or(u64::MAX),if returned.receiving_refusal().is_none(){phase}else{ActorGuestPhase::Ready}),None=>Err(refusal("original parked body has no checked out issuer return"))};let receipt=if received.is_ok(){issuer.return_actor_turn()}else{Err(received.err().unwrap())};let(receipt,refusal)=match receipt{Ok(receipt)=>(Some(receipt),None),Err(error)=>(None,Some(error))};
   OriginalActorParkedReturn{issuer:ManuallyDrop::new(Some(issuer)),returned,receipt,issuer_refusal:ManuallyDrop::new(refusal)}
  }
 }

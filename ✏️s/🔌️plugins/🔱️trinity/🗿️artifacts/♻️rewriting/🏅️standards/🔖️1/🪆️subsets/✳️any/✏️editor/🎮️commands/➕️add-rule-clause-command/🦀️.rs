@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_bin
 
 use crate::standards::v1::subsets::any::schema::{self, ParameterKind};
 use crate::RewritingSnapshot;
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 
 /// ➕️ The leaves that add one clause of `clause_kind` to the rule: `edit-lhs` for a WHERE clause, `edit-rhs` for every other

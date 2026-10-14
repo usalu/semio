@@ -604,8 +604,8 @@ pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
 /// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
     dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
-        semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
+        semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
@@ -633,8 +633,8 @@ pub fn gis_map_value_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
     dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
-        semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
+        semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })

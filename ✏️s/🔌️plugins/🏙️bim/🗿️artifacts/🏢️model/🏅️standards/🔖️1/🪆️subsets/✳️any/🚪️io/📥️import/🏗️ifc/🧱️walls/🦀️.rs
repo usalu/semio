@@ -8,7 +8,7 @@ use super::spatial::{authoring_of, phase_of, set_of};
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::offsets_of;
-use crate::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, DoorLeaves, DoorType, Layer, LayerFunction, LocationLine, Opening, OpeningKind, Point2, Swing, TopConstraint, Wall, WallType, WindowType};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 
@@ -49,7 +49,7 @@ fn location_for(i: &Import<'_>, wall: &Wall, left: f64) -> LocationLine {
         .unwrap_or(LocationLine::Center)
 }
 
-fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_ifc::part21::Part21Value], entity: &str) {
+fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_contract::part21::Part21Value], entity: &str) {
     let label_text = text(args, 2);
     let Some(storey) = i.storey_of(instance_id) else {
         i.skip(entity, &label_text, "it is not contained in a storey");
@@ -97,7 +97,7 @@ fn wall(i: &mut Import<'_>, instance_id: u64, args: &[semio_s_artifact_stdio_ifc
     i.ids.insert(instance_id, id);
 }
 
-fn window_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_ifc::part21::Part21Value], width: f64, height: f64, sill: f64) -> String {
+fn window_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_contract::part21::Part21Value], width: f64, height: f64, sill: f64) -> String {
     if let Some(known) = i.doc.index.types.get(&fill_ifc).and_then(|kind| i.type_ids.get(kind)).filter(|id| i.model.window_types.contains_key(*id)) {
         return known.clone();
     }
@@ -111,7 +111,7 @@ fn window_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio
     id
 }
 
-fn door_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_ifc::part21::Part21Value], width: f64, height: f64) -> String {
+fn door_type(i: &mut Import<'_>, fill_ifc: u64, fill: &[semio_s_artifact_stdio_contract::part21::Part21Value], width: f64, height: f64) -> String {
     if let Some(known) = i.doc.index.types.get(&fill_ifc).and_then(|kind| i.type_ids.get(kind)).filter(|id| i.model.door_types.contains_key(*id)) {
         return known.clone();
     }

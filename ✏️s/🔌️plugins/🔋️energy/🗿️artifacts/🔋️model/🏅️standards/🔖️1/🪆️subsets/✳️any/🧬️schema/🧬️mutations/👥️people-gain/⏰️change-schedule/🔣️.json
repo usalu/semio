@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️people-gain/⏰️change-schedule",
+  "semanticKind": "change-people-gain-schedule",
+  "displayName": "Change People Gain Schedule",
+  "emoji": "⏰️",
+  "aggregateVariant": "ChangePeopleGainSchedule",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-people-gain-schedule",
+  "binaryTag": 79,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

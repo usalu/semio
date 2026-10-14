@@ -6,8 +6,17 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_added;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_added;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_triple;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};

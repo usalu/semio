@@ -22,7 +22,19 @@
     "leaf.ts"
   ],
   "result": 42,
+  "observation": {
+    "provider": "build:declared-source-imports:v1",
+    "bodyChanged": "export const value = 21;\n",
+    "importChanged": "export { value } from \"./new.ts\";\n",
+    "controlInterval": 16,
+    "controlFiles": 33,
+    "controlProgress": [1, 17, 33, 34]
+  },
   "rejected": [
+    {
+      "source": "export * from \"./unresolved.ts\";",
+      "reason": "Cannot find module"
+    },
     {
       "source": "export * from \"unlisted\";",
       "reason": "external"

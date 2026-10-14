@@ -50,7 +50,6 @@ impl ArchiveSpec {
 //#region 🔖️Zip
 /// 🔮️ Creates a ZIP with the registered `zip` reference implementation.
 /// @see https://github.com/zip-rs/zip2
-#[cfg(feature = "oracles")]
 pub fn oracle_create_zip(spec: &ArchiveSpec) -> Result<Vec<u8>, String> {
     use std::io::Write;
     let mut cursor = std::io::Cursor::new(Vec::new());
@@ -67,7 +66,6 @@ pub fn oracle_create_zip(spec: &ArchiveSpec) -> Result<Vec<u8>, String> {
 }
 
 /// 🔮️ Removes one named member from an existing ZIP with the registered reference implementation.
-#[cfg(feature = "oracles")]
 pub fn oracle_remove_zip_entry(input: &[u8], name: &str) -> Result<Vec<u8>, String> {
     let mut kept = read_zip_entries(input)?;
     kept.retain(|entry| entry.name != name);
@@ -75,13 +73,11 @@ pub fn oracle_remove_zip_entry(input: &[u8], name: &str) -> Result<Vec<u8>, Stri
 }
 
 /// 👁️ Projects ZIP bytes with the INDEPENDENT reader onto the owned `semantic-archive-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_zip(input: &[u8]) -> Result<Json, String> {
     Ok(ArchiveSpec { entries: read_zip_entries(input)? }.projection())
 }
 
 /// 📖 Reads every file member through the independent `zip` implementation and returns only owned values.
-#[cfg(feature = "oracles")]
 pub fn read_zip_entries(input: &[u8]) -> Result<Vec<ArchiveEntry>, String> {
     use std::io::Read;
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(input.to_vec())).map_err(|error| format!("independent reader could not parse the ZIP: {}", error))?;
@@ -103,7 +99,6 @@ pub fn read_zip_entries(input: &[u8]) -> Result<Vec<ArchiveEntry>, String> {
 //#region 🔖️Deflate
 /// 🔮️ Compresses a byte stream as zlib (RFC 1950) with the registered `flate2` reference implementation.
 /// @see https://github.com/rust-lang/flate2-rs
-#[cfg(feature = "oracles")]
 pub fn oracle_zlib_compress(input: &[u8]) -> Result<Vec<u8>, String> {
     use std::io::Write;
     let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
@@ -113,7 +108,6 @@ pub fn oracle_zlib_compress(input: &[u8]) -> Result<Vec<u8>, String> {
 
 /// 👁️ Projects a zlib stream by DECOMPRESSING it with the independent reader. Compression level and
 /// the exact encoded bytes are writer choices; only the recovered payload is normative.
-#[cfg(feature = "oracles")]
 pub fn project_zlib(input: &[u8]) -> Result<Json, String> {
     use std::io::Read;
     let mut decoder = flate2::read::ZlibDecoder::new(input);
@@ -129,32 +123,5 @@ pub fn project_zlib(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️Deflate
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature nothing here is linked, and every entry point fails loudly.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::{ArchiveSpec, Json};
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn create_zip(_spec: &ArchiveSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn remove_zip_entry(_input: &[u8], _name: &str) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_zip(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn read_zip_entries(_input: &[u8]) -> Result<Vec<super::ArchiveEntry>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn zlib_compress(_input: &[u8]) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_zlib(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{create_zip as oracle_create_zip, project_zip, project_zlib, read_zip_entries, remove_zip_entry as oracle_remove_zip_entry, zlib_compress as oracle_zlib_compress};
 //#endregion 🔖️Unavailable

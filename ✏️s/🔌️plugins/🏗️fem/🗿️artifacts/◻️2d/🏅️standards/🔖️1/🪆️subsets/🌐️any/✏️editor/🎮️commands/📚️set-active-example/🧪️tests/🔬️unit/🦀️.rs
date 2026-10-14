@@ -6,23 +6,23 @@ use semio_framework::kernel::Effect;
 /// itself, the same shape `commands::set_active_example`'s fem3d sibling tests use.
 #[test]
 fn set_active_example_loads_the_demo_fixture_2d() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
-    let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
+    let emit = handle(&SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
     assert!(emit.artifact_mutations.is_empty());
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <crate::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
 }
 
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document_2d() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = NoConfig::default();
@@ -31,8 +31,8 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <crate::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
-    assert_eq!(loaded, crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    let loaded = <semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    assert_eq!(loaded, semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
 }
 
 /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
@@ -57,9 +57,9 @@ fn the_declared_example_option_is_the_bundled_example_id_2d() {
     match example.control() {
         semio_framework::ActionArgControl::Select { options } => {
             assert_eq!(options.len(), 1);
-            assert_eq!(options[0].value, crate::examples::demo::ID);
+            assert_eq!(options[0].value, semio_s_artifact_fem_2d_io::examples::demo::ID);
         }
         other => panic!("expected a select control for exampleId, got {other:?}"),
     }
-    assert_eq!(crate::examples::demo::source().id(), crate::examples::demo::ID);
+    assert_eq!(semio_s_artifact_fem_2d_io::examples::demo::source().id(), semio_s_artifact_fem_2d_io::examples::demo::ID);
 }

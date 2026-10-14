@@ -7,26 +7,27 @@ import { BundleScript } from "../../../../../../../🔨️modules/🏃️process
 import { slash, sourceFiles } from "../../🔍️discovery/📂️source/🟦️.ts";
 import { captureArtifactContract } from "../../📦️artifacts/🏃️contract-capture/🟦️.ts";
 import { artifactPackageInventory } from "../../📦️artifacts/🧭️package-inventory/🟦️.ts";
+import { loadBuildGraphV1 } from "../../../🏗️build/🕸️graph/🟦️.ts";
 
 /** 🧬️ Validates every taxonomy artifact's language-neutral package boundary. */
 export class ArtifactPackageContractScript extends BundleScript {
   async run(): Promise<void> {
-    const fixtureRoot = fileURLToPath(new URL("../../../🧫️fixtures/artifact-packages", import.meta.url));
+    const fixtureRoot = fileURLToPath(new URL("../🧫️fixtures/artifact-packages", import.meta.url));
     const schema = JSON.parse(readFileSync(join(this.root, "📦️artifacts/🧭️package-inventory/🧬️schema/🔣️.json"), "utf8"));
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const { default: Ajv2020 } = await import("ajv/dist/2020.js");
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
     for (const accepted of fixture.accepted) assert.ok(validate(accepted), JSON.stringify(validate.errors));
     for (const rejected of fixture.rejected) assert.equal(validate(rejected.value), false, `Negative fixture accepted: ${rejected.id}`);
-    const contract = artifactPackageInventory(this.repoRoot);
+    const contract = artifactPackageInventory(this.repoRoot, await loadBuildGraphV1(this.repoRoot, this.invocation, { reuse: true }));
     assert.ok(validate(contract), JSON.stringify(validate.errors));
     const cargoNames = new Set<string>(),
-      nxNames = new Set<string>();
+      projectNames = new Set<string>();
     for (const entry of contract.packages) {
       assert.ok(!cargoNames.has(entry.rust.cargoName), `Duplicate Cargo package ${entry.rust.cargoName}`);
-      assert.ok(!nxNames.has(entry.rust.nxName), `Duplicate Nx project ${entry.rust.nxName}`);
+      assert.ok(!projectNames.has(entry.rust.projectName), `Duplicate build project ${entry.rust.projectName}`);
       cargoNames.add(entry.rust.cargoName);
-      nxNames.add(entry.rust.nxName);
+      projectNames.add(entry.rust.projectName);
       const packageRoot = join(this.repoRoot, dirname(entry.rust.manifest));
       const implementations = sourceFiles(packageRoot).filter((path) => /(?:^|\/)(?!📜️script\.ts$).+\.(?:rs|ts|tsx)$/.test(path) && !path.startsWith("dist/"));
       assert.deepEqual(implementations, [], `Rust package declarations contain implementation: ${implementations.join(", ")}`);
@@ -39,13 +40,13 @@ export class ArtifactPackageContractScript extends BundleScript {
         assert.equal(/^(?:pub\s+mod\s+(?:artifacts|editor|viewer)\b|pub\s+use\s+semio_s_artifact_)/m.test(parent), false, `${parentSource} publicly re-exports an artifact implementation`);
       }
       if (entry.typescript) {
-        assert.ok(!nxNames.has(entry.typescript.nxName), `Duplicate Nx project ${entry.typescript.nxName}`);
-        nxNames.add(entry.typescript.nxName);
+        assert.ok(!projectNames.has(entry.typescript.projectName), `Duplicate build project ${entry.typescript.projectName}`);
+        projectNames.add(entry.typescript.projectName);
         const declaration = JSON.parse(readFileSync(join(this.repoRoot, entry.typescript.manifest), "utf8"));
         assert.equal(declaration.type, "module");
         assert.equal(declaration.private, true);
         assert.equal(declaration.types, "./dist/🟦️.d.ts");
-        assert.deepEqual(declaration.exports?.["."], entry.typescript.entry);
+        assert.deepEqual({types:declaration.exports?.["."]?.types,import:declaration.exports?.["."]?.import}, entry.typescript.entry);
       }
     }
     const records = [];

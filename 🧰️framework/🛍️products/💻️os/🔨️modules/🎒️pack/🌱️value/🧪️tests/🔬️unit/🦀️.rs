@@ -529,7 +529,7 @@ fn retained_value_cursor(limits: PackLimits) -> RetainedValueCursor {
 fn close_retained_value(cursor: &mut RetainedValueCursor) {
     loop {
         let maximum_bytes = cursor.next_release_allocation_bytes().unwrap_or(0);
-        if cursor.close_step(1, maximum_bytes).expect("retained close") == crate::os_pack::format::RetainedPackCloseStep::Complete {
+        if cursor.close_step(1, maximum_bytes).expect("retained close") == crate::format::RetainedPackCloseStep::Complete {
             break;
         }
     }
@@ -596,8 +596,8 @@ fn close_retained_record(cursor: &mut RetainedRecordBodyCursor) -> usize {
     for _ in 0..100_000 {
         let maximum_bytes = cursor.next_release_allocation_bytes().expect("record-body release demand").unwrap_or(0);
         match cursor.close_step(1, maximum_bytes).expect("record-body close") {
-            crate::os_pack::format::RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
-            crate::os_pack::format::RetainedPackCloseStep::Complete => return released,
+            crate::format::RetainedPackCloseStep::Pending { released_bytes, .. } => released += released_bytes,
+            crate::format::RetainedPackCloseStep::Complete => return released,
         }
     }
     panic!("record-body owner did not close");
@@ -632,17 +632,17 @@ fn retained_value_stack_refuses_subexact_allocation_and_closes_partial_roots_exa
             assert_eq!(cursor.admit_byte(0, 0), Err((0, 0)));
         }
         let before = cursor.progress();
-        assert_eq!(cursor.close_step(0, 0).expect("zero close"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(cursor.close_step(0, 0).expect("zero close"), crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!(cursor.progress(), before);
         while cursor.next_release_allocation_bytes().is_none() {
-            assert!(matches!(cursor.close_step(1, 0).expect("logical stack close"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_bytes: 0, .. }));
+            assert!(matches!(cursor.close_step(1, 0).expect("logical stack close"), crate::format::RetainedPackCloseStep::Pending { released_bytes: 0, .. }));
         }
         let release = cursor.next_release_allocation_bytes().expect("stack release demand");
-        assert_eq!(cursor.close_step(1, release - 1).expect("subexact stack release"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        assert_eq!(cursor.close_step(1, release - 1).expect("subexact stack release"), crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!(cursor.stack.as_ptr(), pointer);
         assert_eq!(cursor.allocated_bytes(), step.allocated_bytes);
-        assert_eq!(cursor.close_step(1, release).expect("exact stack release"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: release });
-        assert_eq!(cursor.close_step(1, 0).expect("terminal stack close"), crate::os_pack::format::RetainedPackCloseStep::Complete);
+        assert_eq!(cursor.close_step(1, release).expect("exact stack release"), crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: release });
+        assert_eq!(cursor.close_step(1, 0).expect("terminal stack close"), crate::format::RetainedPackCloseStep::Complete);
         assert!(cursor.terminal_is_empty());
         assert_eq!(release, step.allocated_bytes);
     }
@@ -678,12 +678,12 @@ fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
     let before = state(&cursor);
     assert_eq!(
         cursor.close_step(0, 0).expect("unopened zero close"),
-        crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
+        crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
     );
     assert_eq!(state(&cursor), before);
     assert_eq!(
         cursor.close_step(1, 0).expect("pending byte close"),
-        crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 }
+        crate::format::RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 }
     );
     for _ in 0..64 {
         if cursor.close_phase == RetainedRecordBodyClosePhase::ValuePhysical {
@@ -692,22 +692,22 @@ fn retained_record_body_zero_grants_preserve_unopened_cancellation() {
         let before = state(&cursor);
         assert_eq!(
             cursor.close_step(0, 0).expect("intermediate zero close"),
-            crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
+            crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
         );
         assert_eq!(state(&cursor), before);
         assert!(matches!(
             cursor.close_step(1, 0).expect("unopened logical close"),
-            crate::os_pack::format::RetainedPackCloseStep::Pending { released_bytes: 0, .. }
+            crate::format::RetainedPackCloseStep::Pending { released_bytes: 0, .. }
         ));
     }
     assert_eq!(cursor.close_phase, RetainedRecordBodyClosePhase::ValuePhysical);
     let before = state(&cursor);
     assert_eq!(
         cursor.close_step(0, 0).expect("physical-phase zero close"),
-        crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
+        crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 }
     );
     assert_eq!(state(&cursor), before);
-    assert_eq!(cursor.close_step(0, 1).expect("bytes-only metadata close"), crate::os_pack::format::RetainedPackCloseStep::Complete);
+    assert_eq!(cursor.close_step(0, 1).expect("bytes-only metadata close"), crate::format::RetainedPackCloseStep::Complete);
     assert!(cursor.terminal_is_empty());
 }
 
@@ -740,18 +740,18 @@ fn retained_record_body_indexes_multibyte_symbols_and_retires_all_logical_owners
     let mut released_before_physical = 0;
     while cursor.close_phase != RetainedRecordBodyClosePhase::ValuePhysical {
         match cursor.close_step(1, usize::MAX).expect("logical record-body close") {
-            crate::os_pack::format::RetainedPackCloseStep::Pending { released_bytes, .. } => released_before_physical += released_bytes,
-            crate::os_pack::format::RetainedPackCloseStep::Complete => panic!("record body closed before physical phase"),
+            crate::format::RetainedPackCloseStep::Pending { released_bytes, .. } => released_before_physical += released_bytes,
+            crate::format::RetainedPackCloseStep::Complete => panic!("record body closed before physical phase"),
         }
     }
     assert_eq!(released_before_physical, 0);
     assert_eq!((cursor.symbols.len(), cursor.symbols.scalar_len()), (0, 0));
     let exact = cursor.next_release_allocation_bytes().expect("value release query").expect("value release demand");
     assert_eq!(exact, value_allocation);
-    assert_eq!(cursor.close_step(0, exact - 1).expect("subexact value release"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(cursor.close_step(0, exact - 1).expect("subexact value release"), crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(cursor.next_release_allocation_bytes().expect("preserved value release demand"), Some(exact));
     let mut released = match cursor.close_step(0, exact).expect("exact value release") {
-        crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes } => released_bytes,
+        crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes } => released_bytes,
         step => panic!("unexpected value release {step:?}"),
     };
     released += close_retained_record(&mut cursor);
@@ -797,7 +797,7 @@ fn retained_record_body_crosses_a_symbol_leaf_and_preserves_maximum_plus_one_pen
     let first = excessive.next_allocation_bytes().expect_err("maximum plus one symbol count");
     assert_eq!(excessive.pending, pending);
     assert_eq!(excessive.grant().expect_err("sticky symbol count fault"), first);
-    assert_eq!(excessive.close_step(0, usize::MAX).expect("bytes-only cancellation refusal"), crate::os_pack::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+    assert_eq!(excessive.close_step(0, usize::MAX).expect("bytes-only cancellation refusal"), crate::format::RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
     assert_eq!(excessive.pending, pending);
     assert_eq!(close_retained_record(&mut excessive), 0);
     assert!(excessive.terminal_is_empty());

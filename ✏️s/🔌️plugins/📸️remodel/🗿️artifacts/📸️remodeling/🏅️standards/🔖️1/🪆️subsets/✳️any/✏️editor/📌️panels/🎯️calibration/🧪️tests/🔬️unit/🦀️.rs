@@ -1,7 +1,7 @@
-use super::*;
-use crate::editor::remodeling::commands::add_gcp::AddGcp;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::calibration::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::add_gcp::AddGcp;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, render as render_body};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn the_calibration_panel_lists_added_ground_control_points() {
@@ -17,7 +17,7 @@ async fn the_calibration_panel_lists_added_ground_control_points() {
 // (c) a host `TreeWindowRequest{offset, rows}` materialises exactly `[offset, offset + rows)` keyed by
 // the row's own target id, (d) pick rows carry a granularity and no binding of their own while the
 // tree root carries exactly one `interactionSelect`.
-use crate::editor::remodeling::terminology::remodeling_labels;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::remodeling_labels;
 use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, TreeWindows, ViewModel};
 
 const GCPS_SECTION: &str = "remodeling-calibration.gcps";
@@ -25,9 +25,9 @@ const OVERSIZED: usize = 200;
 
 /// 📸️ A photogrammetry project with far more ground control points than one node admits. Law (d) does
 /// not apply here: `📸️remodel` declares no `InteractionDefinition`, so this panel has no pick rows.
-fn oversized_calibration(count: usize) -> crate::RemodelingSnapshot {
-    let mut scene = crate::default_remodeling_scene();
-    scene.gcps = (0..count).map(|index| crate::GroundControlPoint { id: format!("gcp-{index:03}"), name: format!("GCP {index}"), world_position: [0.0, 0.0, 0.0], observations: Vec::new() }).collect();
+fn oversized_calibration(count: usize) -> semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot {
+    let mut scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene();
+    scene.gcps = (0..count).map(|index| semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: format!("gcp-{index:03}"), name: format!("GCP {index}"), world_position: [0.0, 0.0, 0.0], observations: Vec::new() }).collect();
     scene
 }
 

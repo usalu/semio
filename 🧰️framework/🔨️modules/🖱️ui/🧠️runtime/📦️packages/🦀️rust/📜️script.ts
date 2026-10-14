@@ -1,10 +1,13 @@
 #!/usr/bin/env bun
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runExactCargoLaws } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+
 import { runOwnedCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** ⚙️ Runs the `semio-framework-ui-runtime` test suite and the guest-target compile gates.
@@ -29,21 +32,25 @@ class TreeRetirementScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     testRuntimeTreeRetirement();
     if (segments.length === 1 && segments[0] === "--oracle-only") return;
-    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 }, manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, cargoArgs: segments, groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000 },manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,cargoArgs: segments,groups: [{ package: "semio-framework-ui-runtime", target: { kind: "lib" }, laws: [
         "runtime_tree_retirement_preserves_occupied_sources_and_closes_exact_payloads",
         "runtime_tree_retirement_handback_preserves_partial_owner_until_full_readmission",
         "runtime_tree_retirement_rejected_close_preserves_source_until_handback_admission",
-      ] }] });
+      ] }]});
     console.log(`runtime-tree exact native laws:${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed`);
   }
 }
 
+/** 📥️ Validates the native receiver corpus against Three, SQLite and the closed schema. */
+class NativeMeshReceivingSourceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Native mesh receiving source accepts no arguments");const sources=[resolve(this.root,"../../../🎬️scene/📐️math/📦️resource/📥️receiving/🧪️tests/🟦️.ts"),resolve(this.root,"../../🎭️present/📦️resources/📤️transport/📨️message/🧪️tests/🟦️.ts")];const remaining=this.invocation.control.remainingMilliseconds();if(remaining===null||remaining<=0)throw Error("Native mesh receiving source requires finite original authority");for(const command of [[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",...sources],["test",...sources]])await runOwnedCommand(process.execPath,command,this.repoRoot,"ui-runtime:native-mesh-receiving:source",Math.min(remaining,30000),{signal:this.invocation.control.signal});}
+}
 class NativeResourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("Native resource custody requires its exact original selection");
     const left = this.invocation.control.remainingMilliseconds();
     if (left === null || left <= 0) throw Error("Native resource custody requires finite original caller authority");
-    await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-ui-runtime", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+    await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-ui-runtime": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-ui-runtime", target: { kind: "test", name: "native_resource_custody" }, laws: ["native_resource_owner_and_loan_bundle_preserve_original_pages_and_full_close","native_mesh_receiver_same_canonical_pages_all_labels_and_paid_destination_close","native_mesh_receiver_cancelled_ready_destination_cannot_escape_its_paid_close","native_mesh_message_fixed_windows_bind_patch_resource_and_original_donor_before_lifting","native_mesh_message_receiver_preserves_whole_donor_and_returns_source_with_live_destination"] }]});
   }
 }
 
@@ -51,7 +58,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     console.log(`surface-ownership-oracle checks=${surfaceOwnershipSelfTests()}`);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: [], cwd: this.root, extraArgs: ["--all-features", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 //#endregion 🔖️test
@@ -60,7 +67,7 @@ class TestScript extends BundleScript {
 /** 🌐️ Both guest flavours: wasip2 (plugin components) and unknown-unknown (browser renderers). */
 class CheckWasmScript extends BundleScript {
   async run(): Promise<void> {
-    const check = (args: string[]) => runOwnedCommand("cargo", ["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args], packageRoot, "tool:owner", buildBudgetMs(), {env: process.env});
+    const check = (args: string[]) => runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-ui-runtime", ...args],packageRoot,process.env,buildBudgetMs());
     await check(["--target", "wasm32-wasip2"]);
     await check(["--target", "wasm32-unknown-unknown"]);
   }
@@ -68,6 +75,6 @@ class CheckWasmScript extends BundleScript {
 //#endregion 🔖️check-wasm
 
 if (import.meta.main) {
-  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript).register("test-native-resource-custody", NativeResourceScript);
+  const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript).register("test-native-resource-custody", NativeResourceScript).register("test-native-mesh-receiving-source",NativeMeshReceivingSourceScript);
   await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

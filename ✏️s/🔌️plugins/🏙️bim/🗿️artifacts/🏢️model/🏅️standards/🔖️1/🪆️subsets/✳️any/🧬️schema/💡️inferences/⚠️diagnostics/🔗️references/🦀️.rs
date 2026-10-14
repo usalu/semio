@@ -4,7 +4,7 @@
 
 use super::{Diagnostic, DiagnosticCode};
 use crate::standards::v1::subsets::any::schema::authored::references;
-use crate::{ModelSnapshot, OpeningKind, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, TopConstraint};
 use std::collections::{BTreeMap, BTreeSet};
 
 fn top_storey(top: &TopConstraint) -> Option<&str> {
@@ -186,7 +186,7 @@ impl ReferenceView {
         stray.extend(placed(snapshot.tags.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.text_notes.iter().map(|(id, row)| (id, &row.storey)).collect()));
         stray.extend(placed(snapshot.leaders.iter().map(|(id, row)| (id, &row.storey)).collect()));
-        let layers = |rows: Vec<(&String, &Vec<crate::Layer>)>| rows.into_iter().map(|(id, layers)| (id.clone(), layers.iter().map(|layer| layer.material.clone()).collect::<Vec<_>>())).collect::<Vec<_>>();
+        let layers = |rows: Vec<(&String, &Vec<crate::standards::v1::subsets::any::schema::snapshot::Layer>)>| rows.into_iter().map(|(id, layers)| (id.clone(), layers.iter().map(|layer| layer.material.clone()).collect::<Vec<_>>())).collect::<Vec<_>>();
         let mut layered: BTreeMap<String, Vec<String>> = BTreeMap::new();
         layered.extend(layers(snapshot.wall_types.iter().map(|(id, kind)| (id, &kind.layers)).collect()));
         layered.extend(layers(snapshot.slab_types.iter().map(|(id, kind)| (id, &kind.layers)).collect()));
@@ -201,11 +201,11 @@ impl ReferenceView {
             named.push(use_of(id, &row.panel_material));
             named.push(use_of(id, &row.mullion_material));
         }
-        let panel_use = |id: &String, panel: &crate::CurtainPanel| match panel {
-            crate::CurtainPanel::Solid { material } => Some(PanelUse { id: id.clone(), kind: "material".into(), reference: material.clone() }),
-            crate::CurtainPanel::Door { door_type } => Some(PanelUse { id: id.clone(), kind: "door".into(), reference: door_type.clone() }),
-            crate::CurtainPanel::Window { window_type } => Some(PanelUse { id: id.clone(), kind: "window".into(), reference: window_type.clone() }),
-            crate::CurtainPanel::Glass | crate::CurtainPanel::Empty => None,
+        let panel_use = |id: &String, panel: &crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel| match panel {
+            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Solid { material } => Some(PanelUse { id: id.clone(), kind: "material".into(), reference: material.clone() }),
+            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Door { door_type } => Some(PanelUse { id: id.clone(), kind: "door".into(), reference: door_type.clone() }),
+            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Window { window_type } => Some(PanelUse { id: id.clone(), kind: "window".into(), reference: window_type.clone() }),
+            crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass | crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Empty => None,
         };
         let panels: Vec<PanelUse> = snapshot.curtain_wall_types.iter().filter_map(|(id, row)| panel_use(id, &row.panel)).chain(snapshot.curtain_panel_overrides.iter().filter_map(|(id, row)| panel_use(id, &row.panel))).collect();
         named.extend(snapshot.railings.iter().map(|(id, row)| use_of(id, &row.material)));

@@ -10,11 +10,11 @@ use crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT;
 use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema, IFC_DIALECT};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, instance as inference};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::Dialect;
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 #[path = "🧭️frames/🦀️.rs"]
@@ -124,7 +124,7 @@ impl<'a> Import<'a> {
 
 //#region 🔖️Entry
 /// 📥️ Imports the Part-21 document of a file in `schema` into a model plus one note per entity class or item that was not imported.
-pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_ifc::part21::Part21Document) -> Result<(ModelSnapshot, Vec<String>), String> {
+pub fn import_document(schema: Schema, document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<(ModelSnapshot, Vec<String>), String> {
     let mut import = Import::new(schema, Doc::new(document));
     spatial::read(&mut import);
     import.levels = inference::probe::<{ kinds::LEVELS }, _>(None, &import.model, |inferred| inferred.storey_levels.clone()).map_err(|error| error.to_string())?;

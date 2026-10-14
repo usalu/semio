@@ -4,8 +4,16 @@
 //! sees an infinity or a NaN; a domain error (a square root of a negative number, a tangent at a quarter turn) is refused at the input port that causes it.
 //!
 //! 🔗️ [Rounding](https://en.wikipedia.org/wiki/Rounding) · [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754)
+#![allow(clippy::result_large_err)]
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 
 const SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
 const POLE_TOLERANCE: f64 = 1e-12;
@@ -181,6 +189,8 @@ fn tangent(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Computes
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("math-arithmetic", include_str!("../../../🗂️catalogue/🔣️math-arithmetic.json"));
 /// 🗃️ Every math.arithmetic catalogue kind and the compute that starts it.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "math.add", start: add },

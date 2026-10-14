@@ -1,6 +1,6 @@
 use super::clash::{centre_distance, clashes_of, segment_distance};
 use super::*;
-use crate::{MepElement, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, Point3};
 
 fn point(x: f64, y: f64, z: f64) -> Point3 {
     Point3 { x, y, z }

@@ -3,9 +3,11 @@
 //! Guards, in the order they run: `mutation.target-missing` (Error), then
 //! `mutation.target-referenced` (Error) while any element still names this cross-section.
 use super::DeleteSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionRemoval, Fem2dSectionsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionRemoval;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

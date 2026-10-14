@@ -1,6 +1,6 @@
 use super::codec::read_records;
 use super::*;
-use crate::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
 

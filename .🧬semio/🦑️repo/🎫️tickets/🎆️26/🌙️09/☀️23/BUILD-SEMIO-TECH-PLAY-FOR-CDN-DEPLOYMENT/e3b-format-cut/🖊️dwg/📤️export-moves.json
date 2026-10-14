@@ -1,0 +1,68 @@
+{
+ "ident": "semio_s_artifact_stdio_dwg_write",
+ "moves": [
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::container",
+   "to": "standards::v_ac1024::subsets::any::io::export::records::container",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🦀️.rs",
+   "dir": "🗜️container"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::bits",
+   "to": "standards::v_ac1024::subsets::any::io::export::records::bits",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🦀️.rs",
+   "dir": "🔢️bits"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::fields",
+   "to": "standards::v_ac1024::subsets::any::io::export::records::fields",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🦀️.rs",
+   "dir": "🔩️fields"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::document",
+   "to": "standards::v_ac1024::subsets::any::io::export::records::document",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🦀️.rs",
+   "dir": "📄️document"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::entities",
+   "to": "standards::v_ac1024::subsets::any::io::export::records::entities",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/🦀️.rs",
+   "dir": "📐️entities"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::tables",
+   "to": "standards::v_ac1024::subsets::any::io::export::objects::tables",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs",
+   "dir": "🗃️tables"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::styles",
+   "to": "standards::v_ac1024::subsets::any::io::export::objects::styles",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs",
+   "dir": "🖌️styles"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::blocks",
+   "to": "standards::v_ac1024::subsets::any::io::export::objects::blocks",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs",
+   "dir": "🧩️blocks"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::io::export::associativity",
+   "to": "standards::v_ac1024::subsets::any::io::export::objects::associativity",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/🦀️.rs",
+   "dir": "🔗️associativity"
+  }
+ ]
+}

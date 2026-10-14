@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `BindRepresentation`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::diff::SemioKitDiff;
 use crate::schema::snapshot::SemioKitSnapshot;
 

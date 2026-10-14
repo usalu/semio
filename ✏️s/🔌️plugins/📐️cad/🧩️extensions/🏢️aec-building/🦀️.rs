@@ -9,7 +9,8 @@ use semio_framework_os_kernel::pack_rt;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
-use semio_s_artifact_cad_cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest

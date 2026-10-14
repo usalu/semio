@@ -1,7 +1,7 @@
 //! 📤️ Declares owned PNG, SVG and PDF downloads through the retained export command route.
 
-use crate::op::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
 
 /// 📄️ The default when the palette dispatches the verb without arguments.
@@ -18,7 +18,7 @@ pub struct ExportDocument {
 impl Default for ExportDocument{fn default()->Self{Self{format:DEFAULT_EXPORT_FORMAT.into(),width:None,height:None,transparent:None}}}
 
 /// 📎️ A fixed header copies at most 256 authored filename scalars.
-pub(crate) fn export_stem(document: &DrawingSnapshot) -> String {
+pub fn export_stem(document: &DrawingSnapshot) -> String {
     let source = if document.id.chars().take(256).all(char::is_whitespace) { document.title.as_ref() } else { Some(&document.id) };
     let stem: String = source.map(|source| source.chars().take(256).map(|ch| if ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_' | '.') { ch } else { '-' }).collect()).unwrap_or_else(|| "drawing".into());
     let stem = stem.trim_matches(['-', '.']).to_owned();
@@ -29,7 +29,7 @@ pub fn handle(
     _payload: &ExportDocument,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
-    _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
+    _session: &mut crate::commands::canvas_pointer_down::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     Err(Fault::new(FaultOrigin::App,FaultCode::new("drawing.export.owned-route-required"),"Drawing export requires its registered owned command factory"))
 }

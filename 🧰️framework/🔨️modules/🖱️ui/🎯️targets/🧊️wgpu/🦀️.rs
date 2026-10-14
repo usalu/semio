@@ -20,17 +20,7 @@
 //! "p2")))]`-gated. See `.🧬semio/🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`
 //! for the full per-symbol classification and before/after `cargo tree -i` evidence.
 
-#[path = "../../../🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs"]
-mod icon_name_gen;
-
-pub use icon_name_gen::IconName;
-
-// 🌱️ `ToValue`/`FromValue` for `IconName`, hand-written in a sibling file rather than added to
-// `icon_name_gen` above — that generated file is marked "do not edit" at its own top line. See
-// `🔣️icon-name/🧾️value/🦀️.rs`'s own docstring for why this is a separate mount instead of a `#[value]`
-// attribute on the derive. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[path = "🔣️icon-name/🧾️value/🦀️.rs"]
-mod icon_name_value;
+pub use semio_framework_ui_declaration::IconName;
 
 //#region 🔖️UiAxes
 use semio_framework_ui_locale::{AppLabels, Label, Locale, LocalizedLabel, Terminology};
@@ -39,21 +29,17 @@ use semio_framework_ui_locale::{AppLabels, Label, Locale, LocalizedLabel, Termin
 
 // #region component
 // 🧩️ Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 program builds stay dependency-clean; must never reference `semio_framework`.
-#[path = "🧩️component/🦀️.rs"]
-pub mod component;
+pub use semio_framework_ui_declaration as component;
 // #endregion component
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🏟️arena/🦀️.rs"]
-pub mod arena;
+pub use semio_framework_ui_arena as arena;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🌳️tree/🦀️.rs"]
-pub mod tree;
+pub use semio_framework_ui_retained_tree::tree;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "🔀️reconcile/🦀️.rs"]
-pub mod reconcile;
+pub use semio_framework_ui_retained_tree::reconcile;
 
 /// ♿️ The accessibility tree this target publishes from the retained document, for a host to mirror
 /// into a real ARIA subtree — the GPU-canvas answer to React's `aria-*` attributes, which a canvas
@@ -78,11 +64,9 @@ pub mod draw;
 /// `paint_selection_marquee`) and of `widgets.rs`'s `gizmo` submodule (placement/tip-geometry/
 /// hit-test math) — mounted unconditionally so `wasm32-wasip2` program components can use them
 /// without `wgpu-engine`. See this file's top docstring.
-#[path = "🖍️draw/🏷️types/🦀️.rs"]
-pub mod draw_types;
+pub use semio_framework_ui_draw_contract as draw_types;
 
-#[path = "📐️geometry/🦀️.rs"]
-pub mod geometry;
+pub use semio_framework_ui_theme::geometry;
 
 /// 🗺️ Reusable minimap-navigator layout math — panel/viewport placement, content-fit checks, and
 /// screen<->world mapping for a bottom-right pannable-camera minimap widget (wgpu parity with the dag
@@ -107,11 +91,9 @@ pub mod gpu;
 /// `wgpu::`/`bytemuck`/etc reference anywhere in the file, confirmed by grep). Mounted
 /// unconditionally; its one browser-only item (`OffscreenPresentToken`) already carries its own
 /// `not(target_env = "p2")` item-level gate.
-#[path = "🎟️prepared/🦀️.rs"]
-pub mod prepared;
+pub use semio_framework_ui_prepared as prepared;
 
-#[path = "🖼️raster-ownership/🦀️.rs"]
-pub mod raster_ownership;
+pub use semio_framework_ui_raster_owner as raster_ownership;
 
 /// 🧩️ Target-neutral pointer and keyboard input, with retained engine registrations gated by `wgpu-engine`.
 #[path = "📥️input/🦀️.rs"]
@@ -119,8 +101,7 @@ pub mod input;
 
 /// 🧩️ 100% target-neutral (bounded action reservation/queue — zero `wgpu::` reference anywhere in
 /// the file, confirmed by grep). Mounted unconditionally.
-#[path = "🎬️action/🦀️.rs"]
-pub mod action;
+pub use semio_framework_ui_action as action;
 
 #[cfg(feature = "wgpu-engine")]
 #[path = "🧮️layout/🦀️.rs"]
@@ -139,15 +120,11 @@ pub mod mounted_layout;
 pub mod shaders;
 
 #[cfg(feature = "wgpu-engine")]
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub use semio_framework_ui_text as text;
 
-#[cfg(feature = "wgpu-engine")]
-#[path = "../../🚪️io/🔤️font/🤝️pair-adjustment/🦀️.rs"]
-pub(crate) mod font_pair_io;
 
-#[path = "🎨️theme/🦀️.rs"]
-pub mod theme;
+
+pub use semio_framework_ui_theme as theme;
 
 #[cfg(feature = "wgpu-engine")]
 #[path = "🖌️paint/🦀️.rs"]
@@ -274,7 +251,7 @@ pub use cursor::apply_window_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
-pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, RasterKeepSetV1, RasterResidencyLedger, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
+pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, MeshGpuSourceReturn, RasterKeepSetV1, RasterResidencyLedger, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, NodeKeyRef, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
@@ -392,3 +369,23 @@ pub use select::{arm_select_scroll, clear_select_scroll, normalize_nfkd_text};
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️targets-wgpu-case-wiring-law/🦀️.rs"]
 mod case_wiring_law_tests;
+
+#[cfg(all(test,feature="wgpu-engine"))]
+#[path="../../🧪️tests/🔬️targets-wgpu-text-renderer/🦀️.rs"]
+mod text_renderer_tests;
+
+#[cfg(test)]
+#[path="../../🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"]
+mod theme_token_tests;
+
+#[cfg(all(test,feature="wgpu-engine"))]
+#[path="../../🧪️tests/🌳️document-tree-reconcile/🦀️.rs"]
+mod document_tree_tests;
+
+#[cfg(all(test,feature="wgpu-engine"))]
+#[path="../../🧪️tests/🧪️conformance-corpus/🦀️.rs"]
+mod conformance_corpus_tests;
+
+#[cfg(all(test,feature="wgpu-engine"))]
+#[path="../../🧪️tests/🔬️targets-wgpu-prepared-engine-unit/🦀️.rs"]
+mod prepared_engine_tests;

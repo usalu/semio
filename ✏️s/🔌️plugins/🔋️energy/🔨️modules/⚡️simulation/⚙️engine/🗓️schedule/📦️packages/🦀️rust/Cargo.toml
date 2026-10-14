@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-schedule"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `schedule`: Schedule definitions and runtime lookup"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+serde_json = { workspace = true }

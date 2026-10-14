@@ -3,8 +3,8 @@
 
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::mutations::set_classification_system::SetClassificationSystem;
-use crate::{ClassificationItem, ClassificationSystemPatch, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ModelSnapshot}, diff::patches::ClassificationSystemPatch, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

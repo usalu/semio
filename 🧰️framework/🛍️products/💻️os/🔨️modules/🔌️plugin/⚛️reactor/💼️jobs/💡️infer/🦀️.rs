@@ -33,8 +33,8 @@ enum InferenceBridgeKind {
 #[value(rename_all = "camelCase")]
 struct InferenceBridgeItem {
     kind: InferenceBridgeKind,
-    operation: u64,
-    generation: u64,
+    pub(crate) operation: u64,
+    pub(crate) generation: u64,
     sequence: u64,
     payload: Vec<u8>,
 }

@@ -1,233 +1,241 @@
 //! 🧬️ En1993 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 
-use crate::En1993Snapshot;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 //#region 🔖️Rows
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SteelMaterial`.
-    pub En1993MaterialPatch of crate::SteelMaterial { set { grade: String, fy: f64, fu: f64, e_modulus: f64, g_modulus: f64, subgrade: String, kind: String } }
+    pub En1993MaterialPatch of semio_s_artifact_norm_en1993_model::SteelMaterial { set { grade: String, fy: f64, fu: f64, e_modulus: f64, g_modulus: f64, subgrade: String, kind: String } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SteelMaterial` list.
-    pub En1993MaterialDelta { removal: En1993MaterialRemoval, insertion: En1993MaterialInsertion, relocation: En1993MaterialRelocation, modification: En1993MaterialModification, row: crate::SteelMaterial, patch: En1993MaterialPatch, key: id }
+    pub En1993MaterialDelta { removal: En1993MaterialRemoval, insertion: En1993MaterialInsertion, relocation: En1993MaterialRelocation, modification: En1993MaterialModification, row: semio_s_artifact_norm_en1993_model::SteelMaterial, patch: En1993MaterialPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SteelSection`.
-    pub En1993SectionPatch of crate::SteelSection { set { designation: String, kind: String, h: f64, b: f64, tw: f64, tf: f64, r: f64, area: f64, shear_area_y: f64, shear_area_z: f64, iy: f64, iz: f64, it: f64, iw: f64, w_el_y: f64, w_el_z: f64, w_pl_y: f64, w_pl_z: f64, area_net: f64 } }
+    pub En1993SectionPatch of semio_s_artifact_norm_en1993_model::SteelSection { set { designation: String, kind: String, h: f64, b: f64, tw: f64, tf: f64, r: f64, area: f64, shear_area_y: f64, shear_area_z: f64, iy: f64, iz: f64, it: f64, iw: f64, w_el_y: f64, w_el_z: f64, w_pl_y: f64, w_pl_z: f64, area_net: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SteelSection` list.
-    pub En1993SectionDelta { removal: En1993SectionRemoval, insertion: En1993SectionInsertion, relocation: En1993SectionRelocation, modification: En1993SectionModification, row: crate::SteelSection, patch: En1993SectionPatch, key: id }
+    pub En1993SectionDelta { removal: En1993SectionRemoval, insertion: En1993SectionInsertion, relocation: En1993SectionRelocation, modification: En1993SectionModification, row: semio_s_artifact_norm_en1993_model::SteelSection, patch: En1993SectionPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SteelMember`.
-    pub En1993MemberPatch of crate::SteelMember { set { label: String, member_type: String, section_id: String, material_id: String, length: f64, buckling_length_y: f64, buckling_length_z: f64, ltb_length: f64, ltb_restraint_spacing: f64, load_application: String, end_moment_ratio_psi: f64, moment_diagram: String, deflection_limit_ratio: f64, analysis: String } }
+    pub En1993MemberPatch of semio_s_artifact_norm_en1993_model::SteelMember { set { label: String, member_type: String, section_id: String, material_id: String, length: f64, buckling_length_y: f64, buckling_length_z: f64, ltb_length: f64, ltb_restraint_spacing: f64, load_application: String, end_moment_ratio_psi: f64, moment_diagram: String, deflection_limit_ratio: f64, analysis: String } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SteelMember` list.
-    pub En1993MemberDelta { removal: En1993MemberRemoval, insertion: En1993MemberInsertion, relocation: En1993MemberRelocation, modification: En1993MemberModification, row: crate::SteelMember, patch: En1993MemberPatch, key: id }
+    pub En1993MemberDelta { removal: En1993MemberRemoval, insertion: En1993MemberInsertion, relocation: En1993MemberRelocation, modification: En1993MemberModification, row: semio_s_artifact_norm_en1993_model::SteelMember, patch: En1993MemberPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `LoadCase`.
-    pub En1993LoadCasePatch of crate::LoadCase { set { name: String, kind: String, category: String } }
+    pub En1993LoadCasePatch of semio_s_artifact_norm_en1993_model::LoadCase { set { name: String, kind: String, category: String } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `LoadCase` list.
-    pub En1993LoadCaseDelta { removal: En1993LoadCaseRemoval, insertion: En1993LoadCaseInsertion, relocation: En1993LoadCaseRelocation, modification: En1993LoadCaseModification, row: crate::LoadCase, patch: En1993LoadCasePatch, key: id }
+    pub En1993LoadCaseDelta { removal: En1993LoadCaseRemoval, insertion: En1993LoadCaseInsertion, relocation: En1993LoadCaseRelocation, modification: En1993LoadCaseModification, row: semio_s_artifact_norm_en1993_model::LoadCase, patch: En1993LoadCasePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `MemberAction`.
-    pub En1993MemberActionPatch of crate::MemberAction { set { member_id: String, load_case_id: String, action: crate::DesignAction } }
+    pub En1993MemberActionPatch of semio_s_artifact_norm_en1993_model::MemberAction { set { member_id: String, load_case_id: String, action: semio_s_artifact_norm_en1993_model::DesignAction } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `MemberAction` list.
-    pub En1993MemberActionDelta { removal: En1993MemberActionRemoval, insertion: En1993MemberActionInsertion, relocation: En1993MemberActionRelocation, modification: En1993MemberActionModification, row: crate::MemberAction, patch: En1993MemberActionPatch, key: id }
+    pub En1993MemberActionDelta { removal: En1993MemberActionRemoval, insertion: En1993MemberActionInsertion, relocation: En1993MemberActionRelocation, modification: En1993MemberActionModification, row: semio_s_artifact_norm_en1993_model::MemberAction, patch: En1993MemberActionPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SteelJoint`.
-    pub En1993JointPatch of crate::SteelJoint { set { kind: String, member_id: String, bolt_class: String, bolt_diameter: f64, bolt_rows: u32, bolts_per_row: u32, pitch: f64, gauge: f64, end_distance: f64, edge_distance: f64, shear_planes: u32, plate_thickness: f64, plate_fu: f64, weld_throat: f64, weld_length: f64, weld_fu: f64, weld_grade: String, actions: Vec<crate::JointForceAction>, category: String, friction_mu: f64, preload_force: f64, slip_factor_ks: f64, friction_surfaces: u32 } }
+    pub En1993JointPatch of semio_s_artifact_norm_en1993_model::SteelJoint { set { kind: String, member_id: String, bolt_class: String, bolt_diameter: f64, bolt_rows: u32, bolts_per_row: u32, pitch: f64, gauge: f64, end_distance: f64, edge_distance: f64, shear_planes: u32, plate_thickness: f64, plate_fu: f64, weld_throat: f64, weld_length: f64, weld_fu: f64, weld_grade: String, actions: Vec<semio_s_artifact_norm_en1993_model::JointForceAction>, category: String, friction_mu: f64, preload_force: f64, slip_factor_ks: f64, friction_surfaces: u32 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SteelJoint` list.
-    pub En1993JointDelta { removal: En1993JointRemoval, insertion: En1993JointInsertion, relocation: En1993JointRelocation, modification: En1993JointModification, row: crate::SteelJoint, patch: En1993JointPatch, key: id }
+    pub En1993JointDelta { removal: En1993JointRemoval, insertion: En1993JointInsertion, relocation: En1993JointRelocation, modification: En1993JointModification, row: semio_s_artifact_norm_en1993_model::SteelJoint, patch: En1993JointPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `FatigueDetail`.
-    pub En1993FatigueDetailPatch of crate::FatigueDetail { set { member_id: String, category: u8, method: String, spectrum: Vec<crate::FatigueBand> } }
+    pub En1993FatigueDetailPatch of semio_s_artifact_norm_en1993_model::FatigueDetail { set { member_id: String, category: u8, method: String, spectrum: Vec<semio_s_artifact_norm_en1993_model::FatigueBand> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `FatigueDetail` list.
-    pub En1993FatigueDetailDelta { removal: En1993FatigueDetailRemoval, insertion: En1993FatigueDetailInsertion, relocation: En1993FatigueDetailRelocation, modification: En1993FatigueDetailModification, row: crate::FatigueDetail, patch: En1993FatigueDetailPatch, key: id }
+    pub En1993FatigueDetailDelta { removal: En1993FatigueDetailRemoval, insertion: En1993FatigueDetailInsertion, relocation: En1993FatigueDetailRelocation, modification: En1993FatigueDetailModification, row: semio_s_artifact_norm_en1993_model::FatigueDetail, patch: En1993FatigueDetailPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `FireExposure`.
-    pub En1993FireExposurePatch of crate::FireExposure { set { member_id: String, rating: String, protection_thickness: f64, section_factor: f64, mu0: f64, design_temperature: f64, protection_conductivity: f64, protection_density: f64, protection_specific_heat: f64 } }
+    pub En1993FireExposurePatch of semio_s_artifact_norm_en1993_model::FireExposure { set { member_id: String, rating: String, protection_thickness: f64, section_factor: f64, mu0: f64, design_temperature: f64, protection_conductivity: f64, protection_density: f64, protection_specific_heat: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `FireExposure` list.
-    pub En1993FireExposureDelta { removal: En1993FireExposureRemoval, insertion: En1993FireExposureInsertion, relocation: En1993FireExposureRelocation, modification: En1993FireExposureModification, row: crate::FireExposure, patch: En1993FireExposurePatch, key: id }
+    pub En1993FireExposureDelta { removal: En1993FireExposureRemoval, insertion: En1993FireExposureInsertion, relocation: En1993FireExposureRelocation, modification: En1993FireExposureModification, row: semio_s_artifact_norm_en1993_model::FireExposure, patch: En1993FireExposurePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ColdFormedMember`.
-    pub En1993ColdFormedMemberPatch of crate::ColdFormedMember { set { b_bar: f64, thickness: f64, k_sigma: f64, psi: f64, fy: f64, gross_resistance: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993ColdFormedMemberPatch of semio_s_artifact_norm_en1993_model::ColdFormedMember { set { b_bar: f64, thickness: f64, k_sigma: f64, psi: f64, fy: f64, gross_resistance: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ColdFormedMember` list.
-    pub En1993ColdFormedMemberDelta { removal: En1993ColdFormedMemberRemoval, insertion: En1993ColdFormedMemberInsertion, relocation: En1993ColdFormedMemberRelocation, modification: En1993ColdFormedMemberModification, row: crate::ColdFormedMember, patch: En1993ColdFormedMemberPatch, key: id }
+    pub En1993ColdFormedMemberDelta { removal: En1993ColdFormedMemberRemoval, insertion: En1993ColdFormedMemberInsertion, relocation: En1993ColdFormedMemberRelocation, modification: En1993ColdFormedMemberModification, row: semio_s_artifact_norm_en1993_model::ColdFormedMember, patch: En1993ColdFormedMemberPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `PlatedPanel`.
-    pub En1993PlatedPanelPatch of crate::PlatedPanel { set { a: f64, b: f64, thickness: f64, fy: f64, k_sigma: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993PlatedPanelPatch of semio_s_artifact_norm_en1993_model::PlatedPanel { set { a: f64, b: f64, thickness: f64, fy: f64, k_sigma: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `PlatedPanel` list.
-    pub En1993PlatedPanelDelta { removal: En1993PlatedPanelRemoval, insertion: En1993PlatedPanelInsertion, relocation: En1993PlatedPanelRelocation, modification: En1993PlatedPanelModification, row: crate::PlatedPanel, patch: En1993PlatedPanelPatch, key: id }
+    pub En1993PlatedPanelDelta { removal: En1993PlatedPanelRemoval, insertion: En1993PlatedPanelInsertion, relocation: En1993PlatedPanelRelocation, modification: En1993PlatedPanelModification, row: semio_s_artifact_norm_en1993_model::PlatedPanel, patch: En1993PlatedPanelPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SiloShell`.
-    pub En1993SiloShellPatch of crate::SiloShell { set { thickness: f64, radius: f64, depth: f64, k: f64, gamma: f64, fy: f64 } }
+    pub En1993SiloShellPatch of semio_s_artifact_norm_en1993_model::SiloShell { set { thickness: f64, radius: f64, depth: f64, k: f64, gamma: f64, fy: f64 } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SiloShell` list.
-    pub En1993SiloShellDelta { removal: En1993SiloShellRemoval, insertion: En1993SiloShellInsertion, relocation: En1993SiloShellRelocation, modification: En1993SiloShellModification, row: crate::SiloShell, patch: En1993SiloShellPatch, key: id }
+    pub En1993SiloShellDelta { removal: En1993SiloShellRemoval, insertion: En1993SiloShellInsertion, relocation: En1993SiloShellRelocation, modification: En1993SiloShellModification, row: semio_s_artifact_norm_en1993_model::SiloShell, patch: En1993SiloShellPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `TensionComponent`.
-    pub En1993TensionComponentPatch of crate::TensionComponent { set { f_uk: f64, f_k: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993TensionComponentPatch of semio_s_artifact_norm_en1993_model::TensionComponent { set { f_uk: f64, f_k: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `TensionComponent` list.
-    pub En1993TensionComponentDelta { removal: En1993TensionComponentRemoval, insertion: En1993TensionComponentInsertion, relocation: En1993TensionComponentRelocation, modification: En1993TensionComponentModification, row: crate::TensionComponent, patch: En1993TensionComponentPatch, key: id }
+    pub En1993TensionComponentDelta { removal: En1993TensionComponentRemoval, insertion: En1993TensionComponentInsertion, relocation: En1993TensionComponentRelocation, modification: En1993TensionComponentModification, row: semio_s_artifact_norm_en1993_model::TensionComponent, patch: En1993TensionComponentPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `BridgeFatigue`.
-    pub En1993BridgeFatiguePatch of crate::BridgeFatigue { set { member_id: String, lambda: f64, phi2: f64, delta_sigma_p: f64, category: u8, method: String } }
+    pub En1993BridgeFatiguePatch of semio_s_artifact_norm_en1993_model::BridgeFatigue { set { member_id: String, lambda: f64, phi2: f64, delta_sigma_p: f64, category: u8, method: String } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `BridgeFatigue` list.
-    pub En1993BridgeFatigueDelta { removal: En1993BridgeFatigueRemoval, insertion: En1993BridgeFatigueInsertion, relocation: En1993BridgeFatigueRelocation, modification: En1993BridgeFatigueModification, row: crate::BridgeFatigue, patch: En1993BridgeFatiguePatch, key: id }
+    pub En1993BridgeFatigueDelta { removal: En1993BridgeFatigueRemoval, insertion: En1993BridgeFatigueInsertion, relocation: En1993BridgeFatigueRelocation, modification: En1993BridgeFatigueModification, row: semio_s_artifact_norm_en1993_model::BridgeFatigue, patch: En1993BridgeFatiguePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `TowerLeg`.
-    pub En1993TowerLegPatch of crate::TowerLeg { set { member_id: String, force_coefficient: f64, dynamic_factor: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993TowerLegPatch of semio_s_artifact_norm_en1993_model::TowerLeg { set { member_id: String, force_coefficient: f64, dynamic_factor: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `TowerLeg` list.
-    pub En1993TowerLegDelta { removal: En1993TowerLegRemoval, insertion: En1993TowerLegInsertion, relocation: En1993TowerLegRelocation, modification: En1993TowerLegModification, row: crate::TowerLeg, patch: En1993TowerLegPatch, key: id }
+    pub En1993TowerLegDelta { removal: En1993TowerLegRemoval, insertion: En1993TowerLegInsertion, relocation: En1993TowerLegRelocation, modification: En1993TowerLegModification, row: semio_s_artifact_norm_en1993_model::TowerLeg, patch: En1993TowerLegPatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SteelPile`.
-    pub En1993PilePatch of crate::SteelPile { set { section_id: String, material_id: String, driving_stress: f64, embedded_length: f64, shaft_perimeter: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993PilePatch of semio_s_artifact_norm_en1993_model::SteelPile { set { section_id: String, material_id: String, driving_stress: f64, embedded_length: f64, shaft_perimeter: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SteelPile` list.
-    pub En1993PileDelta { removal: En1993PileRemoval, insertion: En1993PileInsertion, relocation: En1993PileRelocation, modification: En1993PileModification, row: crate::SteelPile, patch: En1993PilePatch, key: id }
+    pub En1993PileDelta { removal: En1993PileRemoval, insertion: En1993PileInsertion, relocation: En1993PileRelocation, modification: En1993PileModification, row: semio_s_artifact_norm_en1993_model::SteelPile, patch: En1993PilePatch, key: id }
 }
 
 protocol::row_patch! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `CraneRunway`.
-    pub En1993CraneRunwayPatch of crate::CraneRunway { set { member_id: String, wheel_contact_length: f64, dispersion: f64, web_thickness: f64, fy: f64, phi: f64, actions: Vec<crate::ForceAction> } }
+    pub En1993CraneRunwayPatch of semio_s_artifact_norm_en1993_model::CraneRunway { set { member_id: String, wheel_contact_length: f64, dispersion: f64, web_thickness: f64, fy: f64, phi: f64, actions: Vec<semio_s_artifact_norm_en1993_model::ForceAction> } }
 }
 
 protocol::list_delta! {
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
     #[cfg_attr(test, serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `CraneRunway` list.
-    pub En1993CraneRunwayDelta { removal: En1993CraneRunwayRemoval, insertion: En1993CraneRunwayInsertion, relocation: En1993CraneRunwayRelocation, modification: En1993CraneRunwayModification, row: crate::CraneRunway, patch: En1993CraneRunwayPatch, key: id }
+    pub En1993CraneRunwayDelta { removal: En1993CraneRunwayRemoval, insertion: En1993CraneRunwayInsertion, relocation: En1993CraneRunwayRelocation, modification: En1993CraneRunwayModification, row: semio_s_artifact_norm_en1993_model::CraneRunway, patch: En1993CraneRunwayPatch, key: id }
 }
 //#endregion 🔖️Rows
 
@@ -240,7 +248,7 @@ protocol::list_delta! {
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Diff {
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub annex: Option<semio_s_plugin_norm_compliance::AnnexChoice>,
     #[state(artifact)]
     pub materials: En1993MaterialDelta,
     #[state(artifact)]
@@ -371,3 +379,8 @@ impl DiffAlgebra<En1993Snapshot> for En1993Diff {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `diff` schema facet.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves

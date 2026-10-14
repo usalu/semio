@@ -1,6 +1,7 @@
 use super::*;
 use semio_s_artifact_stdio_semio_value_import::deserializers::artifacts::json::v_rfc8259::any::semio_value_from_json;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValueEntry, SemioValueNode};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
 
 #[semio_framework_async_macros::async_test]
 async fn int_and_float_lexemes_reemit_as_a_plain_number_verbatim() {
@@ -62,7 +63,7 @@ async fn json_to_value_to_json_to_value_round_trips() {
         ],
     };
     let s1_value = semio_value_from_json(&json);
-    let s1 = SemioValueSnapshot { schema: semio_s_artifact_stdio_semio_value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: s1_value, nodes: Vec::new() };
+    let s1 = SemioValueSnapshot { schema: semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: s1_value, nodes: Vec::new() };
     let json_x = ::semio_framework_async::poll::resolve_ready(SemioValueToJson::serialize(&s1)).expect("serialize");
     let s2_value = semio_value_from_json(&json_x.value);
     assert_eq!(s1.root, s2_value);
@@ -71,7 +72,7 @@ async fn json_to_value_to_json_to_value_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn nodes_graph_round_trips_through_dereferenced_json() {
     let s1 = SemioValueSnapshot {
-        schema: semio_s_artifact_stdio_semio_value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
         root: SemioValue::Map { entries: vec![SemioValueEntry { key: "linked".into(), value: SemioValue::Ref { id: ValueId::new("n1") } }] },
         nodes: vec![SemioValueNode { id: ValueId::new("n1"), value: SemioValue::Int { lexeme: "7".into() } }],
     };

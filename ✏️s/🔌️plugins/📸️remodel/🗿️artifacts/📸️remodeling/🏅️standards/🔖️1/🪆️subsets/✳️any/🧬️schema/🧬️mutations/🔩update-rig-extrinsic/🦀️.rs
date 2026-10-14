@@ -2,9 +2,9 @@
 //! rigid pose = `{rotation_wxyz, translation_m}`, inseparable — same `update` reasoning as
 //! `update-camera-calibration`).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{RemodelingSnapshot, RigExtrinsic};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RigExtrinsic;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -22,17 +22,20 @@ pub struct UpdateRigExtrinsic {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_rig_extrinsic(extrinsic: RigExtrinsic) -> RemodelingMutation {
-    RemodelingMutation::UpdateRigExtrinsic(UpdateRigExtrinsic { extrinsic })
+pub fn update_rig_extrinsic<Op: From<UpdateRigExtrinsic>>(extrinsic: RigExtrinsic) -> Op {
+    Op::from(UpdateRigExtrinsic { extrinsic })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateRigExtrinsic {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for UpdateRigExtrinsic
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<UpdateRigExtrinsic>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "rig-extrinsic", kind: "update-rig-extrinsic", record: "UpdatedRigExtrinsic" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

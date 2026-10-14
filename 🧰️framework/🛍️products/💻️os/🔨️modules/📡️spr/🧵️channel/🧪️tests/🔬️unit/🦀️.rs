@@ -2,17 +2,17 @@ use super::*;
 
 
 //#region 🧸️Fixtures
-async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
-    crate::os_spr::causal::MutationEnvelope {
-        mutation_id: crate::os_spr::ids::MutationId(id.to_string()),
-        document_id: crate::os_spr::ids::ArtifactId("document-1".to_string()),
-        actor: crate::os_spr::ids::ActorId("actor-1".into()),
+async fn sample_envelope(id: &str) -> protocol::causal::MutationEnvelope {
+    protocol::causal::MutationEnvelope {
+        mutation_id: protocol::ids::MutationId(id.to_string()),
+        document_id: protocol::ids::ArtifactId("document-1".to_string()),
+        actor: protocol::ids::ActorId("actor-1".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: crate::os_spr::causal::ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-        inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-        timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
+        diff: protocol::causal::ArtifactDiff { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+        inverse: protocol::causal::InverseMutation { schema: protocol::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+        timestamp: protocol::ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }
 }
@@ -94,7 +94,7 @@ async fn app_command_apply_envelopes_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_command_tag_six_stays_unassigned() {
     let err = decode_app_command(&[6, 8, 1, 1, 1, 2]).await.unwrap_err();
-    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+    assert!(matches!(err, protocol::ProtocolError::Malformed { what: "channel app-command tag", .. }));
     let mut pages = CommandPageSet::try_new(1).expect("one fixed page");
     pages.try_push(FixedCommandPage::try_copy_from(&[6, 8, 1, 1, 1, 2]).expect("retired tag page")).unwrap_or_else(|(fault, _page)| panic!("admit retired tag page: {fault:?}"));
     let command = PagedCommand::try_from_pages(pages).unwrap_or_else(|(fault, _pages)| panic!("admit retired tag command: {fault:?}"));
@@ -336,12 +336,12 @@ async fn app_frame_invocation_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn app_frame_invocation_rejects_result_pack_outside_command_transport_authority() {
     let mut encoded = vec![1];
-    crate::os_spr::write_varint_u64(&mut encoded, 2);
+    protocol::write_varint_u64(&mut encoded, 2);
     for _ in 0..5 {
-        crate::os_spr::write_bytes(&mut encoded, &[]);
+        protocol::write_bytes(&mut encoded, &[]);
     }
-    crate::os_spr::write_bytes(&mut encoded, &vec![0; INVOCATION_RESULT_PACK_MAXIMUM_BYTES + 1]);
-    crate::os_spr::write_bytes(&mut encoded, &[]);
+    protocol::write_bytes(&mut encoded, &vec![0; INVOCATION_RESULT_PACK_MAXIMUM_BYTES + 1]);
+    protocol::write_bytes(&mut encoded, &[]);
     let error = decode_app_frame(&encoded).await.expect_err("oversized packed mutation authority must fail closed");
     assert!(format!("{error:?}").contains("packed mutations or inverse group exceed command transport authority"));
 }
@@ -483,8 +483,8 @@ async fn child_head_commands_and_frames_round_trip() {
     assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 23, entries }).await;
     assert_frame_round_trips(&AppFrame::ChildHeads { in_reply_to: 24, entries: Vec::new() }).await;
     let mut oversized = vec![32, 1];
-    crate::os_spr::write_varint_u64(&mut oversized, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 + 1);
-    assert!(matches!(decode_app_frame(&oversized).await, Err(crate::os_spr::ProtocolError::Malformed { what: "channel child heads", .. })));
+    protocol::write_varint_u64(&mut oversized, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 + 1);
+    assert!(matches!(decode_app_frame(&oversized).await, Err(protocol::ProtocolError::Malformed { what: "channel child heads", .. })));
 }
 //#endregion 🔖️Children
 
@@ -569,25 +569,25 @@ async fn encoding_is_deterministic() {
 #[semio_framework_async_macros::async_test]
 async fn decode_app_command_rejects_empty_bytes() {
     let err = decode_app_command(&[]).await.unwrap_err();
-    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+    assert!(matches!(err, protocol::ProtocolError::Malformed { what: "channel app-command tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_app_frame_rejects_empty_bytes() {
     let err = decode_app_frame(&[]).await.unwrap_err();
-    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
+    assert!(matches!(err, protocol::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_app_command_rejects_unknown_tag() {
     let err = decode_app_command(&[0xFF]).await.unwrap_err();
-    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-command tag", .. }));
+    assert!(matches!(err, protocol::ProtocolError::Malformed { what: "channel app-command tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn decode_app_frame_rejects_unknown_tag() {
     let err = decode_app_frame(&[0xFF]).await.unwrap_err();
-    assert!(matches!(err, crate::os_spr::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
+    assert!(matches!(err, protocol::ProtocolError::Malformed { what: "channel app-frame tag", .. }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -755,7 +755,7 @@ async fn paged_recursive_archive_crosses_pages_and_decoded_owner_closes_one_fiel
 #[semio_framework_async_macros::async_test]
 async fn document_archive_decoders_reject_member_counts_beyond_fixed_authority() {
     let mut bytes = vec![32, 1, 0, 0];
-    crate::os_spr::write_varint_u64(&mut bytes, (DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS + 1) as u64);
+    protocol::write_varint_u64(&mut bytes, (DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS + 1) as u64);
     assert!(decode_app_command(&bytes).await.is_err());
     let page = FixedCommandPage::try_copy_from(&bytes).unwrap();
     let mut pages = CommandPageSet::try_new(1).unwrap();

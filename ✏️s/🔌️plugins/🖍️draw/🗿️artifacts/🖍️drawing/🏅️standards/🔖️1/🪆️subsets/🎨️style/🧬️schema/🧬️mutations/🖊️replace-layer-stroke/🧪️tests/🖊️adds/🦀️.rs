@@ -5,10 +5,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::schema::{find_drawing_layer, layer_base};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🖊️replace-layer-stroke/🖊️adds/📸️snapshot/➡️after/🔣️.json");
@@ -46,8 +46,8 @@ async fn an_absent_stroke_becomes_the_committed_dashed_one() {
     assert_eq!(before_attributes.stroke, None, "adds-a-dashed-stroke's before-snapshot must start with no stroke at all");
     let stroke = after_attributes.stroke.expect("replace-layer-stroke must install the payload's stroke");
     assert_eq!(stroke.width, 2.0, "the stroke width comes from the payload");
-    assert_eq!(stroke.cap, crate::StrokeCap::Round, "the stroke cap comes from the payload");
-    assert_eq!(stroke.join, crate::StrokeJoin::Bevel, "the stroke join comes from the payload");
+    assert_eq!(stroke.cap, semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round, "the stroke cap comes from the payload");
+    assert_eq!(stroke.join, semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Bevel, "the stroke join comes from the payload");
     assert_eq!(stroke.dash, Some([4.0, 2.0].into_iter().collect()), "the optional dash pattern must survive verbatim");
     assert_eq!(after_attributes.fill, before_attributes.fill, "installing a stroke must not disturb the fill");
 }
@@ -115,7 +115,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-layer-stroke/adds-a-dashed-stroke: committed diff JSON is not canonical");
@@ -125,7 +125,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-layer-stroke/adds-a-dashed-stroke: committed diff did not carry before to after");
 }

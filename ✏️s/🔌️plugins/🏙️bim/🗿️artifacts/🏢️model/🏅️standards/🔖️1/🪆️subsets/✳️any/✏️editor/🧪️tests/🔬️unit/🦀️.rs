@@ -145,7 +145,7 @@ pub(crate) mod support {
 
     /// 🔁️ The snapshot after the emitted mutations are applied one after the other through the central applier.
     pub fn applied(snapshot: &ModelSnapshot, emit: &Emit<ModelMutation, NoConfigMutation>) -> ModelSnapshot {
-        emit.artifact_mutations.iter().fold(snapshot.clone(), |state, mutation| crate::mutations::apply_model_mutation(&state, mutation).expect("the emitted mutation applies"))
+        emit.artifact_mutations.iter().fold(snapshot.clone(), |state, mutation| crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&state, mutation).expect("the emitted mutation applies"))
     }
 }
 

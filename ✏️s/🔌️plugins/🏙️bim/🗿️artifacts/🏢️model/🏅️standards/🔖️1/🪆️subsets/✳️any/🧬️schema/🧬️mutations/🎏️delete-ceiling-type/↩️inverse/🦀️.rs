@@ -3,7 +3,7 @@
 use super::super::create_ceiling_type::CreateCeilingType;
 use super::super::cascade;
 use super::DeleteCeilingType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteCeilingType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.ceiling_types.get(&payload.id) {

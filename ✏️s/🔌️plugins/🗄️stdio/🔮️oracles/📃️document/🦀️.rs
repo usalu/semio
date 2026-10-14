@@ -68,7 +68,6 @@ impl PdfSpec {
 //#region 🔖️PdfCreationOracle
 /// 🔮️ Creates a PDF with the registered `pdf-writer` creation oracle.
 /// @see https://github.com/typst/pdf-writer
-#[cfg(feature = "oracles")]
 pub fn oracle_create_pdf(spec: &PdfSpec) -> Result<Vec<u8>, String> {
     use pdf_writer::{Content, Finish, Name, Pdf, Rect, Ref, Str};
 
@@ -142,7 +141,6 @@ pub fn oracle_create_pdf(spec: &PdfSpec) -> Result<Vec<u8>, String> {
 //#region 🔖️PdfEditingOracle
 /// 🔮️ Replaces the document metadata of an existing PDF with the registered `lopdf` editing oracle.
 /// @see https://github.com/J-F-Liu/lopdf
-#[cfg(feature = "oracles")]
 pub fn oracle_replace_metadata(input: &[u8], title: Option<&str>, author: Option<&str>) -> Result<Vec<u8>, String> {
     use lopdf::{Dictionary, Document, Object};
 
@@ -162,7 +160,6 @@ pub fn oracle_replace_metadata(input: &[u8], title: Option<&str>, author: Option
 }
 
 /// 🔮️ Deletes one 1-based page from an existing PDF with the registered `lopdf` editing oracle.
-#[cfg(feature = "oracles")]
 pub fn oracle_delete_page(input: &[u8], page_number: u32) -> Result<Vec<u8>, String> {
     use lopdf::Document;
 
@@ -179,7 +176,6 @@ pub fn oracle_delete_page(input: &[u8], page_number: u32) -> Result<Vec<u8>, Str
 /// producer can never be checked against its own reading of what it wrote. Nondeterministic
 /// artefacts (object numbers, xref offsets, timestamps, ids) are excluded by construction; the
 /// comparison profile strips any that slip through.
-#[cfg(feature = "oracles")]
 pub fn project_pdf(input: &[u8]) -> Result<Json, String> {
     use lopdf::{Document, Object};
 
@@ -244,27 +240,9 @@ pub fn project_pdf(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️PdfProjection
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all, and every
-/// entry point fails loudly. A missing oracle must never degrade into a silently skipped test.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_create_pdf(_spec: &PdfSpec) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_replace_metadata(_input: &[u8], _title: Option<&str>, _author: Option<&str>) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_delete_page(_input: &[u8], _page_number: u32) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_pdf(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Unavailable
 
 //#region 🔖️OoxmlConformanceClass
@@ -282,7 +260,6 @@ pub fn project_pdf(_input: &[u8]) -> Result<Json, String> {
 /// Nothing here interprets a workbook, a document body or a slide: that is the `✳️any` subsets'
 /// vocabulary, and their own reference pairings answer for it. This engine reads and writes the
 /// package, which is exactly the surface a conformance class is defined on.
-#[cfg(feature = "oracles")]
 pub mod ooxml {
     use quick_xml::events::{BytesStart, Event};
     use quick_xml::reader::Reader;
@@ -1458,7 +1435,6 @@ pub mod ooxml {
 /// reads the trailer — and it is the only form the mutation can take and still leave a document both
 /// producers can re-read, since a genuinely `/Encrypt`-linked trailer makes every string and stream
 /// in the file ciphertext.
-#[cfg(feature = "oracles")]
 pub mod pdf_conformance {
     use lopdf::{Dictionary, Document, Object, ObjectId, Stream};
     use semio_repo_test_host::{digest, Json};

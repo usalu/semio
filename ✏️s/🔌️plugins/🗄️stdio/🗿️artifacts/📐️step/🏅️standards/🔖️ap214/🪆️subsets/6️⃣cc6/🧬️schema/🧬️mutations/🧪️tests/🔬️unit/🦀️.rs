@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v_ap214::subsets::cc6::schema::MAX_RUNG;
-use crate::standards::v_ap214::engine::ladder::{ceiling_type_of, has_product_definition_chain, ladder_rung_of, ladder_violations, shape_representation_row};
+use crate::standards::v_ap214::subsets::base::io::ladder::{ceiling_type_of, has_product_definition_chain, ladder_rung_of, ladder_violations, shape_representation_row};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::standards::v_ap214::subsets::cc6::io::check_cc6_conformance;
 

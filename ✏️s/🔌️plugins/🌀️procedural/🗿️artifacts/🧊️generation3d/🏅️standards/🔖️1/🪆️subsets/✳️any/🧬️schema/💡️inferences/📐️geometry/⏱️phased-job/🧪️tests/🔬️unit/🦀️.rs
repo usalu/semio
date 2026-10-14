@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
-use semio_framework_3d_brep_queries::analysis::{edge_table, face_table, ShapeScope};
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_framework_3d_brep_analysis::{edge_table, face_table, ShapeScope};
 use semio_framework_3d_brep_engine::ShapeRoot;
 
 #[path = "../🧰️support/🦀️.rs"]

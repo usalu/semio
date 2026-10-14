@@ -307,4 +307,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioMaterial {
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioTexture { id, mime, bytes });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioMeshSnapshot { schema, meshes, materials, textures });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioMeshSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioMeshSnapshot, schema::mutations::SemioMeshMutation);

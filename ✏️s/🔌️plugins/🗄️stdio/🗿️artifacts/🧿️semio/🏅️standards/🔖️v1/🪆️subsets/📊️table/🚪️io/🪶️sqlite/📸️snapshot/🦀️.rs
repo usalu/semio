@@ -3,8 +3,13 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::schema::snapshot::{SemioTableSnapshot, SemioTableColumn, SemioTableRow, SemioTableCellKind};
-use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::{project_value_tree, reconstruct_value_forest, ValueSqliteTables};
+use crate::schema::snapshot::SemioTableSnapshot;
+use crate::schema::snapshot::SemioTableColumn;
+use crate::schema::snapshot::SemioTableRow;
+use crate::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::project_value_tree;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::reconstruct_value_forest;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::ValueSqliteTables;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
 
@@ -79,7 +84,7 @@ if !values.get_mut().is_empty(){return Err(ValueError::new(ValueRefusalKind::Inv
 
 impl SemioTableSnapshot{
 /// 📏️ Bounds explicitly owned native fields before encoding.
-pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_values(&row.cells,b)?;}Ok(())}
+pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_values(&row.cells,b)?;}Ok(())}
 }
 
 fn ordered<'a>(rows:&'a[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{

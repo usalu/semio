@@ -8,7 +8,7 @@
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
-use semio_framework_artifact_infinite_dag::DagHostSnapshot;
+use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

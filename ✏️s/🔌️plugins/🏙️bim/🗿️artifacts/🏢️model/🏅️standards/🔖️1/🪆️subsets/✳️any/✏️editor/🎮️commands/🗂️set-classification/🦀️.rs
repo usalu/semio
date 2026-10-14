@@ -4,7 +4,7 @@
 use crate::editor::bim::commands::set_property::elements_of;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -32,7 +32,7 @@ pub fn handle(payload: &SetClassification, doc: &ArtifactView<'_, ModelSnapshot>
     let mutations: Vec<ModelMutation> = ids
         .into_iter()
         .filter(|id| snapshot.classifications.get(id.as_str()).and_then(|set| set.get(system)).map(String::as_str) != Some(code))
-        .map(|id| ModelMutation::SetElementClassification(crate::mutations::set_element_classification::SetElementClassification { id: id.clone(), system: system.to_string(), code: code.to_string() }))
+        .map(|id| ModelMutation::SetElementClassification(crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification { id: id.clone(), system: system.to_string(), code: code.to_string() }))
         .collect();
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }

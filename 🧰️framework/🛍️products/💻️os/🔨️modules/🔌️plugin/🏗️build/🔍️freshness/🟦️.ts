@@ -85,7 +85,7 @@ export function stagedModuleMtime(moduleDirectory: string): number | undefined {
   if (!existsSync(moduleDirectory)) return undefined;
   let newest: number | undefined;
   for (const entry of readableDirectoryEntries(moduleDirectory)) {
-    if (!entry.isFile() || entry.name === ".nx-artifact.json") continue;
+    if (!entry.isFile() || entry.name === ".semio-artifact.json") continue;
     try { const { mtimeMs } = statSync(join(moduleDirectory, entry.name)); if (newest === undefined || mtimeMs > newest) newest = mtimeMs; } catch { continue; }
   }
   return newest;

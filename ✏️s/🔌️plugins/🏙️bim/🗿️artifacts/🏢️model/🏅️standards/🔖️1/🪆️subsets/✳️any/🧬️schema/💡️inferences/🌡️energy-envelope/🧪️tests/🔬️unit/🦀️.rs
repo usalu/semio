@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession};
-use crate::{Axis, Building, Entry, Layer, LayerFunction, LocationLine, Material, MaterialCategory, ModelDiff, Opening, Phase, Point2, Rgb, Site, Slab, SlabType, Space, SpaceBoundary, SpaceConditionsPatch, Storey, TopConstraint, Wall, WallType, WindowType, Zone};
-use crate::{Assigned, ModelInference};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Building, Layer, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Rgb, Site, Slab, SlabType, Space, SpaceBoundary, Storey, TopConstraint, Wall, WallType, WindowType, Zone}, diff::{Entry, ModelDiff, patches::SpaceConditionsPatch}};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, inferences::ModelInference};
 use protocol::Inference;
 
 fn near(left: f64, right: f64) -> bool {
@@ -64,7 +64,7 @@ fn rectangle(snapshot: &mut ModelSnapshot, storey: &str, width: f64, depth: f64)
 }
 
 fn window(snapshot: &mut ModelSnapshot, host: &str, offset: f64) {
-    snapshot.openings.insert("o-win".into(), Opening { host: host.into(), kind: crate::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
+    snapshot.openings.insert("o-win".into(), Opening { host: host.into(), kind: crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Window { window_type: "win".into() }, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: "Window".into() });
 }
 
 fn room() -> ModelSnapshot {

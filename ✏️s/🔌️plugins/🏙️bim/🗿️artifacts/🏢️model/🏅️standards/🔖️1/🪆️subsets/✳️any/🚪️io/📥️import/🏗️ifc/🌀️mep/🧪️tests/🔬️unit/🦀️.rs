@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::components;
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4};
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::{MepShape, MepSystem};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem};
 
 #[test]
 fn the_routed_elements_survive_the_round_trip_exactly_in_both_schemas() {
@@ -19,12 +19,12 @@ fn a_foreign_segment_is_read_along_its_extrusion_with_the_system_of_its_group() 
     use crate::standards::v1::subsets::any::io::export::ifc::codec::encode_document;
     use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, real, reals, refs, rf, unset};
     use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
-    use semio_s_artifact_stdio_ifc::part21::Part21Instance;
+    use semio_s_artifact_stdio_contract::part21::Part21Instance;
     let model = components();
     let (mut document, _) = model_to_part21(Schema::Ifc2x3, &model).expect("the export");
     let context = document.by_type("IFCGEOMETRICREPRESENTATIONSUBCONTEXT").next().expect("a body context").id;
     let mut next = document.next_id();
-    let mut add = |name: &str, args: Vec<semio_s_artifact_stdio_ifc::part21::Part21Value>| {
+    let mut add = |name: &str, args: Vec<semio_s_artifact_stdio_contract::part21::Part21Value>| {
         let id = next;
         next += 1;
         (id, Part21Instance { id, entities: vec![(name.to_string(), args)] })

@@ -32,7 +32,7 @@ export async function bundleJavaScript(options: JavaScriptBundle): Promise<void>
   }
   const require = createRequire(join(options.workspace, "package.json")), policy = buildModePolicy(options.mode);
   const args = [require.resolve("esbuild/bin/esbuild"), options.source, "--bundle", `--tree-shaking=${policy.optimize}`, "--format=esm", "--target=es2022", `--platform=${options.platform}`, `--outfile=${options.output}`, ...(policy.optimize ? ["--minify"] : []), ...(policy.sourceMap ? ["--sourcemap=external"] : []), ...["bun", ...(options.external ?? [])].map(value => `--external:${value}`)];
-  const control = scriptCompilerAdmissionControlV1(options.invocation, "javascript:esbuild", 120_000, options.signal), lease = await acquireCompilerCapacityLeaseV1({ directory: join(options.workspace, ".cache/framework/leases"), control, environment: options.environment });
+  const control = scriptCompilerAdmissionControlV1(options.invocation, "javascript:esbuild", 120_000, options.signal), lease = await acquireCompilerCapacityLeaseV1({ directory: join(options.workspace, ".cache/b/l/m/data"), control, environment: options.environment });
   try {
     const environment = { ...options.environment, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(lease.parallelism), GOMAXPROCS: String(lease.parallelism) };
     console.log(`[javascript-build] mode=${options.mode} workers=${lease.parallelism}`);
@@ -89,7 +89,7 @@ async function withBunBundleFiles<T>(request: BunBundleRequest, options: BunComp
   await mkdir(options.temporaryRoot, { recursive: true });
   const temporary = await mkdtemp(join(options.temporaryRoot, "bun-worker-")), output = join(temporary, "result.json");
   try {
-    return await withWholeHostCompilerCapacity(join(options.workspace, ".cache/framework/leases"), control, async compilerEnvironment => {
+    return await withWholeHostCompilerCapacity(join(options.workspace, ".cache/b/l/m/data"), control, async compilerEnvironment => {
       await runOwnedCommand(process.execPath, [join(import.meta.dir, "🟦️bun/📜️script.ts"), "compile", output], options.workspace, "javascript:bun-worker", compilerAdmissionBudgetV1(control), { input, signal: control.signal, env: scriptInvocationEnvironment(options.invocation, buildModeEnvironment(request.mode, compilerEnvironment)), onLine: options.onLine });
       const files = await readBunBundleFiles(request, output, control.signal); compilerAdmissionBudgetV1(control); const result = await consume(files); control.signal.throwIfAborted(); compilerAdmissionBudgetV1(control); return result;
     }, options.environment);

@@ -6,7 +6,7 @@ use super::{marks_of, print, text_width, Inputs, LeaderLayout, NoteLayout, Style
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
 use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::{Leader, ModelSnapshot, OpeningKind, Point2, Tag, TagCategory, TextNote};
+use crate::standards::v1::subsets::any::schema::snapshot::{Leader, ModelSnapshot, OpeningKind, Point2, Tag, TagCategory, TextNote};
 
 fn name_of(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
     snapshot

@@ -1,8 +1,26 @@
 //! 🧭️ The table editor's edit rules: which snapshot pointer raises which ONE concrete table mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, ent, event_path, field, ins, item, keyed, list_move, named, positions, rem, resolve, spread_snake, take, uint, unsupported, Entries, Reshape, ITEM};
-use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::build;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::event_path;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::field;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::item;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::list_move;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::positions;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_snake;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::take;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::uint;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::unsupported;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
+use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};

@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in[7,8,9]{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for z in n::list(n::field(root,7)?)?{rows=n::add(rows,n::list(n::field(n::record(z)?,4)?)?.len())?}for e in n::list(n::field(root,8)?)?{for l in n::list(n::field(n::record(e)?,10)?)?{rows=n::add(rows,1)?;rows=n::add(rows,n::list(n::field(n::record(l)?,11)?)?.len())?}}Ok(rows)}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key_float("din4108_document",1,&n::cells(root,[Enumeration(0,&["Zone1","Zone2","Zone3","Zone4"]),Text(1),Real(2),Real(3),Boolean(4),Real(5),Boolean(6)])?,DOCUMENT_FLOATS)?;

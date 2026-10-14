@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
 import {BundleScript,ScriptRouter} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runScriptMain} from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runBudgetedTestCommand} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import {runCargoTestsV1,readCargoTestPolicyV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {resolveTestLevel,testLevelBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import {cmdBudgetMs} from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
@@ -23,7 +24,7 @@ class NativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const{rest}=resolveTestLevel(segments);
     if(rest.length)throw Error("test-native accepts only an execution level");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-schema"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-schema"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 /** ⚠️ Proves the owned IO cause projection and wire contract against independent schemas. */

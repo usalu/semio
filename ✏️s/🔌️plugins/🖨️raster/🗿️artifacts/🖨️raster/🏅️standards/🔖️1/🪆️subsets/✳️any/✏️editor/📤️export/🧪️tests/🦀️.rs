@@ -161,25 +161,10 @@ async fn png_progress_control_cancels_its_exact_visible_operation() {
     let json=context::render_with_view(&mut app,RASTER_PLAY_BODY_LAYERS,&context::raster_view_state()).await;assert!(!json.contains("cancelTypedOperation"));context::history(&mut app,"undo").await;let document=app.snapshot().unwrap();assert!(document.layers.is_empty());retire_raster_snapshot(document);
 }
 #[test]
-fn export_snapshot_disposal_obeys_grants_and_retires_the_last_shared_owner() {
-    use semio_framework_plugin::{ArtifactEditor,PluginLifecycleStep};
-    let snapshot=std::sync::Arc::new(crate::standards::v1::subsets::any::schema::raster_image_test_snapshot());
-    let mut aliases=[Some(snapshot.clone()),Some(snapshot)];
-    let mut disposers=[RasterPlayApp::build_snapshot_disposer().unwrap(),RasterPlayApp::build_snapshot_disposer().unwrap()];
-    for index in 0..2 {
-        let unfunded=RetainedCloneGrant {maximum_items:0,maximum_copy_bytes:16384,maximum_capacity_bytes:16384,maximum_release_bytes:16384,maximum_depth:16};
-        assert_eq!(disposers[index].close_step(&mut aliases[index],unfunded).unwrap(),PluginLifecycleStep::Progress(Default::default()));
-        assert!(aliases[index].is_some());
-        let mut complete=false;
-        for _ in 0..100000 {
-            let demand=disposers[index].retirement_demands(&aliases[index],4096).unwrap();
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)};
-            match disposers[index].close_step(&mut aliases[index],grant).unwrap() {
-                PluginLifecycleStep::Complete(_)=>{complete=true;break;},
-                PluginLifecycleStep::Progress(progress)=>{assert!(progress.fits(grant));},
-                other=>panic!("export snapshot failed to retire its owned alias: {other:?}"),
-            }
-        }
-        assert!(complete);assert!(disposers[index].terminal_is_empty(&aliases[index]));
-    }
+fn export_snapshot_installed_supplier_returns_each_actual_shared_owner(){
+    use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactorySharedRetirement};use std::sync::Arc;
+    let snapshot=Arc::new(crate::standards::v1::subsets::any::schema::raster_image_test_snapshot());let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<crate::RasterSnapshot>>=Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<crate::RasterSnapshot>::default());
+    let mut owners=[FactorySharedRetirement::new(snapshot.clone(),factory.clone()),FactorySharedRetirement::new(snapshot,factory)];
+    for owner in &mut owners{for turn in 0..100000{if owner.terminal_is_empty(){break}let demand=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};assert_eq!(owner.close_step(RetainedCloneGrant{maximum_items:0,..grant}).unwrap().progress(),Default::default());let step=owner.close_step(grant).unwrap();assert!(step.progress().fits(grant));assert!(turn<99999)}assert!(owner.terminal_is_empty())}
 }
+

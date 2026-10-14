@@ -7,10 +7,11 @@
 //! this case's diff must carry BOTH `columns` and `rows` — a diff that only rebuilt `columns`
 //! would leave every row one cell short.
 
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🏗️create-column/🏗️appends/📸️snapshot/⬅️before/🔣️.json");

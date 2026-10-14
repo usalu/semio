@@ -25,7 +25,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const parsed = (path: string): Record<string, unknown> => JSON.parse(read(path));
 const digest = (value: string) => createHash("sha256").update(value).digest("hex");
 const manifestOwner = (path: string) => path.slice(0, -"/🔮️oracles/🔣️.json".length);
-const currentHosts = (path: string): { implementation: string; package: string; path?: string; features?: string[] }[] => (parsed(path).oracleHostPackages ?? []) as { implementation: string; package: string; path?: string; features?: string[] }[];
+const currentHosts = (path: string): { implementation: string; package: string; path?: string }[] => (parsed(path).oracleHostPackages ?? []) as { implementation: string; package: string; path?: string }[];
 
 /** 🛂️ Audits public signatures, fields, variants and reexports using actual Rust module scopes. */
 function foreignPublicSurface(path: string): string[] {
@@ -85,13 +85,13 @@ function foreignPublicSurface(path: string): string[] {
 const packageOwners = [...contract.providers, ...contract.families, contract.grammar];
 const restored = (source: string, rewrites: { previous: string; current: string }[]) => rewrites.reduce((text, { previous, current }) => text.replaceAll(current, previous), source);
 const restoredMetadata = (text: string) => restored(text, contract.callers.flatMap(({ rewrites }) => rewrites)).replaceAll(contract.owner, contract.retired.owner).replaceAll(contract.package.package, contract.retired.package);
-const cargoAt = (path: string) => toml.parse(read(`${path}/Cargo.toml`)) as { package: { name: string }; lib: { name: string; path: string }; dependencies: Record<string, { path?: string; features?: string[] } | string>; features: Record<string, string[]> };
+const cargoAt = (path: string) => toml.parse(read(`${path}/Cargo.toml`)) as { package: { name: string }; lib: { name: string; path: string }; dependencies: Record<string, { path?: string; optional?: boolean } | string> };
 const contributions = () => {
   const paths = new Set([...contract.contributions.map(({ path }) => path), ...contract.artifactBindings.map(({ owner }) => `${owner}/🔮️oracles/🔣️.json`)]);
   return [...paths].filter((path) => existsSync(resolve(root, path))).map((path) => ({ owner: manifestOwner(path), oracleHostPackages: currentHosts(path) }));
 };
 
-/** 🌳️ Follows all authored path-package dependencies and compile inputs without weakening features. */
+/** 🌳️ Follows all authored path-package dependencies and compile inputs. */
 function removedOracleInputs(hosts: { path: string }[], removedOwner: string): string[] {
   const removed = resolve(root, removedOwner), inputs = new Set<string>(), packages = new Set<string>(), sources = new Set<string>();
   const visitSource = (path: string, manifest: string) => {
@@ -129,11 +129,10 @@ describe("canonical complete Stdio oracle ownership", () => {
     for (const row of selection.cases) expect(packagesForOwner(row.contributions, row.owner, row.implementation), row.id).toEqual(row.expected);
   });
 
-  test("owned deletion schema and independent Ajv require original features and complete execution", () => {
-    
+  test("owned deletion vectors require complete execution and select no Cargo feature", () => {
     for (const vector of deletion.vectors) {
       expect(vector.execution).toBe("all-original-scenarios");
-      expect(vector.features.length).toBeGreaterThan(0);
+      expect(vector).not.toHaveProperty("features");
     }
     expect(deletion.lowerPlugin.nativeRequired).toBe(true);
   });
@@ -160,7 +159,7 @@ describe("canonical complete Stdio oracle ownership", () => {
       expect(name).not.toBe(contract.retired.package);
       expect(name).not.toBe(contract.package.package);
       expect(contract.providers.some(({ package: pkg }) => pkg.package === name)).toBe(false);
-      if (name in externalDependencies && name !== contract.neutralLaw.package) { const actual = value as Record<string, unknown>, expected = externalDependencies[name] as Record<string, unknown>; expect(actual.optional, name).toBe(expected.optional); }
+      if (typeof value === "object") expect(value.optional, name).toBeUndefined();
       if (typeof value === "object" && value.path) {
         const declared = packageOwners.find(({ package: pkg }) => pkg.package === name);
         const target = name === contract.neutralLaw.package ? contract.neutralLaw.source.replace(/\/🦀️\.rs$/u, "/📦️packages/🦀️rust") : declared?.package.path;
@@ -168,8 +167,7 @@ describe("canonical complete Stdio oracle ownership", () => {
         expect(resolve(root, owner.package.path, value.path)).toBe(resolve(root, target!));
       }
     }
-    const feature = needed.flatMap((name) => name === contract.neutralLaw.package ? [] : name in contract.dependencies ? [`dep:${name}`] : [`${name}/oracles`]);
-    expect(cargo.features.oracles).toEqual(feature);
+    expect(cargo).not.toHaveProperty("features");
   });
 
   test("original mounted test sources own their exact development references", () => {
@@ -188,24 +186,17 @@ describe("canonical complete Stdio oracle ownership", () => {
       expect(before).toEqual(Bun.TOML.parse(row.originalManifest.source));
       expect(before["dev-dependencies"]).toBeUndefined();
       const originalDependencies = { ...cargo.dependencies };
-      const originalFeatures = structuredClone(cargo.features);
       if (row.package === "semio-s-artifact-note-note-test-oracle") {
         expect(originalDependencies[drawing.package]).toBeDefined();
         delete originalDependencies[drawing.package];
         originalDependencies.dxf = drawing.externalDependency;
-        originalFeatures.oracles = (originalFeatures.oracles as string[]).filter((feature) => feature !== `${drawing.package}/oracles`);
-        originalFeatures.oracles.unshift("dep:dxf");
       }
       for (const name of Object.keys(before.dependencies)) expect(originalDependencies[name], name).toBeDefined();
-      expect(originalFeatures.oracles).toBeDefined();
       const dependencies = cargo["dev-dependencies"] as Record<string, Record<string, unknown>>;
       expect(dependencies, row.package).toBeDefined();
       expect(Object.keys(dependencies).sort()).toEqual([...row.references].sort());
       for (const name of row.references) {
-        const original = externalDependencies[name] as Record<string, unknown>;
-        expect(original.optional, name).toBe(true);
-        const { optional, ...needed } = original;
-        expect(dependencies[name], name).toEqual(needed);
+        expect(dependencies[name], name).toEqual(externalDependencies[name]);
       }
       expect(rustTokens(read(row.source)).some((token, index, tokens) => token.text === "fn" && tokens[index + 1]?.kind === "identifier"), row.source).toBe(true);
       expect(read(row.source).includes("#[ignore]"), row.source).toBe(row.ignored);
@@ -281,7 +272,7 @@ describe("canonical complete Stdio oracle ownership", () => {
       for (const host of selected) {
         const declared = packageOwners.find(({ package: pkg }) => pkg.package === host.package)!;
         expect(host.path).toBe(declared.package.path);
-        expect(host.features ?? []).toEqual(declared.package.features);
+        expect(host).not.toHaveProperty("features");
       }
     }
     for (const row of graph.filter(({ owner }) => !owner.includes("/🗿️artifacts/"))) expect(row.oracleHostPackages.some(({ package: name }) => name === contract.retired.package || name === contract.package.package)).toBe(false);
@@ -319,7 +310,6 @@ describe("canonical complete Stdio oracle ownership", () => {
     for (const scenario of vector.requiredScenarios) expect(adapter, vector.adapter).toContain(`"${scenario}"`);
     const hosts = packagesForOwner(contributions(), vector.retainedOwner, vector.implementation);
     expect(hosts.length, vector.id).toBeGreaterThan(0);
-    for (const host of hosts) if (host.features) expect(host.features).toContain("oracles");
     expect(removedOracleInputs(hosts, vector.removedOwner), `${vector.id}: actual host dependency reaches a removed artifact`).toEqual([]);
   });
 

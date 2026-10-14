@@ -5,10 +5,13 @@
 //! `s.stdio.semio@v1/model` children: one relative `drag-`/`rotate-`/`scale-elements` per touched pane plus the
 //! `insert-element`s a construction or copy lands (design §12, §20.15). Tool state is never history; the yielded leaves are
 //! (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5).
-#![allow(unexpected_cfgs)]
 
-use crate::editor::cad::config::CadConfigMutation;
-use crate::{cad_pane_model, cad_pane_model_slot, CadMutation, CadPaneId, CadSnapshot};
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as protocol;
+
+use semio_s_artifact_cad_cad_config::CadConfigMutation;
+use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_model, snapshot::cad_pane_model_slot, snapshot::CadPaneId, snapshot::CadSnapshot};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
 use machine::Command;
 use semio_framework_diagnostic::Fault;
 use semio_framework_plugin::app::ChildEmitPreparation;
@@ -271,7 +274,7 @@ pub fn cad_transform_tool_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, 
 }
 
 /// 🧊️ Publishes actual topology and its model reference in the same exact tool transaction.
-pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPaneId, verb: &str, mut imported: crate::standards::v1::subsets::any::io::CadImportedObject) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
+pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPaneId, verb: &str, mut imported: semio_s_artifact_cad_cad_io::CadImportedObject) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
     use {semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation};
     use semio_s_artifact_stdio_semio_model::schema::snapshot::GeometryRef;
     let refused = |message| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.import-object-refused"), message);
@@ -288,14 +291,11 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
     let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&imported.geometry)};
-    emit.artifact_mutations.push(CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
+    emit.artifact_mutations.push(CadMutation::CreateBrep(semio_s_artifact_cad_cad_mut_documents::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
     emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, Vec::new()));
     Ok(emit)
 }
 //#endregion 🛠️TransformTool
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

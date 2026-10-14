@@ -1,8 +1,9 @@
 //! 🔁 Drawing mutation — `ReplaceLayerFill`: whole-value swap of one layer's structured `fill`
 //! sub-payload (a tagged `FillStyle` union — solid/linear/radial — not a scalar).
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::{DrawingSnapshot, FillStyle};
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::FillStyle;
 
 //#region 🔖️Mutation
 /// 🔁 `replace-layer-fill` payload.
@@ -22,17 +23,17 @@ pub struct ReplaceLayerFill {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_layer_fill(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, fill: Option<FillStyle>) -> DrawingMutation {
-    DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id, fill })
+pub fn replace_layer_fill<Op: From<ReplaceLayerFill>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, fill: Option<FillStyle>) -> Op {
+    Op::from(ReplaceLayerFill { layer_id, fill })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReplaceLayerFill {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ReplaceLayerFill where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReplaceLayerFill> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-fill", record: "ReplacedLayerFill" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

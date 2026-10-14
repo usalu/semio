@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-surface-identity-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

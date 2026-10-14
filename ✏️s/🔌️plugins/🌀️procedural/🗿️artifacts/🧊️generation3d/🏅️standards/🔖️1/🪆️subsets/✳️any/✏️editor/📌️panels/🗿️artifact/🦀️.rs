@@ -2,9 +2,10 @@
 
 use crate::editor::generation3d::config::Generation3dConfig;
 use crate::editor::generation3d::modes::edit::windows::flow::graph_outline;
-use crate::editor::generation3d::terminology::Generation3dLabels;
-use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_plugin::plugin_app_close_prelude::UiAssemblyResult;
 use semio_framework_ui_locale::LocalizedLabel;

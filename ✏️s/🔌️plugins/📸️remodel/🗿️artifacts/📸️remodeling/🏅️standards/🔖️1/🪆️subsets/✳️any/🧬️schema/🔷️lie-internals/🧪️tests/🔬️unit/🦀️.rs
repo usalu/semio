@@ -1,5 +1,5 @@
 use super::*;
-use crate::algebra::VecD;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::VecD;
 use std::f64::consts::PI;
 
 fn lcg(state: &mut u64) -> f64 {

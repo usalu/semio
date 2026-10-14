@@ -7,7 +7,7 @@
 use super::compute::take_computed;
 use super::projection::{apply, project, rebuild_diagnostics, retract};
 use super::{kinds, ModelGraph, ModelNode, ModelValue, READS};
-use crate::{ModelDiff, ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceError, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
 use std::collections::BTreeMap;
 

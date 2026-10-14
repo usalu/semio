@@ -1,10 +1,13 @@
 //! 🔺️ `change-slider-value` sparse diff — replaces the ONE addressed slider widget with its value set (and, for a
 //! value outside its range, its range widened exactly like the canvas knob).
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetModification, Generation3dWidgetsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
-use crate::standards::v1::subsets::any::schema::mutations::widget_index;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetModification;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetsDelta;
+use crate::change_slider_value::ChangeSliderValue;
+use crate::widget_index;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 
 /// 🏗️ A missing slider is `target-missing`, another widget kind or a range that cannot hold the value is

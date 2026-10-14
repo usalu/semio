@@ -1,6 +1,6 @@
 //! 📝️ `set-text-note` payload. Sets exactly the provided fields of a text note: position, text, rotation and style; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Point2, TextNotePatch};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::TextNotePatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,5 +1,5 @@
-use crate::RemodelingSnapshot;
-use crate::REMODELING_DOCUMENT_SCHEMA;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -13,7 +13,7 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// `REMODELING_DOCUMENT_SCHEMA` so a hand-authored json is still accepted.
 pub fn from_json_text(text: &str) -> Result<RemodelingSnapshot, IoError> {
     let value = parse_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→remodeling: parse failed: {error}"))))?;
-    let raw = crate::standards::v1::subsets::any::io::remodeling_json::convert(semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()),true).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
+    let raw = semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io::remodeling_json::convert(semio_framework_pack_json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value()),true).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
     let mut snapshot: RemodelingSnapshot = semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→remodeling: {error}"))))?;
     if snapshot.schema.is_empty() {
         snapshot.schema = REMODELING_DOCUMENT_SCHEMA.to_string();

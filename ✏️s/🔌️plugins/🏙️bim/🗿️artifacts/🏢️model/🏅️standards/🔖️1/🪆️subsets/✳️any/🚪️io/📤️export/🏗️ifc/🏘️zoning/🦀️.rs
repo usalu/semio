@@ -8,7 +8,7 @@ use super::data::{define, label, number, property_set};
 use super::writer::{opt_text, refs, rf, text, typed, unset, V};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🎨️ The finish rows of one space: the material ids in its authoring data and the covering property set that names the materials.

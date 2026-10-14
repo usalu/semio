@@ -82,7 +82,7 @@ impl NativeKernelRuntime {
         caps: &[BrokerCapabilityGrant],
         instantiate_budget: &TurnBudget,
     ) -> Result<ActorId, semio_framework_plugin_host::activation::ActivationRefusal> {
-        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event, retained: instantiate_budget.retained };
+        let request = semio_framework_actor::activation::KernelActivationRequest { package, plugin_ordinal, kind, lane, window, event, retained: instantiate_budget.retained,loan:semio_framework_actor::OriginalActorTurnLoan{retained_policy:instantiate_budget.retained_policy,work_fuel:instantiate_budget.work_fuel,deadline_us:instantiate_budget.deadline_us} };
         let reservation = self.kernel.reserve_activation(request).await.map_err(|refused| semio_framework_plugin_host::activation::ActivationRefusal::host(format!("Kernel activation refused: {:?}", refused.reason)))?;
         semio_framework_plugin_host::activation::install_actor(&mut self.kernel, &self.guest_runtime, &self.shards, reservation, compiled, caps, instantiate_budget).await
     }

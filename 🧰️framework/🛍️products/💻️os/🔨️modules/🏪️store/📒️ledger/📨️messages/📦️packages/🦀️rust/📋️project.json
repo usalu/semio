@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/os-store-message-ledger-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-store-message-ledger"
+  ]
+}

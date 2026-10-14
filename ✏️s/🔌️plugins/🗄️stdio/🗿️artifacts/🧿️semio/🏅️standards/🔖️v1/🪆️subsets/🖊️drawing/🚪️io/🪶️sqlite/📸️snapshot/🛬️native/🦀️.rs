@@ -1,5 +1,8 @@
 //! 🖊️ Admitted native Drawing fields, closed path commands and recursively bounded scene nodes.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawLayer, DrawNode, PathSegment, SemioPoint2, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;

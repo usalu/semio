@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::Soli
 use crate::standards::v1::subsets::any::schema::inferences::mep::{self, MepValue};
 use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityKind};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{FamilyCategory, Point2, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, Point2, Point3};
 use std::collections::BTreeMap;
 
 /// 🪑️ The placement of one component as the oracle reproduces it: the turn as cosine and sine (an angle has two spellings), the rest as inferred.

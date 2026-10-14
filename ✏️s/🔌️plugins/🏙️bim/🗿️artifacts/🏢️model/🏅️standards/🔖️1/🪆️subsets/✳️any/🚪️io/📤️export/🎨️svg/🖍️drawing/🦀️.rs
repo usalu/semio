@@ -8,7 +8,7 @@ use super::sheet::{Slot, TITLE_BAND};
 use super::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
 use crate::standards::v1::subsets::any::schema::inferences::mep;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanText};
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 /// 🔑️ An XML id built from a prefix and a model id: characters outside `[A-Za-z0-9_.-]` become `_`.
 pub fn xml_id(prefix: &str, raw: &str) -> String {

@@ -1,0 +1,2 @@
+{"order": ["examples", "base"], "allow": {"examples": [], "base": ["examples"]},
+ "rules": [["^📚️examples/", "examples"], [".", "base"]]}

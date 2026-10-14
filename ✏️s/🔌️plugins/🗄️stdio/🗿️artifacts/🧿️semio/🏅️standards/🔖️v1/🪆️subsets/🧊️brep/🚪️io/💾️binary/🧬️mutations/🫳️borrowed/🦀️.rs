@@ -1,5 +1,6 @@
 //! 🫳️ Ordered JSON ordinals reborrow the original Brep topology and geometry owner.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::snapshot::*;
 use semio_framework_plugin::plugin_app_close_prelude::store::{ArtifactCanonicalJson, ArtifactCanonicalJsonNode as Node, ARTIFACT_CANONICAL_JSON_DEPTH};
 

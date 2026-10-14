@@ -1,6 +1,6 @@
 //! 🔺️ The sparse delta of the shared Norm Results-window configuration: the one field a mutation sets, with its new value.
 
-use crate::results_window_config::NormResultsWindowConfig;
+use crate::schema::NormResultsWindowConfig;
 
 /// 🎯️ The new selected compliance check (`None` clears the selection).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]

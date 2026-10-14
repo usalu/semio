@@ -6,7 +6,7 @@
 
 use super::super::horizontal_rules::{holes_fault, loop_fault};
 use super::SetSlabBoundary;
-use crate::{Entry, ModelDiff, ModelSnapshot, SlabPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::SlabPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSlabBoundary, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

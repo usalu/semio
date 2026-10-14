@@ -1,14 +1,14 @@
 //! 🎥️ CAD world-window camera and projection commands owned by the exact invoking window.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::windows::config as window_config;
-use crate::editor::cad::cad_pane_id_from_surface_id;
-use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::schema::inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_modes::windows::config as window_config;
+use semio_s_artifact_cad_cad_kit::cad_pane_id_from_surface_id;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_inferences::{cad_camera_distance, cad_camera_projection_config, cad_camera_set_projection_config};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value::DslValue;
-use crate::{CadCamera, CadPaneId};
+use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId};
 use semio_framework_plugin::{apply_world3d_projection_action, world3d_projection_action_moves_pose, world3d_projection_pose};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

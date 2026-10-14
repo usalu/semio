@@ -4428,7 +4428,8 @@ pub(crate) mod kernel_runtime {
         Payload, JOB_PROGRESS_ACTIVE_CAPACITY,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef}; use semio_framework_plugin_interpreter::OwnedRuntime;
+    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef};
+    use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
     use std::collections::HashMap;
     use std::future::Future;
     use std::mem::ManuallyDrop;
@@ -9958,7 +9959,8 @@ pub mod scale_bench {
     use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef}; use semio_framework_plugin_interpreter::OwnedRuntime;
+    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef};
+    use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
     use serde::Deserialize;
     use serde_json::json;
     use std::collections::HashMap;
@@ -11231,7 +11233,8 @@ struct RuntimeDispatchCursor {
 struct RuntimeDispatchSource{original:semio_framework_job::OriginalCallerSourceLoan,epoch:u64}
 impl RuntimeDispatchSource{
     fn admit(cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source requires its actual admitted input epoch"))?;let parent=cx.original_source_parent()?;Ok(parent.admit_loan(cx)?.map(|original|Self{original,epoch}))}
-    fn validate_opportunity(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if !cx.original_source_epoch().is_some_and(|epoch|epoch>=self.epoch){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor incoming epoch precedes its admitted intent").into())}Ok(())}
+    fn original_clock_source(&self)->Result<(u64,fn()->Option<u64>,u64),semio_framework_value::ValueError>{self.original.original_clock_source()}
+    fn validate_opportunity(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{let(binding,clock,deadline)=self.original_clock_source()?;if cx.original_clock_binding()!=Some(binding)||!std::ptr::fn_addr_eq(clock,cx.clock_source())||deadline!=cx.original_absolute_deadline_us(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch source changed original bound clock or absolute deadline").into())}if !cx.original_source_epoch().is_some_and(|epoch|epoch>=self.epoch){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"dispatch cursor incoming epoch precedes its admitted intent").into())}Ok(())}
     fn validate_context(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;self.original.validate_context(cx)}
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_opportunity(cx)?;let parent=cx.original_source_parent()?;let _=self.original.close_step(parent,cx)?;Ok(self.original.terminal_is_empty())}
 }
@@ -13164,6 +13167,17 @@ enum PresenterInteractionStep {
 }
 
 impl RuntimeMailbox {
+    /// 🏘️ Event closure observes the actual mailbox, checked-out workers and held runtime bodies.
+    fn original_event_terminal_is_empty(&self)->bool{
+        if !self.0.completions.try_lock().is_ok_and(|queue|queue.len()==0){return false}
+        #[cfg(not(target_arch="wasm32"))]
+        if self.0.frame_maintenance.state.load(Ordering::Acquire)!=0||self.0.frame_maintenance_executions.state.load(Ordering::Acquire)!=0||self.0.frame_deferred_executions.state.load(Ordering::Acquire)!=0{return false}
+        self.try_lock().is_ok_and(|runtime|{
+            #[cfg(not(target_arch="wasm32"))]
+            if runtime.pending_frame_maintenance_refusal.is_some(){return false}
+            runtime.interaction_available()&&runtime.pending_frame_deferred.is_none()
+        })
+    }
     fn new(runtime: AppRuntime) -> Self {
         let presentation_authority = RuntimePresentationAuthority::new();
         let raster_operation_authority = RuntimeRasterOperationAuthority::new();
@@ -13284,8 +13298,8 @@ impl RuntimeMailbox {
         self.0.world_cursor_wake.close_step() && self.0.world_cursor_wake.terminal_is_empty()
     }
 
-    pub(crate) fn close_world3d_dynamic_step(&self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
-        if cx.should_yield(){return Ok(false)}
+    pub(crate) fn close_world3d_dynamic_step(&self,presenter:&mut AppPresenter,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
+        if cx.retirement_should_yield(){return Ok(false)}
         if !self.close_renderer_asset_step() {
             return Ok(false);
         }
@@ -13328,6 +13342,8 @@ impl RuntimeMailbox {
             infinite_world::world::WorldTerrainMeshPublicationStep::Pending|infinite_world::world::WorldTerrainMeshPublicationStep::Complete=>return Ok(false),
             infinite_world::world::WorldTerrainMeshPublicationStep::Fault(fault)=>{self.record_frame_fault(&format!("world3d terrain retirement refused: {fault:?}"));return Ok(false);}
         }
+        let gpu_return=infinite_world::world::world3d_return_native_mesh_gpu_step(state,cx.retained_grant(),|key,source|presenter.gpu.retire_original_mesh_source_step(key,source)).map_err(|_|semio_framework_job::OriginalTurnFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original World GPU source return refused")))?;
+        cx.consume_retained(gpu_return)?;if gpu_return.copied_items!=0{cx.consume_fuel(1);return Ok(false)}
         if step_world3d_dynamic_retirement(state, cx) && world3d_dynamic_retirement_terminal_is_empty(state) {
             *cursor += 1;
         }
@@ -16932,8 +16948,8 @@ impl AppPresenter {
     pub(crate) fn close_original_media_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(cursor)=self.pending.as_mut()else{return Ok(true)};
         if !cursor.media_collect.terminal_is_empty(){if !crate::interpreter::close_presented_media_slots(&mut cursor.media_collect,cx)?{return Ok(false)}}
-        if let Some(owner)=cursor.media_close.as_mut(){if owner.terminal_is_empty(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cursor.media_close=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}
-        if !cursor.media_slots.is_empty(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let original=std::mem::take(&mut cursor.media_slots);match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>cursor.media_close=Some(owner),Err((original,source))=>{cursor.media_slots=source;return Err(original.into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
+        if let Some(owner)=cursor.media_close.as_mut(){if owner.terminal_is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cursor.media_close=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}
+        if !cursor.media_slots.is_empty(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let original=std::mem::take(&mut cursor.media_slots);match semio_framework_value::retirement::controlled::ControlledRetirement::new(original){Ok(owner)=>cursor.media_close=Some(owner),Err((original,source))=>{cursor.media_slots=source;return Err(original.into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}Ok(true)
     }
 
     pub(crate) fn close_frame_owners_step(&mut self) -> Result<bool, String> {
@@ -19410,7 +19426,7 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf, 
     scenes::install_native_host_temporal_formatter(std::sync::Arc::new(native_temporal::SystemTemporalFormatter::default()));
     let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
-    let caller=native_caller::NativeFrameCaller::new(semio_framework_trace::allocate_operation_id(),semio_framework_trace::Generation(1),semio_framework_job::default_now_us,native_caller::NativeFrameRootPolicyV1{fuel:semio_framework_job::INTERACTIVE_LANE_FUEL,maximum_elapsed_microseconds:semio_framework_job::INTERACTIVE_LANE_WALL_US,grant:frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT}).expect("native window root policy");
+    let caller=native_caller::NativeFrameEventIssuer::new(semio_framework_job::default_now_us,native_caller::NativeFrameRootPolicyV1::initiating_event()).expect("native initiating event policy");
     let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root,services,caller);
     let _ = event_loop.run_app(&mut app);
 }

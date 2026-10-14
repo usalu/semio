@@ -50,7 +50,7 @@ pub fn render(config: &config::Generation2dGeneratePreviewWindowConfig, preview_
     }
     let layers = generation_preview_layers(eval_json);
     let _ = GENERATION2D_PLAY_APP_ID;
-    crate::scene_surface(
+    semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_GENERATE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: layers, snapshot: None, tool_run_trace: None, lanes: Vec::new() },

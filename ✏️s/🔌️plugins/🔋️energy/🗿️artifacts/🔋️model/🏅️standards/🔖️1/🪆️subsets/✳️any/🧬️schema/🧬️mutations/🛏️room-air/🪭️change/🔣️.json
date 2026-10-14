@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️room-air/🪭️change",
+  "semanticKind": "change-room-air-model",
+  "displayName": "Change Room Air Model",
+  "emoji": "🪭️",
+  "aggregateVariant": "ChangeRoomAirModel",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-room-air-model",
+  "binaryTag": 164,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

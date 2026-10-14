@@ -1,6 +1,6 @@
 //! 🔆️ `set-curtain-wall` payload. Adjusts the named parameters of a curtain wall (axis, base offset, top, name); every field left out stays as it is. Its type is set by `set-curtain-wall-type-of`, its grid by `set-curtain-wall-grid`.
 
-use crate::{Axis, CurtainWallPatch, ModelDiff, ModelMutation, ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, TopConstraint}, diff::{patches::CurtainWallPatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

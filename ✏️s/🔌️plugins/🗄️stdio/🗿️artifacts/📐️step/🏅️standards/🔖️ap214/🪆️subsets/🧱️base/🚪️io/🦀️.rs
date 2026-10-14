@@ -13,7 +13,7 @@ pub mod ladder;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ap214::subsets::base::io::StepAnalyzer;
-    use crate::StepSnapshot;
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
@@ -54,42 +54,6 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-//#region 🚪️DerivedIoRegistry
-/// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// the composed `any` + `cc1`..`cc6` entry union `declaration()`'s `.composers(...)` reaches
-/// through the `engine` barrel shim (`🦀️.rs`'s `pub mod engine { pub use super::subsets::
-/// any::io::*; pub use super::subsets::any::schema::*; }`).
-pub mod io_registry {
-    use crate::standards::v_ap214::subsets::base::io::StepComposer as StepRawAnyComposer;
-    use crate::standards::v_ap214::subsets::cc1::io::StepCc1Composer;
-    use crate::standards::v_ap214::subsets::cc2::io::StepCc2Composer;
-    use crate::standards::v_ap214::subsets::cc3::io::StepCc3Composer;
-    use crate::standards::v_ap214::subsets::cc4::io::StepCc4Composer;
-    use crate::standards::v_ap214::subsets::cc5::io::StepCc5Composer;
-    use crate::standards::v_ap214::subsets::cc6::io::StepCc6Composer;
-    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
-    use std::sync::OnceLock;
-
-    static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
-
-    // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
-    pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    composer_entry_of::<StepRawAnyComposer>(),
-                    composer_entry_of::<StepCc1Composer>(),
-                    composer_entry_of::<StepCc2Composer>(),
-                    composer_entry_of::<StepCc3Composer>(),
-                    composer_entry_of::<StepCc4Composer>(),
-                    composer_entry_of::<StepCc5Composer>(),
-                    composer_entry_of::<StepCc6Composer>(),
-                ]
-            })
-            .as_slice()
-    }
-}
-//#endregion 🚪️DerivedIoRegistry
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -101,7 +65,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{StepDiff, StepMutation, StepSnapshot};
+    use crate::standards::v_ap214::subsets::base::schema::diff::{StepDiff};
+    use crate::standards::v_ap214::subsets::base::schema::mutations::{StepMutation};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -150,7 +116,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::StepSnapshot;
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts

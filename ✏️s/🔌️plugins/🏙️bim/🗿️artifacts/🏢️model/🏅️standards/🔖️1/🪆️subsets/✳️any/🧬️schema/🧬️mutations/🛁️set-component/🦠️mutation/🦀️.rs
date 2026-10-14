@@ -1,6 +1,6 @@
 //! 🛁️ `set-component` payload. Sets exactly the provided fields of a component: storey, family, position, elevation, rotation, mirror flag, host wall (set or cleared), system (set or cleared) and name; absent fields stay untouched.
 
-use crate::{Assigned, ComponentPatch, MepSystem, ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ComponentPatch, ModelDiff}, snapshot::{MepSystem, ModelSnapshot, Point2}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

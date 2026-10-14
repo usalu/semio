@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-os-infinite", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-tool-machine"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -33,11 +29,11 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-graph = { workspace = true }
-semio-framework = { workspace = true, optional = true }
-semio-framework-os-infinite = { workspace = true, optional = true }
+semio-framework-graph-manifest = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
+semio-framework-tool-machine = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-replication = { workspace = true }
@@ -53,8 +49,8 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-graph = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true }
 pack = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

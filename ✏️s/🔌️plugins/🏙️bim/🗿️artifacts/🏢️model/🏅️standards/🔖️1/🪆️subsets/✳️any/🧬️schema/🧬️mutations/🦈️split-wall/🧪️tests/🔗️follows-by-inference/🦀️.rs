@@ -5,7 +5,7 @@
 use super::SplitWall;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 const WITH_OPENINGS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json");
 const WITH_ARC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🌀️splits-an-arc/📸️snapshot/⬅️before/🔣️.json");

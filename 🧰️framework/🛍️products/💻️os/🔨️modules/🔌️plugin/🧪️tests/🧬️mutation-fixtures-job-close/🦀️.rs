@@ -22,7 +22,7 @@ pub(crate) struct FixtureJobOwners<A: ArtifactApp> {
     delivered:bool,
     pending:Option<PendingFixtureEmission<A>>,
     pending_active:Option<ControlledRetirement<PendingFixtureEmission<A>>>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<A: ArtifactApp> FixtureJobOwners<A> {

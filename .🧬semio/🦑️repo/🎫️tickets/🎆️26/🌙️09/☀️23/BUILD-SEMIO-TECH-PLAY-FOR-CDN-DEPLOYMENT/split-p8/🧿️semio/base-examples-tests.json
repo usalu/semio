@@ -1,0 +1,2 @@
+{"manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📦️packages/🦀️rust/Cargo.toml",
+ "targets": [{"name": "examples", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧪️tests/🔬️sources/🦀️.rs", "doc": "//! 🧪️ Every shared semio example's source contract, as one integration target over the examples crate's public API.", "tests": ["📚️examples/[^/]+/🧪️tests/"]}]}

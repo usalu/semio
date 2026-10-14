@@ -1,4 +1,9 @@
-import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {admitCargoSelectionV1,type CargoSourceBoundaryPolicyV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {repositoryStrictStorageV1} from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
+import {requireNativeStoragePathV1,nativeImageRootV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import type {NativeStorageReservationV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import { findWorkspaceRoot,receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { scriptCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, compilerAdmissionBudgetV1, acquireCompilerCapacityLeaseV1, type CompilerAdmissionControl } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode, buildModeEnvironment } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -28,18 +33,21 @@ export type TrunkRendererBuild = { readonly rustPackageRoot: string; readonly co
 /** 🎯️ Gives finite compiler results one owner per optimization profile. */
 export function wasmRendererDirectory(root: string, profile: string): string {
   if (profile !== "prototype" && profile !== "release") throw new Error("Select the wasm or wasm-release Nx target");
-  return join(root, "dist", `wasm-${profile}`);
+  const workspace=findWorkspaceRoot(root),store=repositoryStrictStorageV1(workspace);return join(nativeImageRootV1(store.directory),"published",createHash("sha256").update(resolve(root)).digest("hex").slice(0,20),`wasm-${profile}`);
 }
 
 /** 🏗️ Compiles only Rust renderer bytes; browser composition consumes its completed artifacts separately. */
 export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<void> {
   const mode=readBuildMode(options.profile),original=options.environment??process.env,control=requestedCompilerAdmissionControlV1(options.control,buildBudgetMs());
   if(original.SEMIO_BUILD_MODE!==undefined&&readBuildMode(original.SEMIO_BUILD_MODE)!==mode)throw Error("Renderer mode contradicts its original environment");
-  const capacity=await acquireCompilerCapacityLeaseV1({directory:join(options.workspace,".cache/framework/leases"),control,environment:original});
-  try {const budget=compilerAdmissionBudgetV1(control),signal=AbortSignal.any([control.signal,...(options.signal?[options.signal]:[]),...(budget>0?[AbortSignal.timeout(budget)]:[])]);await compileTrunkRenderer({...options,control,signal,environment:{...buildModeEnvironment(mode,original),SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),CARGO_BUILD_JOBS:String(capacity.parallelism)}});}finally{capacity.release();}
+  await withRepositoryCompilerStoreV1(options.workspace,mode,control,original,async store=>{
+   const capacity=await acquireCompilerCapacityLeaseV1({directory:join(options.workspace,".cache/framework/leases"),control,environment:store.environment});
+   try{await compileTrunkRenderer({...options,control,storage:store.storage,sourceBoundary:store.sourceBoundary,signal:control.signal,stateRoot:options.stateRoot??join(store.root,"trunk"),environment:{...buildModeEnvironment(mode,store.environment),SEMIO_COMPILER_CAPACITY_HELD:"true",SEMIO_COMPILER_PARALLELISM:String(capacity.parallelism),CARGO_BUILD_JOBS:String(capacity.parallelism)}});}finally{capacity.release();}
+  });
 }
 
-async function compileTrunkRenderer(options: TrunkRendererBuild): Promise<void> {
+async function compileTrunkRenderer(options: TrunkRendererBuild&Readonly<{storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1}>): Promise<void> {
+  await options.storage.recheck();requireNativeStoragePathV1(options.storage.backing.root,wasmRendererDirectory(options.rustPackageRoot,options.profile));requireNativeStoragePathV1(options.storage.backing.root,options.stateRoot!);
   const builtAtMs=Date.now(),hash=(path:string):string=>createHash("sha256").update(readFileSync(path)).digest("hex");
   const { rustPackageRoot: owner, componentRoot: root, workspace, profile } = options, output = wasmRendererDirectory(owner, profile), toolWorkspace = options.toolWorkspace ?? workspace;
   const signal = options.signal!;
@@ -68,12 +76,12 @@ async function compileTrunkRenderer(options: TrunkRendererBuild): Promise<void> 
     writeFileSync(join(temporary, "Trunk.toml"), `required_version = "=0.21.14"\noffline = true\n[build]\nlocked = true\nfrozen = true\ntarget = "index.html"\ndist = "dist"\nfilehash = false\nrelease = ${profile === "release"}\n[tools]\nwasm_bindgen = ${JSON.stringify(bindgen[0])}\nwasm_opt = "version_130"\n`);
     environment.CARGO_TARGET_DIR = join(temporary, "target");
     const lease=await acquireCargoBuildLeaseV1({directory:join(workspace,".cache/framework/leases"),buildDirectory:compilerDirectories.build,targetDirectory:environment.CARGO_TARGET_DIR,args:["--profile",profile],signal:options.control.signal,control:options.control});
-    try {await runTool("cargo", ["metadata", "--locked", "--offline", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], root, "ignore", environment);await runTool("trunk", ["build", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "--offline", "true", "--color", "never"], root, false, environment);}finally{lease.release();}
+    try {await admitCargoSelectionV1({workspaceRoot:workspace,cwd:root,args:["build","--locked","--offline","--manifest-path",join(root,"Cargo.toml"),"--target=wasm32-unknown-unknown","--profile",profile],environment,sourceBoundary:options.sourceBoundary},options.control);await runTool("cargo", ["metadata", "--locked", "--offline", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], root, "ignore", environment);await runTool("trunk", ["build", "--config", join(temporary, "Trunk.toml"), "--skip-version-check", "--offline", "true", "--color", "never"], root, false, environment);}finally{lease.release();}
     const rawSource=join(temporary,"target","wasm32-unknown-unknown",profile,manifest.package.name.replaceAll("-","_")+".wasm"),rawSha256=hash(rawSource);
     const ledger=join(cargoDirectories(workspace,environment).build,"semio-cargo-provenance"),before=new Set(existsSync(ledger)?readdirSync(ledger):[]);
-    const queryPolicy:CargoArtifactBuildPolicyV1={version:1,mode:readBuildMode(profile),cwd:temporary,buildDirectory:compilerDirectories.build,leaseDirectory:join(workspace,".cache/framework/leases"),captureDirectory:repoCacheDirectory(workspace,"trunk"),budgetMs:compilerAdmissionBudgetV1(options.control)},queryArguments=["--target=wasm32-unknown-unknown","--profile",profile,"--offline","--frozen"],queryArgs=["build","--locked","--manifest-path",join(root,"Cargo.toml"),...cargoArtifactArgumentsV1(queryArguments,queryPolicy),"--message-format=json-render-diagnostics"];
+    const queryPolicy:CargoArtifactBuildPolicyV1={version:1,mode:readBuildMode(profile),cwd:temporary,buildDirectory:compilerDirectories.build,leaseDirectory:join(workspace,".cache/framework/leases"),captureDirectory:join(options.storage.backing.root,"trunk","captures"),budgetMs:compilerAdmissionBudgetV1(options.control)},queryArguments=["--target=wasm32-unknown-unknown","--profile",profile,"--offline","--frozen"],queryArgs=["build","--locked","--manifest-path",join(root,"Cargo.toml"),...cargoArtifactArgumentsV1(queryArguments,queryPolicy),"--message-format=json-render-diagnostics"];
     const observationRoot=join(compilerDirectories.build,"semio-trunk-provenance",randomUUID());mkdirSync(observationRoot,{recursive:true});
-    await buildCargoArtifacts(join(root,"Cargo.toml"),queryArguments,queryPolicy,{control:options.control,environment:{...environment,SEMIO_TEST_ARTIFACT_DIR:undefined},observationOutput:{version:1,directory:join(compilerDirectories.build,"semio-cargo-observations",randomUUID())}});
+    await buildCargoArtifacts(join(root,"Cargo.toml"),queryArguments,queryPolicy,{control:options.control,storage:options.storage,sourceBoundary:options.sourceBoundary,environment:{...environment,SEMIO_TEST_ARTIFACT_DIR:undefined},observationOutput:{version:1,directory:join(compilerDirectories.build,"semio-cargo-observations",randomUUID())}});
     const captured=readdirSync(ledger).filter(name=>!before.has(name)).map(name=>({path:join(ledger,name),receipt:decodeCargoProvenanceV1(readFileSync(join(ledger,name),"utf8"))})).filter(({receipt:row})=>row.status===0&&!row.cancelled&&resolve(row.manifest)===join(root,"Cargo.toml")&&resolve(row.cwd)===temporary&&JSON.stringify(row.args)===JSON.stringify(queryArgs));
     if(captured.length!==1||hash(rawSource)!==rawSha256||!captured[0].receipt.invocationInputs.some(input=>resolve(input.path)===join(workspace,".cargo/config.toml")&&input.sha256===hash(input.path)))throw Error("Trunk output lacks one unchanged actual Cargo compiler artifact query");
     const {receipt:capture,path:compiler}=captured[0],primary=capture.units.filter((unit:any)=>resolve(unit.message.manifest_path??"")===join(root,"Cargo.toml")&&!unit.message.profile.test&&unit.message.target.name===manifest.package.name.replaceAll("-","_")).flatMap((unit:any)=>unit.artifacts.filter((artifact:any)=>unit.message.filenames.includes(artifact.path)&&artifact.path.endsWith(".wasm")&&artifact.sha256===rawSha256&&artifact.stagedSha256===rawSha256&&artifact.stagedPath&&hash(artifact.stagedPath)===rawSha256));

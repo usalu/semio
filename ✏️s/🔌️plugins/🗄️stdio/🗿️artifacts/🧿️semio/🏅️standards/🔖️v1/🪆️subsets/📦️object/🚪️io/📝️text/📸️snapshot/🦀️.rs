@@ -9,7 +9,7 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket child-handle codec — a handle is exactly two strings (`child_id`, the
@@ -38,7 +38,8 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_child_opt, dec_child_opt};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_transform(t: &SemioTransform) -> String {
@@ -53,7 +54,8 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
     let f = semio_s_artifact_stdio_semio_base::schema::geometry::native::parse;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
 
@@ -158,7 +160,7 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 }

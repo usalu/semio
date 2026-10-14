@@ -10,7 +10,8 @@
     "grant",
     "laws",
     "ownedCases",
-    "declaredCases"
+    "declaredCases",
+    "shapeCases"
   ],
   "additionalProperties": false,
   "properties": {
@@ -113,7 +114,7 @@
     },
     "declaredCases": {
       "type": "array",
-      "minItems": 6,
+      "minItems": 8,
       "items": {
         "type": "object",
         "required": [
@@ -126,13 +127,91 @@
           "kind": {
             "enum": [
               "normal",
-              "opaque"
+              "opaque",
+              "skipped"
             ]
           },
           "source": {
             "type": "object"
           },
           "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "shapeCases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "declarations",
+          "fields",
+          "turns",
+          "work",
+          "inspected",
+          "ready",
+          "refused"
+        ],
+        "properties": {
+          "declarations": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "boolean"
+                }
+              ],
+              "items": false,
+              "minItems": 2
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65535
+                },
+                {
+                  "type": "boolean"
+                }
+              ],
+              "items": false,
+              "minItems": 2
+            }
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "inspected": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "refused": {
             "type": "boolean"
           }
         }

@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::model_to_part21;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document_in, psets, rows, string};
-use crate::{template_problem, PropertyValue};
+use crate::standards::v1::subsets::any::schema::snapshot::{template_problem, PropertyValue};
 use std::collections::BTreeSet;
 
 fn document() -> Part21Document {

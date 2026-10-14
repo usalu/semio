@@ -49,11 +49,16 @@
       "additionalProperties": false,
       "required": [
         "operation",
+        "totalGrant",
+        "callPolicy",
         "generation",
         "firstEpoch",
-        "cases"
+        "cases",
+        "work"
       ],
       "properties": {
+        "totalGrant": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
+        "callPolicy": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
         "operation": {
           "type": "integer",
           "minimum": 1
@@ -95,6 +100,32 @@
               "accepted": {
                 "type": "boolean"
               }
+            }
+          }
+        },
+        "work": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "clockBinding",
+            "absoluteDeadlineUs",
+            "fuel"
+          ],
+          "properties": {
+            "clockBinding": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "absoluteDeadlineUs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "fuel": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
             }
           }
         }

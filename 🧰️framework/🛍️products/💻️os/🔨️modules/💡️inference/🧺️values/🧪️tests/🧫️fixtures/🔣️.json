@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "nodes": 4,
+  "caller": {"operation": 969, "generation": 17, "clockUs": 1, "deadlineUs": 1000000, "fuel": 2048, "stock": [1024, 65536, 1048576, 1048576, 64]},
+  "outputs": [{"source": 2, "value": 11}, {"source": 0, "value": 3}],
+  "laws": ["originalSourceLoan", "oneRowPerTurn", "exactPhysicalReserve", "unchangedDeniedDonor", "paidPartialClose", "sourceReturnedLast"]
+}

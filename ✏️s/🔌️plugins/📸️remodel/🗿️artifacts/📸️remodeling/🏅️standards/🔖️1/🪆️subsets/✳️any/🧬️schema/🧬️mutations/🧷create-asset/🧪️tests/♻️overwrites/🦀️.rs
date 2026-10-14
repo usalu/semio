@@ -1,106 +1,20 @@
 //! 🧪️ `create-asset` fixture — `♻️overwrites`.
 //!
-//! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
+//! Source of truth is the committed JSON quintet of the fixture mirror, read at test runtime (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). `create-asset-upsert` is this vector's scenario id in
 //! `../../../../🧪️tests/📸️mutate-remodeling-1/🥒️.feature`, where the same bytes are replayed against
 //! this subset's independent Python reference.
 //!
 //! 🏞️ deliberately NOT a duplicate-id refusal — the leaf's own docstring records that import retries depend on upsert
 
-use crate::mutations::{apply_remodeling_mutation, inverse_remodeling_mutation, RemodelingMutation};
-use crate::{RemodelingDiff, RemodelingSnapshot};
-
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/🎯️outcome/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧷create-asset/♻️overwrites/🔺️diff/🔣️.json");
-
-fn before() -> RemodelingSnapshot {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
-}
-fn expected_after() -> RemodelingSnapshot {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
-}
-fn mutation() -> RemodelingMutation {
-    semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
-}
-fn produced() -> protocol::MutationOutcome<RemodelingDiff> {
-    <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation(), &before())
-}
-fn json_of<T: semio_framework_value::ToValue>(value: &T) -> semio_framework_pack_json::Value {
-    semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(value))
+/// ⚖️ The vector holds the law set its declared outcome selects, its inverse restores the before-document and its committed JSON is canonical.
+#[test]
+fn holds_its_laws() {
+    crate::vectors::assert_case("🧷create-asset", "♻️overwrites");
 }
 
-/// ▶️ The verb reaches its committed after-document, and moved it.
-#[semio_framework_async_macros::async_test]
-async fn reaches_the_committed_after_document() {
-    let applied = apply_remodeling_mutation(&before(), &mutation()).expect("create-asset applies to its committed before-snapshot");
-    assert_eq!(applied, expected_after(), "create-asset/overwrites-an-a34b9d: applied state differs from committed after-snapshot");
-    assert_ne!(applied, before(), "create-asset/overwrites-an-a34b9d: an applied vector must move the document");
-}
-
-/// 🔺️ The sparse delta this leaf produces is EXACTLY the committed diff — the load-bearing
-/// assertion, because it pins WHICH lanes the verb is allowed to touch, not merely the end state.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
-    let outcome = produced();
-    let committed = semio_framework_pack_json::parse(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    assert_eq!(json_of(outcome.diff()), committed, "create-asset/overwrites-an-a34b9d: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the diff type");
-    assert_eq!(json_of(&decoded), committed, "create-asset/overwrites-an-a34b9d: committed diff JSON is not canonical");
-}
-
-/// 🩹 Applying the committed diff straight to `before` yields `after` — the delta is a COMPLETE
-/// description of the change, not a summary of it.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_carries_before_to_after() {
-    let decoded: RemodelingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let applied = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(applied, expected_after(), "create-asset/overwrites-an-a34b9d: committed diff did not carry before to after");
-}
-
-/// 🎯️ The declared outcome — its status and every diagnostic it names — is what this leaf emits.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
-    let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
-    assert_eq!(declared.get("status").and_then(|status| status.as_str()), Some("applied"), "create-asset/overwrites-an-a34b9d declares an applied outcome");
-    let produced = produced();
-    let declared_codes: Vec<String> = match declared.get("messages") {
-        Some(semio_framework_pack_json::Value::Array(entries)) => entries.iter().filter_map(|entry| entry.get("code").and_then(|code| code.as_str()).map(str::to_string)).collect(),
-        _ => Vec::new(),
-    };
-    let emitted: Vec<String> = produced.messages().iter().map(|message| message.code.0.clone()).collect();
-    assert_eq!(emitted, declared_codes, "create-asset/overwrites-an-a34b9d: emitted diagnostics differ from the declared ones");
-}
-
-/// ↩️ Applying the verb and then EVERY step of its own computed inverse restores the committed
-/// before-document — member positions included, which a delete undone by re-appending would fail.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_before_document() {
-    let base = before();
-    let mut snapshot = apply_remodeling_mutation(&base, &mutation()).expect("forward applies");
-    for step in &inverse_remodeling_mutation(&base, &mutation()).expect("valid retained mutation inverse fixture") {
-        snapshot = apply_remodeling_mutation(&snapshot, step).expect("inverse step applies");
-    }
-    assert_eq!(snapshot, base, "create-asset/overwrites-an-a34b9d: inverse did not restore the before-snapshot");
-}
-
-/// 🔣️ The committed snapshots and the committed mutation are already canonical: decode→encode is a
-/// fixed point over `pack::json`, which is the codec the crate uses since serde left this type graph.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RemodelingSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
-        let original = semio_framework_pack_json::parse(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");
-        assert_eq!(json_of(&decoded), original, "create-asset/overwrites-an-a34b9d: committed {label} JSON is not canonical");
-    }
-    let original = semio_framework_pack_json::parse(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation reparses");
-    assert_eq!(json_of(&mutation()), original, "create-asset/overwrites-an-a34b9d: committed mutation JSON is not canonical");
-}
-
-/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+/// ➕️ The inverse rows of this applied vector sum to the negative of its diff.
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+    crate::vectors::assert_inverse_sum("🧷create-asset", "♻️overwrites").await;
 }

@@ -1,7 +1,7 @@
 //! 🧪️ The clash sets: the sweep of candidate pairs against brute force, hard and soft clashes of boxes, hosting, deduplication and grouping.
 
 use super::*;
-use crate::ElementSelector;
+use crate::standards::v1::subsets::any::schema::snapshot::ElementSelector;
 use semio_framework_geometry::random::Rng;
 
 type Box3 = ([f64; 3], [f64; 3]);

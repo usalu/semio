@@ -105,8 +105,8 @@ impl WindowTransientSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError
 pub struct WindowTransientSnapshot {
     window_id: String,
     window_kind_id: &'static str,
-    generation: u64,
-    document_generation: u64,
+    pub(crate) generation: u64,
+    pub(crate) document_generation: u64,
     snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
@@ -161,7 +161,7 @@ pub(crate) trait ErasedWindowTransientPublication: Send {
 struct TypedWindowTransientPublication<O: WindowTransientOwner> {
     address_retirement:Option<ControlledRetirement<String>>,
     window_id: String,
-    document_generation: u64,
+    pub(crate) document_generation: u64,
     publication: store::ArtifactEphemeralOneItemPublication<O::State, O::Mutation>,
     ingress:ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
 }
@@ -400,7 +400,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
 
 /// 🗂️ Runtime registry of heterogeneous window-owned transient schemas.
 pub struct WindowTransientOwnerRegistry {
-    document_generation: u64,
+    pub(crate) document_generation: u64,
     owners: WindowRegistry<&'static str, Option<Box<dyn ErasedWindowTransientStoreOwner>>>,
     owner_close_cursor: usize,
     owner_open: usize,

@@ -4,7 +4,7 @@ use neural_engine::{inject_channel_defaults, ColdOwner, Dictionary, Registry};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
-pub use semio_framework_artifact_flow_flow::extensions::*;
+pub use super::schema::*;
 
 /// 🧬️ Canonical source and wiring ancestry of one geometry inference, excluding presentation data.
 pub fn flow_inference_dependency_json(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, neuron_id: &str) -> String {

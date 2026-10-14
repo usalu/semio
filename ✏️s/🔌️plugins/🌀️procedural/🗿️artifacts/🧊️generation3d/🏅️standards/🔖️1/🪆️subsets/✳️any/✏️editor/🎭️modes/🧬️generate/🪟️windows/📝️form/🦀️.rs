@@ -1,6 +1,6 @@
 //! 📝️ Generation3d play app — the generation input-form window (generate mode).
 
-use crate::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayState;
@@ -42,9 +42,9 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub fn render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState, selected_id: Option<&str>, labels: &Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let spec = flow_host_snapshot_to_form_spec(host_snapshot);
-    let Some(current) = crate::standards::v1::subsets::any::schema::generation_by_id(generation, selected_id) else {
+    let Some(current) = semio_s_artifact_procedural_3d_model::generation_by_id(generation, selected_id) else {
         return built_text_node(semio_framework_ui_locale::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
-    crate::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
+    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
 }
 //#endregion 🔖️Render

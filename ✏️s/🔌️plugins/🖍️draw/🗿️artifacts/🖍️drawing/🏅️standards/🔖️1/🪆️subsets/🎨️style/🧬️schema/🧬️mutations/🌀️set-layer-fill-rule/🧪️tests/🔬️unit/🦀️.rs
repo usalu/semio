@@ -1,5 +1,5 @@
 //! 🌀️ Canonical fill-rule changes preserve geometry, history, and operation codecs.
-use crate::{DrawingSnapshot,DrawingMutation,DrawingDiff,FillRule};
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use protocol::Mutation;
 const BEFORE:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json");
 const AFTER:&str=include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json");
@@ -19,7 +19,7 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
     let mut restored=after;
     let inverse=mutation.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(),1);
-    for step in inverse {crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation(&mut restored,&step).unwrap();}
+    for step in inverse {semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation(&mut restored,&step).unwrap();}
     assert_eq!(restored,before);
     for (snapshot,text) in [(&before,BEFORE),(&restored,BEFORE)] {assert_eq!(serde_json::to_value(snapshot).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());}
     store::os_store::test_support::assert_op_line_round_trip(&mutation);
@@ -28,11 +28,11 @@ fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
 #[test]
 fn unchanged_and_missing_fill_rule_targets_do_not_mutate() {
     let before:DrawingSnapshot=serde_json::from_str(BEFORE).unwrap();
-    let same=crate::mutations::set_layer_fill_rule("shape-a".into(),FillRule::Evenodd);
+    let same=crate::set_layer_fill_rule::mutation::set_layer_fill_rule("shape-a".into(),FillRule::Evenodd);
     let result=same.diff(&before);
     assert!(!result.messages().is_empty());
     assert_eq!(protocol::apply_diff(result.diff(),&before).unwrap(),before);
-    let missing=crate::mutations::set_layer_fill_rule("missing".into(),FillRule::Nonzero);
+    let missing=crate::set_layer_fill_rule::mutation::set_layer_fill_rule("missing".into(),FillRule::Nonzero);
     assert!(!missing.diff(&before).messages().is_empty());
     assert!(missing.inverse(&before).expect("valid retained mutation inverse fixture").is_empty());
 }

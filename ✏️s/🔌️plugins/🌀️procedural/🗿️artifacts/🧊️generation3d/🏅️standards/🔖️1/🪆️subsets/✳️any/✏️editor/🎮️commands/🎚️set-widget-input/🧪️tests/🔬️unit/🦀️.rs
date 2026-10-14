@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::any::io::text::value::widget_input_literal;
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_io_text::value::widget_input_literal;
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 #[test]
 fn widget_input_language_neutral_mesh_source_cases() {
@@ -22,10 +22,10 @@ fn widget_input_language_neutral_mesh_source_cases() {
 
 #[test]
 fn widget_input_mesh_source_preserves_connected_owner_and_inverse() {
-    use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation};
+    use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
-    let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut base = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     base.host_snapshot.widgets.push(Widget::InputNote { id: "source".into(), text: fixture["meshSource"]["mesh"].to_string() });
     base.host_snapshot.widgets.push(semio_framework_pack_json::from_json_str(r#"{"kind":"neuron","id":"construct","neuronKind":"brep.mesh.construct"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     base.host_snapshot.synapses.push(semio_framework_pack_json::from_json_str(r#"{"id":"source-link","from":"source","fromPort":"text","to":"construct","toPort":"data","index":0}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -85,11 +85,11 @@ fn widget_input_language_neutral_cases() {
 
 #[test]
 fn widget_input_plane_edit_is_one_absolute_history_leaf_with_full_inverse(){
-    use crate::standards::v1::subsets::any::schema::mutations::inverse_generation3d_mutation;
+    use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let row=fixture["cases"].as_array().unwrap().iter().find(|entry|entry["id"]=="plane-origin-x").unwrap();let current=semio_framework_value::DslValue::from(row["current"].clone());
     let before=widget_input_of_literal(&current).unwrap();let edited=edit_input_value(&["plane".into()],Some(&current),row["value"].as_str().unwrap(),Some(row["component"].as_str().unwrap())).unwrap();
-    let mut base=crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();let mut widget:Widget=semio_framework_pack_json::from_json_str(r#"{"kind":"neuron","id":"cutting-plane","neuronKind":"brep.mesh.slice"}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut base=semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();let mut widget:Widget=semio_framework_pack_json::from_json_str(r#"{"kind":"neuron","id":"cutting-plane","neuronKind":"brep.mesh.slice"}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     if let Widget::Neuron{params,..}=&mut widget{params.insert("plane".into(),before.neural_value());}else{unreachable!("actual typed plane input belongs to a neuron")}
     base.host_snapshot.widgets.push(widget);let mutation=change_widget_input("cutting-plane","plane",widget_input_of_literal(&edited).unwrap());let inverse=inverse_generation3d_mutation(&base,&mutation).unwrap();assert_eq!(inverse.len(),1);
     let mut applied=base.clone();apply_generation3d_mutation(&mut applied,&mutation).unwrap();let Widget::Neuron{params,..}=&applied.host_snapshot.widgets[0]else{unreachable!("actual input mutation retains its neuron")};assert_eq!(params["plane"].to_value(),edited);assert_eq!(applied.host_snapshot.synapses,base.host_snapshot.synapses);
@@ -99,7 +99,7 @@ fn widget_input_plane_edit_is_one_absolute_history_leaf_with_full_inverse(){
 
 #[test]
 fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
-    use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation};
+    use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
     use semio_framework_os_flow::{FlowHost, FlowExtensionSpec};
     let _serial = crate::test_serial::lock();
@@ -122,7 +122,7 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
         let payload: SetWidgetInput = semio_framework_pack_json::from_json_str(&command.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let leaf = input_leaf(&host.host_snapshot, &payload).unwrap().expect("one changed input leaf");
         assert!(matches!(leaf, Generation3dMutation::ChangeWidgetInput(_)), "{}", entry["id"]);
-        let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+        let mut base = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
         std::mem::replace(&mut base.host_snapshot, host.host_snapshot.clone()).retire_cold();
         host.retire_cold();
         let inverse = inverse_generation3d_mutation(&base, &leaf).expect("valid retained mutation inverse fixture");
@@ -146,13 +146,13 @@ fn widget_input_collections_publish_one_absolute_leaf_and_restore_the_base() {
 
 #[test]
 fn widget_input_explicit_widget_facets_use_one_existing_widget_leaf() {
-    use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation};
+    use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
 
     let _serial = crate::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["facets"].as_array().unwrap() {
         let widget: Widget = semio_framework_pack_json::from_json_str(&entry["widget"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut base = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+        let mut base = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
         base.host_snapshot.widgets.push(widget);
         for widget in entry["widgets"].as_array().into_iter().flatten() { base.host_snapshot.widgets.push(semio_framework_pack_json::from_json_str(&widget.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()); }
         for synapse in entry["synapses"].as_array().into_iter().flatten() { base.host_snapshot.synapses.push(semio_framework_pack_json::from_json_str(&synapse.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()); }

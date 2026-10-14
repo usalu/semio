@@ -5,7 +5,7 @@ import ts from "typescript";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { type JsonMap, readStdioJson, slashStdioPath, STDIO_RELATIVE_ROOT, stdioArtifactDefinitionPaths, stdioArtifactPackageContract } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
 import { assertStdioArtifactSchema, assertStdioArtifactSourceContract } from "../../🏘️composition/🛂️artifact-contract/🟦️.ts";
-import { assertStdioArtifactCargoMetadata, assertStdioArtifactNxGraph, stdioCargoMetadata } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
+import { assertStdioArtifactCargoMetadata, assertStdioArtifactBuildGraph, stdioCargoMetadata } from "../../🏘️composition/🕸️artifact-graph/🟦️.ts";
 
 type CommandOwnership = Readonly<{
   owners: readonly Readonly<{ id: string; path: string; exports: readonly string[] }>[];
@@ -15,7 +15,7 @@ type CommandOwnership = Readonly<{
   registration: Readonly<{ projectPath: string; packagePath: string; projectName: string }>;
 }>;
 
-/** 🧭️ Named Nx input that carries each declared input set of the command-ownership contract. */
+/** 🧭️ Named build input that carries each declared input set of the command-ownership contract. */
 const STDIO_NAMED_INPUTS: Readonly<Record<keyof CommandOwnership["inputs"], string>> = { build: "stdioCompositionBuild", contract: "stdioArtifactContract", graph: "stdioArtifactGraph" };
 
 /** 🧭️ Declared input set each composition-package command hashes. */
@@ -63,17 +63,17 @@ export async function testStdioArtifactPackageContract(repoRoot: string): Promis
   console.log(`[stdio-package-contract] source packages=${contract.packages.length} dag=valid`);
 }
 
-/** 🕸️ Compares declared artifact dependencies with Cargo metadata and the Nx project graph. */
+/** 🕸️ Compares declared artifact dependencies with Cargo metadata and the portable build graph. */
 export async function testStdioArtifactPackageGraph(repoRoot: string): Promise<void> {
   const contract = stdioArtifactPackageContract(repoRoot);
-  await assertStdioArtifactNxGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
+  await assertStdioArtifactBuildGraph(repoRoot, contract, await stdioCargoMetadata(repoRoot));
 }
 
-/** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, Nx inputs and package scripts to the command-ownership contract. */
+/** 🏷️ Binds semantic owners, pure routers, admitted artifact definitions, build inputs and package scripts to the command-ownership contract. */
 export async function verifyStdioCommandOwnership(repoRoot = getWorkspaceRoot()): Promise<void> {
   const stdioRoot = join(repoRoot, STDIO_RELATIVE_ROOT);
   const compositionRoot = join(repoRoot, "✏️s/🧑‍💻dev/🗄️stdio");
-  const fixture = readStdioJson(join(compositionRoot, "🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;
+  const fixture = readStdioJson(join(compositionRoot, "🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json")) as CommandOwnership;
   for (const owner of fixture.owners) {
     const path = join(repoRoot, owner.path);
     assert(existsSync(path), `missing stdio owner ${owner.id}: ${owner.path}`);

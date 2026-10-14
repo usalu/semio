@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `CreateEdge`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::diff::SemioGraphDiff;
 use crate::schema::snapshot::{SemioGraphEdge, SemioGraphSnapshot};
 

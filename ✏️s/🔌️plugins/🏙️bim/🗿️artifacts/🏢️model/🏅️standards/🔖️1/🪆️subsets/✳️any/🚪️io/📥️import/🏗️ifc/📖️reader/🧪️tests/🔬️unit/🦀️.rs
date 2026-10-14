@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_ifc::part21::parse_part21;
+use semio_s_artifact_stdio_contract::part21::parse_part21;
 
 const SAMPLE: &str = "ISO-10303-21;
 HEADER;

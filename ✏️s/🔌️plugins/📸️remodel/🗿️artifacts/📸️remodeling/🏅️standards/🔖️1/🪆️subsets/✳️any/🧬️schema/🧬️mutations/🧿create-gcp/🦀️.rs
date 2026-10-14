@@ -1,9 +1,10 @@
 //! 🧿 Remodeling mutation — `CreateGcp`: brings a new id-keyed ground control point into existence
 //! (id minted by the caller via `mint_remodeling_id(operation, "gcp")`).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{GroundControlPoint, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_gcp::DeleteGcp;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +22,20 @@ pub struct CreateGcp {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_gcp(gcp: GroundControlPoint) -> RemodelingMutation {
-    RemodelingMutation::CreateGcp(CreateGcp { gcp })
+pub fn create_gcp<Op: From<CreateGcp>>(gcp: GroundControlPoint) -> Op {
+    Op::from(CreateGcp { gcp })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateGcp {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for CreateGcp
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<DeleteGcp>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "gcp", kind: "create-gcp", record: "CreatedGcp" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

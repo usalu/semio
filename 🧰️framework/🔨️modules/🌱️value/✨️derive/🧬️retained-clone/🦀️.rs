@@ -12,6 +12,10 @@ fn field_types(input: &DeriveInput) -> Vec<&Type> {
 
 fn bounded_generics(input: &DeriveInput, bound: TokenStream) -> Generics {
     let mut generics = input.generics.clone();
+    for parameter in input.generics.type_params().filter(|parameter|field_types(input).into_iter().any(|ty|type_mentions_ident(ty,&parameter.ident))) {
+        let ident=&parameter.ident;
+        generics.make_where_clause().predicates.push(parse_quote!(#ident: #bound));
+    }
     for ty in field_types(input).into_iter().filter(|ty| !type_mentions_ident(ty, &input.ident) && input.generics.type_params().any(|parameter| type_mentions_ident(ty, &parameter.ident))) {
         generics.make_where_clause().predicates.push(parse_quote!(#ty: #bound));
     }
@@ -218,6 +222,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         .collect::<Vec<_>>();
     let cursor_fields = field_rows.iter().map(|(_, ty, cursor, value)| quote!(#cursor: ::semio_framework_value::retained_clone::RetainedFieldCursor<#ty>, #value: Option<#ty>));
     let cursor_init = field_rows.iter().map(|(_, _ty, cursor, value)| quote!(#cursor: Default::default(), #value: None));
+    let demand_arms=field_rows.iter().map(|(index,ty,cursor,_)|{let access=field_access(fields,*index);quote!(#index=>if self.draining{::semio_framework_value::retained_clone::clone_cursor_close_demand::<#ty>(&self.#cursor,body)}else{::semio_framework_value::retained_clone::RetainedCloneCursor::advance_demands(&self.#cursor,source.project(#index+1,|source|&source.#access),body)})});
     let advance_arms = field_rows.iter().map(|(index, _, cursor, value)| {
         let access = field_access(fields, *index);
         quote! {
@@ -288,6 +293,9 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
         }
 
         impl #impl_generics ::semio_framework_value::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
+            fn output_ready(&self)->bool{self.output.is_some()}
+            fn advance_demands(&self,source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"record original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}match self.phase{#(#demand_arms,)*_=>Ok(::semio_framework_value::RetirementDemand{depth:1,..Default::default()})}}
+
             fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
                 if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct clone cursor is closing")); }
                 if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained struct clone cursor is spent")); }
@@ -467,6 +475,11 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             }
         }
     });
+    let demand_variants=data.variants.iter().enumerate().map(|(variant_index,variant)|{
+        let(pattern,bindings)=borrowed_variant_pattern(name,variant,variant_index);let fields=rows.iter().filter(|(row_variant,_,_,_,_)|*row_variant==variant_index).collect::<Vec<_>>();let count=fields.len();let release=fields.iter().map(|(_,_,ty,_,_)|quote!(::std::mem::size_of::<#ty>()));
+        let demands=fields.iter().map(|(_,field_index,ty,cursor,_)|{let binding=&bindings[*field_index];let projected=pattern.clone();quote!(#field_index=>if self.draining{::semio_framework_value::retained_clone::clone_cursor_close_demand::<#ty>(&self.#cursor,body)}else if ::semio_framework_value::retained_clone::RetainedCloneCursor::output_ready(&self.#cursor){Ok(::semio_framework_value::RetirementDemand{capacity_bytes: ::std::mem::size_of::<#ty>(),depth:1,..Default::default()})}else{::semio_framework_value::retained_clone::RetainedCloneCursor::advance_demands(&self.#cursor,source.project((#variant_index+1)*1024+#field_index+1,|source|match source{#projected=>#binding,_=>unreachable!("original quoted enum variant changed")}),body)})});
+        quote!((#variant_index,#pattern)=>match self.phase{#(#demands,)*#count=>Ok(::semio_framework_value::RetirementDemand{release_bytes:0usize#(.saturating_add(#release))*,depth:1,..Default::default()}),_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"original quoted enum phase changed"))})
+    });
     let controlled_values = rows.iter().map(|(_, _, _, _, value)| quote!(if let Some(step) = self.close.begin_granted(&mut self.#value, grant)? { return Ok(step); }));
     let controlled_children = rows.iter().map(|(_, _, _, cursor, _)| quote! {
         if !::semio_framework_value::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
@@ -500,6 +513,9 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
         }
 
         impl #impl_generics ::semio_framework_value::retained_clone::RetainedCloneCursor<#name #ty_generics> for #cursor_name #ty_generics #where_clause {
+            fn output_ready(&self)->bool{self.output.is_some()}
+            fn advance_demands(&self,source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_,#name #ty_generics>,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"enum original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}let Some(variant)=self.variant else{return Ok(::semio_framework_value::RetirementDemand{depth:1,..Default::default()})};match(variant,source.get()){#(#demand_variants,)*_=>Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"original quoted enum source changed"))}}
+
             fn advance(&mut self, source: ::semio_framework_value::retained_clone::RetainedCloneRef<'_, #name #ty_generics>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
                 if self.closing { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone cursor is closing")); }
                 if self.spent { return Err(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvariantViolated, "retained enum clone cursor is spent")); }

@@ -11,13 +11,27 @@
 //! carries the reference envelopes; NREL's `BESTEST-GSR` repository carries the same case set as
 //! OpenStudio measures. Neither is consumed here — this is an independent authoring of the spec.
 
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_geometry as geometry;
+extern crate semio_s_plugin_energy_engine_kernel as kernel;
+extern crate semio_s_plugin_energy_engine_material as material;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_plugin_energy_engine_sim as sim;
+extern crate semio_s_plugin_energy_engine_site as site;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_precompute as precompute;
+
 use crate::air_exchange::InfiltrationMethod;
 use crate::error::{Diagnostics, Error};
 use crate::kernel::{SimulationConfig, SimulationEnvironment};
 use crate::model::{
-    Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ScheduleId, ShadingSurface, Site, Surface, SurfaceClass,
+    Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, IdealLoadsSystem, Infiltration, Material, MechanicalVentilation, Model, OutsideBoundary, ShadingSurface, Site, Surface, SurfaceClass,
     SurfaceRoughness, Thermostat, Zone,
 };
+use crate::schedule::ScheduleId;
 use crate::results::Results;
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation, ScheduleSet};
 use crate::site::WeatherData;
@@ -439,7 +453,7 @@ pub fn run(case: &str, weather: WeatherData, warmup_days: u32) -> Result<Results
     let built = model(case).ok_or_else(|| single(Error::fatal(format!("no ANSI/ASHRAE 140 §5.2 case is registered as {case:?}"))))?;
     built.validate()?;
     let config = simulation_config(&built, Some(weather), warmup_days);
-    crate::sim::Engine::run(built, config).map_err(single)
+    sim::Engine::run(built, config).map_err(single)
 }
 
 fn single(error: Error) -> Diagnostics {
@@ -588,12 +602,12 @@ pub fn case_parameters_json(case: &str) -> Option<String> {
         let construction = built.constructions.iter().find(|construction| construction.id == construction_id);
         let layers: f64 =
             construction.map_or(0.0, |construction| construction.layer_material_ids.iter().filter_map(|id| built.materials.iter().find(|material| material.id == *id)).map(|material| material.thickness_m / material.conductivity_w_m_k).sum());
-        layers + crate::material::R_FILM_INTERIOR_M2K_W + crate::material::R_FILM_EXTERIOR_M2K_W
+        layers + material::R_FILM_INTERIOR_M2K_W + material::R_FILM_EXTERIOR_M2K_W
     };
     let surfaces = semio_framework_pack_json::array(built.surfaces.iter().map(|surface| {
-        let gross = crate::geometry::surface_area_m2(&surface.vertices_m);
+        let gross = geometry::surface_area_m2(&surface.vertices_m);
         let glazed: f64 = built.fenestrations.iter().filter(|window| window.surface_id == surface.id).map(|window| window.area_m2).sum();
-        let orientation = crate::geometry::surface_tilt_azimuth(crate::geometry::polygon_normal(&surface.vertices_m), built.site.north_axis_deg);
+        let orientation = geometry::surface_tilt_azimuth(geometry::polygon_normal(&surface.vertices_m), built.site.north_axis_deg);
         semio_framework_pack_json::object([
             ("name".to_string(), semio_framework_pack_json::Value::from(surface.name.as_str())),
             ("grossAreaM2".to_string(), semio_framework_pack_json::Value::from(gross)),

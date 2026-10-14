@@ -1,0 +1,23 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "map": {
+  "standards::v1::subsets::any::schema::GraphEditor": "standards::v1::subsets::any::schema::mutations::GraphEditor",
+  "standards::v1::subsets::any::schema::GumballRefusal": "editor::generation3d::transform_commands::GumballRefusal",
+  "standards::v1::subsets::any::schema::gumball_identity": "editor::generation3d::transform_commands::gumball_identity",
+  "standards::v1::subsets::any::schema::record_input_leaves": "editor::generation3d::transform_commands::record_input_leaves",
+  "standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node": "editor::generation3d::transform_commands::ensure_gumball_node",
+  "standards::v1::subsets::any::io::text::snapshot::gumball_xform_kind": "editor::generation3d::transform_commands::gumball_xform_kind",
+  "standards::v1::subsets::any::io::text::snapshot::gumball_widget_id": "editor::generation3d::transform_commands::gumball_widget_id",
+  "standards::v1::subsets::any::io::text::snapshot::gumball_widget_json": "editor::generation3d::transform_commands::gumball_widget_json",
+  "standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow": "preview_eval::dag_host_snapshot_to_workflow",
+  "standards::v1::subsets::any::schema::split_endpoint": "preview_eval::split_endpoint"
+ },
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge"
+ ]
+}

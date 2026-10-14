@@ -70,10 +70,10 @@ impl ArtifactSqliteSnapshotHost for StepSnapshot{
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{
-        (|| -> Result<semio_framework_os_kernel::io_schema::IoOutcome<()>, ValueError> {
-        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.step"||dialect.standard!="ap214"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP dialect differs from its semantic standard"));}let row=database.table("step_document")?.single_row()?;if row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP document identity differs from semantic projection"));}let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"cc1"=>crate::standards::v_ap214::subsets::cc1::io::check_cc1_conformance_controlled(self,control)?,"cc2"=>crate::standards::v_ap214::subsets::cc2::io::check_cc2_conformance_controlled(self,control)?,"cc3"=>crate::standards::v_ap214::subsets::cc3::io::check_cc3_conformance_controlled(self,control)?,"cc4"=>crate::standards::v_ap214::subsets::cc4::io::check_cc4_conformance_controlled(self,control)?,"cc5"=>crate::standards::v_ap214::subsets::cc5::io::check_cc5_conformance_controlled(self,control)?,"cc6"=>crate::standards::v_ap214::subsets::cc6::io::check_cc6_conformance_controlled(self,control)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "unknown owned STEP subset"))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
-    
-        })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)
+        (|| -> Result<(), ValueError> {
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.step"||dialect.standard!="ap214"{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP dialect differs from its semantic standard"));}let row=database.table("step_document")?.single_row()?;if row.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue, "owned STEP document identity differs from semantic projection"));}Ok(())
+        })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;
+        store::io::validate_registered_snapshot_subset(dialect,self,database,control)
     }
     
     
@@ -88,9 +88,6 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 
 #[path = "🚦️native/🦀️.rs"]

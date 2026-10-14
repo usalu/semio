@@ -1,0 +1,172 @@
+{
+ "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+ "module": "crate::standards::v_ac1024::subsets::any::io::export",
+ "macros": null,
+ "budget": {
+  "lines": 3000,
+  "bytes": 200000
+ },
+ "tests": [
+  {
+   "file": "🧪️tests/🔬️unit/🦀️.rs"
+  },
+  {
+   "file": "🧪️tests/🔬️standalone/🦀️.rs",
+   "include": true
+  },
+  {
+   "file": "🧪️tests/🔬️polyline-io/🦀️.rs"
+  },
+  {
+   "file": "🧪️tests/🔮️acadrust-oracle/🦀️.rs"
+  }
+ ],
+ "children": [
+  {
+   "name": "container",
+   "dir": "🗜️container",
+   "doc": "//! 🗜️ The R2004 container writer: LZ77 compression, data and system pages, section descriptors and the canonical page layout.",
+   "match": [
+    "^write_r2004_lz_",
+    "^r2004_lz_",
+    "^compress_r2004_section$",
+    "^r2004_page_checksum$",
+    "^EncodedR2004Page$",
+    "^align_r2004$",
+    "^r2004_crc32$",
+    "^encrypt_data_page_header$",
+    "^extend_r2004_lcg_fill$",
+    "^write_data_page$",
+    "^R2004SectionDescriptor$",
+    "^encode_r2004_section_info$",
+    "^write_r2004_system_page$"
+   ]
+  },
+  {
+   "name": "bits",
+   "dir": "🔢️bits",
+   "doc": "//! 🔢️ The DWG bit-stream writer and little-endian byte pushers.",
+   "match": [
+    "^DwgBitWriter$",
+    "^push_u(16|32|64)$"
+   ]
+  },
+  {
+   "name": "fields",
+   "dir": "🔩️fields",
+   "doc": "//! 🔩️ Object-record field writers: handles, extended entity data, xrecord values, colors, cell styles, block elements, constraint nodes and string streams.",
+   "match": [
+    "^DwgObjectFrame$",
+    "^write_object_handle$",
+    "^encode_xrecord_values$",
+    "^encode_r2010_eed$",
+    "^finish_r2010_object_frame$",
+    "^append_r2010_string_stream$",
+    "^write_visual_style_",
+    "^write_table_style_color$",
+    "^table_style_borders$",
+    "^encode_r2010_cell_style$",
+    "^write_material_(color|map)$",
+    "^constraint_point3$",
+    "^encode_r2010_constraint_node$",
+    "^encode_r2010_block_(element|grip|action)$",
+    "^encode_r2010_two_point_parameter$",
+    "^write_r2010_action_connection$",
+    "^encode_complex_color_value$",
+    "^logical_point[23]$",
+    "^write_r2004_(unsigned|signed)_modular_char$"
+   ]
+  },
+  {
+   "name": "document",
+   "dir": "📄️document",
+   "doc": "//! 📄️ File-level section writers: header variables, classes, summary, application, dependencies, template, auxiliary header, revision history and preview.",
+   "match": [
+    "^DWG_SENTINEL_CLASSES_END$",
+    "^push_utf16_(z|bytes)$",
+    "^push_bytes_z$",
+    "^checksum_bytes$",
+    "^encode_(summary_info|application_info|dependencies|template|auxiliary_header|revision_history|indexed_preview|digest128|application_history|object_free_space)$",
+    "^render_(application_properties|product_information)$",
+    "^header_point[23]$",
+    "^write_header_",
+    "^encode_r2010_header_section$",
+    "^encode_r2010_classes_section$"
+   ]
+  },
+  {
+   "name": "entities",
+   "dir": "📐️entities",
+   "doc": "//! 📐️ Entity record writers: the common entity fields and every entity body frame.",
+   "match": [
+    "^entity_(mode|reference)_bits$",
+    "^encode_r2010_entity_common_(main|handles)$",
+    "^dimension_(attachment|spacing)_wire$",
+    "^encode_r2010_(block_begin|block_end|insert|dimension_linear|viewport|line|arc|lwpolyline|entity|entity_body)_frame$",
+    "^viewport_status_mask$"
+   ]
+  },
+  {
+   "name": "tables",
+   "dir": "🗃️tables",
+   "doc": "//! 🗃️ Symbol-table record writers: table controls and table records.",
+   "match": [
+    "^encode_r2010_table_(control|record)_frame$"
+   ]
+  },
+  {
+   "name": "styles",
+   "dir": "🖌️styles",
+   "doc": "//! 🖌️ Style object writers: visual, table, multiline and multileader styles and materials.",
+   "match": [
+    "^encode_r2010_(visual_style|table_style|mline_style|mleader_style|material)_frame$"
+   ]
+  },
+  {
+   "name": "blocks",
+   "dir": "🧩️blocks",
+   "doc": "//! 🧩️ Dynamic-block object writers: parameters, grips, actions, proxies and representation data.",
+   "match": [
+    "^encode_r2010_block_",
+    "^encode_r2010_dynamic_block_",
+    "^encode_r2010_(alignment_action|final_parameter)_frame$"
+   ]
+  },
+  {
+   "name": "associativity",
+   "dir": "🔗️associativity",
+   "doc": "//! 🔗️ Associativity object writers: networks, dependencies, variables, constraint groups and evaluation graphs.",
+   "match": [
+    "^encode_r2010_associative_",
+    "^encode_r2010_assoc_",
+    "^encode_r2010_evaluation_graph_frame$"
+   ]
+  },
+  {
+   "name": "objects",
+   "dir": "📦️objects",
+   "doc": "//! 📦️ The object-record writer: per-class dispatch, layouts, scales, sort tables, dictionaries, xrecords and the handle map.",
+   "match": [
+    "^encode_r2010_object_frame$",
+    "^encode_r2010_(layout|placeholder|dictionary_variable|annotation_scale|sort_entities_table|xrecord|dictionary)_frame$",
+    "^finish_r2004_handle_block$",
+    "^materialize_r2004_handles$",
+    "^materialize_r2010_objects$"
+   ]
+  }
+ ],
+ "keep": [
+  "^dwg_to_bytes$",
+  "^tests$",
+  "^polylines_to_dwg_bytes$",
+  "^polyline_io_tests$",
+  "^acadrust_oracle_tests$",
+  "^encode_preamble_only_document$",
+  "^validate_export_header$",
+  "^encode_dwg$",
+  "^encode_r2004_canonical$",
+  "^encode_r2004_snapshot$",
+  "^r2004_section_descriptors$",
+  "^materialize_r2004_ordinary_pages_without_header$"
+ ]
+}

@@ -4,8 +4,8 @@
 //!
 //! Layering: `📓️2026-10-13-wave-e1b-kernel-seams.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
 use crate::os_store::snapshot_read::retire_document_envelope;
-use crate::os_store::snapshot_read::artifact_retirement_owner_demands;
-use crate::os_store::snapshot_read::artifact_retirement_owner_close;
+use crate::os_store::snapshot_read::retirement_owner_demands;
+use crate::os_store::snapshot_read::retirement_owner_close;
 use crate::os_store::snapshot_read::ArtifactStoreEnvelopeRetirement;
 use crate::ArtifactStoreCursorDisposer;
 use pack::snapshot::ArtifactPack;
@@ -29,8 +29,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use super::snapshot_read_registry_handle::SnapshotReadRegistryHandle;
-use super::snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
+use semio_framework_value_snapshot_read::SnapshotReadRegistryHandle;
+use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 use crate::os_spr::conflict::ProtocolConflictRetirement as ArtifactStoreConflictRetirement;
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use semio_framework_value::retirement::shared::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
@@ -442,7 +442,7 @@ where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.envelope.is_some() {
-            let step = artifact_retirement_owner_close(&mut self.envelope, grant)?;
+            let step = retirement_owner_close(&mut self.envelope, grant)?;
             return Ok(if self.owners.is_some() { RetainedCloneStep::Progress(step.progress()) } else { step });
         }
         if self.owners.is_some() {
@@ -470,7 +470,7 @@ impl<P, M> UninstalledDocumentEnvelopeRetirement<P, M>
 where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + Mutation<P> + Send + 'static,
 {
     fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        if self.envelope.is_some() { return artifact_retirement_owner_demands(&self.envelope, body); }
+        if self.envelope.is_some() { return retirement_owner_demands(&self.envelope, body); }
         if let Some(owners) = self.owners.as_ref() {
             let mut demand = owners.uninstalled_owners_demands(body)?;
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "uninstalled catalog logical depth overflow"))?;

@@ -109,6 +109,15 @@ features = [ "derive" ]
 version = "1.0.149"
 features = [ "raw_value" ]
 
+[workspace.dependencies.semio-s-artifact-procedural-3d-model]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-terminology]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-mutations]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

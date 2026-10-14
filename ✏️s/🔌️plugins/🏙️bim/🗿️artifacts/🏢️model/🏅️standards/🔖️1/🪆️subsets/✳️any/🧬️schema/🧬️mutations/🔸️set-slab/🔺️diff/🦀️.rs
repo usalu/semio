@@ -5,7 +5,7 @@
 
 use super::super::horizontal_rules::slope_fault;
 use super::SetSlab;
-use crate::{Entry, ModelDiff, ModelSnapshot, SlabPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::SlabPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSlab, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

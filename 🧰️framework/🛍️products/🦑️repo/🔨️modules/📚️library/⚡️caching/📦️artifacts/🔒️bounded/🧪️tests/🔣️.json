@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "confined",
+      "paths": [
+        "cache",
+        "data",
+        "tmp",
+        "outputs"
+      ],
+      "accepted": true
+    },
+    {
+      "name": "parent",
+      "paths": [
+        "../foreign"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "prefix",
+      "paths": [
+        "../store-other"
+      ],
+      "accepted": false
+    },
+    {
+      "name": "linked",
+      "paths": [
+        "link/output"
+      ],
+      "accepted": false
+    }
+  ]
+}
+

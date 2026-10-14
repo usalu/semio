@@ -5,9 +5,6 @@
     "test-command-ingress-ownership": "bun repo run @semio-tech/framework-replication-rs:test-command-ingress-ownership",
     "test-command-ingress-native": "bun repo run @semio-tech/framework-replication-rs:test-command-ingress-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

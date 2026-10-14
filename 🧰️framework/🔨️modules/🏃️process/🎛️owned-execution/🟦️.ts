@@ -26,7 +26,8 @@ export interface OwnedCommandOptions {
 /** 🧺️ Runs one tool without blocking the event loop and without forwarding its output: several tools run at once (jco, wasm-opt, a descriptor emitter, a
  * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
  * Resolves with the output tail. */
-export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl }> = {}): Promise<string> {
+export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
+  if(options.output&&validateJsonSchemaSubset(outputSchema,options.output).length)throw Error("Owned data capture requires complete output limits");
   const signal = options.control?.signal ?? options.signal;
   if (options.control) {
     const remaining = checkResourceLeaseControl(options.control);
@@ -41,8 +42,9 @@ export function captureOwnedCommandV1(command: string, args: readonly string[], 
     const check = (): void => { if (!options.control) return; try { const remaining = checkResourceLeaseControl(options.control); deadline = setTimeout(check, Math.min(remaining ?? 1000, 1000)); } catch (error) { stopped = error; cancel(); } };
     signal?.addEventListener("abort", cancel, { once: true });
     check();
-    const capture = (chunk: Buffer): void => { output = (output + chunk.toString("utf8")).slice(-64 * 1024); };
-    child.stdout?.on("data", capture); child.stderr?.on("data", capture);
+    let capturedBytes=0,capturedLines=0;const open={stdout:false,stderr:false},decoders={stdout:new StringDecoder("utf8"),stderr:new StringDecoder("utf8")};
+    const capture=(chunk:Buffer,stream:OwnedCommandStreamV1):void=>{if(stopped!==undefined)return;if(options.output){capturedBytes+=chunk.length;for(const byte of chunk){if(!open[stream])capturedLines++;open[stream]=byte!==10;}if(capturedBytes>options.output.maximumBytes||capturedLines>options.output.maximumLines){stopped=Error("Owned data capture output limit exceeded");cancel();return;}}const decoded=decoders[stream].write(chunk);output=options.output?output+decoded:(output+decoded).slice(-64*1024);};
+    child.stdout?.on("data",chunk=>capture(chunk,"stdout"));child.stderr?.on("data",chunk=>capture(chunk,"stderr"));for(const stream of ["stdout","stderr"] as const)child[stream]?.once("end",()=>{if(stopped===undefined)output+=decoders[stream].end();});
     child.once("error", reject);
     child.once("close", (code) => {
       if (forced) clearTimeout(forced);

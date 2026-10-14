@@ -3,14 +3,14 @@
 //! bare "delete", since `create-energy-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateEnergyModel;
-use crate::mutations::{delete_energy_model, CadMutation};
-use crate::CadSnapshot;
+use crate::delete_energy_model;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::create_energy_model::CreateEnergyModel> + From<crate::delete_energy_model::DeleteEnergyModel>>(_payload: &CreateEnergyModel, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match &base.energy_model {
-        Some(existing) => vec![CadMutation::CreateEnergyModel(CreateEnergyModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
-        None => vec![CadMutation::DeleteEnergyModel(delete_energy_model::DeleteEnergyModel {})],
+        Some(existing) => vec![Op::from(CreateEnergyModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
+        None => vec![Op::from(delete_energy_model::DeleteEnergyModel {})],
     })
 }
 //#endregion 🔖️Inverse

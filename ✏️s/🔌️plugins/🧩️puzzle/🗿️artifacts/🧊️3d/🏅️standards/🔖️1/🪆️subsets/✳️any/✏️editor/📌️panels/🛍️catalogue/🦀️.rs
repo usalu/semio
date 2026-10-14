@@ -8,11 +8,12 @@
 //! longer truncates with a `+N` that never advanced — the panel's page cursor was dead
 //! (`📓️audit-app-panels-a.md` §4a), and the scrollbar now spans the whole catalog instead.
 
+use crate::editor::puzzle3d::snapshot::catalog_entry_label;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_INTERACTION_DOMAIN, PUZZLE3D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_INTERACTION_DOMAIN, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
 
 use semio_framework_pack_json::{json, Value};
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase};
+use semio_framework_plugin::plugin_app_close_prelude::BuiltNode;
 use semio_framework_plugin::tree_window_item;
 use semio_framework_plugin::ActionFactory;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -57,12 +58,7 @@ fn ui_map_value(values: impl IntoIterator<Item = (&'static str, semio_framework_
     Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
 }
 
-/// 🏷️ One catalog entry's display name — `label`, else `name`, else its `id`. Shared with the
-/// manifest's `addObjectKind`/"Add Object" dialog option set (`✏️editor/🦀️.rs`), which must read
-/// exactly the same catalog rows this panel renders.
-pub(crate) fn catalog_entry_label(entry: &semio_framework_value::DslValue) -> String {
-    entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
-}
+
 
 /// 🌀️ One object kind's rim-vortex templates, paired with their ordinal so sibling templates that
 /// declare the same `vortexKind` still key apart — a repeated key is a `DuplicateSiblingKey` refusal,
@@ -145,7 +141,7 @@ fn catalog_kind_item(entry: &semio_framework_value::DslValue, icon_id: &str) -> 
 /// which is inside the navbar, and is why ticket 26/09/02 read this as "the navbar covers the catalogue"
 /// for three waves (wave B26 §5, corrected in wave B27 §1).
 pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
+    let entries = |section: &str| crate::editor::puzzle3d::snapshot::puzzle3d_catalog_entries(&envelope.scene_snapshot, section);
     PanelTreeBuilder::new(ROOT)?
         .window_section(windows, &format!("{ROOT}.objects"), Some(ui_label(labels.objects.as_str())?), true, entries("objects"), |entry| object_kind_item(entry, windows))?
         .window_section(windows, &format!("{ROOT}.vortices"), Some(ui_label(labels.vortices.as_str())?), false, entries("vortices"), |entry| catalog_kind_item(entry, "circle-dot"))?

@@ -1,0 +1,16 @@
+{
+  "image": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 41943040,
+    "chunkBytes": 1048576,
+    "writeChunks": 100,
+    "refusal": "ENOSPC"
+  },
+  "shared": {
+    "filesystemBytes": 1073741824,
+    "maximumPhysicalBytes": 1074790400,
+    "firstReservationBytes": 734003200,
+    "contenderBytes": 419430400,
+    "remainingChargeBytes": 734003200
+  }
+}

@@ -1,3 +1,5 @@
+import {type CargoDependencyNetworkV1} from "./🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {runRepositoryCargoTestsV1} from "./🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS} from "./🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
 export {packageTestBudgetMs,PACKAGE_TEST_BUDGET_MS};
 import {nextestArtifactLocation,repositoryCargoTestPolicyV1} from "./🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
@@ -9,16 +11,15 @@ export {coverageDir,coverageSlug,repositoryProcessOwnerContextV1,repositoryVites
 export type {CoverageKind};
 import { scriptCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { readBuildMode } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { type ScriptControl } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { safeGitEnv, gitSpawnEnv } from "./🏃️process/🌿️environment/🌳️git/🟦️.ts";
 export { safeGitEnv, gitSpawnEnv };
-import { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir } from "./🗂️workspaces/🧬️metadata/🟦️.ts";
-export { SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
+import { HUB_DATA_DIR_NAME,SPACE_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir } from "./🗂️workspaces/🧬️metadata/🟦️.ts";
+export { HUB_DATA_DIR_NAME,SPACE_DATA_DIR_NAME,MAP_CACHE_DIR_NAME,SEMIO_ROOT_DIR, REPO_META_DIR_NAME, getSemioRoot, getRepoMetaDir };
 import { runOwnedCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildWasmWebV1, type WasmPackWebBuildOptions, type WasmBuildPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
 import type { ProcessOwnerContextV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📋️context/🟦️.ts";
 import { runVitestV1, vitestArgumentsV1, type VitestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
-import { type CargoTestPolicyV1, runCargoTestsV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { type CargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { BUILD_BUDGET_MS, CMD_BUDGET_MS, buildBudgetMs, cmdBudgetMs, daemonBudgetMs, orchestratorBudgetMs } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -52,9 +53,9 @@ import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspa
 import {repositoryCargoPreparationStorageV1} from "./⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioReleaseEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
-export const HUB_DATA_DIR_NAME = "🌐hub";
-export const SPACE_DATA_DIR_NAME = "🔗space";
-export const MAP_CACHE_DIR_NAME = "🗺️map";
+
+
+
 
 /** 🧊️ Captures one stable regular file through its retained descriptor and a shared byte admission. */
 export function readStableBuildFile(path: string, maximum: number, admission: { remaining: number }, check: () => void): Uint8Array {
@@ -1119,7 +1120,7 @@ export async function runCanonicalGoBuild(moduleRoot: string, args: string[], op
   writeFileSync(overlay, JSON.stringify({Replace:plan.replacements}));
   try {
     const { buildGoArtifactsV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🐹️go-build/🟦️.ts");
-    await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory:join(root,".cache","framework","leases"),budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control});
+    await buildGoArtifactsV1([`-overlay=${overlay}`,...args],{version:1,mode,cwd:resolve(moduleRoot),captureDirectory,leaseDirectory:join(root,".cache","b","l","m","data"),budgetMs:opts.budgetMs??buildBudgetMs()},{environment,control});
   } finally { rmSync(temporary,{recursive:true,force:true}); }
 }
 
@@ -1365,8 +1366,8 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 
 
 /** 🦀️ Composes selected repository workspace preparation with explicit neutral Cargo execution. */
-export async function runRepositoryCargoTests(packages:string[],cwd:string,control:ScriptControl,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
-  control.signal.throwIfAborted();{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");}
+export async function runRepositoryCargoTests(packages:string[],cwd:string,invocation:ScriptInvocation,extraArgs:string[]=[],env:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+  invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo deadline exhausted");}
   const repository=getWorkspaceRoot(), rows=cargoRepositoryPackageSelections(repository,packages);
   const manifests=rows.length?[...new Set(rows.map(row=>row.manifest))]:[relative(repository,join(cwd,"Cargo.toml"))];
   const scopes=new Map<string,string[]>();
@@ -1374,100 +1375,17 @@ export async function runRepositoryCargoTests(packages:string[],cwd:string,contr
   for(const manifests of scopes.values()){
     const manifest=resolve(repository,manifests[0]!),names=rows.filter(row=>manifests.includes(row.manifest)).map(row=>row.name);
     prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(repository),repository,["test","--manifest-path",manifest,...names.flatMap(name=>["-p",name])],cwd,env);
-    control.signal.throwIfAborted();{const remaining=control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo preparation deadline exhausted");}
+    invocation.control.signal.throwIfAborted();{const remaining=invocation.control.remainingMilliseconds();if(remaining!==null&&remaining<1)throw Error("Original repository Cargo preparation deadline exhausted");}
     const policy=repositoryCargoTestPolicyV1(manifest,cwd,env);
-    await runCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env,signal:control.signal,remainingMilliseconds:()=>control.remainingMilliseconds()},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets});
+    await runRepositoryCargoTestsV1({manifestPath:manifest,packages:names,cwd,extraArgs,environment:env},{...policy,assertionBudgets:names.length?Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs(names,value,env)])) as Record<TestLevel,number>:policy.assertionBudgets},repository,invocation);
   }
 }
 
 
 
-export interface RunProbeResult {
-  status: number | null;
-  stdout: string;
-  stderr: string;
-  signal: NodeJS.Signals | null;
-}
-
-type CapturedSpawnOptions = Readonly<{
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
-  input?: Buffer | string;
-  timeout?: number;
-  killSignal?: NodeJS.Signals | number;
-}>;
-
-type CapturedSpawnResult = Readonly<{
-  status: number | null;
-  stdout: Buffer;
-  stderr: Buffer;
-  signal: NodeJS.Signals | null;
-  error?: Error;
-}>;
-
-const CAPTURE_WRAPPER_SOURCE = `
-const { readFileSync, writeFileSync } = await import("node:fs");
-const { spawnSync } = await import("node:child_process");
-const spec = JSON.parse(readFileSync(process.env.SEMIO_PROCESS_CAPTURE_SPEC, "utf8"));
-const input = spec.input === undefined ? undefined : Buffer.from(spec.input, "base64");
-const result = spawnSync(spec.cmd, spec.args, { cwd: spec.cwd, env: spec.env, timeout: spec.timeout, killSignal: spec.killSignal, stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"], ...(input === undefined ? {} : { input }), maxBuffer: 536870912 });
-writeFileSync(spec.stdoutPath, result.stdout ?? Buffer.alloc(0));
-writeFileSync(spec.stderrPath, result.stderr ?? Buffer.alloc(0));
-const sourceError = result.error;
-const error = sourceError ? { message: sourceError.message, code: sourceError.code, errno: sourceError.errno, syscall: sourceError.syscall, path: sourceError.path, spawnargs: sourceError.spawnargs } : undefined;
-writeFileSync(spec.metaPath, JSON.stringify({ status: result.status, signal: result.signal, error }));
-`;
-
-/** 📥️Captures subprocess bytes through a child-owned OS-file bridge so Bun test and native process hosts agree exactly. */
-function spawnCapturedSync(cmd: string, args: readonly string[], opts: CapturedSpawnOptions = {}): CapturedSpawnResult {
-  const captureRoot = mkdtempSync(join(tmpdir(), "semio-process-capture-"));
-  const stdoutPath = join(captureRoot, "stdout");
-  const stderrPath = join(captureRoot, "stderr");
-  const metaPath = join(captureRoot, "meta.json");
-  const specPath = join(captureRoot, "spec.json");
-  const env = Object.fromEntries(Object.entries(opts.env ?? process.env).filter((entry): entry is [string, string] => entry[1] !== undefined));
-  writeFileSync(
-    specPath,
-    JSON.stringify({ cmd, args, cwd: opts.cwd, env, input: opts.input === undefined ? undefined : Buffer.from(opts.input).toString("base64"), timeout: opts.timeout, killSignal: opts.killSignal, stdoutPath, stderrPath, metaPath }),
-  );
-  try {
-    const launcher = spawnSync(process.execPath, ["-e", CAPTURE_WRAPPER_SOURCE], {
-      env: { ...process.env, SEMIO_PROCESS_CAPTURE_SPEC: specPath },
-      timeout: opts.timeout ? opts.timeout + 5_000 : undefined,
-      killSignal: opts.killSignal,
-      stdio: "ignore",
-    });
-    if (!existsSync(metaPath)) return { status: launcher.status, stdout: Buffer.alloc(0), stderr: Buffer.alloc(0), signal: launcher.signal, error: launcher.error };
-    const meta = JSON.parse(readFileSync(metaPath, "utf8")) as { status: number | null; signal: NodeJS.Signals | null; error?: NodeJS.ErrnoException };
-    const error = meta.error ? Object.assign(new Error(meta.error.message), meta.error) : undefined;
-    return { status: meta.status, stdout: readFileSync(stdoutPath), stderr: readFileSync(stderrPath), signal: meta.signal, error };
-  } finally {
-    rmSync(captureRoot, { recursive: true, force: true });
-  }
-}
-
-/** 🔍️Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
-export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
-  const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
-  const result = spawnCapturedSync(cmd, args, {
-    cwd: opts.cwd,
-    env: opts.env ?? process.env,
-    timeout: budgetMs,
-    killSignal: "SIGKILL",
-  });
-  if (result.error) {
-    if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
-      console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
-    }
-    throw result.error;
-  }
-  return {
-    status: result.status,
-    stdout: result.stdout.toString("utf8"),
-    stderr: result.stderr.toString("utf8"),
-    signal: result.signal,
-  };
-}
+import {spawnCapturedSync,runProbe} from "./🏃️process/🔍️probe/🟦️.ts";
+export {runProbe};
+export type {RunProbeResult} from "./🏃️process/🔍️probe/🟦️.ts";
 
 /** 🦀️ One explicit Cargo package/target and nonempty exact law selection. */
 /** 🦀️ Composes exact native execution with the repository's admitted manifest and compiler storage policy. */
@@ -2180,14 +2098,14 @@ export function parseExtensionCargoManifest(
 
 /** 📦 Packs the SHIPPED `wasm-release` component of one extension component crate — built, staged and verified against its committed
  * semantic descriptor by the one component stage — into a runtime-installable `.sxt` beside that crate (`dist/<id>.sxt`). */
-export async function runExtensionComponentPackage(opts: { readonly control: CompilerAdmissionControl; readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
+export async function runExtensionComponentPackage(opts: { readonly network:CargoDependencyNetworkV1;readonly control: CompilerAdmissionControl; readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
   const componentDir = resolve(opts.componentDir);
   const manifestPath = join(componentDir, "Cargo.toml");
   const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
   const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
   const { componentStageTargetV1, stageComponentV1 } = await import("../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
-  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify", opts.control);
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify", opts.control,opts.network);
   const componentWasm = new Uint8Array(readFileSync(staged.deliverable.wasm));
   const { packExtensionPackage } = await import("../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts");
   const manifest = {

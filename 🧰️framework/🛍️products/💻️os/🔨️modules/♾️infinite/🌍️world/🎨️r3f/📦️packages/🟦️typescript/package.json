@@ -30,9 +30,5 @@
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*"
   },
-  "bundleKind": "library",
-  "nx": {
-    "includedScripts": [],
-    "name": "@semio-tech/infinite-world-r3f"
-  }
+  "bundleKind": "library"
 }

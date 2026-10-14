@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Building, Storey};
+use crate::standards::v1::subsets::any::schema::snapshot::{Building, Storey};
 
 fn base() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();

@@ -6,14 +6,14 @@
 //! per axis, NURBS faces are tessellated; either one clears `exact`.
 
 use super::{ScopeMembers, ShapeScope};
-use crate::mass_properties::closest_point_on_face;
-use crate::tessellation::tessellate_face;
+use semio_framework_3d_brep_queries::mass_properties::closest_point_on_face;
+use semio_framework_3d_brep_tessellation::tessellate_face;
 use semio_framework_3d_brep_representation::arena::FaceId;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use std::f64::consts::{PI, TAU};
 
 /// 📦️ Axis-aligned bounds. `exact` is `false` when a NURBS curve or face made them approximate.

@@ -1,8 +1,8 @@
 //! ⬜️ `update-hss-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateHssInputs;
-use crate::diff::{En1993Diff, En1993LoadCaseDelta};
-use crate::En1993Snapshot;
+use crate::update_hss_inputs::UpdateHssInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993LoadCaseDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateHssInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.load_cases.iter().position(|row| row.id == payload.load_case.id) {

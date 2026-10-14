@@ -14,8 +14,8 @@ import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts
 import { ACTIVE_SEMIO_TECH_BUILD, cleanKillStrayProcesses } from "../🧟️stray-processes/🟦️.ts";
 
 /**
- * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
- * map/hub/space, and never the cache except through its own child-level policies.
+ * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts, and rustc
+ * incremental directories larger than 1 GiB — never map/hub/space, and never the rest of the cache.
  *
  * Two different mechanisms used to share the word "clean". This is the WORKSPACE one. Generated
  * test state is removed by `clean test`, which is owned by the testing domain and refuses to touch
@@ -99,7 +99,7 @@ export class CleanScript extends Script {
     const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
     const lines = [
       `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
-      ...(["misplaced", "root-transient", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "windows-illegal"] as const).map((kind) => {
+      ...(["misplaced", "root-transient", "gitignore", "ticket-file", "ticket-dir", "ticket-generated", "build-artifact", "cargo-incremental", "windows-illegal"] as const).map((kind) => {
         const rows = report.removals.filter((r) => r.kind === kind);
         return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
       }),

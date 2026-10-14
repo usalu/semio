@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-math-sampling-workspace"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Token-sampling step contract: logits workspace, step view, distribution, undo marks."
+
+[package.metadata.semio]
+role = "framework"
+id = "math-sampling-workspace"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_math_sampling_workspace"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-math-sampling-vocabulary = { path = "../../../🔤️vocabulary/📦️packages/🦀️rust" }
+semio-framework-math-sampling-config = { path = "../../../🎚️config/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

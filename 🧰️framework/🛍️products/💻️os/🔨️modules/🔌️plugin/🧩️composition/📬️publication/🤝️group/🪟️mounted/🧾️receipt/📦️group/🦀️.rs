@@ -54,10 +54,10 @@ pub(crate) struct MountedGroupReceipt {
     child_count: usize,
     has_parent: bool,
     phase: usize,
-    offset: usize,
+    pub(crate) offset: usize,
     close_phase: usize,
     close_field: usize,
-    closing: bool,
+    pub(crate) closing: bool,
     transferred: bool,
 }
 
@@ -157,7 +157,7 @@ impl MountedGroupReceipt {
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
     fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
     /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.
-    fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if (5..=8).contains(&self.close_phase) {
             let owner = match self.close_phase { 5 => &self.invocation, 6 => &self.parent, 7 => &self.child, _ => &self.edit };
@@ -172,7 +172,7 @@ impl MountedGroupReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
     }
     /// ♻️ Closes one retained causal field per turn and funds every indivisible allocation before taking it.
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
+    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
         if self.terminal_is_empty(){return RetainedCloneStep::Complete(Default::default());}
         let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if !plugin_grant_funds(self.retirement_demands().expect("fixed receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }self.closing=true;
         match self.close_phase{

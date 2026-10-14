@@ -1,7 +1,10 @@
 //! 🔺️ Writes every primitive buffer, optional material, exact PBR word and texture byte.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioUv, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use crate::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioPrimitive, SemioTopology, SemioMaterial, SemioTexture};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioMeshSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.mesh.dsl v1\n","stdio.semio.mesh.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}

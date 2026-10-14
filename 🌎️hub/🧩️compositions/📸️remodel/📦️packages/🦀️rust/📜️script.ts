@@ -20,7 +20,7 @@ class RegenerateExampleScript extends BundleScript {
   run(segments: string[]): void {
     const example = segments[0] ?? "synthetic-orbit";
     if (example !== "synthetic-orbit") throw new Error(`unknown remodel example \`${example}\`; known: synthetic-orbit`);
-    runCargo(["test", "-p", "semio-hub-remodel", "--lib", "regenerates_the_synthetic_orbit_example", "--", "--ignored", "--nocapture"], this.repoRoot);
+    runCargo(["test", "--manifest-path", "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml", "-p", "semio-s-artifact-remodel-remodeling", "--test", "editor", "regenerates_the_synthetic_orbit_example", "--", "--ignored", "--nocapture"], this.repoRoot);
   }
 }
 

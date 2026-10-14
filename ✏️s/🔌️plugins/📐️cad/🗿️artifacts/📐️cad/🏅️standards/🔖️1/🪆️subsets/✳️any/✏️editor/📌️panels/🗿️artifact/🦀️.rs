@@ -1,12 +1,12 @@
 //! 📄️ CAD play app panel — the document tree: every pane's objects (with their primitive children)
 //! and reference overlays, plus the scene's nodes.
 
-use crate::editor::cad::modes::edit;
-use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
-use crate::standards::v1::subsets::any::schema::geometry::CadObject;
-use crate::standards::v1::subsets::any::schema::inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
-use crate::{CadPaneId, CadReference, CadSnapshot};
+use semio_s_artifact_cad_cad_modes;
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
+use semio_s_artifact_cad_cad_model::geometry::CadObject;
+use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, RowActionPlacement};
 use semio_framework_plugin::row_action;
 use semio_framework_plugin::row_target;
@@ -183,7 +183,4 @@ pub fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels, windows: 
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

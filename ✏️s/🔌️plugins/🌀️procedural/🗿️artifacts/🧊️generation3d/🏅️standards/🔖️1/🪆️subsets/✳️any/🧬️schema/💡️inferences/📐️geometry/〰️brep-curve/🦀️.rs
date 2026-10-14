@@ -1,18 +1,30 @@
 //! 〰️ `brep.curve` computes: lines, arcs, circles, ellipses, splines, polygons and helices built in a fresh kernel session (polylines at value level) and exported as shape values.
 //!
 //! Besides the ten computes this module owns the value-level views the profile and path inputs of the surface and solid computes share: a polyline built directly as a wire value and a curve or an edge read as a one-edge wire.
+#![allow(clippy::result_large_err)]
 
-use super::super::prelude::*;
-use super::super::value::FAULT_PREFIX;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_geometry_compute::failed;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
+use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
 use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, ShapeRoot, ShapeValue, ShapeWire};
 use semio_framework_3d_brep_operations::euler::{make_edge, make_vertex};
 use semio_framework_3d_brep_operations::primitives::make_polyline_wire;
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::tolerance::Tol;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_tolerance::Tol;
+use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as KernelVec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3 as KernelVec3};
 use std::f64::consts::TAU;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Arc;
@@ -311,6 +323,8 @@ cheap! {
     helix => helix_outputs,
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-curve", include_str!("../../../🗂️catalogue/🔣️brep-curve.json"));
 /// 🗃️ The `brep.curve` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.curve.line", start: line },

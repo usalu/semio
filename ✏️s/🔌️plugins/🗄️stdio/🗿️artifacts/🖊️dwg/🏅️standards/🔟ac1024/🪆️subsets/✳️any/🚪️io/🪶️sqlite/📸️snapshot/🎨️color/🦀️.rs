@@ -1,13 +1,14 @@
 //! 🎨️ DWG's owned complex-color variants and optional book/name metadata.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColorValue;
 use super::reader::{byte,optional_text,word,Reader};
 use super::xrecord::require_null;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::Projection;
 use Cell::{Integer as I,Text as T,Null as N};
 
-pub(super) fn project(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,color:&DwgComplexColor)->Result<(),ValueError>{
+pub fn project(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,color:&DwgComplexColor)->Result<(),ValueError>{
     let(kind,red,green,blue,index)=match color.value{
         DwgComplexColorValue::None=>("none",N,N,N,N),DwgComplexColorValue::ByLayer=>("by_layer",N,N,N,N),DwgComplexColorValue::ByBlock=>("by_block",N,N,N,N),
         DwgComplexColorValue::ByColor{red,green,blue}=>("by_color",I(i64::from(red)),I(i64::from(green)),I(i64::from(blue)),N),DwgComplexColorValue::ByAci{index}=>("by_aci",N,N,N,I(i64::from(index))),DwgComplexColorValue::ByPen{index}=>("by_pen",N,N,N,I(i64::from(index))),
@@ -15,7 +16,7 @@ pub(super) fn project(projection:&mut Projection<'_,'_>,table:&'static str,id:i6
     };
     projection.insert_key(table,id,&[I(i64::from(color.index)),T(kind),red,green,blue,index,color.name.as_deref().map(T).unwrap_or(N),color.book_name.as_deref().map(T).unwrap_or(N)])
 }
-pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<DwgComplexColor,ValueError>{
+pub fn reconstruct(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<DwgComplexColor,ValueError>{
     let row=reader.component(table,id)?;
     let value=match row.text(2)?{
         "by_color"=>{require_null(row,&[6])?;DwgComplexColorValue::ByColor{red:byte(row,3)?,green:byte(row,4)?,blue:byte(row,5)?}},

@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/pack-record-token-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:pack-record-token"
+  ]
+}

@@ -2,7 +2,7 @@
 //! nothing changes.
 
 use super::SetClassificationSystem;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetClassificationSystem, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.classification_systems.get(&payload.id) else {

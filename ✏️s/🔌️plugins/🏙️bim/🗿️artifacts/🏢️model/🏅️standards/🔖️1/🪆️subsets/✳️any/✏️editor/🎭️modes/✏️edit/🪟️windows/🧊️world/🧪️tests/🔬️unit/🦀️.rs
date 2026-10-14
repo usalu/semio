@@ -93,8 +93,8 @@ async fn the_world_window_is_a_world3d_surface_bound_to_the_elements_domain() {
 #[semio_framework_async_macros::async_test]
 async fn the_phase_filter_draws_only_the_elements_of_its_phase() {
     let (mut snapshot, _) = demo();
-    snapshot.walls.get_mut("w-south").expect("wall").phase = crate::Phase::Demolished;
-    snapshot.walls.get_mut("w-east").expect("wall").phase = crate::Phase::Existing;
+    snapshot.walls.get_mut("w-south").expect("wall").phase = crate::standards::v1::subsets::any::schema::snapshot::Phase::Demolished;
+    snapshot.walls.get_mut("w-east").expect("wall").phase = crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing;
     let inference = ModelInference::infer(&snapshot).expect("infers");
     let drawn = |view_phase: &str| -> Vec<String> { instances(&scene(&snapshot, &inference, &BimWorldWindowConfig { view_phase: view_phase.into(), ..BimWorldWindowConfig::default() }, &[], &[], 1)).iter().map(|instance| instance["id"].as_str().expect("id").to_string()).collect() };
     assert_eq!(drawn("").len(), 4, "an empty filter and 'all' draw every element");

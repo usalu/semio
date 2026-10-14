@@ -2,7 +2,7 @@
 
 use super::super::delete_window_type::DeleteWindowType;
 use super::CreateWindowType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateWindowType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.window_types.contains_key(&payload.id) {

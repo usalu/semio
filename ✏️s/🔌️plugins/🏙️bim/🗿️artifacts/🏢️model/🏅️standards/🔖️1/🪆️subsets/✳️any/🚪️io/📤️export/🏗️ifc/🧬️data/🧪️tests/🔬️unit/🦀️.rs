@@ -1,8 +1,8 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, psets, real, rows, string, target};
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
-use semio_s_artifact_stdio_ifc::part21::Part21Document;
-use crate::PropertyValue;
+use semio_s_artifact_stdio_contract::part21::Part21Document;
+use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue;
 
 #[test]
 fn property_values_map_every_kind_to_its_ifc_measure() {

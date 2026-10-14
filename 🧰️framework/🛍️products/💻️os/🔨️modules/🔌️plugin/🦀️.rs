@@ -122,7 +122,7 @@ macro_rules! component_persistent_local {
 #[doc(hidden)]
 pub mod owned_abi {
     /// 📋️ Fixed stack authority preserves all original scalar fields and refuses malformed extents.
-    pub fn original_job_budget(arguments:[u64;11])->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{semio_framework::kernel::OriginalJobBudget::from_scalar_arguments(arguments).map_err(|error|error.kind)}
+    pub fn original_job_budget(arguments:[u64;19])->Result<semio_framework::kernel::OriginalJobBudget,semio_framework_value::ValueRefusalKind>{semio_framework::kernel::OriginalJobBudget::from_scalar_arguments(arguments).map_err(|error|error.kind)}
 
     use semio_framework_value_derive::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
@@ -240,7 +240,7 @@ pub mod owned_abi {
     }
 
     /// 🌱️ The owned actor admission port never creates dynamic diagnostic prose on malformed input.
-    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
+    pub unsafe fn take_actor_admission_input(pointer:u32,length:u32)->Result<(semio_framework::kernel::RetainedTurnInput,semio_framework_value::RetainedCloneGrant),semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
 
     /// 📬️ Retains the original declared poll fields without an error-text carrier.
     pub unsafe fn take_actor_poll_input(pointer:u32,length:u32)->Result<PollInput,semio_framework_value::ValueRefusalKind>{unsafe{take_actor_json(pointer,length)}}
@@ -441,6 +441,8 @@ pub(crate) mod media_export;
 pub(crate) mod media_operation_refusal;
 #[cfg(feature="media-turn-testing")]
 pub use media_operation_refusal::tests as media_turn_laws;
+#[cfg(feature="reserved-producer-testing")]
+pub use tool_contract::original_reserved_producer_laws;
 #[path="🚪️io/🛂️authority/🦀️.rs"]
 pub mod operation_authority;
 #[path="👷️job/🧾️bytes/🦀️.rs"]
@@ -740,7 +742,6 @@ pub use app::{
     ArtifactRuntimeCapabilityRequirement,
     ArtifactSerializer,
     ArtifactSnapshotCloseLease,
-    ArtifactSnapshotDisposer,
     ArtifactStoreInitializationAuthority,
     ArtifactStoreInitializationJob,
     ArtifactToolCompletion,

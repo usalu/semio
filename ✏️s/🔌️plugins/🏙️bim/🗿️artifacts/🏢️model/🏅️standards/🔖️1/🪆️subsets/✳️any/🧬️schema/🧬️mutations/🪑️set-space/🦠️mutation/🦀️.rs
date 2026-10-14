@@ -1,6 +1,6 @@
 //! 🪑️ `set-space` payload. Sets any of a room's number, name, boundary, usage, zone and floor, wall and ceiling finish (an assigned null leaves the zone or removes a finish); absent fields stay untouched and the number stays unique within the storey.
 
-use crate::{Assigned, ModelDiff, ModelMutation, ModelSnapshot, SpaceBoundary, SpacePatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::SpacePatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, SpaceBoundary}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

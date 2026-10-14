@@ -37,7 +37,7 @@ semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️module
 [dev-dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-plugin-host.workspace = true
-semio-framework-plugin-interpreter.workspace = true
+semio-framework-plugin-guest-contract.workspace = true
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 serde.workspace = true

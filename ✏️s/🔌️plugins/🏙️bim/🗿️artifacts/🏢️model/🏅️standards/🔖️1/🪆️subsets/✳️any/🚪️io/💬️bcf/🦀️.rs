@@ -11,7 +11,7 @@
 
 use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, document_text, element, leaf, number};
 use crate::standards::v1::subsets::any::io::export::ifc::writer::global_id;
-use crate::{ClashRef, Issue, IssueComment, IssuePriority, IssueStatus, IssueViewpoint, ModelSnapshot, Point3, SectionBox, ViewCamera};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, Issue, IssueComment, IssuePriority, IssueStatus, IssueViewpoint, ModelSnapshot, Point3, SectionBox, ViewCamera};
 use semio_framework::io_schema::{Confidence, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
@@ -207,7 +207,7 @@ pub fn document_of(model: &ModelSnapshot) -> Document {
             assigned_to: issue.assignee.clone(),
             creation_date: date_time(&issue.created),
             creation_author: issue.author.clone(),
-            comments: crate::comments_of(model, id).into_iter().map(|(comment_id, comment)| Comment { guid: guid_of(comment_id), date: date_time(&comment.date), author: comment.author.clone(), text: comment.text.clone() }).collect(),
+            comments: crate::standards::v1::subsets::any::schema::snapshot::comments_of(model, id).into_iter().map(|(comment_id, comment)| Comment { guid: guid_of(comment_id), date: date_time(&comment.date), author: comment.author.clone(), text: comment.text.clone() }).collect(),
             viewpoints: viewpoint_of(&guid_of(&format!("{id}#viewpoint")), issue).into_iter().collect(),
         })
         .collect();
@@ -470,7 +470,7 @@ pub fn issues_of(document: &Document, resolve: &dyn Fn(&str) -> Option<String>) 
                 labels.push(label.clone());
             }
         }
-        let valid = |moment: &str| if crate::valid_timestamp(moment) { moment.to_string() } else { "1970-01-01".to_string() };
+        let valid = |moment: &str| if crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(moment) { moment.to_string() } else { "1970-01-01".to_string() };
         imported.issues.insert(
             topic.guid.clone(),
             Issue {
@@ -507,7 +507,7 @@ pub fn import_bcf(bytes: &[u8], resolve: &dyn Fn(&str) -> Option<String>) -> Res
 
 /// 🔎️ The resolver of IFC GlobalIds of `model`: the GlobalId the IFC export writes for each of its elements, spaces and zones.
 pub fn resolver_of(model: &ModelSnapshot) -> impl Fn(&str) -> Option<String> {
-    let ids: BTreeSet<String> = crate::classified(model).into_iter().map(|(id, _)| id).chain(model.spaces.keys().cloned()).chain(model.zones.keys().cloned()).collect();
+    let ids: BTreeSet<String> = crate::standards::v1::subsets::any::schema::snapshot::classified(model).into_iter().map(|(id, _)| id).chain(model.spaces.keys().cloned()).chain(model.zones.keys().cloned()).collect();
     let by_guid: BTreeMap<String, String> = ids.into_iter().map(|id| (ifc_guid(&id), id)).collect();
     move |guid: &str| by_guid.get(guid).cloned()
 }
@@ -530,7 +530,7 @@ pub fn table_json(model: &ModelSnapshot) -> String {
             V::object([("eye".to_string(), vector(camera.eye)), ("look".to_string(), vector(camera.direction)), ("up".to_string(), vector(camera.up))])
         });
         let section = issue.viewpoint.as_ref().and_then(|viewpoint| viewpoint.section.as_ref()).map_or(V::Null, |section| V::object([("min".to_string(), vector([section.min.x, section.min.y, section.min.z])), ("max".to_string(), vector([section.max.x, section.max.y, section.max.z]))]));
-        let comments = crate::comments_of(model, id).into_iter().map(|(_, comment)| V::object([("author".to_string(), V::String(comment.author.clone())), ("text".to_string(), V::String(comment.text.clone()))]));
+        let comments = crate::standards::v1::subsets::any::schema::snapshot::comments_of(model, id).into_iter().map(|(_, comment)| V::object([("author".to_string(), V::String(comment.author.clone())), ("text".to_string(), V::String(comment.text.clone()))]));
         let isolate = issue.viewpoint.as_ref().map_or_else(Vec::new, |viewpoint| viewpoint.isolate.clone());
         let row = V::object([
             ("status".to_string(), V::String(status_name(issue.status).to_string())),

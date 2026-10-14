@@ -12,7 +12,7 @@
 //! dissolved `semio_framework_math::algebra` entirely) sibling-subset
 //! `🔢️value/🧬️schema/➕️algebra-internals` for `MatD`/`VecD` — see that file's own doc comment.
 
-use crate::schema::probability_internals::Continuous;
+use semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Continuous;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 // #region 🔖️Errors
@@ -27,9 +27,9 @@ pub enum CausalError {
     Singular(&'static str),
     InvalidQuery(String),
     InferenceTooLarge(usize, usize),
-    Stats(crate::schema::statistics_internals::StatisticsError),
-    Tabular(crate::schema::tabular_internals::TabularError),
-    Probability(crate::schema::probability_internals::ProbabilityError),
+    Stats(semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::StatisticsError),
+    Tabular(semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError),
+    Probability(semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError),
 }
 
 impl std::fmt::Display for CausalError {
@@ -61,20 +61,20 @@ impl std::error::Error for CausalError {
     }
 }
 
-impl From<crate::schema::statistics_internals::StatisticsError> for CausalError {
-    fn from(error: crate::schema::statistics_internals::StatisticsError) -> Self {
+impl From<semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::StatisticsError> for CausalError {
+    fn from(error: semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::StatisticsError) -> Self {
         Self::Stats(error)
     }
 }
 
-impl From<crate::schema::tabular_internals::TabularError> for CausalError {
-    fn from(error: crate::schema::tabular_internals::TabularError) -> Self {
+impl From<semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError> for CausalError {
+    fn from(error: semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError) -> Self {
         Self::Tabular(error)
     }
 }
 
-impl From<crate::schema::probability_internals::ProbabilityError> for CausalError {
-    fn from(error: crate::schema::probability_internals::ProbabilityError) -> Self {
+impl From<semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError> for CausalError {
+    fn from(error: semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError) -> Self {
         Self::Probability(error)
     }
 }
@@ -544,9 +544,9 @@ pub fn implied_independencies(dag: &CausalDag) -> Vec<CiStatement> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn test_implied_independencies<T: CiTest>(
     dag: &CausalDag,
-    data: &crate::schema::tabular_internals::Table,
+    data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table,
     test: &T,
-) -> Result<Vec<(CiStatement, crate::schema::statistics_internals::TestResult)>, CausalError> {
+) -> Result<Vec<(CiStatement, semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::TestResult)>, CausalError> {
     implied_independencies(dag)
         .into_iter()
         .map(|stmt| {
@@ -560,13 +560,13 @@ pub fn test_implied_independencies<T: CiTest>(
 // #region 🔖️CiTest
 /// 🔬️ A conditional-independence test on tabular data, indexed by table/DAG column.
 pub trait CiTest {
-    fn test(&self, data: &crate::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::schema::statistics_internals::TestResult, CausalError>;
+    fn test(&self, data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::TestResult, CausalError>;
 }
 
 /// 🔬️ Fisher-z partial-correlation test for continuous data, precomputing the correlation matrix
 /// once per dataset — PC-stable runs thousands of tests against the same table.
 pub struct FisherZ {
-    corr: semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD,
+    corr: semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD,
     n: usize,
 }
 
@@ -574,15 +574,15 @@ impl FisherZ {
     /// 🔬️ Precomputes the complete-case correlation matrix over `columns` (in the same order as
     /// the paired [`CausalDag`]'s variable indices).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn for_table(data: &crate::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
-        let (corr, n) = crate::schema::statistics_internals::correlation_from_table(data, columns)?;
+    pub fn for_table(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, columns: &[usize]) -> Result<Self, CausalError> {
+        let (corr, n) = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::correlation_from_table(data, columns)?;
         Ok(Self { corr, n })
     }
 }
 
 impl CiTest for FisherZ {
-    fn test(&self, _data: &crate::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::schema::statistics_internals::TestResult, CausalError> {
-        Ok(crate::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n)?)
+    fn test(&self, _data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::TestResult, CausalError> {
+        Ok(semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::fisher_z_test(&self.corr, x, y, z, self.n)?)
     }
 }
 
@@ -590,13 +590,13 @@ impl CiTest for FisherZ {
 pub struct GSquared;
 
 impl CiTest for GSquared {
-    fn test(&self, data: &crate::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<crate::schema::statistics_internals::TestResult, CausalError> {
+    fn test(&self, data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, x: usize, y: usize, z: &[usize]) -> Result<semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::TestResult, CausalError> {
         let cat_x = data.categorical(x)?;
         let cat_y = data.categorical(y)?;
-        let given_cols: Vec<&crate::schema::tabular_internals::CategoricalColumn> = z.iter().map(|&zi| data.categorical(zi)).collect::<Result<_, _>>()?;
+        let given_cols: Vec<&semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::CategoricalColumn> = z.iter().map(|&zi| data.categorical(zi)).collect::<Result<_, _>>()?;
         let given_codes: Vec<&[u32]> = given_cols.iter().map(|c| c.codes()).collect();
         let given_levels: Vec<usize> = given_cols.iter().map(|c| c.n_levels()).collect();
-        Ok(crate::schema::statistics_internals::g2_ci_test(cat_x.codes(), cat_y.codes(), &given_codes, (cat_x.n_levels(), cat_y.n_levels(), &given_levels))?)
+        Ok(semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::g2_ci_test(cat_x.codes(), cat_y.codes(), &given_codes, (cat_x.n_levels(), cat_y.n_levels(), &given_levels))?)
     }
 }
 // #endregion 🔖️CiTest
@@ -676,7 +676,7 @@ pub struct PcResult {
 /// v-structure orientation and Meek-rule closure.
 #[allow(clippy::needless_range_loop, reason = "x indexes both adj_snapshot and, via the inner loop, cpdag/removals by the same variable id — enumerate() over one Vec wouldn't simplify the rest")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pc_stable<T: CiTest>(data: &crate::schema::tabular_internals::Table, test: &T, opts: PcOptions) -> Result<PcResult, CausalError> {
+pub fn pc_stable<T: CiTest>(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, test: &T, opts: PcOptions) -> Result<PcResult, CausalError> {
     let n = data.n_cols();
     let mut cpdag = Cpdag::complete(data.names().to_vec());
     let mut sepsets: HashMap<(usize, usize), Vec<usize>> = HashMap::new();
@@ -744,24 +744,24 @@ pub fn orient_v_structures(cpdag: &mut Cpdag, sepsets: &HashMap<(usize, usize), 
 /// `-n/2 * ln(sigma^2) - (|parents|+1)/2 * ln(n)`, the per-node summand a score-based search adds/removes.
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn local_bic(data: &crate::schema::tabular_internals::Table, node: usize, parents: &[usize]) -> Result<f64, CausalError> {
+pub fn local_bic(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, node: usize, parents: &[usize]) -> Result<f64, CausalError> {
     let y = data.continuous(node)?;
     let n = y.len();
     let p = parents.len();
     if parents.is_empty() {
-        let m = crate::schema::statistics_internals::mean(y)?;
+        let m = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::mean(y)?;
         let ss: f64 = y.iter().map(|v| (v - m).powi(2)).sum();
         let sigma2 = (ss / n as f64).max(1e-12);
         return Ok(-0.5 * n as f64 * sigma2.ln() - 0.5 * (n as f64).ln());
     }
-    let mut design = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, p);
+    let mut design = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, p);
     for (col, &parent) in parents.iter().enumerate() {
         let values = data.continuous(parent)?;
         for row in 0..n {
             design.set(row, col, values[row]);
         }
     }
-    let fit = crate::schema::statistics_internals::ols(&design, y, true)?;
+    let fit = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::ols(&design, y, true)?;
     let ss_res: f64 = fit.residuals.iter().map(|r| r * r).sum();
     let sigma2 = (ss_res / n as f64).max(1e-12);
     Ok(-0.5 * n as f64 * sigma2.ln() - 0.5 * (p as f64 + 1.0) * (n as f64).ln())
@@ -769,14 +769,14 @@ pub fn local_bic(data: &crate::schema::tabular_internals::Table, node: usize, pa
 
 /// 📉️ Sum of local BICs over every node of `dag` given its own parent set.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dag_bic(data: &crate::schema::tabular_internals::Table, dag: &CausalDag) -> Result<f64, CausalError> {
+pub fn dag_bic(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, dag: &CausalDag) -> Result<f64, CausalError> {
     (0..dag.n()).map(|v| local_bic(data, v, dag.parents(v))).sum()
 }
 
 /// 📦️ DirectLiNGAM output: the recovered causal order and the pruned weighted adjacency (`weights[child][parent]`).
 pub struct LingamResult {
     pub order: Vec<usize>,
-    pub weights: semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD,
+    pub weights: semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD,
     pub dag: CausalDag,
 }
 
@@ -791,7 +791,7 @@ pub struct LingamResult {
 /// identifiability condition (independent, non-Gaussian noise) to detect residual dependence.
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the columns[parent] slice — enumerate() would only remove one of the two")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn direct_lingam(data: &crate::schema::tabular_internals::Table, prune_alpha: f64) -> Result<LingamResult, CausalError> {
+pub fn direct_lingam(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, prune_alpha: f64) -> Result<LingamResult, CausalError> {
     let n = data.n_cols();
     let columns: Vec<Vec<f64>> = (0..n).map(|i| data.continuous(i).map(<[f64]>::to_vec)).collect::<Result<_, _>>()?;
     let mut working: HashMap<usize, Vec<f64>> = (0..n).map(|i| (i, standardize(&columns[i]))).collect();
@@ -835,7 +835,7 @@ pub fn direct_lingam(data: &crate::schema::tabular_internals::Table, prune_alpha
     }
     order.push(remaining[0]);
 
-    let mut weights = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, n);
+    let mut weights = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, n);
     let mut edges = Vec::new();
     for (pos, &child) in order.iter().enumerate() {
         let candidate_parents = &order[..pos];
@@ -843,19 +843,19 @@ pub fn direct_lingam(data: &crate::schema::tabular_internals::Table, prune_alpha
             continue;
         }
         let n_rows = columns[child].len();
-        let mut design = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n_rows, candidate_parents.len());
+        let mut design = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n_rows, candidate_parents.len());
         for (col, &parent) in candidate_parents.iter().enumerate() {
             for row in 0..n_rows {
                 design.set(row, col, columns[parent][row]);
             }
         }
-        let fit = crate::schema::statistics_internals::ols(&design, &columns[child], true)?;
+        let fit = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::ols(&design, &columns[child], true)?;
         for (col, &parent) in candidate_parents.iter().enumerate() {
             let coeff = fit.coefficients[col + 1];
             let se = fit.std_errors[col + 1];
             if se > 1e-12 {
                 let t_stat = coeff / se;
-                let p_value = 2.0 * (1.0 - crate::schema::probability_internals::StudentT::new(fit.dof as f64)?.cdf(t_stat.abs()));
+                let p_value = 2.0 * (1.0 - semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::StudentT::new(fit.dof as f64)?.cdf(t_stat.abs()));
                 if p_value < prune_alpha {
                     weights.set(child, parent, coeff);
                     edges.push((parent, child));
@@ -873,7 +873,7 @@ pub fn direct_lingam(data: &crate::schema::tabular_internals::Table, prune_alpha
 /// equivalence-class insert/delete validity conditions; returns the CPDAG of the local optimum's
 /// Markov equivalence class.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ges(data: &crate::schema::tabular_internals::Table) -> Result<Cpdag, CausalError> {
+pub fn ges(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table) -> Result<Cpdag, CausalError> {
     let n = data.n_cols();
     let names = data.names().to_vec();
     let mut edges: Vec<(usize, usize)> = Vec::new();
@@ -1042,37 +1042,37 @@ pub fn identify(dag: &CausalDag, x: usize, y: usize) -> Result<Identification, C
 #[derive(Clone, Debug)]
 pub struct LinearGaussianScm {
     pub dag: CausalDag,
-    pub weights: semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD,
-    pub intercepts: semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD,
-    pub noise_var: semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD,
+    pub weights: semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD,
+    pub intercepts: semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD,
+    pub noise_var: semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD,
 }
 
 impl LinearGaussianScm {
     /// 📈️ Per-node OLS on parents (roots get their marginal mean/variance).
     #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the pv slice — enumerate() would only remove one of the two")]
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn fit(dag: &CausalDag, data: &crate::schema::tabular_internals::Table) -> Result<Self, CausalError> {
+    pub fn fit(dag: &CausalDag, data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table) -> Result<Self, CausalError> {
         let n = dag.n();
-        let mut weights = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, n);
-        let mut intercepts = semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::zeros(n);
-        let mut noise_var = semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::zeros(n);
+        let mut weights = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, n);
+        let mut intercepts = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD::zeros(n);
+        let mut noise_var = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD::zeros(n);
         for v in 0..n {
             let y = data.continuous(v)?;
             let parents = dag.parents(v);
             if parents.is_empty() {
-                intercepts.set(v, crate::schema::statistics_internals::mean(y)?);
-                noise_var.set(v, crate::schema::statistics_internals::variance(y).unwrap_or(1e-12).max(1e-12));
+                intercepts.set(v, semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::mean(y)?);
+                noise_var.set(v, semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::variance(y).unwrap_or(1e-12).max(1e-12));
                 continue;
             }
             let n_rows = y.len();
-            let mut design = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n_rows, parents.len());
+            let mut design = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n_rows, parents.len());
             for (col, &p) in parents.iter().enumerate() {
                 let pv = data.continuous(p)?;
                 for row in 0..n_rows {
                     design.set(row, col, pv[row]);
                 }
             }
-            let fit = crate::schema::statistics_internals::ols(&design, y, true)?;
+            let fit = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::ols(&design, y, true)?;
             intercepts.set(v, fit.coefficients[0]);
             for (col, &p) in parents.iter().enumerate() {
                 weights.set(v, p, fit.coefficients[col + 1]);
@@ -1085,7 +1085,7 @@ impl LinearGaussianScm {
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::schema::tabular_internals::Table, CausalError> {
+    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
         let mut columns = vec![vec![0.0f64; n_samples]; n];
         for row in 0..n_samples {
@@ -1095,11 +1095,11 @@ impl LinearGaussianScm {
                     val += self.weights.get(v, p) * columns[p][row];
                 }
                 let sd = self.noise_var.get(v).sqrt().max(1e-12);
-                val += crate::schema::probability_internals::Normal::new(0.0, sd)?.sample(rng);
+                val += semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::Normal::new(0.0, sd)?.sample(rng);
                 columns[v][row] = val;
             }
         }
-        Ok(crate::schema::tabular_internals::Table::from_f64_columns(self.dag.names().to_vec(), columns)?)
+        Ok(semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table::from_f64_columns(self.dag.names().to_vec(), columns)?)
     }
 
     /// ✂️ `do(v := value)` for each entry: cuts `v`'s incoming edges, fixes `intercept = value`, `noise_var = 0`.
@@ -1109,7 +1109,7 @@ impl LinearGaussianScm {
         let remaining_edges: Vec<(usize, usize)> = self.dag.edges().into_iter().filter(|&(_, child)| !intervened_set.contains(&child)).collect();
         let new_dag = CausalDag::new(self.dag.names().to_vec(), &remaining_edges)?;
         let n = self.dag.n();
-        let mut weights = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, n);
+        let mut weights = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, n);
         let mut intercepts = self.intercepts.clone();
         let mut noise_var = self.noise_var.clone();
         for v in 0..n {
@@ -1129,8 +1129,8 @@ impl LinearGaussianScm {
 
     /// 🧮️ `E[v]` for every `v`, via forward substitution in topological order.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn mean(&self) -> semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD {
-        let mut mu = semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::zeros(self.dag.n());
+    pub fn mean(&self) -> semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD {
+        let mut mu = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD::zeros(self.dag.n());
         for &v in self.dag.topological_order() {
             let mut val = self.intercepts.get(v);
             for &p in self.dag.parents(v) {
@@ -1143,16 +1143,16 @@ impl LinearGaussianScm {
 
     /// 🧮️ Implied covariance `(I−B)⁻¹ D (I−B)⁻ᵀ`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn implied_covariance(&self) -> Result<semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD, CausalError> {
+    pub fn implied_covariance(&self) -> Result<semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD, CausalError> {
         let n = self.dag.n();
-        let mut i_minus_b = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::identity(n);
+        let mut i_minus_b = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::identity(n);
         for v in 0..n {
             for &p in self.dag.parents(v) {
                 i_minus_b.set(v, p, -self.weights.get(v, p));
             }
         }
-        let inv = crate::schema::statistics_internals::invert(&i_minus_b)?;
-        let mut d = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, n);
+        let inv = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::invert(&i_minus_b)?;
+        let mut d = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, n);
         for v in 0..n {
             d.set(v, v, self.noise_var.get(v));
         }
@@ -1189,7 +1189,7 @@ impl LinearGaussianScm {
     /// noise term from a fully observed row, applies `interventions`, and re-propagates the same
     /// noise — exact for a linear-Gaussian model.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD, CausalError> {
+    pub fn counterfactual(&self, observed: &[f64], interventions: &[(usize, f64)]) -> Result<semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD, CausalError> {
         let n = self.dag.n();
         if observed.len() != n {
             return Err(CausalError::DimensionMismatch(format!("observed row has {} entries, expected {n}", observed.len())));
@@ -1203,7 +1203,7 @@ impl LinearGaussianScm {
             noise[v] = observed[v] - predicted;
         }
         let intervened_map: HashMap<usize, f64> = interventions.iter().copied().collect();
-        let mut out = semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::zeros(n);
+        let mut out = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD::zeros(n);
         for &v in self.dag.topological_order() {
             if let Some(&value) = intervened_map.get(&v) {
                 out.set(v, value);
@@ -1252,9 +1252,9 @@ pub struct DiscreteScm {
 impl DiscreteScm {
     /// 📊️ MLE CPTs from categorical columns with additive (Laplace) smoothing `pseudocount` (`0.0` = pure MLE).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn fit(dag: &CausalDag, data: &crate::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
+    pub fn fit(dag: &CausalDag, data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, pseudocount: f64) -> Result<Self, CausalError> {
         let n = dag.n();
-        let columns: Vec<&crate::schema::tabular_internals::CategoricalColumn> = (0..n).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
+        let columns: Vec<&semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::CategoricalColumn> = (0..n).map(|i| data.categorical(i)).collect::<Result<_, _>>()?;
         let cardinalities: Vec<usize> = (0..n).map(|v| columns[v].n_levels()).collect();
         let mut cpts = Vec::with_capacity(n);
         for v in 0..n {
@@ -1263,7 +1263,7 @@ impl DiscreteScm {
             let mut counts = vec![pseudocount; n_configs * cardinalities[v]];
             for row in 0..data.n_rows() {
                 let own = columns[v].codes()[row];
-                if own == crate::schema::tabular_internals::MISSING_CODE {
+                if own == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
                     continue;
                 }
                 let mut config = 0usize;
@@ -1271,7 +1271,7 @@ impl DiscreteScm {
                 let mut missing_parent = false;
                 for &p in &parents {
                     let code = columns[p].codes()[row];
-                    if code == crate::schema::tabular_internals::MISSING_CODE {
+                    if code == semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::MISSING_CODE {
                         missing_parent = true;
                         break;
                     }
@@ -1300,7 +1300,7 @@ impl DiscreteScm {
     /// 🎲️ Ancestral sampling in topological order.
     #[allow(clippy::needless_range_loop, reason = "row indexes a per-variable column selected by the inner topological-order loop, not a single Vec — no single iterator covers both loop levels")]
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<crate::schema::tabular_internals::Table, CausalError> {
+    pub fn simulate(&self, n_samples: usize, rng: &mut semio_framework_geometry::random::Rng) -> Result<semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, CausalError> {
         let n = self.dag.n();
         let mut codes = vec![vec![0u32; n_samples]; n];
         for row in 0..n_samples {
@@ -1328,7 +1328,7 @@ impl DiscreteScm {
         }
         let names = self.dag.names().to_vec();
         let columns: Vec<(Vec<u32>, Vec<String>)> = (0..n).map(|v| (codes[v].clone(), (0..self.cardinalities[v]).map(|k| format!("l{k}")).collect())).collect();
-        Ok(crate::schema::tabular_internals::Table::from_categorical_columns(names, columns)?)
+        Ok(semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table::from_categorical_columns(names, columns)?)
     }
 
     /// ✂️ `do(v := value)` for each entry: replaces `v`'s CPT with a point mass and drops its parents.
@@ -1521,9 +1521,9 @@ pub struct EstimationOptions {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn bootstrap_ci(
-    data: &crate::schema::tabular_internals::Table,
+    data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table,
     opts: &BootstrapOptions,
-    point_fn: &dyn Fn(&crate::schema::tabular_internals::Table) -> Result<f64, CausalError>,
+    point_fn: &dyn Fn(&semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table) -> Result<f64, CausalError>,
 ) -> (f64, f64) {
     let mut rng = semio_framework_geometry::random::Rng::from_seed(opts.seed);
     let n = data.n_rows();
@@ -1549,9 +1549,9 @@ fn bootstrap_ci(
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wrap_estimate(
     point: f64,
-    data: &crate::schema::tabular_internals::Table,
+    data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table,
     opts: &EstimationOptions,
-    point_fn: &dyn Fn(&crate::schema::tabular_internals::Table) -> Result<f64, CausalError>,
+    point_fn: &dyn Fn(&semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table) -> Result<f64, CausalError>,
 ) -> EffectEstimate {
     match &opts.bootstrap {
         Some(bootstrap_opts) => {
@@ -1563,7 +1563,7 @@ fn wrap_estimate(
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn naive_difference_point(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize) -> Result<f64, CausalError> {
+fn naive_difference_point(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize) -> Result<f64, CausalError> {
     let t = data.continuous(treatment)?;
     let y = data.continuous(outcome)?;
     let (mut sum1, mut n1, mut sum0, mut n0) = (0.0, 0usize, 0.0, 0usize);
@@ -1584,7 +1584,7 @@ fn naive_difference_point(data: &crate::schema::tabular_internals::Table, treatm
 
 /// 📏️ Level-1 baseline: `E[y|t=1] − E[y|t=0]` — biased under confounding, useful as a comparison point.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn naive_difference(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize, opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub fn naive_difference(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize, opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = naive_difference_point(data, treatment, outcome)?;
     Ok(wrap_estimate(point, data, opts, &|d| naive_difference_point(d, treatment, outcome)))
 }
@@ -1592,13 +1592,13 @@ pub fn naive_difference(data: &crate::schema::tabular_internals::Table, treatmen
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and a values/t slice — enumerate() would only remove one of the two")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn design_with_treatment(
-    data: &crate::schema::tabular_internals::Table,
+    data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table,
     treatment: usize,
     covariates: &[usize],
     treatment_value: Option<f64>,
-) -> Result<semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD, CausalError> {
+) -> Result<semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD, CausalError> {
     let n = data.n_rows();
-    let mut design = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, covariates.len() + 1);
+    let mut design = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, covariates.len() + 1);
     let t = data.continuous(treatment)?;
     for row in 0..n {
         design.set(row, 0, treatment_value.unwrap_or(t[row]));
@@ -1613,11 +1613,11 @@ fn design_with_treatment(
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn g_formula_point(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
+fn g_formula_point(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     let y = data.continuous(outcome)?;
     let design = design_with_treatment(data, treatment, covariates, None)?;
-    let fit = crate::schema::statistics_internals::ols(&design, y, true)?;
-    let predict_mean = |design: &semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD| -> f64 {
+    let fit = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::ols(&design, y, true)?;
+    let predict_mean = |design: &semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD| -> f64 {
         let n = design.rows;
         let p = design.cols;
         let total: f64 = (0..n).map(|row| fit.coefficients[0] + (0..p).map(|col| fit.coefficients[col + 1] * design.get(row, col)).sum::<f64>()).sum();
@@ -1631,17 +1631,17 @@ fn g_formula_point(data: &crate::schema::tabular_internals::Table, treatment: us
 /// 📏️ G-formula / regression-adjustment ATE: fit `y ~ t + covariates` by OLS, then average the
 /// model's predicted `y` at `t=1` minus at `t=0` over the empirical covariate distribution.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn g_formula_ate(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub fn g_formula_ate(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = g_formula_point(data, treatment, outcome, covariates)?;
     Ok(wrap_estimate(point, data, opts, &|d| g_formula_point(d, treatment, outcome, covariates)))
 }
 
 #[allow(clippy::needless_range_loop, reason = "row indexes both the MatD design matrix by (row, col) and the values slice — enumerate() would only remove the values index")]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn ipw_point(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
+fn ipw_point(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize]) -> Result<f64, CausalError> {
     const EPS: f64 = 1e-6;
     let n = data.n_rows();
-    let mut design = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(n, covariates.len());
+    let mut design = semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD::zeros(n, covariates.len());
     for (col, &c) in covariates.iter().enumerate() {
         let values = data.continuous(c)?;
         for row in 0..n {
@@ -1649,8 +1649,8 @@ fn ipw_point(data: &crate::schema::tabular_internals::Table, treatment: usize, o
         }
     }
     let t = data.continuous(treatment)?;
-    let fit = crate::schema::statistics_internals::logistic(&design, t, true)?;
-    let propensity = crate::schema::statistics_internals::logistic_predict(&fit, &design, true)?;
+    let fit = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::logistic(&design, t, true)?;
+    let propensity = semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals::logistic_predict(&fit, &design, true)?;
     let y = data.continuous(outcome)?;
     let (mut num1, mut den1, mut num0, mut den0) = (0.0, 0.0, 0.0, 0.0);
     for row in 0..n {
@@ -1672,7 +1672,7 @@ fn ipw_point(data: &crate::schema::tabular_internals::Table, treatment: usize, o
 /// 📏️ Inverse-probability weighting ATE: logistic propensity model, Hájek (normalized-weight)
 /// estimator, propensities clipped to `[1e-6, 1-1e-6]`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ipw_ate(data: &crate::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
+pub fn ipw_ate(data: &semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::Table, treatment: usize, outcome: usize, covariates: &[usize], opts: &EstimationOptions) -> Result<EffectEstimate, CausalError> {
     let point = ipw_point(data, treatment, outcome, covariates)?;
     Ok(wrap_estimate(point, data, opts, &|d| ipw_point(d, treatment, outcome, covariates)))
 }

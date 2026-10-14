@@ -33,7 +33,8 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
-semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
@@ -59,18 +60,11 @@ base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/�
 semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 # 🛠️ The gumball and paint tools are `🔄️machine` statecharts folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-tool-machine = { workspace = true }
 
-[features]
-# 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).
-cad-fixtures = ["dep:semio-s-artifact-cad-cad"]
-
-[dependencies.semio-s-artifact-cad-cad]
-workspace = true
-optional = true
-
 [dev-dependencies]
+semio-s-artifact-cad-cad-play = { workspace = true }
 base64 = "0.22.1"
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }

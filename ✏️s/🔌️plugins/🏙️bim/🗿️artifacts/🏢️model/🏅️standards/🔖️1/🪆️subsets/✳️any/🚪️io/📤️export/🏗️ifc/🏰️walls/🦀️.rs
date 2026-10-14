@@ -14,7 +14,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall
 use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::{Axis, Layer, LayerFunction, ModelSnapshot, Opening, OpeningKind, TopConstraint, Wall, WallType};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, LayerFunction, ModelSnapshot, Opening, OpeningKind, TopConstraint, Wall, WallType};
 use semio_framework_geometry::bulge::{band_loop, BulgeSeg};
 use semio_framework_geometry::mesh::TriMesh;
 use std::collections::BTreeMap;

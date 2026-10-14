@@ -94,8 +94,7 @@ impl ArtifactEditor for Din4108PlayApp {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 
-    semio_s_artifact_norm_contract::norm_exact_store_ownership!();
-
+    semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         Din4108BoundedCommandJobFactory::register(registry)
@@ -115,7 +114,6 @@ impl ArtifactEditor for Din4108PlayApp {
         contract: crate::app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
-
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -143,7 +141,7 @@ impl ArtifactEditor for Din4108PlayApp {
     /// (`app.command.unsupported: … dispatched exclusively through the typed command channel now`),
     /// so with no bridge not one Actions-pane row of this editor could reach `Command::dispatch` —
     /// the three verbs were already `Migrated`, retained and proven, and were still inert in the shell.
-    semio_s_artifact_norm_contract::norm_command_from_action!(Din4108Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_din4108_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(Din4108Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_din4108_snapshot_json);
 
     fn handle(
         command: &Din4108Command,

@@ -86,7 +86,8 @@
       "expected": {
         "persistent": false,
         "localDisabled": true,
-        "nextEnabled": true
+        "nextEnabled": true,
+        "fallbackCalls": 1
       }
     },
     {
@@ -95,7 +96,8 @@
       "expected": {
         "persistent": false,
         "localDisabled": true,
-        "nextEnabled": true
+        "nextEnabled": true,
+        "fallbackCalls": 1
       }
     }
   ],

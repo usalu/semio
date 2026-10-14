@@ -4,7 +4,7 @@
 use super::super::elements;
 use super::super::remove_element_property::RemoveElementProperty;
 use super::SetElementProperty;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetElementProperty, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if !elements::holds_data(base, &payload.id) {

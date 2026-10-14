@@ -1,6 +1,6 @@
 //! 👯️ `copy-elements` payload. Copies placed elements by a vector: a created record per source with minted ids (prefix, copy number, position of the source in id order), the openings of a copied wall or curtain wall hosted on its copy, and the properties and classification of every source. A copied space takes the next free number of its storey and a copied grid line the next free label of its building.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

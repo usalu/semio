@@ -32,7 +32,7 @@ pub(crate) mod context {
     /// only the two child handles).
     pub async fn live_scene(app: &ImperativeApp) -> crate::ProcedureScene {
         use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-        use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
+        use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
         use store::{pack::snapshot::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("procedure parent projection");
         let flow = app.child_store("flow", &snapshot.flow.child_id).await.expect("procedure flow child").document_pack_bytes().await.expect("procedure flow child pack");

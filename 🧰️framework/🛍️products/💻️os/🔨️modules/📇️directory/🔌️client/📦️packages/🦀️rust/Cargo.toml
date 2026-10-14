@@ -1,0 +1,58 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-directory-client"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Typed Directory transport and credential boundary"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-directory-client"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🧩️composition/🦀️.rs"
+
+[features]
+default = []
+ureq = ["dep:ureq", "dep:semio-framework-actor"]
+sync = ["ureq", "dep:tokio-tungstenite", "dep:semio-framework-os-services"]
+
+[dependencies]
+semio-framework-os-directory = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-schema-validator = { path = "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-os-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-os-channel = { path = "../../../../📡️spr/🧵️channel/📦️packages/🦀️rust" }
+semio-framework-plugin-component-receipt = { path = "../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ureq = { version = "2", optional = true }
+tokio-tungstenite = { version = "0.26", optional = true, features = ["rustls-tls-webpki-roots"] }
+semio-framework-os-services = { path = "../../../../🛎️services/📦️packages/🦀️rust", optional = true }
+semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+web-sys = { version = "0.3.98", features = ["Window", "WebSocket", "MessageEvent", "CloseEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
+tokio = { version = "1", features = ["sync"], default-features = false }

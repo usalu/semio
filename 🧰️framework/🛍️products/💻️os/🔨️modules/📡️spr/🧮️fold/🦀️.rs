@@ -1,6 +1,6 @@
 //! 🧮️ Composite-plan folding and the fold-footprint law: store-side machinery that turns a composite kind's plan into one
 //! forward diff and its inverse rows. It routes through the central applier ([`apply_diff`]); no mutation leaf lives here.
-use super::command::{apply_diff, worst_level, CompositeMutationKind, Mutation, MutationDiff, MutationMessage, MutationOutcome, PlanError, PlanStep, Planner};
+use crate::{apply_diff, worst_level, CompositeMutationKind, Mutation, MutationDiff, MutationMessage, MutationOutcome, PlanError, PlanStep, Planner};
 
 /// 🧬️ Folds a composite's LOCAL steps into one [`MutationOutcome`] via
 /// [`MutationDiff::absorb`], applying each step against the snapshot as it stood right before that

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{ctx, demo, run};
-use crate::ClassificationItem;
+use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
 
 fn system() -> ClassificationSystem {
     let entry = |code: &str, title: &str, parent: Option<&str>| ClassificationItem { code: code.into(), title: title.into(), parent: parent.map(str::to_string) };

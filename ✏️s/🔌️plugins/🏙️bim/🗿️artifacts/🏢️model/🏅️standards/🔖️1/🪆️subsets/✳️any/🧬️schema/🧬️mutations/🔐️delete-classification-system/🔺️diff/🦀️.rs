@@ -3,7 +3,7 @@
 
 use super::super::cascade;
 use super::DeleteClassificationSystem;
-use crate::{ClassificationSetPatch, Entry, KeyedDelta, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -15,7 +15,7 @@ pub fn diff(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Mutat
     if holders.len() > cascade::INVERSE_ROWS {
         return MutationOutcome::refuse(OutcomeCode::InverseRefused, format!("Classification system \"{}\" classifies {} records where one removal restores at most {}; reclassify in parts.", payload.id, holders.len(), cascade::INVERSE_ROWS), [payload.id.clone()]);
     }
-    let classifications: BTreeMap<String, Entry<crate::ClassificationSet, ClassificationSetPatch>> = holders
+    let classifications: BTreeMap<String, Entry<crate::standards::v1::subsets::any::schema::snapshot::ClassificationSet, ClassificationSetPatch>> = holders
         .iter()
         .map(|(holder, _)| {
             let last = base.classifications.get(holder).is_some_and(|set| set.len() == 1);

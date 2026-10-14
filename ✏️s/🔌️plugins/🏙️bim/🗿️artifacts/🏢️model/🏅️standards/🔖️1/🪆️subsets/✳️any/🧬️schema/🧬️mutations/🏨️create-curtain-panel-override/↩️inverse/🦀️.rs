@@ -2,7 +2,7 @@
 
 use super::super::delete_curtain_panel_override::DeleteCurtainPanelOverride;
 use super::CreateCurtainPanelOverride;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateCurtainPanelOverride, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.curtain_panel_overrides.contains_key(&payload.id) {

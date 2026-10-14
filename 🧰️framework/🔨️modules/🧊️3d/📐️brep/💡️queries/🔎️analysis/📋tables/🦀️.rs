@@ -2,15 +2,15 @@
 //! centroid and normal, the labels of neighbouring faces, and the dihedral angle between faces.
 
 use super::ShapeScope;
-use crate::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, surface_uv};
-use crate::validation::is_point_edge;
+use semio_framework_3d_brep_queries::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, surface_uv};
+use semio_framework_3d_brep_validation::is_point_edge;
 use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId};
-use semio_framework_3d_brep_representation::curve::curve_ops;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::curve_ops;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::{surface_ops, Surface};
+use semio_framework_3d_brep_surface::{surface_ops, Surface};
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use std::collections::{BTreeSet, HashMap};
 
 /// 🏄️ The geometry of a face's supporting surface.

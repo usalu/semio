@@ -11,7 +11,7 @@ use crate::editor::bim::entities::wall_sweeps::top_attach_text;
 use crate::editor::bim::entities::{fields_of, kind_holding, property_text, EntityKind, FieldRow, PROJECT_FIELDS, PROJECT_ID};
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
@@ -171,7 +171,7 @@ fn wall_rows(snapshot: &ModelSnapshot, ids: &[&str], selected: &[String], labels
 
 /// 📍️ The place-at row of a placed selection: the reference point of the first element, to be typed over.
 fn place_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
-    let reference = ids.first().and_then(|id| crate::mutations::elements::placement(snapshot, id)).and_then(|placement| crate::editor::bim::commands::place_elements::reference_of(&placement));
+    let reference = ids.first().and_then(|id| crate::standards::v1::subsets::any::schema::mutations::elements::placement(snapshot, id)).and_then(|placement| crate::editor::bim::commands::place_elements::reference_of(&placement));
     let Some(reference) = reference else { return Vec::new() };
     vec![ids_args(ids).and_then(|args| input_row(&format!("{ROOT}.action.place"), labels.action_place_at.as_str(), &format!("{}, {}", reference.x, reference.y), Some("0, 0"), bim_action("placeElements", Some(args))))]
 }
@@ -190,7 +190,7 @@ fn conditions_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -
 
 //#region 🔖️PropertySets
 /// 🧾️ The input and the remove row of one property of one element.
-fn property_pair(id: &str, pset: &str, name: &str, value: &crate::PropertyValue, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
+fn property_pair(id: &str, pset: &str, name: &str, value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
     let row_id = format!("{ROOT}.property.{pset}.{name}");
     let args = || ui_value_map([("ids", ui_value_list([ui_value_text(id)?])?), ("pset", ui_value_text(pset)?), ("property", ui_value_text(name)?)]);
     let label = format!("{pset} · {name} ({})", crate::editor::bim::entities::property_type(value));
@@ -245,7 +245,7 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, elements: &[
         if snapshot.components.contains_key(*only) {
             builder = builder.section(format!("{ROOT}.overrides"), Some(ui_label(labels.section_overrides.as_str())?), true, ui_node_list(overrides::render_rows(snapshot, ROOT, only, labels))?)?;
         }
-        if crate::mutations::elements::holds_data(snapshot, only) {
+        if crate::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, only) {
             builder = builder.section(format!("{ROOT}.properties"), Some(ui_label(labels.section_property_sets.as_str())?), true, ui_node_list(property_rows(snapshot, only, labels))?)?;
             let effective = data::effective_rows(snapshot, inference, only, labels);
             if !effective.is_empty() {

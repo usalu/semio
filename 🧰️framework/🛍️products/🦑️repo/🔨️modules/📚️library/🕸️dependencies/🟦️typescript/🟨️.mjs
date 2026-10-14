@@ -1,12 +1,25 @@
-import { observedFs } from "../../🔌️nx-plugin/👁️observation/🟨️.mjs";
+import { observedFs, observedRequireResolve, registerSourceAnalysisV1, observedSourceAnalysisV1, observedSourceAnalysisAsyncV1 } from "../../🏗️build/👁️observation/🟨️.mjs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { createRequire, isBuiltin } from "node:module";
+import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 const { existsSync, readFileSync, realpathSync } = observedFs;
 
 const require = createRequire(import.meta.url);
 const pathPattern = /^(?![/\\])(?![A-Za-z]:)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/;
 const packagePattern = /^(?:@[^/]+\/)?[^/]+$/;
+let importProvider;
+
+/** 🔏️ Binds declared source semantics to the current parser, schema and compiler bytes. */
+function sourceImportProviderV1() {
+  if (!importProvider) {
+    const compiler = observedRequireResolve(fileURLToPath(import.meta.url), "typescript");
+    const revision = createHash("sha256").update(readFileSync(fileURLToPath(import.meta.url))).update(readFileSync(new URL("./🔣️schema.json", import.meta.url))).update(readFileSync(compiler)).digest("hex");
+    importProvider = registerSourceAnalysisV1({ id: "build:declared-source-imports:v1", revision, analyze: parseRuntimeImports });
+  }
+  return importProvider;
+}
 
 /** 🔣️ Validates the owned source-input contract without exposing compiler types. */
 export function sourceInputContract(value) {
@@ -25,9 +38,8 @@ export function readSourceInputContract(path) {
 }
 
 /** 🔗️ Collects module imports conservatively while excluding explicit type-only declarations. */
-function runtimeImports(path) {
-  if (/\.(?:json|d\.[cm]?ts)$/.test(path)) return [];
-  const compiler = require("typescript"), text = readFileSync(path, "utf8");
+function parseRuntimeImports(path, bytes) {
+  const compiler = require("typescript"), text = bytes.toString("utf8");
   const tree = compiler.createSourceFile(path, text, compiler.ScriptTarget.Latest, true);
   const imports = new Set(), loaders = new Set(["require"]);
   const factory = node => compiler.isCallExpression(node) && compiler.isIdentifier(node.expression) && node.expression.text === "createRequire";
@@ -55,6 +67,16 @@ function runtimeImports(path) {
   return [...imports];
 }
 
+/** 📖️ Reuses only a content-addressed import image while reading the current source bytes. */
+export function sourceRuntimeImportsV1(path) {
+  return /\.(?:json|d\.[cm]?ts)$/.test(path) ? [] : observedSourceAnalysisV1(sourceImportProviderV1(), path);
+}
+
+/** 🌊️ Reads each source asynchronously before admitting its registered import image. */
+async function runtimeImportsAsyncV1(path) {
+  return /\.(?:json|d\.[cm]?ts)$/.test(path) ? [] : observedSourceAnalysisAsyncV1(sourceImportProviderV1(), path);
+}
+
 function inside(workspace, path) {
   const local = relative(workspace, path);
   if (isAbsolute(local) || local === ".." || local.startsWith("../") || local.startsWith("..\\")) throw new Error(`Source import escapes workspace: ${path}`);
@@ -67,7 +89,7 @@ function inside(workspace, path) {
 
 function generatedSource(path, required) {
   if (!existsSync(path)) { if (required) throw new Error(`Generated source is missing: ${path}`); return; }
-  if (runtimeImports(path).length) throw new Error(`Generated source boundary contains runtime imports: ${path}`);
+  if (sourceRuntimeImportsV1(path).length) throw new Error(`Generated source boundary contains runtime imports: ${path}`);
 }
 
 /** 🧱️ Ensures generated data boundaries remain self-contained before the compiler consumes them. */
@@ -84,7 +106,7 @@ export function relativeSourceInputs(value, workspace) {
     inside(workspace, path);
     if (generated.has(path) || files.has(path)) return;
     files.add(path);
-    for (const specifier of runtimeImports(path)) {
+    for (const specifier of sourceRuntimeImportsV1(path)) {
       if (isBuiltin(specifier)) continue;
       if (!specifier.startsWith(".")) {
         const name = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
@@ -92,9 +114,40 @@ export function relativeSourceInputs(value, workspace) {
         continue;
       }
       const candidate = inside(workspace, resolve(dirname(path), specifier));
-      visit(generated.has(candidate) ? candidate : createRequire(path).resolve(specifier));
+      visit(generated.has(candidate) ? candidate : observedRequireResolve(path, specifier));
     }
   };
   for (const path of contract.entries) visit(resolve(workspace, path));
+  return { files: [...files].sort(), externalDependencies: [...contract.externalDependencies] };
+}
+
+/** ⏳️ Traverses bounded source batches through the caller's original progress and cancellation control. */
+export async function relativeSourceInputsAsyncV1(value, workspace, advance = async () => {}) {
+  const contract = sourceInputContract(value), generated = new Set(contract.generated.map(path => inside(workspace, resolve(workspace, path)))), files = new Set();
+  let index = 0;
+  const checkpoint = async () => { if (index++ % 16 === 0) await advance(index); };
+  await checkpoint();
+  for (const path of generated) {
+    await checkpoint();
+    if (existsSync(path) && (await runtimeImportsAsyncV1(path)).length) throw new Error(`Generated source boundary contains runtime imports: ${path}`);
+  }
+  const pending = contract.entries.map(path => resolve(workspace, path));
+  while (pending.length) {
+    await checkpoint();
+    const path = inside(workspace, pending.pop());
+    if (generated.has(path) || files.has(path)) continue;
+    files.add(path);
+    for (const specifier of await runtimeImportsAsyncV1(path)) {
+      if (isBuiltin(specifier)) continue;
+      if (!specifier.startsWith(".")) {
+        const name = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
+        if (!contract.externalDependencies.includes(name)) throw new Error(`Undeclared external source import ${specifier} in ${path}`);
+        continue;
+      }
+      const candidate = inside(workspace, resolve(dirname(path), specifier));
+      pending.push(generated.has(candidate) ? candidate : observedRequireResolve(path, specifier));
+    }
+  }
+  await advance(index);
   return { files: [...files].sort(), externalDependencies: [...contract.externalDependencies] };
 }

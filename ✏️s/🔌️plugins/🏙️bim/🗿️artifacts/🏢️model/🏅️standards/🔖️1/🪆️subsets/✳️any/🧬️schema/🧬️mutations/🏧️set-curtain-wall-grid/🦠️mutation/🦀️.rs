@@ -1,6 +1,6 @@
 //! 🏧️ `set-curtain-wall-grid` payload. Sets, per direction, the grid rule of one curtain wall that replaces the rule of its type: explicit grid lines (a whole list owned by the curtain wall) or a uniform spacing; assigning nothing clears the override and the wall follows its type again.
 
-use crate::{Assigned, CurtainGrid, CurtainWallPatch, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::CurtainWallPatch, ModelDiff}, snapshot::{CurtainGrid, ModelSnapshot}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

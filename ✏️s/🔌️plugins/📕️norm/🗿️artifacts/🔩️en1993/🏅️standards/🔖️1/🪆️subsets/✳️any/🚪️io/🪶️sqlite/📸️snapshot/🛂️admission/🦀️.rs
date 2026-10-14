@@ -1,8 +1,9 @@
 //! 🔩️ Borrowed steel material, member, joint and all force cells before typed ownership.
-use super::*;
+use crate::sqlite::snapshot::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in 1..=16{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(6,18),(7,4),(9,7),(10,6),(12,3),(14,4),(15,6),(16,7)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(owner)?,nested)?)?.len())?}}Ok(rows)}
 fn forces(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,r:&R,id:u16)->Result<(),ValueError>{for(index,a)in n::list(n::field(r,id)?)?.iter().enumerate(){n::entity(out,table,parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Real(2)])?,FORCE)?;}Ok(())}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
@@ -27,4 +28,4 @@ fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  for(index,v)in n::list(n::field(root,16)?)?.iter().enumerate(){let v=n::record(v)?;let parent=n::entity(out,"en1993_crane_runway",1,index,&n::cells(v,[Text(0),Text(1),Real(2),Real(3),Real(4),Real(5),Real(6)])?,CRANE)?;forces(out,"en1993_crane_action",parent,v,7)?;}Ok(())
 }
 /// 🛂️ Twenty-five authored tables and complete copied semantic controls.
-pub(in super::super)fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1993Snapshot::SQLITE_SCHEMA,25,57,count(root)?,write)}
+pub fn admit(root:&R,native:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{n::admit(root,native,limits,En1993Snapshot::SQLITE_SCHEMA,25,57,count(root)?,write)}

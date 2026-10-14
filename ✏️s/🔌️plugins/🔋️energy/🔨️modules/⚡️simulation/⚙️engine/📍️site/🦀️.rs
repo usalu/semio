@@ -1,5 +1,8 @@
 //! 🌤️ Format-independent weather records, design days, solar position and ground temperatures.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::{humidity_ratio_from_rh, moist_air_density};
 use crate::units::{deg_to_rad, rad_to_deg};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -99,6 +102,53 @@ impl DesignDay {
         }
     }
 }
+/// 🌤️ One synthetic hour of a smooth annual and daily temperature cycle, for runs without authored weather.
+pub fn synthetic_hour(h: u32) -> WeatherRecord {
+    let day = h / 24;
+    let hour = h % 24;
+    let month = (day / 30 + 1).min(12) as u8;
+    let t_base = 15.0 + 10.0 * ((day as f64 / 365.0) * 2.0 * std::f64::consts::PI).sin();
+    let t_daily = 5.0 * ((hour as f64 - 14.0) / 12.0 * std::f64::consts::PI).cos();
+    WeatherRecord {
+        year: 2026,
+        month,
+        day: (day % 30 + 1) as u8,
+        hour: hour as u8,
+        minute: 0,
+        dry_bulb_c: t_base + t_daily,
+        dew_point_c: t_base - 5.0,
+        relative_humidity: 0.5,
+        atmospheric_pressure_pa: 101_325.0,
+        wind_speed_m_s: 3.0,
+        wind_direction_deg: 180.0,
+        direct_normal_irradiance_w_m2: if (6..18).contains(&hour) { 500.0 } else { 0.0 },
+        diffuse_horizontal_irradiance_w_m2: if (6..18).contains(&hour) { 100.0 } else { 0.0 },
+        horizontal_infrared_w_m2: 250.0,
+        precipitation_mm: 0.0,
+        snow_depth_mm: 0.0,
+    }
+}
+/// 🌡️ One design-day hour at a fixed dry-bulb temperature, sunny when the day is a cooling design day.
+pub fn design_day_hour(hour: u32, dry_bulb_c: f64) -> WeatherRecord {
+    WeatherRecord {
+        year: 2026,
+        month: 1,
+        day: 1,
+        hour: hour as u8,
+        minute: 0,
+        dry_bulb_c,
+        dew_point_c: dry_bulb_c - 10.0,
+        relative_humidity: 0.5,
+        atmospheric_pressure_pa: 101_325.0,
+        wind_speed_m_s: 3.0,
+        wind_direction_deg: 180.0,
+        direct_normal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 800.0 } else { 0.0 },
+        diffuse_horizontal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 150.0 } else { 0.0 },
+        horizontal_infrared_w_m2: 250.0,
+        precipitation_mm: 0.0,
+        snow_depth_mm: 0.0,
+    }
+}
 // #endregion 🔖️DesignDay
 
 // #region 🔖️Solar
@@ -151,7 +201,7 @@ pub fn solar_position(latitude_deg: f64, longitude_deg: f64, time_zone_hours: f6
 
 /// 🌡️ Sky temperature [°C] from the horizontal infrared irradiance, `(IR/σ)^¼`.
 pub fn sky_temperature_c(horizontal_infrared_w_m2: f64) -> f64 {
-    (horizontal_infrared_w_m2.max(0.0) / crate::units::STEFAN_BOLTZMANN).powf(0.25) - 273.15
+    (horizontal_infrared_w_m2.max(0.0) / units::STEFAN_BOLTZMANN).powf(0.25) - 273.15
 }
 // #endregion 🔖️Solar
 
@@ -196,7 +246,7 @@ impl TimestepWeather {
         let dry_bulb_c = linear(previous.dry_bulb_c, current.dry_bulb_c);
         let dew_point_c = linear(previous.dew_point_c, current.dew_point_c);
         let pressure_pa = linear(previous.atmospheric_pressure_pa, current.atmospheric_pressure_pa);
-        let humidity_ratio = crate::props::humidity_ratio_from_dew_point(dew_point_c, pressure_pa);
+        let humidity_ratio = props::humidity_ratio_from_dew_point(dew_point_c, pressure_pa);
         let raining = linear(precipitation(previous), precipitation(current)) >= RAIN_THRESHOLD_MM;
         let mut wind_direction_delta = (current.wind_direction_deg - previous.wind_direction_deg).rem_euclid(360.0);
         if wind_direction_delta > 180.0 {
@@ -206,7 +256,7 @@ impl TimestepWeather {
             dry_bulb_c,
             dew_point_c,
             humidity_ratio,
-            wet_bulb_c: if raining { crate::props::wet_bulb_c(dry_bulb_c, humidity_ratio, pressure_pa) } else { dry_bulb_c },
+            wet_bulb_c: if raining { props::wet_bulb_c(dry_bulb_c, humidity_ratio, pressure_pa) } else { dry_bulb_c },
             pressure_pa,
             wind_speed_m_s: linear(previous.wind_speed_m_s, current.wind_speed_m_s),
             wind_direction_deg: (previous.wind_direction_deg + wind_direction_delta * weight).rem_euclid(360.0),

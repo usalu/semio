@@ -15,11 +15,11 @@ use std::collections::HashMap;
 pub use semio_framework_mesh_engine::HistoryFoldSet;
 
 use crate::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
-use crate::curve::{Curve2, Curve3};
-use crate::surface::Surface;
-use crate::tolerance::Tol;
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use crate::topology::history::{LabelSource, PersistentLabel};
-use crate::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 
 /// 🔗 Whether `coedge` is a use of `edge`: the one edge-use probe valence and incidence walks spend per coedge.
 pub fn coedge_uses_edge(coedge: &Coedge, edge: EdgeId) -> bool {

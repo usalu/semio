@@ -102,7 +102,7 @@ pub use browser::{future_to_promise, spawn_local, JsFuture};
 //#endregion 🌐️BrowserFutureBridge
 
 //#region 🧬️SchemaMetadata
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 pub mod schema_metadata {
     use std::collections::HashSet;
 

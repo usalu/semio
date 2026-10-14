@@ -1,7 +1,9 @@
+import {withRepositoryCargoInputsV1,repositoryCargoNetworkV1} from "../../../🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {cargoInvocationManifestV1} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "./📥️invocation/🛠️preparation/🟦️.ts";
 import {readExactCargoLawPreparationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import {consumeOwnerArgumentsV1} from "../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
+import {consumeOwnerArgumentsV1} from "../../../🏗️build/📤️arguments/🟨️.mjs";
 import {nativeOwnerTestManifestRequestV1} from "./🗺️owner-test-manifests/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
@@ -17,6 +19,8 @@ import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️proc
 import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { repositoryCargoArtifactBuildPolicyV1, buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 import { artifactRustCargoArguments } from "../🎛️native-input/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🔐️ The owner policies a native or script owner's environment carries, exactly as the Nx owner commands author them: `process` (Vitest policy and process
  * owner context), `cargo` (the repository Cargo artifact policy) and `wasm` (the repository wasm-bindgen compiler policy). `buildDirectory` redirects both
@@ -35,7 +39,8 @@ export class CargoRelayScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const budgetMs = Number(process.env[CARGO_RELAY_BUDGET_ENV] ?? 0);
     try {
-      process.exitCode = await cargoStreamingStatus(args, process.cwd(), process.env, {invocation:this.invocation,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot),budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}});
+      const control=scriptCompilerAdmissionControlV1(this.invocation,"cargo:relay",scriptInvocationBudget(this.invocation,budgetMs));
+      process.exitCode = await withRepositoryCompilerStoreV1(this.repoRoot,readBuildMode(process.env.SEMIO_BUILD_MODE),control,process.env,store=>withRepositoryCargoInputsV1({workspace:this.repoRoot,manifest:cargoInvocationManifestV1(args,process.cwd()),args,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control,storage:store.storage,environment:store.environment},environment=>cargoStreamingStatus(args,process.cwd(),environment,{invocation:this.invocation,storage:store.storage,sourceBoundary:store.sourceBoundary,policy:{...repositoryCargoArtifactBuildPolicyV1(process.cwd(),this.repoRoot,store.environment),buildDirectory:store.buildDirectory,captureDirectory:store.captureDirectory,budgetMs:scriptInvocationBudget(this.invocation,budgetMs)}})));
     } catch (error) {
       console.error(error instanceof Error ? error.message : String(error));
       process.exitCode = 1;
@@ -83,7 +88,7 @@ export class NativeScript extends BundleScript {
     if (tool !== "cargo" || (operation !== "build" && operation !== "check" && operation !== "test") || !manifest) throw new Error("native cargo build|check|test --manifest <Cargo.toml> [quick|long|exhaustive] [cargo argument…]");
     const { cargoArgs: extra, testLevel } = artifactRustCargoArguments(operation, args.slice(index + 2));
     if (operation === "build") {
-      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+      await buildRepositoryCargoArtifacts(manifest, extra, this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
       return;
     }
     const status = runCmdStatus("cargo", [operation, "--locked", "--manifest-path", resolve(this.repoRoot, manifest), ...extra], { cwd: this.repoRoot, ...(testLevel ? { env: { ...process.env, SEMIO_TEST_LEVEL: testLevel } } : {}) });

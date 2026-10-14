@@ -6,7 +6,7 @@
 use super::build::selection;
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{totals_of, Boundary, Climate, EnergyScope, EnergyTotals, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🧾️ The area and heat loss `sum(U * A)` of the surfaces of one space that share a kind, a boundary, a neighbour and a sector.

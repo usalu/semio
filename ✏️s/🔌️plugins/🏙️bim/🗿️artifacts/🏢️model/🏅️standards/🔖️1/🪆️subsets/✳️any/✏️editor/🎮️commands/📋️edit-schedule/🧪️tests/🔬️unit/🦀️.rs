@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 
 fn with_schedule() -> ModelSnapshot {
     let mut snapshot = demo();

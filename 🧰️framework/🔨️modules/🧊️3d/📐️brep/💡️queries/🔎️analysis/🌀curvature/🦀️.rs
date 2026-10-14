@@ -6,9 +6,9 @@
 
 use semio_framework_3d_brep_representation::arena::FaceId;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::Vec3;
+use semio_framework_3d_brep_vector::Vec3;
 
 /// 🌀 Local shape of a surface at one parameter pair.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

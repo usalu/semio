@@ -1,10 +1,12 @@
 //! 📏️ `scale-transforms` payload — one gumball scaling as intent: the per-axis factors every addressed scale operator of
 //! the generator graph multiplies into its own. Editing it in history re-derives the operator on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items,generation3d_label_number,Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::generation3d_label_items;
+use crate::generation3d_label_number;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ScaleTransforms
 /// 📏️ Multiplies `(sx, sy, sz)` into the factors of every addressed scale operator.
@@ -26,12 +28,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Scal
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "transforms", kind: "scale-transforms", record: "ScaledTransforms" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::scale_transforms::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::scale_transforms::inverse::inverse(self, base)?
     
     })
 }

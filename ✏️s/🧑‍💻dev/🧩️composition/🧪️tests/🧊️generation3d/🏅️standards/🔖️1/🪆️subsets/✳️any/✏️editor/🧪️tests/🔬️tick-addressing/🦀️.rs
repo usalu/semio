@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstance};
 

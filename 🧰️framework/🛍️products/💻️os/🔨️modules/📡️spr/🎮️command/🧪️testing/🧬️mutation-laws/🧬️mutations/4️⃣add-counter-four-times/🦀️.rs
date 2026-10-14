@@ -1,6 +1,6 @@
 //! 4️⃣ Direct add-counter-four-times fixture payload and behavior.
 use super::super::{AddCounterTwice, Counter, CounterMutation};
-use crate::os_spr::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
+use protocol::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, dsl_derive::CompositeMutation, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

@@ -218,4 +218,5 @@ pub mod viewer {
 
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioObjectSnapshot { schema, transform, brep, mesh, properties });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioObjectSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioObjectSnapshot, schema::mutations::SemioObjectMutation);

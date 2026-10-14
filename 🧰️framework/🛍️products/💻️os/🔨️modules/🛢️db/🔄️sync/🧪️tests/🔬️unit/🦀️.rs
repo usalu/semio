@@ -136,7 +136,6 @@ async fn a_retained_hello_streams_exactly_the_missing_tail() {
 /// and the last equal to the welcome's, while the hello never holds more than about one frame — the old hello decoded the
 /// whole tail first and refused at ~8 000 envelopes (`cumulative envelope backing`). A replica at 40 000 receives exactly
 /// the last 10 000.
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn a_fifty_thousand_edit_document_streams_to_a_fresh_replica_within_one_frame_of_backing() {
     const EDITS: u64 = 50_000;

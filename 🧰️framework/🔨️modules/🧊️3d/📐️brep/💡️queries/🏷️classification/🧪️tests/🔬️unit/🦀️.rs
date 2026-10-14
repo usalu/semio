@@ -1,9 +1,9 @@
 use super::*;
 use semio_framework_3d_brep_operations::primitives::{make_box, make_cylinder, make_sphere};
 use crate::mass_properties::oracle::{ClosedFormMass, Sdf};
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
-use semio_framework_3d_brep_representation::vector::matrix::Trsf;
+use semio_framework_3d_brep_vector::matrix::Trsf;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_classify(body: &Body, solid: SolidId, p: Pnt3, expected: PointClassification) {

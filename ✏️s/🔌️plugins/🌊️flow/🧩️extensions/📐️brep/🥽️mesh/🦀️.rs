@@ -5,7 +5,7 @@ use semio_framework_value::ValueType;
 use semio_framework_value::{ValueError,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3 as MeshVector, VertexId, WeldMode, MirrorAxis, MeshModelingJob, MeshModelingStep, MeshModelingProgress, MeshTessellationJob, MeshTessellationStep};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationStep};
+use semio_framework_3d_brep_tessellation::{TessellationJob, TessellationStep};
 use semio_framework_mesh_engine::{HistoryFoldIndex,MeshAttribute, MeshTexture, PolygonMeshSource};
 use semio_framework_mesh_engine::io::text::{PolygonSourcePreparation, parse_polygon_mesh_source};
 

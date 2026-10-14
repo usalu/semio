@@ -5,7 +5,7 @@ use crate::editor::bim::entities::{EntityKind, ENTITIES};
 use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 use crate::editor::bim::terminology::BimLabels;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;

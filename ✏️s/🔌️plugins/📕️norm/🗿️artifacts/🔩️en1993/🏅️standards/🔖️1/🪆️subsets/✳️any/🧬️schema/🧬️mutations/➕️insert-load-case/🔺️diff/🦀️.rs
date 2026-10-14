@@ -1,8 +1,8 @@
 //! ➕️ `insert-load-case` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertLoadCase;
-use crate::diff::{En1993Diff, En1993LoadCaseDelta};
-use crate::En1993Snapshot;
+use crate::insert_load_case::InsertLoadCase;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993LoadCaseDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertLoadCase, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.load_cases.iter().any(|existing| existing.id == payload.load_case.id) {

@@ -33,7 +33,7 @@ pub fn deserialize<'de, T, D: serde::Deserializer<'de>>(deserializer: D) -> Resu
 }
 
 pub mod optional {
-    use super::*;
+    use crate::child_identity_oracle::*;
 
     pub fn serialize<T, S: serde::Serializer>(child: &Option<store::os_store::artifact_child::ArtifactChild<T>>, serializer: S) -> Result<S::Ok, S::Error> {
         child.as_ref().map(Identity::observe).serialize(serializer)

@@ -3,7 +3,7 @@
 
 use super::super::annotating;
 use super::SetAnnotationStyle;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetAnnotationStyle, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

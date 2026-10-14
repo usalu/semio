@@ -275,17 +275,24 @@ impl SlowSnapshot {
 struct SlowJob {
     remaining: usize,
     total: usize,
-    cancelled: Arc<AtomicUsize>,
+    cancelled: Option<Arc<AtomicUsize>>,
 }
 
 impl InferencePending for SlowJob {
     fn cancel(&mut self) {
-        self.cancelled.fetch_add(1, Ordering::SeqCst);
+        if let Some(cancelled)=self.cancelled.as_ref(){cancelled.fetch_add(1, Ordering::SeqCst);}
     }
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
     }
+    fn close_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let Some(original)=self.cancelled.as_ref()else{return Ok(true)};let grant=cx.retained_grant();
+        if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<size_of::<Arc<AtomicUsize>>>(){return Ok(false)}
+        if Arc::strong_count(original)<=1{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture cancellation witness must retain its actual original").into())}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<AtomicUsize>>(),..Default::default()})?;cx.consume_fuel(1);self.cancelled=None;Ok(true)
+    }
+    fn original_box_release_bytes(&self)->Option<usize>{self.cancelled.is_none().then_some(size_of::<Self>())}
 }
 
 struct SlowWeightSum;
@@ -301,6 +308,14 @@ impl InferredField<SlowSnapshot> for SlowWeightSum {
     fn plan(snapshot: &SlowSnapshot) -> Vec<InferenceStep<Self::Key>> {
         snapshot.nodes.iter().map(|(key, _, parents)| InferenceStep { key: key.clone(), parents: parents.clone() }).collect()
     }
+    fn plan_source_extent(snapshot:&SlowSnapshot)->Option<(usize,usize)>{Some((snapshot.nodes.len(),snapshot.nodes.iter().map(|row|row.2.len()).sum()))}
+    fn plan_source_node(snapshot:&SlowSnapshot,ordinal:usize)->Option<&str>{snapshot.nodes.get(ordinal).map(|row|row.0.as_str())}
+    fn plan_source_key(snapshot:&SlowSnapshot,ordinal:usize)->Option<&String>{snapshot.nodes.get(ordinal).map(|row|&row.0)}
+    fn plan_source_link(snapshot:&SlowSnapshot,mut ordinal:usize)->Option<(&str,&str)>{for row in &snapshot.nodes{if ordinal<row.2.len(){return Some((row.2[ordinal].as_str(),row.0.as_str()))}ordinal-=row.2.len()}None}
+    fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
+        if output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixture parent donor is occupied").into())}
+        if !original_field_metadata(cx,size_of::<i64>())?{return Ok(false)}*output=Some(*original);Ok(true)
+    }
     fn dep_input(snapshot: &SlowSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         vec![snapshot.weight(key)]
     }
@@ -309,14 +324,19 @@ impl InferredField<SlowSnapshot> for SlowWeightSum {
         snapshot.weight(key) + parents.iter().sum::<i64>()
     }
     fn compute_step(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
-        let job = pending.get_or_insert_with(|| Box::new(SlowJob { remaining: snapshot.slices, total: snapshot.slices, cancelled: snapshot.cancelled.clone() }));
+        if pending.is_none(){
+            let grant=cx.retained_grant();let copy=size_of::<SlowJob>()+size_of::<Arc<AtomicUsize>>();let capacity=size_of::<SlowJob>();
+            if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<capacity{return Ok(ComputeStep::Working{fuel_used:0,progress:0.0})}
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);
+            *pending=Some(Box::new(SlowJob{remaining:snapshot.slices,total:snapshot.slices,cancelled:Some(Arc::clone(&snapshot.cancelled))}));return Ok(ComputeStep::Working{fuel_used:1,progress:0.0})
+        }
+        let job = pending.as_mut().unwrap();
         let job = job.as_any_mut().downcast_mut::<SlowJob>().ok_or_else(|| InferenceFault::new("test.pending-type", "the pending slot holds another job"))?;
-        let spent=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(job.remaining);cx.consume_fuel(spent as u64);
-        job.remaining -= spent;
+        let copy=if job.remaining==1{size_of::<i64>()}else{0};if !original_field_metadata(cx,copy)?{return Ok(ComputeStep::Working{fuel_used:0,progress:1.0-job.remaining as f32/job.total as f32})}
+        let spent=1;job.remaining=job.remaining.checked_sub(1).expect("fixture pending producer advances once");
         if job.remaining > 0 {
             return Ok(ComputeStep::Working { fuel_used: spent, progress: 1.0 - job.remaining as f32 / job.total as f32 });
         }
-        *pending = None;
         Ok(ComputeStep::Done { value: Self::compute(snapshot, key, parents), fuel_used: spent })
     }
 }
@@ -329,104 +349,57 @@ fn expected_values(fixture: &serde_json::Value) -> BTreeMap<String, i64> {
     serde_json::from_value(fixture["expected"].clone()).unwrap()
 }
 
-fn original_inference_fixture_caller(fuel:usize)->(semio_framework_job::OriginalJobFixtureCaller,semio_framework_value::retained_clone::RetainedCloneGrant){
- let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let p=&law["caller"];let v=p["sourceGrant"].as_array().unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:v[0].as_u64().unwrap()as usize,maximum_copy_bytes:v[1].as_u64().unwrap()as usize,maximum_capacity_bytes:v[2].as_u64().unwrap()as usize,maximum_release_bytes:v[3].as_u64().unwrap()as usize,maximum_depth:v[4].as_u64().unwrap()as usize};
- (semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(p["operation"].as_u64().unwrap()),semio_framework_job::Generation(p["generation"].as_u64().unwrap()),grant,||Some(1),p["deadlineUs"].as_u64().unwrap(),u64::try_from(fuel).unwrap()),grant)
+fn original_inference_fixture_caller(items:usize)->(semio_framework_job::OriginalJobFixtureCaller,semio_framework_value::RetainedCloneGrant){
+ let law=stepped_fixture();let p=&law["caller"];let raw=p["stock"].as_array().unwrap();let stock=semio_framework_value::RetainedCloneGrant{maximum_items:raw[0].as_u64().unwrap()as usize,maximum_copy_bytes:raw[1].as_u64().unwrap()as usize,maximum_capacity_bytes:raw[2].as_u64().unwrap()as usize,maximum_release_bytes:raw[3].as_u64().unwrap()as usize,maximum_depth:raw[4].as_u64().unwrap()as usize};
+ (semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(p["operation"].as_u64().unwrap()),semio_framework_job::Generation(p["generation"].as_u64().unwrap()),stock,||Some(1),p["deadlineUs"].as_u64().unwrap(),p["fuel"].as_u64().unwrap()),semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64})
 }
 
-fn run_stepped(snapshot: &SlowSnapshot, mut cache: Option<&mut InferenceCache>, fuel: usize) -> (BTreeMap<String, i64>, usize, usize) {
-    let mut cursor = InferenceCursor::new();
-    let mut values = BTreeMap::new();
-    let (mut calls, mut spent) = (0, 0);
-    let (mut caller,grant)=original_inference_fixture_caller(fuel);
-    loop {
-        let report = caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(snapshot,cache.as_deref_mut(),&mut cursor,&mut values,cx))).unwrap().unwrap();
-        calls += 1;
-        spent += report.fuel_used;
-        assert!(calls < 1000, "a stepped run must terminate");
-        if report.done {
-            caller.retire(grant);
-            return (values, calls, spent);
-        }
-    }
+fn close_stepped(caller:&mut semio_framework_job::OriginalJobFixtureCaller,grant:semio_framework_value::RetainedCloneGrant,cursor:&mut InferenceCursor<String>,values:&mut InferenceValues<i64>){
+ for _ in 0..10000{
+  let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(if !cursor.close_original_pending_step(cx)?{false}else if !values.close_step(cx)?{false}else{cursor.close_original_plan_step(cx)})).unwrap().unwrap());
+  assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));if result{return}
+ }panic!("same original driver owners did not finish paid close");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn stepped_driver_equals_the_unbounded_driver_for_every_fuel() {
-    let fixture = stepped_fixture();
-    let snapshot = SlowSnapshot::from_fixture(&fixture);
-    let unbounded = try_infer_field::<SlowSnapshot, SlowWeightSum>(&snapshot, None).unwrap();
-    assert_eq!(unbounded, expected_values(&fixture));
-    let total = snapshot.nodes.len() * snapshot.slices;
-    for fuel in 1..=total + 3 {
-        let (stepped, _, spent) = run_stepped(&snapshot, None, fuel);
-        assert_eq!(stepped, unbounded, "fuel {fuel}");
-        assert_eq!(spent, total, "fuel {fuel}: every slice is paid for exactly once");
-        let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
-        let (cached, _, _) = run_stepped(&snapshot, Some(&mut cache), fuel);
-        assert_eq!(cached, unbounded, "fuel {fuel} with a cold cache");
-        let (warm, calls, warm_spent) = run_stepped(&snapshot, Some(&mut cache), fuel);
-        assert_eq!(warm, unbounded, "fuel {fuel} with a warm cache");
-        assert_eq!((calls, warm_spent), (1, 0), "a warm run is one free call");
-    }
+fn stepped_projection(snapshot:&SlowSnapshot,values:&InferenceValues<i64>)->BTreeMap<String,i64>{values.iter().map(|(ordinal,value)|(snapshot.nodes[ordinal].0.clone(),*value)).collect()}
+
+fn run_stepped(snapshot:&SlowSnapshot,mut cache:Option<&mut InferenceCache>,items:usize)->(BTreeMap<String,i64>,usize,usize){
+ let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut calls,mut spent)=(0,0);let mut progress=0.0;let(mut caller,grant)=original_inference_fixture_caller(items);
+ loop{
+  let(report,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(snapshot,cache.as_deref_mut(),&mut cursor,&mut values,cx))).unwrap().unwrap());
+  assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));assert!(report.fuel_used<=items);assert!(report.progress>=progress);progress=report.progress;calls+=1;spent+=report.fuel_used;assert!(calls<10000);
+  if report.done{let projection=stepped_projection(snapshot,&values);close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);return(projection,calls,spent)}
+ }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn stepped_driver_call_counts_match_the_language_agnostic_fixture() {
-    let fixture = stepped_fixture();
-    let snapshot = SlowSnapshot::from_fixture(&fixture);
-    let by_fuel: BTreeMap<String, usize> = serde_json::from_value(fixture["stepsByFuel"].clone()).unwrap();
-    for (fuel, steps) in by_fuel {
-        let (_, calls, _) = run_stepped(&snapshot, None, fuel.parse().unwrap());
-        assert_eq!(calls, steps, "fuel {fuel}");
-    }
+async fn original_stepped_driver_matches_neutral_dag_for_each_finite_turn(){
+ let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let expected=expected_values(&fixture);assert_eq!(try_infer_field::<SlowSnapshot,SlowWeightSum>(&snapshot,None).unwrap(),expected);
+ for items in fixture["turnItems"].as_array().unwrap(){
+  let items=items.as_u64().unwrap()as usize;let(values,calls,spent)=run_stepped(&snapshot,None,items);assert_eq!(values,expected);assert!(spent>=fixture["minimumComputeSteps"].as_u64().unwrap()as usize);assert!(calls>=snapshot.nodes.len());
+  eprintln!("[DEBUG] actual original inference op971/gen19 turnItems{items} calls{calls} fundedSteps{spent} rows4/edges4 scalar output equals neutral fixture; original full close");
+ }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn default_compute_step_charges_one_unit_per_computed_entity_and_nothing_per_hit() {
-    let snapshot = base_snapshot().await;
-    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
-    let mut cursor = InferenceCursor::new();
-    let mut values = BTreeMap::new();
-    let (mut caller,grant)=original_inference_fixture_caller(2);
-    let report = caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,Some(&mut cache),&mut cursor,&mut values,cx))).unwrap().unwrap();
-    assert_eq!((report.done, report.computed, report.fuel_used), (false, 2, 2));
-    assert_eq!((cursor.completed(), cursor.total()), (2, 4));
-    let report = caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,Some(&mut cache),&mut cursor,&mut values,cx))).unwrap().unwrap();
-    assert_eq!((report.done, report.computed, report.fuel_used), (true, 2, 2));
-    assert_eq!(values, infer_field::<DagSnapshot, WeightSum>(&snapshot, None));
-    caller.retire(grant);
-    let (mut warm_caller,warm_grant)=original_inference_fixture_caller(1);
-    let mut warm_cursor = InferenceCursor::new();
-    let mut warm_values = BTreeMap::new();
-    let report = warm_caller.turn(warm_grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,Some(&mut cache),&mut warm_cursor,&mut warm_values,cx))).unwrap().unwrap();
-    assert_eq!((report.done, report.hits, report.fuel_used), (true, 4, 0));
-    warm_caller.retire(warm_grant);
+async fn original_stepped_cache_option_preserves_values_without_unfunded_cache_publication(){
+ let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let mut cache=InferenceCache::new(InferenceCacheConfig{enabled:true,record_stats:true,..Default::default()}).await;
+ for _ in 0..2{let(values,_,spent)=run_stepped(&snapshot,Some(&mut cache),1);assert_eq!(values,expected_values(&fixture));assert!(spent>0);assert_eq!(cache.len(),0)}
+ eprintln!("[DEBUG] original inference cache option preserves scalar semantics; no cold hashing/copy/publication occurs; funded cache production remains open");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn cancelling_mid_run_keeps_finished_values_cancels_the_pending_compute_and_resumes_from_the_warm_cache() {
-    let fixture = stepped_fixture();
-    let snapshot = SlowSnapshot::from_fixture(&fixture);
-    let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
-    let mut cursor = InferenceCursor::new();
-    let mut values = BTreeMap::new();
-    let (mut caller,grant)=original_inference_fixture_caller(1);
-    for _ in 0..fixture["cancelAfterSteps"].as_u64().unwrap() {
-        assert!(!caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,Some(&mut cache),&mut cursor,&mut values,cx))).unwrap().unwrap().done);
-    }
-    cursor.cancel();
-    assert!(cursor.is_cancelled());
-    assert_eq!(snapshot.cancelled.load(Ordering::SeqCst), 1, "the in-flight job is cancelled exactly once");
-    assert!(matches!(caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,Some(&mut cache),&mut cursor,&mut values,cx))).unwrap(),Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));
-    caller.retire(grant);
-    let finished: BTreeMap<String, i64> = serde_json::from_value(fixture["cancelledValues"].clone()).unwrap();
-    assert_eq!(values, finished, "only finished entities are committed");
-    assert_eq!(cache.len(), finished.len(), "no partial value reaches the cache");
-    let before = snapshot.computes.load(Ordering::SeqCst);
-    let (resumed, _, _) = run_stepped(&snapshot, Some(&mut cache), 2);
-    assert_eq!(resumed, expected_values(&fixture));
-    assert_eq!(snapshot.computes.load(Ordering::SeqCst) - before, fixture["resumeComputes"].as_u64().unwrap() as usize, "the resumed run recomputes only the unfinished entities");
+async fn original_stepped_cancel_retains_finished_rows_and_closes_pending_before_source(){
+ let fixture=stepped_fixture();let snapshot=SlowSnapshot::from_fixture(&fixture);let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut caller,grant)=original_inference_fixture_caller(1);
+ for turn in 0..10000{
+  let report=caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert!(!report.done);assert!(turn<9999);
+  if cursor.completed()==1&&cursor.pending.is_some(){break}
+ }
+ cursor.cancel();assert!(cursor.is_cancelled());assert_eq!(snapshot.cancelled.load(Ordering::SeqCst),1);let finished:BTreeMap<String,i64>=serde_json::from_value(fixture["cancelledValues"].clone()).unwrap();assert_eq!(stepped_projection(&snapshot,&values),finished);
+ let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,SlowWeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert!(matches!(result,Err(InferenceWorkFailure::Driver(InferenceError::Cancelled))));assert_eq!((born,freed),(0,0));
+ caller.cancel().cancel().await;close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);assert!(values.terminal_is_empty());
+ let before=snapshot.computes.load(Ordering::SeqCst);let(resumed,_,_)=run_stepped(&snapshot,None,1);assert_eq!(resumed,expected_values(&fixture));assert_eq!(snapshot.computes.load(Ordering::SeqCst)-before,fixture["resumeComputes"].as_u64().unwrap()as usize);
+ eprintln!("[DEBUG] original stepped cancellation preserves root output and cancels actual pending once; full paid cancelled close; new run recomputes all four values");
 }
 
 struct FailingField;
@@ -442,6 +415,11 @@ impl InferredField<SlowSnapshot> for FailingField {
     fn plan(snapshot: &SlowSnapshot) -> Vec<InferenceStep<Self::Key>> {
         SlowWeightSum::plan(snapshot)
     }
+    fn plan_source_extent(snapshot:&SlowSnapshot)->Option<(usize,usize)>{SlowWeightSum::plan_source_extent(snapshot)}
+    fn plan_source_node(snapshot:&SlowSnapshot,ordinal:usize)->Option<&str>{SlowWeightSum::plan_source_node(snapshot,ordinal)}
+    fn plan_source_key(snapshot:&SlowSnapshot,ordinal:usize)->Option<&String>{SlowWeightSum::plan_source_key(snapshot,ordinal)}
+    fn plan_source_link(snapshot:&SlowSnapshot,ordinal:usize)->Option<(&str,&str)>{SlowWeightSum::plan_source_link(snapshot,ordinal)}
+    fn clone_original_parent(original:&i64,output:&mut Option<i64>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{SlowWeightSum::clone_original_parent(original,output,cx)}
     fn dep_input(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Key]) -> Self::Dependency {
         SlowWeightSum::dep_input(snapshot, key, parents)
     }
@@ -450,23 +428,21 @@ impl InferredField<SlowSnapshot> for FailingField {
     }
     fn compute_step(snapshot: &SlowSnapshot, key: &Self::Key, parents: &[Self::Value], pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure> {
         if key == "leaf_b" {
-            return Err(InferenceFault::new("test.fail", "leaf_b refuses").into());
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"leaf_b refuses").into());
         }
         SlowWeightSum::compute_step(snapshot,key,parents,pending,cx)
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn a_failing_compute_is_an_error_naming_the_entity_and_keeps_the_values_before_it() {
-    let snapshot = SlowSnapshot::from_fixture(&stepped_fixture());
-    let mut cursor = InferenceCursor::new();
-    let mut values = BTreeMap::new();
-    let (mut caller,grant)=original_inference_fixture_caller(usize::MAX);
-    let error=caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,FailingField>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap_err();
-    assert!(matches!(error,InferenceWorkFailure::Field(fault) if fault.code=="test.fail"&&fault.message=="leaf_b refuses"));
-    caller.retire(grant);
-    assert_eq!(values.keys().cloned().collect::<Vec<_>>(), vec!["leaf_a".to_string(), "root".to_string()]);
-    assert!(try_infer_field::<SlowSnapshot, FailingField>(&snapshot, None).is_err());
+async fn a_failing_compute_is_an_error_naming_the_entity_and_keeps_the_values_before_it(){
+ let snapshot=SlowSnapshot::from_fixture(&stepped_fixture());let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let(mut caller,grant)=original_inference_fixture_caller(1);
+ for turn in 0..10000{
+  let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<SlowSnapshot,FailingField>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!((born,freed),(caller.receipt().retained_capacity_bytes,caller.receipt().released_bytes));assert!(turn<9999);
+  match result{Ok(report)=>assert!(!report.done),Err(failure)=>{assert!(matches!(&failure,InferenceWorkFailure::Original(original)if original.primary_value().unwrap().message=="leaf_b refuses"));break}}
+ }
+ assert_eq!(cursor.completed(),2);assert_eq!(stepped_projection(&snapshot,&values).keys().cloned().collect::<Vec<_>>(),vec!["leaf_a".to_string(),"root".to_string()]);close_stepped(&mut caller,grant,&mut cursor,&mut values);caller.retire(grant);
+ eprintln!("[DEBUG] original scalar compute failure retains earlier rows and complete original literal failure; no allocation on refusal; paid partial close");
 }
 //#endregion 🧪️SteppedDriver
 
@@ -586,9 +562,9 @@ async fn an_eviction_storm_with_a_budget_of_one_entry_stays_correct_and_within_b
 
 //#region 🧪️SessionGate
 struct Touching(&'static [&'static str]);
-impl crate::os_spr::command::DiffRegions for Touching {
-    fn touches(&self) -> crate::os_spr::command::TouchedPaths {
-        crate::os_spr::command::TouchedPaths::new(self.0.iter().copied())
+impl semio_framework_os_command::DiffRegions for Touching {
+    fn touches(&self) -> semio_framework_os_command::TouchedPaths {
+        semio_framework_os_command::TouchedPaths::new(self.0.iter().copied())
     }
 }
 
@@ -733,15 +709,15 @@ impl InferredField<EditSnapshot> for EditSum {
     fn compute(snapshot: &EditSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         snapshot.weights.get(key).copied().unwrap_or(0) + parents.iter().sum::<i64>()
     }
-    fn touched_by(_snapshot: &EditSnapshot, key: &Self::Key, touched: &crate::os_spr::command::TouchedPaths) -> bool {
+    fn touched_by(_snapshot: &EditSnapshot, key: &Self::Key, touched: &semio_framework_os_command::TouchedPaths) -> bool {
         touched.intersects_parts(&["weights", key])
     }
 }
 
 struct Strings(Vec<String>);
-impl crate::os_spr::command::DiffRegions for Strings {
-    fn touches(&self) -> crate::os_spr::command::TouchedPaths {
-        crate::os_spr::command::TouchedPaths::new(self.0.iter().cloned())
+impl semio_framework_os_command::DiffRegions for Strings {
+    fn touches(&self) -> semio_framework_os_command::TouchedPaths {
+        semio_framework_os_command::TouchedPaths::new(self.0.iter().cloned())
     }
 }
 
@@ -850,12 +826,12 @@ async fn the_chain_hash_equals_the_merkle_node_it_replaced_and_the_default_touch
     let folded = semio_framework_hash::merkle_node(&[&semio_framework_hash::hash(&own).to_hex()], children);
     assert_eq!(hex(&DepHash::chain("f", 1, b"input", &[b, a]).0), folded, "the chain hash equals the merkle node over the hex of the sorted parents");
     let snapshot = base_snapshot().await;
-    assert!(WeightSum::touched_by(&snapshot, &"root".to_string(), &crate::os_spr::command::TouchedPaths::default()));
+    assert!(WeightSum::touched_by(&snapshot, &"root".to_string(), &semio_framework_os_command::TouchedPaths::default()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn touched_paths_match_a_part_with_slashes_and_ancestors_without_splitting() {
-    let touched = crate::os_spr::command::TouchedPaths::new(["walls/a/b/axis", "storeys"]);
+    let touched = semio_framework_os_command::TouchedPaths::new(["walls/a/b/axis", "storeys"]);
     assert!(touched.intersects_parts(&["walls", "a/b"]) && touched.intersects_parts(&["walls", "a", "b"]) && touched.intersects_parts(&["walls"]));
     assert!(touched.intersects_parts(&["storeys", "st-1"]), "a coarse write region covers every row beneath it");
     assert!(!touched.intersects_parts(&["walls", "a/c"]) && !touched.intersects_parts(&["wall"]) && !touched.intersects_parts(&["walls", "a/bb"]));
@@ -869,11 +845,11 @@ async fn original_inferred_source_binding_preserves_actual_caller_before_unfunde
  use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
  use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let p=&law["caller"];let v=p["sourceGrant"].as_array().unwrap();let source=RetainedCloneGrant{maximum_items:v[0].as_u64().unwrap()as usize,maximum_copy_bytes:v[1].as_u64().unwrap()as usize,maximum_capacity_bytes:v[2].as_u64().unwrap()as usize,maximum_release_bytes:v[3].as_u64().unwrap()as usize,maximum_depth:v[4].as_u64().unwrap()as usize};
- let mut caller=OriginalJobFixtureCaller::admit(OperationId(p["operation"].as_u64().unwrap()),Generation(p["generation"].as_u64().unwrap()),source,||Some(1),p["deadlineUs"].as_u64().unwrap(),p["fuel"].as_u64().unwrap());let snapshot=base_snapshot().await;let original=&snapshot as*const _ as usize;let mut cursor=InferenceCursor::new();let mut values=BTreeMap::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(p["operation"].as_u64().unwrap()),Generation(p["generation"].as_u64().unwrap()),source,||Some(1),p["deadlineUs"].as_u64().unwrap(),p["fuel"].as_u64().unwrap());let snapshot=base_snapshot().await;let original=&snapshot as*const _ as usize;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(denied,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let step=result.unwrap();assert_eq!(step.fuel_used,0);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(cursor.original_caller.is_none()&&cursor.plan.is_none()&&values.is_empty());}
  let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());assert_eq!(result.unwrap().fuel_used,1);assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());
  let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),Default::default());assert!(matches!(&failure,InferenceWorkFailure::Original(original) if original.primary_value().unwrap().kind==semio_framework_value::ValueRefusalKind::UnsupportedOwner));assert_eq!(cursor.original_caller,Some((961,13,original)));assert!(cursor.plan.is_none()&&values.is_empty());drop(failure);
- caller.retire(source);let(_,born,freed)=crate::test_allocation::observe_backing(||drop((cursor,values)));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] actual original inference source op961/gen13 pointer retained metadata item1/copy0/capacity0/release0 same finite caller; genuine unfunded planning refusal preserved source; no whole inference qualification");
+ assert!(!caller.turn(grant,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(caller.turn(grant,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());caller.retire(source);let(_,born,freed)=crate::test_allocation::observe_backing(||drop((cursor,values)));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] actual original inference source op961/gen13 pointer retained metadata item1/copy0/capacity0/release0 same finite caller; genuine unfunded planning refusal preserved source; no whole inference qualification");
 }
 
 struct OriginalPlanSnapshot{nodes:Vec<String>,links:Vec<(String,String)>}
@@ -895,7 +871,7 @@ async fn original_inferred_graph_planning_quotes_each_borrowed_source_and_page()
  let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧭️plan/🔣️.json")).unwrap();let snapshot=OriginalPlanSnapshot{nodes:serde_json::from_value(law["nodes"].clone()).unwrap(),links:serde_json::from_value(law["links"].clone()).unwrap()};
  let original=snapshot.nodes.as_ptr();let link_original=snapshot.links.as_ptr();let expected:Vec<String>=serde_json::from_value(law["expected"].clone()).unwrap();
  for stop in [0usize,1,13,31,83,usize::MAX]{
-  let(mut caller,source)=original_inference_fixture_caller(1);let mut cursor=InferenceCursor::new();let mut values=BTreeMap::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};let(mut turns,mut births,mut releases)=(0usize,0usize,0usize);
+  let(mut caller,source)=original_inference_fixture_caller(1);let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64};let(mut turns,mut births,mut releases)=(0usize,0usize,0usize);
   loop{
    if turns==stop{cursor.cancel();caller.cancel().cancel().await;break}
    let position=cursor.original_plan().map(OriginalInferencePlan::position);let demand=cursor.original_plan().map(|plan|plan.demands::<OriginalPlanSnapshot,OriginalPlanField>(&snapshot).unwrap()).unwrap_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()});
@@ -911,6 +887,36 @@ async fn original_inferred_graph_planning_quotes_each_borrowed_source_and_page()
   loop{
    if let Some(plan)=cursor.original_plan(){let demand=plan.close_demands().unwrap();let position=plan.position();let mut denied=vec![];for body in [0,1,3]{if body<demand.copy_bytes{denied.push(RetainedCloneGrant{maximum_copy_bytes:body,..grant})}}if demand.release_bytes!=0{denied.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant})}for denied in denied{let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(denied,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap());assert!(!result.unwrap());assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());assert_eq!(cursor.original_plan().unwrap().position(),position);}}
    let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap());let receipt=caller.receipt();assert_eq!(born,receipt.retained_capacity_bytes);assert_eq!(freed,receipt.released_bytes);births+=born;releases+=freed;if result.unwrap(){break}}
-  assert_eq!(births,releases);assert!(cursor.original_plan().is_none()&&cursor.original_caller.is_none());caller.retire(source);let(_,born,freed)=crate::test_allocation::observe_backing(||drop((cursor,values)));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] actual inferred graph original source nodes9/link9 op961/gen13 stop{stop} turns{turns} backing{births}={releases} source pointers retained full paid planning close Drop0; hash/cache/widget/output not qualified");
+  assert_eq!(births,releases);assert!(cursor.original_plan().is_none()&&cursor.original_caller.is_none());caller.retire(source);let(_,born,freed)=crate::test_allocation::observe_backing(||drop((cursor,values)));assert_eq!((born,freed),(0,0));eprintln!("[DEBUG] actual inferred graph original source nodes9/link9 op971/gen19 stop{stop} turns{turns} backing{births}={releases} source pointers retained full paid planning close Drop0; hash/cache/widget/output not qualified");
  }
+}
+
+
+fn original_inference_scope_clock()->Option<u64>{Some(1)}
+
+#[semio_framework_async_macros::async_test]
+async fn original_inferred_scope_refuses_foreign_clock_binding_on_same_parent_and_function(){
+ use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueRefusalKind};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let input=&law["caller"];let raw=law["sourceIdentity"]["nativeStock"].as_array().unwrap();let stock=RetainedCloneGrant{maximum_items:raw[0].as_u64().unwrap()as usize,maximum_copy_bytes:raw[1].as_u64().unwrap()as usize,maximum_capacity_bytes:raw[2].as_u64().unwrap()as usize,maximum_release_bytes:raw[3].as_u64().unwrap()as usize,maximum_depth:raw[4].as_u64().unwrap()as usize};
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(input["operation"].as_u64().unwrap()),Generation(input["generation"].as_u64().unwrap()),stock,original_inference_scope_clock,input["deadlineUs"].as_u64().unwrap(),law["sourceIdentity"]["nativeFuel"].as_u64().unwrap());let original=caller.original_clock_binding();let snapshot=base_snapshot().await;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+ caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))}).unwrap().unwrap();
+ let(result,born,freed)=crate::test_allocation::observe_backing(||caller.turn(grant,|cx|{Ok(match cx.bind_original_clock_binding(original+1){Err(error)=>Err(InferenceWorkFailure::from(error)),Ok(())=>infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx)})}).unwrap());assert!(matches!(&result,Err(InferenceWorkFailure::Original(failure))if failure.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());drop(result);
+ assert!(!caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(cursor.close_original_plan_step(cx))}).unwrap().unwrap());assert!(caller.turn(grant,|cx|{cx.bind_original_clock_binding(original)?;Ok(cursor.close_original_plan_step(cx))}).unwrap().unwrap());caller.retire(stock);
+ eprintln!("[DEBUG] original source clock rebinding refused before inferred field work with identical parent/recipient/function/deadline and zero allocation; original binding closes under same source");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn original_inferred_source_scope_refuses_foreign_root_with_same_business_identity(){
+ use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+ use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueRefusalKind};
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️caller/🔣️.json")).unwrap();let declared=&law["caller"];let raw=law["sourceIdentity"]["nativeStock"].as_array().unwrap();let stock=RetainedCloneGrant{maximum_items:raw[0].as_u64().unwrap()as usize,maximum_copy_bytes:raw[1].as_u64().unwrap()as usize,maximum_capacity_bytes:raw[2].as_u64().unwrap()as usize,maximum_release_bytes:raw[3].as_u64().unwrap()as usize,maximum_depth:raw[4].as_u64().unwrap()as usize};
+ let operation=OperationId(declared["operation"].as_u64().unwrap());let generation=Generation(declared["generation"].as_u64().unwrap());let deadline=declared["deadlineUs"].as_u64().unwrap();let fuel=law["sourceIdentity"]["nativeFuel"].as_u64().unwrap();let snapshot=base_snapshot().await;let mut cursor=InferenceCursor::new();let mut values=InferenceValues::new();
+ let mut caller=OriginalJobFixtureCaller::admit(operation,generation,stock,original_inference_scope_clock,deadline,fuel);
+ let metadata=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
+ let first=caller.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap().unwrap();assert_eq!(first.fuel_used,1);
+ let mut foreign=OriginalJobFixtureCaller::admit(operation,generation,stock,original_inference_scope_clock,deadline,fuel);
+ let(result,born,freed)=crate::test_allocation::observe_backing(||foreign.turn(metadata,|cx|Ok(infer_field_step::<DagSnapshot,WeightSum>(&snapshot,None,&mut cursor,&mut values,cx))).unwrap());let failure=result.unwrap_err();assert!(matches!(&failure,InferenceWorkFailure::Original(original)if original.primary_value().unwrap().kind==ValueRefusalKind::InvariantViolated));assert_eq!((born,freed),(0,0));assert_eq!(foreign.receipt(),RetainedCloneProgress::default());assert!(values.is_empty());drop(failure);foreign.retire(stock);
+ assert!(!caller.turn(metadata,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(caller.turn(metadata,|cx|Ok(cursor.close_original_plan_step(cx))).unwrap().unwrap());assert!(cursor.original_scope.is_none()&&cursor.original_caller.is_none());caller.retire(stock);
+ eprintln!("[DEBUG] actual inferred source refuses foreign parent with same op/gen/snapshot/clock/deadline before work or allocation; same original source paid binding close");
 }

@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot:
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const DOCUMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
 const ZONE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
 const ELEMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
@@ -35,7 +34,6 @@ fn checkpoint(control:&mut SqliteSnapshotControl<'_>,position:usize,total:usize)
 fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'static[FloatColumn],control:&mut SqliteSnapshotControl<'_>)->Result<Entities<'a>, ValueError>{let rows=&database.table(table)?.rows;let mut result=Entities::new();for(position,row)in rows.iter().enumerate(){checkpoint(control,position,rows.len())?;let row=FloatRow::new(row,floats)?;if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid||result.insert(row.rowid,row).is_some(){return Err(invalid(format!("{table} requires exact fields and unique positive aliased identities")));}}Ok(result)}
 fn one<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'static[FloatColumn],document:bool,control:&mut SqliteSnapshotControl<'_>)->Result<FloatRow<'a>, ValueError>{let rows=entities(database,table,columns,floats,control)?;if rows.len()!=1||!rows.contains_key(&1){return Err(invalid(format!("{table} mandatory singleton identity must be one")));}let row=rows[&1];if document&&row.integer(1)?!=1{return Err(invalid(format!("{table} singleton has a foreign parent")));}Ok(row)}
 fn ordered<'a>(rows:impl Iterator<Item=FloatRow<'a>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>, ValueError>{let mut result=BTreeMap::new();for(position,row)in rows.enumerate(){checkpoint(control,position,0)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error| invalid(error.to_string()))?;if row.integer(1)?!=1||result.insert(ordinal,row).is_some(){return Err(invalid("DIN18599 entity has a foreign document or duplicate ordinal"));}}for(position,ordinal)in result.keys().copied().enumerate(){checkpoint(control,position,result.len())?;if position!=ordinal{return Err(invalid("DIN18599 ordinals must be dense"));}}Ok(result.into_values().collect())}
-
 
 impl Din18599Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

@@ -1,6 +1,6 @@
 //! 🛝️ `create-ramp` payload. Brings a new ramp onto a storey; its length, rise, slope, landings, solid and compliance are inferred from the authored path, landings and top constraint.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Ramp};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Ramp}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

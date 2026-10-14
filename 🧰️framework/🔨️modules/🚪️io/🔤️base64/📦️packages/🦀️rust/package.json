@@ -9,9 +9,6 @@
     "test-source": "bun repo run @semio-tech/framework-io-base64-rs:test-source",
     "test-strict": "bun repo run @semio-tech/framework-io-base64-rs:test-strict"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

@@ -44,7 +44,7 @@ async fn a_huge_group_stays_closed_and_an_opened_one_materialises_only_the_reque
     let (mut snapshot, inference) = demo();
     let template = snapshot.walls["w-south"].clone();
     for index in 0..600 {
-        snapshot.walls.insert(format!("bulk-{index:04}"), crate::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
+        snapshot.walls.insert(format!("bulk-{index:04}"), crate::standards::v1::subsets::any::schema::snapshot::Wall { name: format!("Bulk {index:04}"), ..template.clone() });
     }
     assert_eq!(text(&snapshot, &inference, Locale::En).matches("Bulk ").count(), 0, "a group over the open limit is not built until the host opens it");
     let group = ["bim-outliner.model", "site-1", "bldg-1", "st-ground", "st-ground::wall"].join(semio_framework_ui_contract::TREE_WINDOW_PATH_SEPARATOR);
@@ -97,7 +97,7 @@ async fn every_kind_of_view_can_be_added_from_the_outliner_in_both_languages() {
 async fn a_wall_sweep_hangs_under_its_wall_and_makes_no_storey_group() {
     let (snapshot, _) = demo();
     let create = kind_of("wall-sweep").and_then(|row| row.create).expect("wall sweep create");
-    let snapshot = crate::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
+    let snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &create(&snapshot, "sw-1", "w-south", "Baseboard").expect("creates")).expect("applies");
     let inference = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &snapshot, Clone::clone);
     for locale in [Locale::En, Locale::De] {
         let rendered = text(&snapshot, &inference, locale);

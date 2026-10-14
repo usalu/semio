@@ -4,7 +4,7 @@
 use super::*;
 use pack::snapshot::ArtifactPack;
 
-const SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
+static SCHEMA_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧬️schema/🔣️.json")).expect("../../🧬️schema/🔣️.json").leak());
 
 fn wire(transient: &CadWorldWindowTransient) -> serde_json::Value {
     semio_framework_value::ToValue::to_value(transient).into()
@@ -14,7 +14,7 @@ fn wire(transient: &CadWorldWindowTransient) -> serde_json::Value {
 /// at rest shows `Idle`.
 #[test]
 fn the_wire_form_is_the_declared_schema() {
-    let schema: serde_json::Value = serde_json::from_str(SCHEMA_JSON).expect("schema parses");
+    let schema: serde_json::Value = serde_json::from_str(*SCHEMA_JSON).expect("schema parses");
     let mut required: Vec<&str> = schema["required"].as_array().expect("required").iter().map(|key| key.as_str().expect("key")).collect();
     required.sort_unstable();
     let rest = wire(&CadWorldWindowTransient::default());
@@ -40,7 +40,7 @@ fn a_live_engagement_round_trips_through_the_pack() {
 /// to a transient whose wire form is that row.
 #[test]
 fn every_valid_fixture_row_is_its_own_wire_form() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("fixture parses");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("fixture parses");
     for row in fixture["valid"].as_array().expect("valid rows") {
         let decoded: CadWorldWindowTransient = semio_framework_value::FromValue::from_value(row.clone().into()).expect("a valid row decodes");
         assert_eq!(&wire(&decoded), row);

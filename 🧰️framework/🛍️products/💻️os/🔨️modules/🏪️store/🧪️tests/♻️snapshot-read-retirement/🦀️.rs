@@ -1,6 +1,6 @@
 //! ♻️ Sparse read retirement visits occupied slots within each bounded grant.
 use super::*;
-use super::tests::physical_test_close_grant;
+use semio_framework_value::testing::physical_test_close_grant;
 
 /// 🪙️ One funded admission of the next returned root, handed back whole as the retirement pump would receive it.
 fn take_one_returned(registry: &crate::os_store::SnapshotReadRegistryHandle) -> Option<Arc<u64>> {

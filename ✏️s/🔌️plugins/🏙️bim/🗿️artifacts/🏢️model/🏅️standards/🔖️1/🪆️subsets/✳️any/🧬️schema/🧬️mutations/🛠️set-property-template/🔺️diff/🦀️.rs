@@ -2,7 +2,7 @@
 //! template has, kinds listed at most once, sound and uniquely named definitions); providing only equal values is a no-op. Elements are not touched: their effective properties follow by inference.
 
 use super::SetPropertyTemplate;
-use crate::{template_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{template_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetPropertyTemplate, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

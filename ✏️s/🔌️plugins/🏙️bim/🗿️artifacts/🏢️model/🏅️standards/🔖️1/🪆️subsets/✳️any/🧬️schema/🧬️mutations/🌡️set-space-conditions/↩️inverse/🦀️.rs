@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetSpaceConditions`: `RemoveSpaceConditions` when the forward creates the record, else an absolute `SetSpaceConditions` restoring the base value of exactly the fields the forward really changes.
 
 use super::SetSpaceConditions;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 use super::super::remove_space_conditions::RemoveSpaceConditions;
 
 pub fn inverse(payload: &SetSpaceConditions, base: &ModelSnapshot) -> Vec<ModelMutation> {

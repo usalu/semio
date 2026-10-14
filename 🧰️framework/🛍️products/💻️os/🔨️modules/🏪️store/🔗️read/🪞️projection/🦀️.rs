@@ -4,10 +4,10 @@ use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirem
 use std::{mem::ManuallyDrop,sync::Arc};
 
 /// 📸️ An immutable projection cannot retire before its exact original read is bound.
-pub struct SnapshotReadProjection<T:Send+Sync+'static>{projection:ManuallyDrop<Option<Arc<T>>>,read:ManuallyDrop<Option<crate::os_store::snapshot_read::ErasedSnapshotRead>>}
+pub struct SnapshotReadProjection<T:Send+Sync+'static>{projection:ManuallyDrop<Option<Arc<T>>>,read:ManuallyDrop<Option<crate::ErasedSnapshotRead>>}
 impl<T:Send+Sync+'static> SnapshotReadProjection<T>{
  pub fn new(projection:Arc<T>)->Self{Self{projection:ManuallyDrop::new(Some(projection)),read:ManuallyDrop::new(None)}}
- pub fn bind(&mut self,read:crate::os_store::snapshot_read::SnapshotRead<T>)->Result<(),crate::os_store::snapshot_read::SnapshotRead<T>>{if self.read.is_some()||!self.projection.as_ref().is_some_and(|value|std::ptr::eq(value.as_ref(),read.get())){return Err(read);}*self.read=Some(read.into_erased());Ok(())}
+ pub fn bind(&mut self,read:crate::SnapshotRead<T>)->Result<(),crate::SnapshotRead<T>>{if self.read.is_some()||!self.projection.as_ref().is_some_and(|value|std::ptr::eq(value.as_ref(),read.get())){return Err(read);}*self.read=Some(read.into_erased());Ok(())}
  pub fn get(&self)->&T{self.projection.as_deref().expect("original context projection transferred")}
  pub fn has_original_issuer(&self)->bool{self.projection.as_ref().zip(self.read.as_ref()).is_some_and(|(value,read)|read.get::<T>().is_some_and(|original|std::ptr::eq(value.as_ref(),original)))}
 }
@@ -15,7 +15,7 @@ impl<T:Send+Sync+'static> std::ops::Deref for SnapshotReadProjection<T>{type Tar
 impl<T:Send+Sync+'static> AsRef<T> for SnapshotReadProjection<T>{fn as_ref(&self)->&T{self.get()}}
 impl<T:Send+Sync+'static> Drop for SnapshotReadProjection<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.projection.is_none()&&self.read.is_none()),"context root retains its original projection or Store issuer");if self.projection.is_none()&&self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.projection);ManuallyDrop::drop(&mut self.read);}}}}
 
-struct Cursor<T:Send+Sync+'static>{root:SnapshotReadProjection<T>,active:ManuallyDrop<Option<ControlledRetirement<crate::os_store::snapshot_read::ErasedSnapshotRead>>>}
+struct Cursor<T:Send+Sync+'static>{root:SnapshotReadProjection<T>,active:ManuallyDrop<Option<ControlledRetirement<crate::ErasedSnapshotRead>>>}
 impl<T:Send+Sync+'static> Cursor<T>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.root.projection.is_some(){return if self.root.has_original_issuer(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"context projection retains no matching original Store issuer"))};}

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "owner": "ticket:architecture-source-verification",
+  "maximumElapsedMilliseconds": 600000
+}

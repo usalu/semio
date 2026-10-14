@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_plugin_interpreter::validate_cold_page;
+use semio_framework_plugin_guest_contract::validate_cold_page;
 
 #[cfg(test)]
 #[path = "🧪️tests/📥️cold-pair/🦀️.rs"]

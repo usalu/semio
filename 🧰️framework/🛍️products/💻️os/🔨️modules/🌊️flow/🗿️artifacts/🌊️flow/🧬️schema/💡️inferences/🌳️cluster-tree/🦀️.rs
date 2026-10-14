@@ -1,5 +1,5 @@
 //! 🌳️ Owned cluster-tree properties retain exact neural atoms and nested dictionaries.
-use graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use neural_engine::{Atom, ColdDictionaryBuilder, Dictionary, Neuron, Synapse, Tree, Value};
 use semio_framework_value::{FromValue, ToValue};
 

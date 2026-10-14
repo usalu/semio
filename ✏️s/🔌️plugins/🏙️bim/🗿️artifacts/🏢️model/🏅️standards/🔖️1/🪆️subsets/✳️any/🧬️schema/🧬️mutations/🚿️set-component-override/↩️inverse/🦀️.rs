@@ -4,7 +4,7 @@
 use super::super::remove_component_override::RemoveComponentOverride;
 use super::super::family_rules;
 use super::SetComponentOverride;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetComponentOverride, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if !base.components.contains_key(&payload.component) {

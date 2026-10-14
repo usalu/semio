@@ -18,7 +18,7 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchSupport) -> Result<Emit<Fem2dMut
 #[semio_framework_async_macros::async_test]
 async fn patch_support_restrains_and_releases_a_dof_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchSupport(PatchSupport { id: "s1".into(), field: "rz".into(), value: "true".into() })).await;
     let fixed = app.snapshot().expect("snapshot").supports.iter().find(|support| support.id == "s1").expect("s1").fixed.clone();
     assert_eq!(fixed, vec![FemDof::Tx, FemDof::Ty, FemDof::Rz], "a restrained set is always emitted in canonical DOF order");

@@ -6,7 +6,7 @@
 use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
 use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::{Axis, ModelMutation, ModelSnapshot, Opening, OpeningKind};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Opening, OpeningKind}, mutations::ModelMutation};
 
 /// 🪟️ The size of a void opening, in metres.
 pub const VOID_WIDTH: f64 = 1.0;
@@ -96,7 +96,7 @@ impl Placing {
         let Some(offset) = fitted_offset(host.length, width, host.offset) else { return Some(Candidate { offset: host.offset, host, width, opening: None, valid: false }) };
         let name = ctx.name_of(|labels| labels.kind_opening, ctx.snapshot.openings.len());
         let opening = Opening { host: host.host.clone(), kind, offset, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: host.side < 0.0, reveal_depth: None, reveal_material: None, name };
-        let valid = ctx.accepts(&ModelMutation::CreateOpening(crate::mutations::create_opening::CreateOpening { id: "probe".into(), opening: opening.clone() }));
+        let valid = ctx.accepts(&ModelMutation::CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id: "probe".into(), opening: opening.clone() }));
         Some(Candidate { host, offset, width, opening: Some(opening), valid })
     }
 }
@@ -118,7 +118,7 @@ impl Tool for Placing {
                     Some(Candidate { valid: true, opening: Some(opening), .. }) => {
                         let opening = opening.clone();
                         let id = ctx.mint("opening");
-                        Step::write(ctx, ModelMutation::CreateOpening(crate::mutations::create_opening::CreateOpening { id, opening }))
+                        Step::write(ctx, ModelMutation::CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening { id, opening }))
                     }
                     Some(_) => Step::refuse(REJECTED),
                 }

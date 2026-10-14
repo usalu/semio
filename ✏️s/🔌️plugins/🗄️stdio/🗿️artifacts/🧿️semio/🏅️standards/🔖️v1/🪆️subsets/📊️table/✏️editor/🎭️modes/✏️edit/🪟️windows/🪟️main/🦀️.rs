@@ -4,7 +4,7 @@
 //! artifact-level `SemioTableSnapshot` — this window itself never mutates; mutation is the surface
 //! root's `handle()` responsibility.
 
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants

@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-cad-cad-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-cad-cad-inferences = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-mutations = { workspace = true }
+semio-s-artifact-cad-cad-play = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+ui_wgpu = { workspace = true, features = ["wgpu"] }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

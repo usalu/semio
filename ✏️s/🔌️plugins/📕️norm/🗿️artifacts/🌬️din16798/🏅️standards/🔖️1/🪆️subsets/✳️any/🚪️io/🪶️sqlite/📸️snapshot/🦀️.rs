@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot:
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const DOCUMENT_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8)];
 const ZONE_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14),FloatColumn::Binary64(15),FloatColumn::Binary64(16),FloatColumn::Binary64(17),FloatColumn::Binary64(18),FloatColumn::Binary64(19),FloatColumn::Binary64(20),FloatColumn::Binary64(21)];
 const SYSTEM_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(6),FloatColumn::Binary64(8),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(14),FloatColumn::Binary64(15),FloatColumn::Binary64(17),FloatColumn::Binary64(18),FloatColumn::Binary64(19)];
@@ -21,7 +20,6 @@ fn entities<'a>(database:&'a SqliteDatabase,table:&str,columns:usize,floats:&'st
 fn ordered<'a>(rows:impl Iterator<Item=FloatRow<'a>>,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<FloatRow<'a>>, ValueError>{let mut result=BTreeMap::new();for(position,row)in rows.enumerate(){checkpoint(control,position,0)?;let ordinal=usize::try_from(row.integer(2)?).map_err(|error| invalid(error.to_string()))?;if row.integer(1)?!=1||result.insert(ordinal,row).is_some(){return Err(invalid("DIN16798 entity has a foreign document or duplicate ordinal"));}}for(position,ordinal)in result.keys().copied().enumerate(){checkpoint(control,position,result.len())?;if position!=ordinal{return Err(invalid("DIN16798 ordinals must be dense"));}}Ok(result.into_values().collect())}
 fn read_u32(row:FloatRow<'_>,column:usize)->Result<u32, ValueError>{u32::try_from(row.integer(column)?).map_err(|error| invalid(error.to_string()))}
 fn read_u8(row:FloatRow<'_>,column:usize)->Result<u8, ValueError>{u8::try_from(row.integer(column)?).map_err(|error| invalid(error.to_string()))}
-
 
 impl Din16798Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

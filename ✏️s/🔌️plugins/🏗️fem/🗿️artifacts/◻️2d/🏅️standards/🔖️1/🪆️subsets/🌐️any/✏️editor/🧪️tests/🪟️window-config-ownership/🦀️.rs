@@ -5,15 +5,15 @@ fn fem2d_window_config_document_admission_rejects_window_and_os_fields() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧪️tests/🧫️fixtures/🧬️document-admission/🔣️.json")).expect("document admission fixture");
     let row = fixture["cases"].as_array().expect("document cases").iter().find(|row| row["dimension"] == "2d").expect("dimension");
     let base = row["document"].to_string();
-    let _ = semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");
-    let _ = semio_framework_pack_json::from_json_str::<crate::Fem2dSnapshot>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM snapshot admission");
+    let _ = semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::Fem2dArtifact>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM artifact admission");
+    let _ = semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot>(&base, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral FEM snapshot admission");
     for field in row["foreignFields"].as_array().expect("foreign fields") {
         let key = field["key"].as_str().expect("field key");
         let mut candidate = row["document"].clone();
         candidate[key] = field["value"].clone();
         let text = candidate.to_string();
-        assert!(semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::Fem2dArtifact>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "artifact admitted {key}");
-        assert!(semio_framework_pack_json::from_json_str::<crate::Fem2dSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "snapshot admitted {key}");
+        assert!(semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::Fem2dArtifact>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "artifact admitted {key}");
+        assert!(semio_framework_pack_json::from_json_str::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "snapshot admitted {key}");
     }
 }
 
@@ -91,15 +91,15 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                         return Err("FEM window state crossed into a same-kind sibling".into());
                     }
                     let model_state = artifact_app_laws::capture_fixture_window_config::<model::config::Fem2dModelWindowConfigOwner, _, _>(&mut *app, &model_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM model state".to_string())?;
-                    if model_state.camera != (crate::Viewport2d { x: 7.0, y: -3.0, zoom: 2.5 }) {
+                    if model_state.camera != (semio_framework_os_kernel::Viewport2d { x: 7.0, y: -3.0, zoom: 2.5 }) {
                         return Err("FEM model camera did not persist on its exact owner".into());
                     }
                     let result_state = artifact_app_laws::capture_fixture_window_config::<results::config::Fem2dResultsWindowConfigOwner, _, _>(&mut *app, &results_left).await.map_err(|error| format!("{error:?}"))?.ok_or_else(|| "missing exact FEM results state".to_string())?;
-                    if result_state.result_source_id.as_deref() != Some("dead") || result_state.result_mode != crate::app_surface::ResultMode::Modal || result_state.result_mode_index != 2 {
+                    if result_state.result_source_id.as_deref() != Some("dead") || result_state.result_mode != semio_s_fem_app_surface::ResultMode::Modal || result_state.result_mode_index != 2 {
                         return Err("FEM result display did not persist on its exact owner".into());
                     }
                     let before_example: Vec<(String, Vec<u8>)> = packs.iter().map(|pack| (pack.window_id.clone(), pack.files.pack.clone())).collect();
-                    let reset = dispatch(&mut app, &model_left, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }), 0).await?;
+                    let reset = dispatch(&mut app, &model_left, Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() }), 0).await?;
                     let [semio_framework::kernel::Effect::LoadDocument { pack, spr }] = reset.effects.as_slice() else {
                         return Err("FEM example command did not emit one host-owned document load".into());
                     };

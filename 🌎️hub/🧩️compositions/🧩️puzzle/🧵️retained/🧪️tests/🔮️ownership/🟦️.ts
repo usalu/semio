@@ -48,7 +48,7 @@ describe("Puzzle retained laws belong to their actual selected owner", () => {
       for (const [path, hash] of [[artifact.fixture, artifact.fixtureSha256], [artifact.root, artifact.rootSha256], [artifact.manifest, artifact.manifestSha256], [artifact.script, artifact.scriptSha256]]) expect(digest(read(path)), path).toBe(hash);
       expect(read(artifact.root)).toContain("fn retained_command_test_catalog()");
       expect(read(artifact.root)).toContain("../../🎮️commands/🧵️retained/🦀️.rs");
-      expect(read("🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts")).toContain('"--features", "component-app-assembly"');
+      expect(read("🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts")).not.toContain('"--features"');
       const actual = evaluate(read(artifact.fixture));
       expect(actual.vectorIds.slice(0, vectorIds.length)).toEqual(vectorIds);
       expect(checkpointIds.every((id) => actual.vectorIds.includes(id))).toBe(true);

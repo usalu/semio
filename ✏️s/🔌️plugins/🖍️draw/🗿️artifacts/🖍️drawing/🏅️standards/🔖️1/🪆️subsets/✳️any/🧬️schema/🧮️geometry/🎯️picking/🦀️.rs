@@ -1,7 +1,5 @@
 //! 🎯️ Resumable contour winding and stroke proximity in world coordinates.
-#[path="🎨️paint/🦀️.rs"]
-pub mod paint;
-use crate::PathSegment;
+use semio_s_artifact_draw_drawing_model::PathSegment;
 type Point=[f64;2];
 #[derive(Clone,Debug)]
 enum Piece {

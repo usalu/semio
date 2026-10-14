@@ -7,9 +7,9 @@ use super::data::{label, number};
 use super::reader::{opt_text, refs, text};
 use super::spatial::{authoring_of, single_values};
 use super::Import;
-use crate::{AreaMeasure, AreaScheme, Zone};
+use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 /// 🪪️ The set whose rows the importer maps to finishes instead of to user properties.
@@ -52,7 +52,7 @@ fn finishes(i: &mut Import<'_>) {
 }
 
 fn free(i: &Import<'_>, candidate: &str) -> bool {
-    crate::mutations::elements::taken(&i.model, candidate).is_none()
+    crate::standards::v1::subsets::any::schema::mutations::elements::taken(&i.model, candidate).is_none()
 }
 
 fn zones(i: &mut Import<'_>) {

@@ -2,9 +2,9 @@
 //! payload-only rows are appended, rows present in both are patched field by field, and the payload order is carried only when it
 //! differs from "survivors in base order, then the appended rows".
 use super::ReplaceReferences;
-use crate::diff::{CadDiff, CadReferencesDelta};
-use crate::mutations::{CadOpacitySet, CadOrientationSet, CadReferencePatch, CadScaleSet};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadReferencesDelta};
+use semio_s_artifact_cad_cad_model::{diff::CadOpacitySet, diff::CadOrientationSet, diff::CadReferencePatch, diff::CadScaleSet};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff
@@ -16,9 +16,9 @@ pub fn diff(payload: &ReplaceReferences, base: &CadSnapshot) -> protocol::Mutati
     if existing == payload.references.as_slice() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("References for \"{}\" are already up to date.", payload.model_definition_id));
     }
-    let removed: Vec<crate::diff::CadReferenceRemoval> = existing.iter().enumerate().filter(|(_, reference)| !payload.references.iter().any(|next| next.id == reference.id)).map(|(index, reference)| crate::diff::CadReferenceRemoval { id: reference.id.clone(), index }).collect();
-    let inserted: Vec<crate::diff::CadReferenceInsertion> = payload.references.iter().enumerate().filter(|(_, next)| !existing.iter().any(|reference| reference.id == next.id)).map(|(index, next)| crate::diff::CadReferenceInsertion { index, row: next.clone() }).collect();
-    let modified: Vec<crate::diff::CadReferenceModification> = payload
+    let removed: Vec<semio_s_artifact_cad_cad_model::diff::CadReferenceRemoval> = existing.iter().enumerate().filter(|(_, reference)| !payload.references.iter().any(|next| next.id == reference.id)).map(|(index, reference)| semio_s_artifact_cad_cad_model::diff::CadReferenceRemoval { id: reference.id.clone(), index }).collect();
+    let inserted: Vec<semio_s_artifact_cad_cad_model::diff::CadReferenceInsertion> = payload.references.iter().enumerate().filter(|(_, next)| !existing.iter().any(|reference| reference.id == next.id)).map(|(index, next)| semio_s_artifact_cad_cad_model::diff::CadReferenceInsertion { index, row: next.clone() }).collect();
+    let modified: Vec<semio_s_artifact_cad_cad_model::diff::CadReferenceModification> = payload
         .references
         .iter()
         .filter_map(|next| {
@@ -34,12 +34,12 @@ pub fn diff(payload: &ReplaceReferences, base: &CadSnapshot) -> protocol::Mutati
                 locked: (reference.locked != next.locked).then_some(next.locked),
                 opacity: (reference.opacity != next.opacity).then_some(CadOpacitySet { value: next.opacity }),
             };
-            (patch != CadReferencePatch::default()).then(|| crate::diff::CadReferenceModification { id: next.id.clone(), patch })
+            (patch != CadReferencePatch::default()).then(|| semio_s_artifact_cad_cad_model::diff::CadReferenceModification { id: next.id.clone(), patch })
         })
         .collect();
     let survivors: Vec<(usize, usize)> = payload.references.iter().enumerate().filter_map(|(after, next)| existing.iter().position(|reference| reference.id == next.id).map(|base| (base, after))).collect();
     let stay = longest_increasing_base_run(&survivors);
-    let moved: Vec<crate::diff::CadReferenceRelocation> = survivors.iter().filter(|(base, _)| !stay.contains(base)).map(|(base, after)| crate::diff::CadReferenceRelocation { id: existing[*base].id.clone(), from: *base, to: *after }).collect();
+    let moved: Vec<semio_s_artifact_cad_cad_model::diff::CadReferenceRelocation> = survivors.iter().filter(|(base, _)| !stay.contains(base)).map(|(base, after)| semio_s_artifact_cad_cad_model::diff::CadReferenceRelocation { id: existing[*base].id.clone(), from: *base, to: *after }).collect();
     let mut modified = modified;
     modified.sort_by(|left, right| left.id.cmp(&right.id));
     protocol::MutationOutcome::new(CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(payload.model_definition_id.clone(), CadReferencesDelta { removed, inserted, moved, modified })])), ..Default::default() })

@@ -3,7 +3,6 @@
 //! one `🪟️windows/🧊️main` window kind) plus the mode-level Fill tool. The per-window chrome options
 //! every instance shares live in `☑️options/*`.
 
-use crate::editor::puzzle3d::modes::edit::tools::fill;
 use crate::editor::puzzle3d::modes::edit::windows::main;
 use semio_framework_plugin::create_window_layout;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -24,7 +23,7 @@ pub fn definition() -> ModeDefinition {
         id: PUZZLE3D_PLAY_MODE_EDIT.into(),
         label: LocalizedLabel::native("Edit", "Bearbeiten"),
         icon_id: "pencil".into(),
-        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(fill::TOOL_ID))],
+        tools: vec![::semio_framework_async::poll::resolve_ready(ToolRef::new(crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID))],
         layout_id: None,
         commands: Vec::new(),
     }

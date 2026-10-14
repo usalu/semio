@@ -1,0 +1,3 @@
+{"artifact": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad", "mutations": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "union": "CadMutation", "snapshot": "CadSnapshot", "diff": "crate::standards::v1::subsets::any::schema::diff::CadDiff",
+ "union_module": "crate::standards::v1::subsets::any::schema::mutations"}

@@ -4,7 +4,7 @@ use super::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, Plan
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, PlanRole as Stroke, PlanShape};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::{CurtainWall, ModelSnapshot, OpeningKind, Phase, Point2, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, ModelSnapshot, OpeningKind, Phase, Point2, Wall};
 use semio_framework_geometry::bulge::{band_loop, BulgeSeg};
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;

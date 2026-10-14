@@ -1,9 +1,9 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, export_ifc4, model_to_part21, Schema};
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
 const ENERGY: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
 

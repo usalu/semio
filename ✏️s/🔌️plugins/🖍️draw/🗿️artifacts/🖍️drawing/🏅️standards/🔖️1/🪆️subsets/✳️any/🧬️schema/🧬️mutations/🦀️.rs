@@ -4,14 +4,19 @@
 //! and `impl protocol::SemanticMutation<DrawingSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
 
-use crate::schema::{find_drawing_layer, layer_base};
-use crate::{DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
-#[path="../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🦀️.rs"]
-pub mod import_image;
-#[path="../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🦀️.rs"]
-pub mod remove_image;
-pub use import_image::{import_image_asset,ImportImageAsset};
-pub use remove_image::{remove_image_asset,RemoveImageAsset};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_structure::import_image_asset::mutation::ImportImageAsset;
+use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::RemoveImageAsset;
 
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
@@ -19,7 +24,7 @@ pub use remove_image::{remove_image_asset,RemoveImageAsset};
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
-#[mutations(snapshot = DrawingSnapshot, diff = crate::diff::DrawingDiff, schema = "drawing.drawing")]
+#[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing")]
 pub enum DrawingMutation {
     SetLayerVisible(SetLayerVisible),
     SetLayerLocked(SetLayerLocked),
@@ -49,7 +54,8 @@ pub enum DrawingMutation {
     RemoveImageAsset(RemoveImageAsset),
 }
 //#endregion 🔖️Mutations
-pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
+use semio_s_artifact_draw_drawing_style::update_text::mutation::update_text;
+use semio_s_artifact_draw_drawing_style::update_text::mutation::UpdateText;
 
 //#region 🔖️FieldPatch
 
@@ -63,11 +69,11 @@ fn field_dash(value:&semio_framework_value::DslValue)->Option<Option<Vec<f64>>>{
 pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_framework_value::paged::Utf8Text + ?Sized), field: &str, value: &semio_framework_value::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
     let layer_id = &layer_base(layer).id;
-    if let Ok(coordinate)=crate::schema::shape_geometry::ShapeCoordinateField::parse(field) {
+    if let Ok(coordinate)=semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::parse(field) {
         let DrawingLayerNode::Shape(shape)=layer else{return None;};
         let value=value.as_f64().filter(|number|number.is_finite())?;
-        crate::schema::shape_geometry::shape_coordinate(shape,&coordinate,None).ok()?;
-        if value<0.0&&matches!(coordinate,crate::schema::shape_geometry::ShapeCoordinateField::RectWidth|crate::schema::shape_geometry::ShapeCoordinateField::RectHeight|crate::schema::shape_geometry::ShapeCoordinateField::EllipseRx|crate::schema::shape_geometry::ShapeCoordinateField::EllipseRy|crate::schema::shape_geometry::ShapeCoordinateField::CircleR){return None;}
+        semio_s_artifact_draw_drawing_model::shape_geometry::shape_coordinate(shape,&coordinate,None).ok()?;
+        if value<0.0&&matches!(coordinate,semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::RectWidth|semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::RectHeight|semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::EllipseRx|semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::EllipseRy|semio_s_artifact_draw_drawing_model::shape_geometry::ShapeCoordinateField::CircleR){return None;}
         return Some(set_shape_coordinate(layer_id.clone(),coordinate,None,value));
     }
     let finite = || value.as_f64().filter(|number| number.is_finite());
@@ -76,7 +82,7 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "imageKey" => { if !matches!(layer,DrawingLayerNode::Image(_)){return None;}value.as_str()?; }
         "imageWidth" | "imageHeight" => { if !matches!(layer,DrawingLayerNode::Image(_))||finite()?<=0.0{return None;} }
         "textContent" => { if !matches!(layer, DrawingLayerNode::Text(_)) { return None; } value.as_str()?; }
-        "fontFamily" => {if !matches!(layer,DrawingLayerNode::Text(_)){return None;}crate::DrawingFontFamily::parse(value.as_str()?).ok()?;}
+        "fontFamily" => {if !matches!(layer,DrawingLayerNode::Text(_)){return None;}semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(value.as_str()?).ok()?;}
         "textSize" => { if !matches!(layer, DrawingLayerNode::Text(_)) || finite()? <= 0.0 { return None; } }
         "visible" | "locked" | "fillEnabled" | "strokeEnabled" => { value.as_bool()?; }
         "opacity" | "traceThreshold" => { if !(0.0..=1.0).contains(&finite()?) { return None; } }
@@ -86,19 +92,19 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
         "fillColor" | "strokeColor" => { field_color(value)?; }
 
         "isolation" => {if !matches!(layer,DrawingLayerNode::Group(_)){return None;}value.as_bool()?;}
-        "fillRule" => { crate::FillRule::parse(value.as_str()?).ok()?; }
-        "strokeCap" => { crate::StrokeCap::parse(value.as_str()?).ok()?; }
-        "strokeJoin" => { crate::StrokeJoin::parse(value.as_str()?).ok()?; }
+        "fillRule" => { semio_s_artifact_draw_drawing_model::fill_rule::FillRule::parse(value.as_str()?).ok()?; }
+        "strokeCap" => { semio_s_artifact_draw_drawing_model::stroke::StrokeCap::parse(value.as_str()?).ok()?; }
+        "strokeJoin" => { semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::parse(value.as_str()?).ok()?; }
         "strokeDash" => { field_dash(value)?; }
-        "blendMode" => { if !crate::DRAWING_BLEND_MODES.contains(&value.as_str()?) { return None; } }
-        "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !crate::DRAWING_BOOLEAN_OPERATIONS.contains(&value.as_str()?) { return None; } }
+        "blendMode" => { if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.contains(&value.as_str()?) { return None; } }
+        "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS.contains(&value.as_str()?) { return None; } }
         _ => return None,
     }
     let operation = match field {
         "name" => rename_layer(layer_id.clone(), value.as_str().unwrap_or("").into()),
         "textContent" | "textSize" | "fontFamily" => {
             let DrawingLayerNode::Text(text) = layer else { return None; };
-            update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size },if field=="fontFamily"{crate::DrawingFontFamily::parse(value.as_str()?).ok()?}else{text.font_family})
+            update_text(layer_id.clone(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size },if field=="fontFamily"{semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::parse(value.as_str()?).ok()?}else{text.font_family})
         }
         "imageKey" | "imageWidth" | "imageHeight" => {
             let DrawingLayerNode::Image(image)=layer else{return None;};
@@ -130,16 +136,16 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
             replace_layer_fill(layer_id.clone(), Some(FillStyle::Solid { color: {let mut color=field_color(value)?;color[3]=alpha;color} }))
         }
         "isolation" => set_group_isolation(layer_id.clone(),value.as_bool()?),
-        "fillRule" => set_layer_fill_rule(layer_id.clone(),crate::FillRule::parse(value.as_str()?).ok()?),
+        "fillRule" => set_layer_fill_rule(layer_id.clone(),semio_s_artifact_draw_drawing_model::fill_rule::FillRule::parse(value.as_str()?).ok()?),
         "fillEnabled" => replace_layer_fill(layer_id.clone(), if value.as_bool()? { Some(layer_base(layer).attributes.fill.clone().unwrap_or(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })) } else { None }),
-        "strokeEnabled" => replace_layer_stroke(layer_id.clone(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None })) } else { None }),
+        "strokeEnabled" => replace_layer_stroke(layer_id.clone(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Butt, join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Miter, dash: None })) } else { None }),
         "strokeWidth" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" => {
-            let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
+            let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Butt, join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Miter, dash: None });
             match field {
                 "strokeWidth" => stroke.width = finite()?,
                 "strokeColor" => stroke.color = {let mut color=field_color(value)?;color[3]=stroke.color[3];color},
-                "strokeCap" => stroke.cap = crate::StrokeCap::parse(value.as_str()?).ok()?,
-                "strokeJoin" => stroke.join = crate::StrokeJoin::parse(value.as_str()?).ok()?,
+                "strokeCap" => stroke.cap = semio_s_artifact_draw_drawing_model::stroke::StrokeCap::parse(value.as_str()?).ok()?,
+                "strokeJoin" => stroke.join = semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::parse(value.as_str()?).ok()?,
                 _ => stroke.dash = field_dash(value)?.map(Into::into),
             }
             replace_layer_stroke(layer_id.clone(), Some(stroke))
@@ -166,20 +172,34 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &(impl semio_
 // 🪆️ These fourteen leaves now live under their own semantic subset (`structure`/`style`/
 // `transform`/`metadata`, see `../../../🔣️.json`), not as siblings of this catalog any more — this
 // catalog is the one thing every subset composes back through, so its `use`s are fully qualified.
-pub use crate::standards::v1::subsets::metadata::schema::mutations::rename_layer::mutation::{rename_layer, RenameLayer};
-pub use crate::standards::v1::subsets::metadata::schema::mutations::set_layer_locked::mutation::{set_layer_locked, SetLayerLocked};
-pub use crate::standards::v1::subsets::metadata::schema::mutations::set_layer_visible::mutation::{set_layer_visible, SetLayerVisible};
-pub use crate::standards::v1::subsets::structure::schema::mutations::create_layer::mutation::{create_layer, CreateLayer};
-pub use crate::standards::v1::subsets::structure::schema::mutations::delete_layer::mutation::{delete_layer, DeleteLayer};
-pub use crate::standards::v1::subsets::structure::schema::mutations::duplicate_layer::mutation::{duplicate_layer, DuplicateLayer};
-pub use crate::standards::v1::subsets::structure::schema::mutations::reorder_layer::mutation::{reorder_layer, ReorderLayer};
-pub use crate::standards::v1::subsets::style::schema::mutations::replace_layer_fill::mutation::{replace_layer_fill, ReplaceLayerFill};
-pub use crate::standards::v1::subsets::style::schema::mutations::replace_layer_stroke::mutation::{replace_layer_stroke, ReplaceLayerStroke};
-pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_blend_mode::mutation::{set_layer_blend_mode, SetLayerBlendMode};
-pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_opacity::mutation::{set_layer_opacity, SetLayerOpacity};
-pub use crate::standards::v1::subsets::transform::schema::mutations::set_layer_boolean_operation::mutation::{set_layer_boolean_operation, SetLayerBooleanOperation};
-pub use crate::standards::v1::subsets::transform::schema::mutations::update_layer_trace_params::mutation::{update_layer_trace_params, UpdateLayerTraceParams};
-pub use crate::standards::v1::subsets::transform::schema::mutations::update_layer_transform::mutation::{update_layer_transform, UpdateLayerTransform};
+use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::rename_layer;
+use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
+use semio_s_artifact_draw_drawing_metadata::set_layer_locked::mutation::set_layer_locked;
+use semio_s_artifact_draw_drawing_metadata::set_layer_locked::mutation::SetLayerLocked;
+use semio_s_artifact_draw_drawing_metadata::set_layer_visible::mutation::set_layer_visible;
+use semio_s_artifact_draw_drawing_metadata::set_layer_visible::mutation::SetLayerVisible;
+use semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer;
+use semio_s_artifact_draw_drawing_structure::create_layer::mutation::CreateLayer;
+use semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer;
+use semio_s_artifact_draw_drawing_structure::delete_layer::mutation::DeleteLayer;
+use semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::duplicate_layer;
+use semio_s_artifact_draw_drawing_structure::duplicate_layer::mutation::DuplicateLayer;
+use semio_s_artifact_draw_drawing_structure::reorder_layer::mutation::reorder_layer;
+use semio_s_artifact_draw_drawing_structure::reorder_layer::mutation::ReorderLayer;
+use semio_s_artifact_draw_drawing_style::replace_layer_fill::mutation::replace_layer_fill;
+use semio_s_artifact_draw_drawing_style::replace_layer_fill::mutation::ReplaceLayerFill;
+use semio_s_artifact_draw_drawing_style::replace_layer_stroke::mutation::replace_layer_stroke;
+use semio_s_artifact_draw_drawing_style::replace_layer_stroke::mutation::ReplaceLayerStroke;
+use semio_s_artifact_draw_drawing_style::set_layer_blend_mode::mutation::set_layer_blend_mode;
+use semio_s_artifact_draw_drawing_style::set_layer_blend_mode::mutation::SetLayerBlendMode;
+use semio_s_artifact_draw_drawing_style::set_layer_opacity::mutation::set_layer_opacity;
+use semio_s_artifact_draw_drawing_style::set_layer_opacity::mutation::SetLayerOpacity;
+use semio_s_artifact_draw_drawing_transform::set_layer_boolean_operation::mutation::set_layer_boolean_operation;
+use semio_s_artifact_draw_drawing_transform::set_layer_boolean_operation::mutation::SetLayerBooleanOperation;
+use semio_s_artifact_draw_drawing_transform::update_layer_trace_params::mutation::update_layer_trace_params;
+use semio_s_artifact_draw_drawing_transform::update_layer_trace_params::mutation::UpdateLayerTraceParams;
+use semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::update_layer_transform;
+use semio_s_artifact_draw_drawing_transform::update_layer_transform::mutation::UpdateLayerTransform;
 
 //#region 🔖️Apply
 /// ↩️ The typed mutation steps that undo `mutation` against `snapshot`.
@@ -243,120 +263,48 @@ pub const KINDS: &[&str] = &[
 mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
 
-pub use crate::standards::v1::subsets::transform::schema::mutations::update_path_geometry::mutation::{update_path_geometry, UpdatePathGeometry};
+use semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::UpdatePathGeometry;
 
-pub use crate::standards::v1::subsets::style::schema::mutations::set_layer_fill_rule::mutation::{set_layer_fill_rule,SetLayerFillRule};
+use semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::set_layer_fill_rule;
+use semio_s_artifact_draw_drawing_style::set_layer_fill_rule::mutation::SetLayerFillRule;
 
-pub use crate::standards::v1::subsets::style::schema::mutations::set_group_isolation::mutation::{set_group_isolation,SetGroupIsolation};
+use semio_s_artifact_draw_drawing_style::set_group_isolation::mutation::set_group_isolation;
+use semio_s_artifact_draw_drawing_style::set_group_isolation::mutation::SetGroupIsolation;
 
-pub use crate::standards::v1::subsets::transform::schema::mutations::drag_layers::mutation::{drag_layers, DragLayers};
-pub use crate::standards::v1::subsets::transform::schema::mutations::rotate_layers::mutation::{rotate_layers, RotateLayers};
-pub use crate::standards::v1::subsets::transform::schema::mutations::scale_layers::mutation::{scale_layers, ScaleLayers};
-pub use crate::standards::v1::subsets::transform::schema::mutations::drag_path_points::mutation::{drag_path_points, DragPathPoints, DrawingPathPointTarget};
+use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
+use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::DragLayers;
+use semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::rotate_layers;
+use semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::RotateLayers;
+use semio_s_artifact_draw_drawing_transform::scale_layers::mutation::scale_layers;
+use semio_s_artifact_draw_drawing_transform::scale_layers::mutation::ScaleLayers;
+use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::drag_path_points;
+use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::DragPathPoints;
+use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::DrawingPathPointTarget;
 
 //#region 🔖️SelectionTransform
-/// 🧮️ The identity affine matrix `[a, b, c, d, e, f]`.
-pub const DRAWING_IDENTITY_MATRIX: [f64; 6] = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 
-/// 🌍️ One addressed layer of `base` in document order: its parent chain's world matrix, whether it and every ancestor is
-/// visible and unlocked, and the nearest addressed ancestor, if any.
-pub struct DrawingPlacedLayer<'a> {
-    pub layer: &'a DrawingLayerNode,
-    pub parent: [f64; 6],
-    pub editable: bool,
-    pub addressed_ancestor: Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>,
-}
 
-/// 🗂️ Every layer of `base` whose id is in `ids`, in document (pre-)order, placed in the world.
-pub fn drawing_placed_layers<'a, T: semio_framework_value::paged::Utf8Text>(base: &'a DrawingSnapshot, ids: &[T]) -> Vec<DrawingPlacedLayer<'a>> {
-    let mut placed = Vec::new();
-    let mut stack: Vec<(semio_framework_value::list::PagedIter<'a, DrawingLayerNode, {usize::MAX}>, [f64; 6], bool, Option<&'a semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)> = vec![(base.layers.iter(), DRAWING_IDENTITY_MATRIX, true, None)];
-    while let Some((layers, parent, editable, ancestor)) = stack.last_mut() {
-        let Some(layer) = layers.next() else {
-            stack.pop();
-            continue;
-        };
-        let (parent, ancestor) = (*parent, *ancestor);
-        let layer_base = layer_base(layer);
-        let editable = *editable && layer_base.visible && !layer_base.locked;
-        let addressed = ids.iter().any(|id| layer_base.id.eq_text(id));
-        if addressed {
-            placed.push(DrawingPlacedLayer { layer, parent, editable, addressed_ancestor: ancestor });
-        }
-        if let DrawingLayerNode::Group(group) = layer {
-            let matrix = crate::schema::geometry::multiply(parent, crate::schema::drawing_transform_to_matrix(&layer_base.transform));
-            stack.push((group.children.iter(), matrix, editable, if addressed { Some(&layer_base.id) } else { ancestor }));
-        }
-    }
-    placed
-}
-
-/// 🚨️ The schema-stated target invariant every selection transform shares: at least one id, none repeated.
-pub fn drawing_targets_invariant(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>) -> Result<(), &'static str> {
-    if targets.is_empty() {
-        return Err("a selection transform addresses at least one layer");
-    }
-    let unique: std::collections::BTreeSet<_> = targets.iter().collect();
-    if unique.len() != targets.len() {
-        return Err("a selection transform addresses every layer once");
-    }
-    Ok(())
-}
-
-/// 🚨️ The `mutation.partial` warnings of a layer selection transform: addressed ids missing from the drawing, locked or hidden,
-/// or placed through a singular transform — each skipped, never fatal.
-pub fn drawing_selection_partial(targets: &semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, placed: &[DrawingPlacedLayer<'_>], locked: Vec<String>, singular: Vec<String>) -> Vec<protocol::MutationMessage> {
-    let missing: Vec<String> = targets.iter().filter(|id| !placed.iter().any(|entry| &layer_base(entry.layer).id == *id)).map(|id| id.to_string_owner()).collect();
-    [(missing, "not in this drawing"), (locked, "locked or hidden"), (singular, "placed through a singular transform")]
-        .into_iter()
-        .filter(|(skipped, _)| !skipped.is_empty())
-        .map(|(skipped, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", skipped.len(), targets.len(), skipped.join(", "))).at(skipped))
-        .collect()
-}
-
-/// ↔️ A layer's transform after its world-space drag by `delta` through its parent's world matrix — only the origin moves.
-pub fn drawing_dragged_transform(source: &crate::DrawingTransform, parent: [f64; 6], delta: [f64; 2]) -> Option<crate::DrawingTransform> {
-    let [x, y, scale_x, scale_y, rotation] = crate::schema::geometry::translation::translate([source.x, source.y, source.scale_x, source.scale_y, source.rotation], parent, delta)?;
-    Some(crate::DrawingTransform { x, y, scale_x, scale_y, rotation, shear: source.shear })
-}
-
-/// 🌐️ A layer's transform after the world-space affine `motion` through its parent's world matrix:
-/// `parent⁻¹ · motion · parent · local`.
-pub fn drawing_moved_transform(source: &crate::DrawingTransform, parent: [f64; 6], motion: [f64; 6]) -> Option<crate::DrawingTransform> {
-    use crate::schema::geometry::{inverse, multiply};
-    let local = multiply(inverse(parent)?, multiply(motion, multiply(parent, crate::schema::drawing_transform_to_matrix(source))));
-    local.iter().all(|value| value.is_finite()).then(|| crate::schema::drawing_matrix_to_transform(local))
-}
-
-/// 🔄️ The world-space rotation by `angle` radians about `(pivot_x, pivot_y)`.
-pub fn drawing_rotation_matrix(pivot_x: f64, pivot_y: f64, angle: f64) -> [f64; 6] {
-    let (s, c) = angle.sin_cos();
-    [c, s, -s, c, pivot_x - c * pivot_x + s * pivot_y, pivot_y - s * pivot_x - c * pivot_y]
-}
-
-/// 📐️ The world-space scaling by `(scale_x, scale_y)` about `(pivot_x, pivot_y)`.
-pub fn drawing_scaling_matrix(pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> [f64; 6] {
-    [scale_x, 0.0, 0.0, scale_y, pivot_x * (1.0 - scale_x), pivot_y * (1.0 - scale_y)]
-}
-
-/// 🔢️ A selection label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
-pub fn drawing_label_number(value: f64) -> (String, String) {
-    let rounded = (value * 100.0).round() / 100.0;
-    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
-    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
-    let de = en.replace('.', ",");
-    (en, de)
-}
-
-/// 🔠️ A selection label's counted noun, `(en, de)`: "1 layer" / "1 Ebene", "3 layers" / "3 Ebenen".
-pub fn drawing_label_layers(count: usize) -> (String, String) {
-    match count {
-        1 => ("1 layer".to_string(), "1 Ebene".to_string()),
-        count => (format!("{count} layers"), format!("{count} Ebenen")),
-    }
-}
 //#endregion 🔖️SelectionTransform
 
-pub use crate::standards::v1::subsets::style::schema::mutations::update_image::mutation::{update_image,UpdateImage};
+use semio_s_artifact_draw_drawing_style::update_image::mutation::update_image;
+use semio_s_artifact_draw_drawing_style::update_image::mutation::UpdateImage;
 
-pub use crate::standards::v1::subsets::transform::schema::mutations::shape_coordinate::mutation::{set_shape_coordinate,SetShapeCoordinate};
+use semio_s_artifact_draw_drawing_transform::shape_coordinate::mutation::set_shape_coordinate;
+use semio_s_artifact_draw_drawing_transform::shape_coordinate::mutation::SetShapeCoordinate;
+
+/// 🏗️ `DrawingSnapshot`/`DrawingMutation`'s `ArtifactBuilder` is the ordinary `Mutation`/`MutationDiff`
+/// algebra with no custom build logic beyond that — the old hand-rolled `DrawingBuilderConstruction`
+/// (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/`build`) matched
+/// `SnapshotBuilder<S, M>`'s own documented "apply `outcome.diff()` once, fold a rejection into a
+/// Fatal message" idiom exactly, so this subset writes zero builder boilerplate (ticket
+/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE task 3).
+pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DrawingSnapshot, DrawingMutation>;
+
+//#region 🪢️TaxonomyMounts
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;
+#[path = "../../../🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🎮️prepare/🦀️.rs"]
+pub mod rename_prepare;
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+//#endregion 🪢️TaxonomyMounts

@@ -2,7 +2,7 @@
 //! that are rows, no cycle); element classifications whose code the new table lacks stay and are reported by a diagnostic. Providing only equal values is a no-op.
 
 use super::SetClassificationSystem;
-use crate::{entries_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{entries_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetClassificationSystem, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

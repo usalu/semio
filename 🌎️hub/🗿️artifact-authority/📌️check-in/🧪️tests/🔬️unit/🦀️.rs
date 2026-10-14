@@ -172,13 +172,11 @@ fn check_in_jobs_join_bound_retain_and_cancel_by_document() {
 //#region 🔖️Supersede
 /// 🗺️ A linked GIS Map codec — the shape `PluginHostArtifactCodec` and a linked `VerifiedNativeArtifactCodec` give a
 /// hub: `codec.replay-envelopes` is `store::replay_envelopes_onto_pair`, a replica's own fold.
-#[cfg(feature = "native-artifact-execution")]
 struct LinkedGisMapCodec {
     identity: TrustedArtifactIdentity,
     codec: ::directory::os_store::serialization::ArtifactCodec,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl TrustedArtifactCodec for LinkedGisMapCodec {
     fn identity(&self) -> &TrustedArtifactIdentity {
         &self.identity
@@ -195,7 +193,6 @@ impl TrustedArtifactCodec for LinkedGisMapCodec {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl TrustedArtifactReplayCodec for LinkedGisMapCodec {
     async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
@@ -204,10 +201,8 @@ impl TrustedArtifactReplayCodec for LinkedGisMapCodec {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct LinkedGisMapCatalog(LinkedGisMapCodec);
 
-#[cfg(feature = "native-artifact-execution")]
 impl TrustedArtifactCatalog for LinkedGisMapCatalog {
     type Codec = LinkedGisMapCodec;
 
@@ -218,7 +213,6 @@ impl TrustedArtifactCatalog for LinkedGisMapCatalog {
 
 /// 🌱️ The GIS Map genesis pair of the check-in document and the ledger a real map editor emits for `mutations`, one
 /// one-operation edit each — exactly its store's own event log.
-#[cfg(feature = "native-artifact-execution")]
 async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutation>) -> (ArtifactPair, Vec<protocol::MutationEnvelope>) {
     use ::directory::os_store::{store_schema::ArtifactCommand, pack::snapshot::ArtifactPack, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
@@ -249,7 +243,6 @@ async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutati
 
 /// ✏️ A collaborator's supersession of `targets` authored after the whole `ledger`: its envelope depends on exactly its
 /// targets, and a replacement input is the aggregate op's canonical `OpBinary` bytes under the artifact schema.
-#[cfg(feature = "native-artifact-execution")]
 fn gis_map_supersede(ledger: &[protocol::MutationEnvelope], inputs: Vec<(usize, Option<semio_s_artifact_gis_gismap::GisMapMutation>)>) -> protocol::MutationEnvelope {
     use protocol::OpBinary;
     let last = ledger.last().expect("a ledger to supersede").timestamp;
@@ -270,7 +263,6 @@ fn gis_map_supersede(ledger: &[protocol::MutationEnvelope], inputs: Vec<(usize, 
 }
 
 /// 📍️ A GIS Map position `id` at longitude `lon`.
-#[cfg(feature = "native-artifact-execution")]
 fn gis_map_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_gismap::GisMapMutation {
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
     let data = ::directory::DslValue::object([("lon".into(), ::directory::DslValue::float(lon)), ("lat".into(), ::directory::DslValue::float(47.0))]);
@@ -278,7 +270,6 @@ fn gis_map_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_gi
 }
 
 /// 🏗️ The check-in authority over the linked GIS Map codec.
-#[cfg(feature = "native-artifact-execution")]
 fn gis_map_authority() -> ValidatingCanonicalArtifactAuthority<LinkedGisMapCatalog> {
     let codec = ::directory::os_store::artifact_codec::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA);
     ValidatingCanonicalArtifactAuthority::new(LinkedGisMapCatalog(LinkedGisMapCodec { identity: TrustedArtifactIdentity::from_descriptor(&descriptor()), codec }))
@@ -287,7 +278,6 @@ fn gis_map_authority() -> ValidatingCanonicalArtifactAuthority<LinkedGisMapCatal
 /// ✏️ A committed ledger holding a collaborator's `Supersede` of another author's operation materializes through Check In
 /// into a pair that keeps the supersession and whose reload folds it: the position carries the replacement input, the
 /// superseded edit keeps its slot and identity (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING `📋️design.md` §2, §3.1).
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn materialize_check_in_folds_a_supersession_of_the_ledger() {
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
@@ -308,7 +298,6 @@ async fn materialize_check_in_folds_a_supersession_of_the_ledger() {
 /// the same position `mutation.target-missing`, an `Error`) fails Check In with the codec's typed output refusal, the
 /// same on every attempt, while the same ledger without it checks in (design §9.2: Error and Fatal block, the check-in
 /// strictness).
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn materialize_check_in_refuses_a_supersession_that_blocks_the_replay() {
     use semio_s_artifact_gis_gismap::mutations::delete_position::DeletePosition;

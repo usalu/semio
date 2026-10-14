@@ -1,7 +1,7 @@
 #[path = "📝️change-test-config/🦀️.rs"]
 pub mod change_test_config_selection;
 pub(crate) use change_test_config_selection::ChangeTestConfigSelection;
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
@@ -30,14 +30,13 @@ impl protocol::OpText for TestConfigMutation {
 }
 impl protocol::OpBinary for TestConfigMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        match self {
-            Self::ChangeTestConfigSelection(value) => value.encode_op(),
-        }
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        Ok(ChangeTestConfigSelection::decode_op(bytes)?.into())
+        dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(TestConfigMutation);
 impl store::snapshot_clone_preparation::ConfigApplyMutation<super::TestConfig> for TestConfigMutation {
     fn exchange(self, post: &mut super::TestConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::ChangeTestConfigSelection(change) = self;

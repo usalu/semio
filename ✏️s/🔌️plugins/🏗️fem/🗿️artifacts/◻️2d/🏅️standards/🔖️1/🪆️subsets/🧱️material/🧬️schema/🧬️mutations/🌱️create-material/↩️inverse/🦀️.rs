@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `CreateMaterial` — always a `delete-material` of the created id.
 use super::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_material,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_material;
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateMaterial, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<delete_material::DeleteMaterial>>(payload: &CreateMaterial, _base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Fem2dMutation::DeleteMaterial(delete_material::DeleteMaterial { id: payload.material.id.clone() })]
+    vec![Op::from(delete_material::DeleteMaterial { id: payload.material.id.clone() })]
 
     })())
 }

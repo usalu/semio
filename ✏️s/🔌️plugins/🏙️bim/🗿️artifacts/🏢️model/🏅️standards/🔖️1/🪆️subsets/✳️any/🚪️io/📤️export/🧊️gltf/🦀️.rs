@@ -4,7 +4,7 @@
 //! 🔖 `IoFidelity::Lossy`: glTF has no slot for parametric constraints, types, layers, property sets or quantities; geometry, hierarchy, names and colours are exact.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};

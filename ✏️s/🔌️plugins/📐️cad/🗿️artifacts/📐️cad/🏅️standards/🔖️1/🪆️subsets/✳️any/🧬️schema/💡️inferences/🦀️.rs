@@ -4,8 +4,21 @@
 //! dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
-use super::bounds::{object_count, scene_bounds, vertex_count};
-use crate::CadSnapshot;
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod bounds {
+    #[path = "📦bounds/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+//#endregion 🧩️Modules
+
+use crate::{bounds::object_count, bounds::scene_bounds, bounds::vertex_count};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
@@ -74,9 +87,9 @@ mod tests;
 // classification/reclassification (rule 2: pure fn snapshot/objects -> derived objects), not
 // stateful app behaviour.
 mod derive_transformation {
-    use crate::standards::v1::subsets::any::schema::geometry::CadObject;
+    use semio_s_artifact_cad_cad_model::geometry::CadObject;
     #[cfg(test)]
-    use crate::standards::v1::subsets::any::schema::geometry::CadPrimitiveSlot;
+    use semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot;
 
     use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
     #[cfg(test)]
@@ -420,9 +433,9 @@ pub use derive_transformation::*;
 // Jack `QueryableGraph` adapter over one `CadGeometry` pane (rule 2/CAD-map: query -> D4
 // inference-shaped derived compute).
 mod construct_query {
-    use crate::standards::v1::subsets::any::schema::geometry::CadGeometry;
-    use graph::dsl::{QueryableEdge, QueryableGraph};
-    use graph::manifest::PropertyValue;
+    use semio_s_artifact_cad_cad_model::geometry::CadGeometry;
+    use semio_framework_graph_dsl::{QueryableEdge, QueryableGraph};
+    use semio_framework_graph_manifest::PropertyValue;
     use std::collections::BTreeSet;
 
     const KIND_VERTEX: &str = "Vertex";
@@ -450,7 +463,7 @@ mod construct_query {
     }
 
     impl QueryableGraph for CadTopologyGraph<'_> {
-        fn manifest(&self) -> Option<&graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&semio_framework_graph_manifest::GraphManifest> {
             None
         }
 
@@ -511,7 +524,7 @@ mod construct_query {
             let mut next_id = 0usize;
             let mut push = |kind: &str, source_node_id: String, target_node_id: String| {
                 next_id += 1;
-                out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: graph::manifest::PropertyBag::default() });
+                out.push(QueryableEdge { id: format!("{kind}-{next_id}"), kind: kind.to_string(), source_node_id, target_node_id, source_port: None, target_port: None, properties: semio_framework_graph_manifest::PropertyBag::default() });
             };
             for solid in &g.solids {
                 for shell_id in &solid.shell_ids {
@@ -548,12 +561,12 @@ mod construct_query {
 
     /// 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
     /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
-    /// non-manifold-edge checks, adjacency lookups), reusing `graph::dsl::run_query_json`
+    /// non-manifold-edge checks, adjacency lookups), reusing `semio_framework_graph_dsl::run_query_json`
     /// unchanged.
     #[cfg(test)]
-    pub(crate) fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, graph::dsl::GraphDslError> {
+    pub(crate) fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, semio_framework_graph_dsl::GraphDslError> {
         let graph = CadTopologyGraph::new(geometry);
-        graph::dsl::run_query_json(&graph, source)
+        semio_framework_graph_dsl::run_query_json(&graph, source)
     }
 
     #[cfg(test)]
@@ -570,9 +583,9 @@ pub use construct_query::*;
 // moved to `🚪️io/🦀️.rs` instead; the interaction statechart moved to the app's own
 // `⚙️engine` (D5 behavioural).
 mod scene_compute {
-    use crate::standards::v1::subsets::any::schema::geometry::{centroid_from_host_snapshot_primitives, import_geometry_handles, resolve_primitive_handle, tessellate_geometry_handle, tessellate_object_mesh, tessellate_object_mesh_from_host_snapshot, CadGeometry, CadObject, CadPrimitiveSlot};
-    #[cfg(test)] use crate::standards::v1::subsets::any::schema::geometry::{objects_from_host_snapshot_model, parse_geometry};
-    use crate::{CadCamera, CadNode, CadPaneId, CadProjectionDsl, CadReference, CadSnapshot, CAD_PLAY_DOCUMENT_SCHEMA};
+    use semio_s_artifact_cad_cad_model::{geometry::centroid_from_host_snapshot_primitives, geometry::import_geometry_handles, geometry::resolve_primitive_handle, geometry::tessellate_geometry_handle, geometry::tessellate_object_mesh, geometry::tessellate_object_mesh_from_host_snapshot, geometry::CadGeometry, geometry::CadObject, geometry::CadPrimitiveSlot};
+    #[cfg(test)] use semio_s_artifact_cad_cad_model::geometry::{objects_from_host_snapshot_model, parse_geometry};
+    use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadNode, snapshot::CadPaneId, snapshot::CadProjectionDsl, snapshot::CadReference, snapshot::CadSnapshot, snapshot::CAD_PLAY_DOCUMENT_SCHEMA};
     #[cfg(test)] use crate::{CadWorkingScene};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
@@ -783,8 +796,8 @@ mod scene_compute {
     /// fixture) builds each pane from.
 
 
-    fn forest_references_for_model_definitions(reference_z: f64) -> crate::CadReferenceIndex {
-        let mut output = crate::CadReferenceIndex::new();
+    fn forest_references_for_model_definitions(reference_z: f64) -> semio_s_artifact_cad_cad_model::CadReferenceIndex {
+        let mut output = semio_s_artifact_cad_cad_model::CadReferenceIndex::new();
         for pane in CadPaneId::all() {
             output.insert(pane.model_definition_id().into(), vec![CadReference {
                 id: "ref-concrete-forest".into(), source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
@@ -814,14 +827,14 @@ mod scene_compute {
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: "cad".into(),
-            shape_model: Some(crate::cad_empty_pane_child(CadPaneId::Shape)),
-            building_model: Some(crate::cad_empty_pane_child(CadPaneId::Building)),
-            energy_model: Some(crate::cad_empty_pane_child(CadPaneId::Energy)),
-            structure_classic_model: Some(crate::cad_empty_pane_child(CadPaneId::StructureClassic)),
+            shape_model: Some(semio_s_artifact_cad_cad_model::snapshot::cad_empty_pane_child(CadPaneId::Shape)),
+            building_model: Some(semio_s_artifact_cad_cad_model::snapshot::cad_empty_pane_child(CadPaneId::Building)),
+            energy_model: Some(semio_s_artifact_cad_cad_model::snapshot::cad_empty_pane_child(CadPaneId::Energy)),
+            structure_classic_model: Some(semio_s_artifact_cad_cad_model::snapshot::cad_empty_pane_child(CadPaneId::StructureClassic)),
             drawings: Vec::new(),
             breps: Vec::new(),
             nodes: vec![CadNode { id: "node-root".into(), label: "Model".into(), kind: "group".into() }, CadNode { id: "node-box".into(), label: "Box".into(), kind: "solid".into() }],
-            references_by_model_definition_id: crate::CadReferenceIndex::new(),
+            references_by_model_definition_id: semio_s_artifact_cad_cad_model::CadReferenceIndex::new(),
         }
     }
 
@@ -836,7 +849,7 @@ mod scene_compute {
     /// Forest Left fixture's pane scene ([`forest_pane_scene`]) — and lives in the child store from then on (design
     /// §20.15). The handle is two strings and never a digest of the content it was born with.
     fn forest_play_document() -> CadSnapshot {
-        let child = |pane: CadPaneId| Some(crate::cad_named_pane_child(CAD_EXAMPLE_FOREST_LEFT, pane));
+        let child = |pane: CadPaneId| Some(semio_s_artifact_cad_cad_model::snapshot::cad_named_pane_child(CAD_EXAMPLE_FOREST_LEFT, pane));
         CadSnapshot {
             schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
             id: CAD_EXAMPLE_FOREST_LEFT.into(),
@@ -1038,5 +1051,5 @@ pub use scene_compute::*;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::bounds::CadBounds;
+pub use crate::bounds::CadBounds;
 //#endregion 🔁️Re-exports

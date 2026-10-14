@@ -700,6 +700,6 @@ impl std::future::Future for WalWriterAdmissionWait {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(all(test, feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "🧪️tests/🔬️fence-conformance/🦀️.rs"]
 mod fence_conformance;

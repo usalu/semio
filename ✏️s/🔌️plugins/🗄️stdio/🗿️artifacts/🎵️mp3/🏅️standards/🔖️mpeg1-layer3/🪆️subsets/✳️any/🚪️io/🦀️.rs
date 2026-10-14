@@ -406,7 +406,7 @@ pub mod playback {
     use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
     use semio_framework_job::Operation;
     use semio_framework_plugin::app::ArtifactOutputChunks;
-    use semio_framework_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactSnapshotDisposer, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
+    use semio_framework_plugin::{ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity};
     use semio_s_artifact_stdio_contract::media_export::{IncrementalMediaAdvance, IncrementalMediaExportJob, IncrementalMediaExportSpec};
     use std::marker::PhantomData;
     use std::sync::Arc;
@@ -451,7 +451,7 @@ pub mod playback {
         const ARTIFACT_ID: &'static str = "stdio.mp3";
         const ARTIFACT_NAME: &'static str = "MP3 Audio";
         const COMPONENT_KIND: &'static str = "audio";
-        fn cursor(snapshot: &Mp3Snapshot) -> Result<Mp3EncodeCursor, Fault> { Ok(Mp3EncodeCursor::new(snapshot)) }
+        fn cursor(snapshot: &Mp3Snapshot) -> Mp3EncodeCursor { Mp3EncodeCursor::new(snapshot) }
         fn advance(cursor: &mut Mp3EncodeCursor, snapshot: &Mp3Snapshot, maximum_bytes: usize) -> Result<IncrementalMediaAdvance, Fault> {
             cursor.advance(snapshot, maximum_bytes).map(|advance| match advance {
                 Mp3EncodeAdvance::Progress => IncrementalMediaAdvance::Progress,
@@ -505,58 +505,7 @@ pub mod playback {
         const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: TOOL_ID, lanes: &[ArtifactToolPublicationLane::HostOnly] }];
     }
 
-    #[derive(Default)]
-    pub struct Mp3ExportSnapshotDisposer {
-        pending: std::mem::ManuallyDrop<Option<Mp3Snapshot>>,
-        retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>,
-    }
 
-    impl ArtifactSnapshotDisposer<Mp3Snapshot> for Mp3ExportSnapshotDisposer {
-        fn retirement_demands(&self, snapshot: &Option<Arc<Mp3Snapshot>>, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-            if let Some(owner) = self.retirement.as_ref() {
-                if owner.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<Mp3Snapshot>>>(), depth: 1, ..Default::default() }); }
-                let copy = owner.next_copy_byte_demand()?;
-                let release = owner.next_release_byte_demand()?;
-                return Ok(semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: owner.next_capacity_byte_demand(body.max(copy).max(release))?, release_bytes: release, depth: owner.next_depth_demand()? });
-            }
-            Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.pending.is_some() || snapshot.is_some() { size_of::<Mp3Snapshot>() } else { 0 }, capacity_bytes: 0, release_bytes: if snapshot.is_some() { semio_framework_value::retirement::shared::shared_retirement_allocation_bytes::<Mp3Snapshot>() } else { 0 }, depth: usize::from(self.pending.is_some() || snapshot.is_some()) })
-        }
-
-        fn close_step(&mut self, snapshot: &mut Option<Arc<Mp3Snapshot>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, Fault> {
-            use semio_framework_plugin::PluginLifecycleStep;
-            use semio_framework_value::retained_clone::RetainedCloneProgress;
-            if self.terminal_is_empty(snapshot) { return Ok(PluginLifecycleStep::Complete(Default::default())); }
-            let demand = self.retirement_demands(snapshot, grant.maximum_copy_bytes).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
-            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(PluginLifecycleStep::Progress(Default::default())); }
-            if let Some(owner) = self.retirement.as_mut() {
-                if owner.terminal_is_empty() { *self.retirement = None; return Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-                let step = owner.step(grant).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message()))?;
-                return Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty(snapshot)));
-            }
-            if let Some(value) = self.pending.take() {
-                match semio_framework_value::retirement::controlled::ControlledRetirement::new(value) {
-                    Ok(owner) => { *self.retirement = Some(owner); return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-                    Err((error, value)) => { *self.pending = Some(value); return Err(Fault::new(semio_framework_plugin::FaultOrigin::Framework, error.kind.as_str(), error.into_message())); }
-                }
-            }
-            let Some(owner) = snapshot.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())); };
-            if Arc::get_mut(owner).is_none() { return Ok(PluginLifecycleStep::AwaitingInput { reason: "MP3 original snapshot observers must return before retirement" }); }
-            match Arc::try_unwrap(snapshot.take().unwrap()) {
-                Ok(value) => { *self.pending = Some(value); Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() })) }
-                Err(owner) => { *snapshot = Some(owner); Ok(PluginLifecycleStep::AwaitingInput { reason: "MP3 original snapshot custody remains shared" }) }
-            }
-        }
-
-        fn terminal_is_empty(&self, snapshot: &Option<Arc<Mp3Snapshot>>) -> bool { snapshot.is_none() && self.pending.is_none() && self.retirement.is_none() }
-    }
-
-    impl Drop for Mp3ExportSnapshotDisposer {
-        fn drop(&mut self) {
-            let empty = self.pending.is_none() && self.retirement.is_none();
-            assert!(std::thread::panicking() || empty, "MP3 snapshot disposer abandoned original ownership");
-            if empty { unsafe { std::mem::ManuallyDrop::drop(&mut self.pending); std::mem::ManuallyDrop::drop(&mut self.retirement); } }
-        }
-    }
 }
 //#endregion 🔖️Codec
 

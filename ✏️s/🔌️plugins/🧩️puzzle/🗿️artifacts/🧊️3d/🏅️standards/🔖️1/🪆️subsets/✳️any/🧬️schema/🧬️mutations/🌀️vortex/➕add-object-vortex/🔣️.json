@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➕add-object-vortex",
+  "semanticKind": "add-object-vortex",
+  "displayName": "Add Object Vortex",
+  "emoji": "➕",
+  "aggregateVariant": "AddObjectVortex",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-object-vortex",
+  "binaryTag": 11,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

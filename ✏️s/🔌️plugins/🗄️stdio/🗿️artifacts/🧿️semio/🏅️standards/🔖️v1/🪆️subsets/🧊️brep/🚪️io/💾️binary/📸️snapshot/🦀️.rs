@@ -7,8 +7,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
 
@@ -573,7 +575,8 @@ mod native_snapshot_codec {
 use super::*;
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;

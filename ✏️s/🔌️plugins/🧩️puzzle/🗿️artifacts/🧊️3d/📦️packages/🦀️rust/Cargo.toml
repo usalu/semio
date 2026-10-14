@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:machine", "dep:semio-framework-3d", "dep:semio-framework-async", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -32,9 +28,8 @@ semio-framework-schema-composition = { path = "../../../../../../../🧰️frame
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-wasm-bindgen = { workspace = true, optional = true }
+wasm-bindgen = { workspace = true }
 semio-framework = { workspace = true }
-semio-framework-graph = { workspace = true }
 semio-framework-hash = { workspace = true }
 # 🔤️ First-party base64 codec — the paged `registerBrushMesh` wire carries mesh values as base64 of
 # little-endian bytes, which is the only encoding that fits 1 024 values in one 8 192-byte command.
@@ -61,14 +56,14 @@ semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-3d = { workspace = true, optional = true }
-semio-framework-async = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-scene = { workspace = true, optional = true }
+semio-framework-3d = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
 # 🛠️ The transform tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework-tool-machine = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

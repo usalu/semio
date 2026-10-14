@@ -1,10 +1,10 @@
-use super::RemoveMaterial;
-use crate::mutations::{insert_material, En1993Mutation};
-use crate::En1993Snapshot;
-pub fn inverse(payload: &RemoveMaterial, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::remove_material::RemoveMaterial;
+use crate::insert_material;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &RemoveMaterial, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_material::InsertMaterial> {
     Ok((|| {
     if payload.index >= base.materials.len() { return Vec::new(); }
-    vec![En1993Mutation::InsertMaterial(insert_material::InsertMaterial { index: Some(payload.index), material: base.materials[payload.index].clone() })]
+    vec![Op::from(insert_material::InsertMaterial { index: Some(payload.index), material: base.materials[payload.index].clone() })]
 
     })())
 }

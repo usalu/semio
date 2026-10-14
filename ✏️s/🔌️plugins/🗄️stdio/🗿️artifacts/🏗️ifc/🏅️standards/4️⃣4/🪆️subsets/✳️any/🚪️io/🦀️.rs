@@ -9,8 +9,6 @@
 /// `semio_s_artifact_stdio_contract::part21` generic graph — never persisted itself. Reused externally by
 /// `🧿️semio`'s own IFC4 deserializer, so this stays reachable at the same `engine::spatial` path
 /// through the `engine` barrel shim.
-#[path = "🏛️spatial/🦀️.rs"]
-pub mod spatial;
 //#endregion 🔖️Submodules
 
 //#region 🔖️Codec
@@ -47,7 +45,7 @@ pub fn encode_ifc4_document(document: &semio_s_artifact_stdio_contract::part21::
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v4::subsets::any::io::IfcAnalyzer;
-    use crate::IfcSnapshot;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("4"), subset: SubsetId("*") };
@@ -89,9 +87,6 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
@@ -110,17 +105,13 @@ pub mod io_registry {
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::{IfcDiff, IfcMutation, IfcSnapshot};
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcDiff;
+    use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -169,7 +160,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::IfcSnapshot;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
@@ -232,8 +223,11 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: IfcComposer,
 );
 
-use crate::standards::v4::subsets::any::schema::*;
-use crate::{IfcSnapshot, IfcMutation, STDIO_IFC_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::*;
+use semio_s_artifact_stdio_ifc_4_descriptor::standards::v4::subsets::any::schema::descriptor::ifc_artifact_schema_descriptor;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA;
 //#region 🔖️Register
 /// 🗂️ **Deliberately left imperative and callable** (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-
 /// APP-STATE-MACHINES, per the ticket's own explicit instruction: "leave ifc's registration
@@ -249,7 +243,7 @@ use crate::{IfcSnapshot, IfcMutation, STDIO_IFC_DOCUMENT_SCHEMA};
 /// Registers codecs and the artifact schema descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    crate::io_registry::register();
+    io_registry::register();
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();

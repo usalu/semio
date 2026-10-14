@@ -1,12 +1,26 @@
 //! 📇️ Typed DWG symbol-table records with explicit owned common fields.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::{color,drawing::optional_words,reader::{boolean,byte,full_unsigned,high,low,optional_text,optional_unsigned,ordinal,real,word,Reader}};
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgBlockHeaderTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionBehavior;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionR2010;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionStyleTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionText;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgDimensionUnits;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLayerTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeDash;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgLinetypeTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgRegisteredApplicationTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTextStyleTableRecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgViewportTableRecord;
+use super::{color,reader::optional_words,reader::{boolean,byte,full_unsigned,high,low,optional_text,optional_unsigned,ordinal,real,word,Reader}};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::Projection;
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 
-pub(super) fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&DwgTableRecordBody)->Result<(),ValueError>{
+pub fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&DwgTableRecordBody)->Result<(),ValueError>{
     let(kind,common)=match value{DwgTableRecordBody::RegisteredApplication(v)=>("registered_application",&v.common),DwgTableRecordBody::TextStyle(v)=>("text_style",&v.common),DwgTableRecordBody::Layer(v)=>("layer",&v.common),DwgTableRecordBody::Linetype(v)=>("linetype",&v.common),DwgTableRecordBody::BlockHeader(v)=>("block_header",&v.common),DwgTableRecordBody::Viewport(v)=>("viewport",&v.common),DwgTableRecordBody::DimensionStyle(v)=>("dimension_style",&v.common)};
     let xref=optional_words(common.xref_handle);
     projection.insert_key("dwg_table_record",id,&[T(kind),T(&common.name),I(i64::from(common.xref_resolution)),xref[0],xref[1]])?;
@@ -33,7 +47,7 @@ pub(super) fn project_record(projection:&mut Projection<'_,'_>,id:i64,value:&Dwg
         DwgTableRecordBody::DimensionStyle(v)=>project_dimension_style(projection,id,v)
     }
 }
-pub(super) fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableRecordBody,ValueError>{
+pub fn reconstruct_record(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableRecordBody,ValueError>{
     let row=reader.component("dwg_table_record",id)?;
     let common=DwgTableRecordCommon{name:row.text(2)?.into(),xref_resolution:word(row,3)?,xref_handle:optional_unsigned(row,4,5)?};
     match row.text(1)?{

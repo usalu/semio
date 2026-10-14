@@ -39,7 +39,8 @@ mod subject {
     use semio_s_artifact_stdio_semio_animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
     use semio_s_artifact_stdio_semio_animation::io::text::snapshot::print_semio_animation_dsl;
     use semio_s_artifact_stdio_semio_animation::io::text::snapshot::parse_semio_animation_dsl;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

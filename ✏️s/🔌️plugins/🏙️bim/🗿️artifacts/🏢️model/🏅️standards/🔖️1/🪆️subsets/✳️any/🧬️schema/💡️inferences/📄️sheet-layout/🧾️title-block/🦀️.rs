@@ -3,7 +3,7 @@
 //! 📎 https://www.iso.org/standard/72482.html (ISO 7200, data fields in title blocks)
 
 use super::{PaperRect, RevisionRow, RevisionTable, TitleBlock, TitleCell, TitleField};
-use crate::{Sheet, SheetRevision};
+use crate::standards::v1::subsets::any::schema::snapshot::{Sheet, SheetRevision};
 
 /// 📏️ The width of the title block and the revision table on a roomy sheet; a narrow frame shrinks both to its width.
 pub const TITLE_BLOCK_WIDTH: f64 = 180.0;

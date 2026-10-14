@@ -5,8 +5,8 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: gradients, blend modes and fill rules have no `SemioDrawingSnapshot`
 //! equivalent, and there is no png import (a png file carries no drawing layer model).
-use crate::standards::v1::subsets::any::io::drawing_document_to_semio_drawing;
-use crate::DrawingSnapshot;
+use crate::drawing_document_to_semio_drawing;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -19,7 +19,7 @@ pub struct DrawingIntoPng;
 impl Serializer<DrawingSnapshot> for DrawingIntoPng {
     const INTO: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::standards::v1::subsets::any::io::owned_export::PNG_FACTORY);
+    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::PNG_FACTORY);
     async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let _ = control;
         let error = |message: String| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPng: {message}")));

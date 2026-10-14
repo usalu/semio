@@ -41,8 +41,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn union_is_the_min_and_matches_containment_of_either_operand() {
-        let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d_brep_representation::vector::Vec3::new(-1.0, 0.0, 0.0)) };
-        let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d_brep_representation::vector::Vec3::new(1.0, 0.0, 0.0)) };
+        let a = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d_brep_vector::Vec3::new(-1.0, 0.0, 0.0)) };
+        let b = Sdf::Sphere { radius: 1.0, placement: Trsf::translation(semio_framework_3d_brep_vector::Vec3::new(1.0, 0.0, 0.0)) };
         let u = a.union(b);
         assert!(u.contains(Pnt3::new(-1.0, 0.0, 0.0), 1e-9));
         assert!(u.contains(Pnt3::new(1.0, 0.0, 0.0), 1e-9));
@@ -60,7 +60,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn placed_box_sdf_respects_transform() {
-        let placement = Trsf::translation(semio_framework_3d_brep_representation::vector::Vec3::new(10.0, 0.0, 0.0));
+        let placement = Trsf::translation(semio_framework_3d_brep_vector::Vec3::new(10.0, 0.0, 0.0));
         let b = Sdf::Box { half_extents: Pnt3::new(1.0, 1.0, 1.0), placement };
         assert!(b.eval(Pnt3::new(10.0, 0.0, 0.0)) < 0.0);
         assert!(b.eval(Pnt3::new(0.0, 0.0, 0.0)) > 0.0);

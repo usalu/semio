@@ -1,34 +1,36 @@
 import {dirname,resolve} from "node:path";
 import {createRequire} from "node:module";
 import {readFileSync} from "node:fs";
-const schema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
+import {mkdir,writeFile} from "node:fs/promises";
+import {createHash} from "node:crypto";
+import {fileURLToPath} from "node:url";
 const key="SEMIO_OWNER_ARGUMENTS";
 const executorSchema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️executor.json",import.meta.url),"utf8"));
 const nativeCallerSchema=JSON.parse(readFileSync(new URL("./🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
 const nativeSchema=JSON.parse(readFileSync(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
+const sourceSchema=JSON.parse(readFileSync(new URL("./🧬️schema/📥️source.json",import.meta.url),"utf8"));
 
-/** 🧬️ Admits the closed native caller and command contracts in the Node executor. */
-function conforms(contract,value){
- if(contract.const!==undefined&&value!==contract.const)return false;
- if(contract.type==="object"){if(value===null||typeof value!=="object"||Array.isArray(value))return false;const keys=Object.keys(value);if(contract.required?.some(key=>!Object.hasOwn(value,key)))return false;if(contract.additionalProperties===false&&keys.some(key=>!Object.hasOwn(contract.properties??{},key)))return false;return Object.entries(contract.properties??{}).every(([key,rule])=>!Object.hasOwn(value,key)||conforms(rule,value[key]));}
- if(contract.type==="array")return Array.isArray(value)&&(contract.minItems===undefined||value.length>=contract.minItems)&&(contract.maxItems===undefined||value.length<=contract.maxItems)&&value.every(item=>conforms(contract.items,item));
- if(contract.type==="integer")return Number.isSafeInteger(value)&&(contract.minimum===undefined||value>=contract.minimum)&&(contract.maximum===undefined||value<=contract.maximum);
- if(contract.type==="boolean")return typeof value==="boolean";
- if(contract.type==="string")return typeof value==="string"&&(contract.minLength===undefined||value.length>=contract.minLength)&&(contract.maxLength===undefined||value.length<=contract.maxLength)&&(!contract.pattern||new RegExp(contract.pattern,"u").test(value));
- return Object.hasOwn(contract,"const");
-}
+import {encodeOwnerArgumentsV1,conformsOwnerContractV1 as conforms} from "../../🏗️build/📤️arguments/🟨️.mjs";
 
-/** 📜️ Binds one discovered literal native child command without shell evaluation. */
-export function declaredNativeOwnerCommandV1(manifest,workingDirectory,command){
- const tokens=[];let cursor=0;
- while(cursor<command.length){while(/\s/u.test(command[cursor]??"")&&cursor<command.length)cursor++;if(cursor===command.length)break;const start=cursor;
-  if(command[cursor]==='"'){cursor++;while(cursor<command.length){if(command[cursor]==="\\"){cursor+=2;continue;}if(command[cursor++]==='"')break;}tokens.push(JSON.parse(command.slice(start,cursor)));}
-  else if(command[cursor]==="'"){cursor++;const end=command.indexOf("'",cursor);if(end<0)throw Error("Unclosed original native command");tokens.push(command.slice(cursor,end));cursor=end+1;}
-  else{while(cursor<command.length&&!/\s/u.test(command[cursor]))cursor++;const token=command.slice(start,cursor);if(/[;&|<>`$"']/u.test(token))throw Error("Native command requires literal discovered arguments");tokens.push(token);}
-  if(cursor<command.length&&!/\s/u.test(command[cursor]))throw Error("Native command requires distinct literal arguments");
- }
- const result={kind:"native-owner-command",manifest,workingDirectory,program:tokens[0],arguments:tokens.slice(1)};
- if(!conforms(nativeSchema.properties.command,result))throw Error("Original discovered native command refused");return result;
+/** 🐚️ Retains Nx process lifecycle while Bun's portable shell receives exact literal arguments. */
+export async function executeLiteralBuildArgumentsV1(options,context,delegate){
+ for(const key of ["args","__unparsed__"])if(options[key]!==undefined&&(!Array.isArray(options[key])||options[key].some(value=>typeof value!=="string")))throw Error("Literal build argument arrays required");
+ if(["SEMIO_NX_COMMAND_RUNNER","SEMIO_NX_COMMAND_DIRECTORY"].some(key=>options.env?.[key]!==undefined))throw Error("Private Nx command runner environment reserved");
+ const wire=process.env.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof wire!=="string"||options.env?.SEMIO_SCRIPT_PROCESS_INVOCATION!==undefined&&options.env.SEMIO_SCRIPT_PROCESS_INVOCATION!==wire)throw Error("Original Nx parent invocation required");
+ const directory=resolve(process.env.SEMIO_TEST_ARTIFACT_DIR??resolve(context.root,".🧬semio/🦑️repo/⚡️cache/build/nx-commands")),invocation=createHash("sha256").update(wire).digest("hex");await mkdir(directory,{recursive:true,mode:0o700});
+ if(typeof options.command!=="string"&&!Array.isArray(options.commands)||options.command!==undefined&&options.commands!==undefined)throw Error("One build command form required");
+ const args=[...options.args??[],...options.__unparsed__??[]],quote=value=>"'"+value.replaceAll("'","'\\''")+"'",wrap=async operation=>{
+  const command=typeof operation==="string"?operation:operation.command,forward=typeof operation==="string"?options.forwardAllArgs:operation.forwardAllArgs??options.forwardAllArgs;
+  if(typeof command!=="string")throw Error("Build command string required");
+  const source={version:1,invocation,command:command+(forward!==false&&args.length?" "+args.map(quote).join(" "):"")};
+  if(!conforms(sourceSchema,source))throw Error("Private Nx command source refused");
+  const image=JSON.stringify(source),digest=createHash("sha256").update(image).digest("hex");try{await writeFile(resolve(directory,digest+".json"),image,{flag:"wx",mode:0o600});}catch(error){if(error.code!=="EEXIST")throw error;}
+  const bridge=(process.platform==="win32"?'bun "%SEMIO_NX_COMMAND_RUNNER%"':'bun "$SEMIO_NX_COMMAND_RUNNER"')+" "+digest;
+  return typeof operation==="string"?bridge:{...operation,command:bridge,forwardAllArgs:false};
+ };
+ const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...process.env,...options.env,SEMIO_BUILD_TOOL:"nx",SEMIO_WORKSPACE_ROOT:context.root,SEMIO_TASK_PROJECT:context.projectName,SEMIO_TASK_TARGET:context.targetName,...(context.configurationName?{SEMIO_TASK_CONFIGURATION:context.configurationName}:{}),SEMIO_NX_COMMAND_DIRECTORY:directory,SEMIO_NX_COMMAND_RUNNER:fileURLToPath(new URL("./📜️script.ts",import.meta.url))}};
+ if(options.command!==undefined)plan.command=await wrap(options.command);else{plan.commands=[];for(const command of options.commands)plan.commands.push(await wrap(command));}
+ return delegate(plan,context);
 }
 
 /** 📥️ Issues the exact discovered descendant with the original caller's unchanged deadline and resources. */
@@ -71,24 +73,6 @@ export async function issueNativeOwnerInvocationV1(options,context,environment,n
  if(typeof environment.CARGO_TARGET_DIR!=="string"||resolve(context.root,caller.native.artifactDirectory)!==resolve(context.root,environment.CARGO_TARGET_DIR)||environment.CARGO_NET_OFFLINE!==String(caller.native.network.offline))throw Error("Original native artifact or network authority changed");
  const forwarded=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]],capabilities={version:1,buildMode:caller.buildMode,repositoryRoot:context.root,artifactDirectory:resolve(context.root,caller.native.artifactDirectory),command:{...request,arguments:[...request.arguments,...forwarded]},transport:caller.native.transport,child:caller.native.child,network:caller.native.network};
  if(!conforms(nativeSchema,capabilities))throw Error("Issued original native capability refused");return {...original,capabilities};
-}
-
-/** 🛡️ Admits literal process arguments against their owned envelope authority. */
-function admit(value){
- if(!value||typeof value!=="object"||Array.isArray(value)||Object.keys(value).length!==schema.required.length||value.version!==schema.properties.version.const||!Array.isArray(value.arguments)||value.arguments.length>schema.properties.arguments.maxItems||value.arguments.some(argument=>typeof argument!=="string"||argument.length>schema.properties.arguments.items.maxLength||argument.includes("\u0000")))throw Error("Invalid owner argument envelope");
- return [...value.arguments];
-}
-
-/** 📤️ Encodes raw argv as environment data independently of platform shell syntax. */
-export function encodeOwnerArgumentsV1(arguments_){
- const value={version:1,arguments:arguments_};admit(value);return JSON.stringify(value);
-}
-
-/** 📥️ Removes the private envelope before handing unchanged arguments to the actual child owner. */
-export function consumeOwnerArgumentsV1(environment){
- const next={...environment},encoded=next[key];delete next[key];
- if(encoded===undefined)return {arguments:[],environment:next};
- return {arguments:admit(JSON.parse(encoded)),environment:next};
 }
 
 /** 🎯️ Keeps Nx process handling while its static owner command receives no dynamic shell interpolation. */

@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{Puzzle3dAttraction, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource, crate::standards::v1::subsets::any::schema::Puzzle3dScale, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
 
 /// 📜️ Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
 /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
@@ -49,7 +49,7 @@ fn puzzle3d_projection_dsl_round_trips() {
         hidden: false,
     });
     projection.meta =
-        Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::Puzzle3dCompatSpecificity::Vortex }] };
+        Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: crate::standards::v1::subsets::any::schema::Puzzle3dCompatSpecificity::Vortex }] };
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&projection);
 }
@@ -63,7 +63,7 @@ fn puzzle3d_projection_dsl_round_trips() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-    use crate::PUZZLE_3D_SCHEMA;
+    use crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA;
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 

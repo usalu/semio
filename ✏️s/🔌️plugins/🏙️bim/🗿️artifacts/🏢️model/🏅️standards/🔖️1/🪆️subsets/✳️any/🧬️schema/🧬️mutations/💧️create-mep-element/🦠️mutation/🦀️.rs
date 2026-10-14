@@ -1,6 +1,6 @@
 //! 💧️ `create-mep-element` payload. Routes a duct, pipe or cable tray: a storey, a system, a cross-section in metres and a path of at least two distinct points whose height is measured above the storey.
 
-use crate::{MepElement, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

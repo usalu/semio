@@ -20,52 +20,57 @@ fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.sho
 type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Option<semio_framework::Fault>);
 #[path="📦️completed/🦀️.rs"]
 mod completed;
-struct RetainedResponse{instance:u32,key:instance_lifetime::NativeCloseKey,witness:ReceivingSource,request:Option<semio_framework::kernel::RequestId>,input:ManuallyDrop<Option<completed::CompletedInput>>,fields:ManuallyDrop<Option<ResponseFields>>,closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,output:ManuallyDrop<Option<crate::plugin_runtime::PluginExchangeOutput>>,failure:ManuallyDrop<Option<OriginalTurnFailure>>,finished:bool}
+struct RetainedResponse{instance:Option<u32>,key:Option<instance_lifetime::NativeCloseKey>,witness:ReceivingSource,request:Option<semio_framework::kernel::RequestId>,input:ManuallyDrop<Option<completed::CompletedInput>>,fields:ManuallyDrop<Option<ResponseFields>>,request_result:ManuallyDrop<Option<Result<Vec<u8>,semio_framework::Fault>>>,request_closing:ManuallyDrop<Option<ControlledRetirement<Result<Vec<u8>,semio_framework::Fault>>>>,closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,output:ManuallyDrop<Option<crate::plugin_runtime::PluginExchangeOutput>>,failure:ManuallyDrop<Option<OriginalTurnFailure>>,finished:bool}
 impl RetainedResponse{
  async fn step<PA:crate::plugin_app::PluginApp>(&mut self,runtime:&crate::plugin_runtime::PluginRuntime<PA>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut StepContext<'_>)->Result<Option<crate::plugin_runtime::PluginExchangeOutput>,OriginalTurnFailure>{
   if !self.witness.admit(cx)?||cx.should_yield(){return Ok(None)}
+  if self.finished&&self.output.is_some(){if !metadata(cx)?{return Ok(None)}return Ok(self.output.take())}
   if let Some(input)=self.input.as_mut(){
    if self.finished||cx.is_cancelled(){self.finished=true;if !input.close_step(cx)?{return Ok(None)}if !metadata(cx)?{return Ok(None)}self.input.take();return Ok(None)}
-   if self.fields.is_none(){match input.step(cx){Ok(Some(fields))=>{*self.fields=Some(fields);return Ok(None)},Ok(None)=>return Ok(None),Err(failure)=>{*self.failure=Some(failure);self.finished=true;return Ok(None)}}
+   if self.fields.is_none()&&self.request_result.is_none(){match input.step(cx){Ok(Some(completed::CompletedResult::Response(fields)))=>{*self.fields=Some(fields);return Ok(None)},Ok(Some(completed::CompletedResult::Request(result)))=>{*self.request_result=Some(result);return Ok(None)},Ok(None)=>return Ok(None),Err(failure)=>{*self.failure=Some(failure);self.finished=true;return Ok(None)}}}
   }else if self.request.is_some()&&!self.finished{return Ok(None)}
   if !self.finished{
-   if native_close_key(runtime,self.instance).ok()!=Some(self.key)||cx.is_cancelled(){self.finished=true;return Ok(None)}
+   if self.instance.is_none_or(|instance|native_close_key(runtime,instance).ok()!=self.key)||cx.is_cancelled(){self.finished=true;return Ok(None)}
+   if self.request_result.is_some(){if !metadata(cx)?{return Ok(None)}REGISTRY.with(|registry|registry.resolve_original(self.request.unwrap(),&mut self.request_result));self.finished=true;return Ok(None)}
    let(action,args,fault)=self.fields.as_mut().unwrap();
-   match crate::plugin_runtime::plugin_dispatch_response_action(runtime,self.instance,action.as_deref().unwrap(),args,fault,identity,cx).await{
-    Ok(None)=>return Ok(None),Ok(Some(mut output))=>{if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){*self.failure=Some(retain_refused_publication(self.instance,output,refusal,cx));}else{*self.output=Some(output)}self.finished=true;return Ok(None)},Err(failure)=>{*self.failure=Some(failure);self.finished=true;return Ok(None)}
+   match crate::plugin_runtime::plugin_dispatch_response_action(runtime,self.instance.unwrap(),action.as_deref().unwrap(),args,fault,identity,cx).await{
+    Ok(None)=>return Ok(None),Ok(Some(mut output))=>{if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){*self.failure=Some(retain_refused_publication(self.instance.unwrap(),output,refusal,cx));}else{*self.output=Some(output)}self.finished=true;return Ok(None)},Err(failure)=>{*self.failure=Some(failure);self.finished=true;return Ok(None)}
    }
   }
+  if let Some(owner)=self.request_closing.as_mut(){if !owner.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.request_closing.take();return Ok(None)}
+  if self.request_result.is_some(){if !metadata(cx)?{return Ok(None)}let result=self.request_result.take().unwrap();match ControlledRetirement::new(result){Ok(owner)=>*self.request_closing=Some(owner),Err((failure,result))=>{*self.request_result=Some(result);return Err(failure.into())}}return Ok(None)}
   if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.closing.take();return Ok(None)}
   if self.fields.is_some(){if !metadata(cx)?{return Ok(None)}let fields=self.fields.take().unwrap();match ControlledRetirement::new(fields){Ok(owner)=>*self.closing=Some(owner),Err((failure,fields))=>{*self.fields=Some(fields);return Err(failure.into())}}return Ok(None)}
   if !self.witness.close(cx)?{return Ok(None)}
-  if !metadata(cx)?{return Ok(None)}if let Some(failure)=self.failure.take(){return Err(failure)}Ok(self.output.take())
+  if !metadata(cx)?{return Ok(None)}if let Some(request)=self.request.take(){REGISTRY.with(|registry|registry.release_completed(request));}if let Some(failure)=self.failure.take(){return Err(failure)}Ok(self.output.take())
  }
- fn terminal(&self)->bool{self.finished&&self.input.is_none()&&self.fields.is_none()&&self.closing.is_none()&&self.witness.loan.is_none()&&self.output.is_none()&&self.failure.is_none()}
+ fn terminal(&self)->bool{self.finished&&self.request.is_none()&&self.input.is_none()&&self.fields.is_none()&&self.request_result.is_none()&&self.request_closing.is_none()&&self.closing.is_none()&&self.witness.loan.is_none()&&self.output.is_none()&&self.failure.is_none()}
 }
 impl Drop for RetainedResponse{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"original response requires source retirement before terminal drop")}}
 thread_local!{static RESPONSES:RefCell<[Option<RetainedResponse>;requests::REQUEST_SLOTS]>=const{RefCell::new([const{None};requests::REQUEST_SLOTS])};static RESPONSE_CURSOR:Cell<usize>=const{Cell::new(0)};}
 pub(super) fn retain_completed<PA:crate::plugin_app::PluginApp>(runtime:&crate::plugin_runtime::PluginRuntime<PA>,donor:&mut Option<Event>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
  let Some(Event::Completed{req,..})=donor.as_ref()else{return Ok(false)};let req=*req;
- let Some(instance)=REGISTRY.with(|registry|registry.continuation_instance(req))else{return Ok(false)};
- let key=native_close_key(runtime,instance)?;
+ let instance=REGISTRY.with(|registry|registry.continuation_instance(req).or_else(||registry.pending_instance(req)));
+ let key=instance.and_then(|instance|native_close_key(runtime,instance).ok());
  RESPONSES.with(|slots|{
   let mut slots=slots.borrow_mut();
   let index=if let Some(index)=slots.iter().position(|slot|slot.as_ref().is_some_and(|owner|owner.request==Some(req)&&owner.witness.identity==(cx.operation(),cx.generation()))){index}else{
    let Some(index)=slots.iter().position(Option::is_none)else{return Ok(false)};
    let witness=ReceivingSource::new(cx)?;if !metadata(cx)?{return Ok(false)}
-   slots[index]=Some(RetainedResponse{instance,key,witness,request:Some(req),input:ManuallyDrop::new(None),fields:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),output:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),finished:false});return Ok(false)
+   slots[index]=Some(RetainedResponse{instance,key,witness,request:Some(req),input:ManuallyDrop::new(None),fields:ManuallyDrop::new(None),request_result:ManuallyDrop::new(None),request_closing:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),output:ManuallyDrop::new(None),failure:ManuallyDrop::new(None),finished:false});return Ok(false)
   };
   let owner=slots[index].as_mut().unwrap();
-  if owner.finished||cx.is_cancelled(){owner.finished=true;return Ok(false)}
+  if owner.input.is_some(){return Ok(false)}
   if !owner.witness.admit(cx)?||!metadata(cx)?{return Ok(false)}
-  let continuation=REGISTRY.with(|registry|registry.take_continuation(req)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"admitted original response continuation changed before donation"))?;
+  let continuation=REGISTRY.with(|registry|registry.take_continuation(req));
+  let partial=if continuation.is_none(){REGISTRY.with(|registry|registry.take_pending_partial(req))}else{None};
   let event=donor.take().expect("borrowed Completed input remains resident through admission");
-  *owner.input=Some(completed::CompletedInput::new(event,continuation));Ok(true)
+  *owner.input=Some(match continuation{Some(continuation)=>completed::CompletedInput::new(event,continuation),None=>completed::CompletedInput::new_request(event,partial.unwrap_or_default())});owner.finished=cx.is_cancelled()||key.is_none();Ok(true)
  })
 }
-pub(super) async fn advance_responses<PA:crate::plugin_app::PluginApp>(runtime:&crate::plugin_runtime::PluginRuntime<PA>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,effects:&mut Vec<Effect>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let start=RESPONSE_CURSOR.get();let selected=RESPONSES.with(|slots|{let mut slots=slots.borrow_mut();(0..requests::REQUEST_SLOTS).map(|offset|(start+offset)%requests::REQUEST_SLOTS).find_map(|index|slots[index].take().map(|owner|(index,owner)))});let Some((index,mut owner))=selected else{return Ok(())};let result=owner.step(runtime,identity,cx).await;RESPONSE_CURSOR.set((index+1)%requests::REQUEST_SLOTS);let instance=owner.instance;if !owner.terminal(){RESPONSES.with(|slots|slots.borrow_mut()[index]=Some(owner))}match result{Ok(Some(output))=>route_exchange_output(instance,output,effects,cx),Ok(None)=>Ok(()),Err(failure)=>Err(failure)}}
+pub(super) async fn advance_responses<PA:crate::plugin_app::PluginApp>(runtime:&crate::plugin_runtime::PluginRuntime<PA>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,effects:&mut Vec<Effect>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let start=RESPONSE_CURSOR.get();let selected=RESPONSES.with(|slots|{let mut slots=slots.borrow_mut();(0..requests::REQUEST_SLOTS).map(|offset|(start+offset)%requests::REQUEST_SLOTS).find_map(|index|slots[index].take().map(|owner|(index,owner)))});let Some((index,mut owner))=selected else{return Ok(())};let result=match owner.step(runtime,identity,cx).await{Ok(Some(output))=>{if let Err(failure)=route_exchange_output(owner.instance.expect("only a live response owns publication"),output,effects,cx){assert!(owner.failure.is_none(),"original response retains one refused output handback");*owner.failure=Some(failure);}Ok(())},Ok(None)=>Ok(()),Err(failure)=>Err(failure)};RESPONSE_CURSOR.set((index+1)%requests::REQUEST_SLOTS);if !owner.terminal(){RESPONSES.with(|slots|slots.borrow_mut()[index]=Some(owner))}result}
 pub(super) fn response_pending()->bool{RESPONSES.with(|slots|slots.borrow().iter().any(Option::is_some))}
-pub(super) fn response_key_empty(key:instance_lifetime::NativeCloseKey)->bool{RESPONSES.with(|slots|slots.borrow().iter().flatten().all(|owner|owner.key!=key))}
+pub(super) fn response_key_empty(key:instance_lifetime::NativeCloseKey)->bool{RESPONSES.with(|slots|slots.borrow().iter().flatten().all(|owner|owner.key!=Some(key)))}
 
 struct RetainedIntents{witness:ReceivingSource,batches:ManuallyDrop<ui_contract::UiFixedList<DirtyIntentBatch,DIRTY_INTENT_INSTANCE_CAPACITY>>,current:ManuallyDrop<Option<DirtyIntentBatch>>,value:ManuallyDrop<Option<ui_contract::UiValueRetirement>>,outputs:ManuallyDrop<[Option<(u32,crate::plugin_runtime::PluginExchangeOutput)>;DIRTY_INTENT_INSTANCE_CAPACITY]>,output_count:usize,current_key:Option<instance_lifetime::NativeCloseKey>,dirty_cursor:usize,failure:ManuallyDrop<Option<OriginalTurnFailure>>,closing:bool}
 impl RetainedIntents{

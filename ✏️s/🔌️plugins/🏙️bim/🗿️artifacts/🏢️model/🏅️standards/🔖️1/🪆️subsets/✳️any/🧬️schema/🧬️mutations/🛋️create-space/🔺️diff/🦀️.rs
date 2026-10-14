@@ -4,7 +4,7 @@
 
 use super::super::elements;
 use super::CreateSpace;
-use crate::{Entry, ModelDiff, ModelSnapshot, SpaceBoundary, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, SpaceBoundary, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn shoelace(outline: &[Vertex]) -> f64 {

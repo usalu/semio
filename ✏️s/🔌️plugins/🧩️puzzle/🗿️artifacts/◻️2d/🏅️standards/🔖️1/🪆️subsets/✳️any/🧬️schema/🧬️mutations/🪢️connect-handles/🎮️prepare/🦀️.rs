@@ -93,9 +93,9 @@ impl Puzzle2dConnectHandlesPreparationCursor {
                 let handle = node.handles.get(location.inner.expect("native handle ordinal")).expect("immutable connected handle");
                 let center = semio_framework_geometry::Point::new(node.x, node.y);
                 let point = if node.shape.as_ref().is_some_and(|shape| shape.eq_str("rectangle")) {
-                    semio_framework_graph::drawing::routing::handle_position_on_rectangle(center, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
+                    semio_framework_graph_drawing::routing::handle_position_on_rectangle(center, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
                 } else {
-                    semio_framework_graph::drawing::routing::handle_position_on_circle(center, node.radius.unwrap_or(24.0), handle.angle)
+                    semio_framework_graph_drawing::routing::handle_position_on_circle(center, node.radius.unwrap_or(24.0), handle.angle)
                 };
                 (point.x, point.y)
             });

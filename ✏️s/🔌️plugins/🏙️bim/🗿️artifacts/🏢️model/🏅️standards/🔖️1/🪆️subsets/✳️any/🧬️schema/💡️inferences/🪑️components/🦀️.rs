@@ -15,7 +15,7 @@ use super::super::families::{self, issues, FamilyIssue, FamilyValue, ResolvedPar
 use super::super::mep;
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
-use crate::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2, Point3};
 use semio_framework_geometry::vector::{cross, perp};
 use semio_framework_geometry::Vec2;
 use semio_framework_value::DslValue;
@@ -173,7 +173,7 @@ fn unit(vector: Vec2) -> Vec2 {
 }
 
 /// 🧱️ The fit of a position to the wall with `axis`, whose faces lie `left` and `right` metres from the axis: the projection on the axis, the side of the position, the point on the face of that side and the normal pointing away from the wall.
-pub fn fit_to_wall(wall: &str, axis: &crate::Axis, left: f64, right: f64, position: Point2) -> Option<HostFit> {
+pub fn fit_to_wall(wall: &str, axis: &crate::standards::v1::subsets::any::schema::snapshot::Axis, left: f64, right: f64, position: Point2) -> Option<HostFit> {
     let segment = seg(axis);
     if segment.length() <= mep::EPS {
         return None;

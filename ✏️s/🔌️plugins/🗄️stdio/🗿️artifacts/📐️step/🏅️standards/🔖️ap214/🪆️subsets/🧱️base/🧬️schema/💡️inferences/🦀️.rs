@@ -8,7 +8,7 @@
 //! ISO 10303 snake_case with no `IFC`-style prefix, unlike `🏗️ifc`'s `IFCCARTESIANPOINT` even
 //! though both ride the identical Part-21 syntax).
 
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::bounds::compute_step_bounds;

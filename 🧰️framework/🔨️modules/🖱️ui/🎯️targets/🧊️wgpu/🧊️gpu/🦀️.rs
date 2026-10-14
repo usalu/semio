@@ -51,7 +51,7 @@ fn address_prepared_glass_region(region: usize, len: usize) -> Result<usize, usi
 fn prepared_glass_command(packet: &PreparedRenderPacket, command: usize) -> Result<&crate::wgpu::draw::GlassRegion, String> {
     let command = packet.command_pages().get(command).ok_or_else(|| "prepared glass command was missing".to_string())?;
     let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() else { return Err("prepared command did not address glass".to_string()) };
-    let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+    let draw = if command.packet_overlay() { packet.overlay().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { packet.draw() };
     let index = address_prepared_glass_region(region, draw.glass_regions.len()).map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len}"))?;
     draw.glass_regions.get(index).ok_or_else(|| "prepared glass region was missing".to_string())
 }
@@ -575,6 +575,8 @@ impl GpuContext {
         self.mesh_store.retire_exact_step(key, version)
     }
 
+    pub fn retire_original_mesh_source_step(&mut self,key:&str,source:&ui_scene::math::Mesh3dResourceLoan)->Result<Option<crate::wgpu::MeshGpuSourceReturn>,&'static str>{self.mesh_store.retire_original_source_step(key,source)}
+
     pub fn close_mesh_table_step(&mut self) -> bool {
         self.mesh_store.close_step()
     }
@@ -759,7 +761,7 @@ impl GpuContext {
                     cursor.clip_piece = 0;
                     return Ok(false);
                 };
-                let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared command overlay owner was missing".to_string())? } else { &packet.draw };
+                let draw = if command.packet_overlay() { packet.overlay().ok_or_else(|| "prepared command overlay owner was missing".to_string())? } else { packet.draw() };
                 match prepared_command_clip_piece(draw, draw_cursor, cursor.clip_piece, self.logical_width, self.logical_height)? {
                     PreparedCommandClipPiece::Unclipped => {
                         self.encode_prepared_draw_scalar(packet, draw_cursor, command.packet_overlay(), None)?;
@@ -804,7 +806,7 @@ impl GpuContext {
             PreparedGpuPresentPhase::CompositeGlass => {
                 let glass = prepared_glass_command(packet, cursor.command)?;
                 let command = packet.command_pages().get(cursor.command).ok_or_else(|| "prepared glass command was missing".to_string())?;
-                let draw = if command.packet_overlay() { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
+                let draw = if command.packet_overlay() { packet.overlay().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { packet.draw() };
                 let Some(draw_cursor) = command.draw_cursor() else { return Err("prepared glass command cursor was missing".to_string()) };
                 let piece = prepared_command_clip_piece(draw, draw_cursor, cursor.clip_piece, self.logical_width, self.logical_height)?;
                 if matches!(piece, PreparedCommandClipPiece::Empty) {
@@ -854,7 +856,7 @@ impl GpuContext {
     }
 
     fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, scissor: Option<crate::wgpu::draw_types::ScissorRect>) -> Result<(), String> {
-        let draw = if packet_overlay { packet.overlay.as_ref().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { &packet.draw };
+        let draw = if packet_overlay { packet.overlay().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { packet.draw() };
         if let DrawMeasureCursor::PassBackdropSnapshot { pass } = cursor {
             let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared backdrop snapshot pass cursor was stale".to_string())?;
             if pass_owner.viewport_mask != crate::wgpu::kernel_3d_scene::SceneViewportMask3d::Ellipse {
@@ -877,7 +879,7 @@ impl GpuContext {
                 let instances = if overlay { &layer.overlay_ui_instances } else { &layer.ui_instances };
                 let instance = instances.get(item).ok_or_else(|| "prepared UI scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_ui_scalar") });
-                self.pipelines.encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, scissor, width, height, packet.time_seconds()).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::LayerVector { layer, item, overlay } if item % 3 == 2 => {
@@ -886,7 +888,7 @@ impl GpuContext {
                 let start = item.checked_sub(2).ok_or_else(|| "prepared vector triangle cursor underflowed".to_string())?;
                 let triangle = vertices.get(start..=item).ok_or_else(|| "prepared vector triangle cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_vector_triangle") });
-                self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, triangle, scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, triangle, scissor, width, height, packet.time_seconds()).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::LayerRaster { layer, raster, overlay } => {
@@ -895,7 +897,7 @@ impl GpuContext {
                 let (key, instance) = instances.get(raster).ok_or_else(|| "prepared raster scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_raster_scalar") });
                 self.pipelines
-                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), scissor, width, height, packet.time_seconds)
+                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), scissor, width, height, packet.time_seconds())
                     .map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }

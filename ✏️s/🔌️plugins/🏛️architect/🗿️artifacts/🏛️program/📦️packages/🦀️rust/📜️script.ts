@@ -71,6 +71,17 @@ if (segments[0] === "program-document-contract") {
   }
 }
 
+/** 🏭️ Generates (or with \`--check\` verifies) the Rust and TypeScript register catalog beside its JSON schema source \`🧬️schema/🗄️registers/🧬️schema/🔣️.json\`. */
+class RegisterCatalogScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length > 1 || (args.length === 1 && args[0] !== "--check")) throw Error("generate-register-catalog [--check]");
+    const { generateCollectionCatalogV1 } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts");
+    const stale = generateCollectionCatalogV1(join(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧬️schema/🔣️.json"), args[0] === "--check" ? "check" : "write");
+    if (args[0] === "--check" && stale.length) throw Error(`register catalog is stale: ${stale.join(", ")}`);
+    console.log(`[register-catalog] ${stale.length ? `wrote ${stale.length}` : "current"}`);
+  }
+}
+
 /** ⏱️ Selects the unchanged complete-domain Source law for operation timing. */
 class SnapshotSourceProfileScript extends BundleScript {
   async run(args: string[]): Promise<void> {
@@ -80,6 +91,6 @@ class SnapshotSourceProfileScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript, "test-snapshot-sqlite-source-profile":SnapshotSourceProfileScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-architect-program", { commands: { verify: OwnedVerifyScript, "generate-register-catalog": RegisterCatalogScript, "test-snapshot-sqlite-source-profile":SnapshotSourceProfileScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
 
 

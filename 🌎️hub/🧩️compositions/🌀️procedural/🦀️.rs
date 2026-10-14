@@ -17,17 +17,6 @@ pub mod editor {
 //#endregion ✏️Editor
 
 //#region 🧮️GuestHeapWitness
-/// 🧮️ Weighs every allocation this GUEST makes, so a per-turn retention trace has real numbers to
-/// attribute inside a `wasm32-wasip2` component.
-///
-/// 🚫️ Never in a shipped plugin: two relaxed atomics per allocation is a measurement cost, and the
-/// reading the browser needs for free is one `memory.size`. Built with `--features
-/// guest-heap-witness` when a leak has to be attributed to a turn PHASE rather than merely observed
-/// as linear-memory growth — installing it also arms `⚛️reactor`'s phase trace, which routes its
-/// lines through the actor world's `log` import. See `📓️idle-turns-2026-09-10.md`.
-#[cfg(feature = "guest-heap-witness")]
-#[global_allocator]
-static PROCEDURAL_GUEST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 //#endregion 🧮️GuestHeapWitness
 
 //#region 🗃️Apps
@@ -89,8 +78,6 @@ fn flow_extension_declarations() -> Result<Vec<FlowExtensionDeclaration>, Plugin
 
 /// 🔌️ Builds the plugin surface for host registration.
 pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
-    #[cfg(feature = "guest-heap-witness")]
-    semio_framework_trace::set_runtime_diagnostics(true);
     let mut builder = Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
@@ -99,9 +86,9 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         .artifact(semio_s_artifact_procedural_generation3d::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::mesh_import(
             "s.procedural.host-media.mesh-import",
-            semio_s_artifact_procedural_generation3d::artifact_kind(),
-            semio_s_artifact_procedural_generation3d::GENERATION_3D_SCHEMA,
-            semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::generation3d_document_from_mesh,
+            semio_s_artifact_procedural_3d_model::artifact_kind(),
+            semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA,
+            semio_s_artifact_procedural_3d_mesh_bridge::generation3d_document_from_mesh,
         )?)
         .plugin_command(commands::list_flow_extensions_command(), Box::new(commands::list_flow_extensions))
         .editor::<semio_s_artifact_procedural_generation2d::editor::generation2d::Generation2dPlayApp>(semio_s_artifact_procedural_generation2d::editor::generation2d::create_generation2d_app())
@@ -113,7 +100,7 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
         .viewer::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>(semio_s_artifact_procedural_generation3d::viewer::generation3d::create_generation3d_viewer())
         .viewer_mutation_roster::<semio_s_artifact_procedural_generation3d::viewer::generation3d::Generation3dViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation2d::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_generation3d::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_procedural_3d_model::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("artifacts.write".into()),

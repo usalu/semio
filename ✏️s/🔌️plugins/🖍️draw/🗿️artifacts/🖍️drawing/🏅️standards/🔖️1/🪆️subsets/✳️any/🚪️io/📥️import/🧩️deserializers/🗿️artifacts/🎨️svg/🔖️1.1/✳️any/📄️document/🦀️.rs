@@ -1,6 +1,8 @@
 //! 📄️ Incremental SVG hierarchy construction with retained progress and cancellation.
 use std::collections::BTreeMap;
-use crate::{DrawingSnapshot,DrawingLayerNode,DrawingLayerBase,DrawingGroupBody,DrawingPathBody,DrawingTextBody,DrawingAttributes,FillStyle,FillRule,StrokeStyle,StrokeCap,StrokeJoin,PathSegment};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingLayerBase, DrawingGroupBody, DrawingPathBody, DrawingTextBody, DrawingAttributes, FillStyle, StrokeStyle, PathSegment};
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{SvgNode,SvgAttr,SvgAttributeValue};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::attributes::bind_svg_attribute;
@@ -144,7 +146,7 @@ fn gradient_fill(reference:&str,definitions:&BTreeMap<String,SvgNode>,segments:&
         let source=text_attr(attrs,"offset").unwrap_or("0");let offset=if let Some(value)=source.strip_suffix('%'){scalar(value)?/100.0}else{scalar(source)?};last=last.max(offset.clamp(0.0,1.0));
         let paint=style.get("stop-color").and_then(SvgAttributeValue::text).or_else(||text_attr(attrs,"stop-color")).unwrap_or("black");
         let opacity=style.get("stop-opacity").or_else(||attr(attrs,"stop-opacity"));
-        stops.push(crate::GradientStop {offset:last,color:color(paint,alpha*fraction(opacity)?)?});
+        stops.push(semio_s_artifact_draw_drawing_model::GradientStop {offset:last,color:color(paint,alpha*fraction(opacity)?)?});
     }
     if stops.is_empty(){return Ok(None);}if stops.len()==1{return Ok(Some(FillStyle::Solid {color:stops[0].color}));}
     let unit=values.get("gradientUnits").and_then(SvgAttributeValue::text).unwrap_or("objectBoundingBox");
@@ -152,12 +154,12 @@ fn gradient_fill(reference:&str,definitions:&BTreeMap<String,SvgNode>,segments:&
     let (mut current,mut start,mut min,mut max)=([0.0;2],[0.0;2],[f64::INFINITY;2],[f64::NEG_INFINITY;2]);
     for segment in segments {
         if let PathSegment::Move {to}=segment {current=*to;start=*to;continue;}
-        let bounds=crate::schema::geometry::segment_bounds(segment,current,start,[1.0,0.0,0.0,1.0,0.0,0.0]);
+        let bounds=semio_s_artifact_draw_drawing_geometry::segment_bounds(segment,current,start,[1.0,0.0,0.0,1.0,0.0,0.0]);
         for axis in 0..2{min[axis]=min[axis].min(bounds[axis]);max[axis]=max[axis].max(bounds[axis]+bounds[axis+2]);}
         current=match segment{PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Quad {to,..}|PathSegment::Cubic {to,..}|PathSegment::Arc {to,..}=>*to,PathSegment::Close=>start};
     }
-    let mut matrix=crate::schema::drawing_transform_to_matrix(&super::transform::parse_editable_svg_transform(values.get("gradientTransform").and_then(SvgAttributeValue::text).unwrap_or(""))?);
-    if unit=="objectBoundingBox"{let (w,h)=(max[0]-min[0],max[1]-min[1]);if !(w>0.0&&h>0.0){return Ok(None);}matrix=crate::schema::geometry::multiply([w,0.0,0.0,h,min[0],min[1]],matrix);}
+    let mut matrix=semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&super::transform::parse_editable_svg_transform(values.get("gradientTransform").and_then(SvgAttributeValue::text).unwrap_or(""))?);
+    if unit=="objectBoundingBox"{let (w,h)=(max[0]-min[0],max[1]-min[1]);if !(w>0.0&&h>0.0){return Ok(None);}matrix=semio_s_artifact_draw_drawing_geometry::multiply([w,0.0,0.0,h,min[0],min[1]],matrix);}
     let coordinate=|key:&str,fallback:f64,axis:usize|->Result<f64,String>{let scale=if unit=="objectBoundingBox"{1.0}else{viewport[axis]};match values.get(key){None=>Ok(fallback*scale),Some(SvgAttributeValue::Length(value)) if value.unit=="%"=>Ok(value.magnitude/100.0*scale),Some(SvgAttributeValue::Length(value)) if unit=="objectBoundingBox"&&value.unit.is_empty()=>Ok(value.magnitude),Some(value) if unit=="userSpaceOnUse"=>length(Some(value),0.0),_=>Err("SVG gradient coordinate requires decoded length".into())}};
     let (x,y)=(coordinate("x1",0.0,0)?,coordinate("y1",0.0,1)?);let (vx,vy)=(coordinate("x2",1.0,0)?-x,coordinate("y2",0.0,1)?-y);
     if vx==0.0&&vy==0.0{return Ok(Some(FillStyle::Solid {color:stops.last().unwrap().color}));}
@@ -179,7 +181,7 @@ impl SvgImportJob {
         if local(name)!="svg"{return Err("Invalid SVG document".into());}
         let (width,height,_)=viewport(attrs)?;
         let title=children.iter().find_map(|child|match child{SvgNode::Element {name,children,..} if local(name)=="title"=>Some(children.iter().filter_map(|child|match child{SvgNode::Text {text}|SvgNode::CData {text}=>Some(text.as_str()),_=>None}).collect::<String>()),_=>None}).filter(|value|!value.trim().is_empty()).unwrap_or_else(||"SVG".into());
-        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:semio_framework_value::list::PagedList::new(),artboard:Some(crate::schema::DrawingArtboard {width,height}),..Default::default()};
+        let document=DrawingSnapshot {id:id.into(),title:Some(title.trim().into()),layers:semio_framework_value::list::PagedList::new(),artboard:Some(semio_s_artifact_draw_drawing_model::DrawingArtboard {width,height}),..Default::default()};
         let user_viewport=if let Some(SvgAttributeValue::ViewBox(value))=attr(attrs,"viewBox"){[value.width,value.height]}else{[width,height]};
         let mut gradients=BTreeMap::new();let mut nodes=vec![&root];
         while let Some(node)=nodes.pop(){if let SvgNode::Element {name,attrs,children}=node{
@@ -212,7 +214,7 @@ impl SvgImportJob {
         let style=properties(&attrs,&parent)?;let field=|key:&str|style.get(key);let value=|key:&str|field(key).and_then(SvgAttributeValue::text);
         let name=match text_attr(&attrs,"inkscape:label").or_else(||text_attr(&attrs,"id")){Some(value)=>value.into(),None if id=="svg"=>self.document.as_ref().unwrap().title.clone().unwrap_or_else(||tag.into()),None=>tag.into()};
         let mut transform=match attr(&attrs,"transform"){None=>super::transform::editable_svg_transform_operations(&[])?,Some(SvgAttributeValue::Transform(operations))=>super::transform::editable_svg_transform_operations(operations)?,_=>return Err("SVG transform requires decoded operations".into())};
-        if id=="svg"{transform=crate::schema::drawing_matrix_to_transform(crate::schema::geometry::multiply(crate::schema::drawing_transform_to_matrix(&transform),viewport(&attrs)?.2));}
+        if id=="svg"{transform=semio_s_artifact_draw_drawing_model::affine::drawing_matrix_to_transform(semio_s_artifact_draw_drawing_geometry::multiply(semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&transform),viewport(&attrs)?.2));}
         let mut solid_style=style.clone();if value("fill").is_some_and(|paint|paint.starts_with("url(")){solid_style.insert("fill".into(),SvgAttributeValue::Text("none".into()));}
         let mut base=DrawingLayerBase {id:id.as_str().into(),name,visible:value("display")!=Some("none")&&(["g","svg"].contains(&tag)||!matches!(value("visibility"),Some("hidden"|"collapse"))),locked:false,opacity:fraction(field("opacity"))?,blend_mode:blend_mode(value("mix-blend-mode"))?.into(),transform,attributes:attributes(&solid_style)?};
         let isolated=isolation(value("isolation"))?;
@@ -225,7 +227,7 @@ impl SvgImportJob {
             if children.iter().any(|node|matches!(node,SvgNode::Element {..})){return Err("Positioned SVG text spans are not supported yet".into());}
             let size=nonnegative(length(field("font-size"),16.0)?)?;
             let mut content=semio_framework_value::paged::PagedUtf8::default();for node in children{if let SvgNode::Text{text}|SvgNode::CData{text}=node{content.try_push_str(&text).map_err(|error|error.into_message())?;}}
-            self.append(DrawingLayerNode::Text(DrawingTextBody {font_family:match value("font-family"){Some(family)=>crate::DrawingFontFamily::from_catalog_family(family).map_err(str::to_owned)?,None=>crate::DrawingFontFamily::Anta},base,x:length(attr(&attrs,"x"),0.0)?,y:length(attr(&attrs,"y"),0.0)?-size,content,size}));
+            self.append(DrawingLayerNode::Text(DrawingTextBody {font_family:match value("font-family"){Some(family)=>semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::from_catalog_family(family).map_err(str::to_owned)?,None=>semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta},base,x:length(attr(&attrs,"x"),0.0)?,y:length(attr(&attrs,"y"),0.0)?-size,content,size}));
         }else{
             let segments=geometry(tag,&attrs)?;
             if let Some(paint)=value("fill").filter(|paint|paint.starts_with("url(")){base.attributes.fill=gradient_fill(paint,&self.gradients,&segments,self.user_viewport,fraction(field("fill-opacity"))?)?;}

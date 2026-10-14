@@ -66,7 +66,7 @@ fn every_declared_viewer_action_is_migrated() {
 
 #[test]
 fn the_viewer_exports_the_example_it_is_showing_not_the_opened_document() {
-    let opened = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let opened = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     for example_id in ["hexagonal-mushroom-column", "rectangle-extrude-volume"] {
         let config = Generation3dViewConfig { active_example_id: Some(example_id.to_string()), ..Default::default() };
         let viewed = super::Generation3dViewedDocument::resolve(&opened, &config);

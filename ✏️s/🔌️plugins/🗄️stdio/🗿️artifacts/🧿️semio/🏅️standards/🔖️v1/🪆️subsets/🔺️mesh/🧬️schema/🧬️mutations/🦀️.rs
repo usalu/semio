@@ -57,7 +57,11 @@
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+#[cfg(test)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+#[cfg(test)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 use crate::schema::diff::SemioMeshDiff;
 
 

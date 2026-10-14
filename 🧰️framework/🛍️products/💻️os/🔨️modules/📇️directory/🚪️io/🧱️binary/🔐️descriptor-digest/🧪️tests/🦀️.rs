@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_directory::io::binary::artifact_hash::hex_lower;
+use crate::io::binary::artifact_hash::hex_lower;
 use semio_framework_value_derive::FromValue;
 
 #[derive(FromValue)]

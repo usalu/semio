@@ -36,7 +36,7 @@ fn diff_tag(d: &SemioDiff) -> u8 {
     }
 }
 use {semio_s_artifact_stdio_semio_animation::schema::diff::SemioAnimationDiff, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
-use {semio_s_artifact_stdio_semio_audio::schema::diff::SemioAudioDiff, semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot};
+use {semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff, semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot};
 use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 use {semio_s_artifact_stdio_semio_brep::schema::diff::SemioBrepDiff, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot};
 use {semio_s_artifact_stdio_semio_cad::schema::diff::SemioCadDiff, semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot};
@@ -50,10 +50,10 @@ use {semio_s_artifact_stdio_semio_mesh::schema::diff::SemioMeshDiff, semio_s_art
 use {semio_s_artifact_stdio_semio_model::schema::diff::SemioModelDiff, semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot};
 use {semio_s_artifact_stdio_semio_object::schema::diff::SemioObjectDiff, semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot};
 use {semio_s_artifact_stdio_semio_presentation::schema::diff::SemioPresentationDiff, semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot};
-use {semio_s_artifact_stdio_semio_table::schema::diff::SemioTableDiff, semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot};
-use {semio_s_artifact_stdio_semio_text::schema::diff::SemioTextDiff, semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot};
-use {semio_s_artifact_stdio_semio_value::schema::diff::SemioValueTreeDiff, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
-use {semio_s_artifact_stdio_semio_video::schema::diff::SemioVideoDiff, semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot};
+use {semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff, semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot};
+use {semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff, semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot};
+use {semio_s_artifact_stdio_semio_value_model::schema::diff::SemioValueTreeDiff, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
+use {semio_s_artifact_stdio_semio_video_model::schema::diff::SemioVideoDiff, semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationApplyError;

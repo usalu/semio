@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-retained-tree"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-retained-tree"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-ui-arena = { path = "../../../🏟️arena/📦️packages/🦀️rust" }
+semio-framework-ui-action = { path = "../../../../🎬️action/📦️packages/🦀️rust" }
+semio-framework-ui-declaration = { path = "../../../../📜️declaration/📦️packages/🦀️rust" }
+semio-framework-ui-layout = { path = "../../../../📜️declaration/📐️layout/📦️packages/🦀️rust" }
+ui_contract = { path = "../../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-locale = { path = "../../../../🌐️locale/📦️packages/🦀️rust" }
+semio-framework-ui-select-behavior = { path = "../../../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust" }
+semio-framework-ui-theme = { path = "../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
+ui_scene = { path = "../../../../🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }

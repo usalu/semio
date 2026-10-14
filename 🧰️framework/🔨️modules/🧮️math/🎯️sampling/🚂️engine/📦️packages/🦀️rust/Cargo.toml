@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-math-sampling-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Token-sampling engine: sequence state, observers, stateless and stateful sampling step."
+
+[package.metadata.semio]
+role = "framework"
+id = "math-sampling-engine"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_math_sampling_engine"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dispatch-macros = { path = "../../../../../🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework-math-sampling-vocabulary = { path = "../../../🔤️vocabulary/📦️packages/🦀️rust" }
+semio-framework-math-sampling-config = { path = "../../../🎚️config/📦️packages/🦀️rust" }
+semio-framework-math-sampling-workspace = { path = "../../../🧺️workspace/📦️packages/🦀️rust" }
+semio-framework-math-sampling-processors = { path = "../../../🎛️processors/📦️packages/🦀️rust" }
+semio-framework-math-sampling-constraints = { path = "../../../🚧️constraints/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-math-sampling-testing = { path = "../../../🧪️testing/📦️packages/🦀️rust" }

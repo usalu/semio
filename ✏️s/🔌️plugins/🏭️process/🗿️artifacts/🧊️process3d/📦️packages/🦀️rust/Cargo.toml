@@ -57,7 +57,7 @@ base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/�
 framework_hash = { package = "semio-framework-hash", path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 # 🛠️ World gestures are `🔄️machine` statecharts folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-tool-machine = { workspace = true }
 
 [dev-dependencies]

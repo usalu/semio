@@ -1,0 +1,8 @@
+{"artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-model",
+ "description": "Procedural generation3d model: artifact schema, snapshot, diff, transforms, catalogue and artifact identity",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+ "moves": [{"from": "standards::v1::subsets::any::schema", "to": ""}],
+ "exclude": ["standards::v1::subsets::any::schema::mutations", "standards::v1::subsets::any::schema::inferences"],
+ "consumers": ["🌎️hub/🧩️compositions/🌀️procedural", "🌎️hub/🧩️compositions/🎪️demonstrator", "✏️s/🧑‍💻dev/🧩️composition", "✏️s/🧑‍💻dev/🧹️fixture-sweep", "✏️s/🔌️plugins/🌀️procedural/🏭️bridge"]}

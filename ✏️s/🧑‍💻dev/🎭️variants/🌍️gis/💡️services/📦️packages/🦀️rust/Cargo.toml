@@ -18,7 +18,6 @@ path = "../../🦀️.rs"
 [[bin]]
 name = "semio-s-gis-services-native"
 path = "../../⌨️entrypoint/🦀️.rs"
-required-features=["native-renderer"]
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -26,8 +25,9 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework-os-kernel.workspace = true
 semio-s-dev-services.workspace = true
 semio-s-artifact-gis-gismap.workspace=true
+semio-s-artifact-gis-gismap-mcp.workspace=true
 
-semio-hub-auth-client={path="../../../../../../../🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust",optional=true}
+semio-hub-auth-client={ path="../../../../../../../🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
@@ -36,8 +36,4 @@ serde_json.workspace = true
 [[bin]]
 name="semio-s-gis-services-mcp"
 path="../../🌉️mcp/⌨️entrypoint/🦀️.rs"
-required-features=["mcp-service"]
 
-[features]
-native-renderer=["semio-s-dev-services/native-renderer"]
-mcp-service=["semio-s-dev-services/mcp-service","dep:semio-hub-auth-client","semio-s-artifact-gis-gismap/mcp-service"]

@@ -57,6 +57,20 @@
       }
     }
   ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-remodel-remodeling-mutations",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The subject half drives the production JSON apply/undo bridges the mutation vocabulary crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-remodel-remodeling-model",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+      "rationale": "📸️ The subject half round-trips the committed document through the snapshot DSL codec the model crate owns."
+    }
+  ],
   "noOracleDecisions": [],
   "mutationCatalogs": [
     {

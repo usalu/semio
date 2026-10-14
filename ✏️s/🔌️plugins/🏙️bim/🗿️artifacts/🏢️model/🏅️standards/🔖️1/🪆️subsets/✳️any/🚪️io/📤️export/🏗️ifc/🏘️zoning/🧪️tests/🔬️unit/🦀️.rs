@@ -1,9 +1,9 @@
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string};
 use super::report_json;
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
-use crate::{AreaMeasure, AreaScheme, ModelInference, ModelSnapshot, Zone};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, inferences::ModelInference};
 use protocol::Inference;
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
 use std::collections::BTreeMap;
 
 /// 🏘️ The house with two zones, two area schemes and finished spaces: the living room in the day zone, the bedroom in the night zone.

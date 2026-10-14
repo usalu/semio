@@ -1,12 +1,12 @@
 //! 🔍️ CAD play app panel — the inspection panel: the field groups for whatever is selected
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
-use crate::editor::cad::engine::picking;
-use crate::editor::cad::terminology::{typology_label, CadLabels};
-use crate::editor::cad::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
-use crate::standards::v1::subsets::any::schema::geometry::CadObject;
-use crate::standards::v1::subsets::any::schema::inferences::object_scale_json;
-use crate::{CadNode, CadPaneId};
+use semio_s_artifact_cad_cad_picking;
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+use semio_s_artifact_cad_cad_kit::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
+use semio_s_artifact_cad_cad_model::geometry::CadObject;
+use semio_s_artifact_cad_cad_inferences::object_scale_json;
+use semio_s_artifact_cad_cad_model::{snapshot::CadNode, snapshot::CadPaneId};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
@@ -132,7 +132,7 @@ fn reference_patch_row(fields: &mut UiFixedList<BuiltNode>, id: &str, label: &st
     if let Some(value) = value {
         entries.push(("value", ui_value_text(if value { "true" } else { "false" })?));
     }
-    let action = crate::editor::cad::cad_action("patchCadPlayReference", Some(ui_value_map(entries)?))?;
+    let action = semio_s_artifact_cad_cad_kit::cad_action("patchCadPlayReference", Some(ui_value_map(entries)?))?;
     push(fields, tree_item_with_action(format!("{ROOT}.{id}"), ui_label(label)?, None, action))
 }
 
@@ -196,7 +196,7 @@ pub(crate) fn pane_geometry_census(envelope: &CadPlayView, pane: CadPaneId) -> P
     let visibility = picking::spatial_scene_kind_toggles_for_model_definition(Some(model_definition_id), &picking::default_spatial_primitive_toggles());
     let targets = picking::filter_spatial_pick_targets_for_visibility(targets, visibility);
     let mut by_typology: Vec<(String, usize)> = Vec::new();
-    for typology_id in crate::editor::cad::engine::typology::model_definition_typology_ids(Some(model_definition_id)) {
+    for typology_id in semio_s_artifact_cad_cad_typology::model_definition_typology_ids(Some(model_definition_id)) {
         let count = objects.iter().filter(|object| object.typology == typology_id).count();
         if count > 0 {
             by_typology.push((typology_id, count));
@@ -239,7 +239,4 @@ pub fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

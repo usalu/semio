@@ -21,7 +21,7 @@ fn equal_inputs_give_equal_shape_bytes() {
 }
 
 fn filled_face_normal(points: &[[f64; 3]]) -> ([f64; 3], [f64; 3]) {
-    let wire = std::sync::Arc::new(super::super::brep_curve::polyline_value(points, true).expect("closed polyline"));
+    let wire = std::sync::Arc::new(semio_s_artifact_procedural_3d_brep_curve::polyline_value(points, true).expect("closed polyline"));
     let winding = fit_plane(&wire_corners(&wire).expect("corners"), WIRE).expect("plane").normal;
     let kind = support::kind_of("brep.surface.faceFromWire");
     let job = Pipeline::new(kind)
@@ -35,7 +35,7 @@ fn filled_face_normal(points: &[[f64; 3]]) -> ([f64; 3], [f64; 3]) {
     let evaluation = support::drive(job, usize::MAX);
     assert!(evaluation.fault.is_none(), "{:?}", evaluation.fault);
     let Some(GeometryValue::Shape(face)) = evaluation.outputs.get("shape") else { panic!("a face") };
-    let source = super::super::brep_sources::SurfaceSource::of(face).expect("a face has a surface");
+    let source = semio_s_artifact_procedural_3d_brep_sources::SurfaceSource::of(face).expect("a face has a surface");
     (winding, source.normal(0.0, 0.0).expect("a normal"))
 }
 

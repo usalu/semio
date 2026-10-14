@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🖋️edit-object-label",
+  "semanticKind": "edit-object-label",
+  "displayName": "Edit Object Label",
+  "emoji": "🖋️",
+  "aggregateVariant": "EditObjectLabel",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "edit-object-label",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

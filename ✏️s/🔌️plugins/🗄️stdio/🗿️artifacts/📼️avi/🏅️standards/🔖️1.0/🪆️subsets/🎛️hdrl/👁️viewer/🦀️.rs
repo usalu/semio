@@ -72,16 +72,12 @@ impl ArtifactViewer for AviViewer {
         Some(semio_s_artifact_stdio_contract::media_export::playback_app_io::<crate::standards::v1_0::subsets::any::io::playback::AviPlaybackExport>())
     }
 
-    fn build_media_export_job(request: semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
-        if request.port != semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID || request.tool_id != semio_s_artifact_stdio_contract::media_export::PLAYBACK_TOOL_ID {
-            return Ok(None);
-        }
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(crate::standards::v1_0::subsets::any::io::playback::AviPlaybackExportJob::new(request)?)))
+    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if request.as_ref().is_some_and(|source|source.port!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID||source.tool_id!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Stdio media source requires its exact published output port").into())}
+        crate::standards::v1_0::subsets::any::io::playback::AviPlaybackExportJob::admit_original(request,body,cx)
     }
 
-    fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        Some(Box::new(semio_s_artifact_stdio_contract::media_export::RetireOwnedSnapshotDisposer::<AviSnapshot>::default()))
-    }
+
 
     fn handle(
         _command: &Self::Command,

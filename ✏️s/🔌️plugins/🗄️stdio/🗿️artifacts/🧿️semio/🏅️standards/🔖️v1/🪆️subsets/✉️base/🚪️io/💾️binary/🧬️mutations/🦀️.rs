@@ -8,8 +8,8 @@ use super::*;
 use crate::schema::mutations::*;
 use {semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_audio::schema::mutations::set_sample_rate;
-use {semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation, semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot};
+use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+use {semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation, semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot};
 use crate::schema::diff::SemioDiff;
 use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 use {semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot};
@@ -24,10 +24,10 @@ use {semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation, se
 use {semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot};
 use {semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation, semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot};
 use {semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation, semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot};
-use {semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation, semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot};
-use {semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation, semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot};
-use {semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
-use {semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation, semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot};
+use {semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation, semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot};
+use {semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation, semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot};
+use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
+use {semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation, semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot};
 use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;

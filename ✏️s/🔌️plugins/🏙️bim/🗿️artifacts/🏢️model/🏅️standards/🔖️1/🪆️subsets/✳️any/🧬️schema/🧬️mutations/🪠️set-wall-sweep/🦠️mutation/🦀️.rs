@@ -1,6 +1,6 @@
 //! 🪠️ `set-wall-sweep` payload. Sets exactly the provided fields of a wall sweep: host wall, face, profile, height above the base, inset, material and name; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Profile, WallSide, WallSweepPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::WallSweepPatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, WallSide}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -10,7 +10,9 @@
     "./page": "./📃️page/🟦️.ts",
     "./lifetime": "./🚪️lifetime/🟦️.ts",
     "./lifetime/patch": "./🚪️lifetime/🩹️patch/🟦️.ts",
-    "./retained-turn": "./🎟️retained-turn/🟦️.ts"
+    "./retained-turn": "./🎟️retained-turn/🟦️.ts",
+    "./codec": "./🧬️codec/🟦️.ts",
+    "./liveness": "./🫀️liveness/🟦️.ts"
   },
   "scripts": {
     "test": "bun repo run @semio-tech/framework-actor:test"
@@ -22,9 +24,6 @@
     "directory": "framework"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

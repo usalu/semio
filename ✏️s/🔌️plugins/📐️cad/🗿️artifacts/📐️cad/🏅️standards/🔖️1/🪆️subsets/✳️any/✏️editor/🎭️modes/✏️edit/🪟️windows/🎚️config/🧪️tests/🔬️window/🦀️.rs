@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_cad_cad_modes::windows::config::*;
 use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output {
@@ -15,7 +15,7 @@ fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output
 
 #[test]
 fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("CAD world-window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD world-window fixture");
     let base: CadWorldWindowConfig = semio_framework_pack_json::from_json_str(&fixture["valid"][0].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral config");
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
@@ -43,11 +43,11 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
             block_on_cad_window_ownership(async {
-                use crate::editor::cad::commands::camera::{set_camera, set_projection, set_projection_param};
-                use crate::editor::cad::commands::sun::{set_sun_azimuth, toggle_sun};
-                use crate::editor::cad::commands::utility::set_dislocate_option;
-                use crate::editor::cad::{create_cad_app, CadCommand, CadPlayApp};
-                use crate::CadCamera;
+                use semio_s_artifact_cad_cad_commands::{camera::set_camera, camera::set_projection, camera::set_projection_param};
+                use semio_s_artifact_cad_cad_commands::{sun::set_sun_azimuth, sun::toggle_sun};
+                use semio_s_artifact_cad_cad_commands::utility::set_dislocate_option;
+                use semio_s_artifact_cad_cad_editor::{create_cad_app, CadCommand, CadPlayApp};
+                use semio_s_artifact_cad_cad_model::snapshot::CadCamera;
                 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner, WindowMeasure};
 
                 /// 🪪️ The live instance this law's app is mounted on — the receiver of every typed
@@ -144,7 +144,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                     Ok(())
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("CAD window fixture");
+                let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../🪟️windows/🎚️config/🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).expect("CAD window fixture");
                 let expected = &fixture["ownership"];
                 let left_id = expected["leftId"].as_str().expect("left id");
                 let right_id = expected["rightId"].as_str().expect("right id");
@@ -285,7 +285,7 @@ fn cad_rendered_world_window_app_reaches_its_exact_terminal_close_witness() {
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
             block_on_cad_window_ownership(async {
-                use crate::editor::cad::{create_cad_app, CadPlayApp};
+                use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
                 use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
                 fn manifest() -> App {
@@ -319,7 +319,7 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
         .stack_size(8 * 1024 * 1024)
         .spawn(|| {
             block_on_cad_window_ownership(async {
-                use crate::editor::cad::{create_cad_app, CadPlayApp};
+                use semio_s_artifact_cad_cad_editor::{create_cad_app, CadPlayApp};
                 use semio_framework_plugin::{artifact_app_laws, App, EditorApp, PluginApp, ViewModel, ViewWindowInstance, VcsArtifactApp, WindowConfigOwner};
 
                 fn manifest() -> App {

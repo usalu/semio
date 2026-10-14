@@ -1,0 +1,348 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "units",
+    "roots",
+    "workspaceRoot"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "packageId",
+          "packageName",
+          "manifest",
+          "sourceRoot",
+          "entry",
+          "name",
+          "kind",
+          "operation",
+          "platform",
+          "roles",
+          "profileName",
+          "profileDigest",
+          "compilerArguments",
+          "features",
+          "dependencies",
+          "boundary",
+          "support",
+          "provenance",
+          "sourceInputs",
+          "compiler",
+          "compilerCfg",
+          "compilationDigest",
+          "configurationDigest",
+          "compilerFlags"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packageId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packageName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceRoot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "entry": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "library",
+              "binary",
+              "proc-macro",
+              "build-script",
+              "build-script-run",
+              "test",
+              "documentation"
+            ]
+          },
+          "operation": {
+            "enum": [
+              "build",
+              "check",
+              "test",
+              "doc",
+              "doctest",
+              "run-custom-build"
+            ]
+          },
+          "platform": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "host",
+                "target"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "profileName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profileDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "compilerArguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "unit",
+                "externName",
+                "public",
+                "noprelude"
+              ],
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "externName": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "public": {
+                  "type": "boolean"
+                },
+                "noprelude": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "uniqueItems": true
+          },
+          "boundary": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "maxSourceBytes",
+                  "maxSourceFiles",
+                  "maxActiveLines"
+                ],
+                "properties": {
+                  "maxSourceBytes": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "maxSourceFiles": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "maxActiveLines": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "support": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "reason"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "supported",
+                  "unsupported"
+                ]
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "identity"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "workspace",
+                  "registry",
+                  "git",
+                  "external-path"
+                ]
+              },
+              "identity": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "sourceInputs": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "digest",
+                "bytes"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "compiler": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "program",
+                  "digest",
+                  "hostTriple"
+                ],
+                "properties": {
+                  "program": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "digest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "hostTriple": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_-]+$"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compilerCfg": {
+            "anyOf": [
+              {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "compilationDigest": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "configurationDigest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "compilerFlags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "uniqueItems": true
+    },
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

@@ -69,7 +69,7 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.equal(project.name, fixture.project);
     assert.deepEqual(target.outputs, []);
     assert.ok(target.options.command.includes("native cargo metadata --manifest"));
-    const { cacheInternals } = await import("../../../🟨️.mjs");
+    const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
     const projectRoot = config.project.slice(0, -"/📋️project.json".length);
     const prepared = cacheInternals.withNativePreparation({ ...structuredClone(project), root: projectRoot }, workspace, { fixture: { ownership: "owned", target: "fixture:generate", nativeConsumers: [projectRoot] } });
     assert.deepEqual(prepared.targets[fixture.target].dependsOn ?? [], [], "Cargo metadata must not schedule native source generators");

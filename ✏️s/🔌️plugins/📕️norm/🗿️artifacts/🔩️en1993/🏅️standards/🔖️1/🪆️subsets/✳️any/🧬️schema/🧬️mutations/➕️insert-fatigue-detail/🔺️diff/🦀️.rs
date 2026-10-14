@@ -1,8 +1,8 @@
 //! ➕️ `insert-fatigue-detail` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertFatigueDetail;
-use crate::diff::{En1993Diff, En1993FatigueDetailDelta};
-use crate::En1993Snapshot;
+use crate::insert_fatigue_detail::InsertFatigueDetail;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993FatigueDetailDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertFatigueDetail, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.fatigue_details.iter().any(|existing| existing.id == payload.fatigue_detail.id) {

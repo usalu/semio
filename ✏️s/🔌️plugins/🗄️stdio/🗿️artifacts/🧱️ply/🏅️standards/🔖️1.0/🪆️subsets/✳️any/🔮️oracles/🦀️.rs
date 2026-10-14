@@ -31,7 +31,6 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
     use ply_rs::parser::Parser;
@@ -527,7 +526,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let empty = Json::Object(Vec::new());
@@ -537,41 +535,21 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 
 /// 👁️ This subset's own semantic projection, read independently through `ply-rs`. @see
 /// [`oracles::project`].
-#[cfg(feature = "oracles")]
 pub fn project_ply(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
 /// 📸️ The `PlySnapshot` wire of `bytes`, read independently through `ply-rs`. @see [`oracles::snapshot_wire`].
-#[cfg(feature = "oracles")]
 pub fn ply_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
     oracles::snapshot_wire(bytes)
 }
 
 /// 🔁️ @see [`oracles::round_trip`].
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(bytes: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(bytes)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn ply_snapshot_wire(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_ply(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch

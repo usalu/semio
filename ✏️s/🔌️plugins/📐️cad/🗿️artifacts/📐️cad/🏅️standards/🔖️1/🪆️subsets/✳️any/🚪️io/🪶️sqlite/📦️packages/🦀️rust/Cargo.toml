@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-cad-cad-io-sqlite"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad SQLite snapshot codec"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "cad_io_sqlite_snapshot"
+path = "../../📸️snapshot/🧪️tests/🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-cad-cad = { workspace = true }
+semio-s-artifact-cad-cad-editor = { workspace = true }
+semio-s-artifact-cad-cad-mutations = { workspace = true }
+semio-s-artifact-cad-cad-viewer = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+serde_json = { workspace = true }

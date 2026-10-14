@@ -726,7 +726,7 @@ pub enum TypedOperationResultLane {
 
 pub(crate) struct OriginalAuthoringEffect {
     receipt: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
-    token: semio_framework_job::CancelToken,
+    pub(crate) token: semio_framework_job::CancelToken,
     publication: PublicationClaimHandle,
     progress: semio_framework_value::native_encoding::NativeEncodeProgress,
 }
@@ -1190,7 +1190,7 @@ include!("♻️alias/🦀️.rs");
 /// 🧹️ Required disposal side of an app-owned persistent job. `Complete` is an assertion
 /// that dropping the concrete job immediately afterward is constant-time; no blanket/default
 /// implementation exists because an erased job may own arbitrarily deep snapshots or queues.
-pub trait ArtifactReservedJob: semio_framework_job::InteractiveJob {}
+pub trait ArtifactReservedJob: semio_framework_job::InteractiveJob + std::any::Any {}
 
 /// 📦️ Sized ActionBus payload around one app-owned concrete resumable state machine.
 pub(crate) struct ArtifactReservedToolJobState {
@@ -1272,6 +1272,8 @@ impl Drop for ArtifactReservedToolJob {
 }
 
 include!("🎟️birth/🦀️.rs");
+#[cfg(feature="reserved-producer-testing")]
+pub mod original_reserved_producer_laws{include!("🎟️birth/🧪️tests/🦀️.rs");}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ToolOwnerWitness {

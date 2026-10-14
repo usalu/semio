@@ -938,6 +938,30 @@
         "cwd": "{projectRoot}",
         "command": "bun ./📜️script.ts test-space-history-validation native"
       }
+    },
+    "test-crate-boundaries": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/.vscode/launch.json",
+        "{projectRoot}/📜️script.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/**/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/**/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧬️schema/📦️crate-boundaries/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/📦️crate-boundaries/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/🧬️schema/📡️record-token/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️owner/**/*"
+      ],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-crate-boundaries"
+      }
     }
   },
   "namedInputs": {

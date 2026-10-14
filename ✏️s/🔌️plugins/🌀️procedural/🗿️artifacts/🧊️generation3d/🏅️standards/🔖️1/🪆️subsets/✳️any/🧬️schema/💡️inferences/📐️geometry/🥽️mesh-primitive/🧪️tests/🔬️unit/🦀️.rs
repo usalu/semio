@@ -1,7 +1,8 @@
 use super::*;
-use super::super::mesh_support::harness as h;
+#[path = "../../../🧱️mesh-support/🧪️tests/🧰️mesh-harness/🦀️.rs"]
+mod h;
 
-fn admitted()->Vec<ComputeEntry> {COMPUTES.iter().chain(crate::standards::v1::subsets::any::io::geometry::mesh_source::COMPUTES).copied().collect()}
+fn admitted()->Vec<ComputeEntry> {COMPUTES.iter().chain(semio_s_artifact_procedural_3d_io_geometry::mesh_source::COMPUTES).copied().collect()}
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/🥽️mesh-primitive/🔣️.json");
 

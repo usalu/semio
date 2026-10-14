@@ -10,7 +10,7 @@ use super::super::plan_kit::seg;
 use super::super::walls::Cut;
 use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
 use super::super::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::{ModelSnapshot, Wall, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSide, WallSweep};
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::vector::perp;

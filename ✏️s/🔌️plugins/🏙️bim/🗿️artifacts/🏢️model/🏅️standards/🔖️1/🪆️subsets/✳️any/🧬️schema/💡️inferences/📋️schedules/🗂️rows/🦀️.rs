@@ -5,7 +5,7 @@ use super::super::super::effective_properties::EffectiveProperties;
 use super::super::super::finishes::FinishQuantity;
 use super::super::super::quantities::{ElementQuantity, LayerQuantity};
 use super::ScheduleCell;
-use crate::{DoorLeaves, ModelSnapshot, OpeningKind, Phase, PropertyValue, Schedule, ScheduleCategory, ScheduleField, ScheduleKey, Swing};
+use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, ModelSnapshot, OpeningKind, Phase, PropertyValue, Schedule, ScheduleCategory, ScheduleField, ScheduleKey, Swing};
 use std::collections::BTreeMap;
 
 //#region 🔖️Scope

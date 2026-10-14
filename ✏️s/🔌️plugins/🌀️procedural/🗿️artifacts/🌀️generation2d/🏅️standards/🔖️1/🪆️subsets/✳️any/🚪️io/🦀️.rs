@@ -181,7 +181,10 @@ pub mod io_registry {
 /// as one drawing, every node's transform applied to its own geometry — the picture every page export
 /// writes. Text is placed at its baseline with the node's transform applied to the anchor only.
 pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::geometry::{flatten_segments, transformed_segments};
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let p = |x: f64, y: f64| SemioPoint2 { x, y };
@@ -293,7 +296,6 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 /// 🖍️ The document's evaluated drawing: its flow program run through the preview evaluator and
 /// every drawing it delivers into an output widget (`output_drawing_handles`) flattened by the flow
 /// drawing kernel — the picture the editor's `drawing:out` port publishes.
-#[cfg(feature = "component-app-assembly")]
 pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
@@ -301,11 +303,6 @@ pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<se
     semio_drawing_from_scenes(&handles.iter().map(|handle| semio_framework_os_flow::render_scene_json(handle)).collect::<Vec<_>>())
 }
 
-/// 🖍️ Without the flow evaluator there is nothing to draw, and saying so beats an empty picture.
-#[cfg(not(feature = "component-app-assembly"))]
-pub fn generation2d_drawing(_snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
-    Err("generation2d export needs the flow evaluator (build with the `component-app-assembly` feature)".into())
-}
 //#endregion 🖍️EvaluatedDrawing
 
 //#region 🧪️Tests

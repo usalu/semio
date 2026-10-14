@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds,
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
 use crate::standards::v1::subsets::any::schema::inferences::quantities::QuantityKind;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{ComponentPatch, Entry, FamilyParameterPatch, MepElementPatch, ModelDiff, ModelSnapshot, Point3, ProjectPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::{ComponentPatch, FamilyParameterPatch, MepElementPatch, ProjectPatch}, Entry, ModelDiff}, snapshot::{ModelSnapshot, Point3}};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeSet;
@@ -155,7 +155,7 @@ fn a_moved_host_wall_recomputes_only_the_components_mounted_on_it_and_its_neighb
     settle(&mut session, &snapshot);
     let mut moved = snapshot.clone();
     let wall = moved.walls.get_mut("w-north").expect("wall");
-    wall.axis = crate::Axis::Line { start: crate::Point2 { x: 6.0, y: 4.5 }, end: crate::Point2 { x: 0.0, y: 4.5 } };
+    wall.axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 6.0, y: 4.5 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 4.5 } };
     let after = session.refresh(&moved).clone();
     assert_eq!(after, ModelInference::infer(&moved).expect("infers"));
     let recomputed = count(&session, "component");

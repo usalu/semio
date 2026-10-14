@@ -7,7 +7,7 @@
 //! no heading hierarchy the way `document`'s does; the honest structural summary is a word/mark
 //! census plus the distinct BCP-47 languages actually used).
 
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::profile::compute_semio_text_profile;

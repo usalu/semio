@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-ifc-2x3-base-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "💡️ The IFC2x3 base inferences with their text and binary codecs."
+
+[package.metadata.semio]
+role = "artifact"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-async-macros = { workspace = true }

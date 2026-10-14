@@ -1,11 +1,18 @@
 use super::*;
-use crate::{FemAnalysisSettings, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
 // #region 🔖️Fixtures
 fn simply_supported_beam_doc() -> Fem2dSnapshot {
     Fem2dSnapshot {
         nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
-        elements: vec![crate::FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
+        elements: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
         regions: vec![],
         materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
         sections: vec![FemSection { id: "ipe300".into(), name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 }],

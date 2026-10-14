@@ -5,7 +5,8 @@
 //! reasoning). `data` (the opaque compressed payload) is never read — pts/rate alone are enough,
 //! honoring this subset's own opaque-payload boundary.
 
-use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
 
 //#region 🔖️Duration
 /// ⏱️ Semio video container duration.

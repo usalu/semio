@@ -43,7 +43,7 @@ use crate::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl pack::snapshot::ArtifactDsl for RewritingSnapshot {
@@ -115,12 +115,12 @@ use crate::standards::v1::subsets::any::io::derived_construction::*;
 use crate::standards::v1::subsets::any::io::derived_analysis::*;
 use crate::LayoutPoint;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_s_artifact_trinity_jack::Camera;
 
-pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<semio_framework_graph::manifest::PropertyBag, TrinityRewritingError> {
+pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<semio_framework_graph_manifest::PropertyBag, TrinityRewritingError> {
     if bindings_json.trim().is_empty() {
-        return Ok(semio_framework_graph::manifest::PropertyBag::new());
+        return Ok(semio_framework_graph_manifest::PropertyBag::new());
     }
     Ok(semio_framework_pack_json::from_json_str(bindings_json, semio_framework_pack_json::JsonMemberPolicy::Reject)?)
 }
@@ -142,7 +142,7 @@ use layout::RuleLayout;
 use rule::{Pattern,Lhs,Rhs,Assignment,ParameterKind,ParameterSpec,Rule};
 use crate::LayoutPoint;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_s_artifact_trinity_jack::Camera;
 
 pub(crate) fn pattern_to_match_clause(pattern: &Pattern) -> String {
@@ -161,15 +161,15 @@ pub(crate) fn pattern_to_match_clause(pattern: &Pattern) -> String {
     }
 }
 
-pub(crate) fn parameter_defaults(rule: &Rule) -> semio_framework_graph::manifest::PropertyBag {
-    let mut defaults = semio_framework_graph::manifest::PropertyBag::new();
+pub(crate) fn parameter_defaults(rule: &Rule) -> semio_framework_graph_manifest::PropertyBag {
+    let mut defaults = semio_framework_graph_manifest::PropertyBag::new();
     for param in &rule.rhs.parameters {
         defaults.insert(param.name.clone(), param.default.clone());
     }
     defaults
 }
 
-pub(crate) fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> semio_framework_graph::manifest::PropertyBag {
+pub(crate) fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> semio_framework_graph_manifest::PropertyBag {
     let mut merged = parameter_defaults(rule);
     for (key, value) in bindings {
         merged.insert(key.clone(), value.clone());
@@ -177,7 +177,7 @@ pub(crate) fn effective_bindings(rule: &Rule, bindings: &semio_framework_graph::
     merged
 }
 
-pub(crate) fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag, value: &PropertyValue) -> PropertyValue {
+pub(crate) fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag, value: &PropertyValue) -> PropertyValue {
     if let PropertyValue::String(s) = value {
         if let Some(name) = s.strip_prefix('$') {
             if !name.is_empty() {
@@ -198,7 +198,7 @@ pub(crate) fn resolve_parameter_value(rule: &Rule, bindings: &semio_framework_gr
 /// 🩹️ unified syntax law: string literals PRINT double-quoted (never single-quoted) — matches the
 /// shared `🫀️core` jack lexer/wire-literal printer, which accepts either quote style on parse but
 /// always emits `"..."`.
-pub(crate) fn assignment_value_jack(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag, value: &PropertyValue) -> String {
+pub(crate) fn assignment_value_jack(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag, value: &PropertyValue) -> String {
     let resolved = resolve_parameter_value(rule, bindings, value);
     match resolved {
         PropertyValue::Null => "null".into(),
@@ -210,7 +210,7 @@ pub(crate) fn assignment_value_jack(rule: &Rule, bindings: &semio_framework_grap
 }
 
 /// 🧵️ Build the Jack query string for a rewrite rule without executing it.
-pub fn build_rule_query(rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> String {
+pub fn build_rule_query(rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> String {
     let effective = effective_bindings(rule, bindings);
     let mut query = format!("MATCH {}", pattern_to_match_clause(&rule.lhs.pattern));
     if let Some(where_clause) = &rule.lhs.where_clause {

@@ -11,7 +11,7 @@ use crate::editor::bim::panels::{families as families_panel, classification as c
 use crate::editor::bim::presence::{BimPresence, BimPresenceMutation};
 use crate::editor::bim::terminology::{bim_labels, BimLabels};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-use crate::{ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;
@@ -1130,7 +1130,7 @@ fn framework_panel_tab(id: &str, label: LocalizedLabel, group: PanelGroup, child
 pub fn create_bim_app() -> semio_framework_plugin::AppDefinition {
     let mut builder = Editor::builder(BIM_MODEL_DIALECT)
         .document(["semio", "bim"])
-        .artifact_kind(crate::artifact_kind())
+        .artifact_kind(crate::standards::v1::subsets::any::schema::artifact_kind())
         .icon_id("building")
         .mode_def(edit::definition())
         .default_mode_id(edit::BIM_EDIT_MODE_EDIT)

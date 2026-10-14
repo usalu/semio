@@ -8,7 +8,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraph;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -394,7 +396,7 @@ pub const DWG_PREVIEW_END: [u8; 16] = [0xe0, 0xda, 0x92, 0xf8, 0x2b, 0xc9, 0xd7,
 pub const DWG_HEADER_BEGIN: [u8; 16] = [0xcf, 0x7b, 0x1f, 0x23, 0xfd, 0xde, 0x38, 0xa9, 0x5f, 0x7c, 0x68, 0xb8, 0x4e, 0x6d, 0x33, 0x5f];
 pub const DWG_HEADER_END: [u8; 16] = [0x30, 0x84, 0xe0, 0xdc, 0x02, 0x21, 0xc7, 0x56, 0xa0, 0x83, 0x97, 0x47, 0xb1, 0x92, 0xcc, 0xa0];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn evaluation_graph_indexes(graph: &crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgEvaluationGraph) -> Result<DwgEvaluationGraphIndexes, String> {
+pub fn evaluation_graph_indexes(graph: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraph) -> Result<DwgEvaluationGraphIndexes, String> {
     let mut node_indexes = std::collections::BTreeMap::new();
     for (index, node) in graph.nodes.iter().enumerate() {
         if node.id == 0 || node.expression_handle == 0 || node_indexes.insert(node.id, index).is_some() {
@@ -452,8 +454,8 @@ pub fn evaluation_graph_indexes(graph: &crate::standards::v_ac1024::subsets::any
     Ok((node_relations, edge_relations, endpoints))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn constraint_node_id(node: &crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgConstraintNode) -> i32 {
-    use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgConstraintNode;
+pub fn constraint_node_id(node: &semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode) -> i32 {
+    use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
     match node {
         DwgConstraintNode::ConstrainedImplicitPoint(value) => value.geometry.node.id,
         DwgConstraintNode::PointCurveConstraint(value)

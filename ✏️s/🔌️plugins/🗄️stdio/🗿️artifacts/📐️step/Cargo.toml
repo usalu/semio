@@ -35,11 +35,26 @@ package = "semio-framework-pack"
 [workspace.dependencies.semio-framework-3d-brep-engine]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-3d-brep-curve]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-surface]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-tolerance]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-vector]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-3d-brep-operations]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-3d-brep-queries]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-validation]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-3d-brep-representation]
 path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust"

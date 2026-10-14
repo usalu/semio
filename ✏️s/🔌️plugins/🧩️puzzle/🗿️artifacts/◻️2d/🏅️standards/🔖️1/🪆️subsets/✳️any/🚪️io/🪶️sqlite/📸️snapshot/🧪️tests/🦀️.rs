@@ -89,9 +89,7 @@ fn sqlite_snapshot_puzzle2d_play_admits_exact_semantic_rows_and_physical_output_
  let expected=snapshot();let play=<crate::Puzzle2dPlaySnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack::snapshot::ArtifactPack::encode_pack(&expected)).unwrap();let limits=SqliteDatabaseLimits::default();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let output=original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap();let bytes=match &output{store::io_schema::IoPayload::Binary(value)=>value.len(),store::io_schema::IoPayload::Text(value)=>value.len()};assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_rows:42,max_file_bytes:bytes,..limits}), native_owner)).is_ok());for restricted in[SqliteDatabaseLimits{max_rows:41,..limits},SqliteDatabaseLimits{max_file_bytes:bytes-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}]{assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());assert!(<crate::Puzzle2dPlaySnapshot as ArtifactSqliteSnapshotHost>::original_owners::with_decoding(|native_owner|decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,restricted), native_owner)).is_err());}assert!(original_owners::with_encoding(|native_owner|play.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|false,limits), native_owner)).is_err());}
 }
-#[cfg(feature="component-app-assembly")]
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
-#[cfg(feature="component-app-assembly")]
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎲️ The actual Puzzle editor and viewer app roster.
  enum SqliteApps:PluginApp{
@@ -99,7 +97,6 @@ semio_framework_dispatch_macros::dyn_enum_close!{
   Viewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
  }
 }
-#[cfg(feature="component-app-assembly")]
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_puzzle2d_actual_editor_viewer_declaration_routes_queryable_files(){
  semio_framework_plugin::Plugin::<SqliteApps>::builder("puzzle").label("Puzzle owned SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(crate::PUZZLE_2D_SCHEMA).await.unwrap().unwrap();assert_eq!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type,Some(std::any::TypeId::of::<crate::Puzzle2dSnapshot>()));let expected=snapshot();

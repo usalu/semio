@@ -36,8 +36,8 @@ pub struct Fem2dArtifact {
 
 impl Fem2dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::Fem2dSnapshot {
-        crate::Fem2dSnapshot {
+    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
+        crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
             regions: self.regions.clone(),
@@ -51,7 +51,7 @@ impl Fem2dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, preserving the authored document fields.
-    pub fn from_snapshot(snapshot: crate::Fem2dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -67,7 +67,7 @@ impl Fem2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::Fem2dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.regions = snapshot.regions;
@@ -131,15 +131,6 @@ pub fn fem2d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::
 
 //#endregion 🧬️DerivedArtifactFacets
 
-//#region 🔁️Re-exports
-pub use crate::FemAnalysisSettings;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::FemCombination;
-pub use crate::FemElement;
-pub use crate::FemLoadCase;
-pub use crate::FemMaterial;
-pub use crate::FemNode;
-pub use crate::FemRegion;
-pub use crate::FemSection;
-pub use crate::FemSupport;
-//#endregion 🔁️Re-exports
+//#region 🏗️Structure
+use super::structure::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+//#endregion 🏗️Structure

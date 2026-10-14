@@ -160,21 +160,18 @@ pub mod engine {
 //#region 🔖️StorageBackends
 /// 🗄️🪶️ `db_storage_sqlite` — the optional SQLite-backed `DbStorage` implementation (behind this
 /// crate's `sqlite` feature), linking the same bundled `rusqlite` version the kernel already uses.
-#[cfg(feature = "sqlite")]
 pub mod storage_sqlite {
     pub use crate::db_storage_sqlite::*;
 }
 
 /// 🗄️🐘️ `db_storage_postgres` — the optional Postgres-backed `DbStorage` implementation (behind
 /// this crate's `postgres` feature).
-#[cfg(feature = "postgres")]
 pub mod storage_postgres {
     pub use crate::db_storage_postgres::*;
 }
 
 /// 🗄️🕸️ `db_storage_neo4j` — the optional Neo4j-backed `DbStorage` implementation (behind this
 /// crate's `neo4j` feature).
-#[cfg(feature = "neo4j")]
 pub mod storage_neo4j {
     pub use crate::db_storage_neo4j::*;
 }

@@ -1,8 +1,8 @@
 //! 🎬️ `set-storey-cut-height` payload. Sets the height above its elevation at which the plan view cuts a storey; an assigned null returns to the 1.2 m default. Pure view convention: nothing else in the model depends on it.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::Assigned;
+use crate::standards::v1::subsets::any::schema::diff::Assigned;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

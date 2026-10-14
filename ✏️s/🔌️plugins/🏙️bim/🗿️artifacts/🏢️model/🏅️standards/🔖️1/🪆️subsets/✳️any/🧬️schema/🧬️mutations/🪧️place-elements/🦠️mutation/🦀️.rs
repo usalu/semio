@@ -1,6 +1,6 @@
 //! 🪧️ `place-elements` payload. Writes absolute placement fields onto placed elements, one sparse patch per element; the exact inverse of a move or a rotation, because it restores the base placements without any floating-point back transformation.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use super::super::elements::Placement;
 use std::collections::BTreeMap;

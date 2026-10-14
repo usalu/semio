@@ -1,5 +1,5 @@
 //! 🧭️ Inferred option visibility and takeoff from authored membership and quantity parents.
-use crate::{ModelSnapshot, ElementMembership};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ElementMembership};
 use super::super::quantities::{ElementQuantity, QuantityTotals, totals_of};
 use crate::standards::v1::subsets::any::schema::mutations::option_rules::{element_ids, host};
 use std::collections::{BTreeMap, BTreeSet};

@@ -14,7 +14,7 @@
 
 use super::super::element_solids::{dep_object, dep_value, ElementSolid};
 use super::super::plan_linework::{self, Inputs as PlanInputs, PlanKind, PlanLinework, PlanStyle};
-use crate::{DetailLevel, ModelSnapshot, View, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_value::DslValue;

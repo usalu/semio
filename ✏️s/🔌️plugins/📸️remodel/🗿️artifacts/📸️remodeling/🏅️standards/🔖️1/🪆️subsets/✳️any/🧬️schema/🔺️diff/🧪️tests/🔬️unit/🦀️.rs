@@ -1,6 +1,7 @@
 use super::*;
-use crate::default_remodeling_scene;
-use crate::{FrameRef, MediaKind};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mutation_diff_absorb_law};
 
 fn stream(id: &str) -> MediaStream {
@@ -120,13 +121,13 @@ async fn absorb_equals_sequential_application() {
 #[semio_framework_async_macros::async_test]
 async fn the_negative_delta_restores_the_base() {
     let mut base = scene_with_streams(&["a", "b"]);
-    base.durable_artifacts.insert("held".into(), crate::RemodelingDurableArtifact { kind: "sparse".into(), mime: None, width: 0, height: 0, chunks: vec![ByteBuffer::from_u8_slice(b"1"), ByteBuffer::from_u8_slice(b"2")] });
+    base.durable_artifacts.insert("held".into(), semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact { kind: "sparse".into(), mime: None, width: 0, height: 0, chunks: vec![ByteBuffer::from_u8_slice(b"1"), ByteBuffer::from_u8_slice(b"2")] });
     let mut diff = RemodelingDiff::stream_rows(vec![RemodelingRow::Remove { key: "a".into() }]);
     diff.absorb(RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: stream("z") }]));
     diff.absorb(frames("b", vec![frame(1)], vec![frame(5)]));
     diff.absorb(sync("b", 9.0));
     diff.absorb(RemodelingDiff::content_rows(vec![RemodelingContentRow::Truncate { id: "held".into(), from: 1 }, RemodelingContentRow::Append { id: "fresh".into(), header: Some(RemodelingContentHeader { kind: "sparse".into(), mime: None, width: 0, height: 0 }), chunks: vec![ByteBuffer::from_u8_slice(b"3")] }]));
-    diff.absorb(RemodelingDiff { params: Some(RemodelingParamsDiff { sfm: Some(crate::SfmParams::default()), ..Default::default() }), results: Some(RemodelingResultsDiff { tracks: Some(Vec::new()), qc: Some(RemodelingAssigned::new(None)), ..Default::default() }), ..Default::default() });
+    diff.absorb(RemodelingDiff { params: Some(RemodelingParamsDiff { sfm: Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SfmParams::default()), ..Default::default() }), results: Some(RemodelingResultsDiff { tracks: Some(Vec::new()), qc: Some(RemodelingAssigned::new(None)), ..Default::default() }), ..Default::default() });
     assert_diff_algebra_inverse_law::<RemodelingSnapshot, RemodelingDiff>(&base, &diff).await;
 }
 

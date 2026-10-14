@@ -28,13 +28,13 @@ mod artifacts {
 
 //#region ✏️Editor
 mod editor {
-    pub use semio_s_artifact_remodel_remodeling::editor::*;
+    pub use semio_s_artifact_remodel_remodeling_editor::editor::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_remodel_remodeling::viewer::*;
+    pub use semio_s_artifact_remodel_remodeling_viewer::viewer::*;
 }
 //#endregion 👁️Viewer
 

@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, SolidFamily};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json");

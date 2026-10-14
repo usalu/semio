@@ -6,7 +6,7 @@ use super::super::elements;
 use super::super::family_rules;
 use super::SetFamilyParameter;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Entry, FamilyParameter, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{FamilyParameter, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetFamilyParameter, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

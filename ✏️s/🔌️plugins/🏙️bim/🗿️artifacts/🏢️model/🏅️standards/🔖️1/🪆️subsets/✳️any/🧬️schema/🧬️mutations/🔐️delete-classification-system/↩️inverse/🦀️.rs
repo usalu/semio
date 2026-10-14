@@ -5,7 +5,7 @@ use super::super::cascade;
 use super::super::create_classification_system::CreateClassificationSystem;
 use super::super::set_element_classification::SetElementClassification;
 use super::DeleteClassificationSystem;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(system) = base.classification_systems.get(&payload.id) else {

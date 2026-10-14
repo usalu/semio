@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { buildBudgetMs } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -7,7 +8,7 @@ import { BROWSER_CANVAS_HOT_CRATES } from "../../../../../../../../../🔨️mod
 import { runOwnedCommand } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -20,7 +21,7 @@ class SourceScript extends BundleScript{
  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}
 }
 class TestScript extends BundleScript{
- async run(segments:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));}
+ async run(segments:string[]):Promise<void>{await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-node-graph"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
 }
 const router=new ScriptRouter(import.meta.dir).register("wasm",WasmScript).register("test",TestScript).register("test-source",SourceScript);
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({defaultCommand:"wasm"}) }));

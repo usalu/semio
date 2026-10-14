@@ -38,11 +38,11 @@ export class CachePruneScript extends BundleScript {
     {
       if(args.includes("--stale-incremental-only")){
         const index=args.indexOf("--profile"),profile=args[index+1];if(index<0||!profile||profile.startsWith("-")||args.some((arg,position)=>!["--stale-incremental-only","--dry-run","--profile"].includes(arg)&&position!==index+1))throw Error("Incremental compaction requires exactly one explicit Cargo profile");
-        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:join(this.repoRoot,".cache","framework","leases"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
+        const result=await compactCargoIncrementalSessionsV1({buildDirectory:cargoDirectories(this.repoRoot).build,leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),profile,control:scriptCompilerAdmissionControlV1(this.invocation,"cache:incremental-compaction",buildBudgetMs()),dryRun,onUnit:unit=>console.log(`[DEBUG] Incremental compaction ${dryRun?"planned":"removing"} ${unit.path} bytes=${unit.bytes}`)});
         console.log(`[DEBUG] Incremental compaction result=${JSON.stringify(result)}`);return;
       }
       const control=scriptCompilerAdmissionControlV1(this.invocation,"cache:shared-maintenance",buildBudgetMs());
-      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","framework","leases"),buildDirectory:cargoDirectories(this.repoRoot).build,control},async()=>{
+      await withCargoCacheMaintenanceV1({leaseDirectory:join(this.repoRoot,".cache","b","l","m","data"),buildDirectory:cargoDirectories(this.repoRoot).build,control},async()=>{
         const areas = await scanCacheAreas(this.repoRoot, control, (area, unit) => console.log(`[cache-prune] scanned ${area}/${unit.path}`));
         const plan: PrunePlan = planCachePrune(areas, Date.now(), CACHE_POLICY.storage.guardAgeMs);
         let deletedBytes = 0,

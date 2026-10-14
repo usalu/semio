@@ -25,7 +25,7 @@ use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFl
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
 #[cfg(test)]
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{RiserKind, Stair, StairFlight, StringerKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{RiserKind, Stair, StairFlight, StringerKind};
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::mesh::{extrude, extrude_loops, prism_between, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};

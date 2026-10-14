@@ -18,7 +18,7 @@ pub struct RewritingSnapshot {
     pub rhs: crate::standards::v1::subsets::any::schema::Rhs,
     #[state(artifact)]
     #[value(default)]
-    pub parameter_bindings: semio_framework_graph::manifest::PropertyBag,
+    pub parameter_bindings: semio_framework_graph_manifest::PropertyBag,
     #[state(artifact)]
     #[value(default)]
     pub rule_layout: crate::standards::v1::subsets::any::schema::RuleLayout,
@@ -47,7 +47,7 @@ pub fn rewrite_rule_summary(snapshot: &RewritingSnapshot) -> String {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_framework_graph::manifest::PropertyValue;
+pub use semio_framework_graph_manifest::PropertyValue;
 //#endregion 🔁️Re-exports
 
 

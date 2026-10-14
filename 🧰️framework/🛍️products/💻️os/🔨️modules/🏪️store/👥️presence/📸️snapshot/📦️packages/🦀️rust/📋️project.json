@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-presence-native-snapshot-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

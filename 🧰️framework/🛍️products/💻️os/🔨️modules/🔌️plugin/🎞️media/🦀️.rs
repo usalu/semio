@@ -25,7 +25,6 @@ use crate::tool_contract::ArtifactReservedToolJob;
 use crate::sdk_fault::plugin_sdk_fault;
 use crate::tool_cancellation::ToolCancellationLease;
 #[cfg(test)]
-use crate::store_lifecycle::ArtifactSnapshotDisposer;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ActiveMediaExportCloseStage {
@@ -46,10 +45,10 @@ pub(crate) struct ActiveMediaExport{
  pub(crate) parts:std::mem::ManuallyDrop<Option<MediaExportOwnedParts>>,
  pub(crate) parts_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<MediaExportOwnedParts>>>,
  pub(crate) operation:semio_framework_job::Operation,pub(crate) contract:semio_framework::ToolExecutionContract,
- pub(crate) session:Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,pub(crate) session_rejected:Option<crate::reserved_job_session::RefusedWorkerSource<semio_framework::ErasedToolJob>>,pub(crate) closing_job:Option<ArtifactReservedToolJob>,
+ pub(crate) session:Option<semio_framework_job::MountedWorkerJobSession<ArtifactReservedToolJob>>,pub(crate) session_rejected:Option<crate::reserved_job_session::RefusedWorkerSource<ArtifactReservedToolJob>>,
  pub(crate) outcome_pending:bool,pub(crate) resume_pending:bool,
  pub(crate) lease:std::mem::ManuallyDrop<Option<ToolCancellationLease>>,
- pub(crate) cancellation_retirement:Option<Box<crate::typed_operation::ToolCancellationLeaseRetirement>>,
+ pub(crate) cancellation_retirement:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
  pub(crate) checkpoint_available:bool,pub(crate) applied_progress:u64,pub(crate) close_stage:ActiveMediaExportCloseStage,
 }
 impl std::ops::Deref for ActiveMediaExport{type Target=MediaExportOwnedParts;fn deref(&self)->&Self::Target{self.parts.as_ref().expect("live media operation retains its original publication parts")}}
@@ -101,20 +100,14 @@ impl ActiveMediaExport {
                 Err(semio_framework_job::WorkerJobDemandError::Refused(error)) => Err(error),
             };
         }
-        if let Some(job) = self.closing_job.as_ref() {
-            if !semio_framework_job::InteractiveJob::terminal_is_empty(job) {
-                return Ok(RetirementDemand { copy_bytes: semio_framework_job::InteractiveJob::next_close_copy_byte_demand(job)?, capacity_bytes: semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(job, body)?, release_bytes: semio_framework_job::InteractiveJob::next_close_release_byte_demand(job)?, depth: semio_framework_job::InteractiveJob::next_close_depth_demand(job)? });
-            }
-        }
-        if self.closing_job.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ArtifactReservedToolJob>>(),..item})}
         if let Some(owner)=self.parts_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(item)}else{owner.selected_demand(body)}}
         if self.parts.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<MediaExportOwnedParts>(),..item})}
-        if self.lease.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),..item})}
-        if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),..item})}else{owner.retirement_demands(canonical,body)}}
+        if self.lease.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),..item})}
+        if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),..item})}else{owner.retirement_demands(canonical,body)}}
         Ok(item)
     }
 
-    pub(crate) fn terminal_is_empty(&self)->Result<bool,Fault>{Ok(self.close_stage==ActiveMediaExportCloseStage::Complete&&self.session.is_none()&&self.session_rejected.is_none()&&!self.outcome_pending&&self.closing_job.is_none()&&!self.resume_pending&&self.parts.is_none()&&self.parts_retirement.is_none()&&self.lease.is_none()&&self.cancellation_retirement.is_none())}
+    pub(crate) fn terminal_is_empty(&self)->Result<bool,Fault>{Ok(self.close_stage==ActiveMediaExportCloseStage::Complete&&self.session.is_none()&&self.session_rejected.is_none()&&!self.outcome_pending&&!self.resume_pending&&self.parts.is_none()&&self.parts_retirement.is_none()&&self.lease.is_none()&&self.cancellation_retirement.is_none())}
 
     pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant,canonical:&crate::tool_cancellation::ToolCancellationHandle) -> Result<PluginLifecycleStep, crate::PluginLifecycleFailure> {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
@@ -135,13 +128,6 @@ impl ActiveMediaExport {
             let demand=match session.retirement_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(semio_framework_job::WorkerJobDemandError::Contention(_))=>return Ok(PluginLifecycleStep::AwaitingInput{reason:"media original worker quote awaits its handback"}),Err(semio_framework_job::WorkerJobDemandError::Refused(error))=>return Err(error.into())};
             return original_worker_lifecycle(cx,demand,grant,"media original mounted worker awaits its handback",|cx|{let step=session.close_step(cx)?;Ok((step,session.terminal_is_empty()))});
         }
-        if let Some(job)=self.closing_job.as_mut(){
-            if !semio_framework_job::InteractiveJob::terminal_is_empty(job){
-                let demand=RetirementDemand{copy_bytes:semio_framework_job::InteractiveJob::next_close_copy_byte_demand(job)?,capacity_bytes:semio_framework_job::InteractiveJob::next_close_capacity_byte_demand(job,grant.maximum_copy_bytes)?,release_bytes:semio_framework_job::InteractiveJob::next_close_release_byte_demand(job)?,depth:semio_framework_job::InteractiveJob::next_close_depth_demand(job)?};
-                return original_rejection_lifecycle(cx,demand,grant,"media original reserved producer awaits its handback",|cx|{let step=semio_framework_job::InteractiveJob::close_step(job,cx)?;Ok((step,semio_framework_job::InteractiveJob::terminal_is_empty(job)))});
-            }
-        }
-        if self.closing_job.is_some(){let bytes=size_of::<Option<ArtifactReservedToolJob>>();if grant.maximum_copy_bytes<bytes{return Ok(PluginLifecycleStep::Progress(Default::default()))}drop(self.closing_job.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))}
         if let Some(owner)=self.parts_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.parts_retirement.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
@@ -155,12 +141,12 @@ impl ActiveMediaExport {
             });
         }
         if let Some(owner)=self.cancellation_retirement.as_ref(){
-            let terminal=owner.terminal_is_empty();let demand=if terminal{RetirementDemand{release_bytes:size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()}}else{owner.retirement_demands(canonical,grant.maximum_copy_bytes)?};
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{let progress=if terminal{crate::typed_operation::original_lease_cursor_release(&mut self.cancellation_retirement,grant)?}else{self.cancellation_retirement.as_mut().expect("quoted original cancellation cursor").close_step(canonical,grant)?.progress()};Ok((PluginLifecycleStep::Progress(progress),false))});
+            let terminal=owner.terminal_is_empty();let demand=if terminal{RetirementDemand{release_bytes:size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()}}else{owner.retirement_demands(canonical,grant.maximum_copy_bytes)?};
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{let progress=if terminal{crate::tool_cancellation::original_lease_cursor_release(&mut self.cancellation_retirement,grant)?}else{self.cancellation_retirement.as_mut().expect("quoted original cancellation cursor").close_step(canonical,grant)?.progress()};Ok((PluginLifecycleStep::Progress(progress),false))});
         }
         if self.lease.is_some(){
-            let demand=RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()};
-            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{let(owner,progress)=crate::typed_operation::original_lease_cursor_admit(&mut self.lease,grant)?;self.cancellation_retirement=owner;Ok((PluginLifecycleStep::Progress(progress),false))});
+            let demand=RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()};
+            return crate::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{let(owner,progress)=crate::tool_cancellation::original_lease_cursor_admit(&mut self.lease,grant)?;self.cancellation_retirement=owner;Ok((PluginLifecycleStep::Progress(progress),false))});
         }
         self.close_stage=ActiveMediaExportCloseStage::Complete;Ok(PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
     }

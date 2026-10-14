@@ -1,8 +1,8 @@
 //! 🔃 Drawing mutation — `ReorderLayer`: repositions (and optionally re-parents) an existing layer to
 //! a FINAL-state `(parent_id, index)` address — never spatial.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🔃 `reorder-layer` payload.
@@ -22,17 +22,17 @@ pub struct ReorderLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn reorder_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, index: usize) -> DrawingMutation {
-    DrawingMutation::ReorderLayer(ReorderLayer { layer_id, parent_id, index })
+pub fn reorder_layer<Op: From<ReorderLayer>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, index: usize) -> Op {
+    Op::from(ReorderLayer { layer_id, parent_id, index })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReorderLayer {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ReorderLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReorderLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "layer", kind: "reorder-layer", record: "ReorderedLayer" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

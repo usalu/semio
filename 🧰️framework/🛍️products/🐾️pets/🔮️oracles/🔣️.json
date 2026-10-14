@@ -197,9 +197,6 @@
       "tolerance": 1e-9
     }
   ],
-  "subjectFeatures": [
-    { "implementation": "rust", "features": ["sut"], "rationale": "🧪️ The pets crate re-exports its JSON codec (serde_json with `float_roundtrip`, so every committed decimal becomes the double JSON.parse and Python read) only under `sut`: the Rust subject adapters decode the shared vectors into the typed twins and encode their answers with it, while production builds of the crate stay free of serde_json." }
-  ],
   "oracleHostPackages": [
     { "implementation": "python", "package": "numpy", "version": "2.5.0", "module": "numpy", "rationale": "📐️ Sine and cosine, SeedSequence words, homogeneous matrices, norms, matrix powers and cumulative weights of the numeric references." },
     { "implementation": "python", "package": "scipy", "version": "1.18.0", "module": "scipy", "rationale": "🎞️ Root finding on the Bézier easing, integration of the hop arc, of the pendulum behind every swing and of the descent under a canopy, and reachability of the behaviour graph." },

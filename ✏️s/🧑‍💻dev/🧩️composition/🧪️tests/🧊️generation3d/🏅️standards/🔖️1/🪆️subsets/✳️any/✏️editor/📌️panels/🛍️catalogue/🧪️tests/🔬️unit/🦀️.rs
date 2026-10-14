@@ -205,7 +205,7 @@ fn catalogue_entry_names_resolve_both_declared_languages() {
     for row in fixture.as_array().unwrap() {
         let id = row["id"].as_str().unwrap();
         for (language, labels) in [("en", &Generation3dLabels::NATIVE_EN), ("de", &Generation3dLabels::NATIVE_DE)] {
-            assert_eq!(semio_s_artifact_procedural_generation3d::editor::generation3d::terminology::generation3d_catalogue_name(labels, id, "unexpected fallback"), row[language].as_str().unwrap());
+            assert_eq!(semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels, id, "unexpected fallback"), row[language].as_str().unwrap());
         }
     }
 }

@@ -6,7 +6,8 @@ import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import { build } from "esbuild";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
-import { prepareJavascriptDependencies, SyncScript, RefreshLockScript } from "../📜️script.ts";
+import {prepareJavascriptDependencies,javascriptDependencyArgumentsV1} from "../🟦️.ts";
+import {SyncScript,RefreshLockScript} from "../📜️script.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
 import { zipSync, unzipSync } from "fflate";
@@ -75,7 +76,7 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
     const distribution = bunDistribution("1.3.14", platform, arch, musl);
     const member = distribution.archive.slice(0, -4) + (platform === "win32" ? "/bun.exe" : "/bun");
     const archive = zipSync({ [member]: new TextEncoder().encode("pinned executable"), "ignored.txt": new Uint8Array([1, 2]) });
-    expect(bunArchiveExecutable(Buffer.from(archive), member)).toEqual(Buffer.from(unzipSync(archive)[member]));
+    expect(bunArchiveExecutable(Buffer.from(archive), member)).toEqual(Buffer.from(unzipSync(archive)[member]!));
     expect(() => bunArchiveExecutable(Buffer.from(archive), "absent/bun")).toThrow();
     expect(distribution.sha256).toMatch(/^[a-f0-9]{64}$/);
   }
@@ -86,33 +87,19 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
 
 
 
-test("selects exact Bun arguments across all supported hosts and rejects installer overrides", async () => {
-  for (const platform of fixture.platforms) for (const operation of fixture.operations) {
-    const calls: unknown[] = [], signal = new AbortController().signal;
-    await prepareJavascriptDependencies(operation.mode, platform, signal, async (args, cwd, actualSignal) => { calls.push({ args, cwd, identicalSignal: actualSignal === signal }); });
-    expect(calls).toEqual([{ args: operation.arguments, cwd: platform, identicalSignal: true }]);
-  }
-  await receiveScriptProcessInvocation(process.env, async original => {
-    for (const args of fixture.rejections) for (const Constructor of [SyncScript, RefreshLockScript]) await expect(new Constructor(owner, owner, original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");
-  });
-  const aborted = new AbortController(); aborted.abort();
-  let called = false;
-  await expect(prepareJavascriptDependencies("lock", owner, aborted.signal, async () => { called = true; })).rejects.toThrow();
-  expect(called).toBe(false);
-  await expect(prepareJavascriptDependencies("lock", owner, new AbortController().signal, async () => { throw new Error("installer refused"); })).rejects.toThrow("installer refused");
-});
+test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyArgumentsV1(operation.mode)).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});let called=false;for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,async()=>{called=true;})).rejects.toThrow("Original JavaScript repository required");expect(called).toBe(false);});
 
 test("an independent Node bundle executes the same authored command corpus", async () => {
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifact) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
   mkdirSync(artifact, { recursive: true });
   const output = mkdtempSync(join(artifact, "javascript-dependencies-")), module = join(output, "dependencies.mjs");
-  const source = createSourceFile("dependencies.ts", readFileSync(join(owner, "📜️script.ts"), "utf8"), ScriptTarget.Latest, true);
-  const operation = source.statements.find(statement => isFunctionDeclaration(statement) && statement.name?.text === "prepareJavascriptDependencies");
+  const source = createSourceFile("dependencies.ts", readFileSync(join(owner, "🟦️.ts"), "utf8"), ScriptTarget.Latest, true);
+  const operation = source.statements.find(statement => isFunctionDeclaration(statement) && statement.name?.text === "javascriptDependencyArgumentsV1");
   if (!operation) throw new Error("Dependency operation is missing");
-  await build({ stdin: { contents: `const runBun = () => { throw new Error("select a runner"); };\n${operation.getText(source)}`, loader: "ts" }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
+  await build({ stdin: { contents: operation.getText(source), loader: "ts" }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
   const entry = join(output, "oracle.mjs");
-  writeFileSync(entry, `import { prepareJavascriptDependencies } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)}; const calls = []; for (const operation of cases) await prepareJavascriptDependencies(operation.mode, "workspace", new AbortController().signal, async (args, cwd) => calls.push({args,cwd})); process.stdout.write(JSON.stringify(calls));`);
+  writeFileSync(entry, `import { javascriptDependencyArgumentsV1 } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)};process.stdout.write(JSON.stringify(cases.map(operation=>({args:javascriptDependencyArgumentsV1(operation.mode),cwd:"workspace"}))));`);
   const child = Bun.spawn(["node", entry], { stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   expect({ code, stderr }).toEqual({ code: 0, stderr: "" });

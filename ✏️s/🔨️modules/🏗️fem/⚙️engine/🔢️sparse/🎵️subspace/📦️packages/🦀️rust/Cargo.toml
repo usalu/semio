@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-fem-sparse-subspace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Subspace-iteration generalized eigensolver and its checkpointed job"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-fem-algebra = { workspace = true }
+semio-s-fem-sparse = { workspace = true }
+semio-s-fem-sparse-ldlt = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-test-support = { workspace = true }
+serde_json = { workspace = true }

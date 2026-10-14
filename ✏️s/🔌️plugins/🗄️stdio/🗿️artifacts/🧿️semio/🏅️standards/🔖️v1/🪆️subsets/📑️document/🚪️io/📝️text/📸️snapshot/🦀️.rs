@@ -6,7 +6,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::io::text::diff::dec_image;
 use crate::io::text::diff::enc_image;
 use crate::io::text::diff::dec_style;

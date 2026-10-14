@@ -26,7 +26,7 @@ pub mod board_host {
         cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
         world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
     };
-    use graph::manifest::GraphManifest;
+    use semio_framework_graph_manifest::GraphManifest;
 
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
@@ -2840,15 +2840,15 @@ pub mod board_host {
     }
 
     enum BoardPropertyAuditFrame {
-        Array { values: Vec<graph::manifest::PropertyValue>, index: usize, pending: Option<usize> },
-        Object { values: graph::PropertyBag, after: Option<String>, pending: Option<String> },
+        Array { values: Vec<semio_framework_graph_manifest::PropertyValue>, index: usize, pending: Option<usize> },
+        Object { values: semio_framework_graph_manifest::PropertyBag, after: Option<String>, pending: Option<String> },
     }
 
     struct BoardPropertyAudit {
         kind: BoardDeleteKind,
         id: String,
-        current: Option<graph::manifest::PropertyValue>,
-        completed: Option<graph::manifest::PropertyValue>,
+        current: Option<semio_framework_graph_manifest::PropertyValue>,
+        completed: Option<semio_framework_graph_manifest::PropertyValue>,
         stack: Box<[Option<BoardPropertyAuditFrame>; BOARD_POINTER_ITEM_CAPACITY]>,
         depth: u16,
         nodes: usize,
@@ -2864,12 +2864,12 @@ pub mod board_host {
     }
 
     enum BoardPropertyContainer {
-        Array(Vec<graph::manifest::PropertyValue>),
-        Object(graph::PropertyBag),
+        Array(Vec<semio_framework_graph_manifest::PropertyValue>),
+        Object(semio_framework_graph_manifest::PropertyBag),
     }
 
     struct BoardPropertyRetirement {
-        current: Option<graph::manifest::PropertyValue>,
+        current: Option<semio_framework_graph_manifest::PropertyValue>,
         stack: Box<[Option<BoardPropertyContainer>; BOARD_POINTER_ITEM_CAPACITY]>,
         depth: u16,
         faulted: bool,
@@ -3012,7 +3012,7 @@ pub mod board_host {
         }
 
         #[cfg(test)]
-        fn push_entity(&mut self, kind: BoardDeleteKind, id: &str, properties: &graph::PropertyBag) -> Result<(), BoardEventFault> {
+        fn push_entity(&mut self, kind: BoardDeleteKind, id: &str, properties: &semio_framework_graph_manifest::PropertyBag) -> Result<(), BoardEventFault> {
             if self.contains(kind, id) {
                 return Ok(());
             }
@@ -3066,8 +3066,8 @@ pub mod board_host {
     include!("🧪️tests/🔬️board-host-standalone/🦀️.rs");
 
     impl BoardPropertyAudit {
-        fn new(kind: BoardDeleteKind, id: String, properties: graph::PropertyBag) -> Self {
-            Self { kind, id, current: Some(graph::manifest::PropertyValue::Object(properties)), completed: None, stack: Box::new(std::array::from_fn(|_| None)), depth: 0, nodes: 0, bytes: 0, fault: None }
+        fn new(kind: BoardDeleteKind, id: String, properties: semio_framework_graph_manifest::PropertyBag) -> Self {
+            Self { kind, id, current: Some(semio_framework_graph_manifest::PropertyValue::Object(properties)), completed: None, stack: Box::new(std::array::from_fn(|_| None)), depth: 0, nodes: 0, bytes: 0, fault: None }
         }
 
         fn add_bytes(&mut self, bytes: usize) {
@@ -3116,29 +3116,29 @@ pub mod board_host {
                     return false;
                 }
                 match value {
-                    graph::manifest::PropertyValue::Array(values) => {
+                    semio_framework_graph_manifest::PropertyValue::Array(values) => {
                         let frame = BoardPropertyAuditFrame::Array { values, index: 0, pending: None };
                         if let Err(frame) = self.push_frame(frame) {
                             self.fault = Some(BoardEventFault::ItemCredits);
                             self.completed = Some(match frame {
-                                BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
+                                BoardPropertyAuditFrame::Array { values, .. } => semio_framework_graph_manifest::PropertyValue::Array(values),
                                 BoardPropertyAuditFrame::Object { .. } => unreachable!(),
                             });
                         }
                     }
-                    graph::manifest::PropertyValue::Object(values) => {
+                    semio_framework_graph_manifest::PropertyValue::Object(values) => {
                         let frame = BoardPropertyAuditFrame::Object { values, after: None, pending: None };
                         if let Err(frame) = self.push_frame(frame) {
                             self.fault = Some(BoardEventFault::ItemCredits);
                             self.completed = Some(match frame {
-                                BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
+                                BoardPropertyAuditFrame::Object { values, .. } => semio_framework_graph_manifest::PropertyValue::Object(values),
                                 BoardPropertyAuditFrame::Array { .. } => unreachable!(),
                             });
                         }
                     }
-                    graph::manifest::PropertyValue::String(value) => {
+                    semio_framework_graph_manifest::PropertyValue::String(value) => {
                         self.add_bytes(value.len());
-                        self.completed = Some(graph::manifest::PropertyValue::String(value));
+                        self.completed = Some(semio_framework_graph_manifest::PropertyValue::String(value));
                     }
                     scalar => self.completed = Some(scalar),
                 }
@@ -3152,8 +3152,8 @@ pub mod board_host {
                 let frame = self.stack[index].take().expect("faulted property audit frame");
                 self.depth -= 1;
                 self.completed = Some(match frame {
-                    BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
-                    BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
+                    BoardPropertyAuditFrame::Array { values, .. } => semio_framework_graph_manifest::PropertyValue::Array(values),
+                    BoardPropertyAuditFrame::Object { values, .. } => semio_framework_graph_manifest::PropertyValue::Object(values),
                 });
                 return false;
             }
@@ -3162,12 +3162,12 @@ pub mod board_host {
                 BoardPropertyAuditFrame::Array { mut values, mut index, pending: _ } => {
                     if index == values.len() {
                         self.depth -= 1;
-                        self.completed = Some(graph::manifest::PropertyValue::Array(values));
+                        self.completed = Some(semio_framework_graph_manifest::PropertyValue::Array(values));
                     } else {
                         let child_index = index;
                         index += 1;
                         let pending = Some(child_index);
-                        self.current = Some(std::mem::replace(&mut values[child_index], graph::manifest::PropertyValue::Null));
+                        self.current = Some(std::mem::replace(&mut values[child_index], semio_framework_graph_manifest::PropertyValue::Null));
                         self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Array { values, index, pending });
                     }
                 }
@@ -3185,7 +3185,7 @@ pub mod board_host {
                             }
                             after = Some(key.clone());
                             pending = Some(key.clone());
-                            self.current = Some(std::mem::replace(values.get_mut(&key).expect("property audit key"), graph::manifest::PropertyValue::Null));
+                            self.current = Some(std::mem::replace(values.get_mut(&key).expect("property audit key"), semio_framework_graph_manifest::PropertyValue::Null));
                             self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Object { values, after, pending });
                         }
                         Some(Err(fault)) => {
@@ -3194,7 +3194,7 @@ pub mod board_host {
                         }
                         None => {
                             self.depth -= 1;
-                            self.completed = Some(graph::manifest::PropertyValue::Object(values));
+                            self.completed = Some(semio_framework_graph_manifest::PropertyValue::Object(values));
                         }
                     }
                 }
@@ -3202,11 +3202,11 @@ pub mod board_host {
             false
         }
 
-        fn take_result(&mut self) -> Option<(BoardDeleteKind, String, graph::PropertyBag, usize, usize, Option<BoardEventFault>)> {
+        fn take_result(&mut self) -> Option<(BoardDeleteKind, String, semio_framework_graph_manifest::PropertyBag, usize, usize, Option<BoardEventFault>)> {
             if self.depth != 0 || self.current.is_some() {
                 return None;
             }
-            let graph::manifest::PropertyValue::Object(properties) = self.completed.take()? else {
+            let semio_framework_graph_manifest::PropertyValue::Object(properties) = self.completed.take()? else {
                 self.fault = Some(BoardEventFault::Schema);
                 return None;
             };
@@ -3215,8 +3215,8 @@ pub mod board_host {
     }
 
     impl BoardPropertyRetirement {
-        fn new(properties: graph::PropertyBag) -> Self {
-            Self { current: Some(graph::manifest::PropertyValue::Object(properties)), stack: Box::new(std::array::from_fn(|_| None)), depth: 0, faulted: false }
+        fn new(properties: semio_framework_graph_manifest::PropertyBag) -> Self {
+            Self { current: Some(semio_framework_graph_manifest::PropertyValue::Object(properties)), stack: Box::new(std::array::from_fn(|_| None)), depth: 0, faulted: false }
         }
 
         fn push_container(&mut self, container: BoardPropertyContainer) -> Result<(), BoardPropertyContainer> {
@@ -3243,19 +3243,19 @@ pub mod board_host {
             }
             if self.current.is_none() {
                 self.current = self.pop_container().map(|container| match container {
-                    BoardPropertyContainer::Array(values) => graph::manifest::PropertyValue::Array(values),
-                    BoardPropertyContainer::Object(values) => graph::manifest::PropertyValue::Object(values),
+                    BoardPropertyContainer::Array(values) => semio_framework_graph_manifest::PropertyValue::Array(values),
+                    BoardPropertyContainer::Object(values) => semio_framework_graph_manifest::PropertyValue::Object(values),
                 });
                 return Ok(self.current.is_none());
             }
             let current = self.current.take().expect("property retirement current owner");
             match current {
-                graph::manifest::PropertyValue::Array(mut values) => {
+                semio_framework_graph_manifest::PropertyValue::Array(mut values) => {
                     let child = values.pop();
                     if !values.is_empty() {
                         if let Err(values) = self.push_container(BoardPropertyContainer::Array(values)) {
                             self.current = Some(match values {
-                                BoardPropertyContainer::Array(values) => graph::manifest::PropertyValue::Array(values),
+                                BoardPropertyContainer::Array(values) => semio_framework_graph_manifest::PropertyValue::Array(values),
                                 BoardPropertyContainer::Object(_) => unreachable!(),
                             });
                             self.faulted = true;
@@ -3264,7 +3264,7 @@ pub mod board_host {
                     }
                     self.current = child;
                 }
-                graph::manifest::PropertyValue::Object(mut values) => {
+                semio_framework_graph_manifest::PropertyValue::Object(mut values) => {
                     let child = values.pop_last().map(|(key, value)| {
                         drop(key);
                         value
@@ -3272,7 +3272,7 @@ pub mod board_host {
                     if !values.is_empty() {
                         if let Err(values) = self.push_container(BoardPropertyContainer::Object(values)) {
                             self.current = Some(match values {
-                                BoardPropertyContainer::Object(values) => graph::manifest::PropertyValue::Object(values),
+                                BoardPropertyContainer::Object(values) => semio_framework_graph_manifest::PropertyValue::Object(values),
                                 BoardPropertyContainer::Array(_) => unreachable!(),
                             });
                             self.faulted = true;
@@ -3281,8 +3281,8 @@ pub mod board_host {
                     }
                     self.current = child;
                 }
-                graph::manifest::PropertyValue::String(value) => drop(value),
-                graph::manifest::PropertyValue::Null | graph::manifest::PropertyValue::Bool(_) | graph::manifest::PropertyValue::Number(_) => {}
+                semio_framework_graph_manifest::PropertyValue::String(value) => drop(value),
+                semio_framework_graph_manifest::PropertyValue::Null | semio_framework_graph_manifest::PropertyValue::Bool(_) | semio_framework_graph_manifest::PropertyValue::Number(_) => {}
             }
             Ok(false)
         }
@@ -8515,7 +8515,7 @@ pub mod board_host {
                             let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
                             self.edges.insert(
                                 edge_id.clone(),
-                                EdgeData { id: edge_id, source: source_id, target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: graph::PropertyBag::new() },
+                                EdgeData { id: edge_id, source: source_id, target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: semio_framework_graph_manifest::PropertyBag::new() },
                             );
                         }
                         operation.phase = 2;
@@ -11247,7 +11247,7 @@ pub mod board_host {
             planning.property_audit = Some(BoardPropertyAudit::new(kind, id.to_owned(), properties));
         }
 
-        fn restore_delete_properties(&mut self, kind: BoardDeleteKind, id: &str, properties: graph::PropertyBag) -> bool {
+        fn restore_delete_properties(&mut self, kind: BoardDeleteKind, id: &str, properties: semio_framework_graph_manifest::PropertyBag) -> bool {
             match kind {
                 BoardDeleteKind::Edge => self.edges.get_mut(id).map(|entity| entity.properties = properties),
                 BoardDeleteKind::Node => self.nodes.get_mut(id).map(|entity| entity.properties = properties),
@@ -11892,7 +11892,7 @@ pub mod board_host {
                     edge_kind,
                     source_tip: None,
                     target_tip: None,
-                    properties: graph::PropertyBag::new(),
+                    properties: semio_framework_graph_manifest::PropertyBag::new(),
                 },
             );
             self.publish_event_batch(reservation);
@@ -12506,7 +12506,7 @@ pub mod board_host {
                         let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
                         self.edges.insert(
                             edge_id.clone(),
-                            EdgeData { id: edge_id, source: source_id.clone(), target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: graph::PropertyBag::new() },
+                            EdgeData { id: edge_id, source: source_id.clone(), target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: semio_framework_graph_manifest::PropertyBag::new() },
                         );
                     }
                     if let Some(target_node_id) = target_node_id {

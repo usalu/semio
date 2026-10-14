@@ -25,7 +25,9 @@ use super::*;
 use crate::schema::mutations::*;
 use crate::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
 use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use protocol::Mutation;
 /// 🔧️ `MutationDiff` in scope for the `#[cfg(test)] mod tests` block below.
 #[cfg(test)]
@@ -84,7 +86,8 @@ impl OpText for SemioAnimationMutation {
         use crate::io::text::snapshot::dec_target;
         use crate::io::text::snapshot::dec_channel;
         use crate::io::text::snapshot::dec_str;
-        use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+        use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+        use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
         use SemioAnimationMutation::*;
         let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());

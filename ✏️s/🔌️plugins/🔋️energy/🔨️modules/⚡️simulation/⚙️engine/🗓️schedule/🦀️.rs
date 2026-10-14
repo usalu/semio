@@ -1,8 +1,55 @@
 //! 📅️ Schedule definitions and runtime lookup.
 
-use crate::model::ScheduleId;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+
+use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
+
+// #region 🔖️ScheduleId
+/// 📅️ Schedule reference by id.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub struct ScheduleId(pub u32);
+
+// 🌱️ Hand-written, not derived — same tuple-struct reason as `crate::model::EntityId`.
+impl ToValue for ScheduleId {
+    fn to_value_controlled(&self,c:&mut semio_framework_value::native_encoding::NativeEncodeControl<'_>)->Result<DslValue,ValueError>{self.0.to_value_controlled(c)}
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for ScheduleId {
+    fn from_value_controlled(v:&DslValue,c:&mut semio_framework_value::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{u32::from_value_controlled(v,c).map(Self)}
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u32::from_value(value).map(ScheduleId)
+    }
+}
+
+/// 🔗️ `ScheduleId` as a mutation-payload field — the schedule-reference slots every thermostat,
+/// humidistat, gain and setpoint-manager mutation addresses. Hand-written, same reason as the `ToValue` pair above.
+impl semio_framework_dsl_record::DslField for ScheduleId {
+    fn shape() -> semio_framework_dsl_record::Shape {
+        semio_framework_dsl_record::Shape::UInt
+    }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
+        semio_framework_dsl_record::FieldValue::UInt(u64::from(self.0))
+    }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        <u32 as semio_framework_dsl_record::DslField>::from_value(value).map(ScheduleId)
+    }
+}
+
+semio_framework_value::artifact_retire_leaf!(ScheduleId);
+
+impl semio_framework_dsl_record::BorrowedDslField for ScheduleId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for ScheduleId {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::U64(u64::from(self.0)))
+    }
+}
+// #endregion 🔖️ScheduleId
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.

@@ -15,18 +15,7 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[bin]]
-name = "semio-wfc-bitmap-mutation-bridge"
-path = "../../🏭️bridge/🦀️.rs"
-required-features = ["mutation-inventory"]
-
-[features]
-default = []
-mutation-inventory = ["dep:semio-framework-test-mutation-inventory", "component-app-assembly"]
-component-app-assembly = ["dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
-
 [dependencies]
-semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -49,11 +38,11 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-wfc-engine = { workspace = true }
 pack = { workspace = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-ui-contract = { workspace = true }
 # 🖌️ The input window's brush is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework-tool-machine = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

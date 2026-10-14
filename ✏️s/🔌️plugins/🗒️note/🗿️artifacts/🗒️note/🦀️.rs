@@ -8,7 +8,11 @@ extern crate semio_framework_schema as framework_schema;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::collections::BTreeMap;

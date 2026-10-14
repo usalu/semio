@@ -29,7 +29,7 @@ export function tectonicBinaryPath(workspace = getWorkspaceRoot()): string {
 /** 🔐️ Checks the installed tool against its verified publication receipt. */
 export function preparedTectonic(workspace = getWorkspaceRoot()): string {
   const binary = tectonicBinaryPath(workspace), directory = dirname(binary), distribution = tectonicDistribution();
-  const marker = JSON.parse(readFileSync(join(directory, ".nx-artifact.json"), "utf8"));
+  const marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
   const receipt = JSON.parse(readFileSync(join(directory, ".toolchain.json"), "utf8"));
   if (marker.owner !== owner || receipt.version !== manifest.version || receipt.target !== distribution.target || receipt.archiveSha256 !== distribution.sha256 || !Object.hasOwn(receipt.files, relative(directory, binary))) throw new Error("Tectonic installation identity is invalid");
   for (const [name, sha256] of Object.entries(receipt.files)) {

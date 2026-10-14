@@ -2,7 +2,7 @@
 //! must exist and every provided value must keep the profile a valid cross-section; providing nothing new is a no-op.
 
 use super::SetColumnType;
-use crate::{profile_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{profile_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetColumnType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

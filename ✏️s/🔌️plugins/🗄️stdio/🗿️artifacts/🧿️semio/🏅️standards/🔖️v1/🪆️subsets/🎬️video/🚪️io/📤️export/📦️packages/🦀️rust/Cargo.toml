@@ -21,7 +21,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-video = { workspace = true }
+semio-s-artifact-stdio-semio-video-model = { workspace = true }
 # 🧩️ Capability Dependencies
 semio-s-artifact-stdio-avi = { workspace = true }
 semio-s-artifact-stdio-mp4 = { workspace = true }

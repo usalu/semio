@@ -1,5 +1,7 @@
 //! 🔺️ Sparse isolation change with group-only target validation.
-use crate::{DrawingSnapshot,DrawingLayerNode,diff::{DrawingDiff,diff_set_group_isolation},schema::find_drawing_layer};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, find_drawing_layer};
+use semio_s_artifact_draw_drawing_diff::{DrawingDiff, diff_set_group_isolation};
 pub fn diff(payload:&super::mutation::SetGroupIsolation,base:&DrawingSnapshot)->protocol::MutationOutcome<DrawingDiff> {
     let group=match find_drawing_layer(base,&payload.layer_id) {
         Some(DrawingLayerNode::Group(group))=>group,

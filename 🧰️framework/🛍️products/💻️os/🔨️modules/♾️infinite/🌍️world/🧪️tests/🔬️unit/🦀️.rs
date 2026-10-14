@@ -5908,13 +5908,13 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
         mesh.edge_ids=row["edgeIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u32).collect();
         let mut cursor=WorldPlaceholderMeshCursor::inline(row["id"].as_str().unwrap(),mesh,819,1).unwrap();
         let pointers=|mesh:&Box<WorldMeshBuffers>|(mesh.as_ref() as *const WorldMeshBuffers,mesh.positions.as_ptr(),mesh.edge_positions.as_ptr(),mesh.indices.as_ptr());
-        let original=match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("inline source disappeared")};
+        let original=match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("inline source disappeared")};
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
         assert!(matches!(cursor.retire_source_step(zero).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
-        assert_eq!(match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("denied source moved")},original);
+        assert_eq!(match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("denied source moved")},original);
         let shallow=RetainedCloneGrant{maximum_items:1,maximum_depth:0,..zero};
         assert!(matches!(cursor.retire_source_step(shallow).unwrap(),RetainedCloneStep::Progress(progress) if progress==RetainedCloneProgress::default()));
-        assert_eq!(match &cursor.source{WorldMeshSource::Inline(mesh)=>pointers(mesh),_=>panic!("depth-denied source moved")},original);
+        assert_eq!(match &cursor.source{WorldMeshInput::Inline(mesh)=>pointers(mesh),_=>panic!("depth-denied source moved")},original);
         let grant=cursor.source_retirement_grant(4096).unwrap();
         assert_eq!(grant.maximum_capacity_bytes,law["ownership"]["inlineMoveCapacityBytes"].as_u64().unwrap() as usize);
         let step=cursor.retire_source_step(grant).unwrap();
@@ -5939,7 +5939,7 @@ fn world_inline_source_retirement_preserves_original_owner_and_full_receipts() {
             match cursor.retire_source_step(grant).unwrap(){RetainedCloneStep::Progress(progress)=>assert!(progress.fits(grant)),RetainedCloneStep::Complete(progress)=>{assert!(progress.fits(grant));break}}
         }
         assert!(cursor.source_retirement.is_none());
-        assert!(!matches!(cursor.source,WorldMeshSource::Inline(_)));
+        assert!(!matches!(cursor.source,WorldMeshInput::Inline(_)));
         assert!(release_refusals>0);
         let mut close_turns=0;while !cursor.close_step(){close_turns+=1;assert!(close_turns<32768)}
         assert!(cursor.terminal_is_empty());

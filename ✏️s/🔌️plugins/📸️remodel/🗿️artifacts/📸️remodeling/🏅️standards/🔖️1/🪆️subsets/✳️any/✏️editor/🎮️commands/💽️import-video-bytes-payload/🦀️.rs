@@ -2,14 +2,24 @@
 //! single picked video), sampled and blur-gated by the import's one gate, committed as ONE import transaction.
 
 use crate::editor::remodeling::commands::import_video_frame_payload::import_transaction;
-use crate::editor::remodeling::engine::reconstruction::{blur_gate_admits, sharpness_score, BLUR_GATE_ROLLING_WINDOW};
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::blur_gate_admits;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::sharpness_score;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::BLUR_GATE_ROLLING_WINDOW;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::remodeling::engine::{describe_video_probe, images as remodeling_image, video as remodeling_video, video_codec_to_artifact};
-use crate::editor::remodeling::payload_from_data_url;
-use crate::mutations::{create_asset, create_stream};
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::schema::mint_remodeling_id;
-use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, VideoSource};
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::describe_video_probe;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::video_codec_to_artifact;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::payload_from_data_url;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::mint_remodeling_id;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -23,11 +33,11 @@ pub struct SampledFrame {
 /// 🎞️ Probes, demuxes, decodes and blur-gates a video container fully in-process under the scene's ingest parameters:
 /// the sampled frames and the probed provenance, or the notice naming why the container could not be read.
 pub fn sample_video(bytes: &[u8], scene: &RemodelingSnapshot) -> Result<(Vec<SampledFrame>, VideoSource), String> {
-    let probe = remodeling_video::probe(bytes).map_err(|error| format!("Could not probe video: {error}"))?;
+    let probe = semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::probe(bytes).map_err(|error| format!("Could not probe video: {error}"))?;
     let (codec, width, height, duration_ms, container) = describe_video_probe(&probe);
     let ingest = &scene.params.ingest;
-    let opts = remodeling_video::VideoIngestOptions { stride: ingest.frame_sample_stride.max(1), max_frames: ingest.max_frames, max_long_edge_px: ingest.downscale_long_edge_px };
-    let iter = remodeling_video::extract_frames(bytes, &opts).map_err(|error| format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}"))?;
+    let opts = semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoIngestOptions { stride: ingest.frame_sample_stride.max(1), max_frames: ingest.max_frames, max_long_edge_px: ingest.downscale_long_edge_px };
+    let iter = semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::extract_frames(bytes, &opts).map_err(|error| format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}"))?;
     let mut rolling = Vec::with_capacity(BLUR_GATE_ROLLING_WINDOW);
     let mut frames = Vec::new();
     for extracted in iter {

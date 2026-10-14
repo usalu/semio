@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Open
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{BLONDEL_MAX, BLONDEL_MIN};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
-use crate::{Axis, CurtainGrid, CurtainPanel, ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, CurtainGrid, CurtainPanel, ModelSnapshot, Point2, SpaceBoundary, Vertex};
 use semio_framework_geometry::loops;
 
 /// 📏️ Lengths below this (metres) are no length.

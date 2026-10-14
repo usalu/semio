@@ -7,7 +7,7 @@ use super::*;
 //#region 🔖️Assets
 #[test]
 fn every_model_definition_asset_parses() {
-    assert_eq!(list_model_definition_manifests().len(), RAW_MODEL_DEFINITION_ASSETS.len());
+    assert_eq!(list_model_definition_manifests().len(), RAW_MODEL_DEFINITION_ASSETS.iter().map(|assets| assets.len()).sum::<usize>());
     let ids: Vec<&str> = list_model_definition_manifests().iter().map(|row| row.id.as_str()).collect();
     for expected in ["spatial.shape", "aec.building", "aec.building.energy", "aec.building.structure", "aec.building.structure.classic", "aec.building.concrete", "aec.building.structure.fem.line", "aec.building.structure.fem.surface", "aec.building.structure.fem.solid"] {
         assert!(ids.contains(&expected), "missing model definition {expected} in {ids:?}");
@@ -16,7 +16,7 @@ fn every_model_definition_asset_parses() {
 
 #[test]
 fn every_typology_asset_parses_and_keeps_its_owner() {
-    assert_eq!(list_model_definition_typologies().count(), RAW_TYPOLOGY_ASSETS.len());
+    assert_eq!(list_model_definition_typologies().count(), RAW_TYPOLOGY_ASSETS.iter().map(|assets| assets.len()).sum::<usize>());
     assert_eq!(model_definition_id_for_typology("building.building.wall"), Some("aec.building"));
     assert_eq!(model_definition_id_for_typology("energy.energy.baseplate"), Some("aec.building.energy"));
     assert_eq!(model_definition_id_for_typology("nope"), None);
@@ -49,9 +49,9 @@ fn every_typology_folder_holds_the_fixed_filename_and_is_embedded() {
             on_disk.push(std::fs::read_to_string(folder.join("🔣️typology.json")).expect("typology asset"));
         }
     }
-    assert_eq!(on_disk.len(), RAW_TYPOLOGY_ASSETS.len(), "typology folders on disk vs embedded typology assets");
+    assert_eq!(on_disk.len(), RAW_TYPOLOGY_ASSETS.iter().map(|assets| assets.len()).sum::<usize>(), "typology folders on disk vs embedded typology assets");
     for raw in &on_disk {
-        assert!(RAW_TYPOLOGY_ASSETS.iter().any(|(_, embedded)| embedded == raw), "a typology on disk is not embedded: {}", &raw[..raw.len().min(160)]);
+        assert!(RAW_TYPOLOGY_ASSETS.iter().flat_map(|assets| assets.iter()).any(|(_, embedded)| embedded == raw), "a typology on disk is not embedded: {}", &raw[..raw.len().min(160)]);
     }
 }
 

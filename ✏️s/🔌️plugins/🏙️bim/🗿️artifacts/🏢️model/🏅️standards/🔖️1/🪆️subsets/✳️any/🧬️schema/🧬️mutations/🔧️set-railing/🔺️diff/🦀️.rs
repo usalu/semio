@@ -5,7 +5,7 @@
 
 use super::super::placement::{host_issue, refuse_stair};
 use super::SetRailing;
-use crate::{railing_construction_problem, Entry, ModelDiff, ModelSnapshot, Patch, Point2, RailingPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff, Patch, patches::RailingPatch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn traceable(path: &[Point2]) -> bool {
@@ -16,7 +16,7 @@ fn positive(value: f64) -> bool {
     value.is_finite() && value > 0.0
 }
 
-fn construction_issue(patch: &RailingPatch, railing: &crate::Railing) -> Option<(&'static str, &'static str)> {
+fn construction_issue(patch: &RailingPatch, railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Option<(&'static str, &'static str)> {
     railing_construction_problem(&patch.write(railing))
 }
 

@@ -149,13 +149,13 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::AddBeam(add_beam::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }),
         Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }),
         Fem2dCommand::AddSection(add_section::AddSection { name: "HEA200".into(), area: 0.00538, iy: 0.0000369 }),
-        Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![crate::FemDof::Tx, crate::FemDof::Ty] }),
-        Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) }),
+        Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty] }),
+        Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) }),
         Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None }),
         Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("dead".into()) }),
         Fem2dCommand::AddRegion(add_region::AddRegion { x: 0.0, y: 0.0, width: 4.0, height: 2.0, material_id: "steel".into(), thickness: Some(0.02), mesh_size: None }),
         Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }),
-        Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
+        Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true }),
         Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None }),
         Fem2dCommand::RemoveSelection(remove_selection::RemoveSelection { ids: vec!["n1".into(), "e1".into()] }),
@@ -226,9 +226,9 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         ("010204026d31026e31026e3202733104000601010602020600030603", Fem2dCommand::AddBeam(add_beam::AddBeam { start: "n1".into(), end: "n2".into(), material_id: "m1".into(), section_id: "s1".into() })),
         ("01030105737465656c020006000105000000da7c724842", Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "steel".into(), e: 210e9 })),
         ("01040106697065333030030006000105a4005130630a763f020509c577de9de7153f", Fem2dCommand::AddSection(add_section::AddSection { name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 })),
-        ("010501026e31020006000116020002", Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![crate::FemDof::Tx, crate::FemDof::Ty] })),
-        ("010602046c697665026e3104000601010a010205000000000088b3c0030600", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) })),
-        ("010601026e3103000600010a010205000000000088b3c0", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: crate::FemDof::Ty, value: -5000.0, case_id: None })),
+        ("010501026e31020006000116020002", Fem2dCommand::AddSupport(add_support::AddSupport { node_id: "n1".into(), fixed: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty] })),
+        ("010602046c697665026e3104000601010a010205000000000088b3c0030600", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty, value: -5000.0, case_id: Some("live".into()) })),
+        ("010601026e3103000600010a010205000000000088b3c0", Fem2dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty, value: -5000.0, case_id: None })),
         ("010701026531030006000105000000000000000002050000000000407fc0", Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None })),
         ("0108020464656164027231030006010105000000000088b340020600", Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some("dead".into()) })),
         (
@@ -238,7 +238,7 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         ("010a01044c697665020006000101", Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })),
         (
             "010b0303554c530464656164046c69766502000600010c020d0200060101059a9999999999f53f0d020006020105000000000000f83f",
-            Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, crate::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
+            Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] }),
         ),
         ("010c010464656164020006000102", Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "dead".into(), enabled: true })),
         ("010d000200040502050000000000003e40", Fem2dCommand::SetAnalysisSettings(set_analysis_settings::SetAnalysisSettings { modal_count: Some(5), buckling_count: None, deformation_scale: Some(30.0), field: None, value: None, window_id: None })),
@@ -282,7 +282,7 @@ async fn retained_routes_cover_every_command_exactly_once() {
 /// refuses a completion whose emitted lane is absent from the contract.
 #[semio_framework_async_macros::async_test]
 async fn every_route_declares_the_lane_its_handler_emits() {
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let config = NoConfig::default();
@@ -324,7 +324,7 @@ async fn every_route_declares_the_lane_its_handler_emits() {
 /// path from a rendered button to `dispatch`.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_resolves_every_declared_action() {
-    let args = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("exampleId".into(), semio_framework_value::DslValue::String(crate::examples::demo::ID.into()))]);
+    let args = semio_framework_value::DslValue::Object(vec![("x".into(), semio_framework_value::DslValue::float(1.0)), ("y".into(), semio_framework_value::DslValue::float(2.0)), ("exampleId".into(), semio_framework_value::DslValue::String(semio_s_artifact_fem_2d_io::examples::demo::ID.into()))]);
     for tool_id in FEM2D_RETAINED_TOOL_IDS {
         let command = <Fem2dPlayApp as ArtifactEditor>::command_from_action(*tool_id, Some((args).clone()), None).unwrap_or_else(|error| panic!("action {tool_id} must resolve: {error:?}"));
         assert_eq!(command.command_id(), *tool_id);
@@ -384,7 +384,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[test]
 fn window_measures_include_transform_utility_options() {
     use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, WindowMeasure};
-    let doc = crate::Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo");
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo");
     let history = HistoryView::empty();
     let view = ArtifactView::new(&doc, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default(), window: None };
@@ -407,7 +407,7 @@ async fn config_spec_declares_no_fields() {
 async fn manifest_declares_config_io_and_computation_artifact_kind() {
     let definition = create_fem2d_app();
     assert!(definition.config.fields.is_empty());
-    assert_eq!(definition.io.artifact_schema, crate::FEM_2D_SCHEMA);
+    assert_eq!(definition.io.artifact_schema, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA);
     let computation_kind = definition.artifact_kinds.iter().find(|kind| kind.id == "computation.fem2d").expect("computation.fem2d artifact kind declared");
     assert_eq!(computation_kind.media_type.class, MediaClass::Computation);
     assert_eq!(computation_kind.media_type.form, MediaForm::Value);
@@ -426,7 +426,7 @@ async fn app_io_forwards_the_engine_declared_ports() {
 #[semio_framework_async_macros::async_test]
 async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
     let io = fem2d_io();
-    assert_eq!(io.artifact_schema, crate::FEM_2D_SCHEMA);
+    assert_eq!(io.artifact_schema, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA);
     assert_eq!(io.artifact_media_type.class, MediaClass::TwoD);
     assert_eq!(io.artifact_media_type.form, MediaForm::Vector);
     assert_eq!(io.artifact.id, "2d.fem");
@@ -457,7 +457,7 @@ async fn the_editor_boots_on_the_bundled_example_document() {
     let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
     assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
-    assert_ne!(boot, crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    assert_ne!(boot, semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     assert_eq!(boot, Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).expect("the bundled example parses"));
     let app = fem2d_app();
     assert!(!app.snapshot().expect("snapshot").nodes.is_empty(), "a booted app renders a non-empty document");
@@ -513,7 +513,7 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let media = Fem2dPlayApp::export_media("artifact:out", &doc).expect("document:out exports");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Vector);
-    let empty_projection = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let empty_projection = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let empty_history = semio_framework_plugin::HistoryView::empty();
     let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
     let emit = Fem2dPlayApp::import_media("artifact:in", &media, &empty_doc).expect("document:in imports");
@@ -552,7 +552,7 @@ async fn export_media_results_out_returns_json_with_every_case_and_combination()
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let error = Fem2dPlayApp::export_media("results:out", &doc).expect_err("no load cases means no results to export");
@@ -565,7 +565,7 @@ async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
 #[semio_framework_async_macros::async_test]
 async fn export_media_unknown_port_is_not_implemented() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     assert!(matches!(Fem2dPlayApp::export_media("bogus:out", &doc), Err(MediaError::NotImplemented)));
@@ -574,8 +574,8 @@ async fn export_media_unknown_port_is_not_implemented() {
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() {
     let _app = Fem2dPlayApp;
-    let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    snapshot.materials.push(crate::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
+    let mut snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    snapshot.materials.push(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }));
@@ -583,7 +583,7 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     assert_eq!(emit.artifact_mutations.len(), 1);
     match &emit.artifact_mutations[0] {
-        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => {
+        Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => {
             assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
             assert!(region.holes.is_empty());
             assert_eq!(region.material_id, "steel");
@@ -595,14 +595,14 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
     let _app = Fem2dPlayApp;
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
     let payload = semio_framework_pack_json::to_string(&semio_framework_pack_json::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     match &emit.artifact_mutations[0] {
-        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => assert_eq!(region.material_id, "unassigned"),
+        Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => assert_eq!(region.material_id, "unassigned"),
         _ => panic!("expected CreateRegion"),
     }
 }

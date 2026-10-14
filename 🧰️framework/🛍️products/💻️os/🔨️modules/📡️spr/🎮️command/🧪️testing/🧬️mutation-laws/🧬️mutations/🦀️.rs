@@ -1,5 +1,5 @@
 use super::{Counter, CounterDiff};
-use crate::os_spr::{OpBinary, OpText, ProtocolError};
+use protocol::{OpBinary, OpText, ProtocolError};
 use serde::{Deserialize, Serialize};
 
 #[path = "➕️add-counter/🦀️.rs"]
@@ -55,21 +55,21 @@ impl OpBinary for CounterMutation {
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let ordinal = variants.iter().position(|(name, _)| name == &keyword).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 0, detail: "unknown owned variant".into() })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &crate::os_pack::EncodeOptions::default()).map_err(ProtocolError::from)?;
+        let body = semio_framework_os_pack::encode_record_body(&spec, &record, &semio_framework_os_pack::EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut bytes = vec![1];
-        crate::os_pack::write_varint_u64(&mut bytes, u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds u64".into() })?);
+        semio_framework_os_pack::write_varint_u64(&mut bytes, u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds u64".into() })?);
         bytes.extend(body);
         Ok(bytes)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
         if reader.read_u8()? != 1 {
             return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: "unsupported counter op format".into() });
         }
         let ordinal = usize::try_from(reader.read_varint_u64()?).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index exceeds platform width".into() })?;
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
         let (keyword, spec_fn) = variants.get(ordinal).ok_or_else(|| ProtocolError::Malformed { what: "op variant", offset: 1, detail: "variant index out of range".into() })?;
-        let (record, _) = crate::os_pack::decode_record_body(&bytes[reader.position()..], &(spec_fn.ordinary)(), &crate::os_pack::DecodeOptions::default()).map_err(ProtocolError::from)?;
+        let (record, _) = semio_framework_os_pack::decode_record_body(&bytes[reader.position()..], &(spec_fn.ordinary)(), &semio_framework_os_pack::DecodeOptions::default()).map_err(ProtocolError::from)?;
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| ProtocolError::Malformed { what: "op record", offset: 2, detail: error.to_string() })
     }
 }

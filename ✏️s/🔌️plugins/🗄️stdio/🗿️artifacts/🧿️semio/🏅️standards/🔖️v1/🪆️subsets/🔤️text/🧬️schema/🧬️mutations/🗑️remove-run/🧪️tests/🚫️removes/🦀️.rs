@@ -5,9 +5,9 @@
 //! the BASE index, and wraps the whole shortened sequence in `SemioTextRunList`. The German run at
 //! #1 is the one taken out here; the two English runs close up around it.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️remove-run/🚫️removes/📸️snapshot/⬅️before/🔣️.json");

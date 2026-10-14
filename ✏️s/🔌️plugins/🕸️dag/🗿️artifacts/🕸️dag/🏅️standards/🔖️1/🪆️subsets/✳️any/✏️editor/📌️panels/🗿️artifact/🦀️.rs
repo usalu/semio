@@ -3,7 +3,7 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{pick_item, DAG_PLAY_APP_ID, DAG_PLAY_INTERACTION_DOMAIN};
 use crate::DagScene;
-use semio_framework_artifact_infinite_dag::dag_node_kind_tag;
+use semio_framework_os_infinite_directed_presentation::dag_node_kind_tag;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;

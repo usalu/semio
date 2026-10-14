@@ -135,4 +135,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SlideLayout { i
 semio_framework_value::artifact_retire_struct!(schema::snapshot::Slide { id, layout_id, shapes, notes });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioPresentationSnapshot { schema, masters, layouts, slides });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioPresentationSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioPresentationSnapshot, schema::mutations::SemioPresentationMutation);

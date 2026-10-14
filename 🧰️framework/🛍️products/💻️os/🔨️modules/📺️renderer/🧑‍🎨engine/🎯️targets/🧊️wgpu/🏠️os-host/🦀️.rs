@@ -665,7 +665,7 @@ impl OsHost {
     pub(crate) fn try_into_retirement(owner:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<OsHostRetirement>,semio_framework_job::OriginalTurnFailure> {
         let Some(host)=owner.as_ref()else{return Ok(None)};
         let grant=cx.retained_grant();let capacity=std::mem::size_of::<OsHostRetirementState>();
-        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||host.component_surface_close.is_some()||component_surface_close_occupied(){
+        if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity||host.component_surface_close.is_some()||component_surface_close_occupied(){
             return Ok(None);
         }
         let Some(abandonment) = reserve_os_host_retirement_abandonment() else {
@@ -760,8 +760,8 @@ impl OsHost {
 
 impl OsHostRetirementState {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
-        if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-        if self.original_snapshot.is_some(){let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let source=self.original_snapshot.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>self.original_snapshot_close=Some(owner),Err((original,source))=>{self.original_snapshot=Some(source);return Err(original.into())}}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if let Some(owner)=self.original_snapshot_close.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}self.original_snapshot_close=None;cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if self.original_snapshot.is_some(){let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let source=self.original_snapshot.take().unwrap();match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>self.original_snapshot_close=Some(owner),Err((original,source))=>{self.original_snapshot=Some(source);return Err(original.into())}}cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
         if let Some(presenter)=self.presenter.as_mut(){if !presenter.close_original_media_step(cx)?{return Ok(false)}}
         if !crate::surface_lane::MountedSurfaceResizeLane::close_abandoned_step() {
             return Ok(false);
@@ -790,7 +790,7 @@ impl OsHostRetirementState {
             return Ok(false);
         }
         if !crate::scenes::scene_camera_storage_is_empty() {
-            let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+            let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
             let step = crate::scenes::close_scene_camera_storage(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
             let receipt = step.progress();
             assert!(receipt.fits(grant));cx.consume_fuel(receipt.copied_items as u64);cx.consume_retained(receipt)?;
@@ -853,7 +853,8 @@ impl OsHostRetirementState {
             }
         }
         if let Some(runtime) = self.runtime.as_ref() {
-            if !runtime.close_world3d_dynamic_step(cx)? {
+            let Some(presenter)=self.presenter.as_mut()else{return Ok(false)};
+            if !runtime.close_world3d_dynamic_step(presenter,cx)? {
                 return Ok(false);
             }
         }
@@ -919,7 +920,7 @@ impl OsHostRetirement {
     }
 
     pub(crate) fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         if let Some(state)=self.state.as_mut(){
             if !state.close_step(cx)?||!state.terminal_is_empty(){return Ok(false)}
             let grant=cx.retained_grant();let release=std::mem::size_of::<OsHostRetirementState>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<release{return Ok(false)}

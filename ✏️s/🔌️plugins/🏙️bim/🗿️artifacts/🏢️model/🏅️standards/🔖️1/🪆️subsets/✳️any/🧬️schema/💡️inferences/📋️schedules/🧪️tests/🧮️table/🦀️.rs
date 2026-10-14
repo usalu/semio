@@ -2,8 +2,8 @@ use super::kit::{house, items, plain, scheduled, table_of, texts};
 use super::table::{natural, passes};
 use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
-use crate::schedule_kit::preset;
-use crate::{ModelInference, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleOp, ScheduleSort};
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleOp, ScheduleSort}};
 use protocol::Inference;
 
 fn number(cell: &ScheduleCell) -> f64 {
@@ -131,7 +131,7 @@ async fn a_property_filter_and_a_property_sort_read_the_authored_property_set() 
     let table = table_of(&snapshot, schedule.clone());
     assert_eq!((texts(&table, 0), texts(&table, 1)), (vec!["w-south".to_string()], vec!["EI60".to_string()]));
     schedule.filter.clear();
-    schedule.sort = vec![crate::ScheduleSort { key: rating, descending: true }];
+    schedule.sort = vec![crate::standards::v1::subsets::any::schema::snapshot::ScheduleSort { key: rating, descending: true }];
     assert_eq!(texts(&table_of(&snapshot, schedule), 0)[0], "w-south", "a text sorts after the empty cells of the other walls when descending");
 }
 
@@ -225,7 +225,7 @@ async fn nothing_to_list_gives_no_rows_and_no_total_row_even_with_summed_columns
     schedule.storeys = vec!["st-roof".into()];
     assert!(table_of(&snapshot, schedule).rows.is_empty());
     let railings = plain(ScheduleCategory::Void, &[(ScheduleField::Name, false)]);
-    let empty = table_of(&crate::ModelSnapshot::default(), railings);
+    let empty = table_of(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), railings);
     assert!(empty.rows.is_empty() && empty.items == 0);
 }
 

@@ -1,7 +1,10 @@
-use super::*;
-use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, place_gcp_observation, remove_gcp};
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::edit_calibration::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::add_gcp;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::calibrate_cameras;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::place_gcp_observation;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::remove_gcp;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn edit_calibration_inserts_then_updates_the_same_camera_entry() {
@@ -21,7 +24,7 @@ async fn gcps_are_added_observed_and_removed() {
     let mut app = app().await;
     // 🎯️ An observation names a stream of the document (`add-gcp-observation` refuses an unknown one as
     // `mutation.target-missing`), so the observed stream exists first — uncalibrated, the boot document carries no camera.
-    dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
+    dispatch(&mut app, RemodelingCommand::AddStream(semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     let stream_id = app.snapshot().expect("projection").streams[0].id.clone();
     dispatch(&mut app, RemodelingCommand::AddGcp(add_gcp::AddGcp { name: "Corner".into(), world_x: 1.0, world_y: 2.0, world_z: 3.0 })).await;
     let gcp_id = app.snapshot().expect("projection").gcps[0].id.clone();
@@ -36,7 +39,7 @@ async fn gcps_are_added_observed_and_removed() {
 #[semio_framework_async_macros::async_test]
 async fn calibrate_cameras_skips_streams_without_frames() {
     let mut app = app().await;
-    dispatch(&mut app, RemodelingCommand::AddStream(crate::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
+    dispatch(&mut app, RemodelingCommand::AddStream(semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     dispatch(&mut app, RemodelingCommand::CalibrateCameras(calibrate_cameras::CalibrateCameras {})).await;
     assert!(app.snapshot().expect("projection").calibration.cameras.is_empty());
 }

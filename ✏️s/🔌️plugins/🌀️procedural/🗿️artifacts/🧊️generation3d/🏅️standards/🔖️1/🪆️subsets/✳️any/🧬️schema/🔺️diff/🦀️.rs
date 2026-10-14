@@ -111,11 +111,11 @@ pub struct Generation3dStringList {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::standards::v1::subsets::any::schema::Generation3dArtifact;
+pub use crate::Generation3dArtifact;
 //#endregion 🔁️Re-exports
 
 use crate::widget_id;
-use crate::Generation3dSnapshot;
+use crate::snapshot::Generation3dSnapshot;
 use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 

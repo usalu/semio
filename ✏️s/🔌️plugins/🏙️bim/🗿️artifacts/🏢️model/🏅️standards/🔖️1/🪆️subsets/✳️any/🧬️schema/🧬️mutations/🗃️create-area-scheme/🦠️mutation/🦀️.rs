@@ -1,6 +1,6 @@
 //! 🗃️ `create-area-scheme` payload. Brings a new area scheme into the model: the authored rule that decides which spaces a gross, net or rentable area adds up, by usage and by zone.
 
-use crate::{AreaScheme, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AreaScheme, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,15 +1,16 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
 
 #[path = "🧭️transforms/🦀️.rs"]
 pub mod transforms;
 
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
-use crate::widget_id;
+use crate::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
 use ::semio_framework_schema::ArtifactSchema;
-#[cfg(feature = "component-app-assembly")]
+use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost};
 
 //#region 🔖️Generation3dArtifact
@@ -229,7 +230,6 @@ pub fn generation_host_snapshot_for(host_snapshot: &FlowHostSnapshot, generation
 /// `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`), so a host is CLOSED through
 /// [`FlowHost::retire_cold`], never dropped. This scope is the ONLY way generation3d builds one —
 /// there is no `host_from_host_snapshot(…) -> FlowHost` to leak.
-#[cfg(feature = "component-app-assembly")]
 pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> R {
     FlowHost::with_host_snapshot(host_snapshot, |host| {
         host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
@@ -238,7 +238,6 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
 }
 
 /// 🏠️ A host that shares `session`'s neural cache and converged evaluation baseline, installed under `grant`.
-#[cfg(feature = "component-app-assembly")]
 pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
     match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()), session, grant) {
         Ok((host, _)) => Ok(host),
@@ -253,7 +252,6 @@ pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSes
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
 /// not provide while the scope itself holds the session borrow.
-#[cfg(feature = "component-app-assembly")]
 pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, body: impl FnOnce(&mut FlowHost, &mut FlowEvalSession) -> R) -> Result<R, semio_framework_value::ValueError> {
     let mut host = host_with_session(host_snapshot, session, grant)?;
     let result = body(&mut host, session);
@@ -261,339 +259,102 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
     Ok(result)
 }
 
-//#region 🧭️GraphEditor
-/// 🧭️ The explicit-intent recorder of every graph edit a command authors: each verb applies one `FlowHost` authoring
-/// operation — which validates it, mints its ids and measures its nodes — and records the declared mutation leaves
-/// that operation IS, cascades included, in the order they replay. No whole-snapshot diff stands between the host and
-/// the leaves: `remove_widget` records the `disconnect-synapse` and `delete-widget-position` leaves of the wires and
-/// the layout entry it takes with it, `connect_ports` records the `disconnect-synapse` of the wire it displaces, and a
-/// port insertion records the `update-widget` and the `update-synapse` leaves of the wires it renumbers.
-///
-/// 🧩️ The host is the validator and the measurer (its port, type and cycle rules, its widget factory, its layout
-/// algorithm); the leaves are the document edit. Replaying [`GraphEditor::finish`]'s leaves on the snapshot the host was
-/// opened on reaches the host's own snapshot (`graph_editor_replay_reaches_the_host_snapshot`).
-#[cfg(feature = "component-app-assembly")]
-pub struct GraphEditor<'a> {
-    host: &'a mut FlowHost,
-    leaves: Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation>,
-}
 
-#[cfg(feature = "component-app-assembly")]
-impl<'a> GraphEditor<'a> {
-    /// 🧭️ Opens a recorder over `host`.
-    pub fn new(host: &'a mut FlowHost) -> Self {
-        Self { host, leaves: Vec::new() }
-    }
 
-    /// 👁️ The host's current graph, for the reads a command decides on.
-    pub fn snapshot(&self) -> &FlowHostSnapshot {
-        &self.host.host_snapshot
-    }
-
-    /// 👁️ The host itself, read-only, for the queries that need more than the graph (a widget's value form).
-    pub fn host(&self) -> &FlowHost {
-        self.host
-    }
-
-    /// 📐️ The rendered rectangles `[x, y, width, height]` of every node except `except` — what an automatic placement avoids.
-    pub fn occupied(&self, except: &str) -> Vec<[f64; 4]> {
-        self.host.dag.host_snapshot.nodes.iter().filter(|node| node.id != except).map(|node| [node.x, node.y, node.width, node.height]).collect()
-    }
-
-    /// 📐️ The rendered size `[width, height]` of node `id`.
-    pub fn size_of(&self, id: &str) -> Option<[f64; 2]> {
-        self.host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| [node.width, node.height])
-    }
-
-    /// 🧾️ The leaves recorded, in replay order. The caller owns them and retires them cold.
-    pub fn finish(mut self) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
-        std::mem::take(&mut self.leaves)
-    }
-
-    fn layout_leaf(&mut self, id: &str) {
-        use crate::standards::v1::subsets::any::schema::mutations::{move_widget::MoveWidget, Generation3dMutation};
-        let Some(layout) = self.host.host_snapshot.layout.get(id).cloned() else { return };
-        if let Some(Generation3dMutation::MoveWidget(last)) = self.leaves.last_mut() {
-            if last.id == id {
-                last.layout = layout;
-                return;
-            }
-        }
-        self.leaves.push(Generation3dMutation::MoveWidget(MoveWidget { id: id.to_string(), layout }));
-    }
-
-    fn widget_leaf(&mut self, id: &str) {
-        use crate::standards::v1::subsets::any::schema::mutations::{update_widget::UpdateWidget, Generation3dMutation};
-        if let Some(widget) = self.host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id) {
-            self.leaves.push(Generation3dMutation::UpdateWidget(UpdateWidget { widget: widget.clone() }));
-        }
-    }
-
-    fn synapse_leaves(&mut self, before: &[semio_framework_artifact_flow_flow::SynapseSpec]) {
-        use crate::standards::v1::subsets::any::schema::mutations::{connect_synapse::ConnectSynapse, disconnect_synapse::DisconnectSynapse, update_synapse::UpdateSynapse, Generation3dMutation};
-        let after = &self.host.host_snapshot.synapses;
-        let mut leaves: Vec<Generation3dMutation> = before.iter().filter(|old| !after.iter().any(|new| new.id == old.id)).map(|old| Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: old.id.clone() })).collect();
-        leaves.extend(after.iter().filter(|new| before.iter().any(|old| old.id == new.id && old != *new)).map(|new| Generation3dMutation::UpdateSynapse(UpdateSynapse { synapse: new.clone() })));
-        leaves.extend(after.iter().enumerate().filter(|(_, new)| !before.iter().any(|old| old.id == new.id)).map(|(index, new)| Generation3dMutation::ConnectSynapse(ConnectSynapse { index, synapse: new.clone() })));
-        self.leaves.extend(leaves);
-    }
-
-    /// 🧩️ Creates the admitted widget at `(x, y)` and records its placement.
-    pub fn add_widget(&mut self, descriptor: &semio_framework_artifact_flow_flow::WidgetDescriptor, x: f64, y: f64) -> Result<String, String> {
-        use crate::standards::v1::subsets::any::schema::mutations::{create_widget::CreateWidget, Generation3dMutation};
-        let index = self.host.host_snapshot.widgets.len();
-        let id = self.host.add_widget_descriptor(descriptor, x, y).map_err(|error| error.to_string())?;
-        let widget = self.host.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id).cloned().ok_or_else(|| format!("created widget {id} is missing"))?;
-        self.leaves.push(Generation3dMutation::CreateWidget(CreateWidget { index, widget }));
-        self.layout_leaf(&id);
-        Ok(id)
-    }
-
-    /// 📍️ Places widget `id` at `(x, y)`: one `move-widget`.
-    pub fn move_widget(&mut self, id: &str, x: f64, y: f64) -> Result<(), String> {
-        self.host.move_widget(id, x, y).map_err(|error| error.to_string())?;
-        self.layout_leaf(id);
-        Ok(())
-    }
-
-    /// ➖️ Removes widget `id` with everything that hangs on it, as `generation3d_widget_removal` spells the cascade.
-    pub fn remove_widget(&mut self, id: &str) -> Result<(), String> {
-        let leaves = crate::standards::v1::subsets::any::schema::mutations::generation3d_widget_removal(&self.host.host_snapshot, id);
-        self.host.remove_widget(id).map_err(|error| error.to_string())?;
-        self.leaves.extend(leaves);
-        Ok(())
-    }
-
-    /// 🔗️ Wires an output to an input: the `disconnect-synapse` of the wire the input drops (an input takes one wire) and
-    /// the `connect-synapse` at the end of the list. Answers the new wire's id.
-    pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, String> {
-        let before = self.host.host_snapshot.synapses.clone();
-        let id = self.host.connect_ports(from_id, from_port, to_id, to_port).map_err(|error| error.to_string())?;
-        self.synapse_leaves(&before);
-        Ok(id)
-    }
-
-    /// ✂️ Cuts wire `id`: one `disconnect-synapse`.
-    pub fn disconnect(&mut self, id: &str) -> Result<(), String> {
-        use crate::standards::v1::subsets::any::schema::mutations::{disconnect_synapse::DisconnectSynapse, Generation3dMutation};
-        self.host.disconnect(id).map_err(|error| error.to_string())?;
-        self.leaves.push(Generation3dMutation::DisconnectSynapse(DisconnectSynapse { id: id.to_string() }));
-        Ok(())
-    }
-
-    /// 🔀️ Splices `mid_id` between `anchor_id` and the consumers of its `anchor_out_port`: the `update-synapse` of every
-    /// consumer wire it re-sources and the `connect-synapse` of the wire that feeds it.
-    pub fn insert_between(&mut self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), String> {
-        let before = self.host.host_snapshot.synapses.clone();
-        self.host.insert_between(anchor_id, anchor_out_port, mid_id, mid_in_port, mid_out_port).map_err(|error| error.to_string())?;
-        self.synapse_leaves(&before);
-        Ok(())
-    }
-
-    /// ➕️ Opens an input port of variadic operator `id` at `index`: the `update-widget` of its new port list and the
-    /// `update-synapse` of every wire the insertion renumbers.
-    pub fn add_input_port(&mut self, id: &str, index: usize) -> Result<(), String> {
-        let before = self.host.host_snapshot.synapses.clone();
-        self.host.add_input_port(id, index).map_err(|error| error.to_string())?;
-        self.widget_leaf(id);
-        self.synapse_leaves(&before);
-        Ok(())
-    }
-
-    /// ➕️ Opens an output port of variadic operator `id` at `index`; see [`GraphEditor::add_input_port`].
-    pub fn add_output_port(&mut self, id: &str, index: usize) -> Result<(), String> {
-        let before = self.host.host_snapshot.synapses.clone();
-        self.host.add_output_port(id, index).map_err(|error| error.to_string())?;
-        self.widget_leaf(id);
-        self.synapse_leaves(&before);
-        Ok(())
-    }
-
-    /// 👁️ Sets operator `id`'s preview flag: one `update-widget` when it flips. Answers whether it did.
-    pub fn set_preview(&mut self, id: &str, shown: bool) -> bool {
-        let mut flipped = false;
-        for widget in &mut self.host.host_snapshot.widgets {
-            if let Widget::Neuron { id: widget_id, preview, .. } = widget {
-                if widget_id == id && *preview != shown {
-                    *preview = shown;
-                    flipped = true;
-                }
-            }
-        }
-        if flipped {
-            self.widget_leaf(id);
-        }
-        flipped
-    }
-
-    /// 🗺️ Lays the graph out again with the host's layered layout: one `move-widget` per widget that moves.
-    pub fn reorganize(&mut self, options: &semio_framework_os_infinite::board::schema::layout::DagLayoutOptions, control: &mut semio_framework_os_infinite::board::schema::layout::LayoutControl<'_>) -> Result<(), String> {
-        let before = self.host.host_snapshot.layout.clone();
-        let reorganized = self.host.reorganize(options, control).map_err(|error| error.to_string());
-        let moved: Vec<String> = self.host.host_snapshot.layout.iter().filter(|(id, layout)| before.get(id) != Some(*layout)).map(|(id, _)| id.clone()).collect();
-        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
-        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(before));
-        retirement.retire_cold();
-        reorganized?;
-        for id in moved {
-            self.layout_leaf(&id);
-        }
-        Ok(())
-    }
-}
-
-/// 🧊️ A recorder dropped with leaves still in hand — a command refused after it recorded — retires them cold: a recorded
-/// `create-widget` owns a widget whose neural dictionary rejects a bare drop.
-#[cfg(feature = "component-app-assembly")]
-impl Drop for GraphEditor<'_> {
-    fn drop(&mut self) {
-        for leaf in self.leaves.drain(..) {
-            leaf.retire_cold();
-        }
-    }
-}
-//#endregion 🧭️GraphEditor
-
-//#region 🧪️Tests
-#[cfg(all(test, feature = "component-app-assembly"))]
-#[path = "🧪️tests/🧭️graph-editor/🦀️.rs"]
-mod graph_editor_tests;
-//#endregion 🧪️Tests
-
-pub fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
-}
-
-#[cfg(feature = "component-app-assembly")]
-pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_artifact_infinite_dag::DagHostSnapshot) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
-    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = host_snapshot
-        .nodes
-        .iter()
-        .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
-            id: node.id.clone(),
-            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
-            x: node.x,
-            y: node.y,
-            width: node.width,
-            height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
-            ..Default::default()
-        })
-        .collect();
-    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = host_snapshot
-        .edges
-        .iter()
-        .map(|edge| {
-            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
-            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            semio_framework_ui::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
-        })
-        .collect();
-    (nodes, edges)
-}
 
 
 
 
 //#endregion 🔖️DocumentHelpers
 
-//#region 🔖️GumballTransforms
 
+pub const GENERATION_3D_SCHEMA: &str = "generation.3d";
 
+/// 🎯️ This subset's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §2.1/§7.4) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
+/// viewer file can read it without ever importing through the sibling `editor` module.
+/// `artifact_kind` matches this artifact's own `s.generation3d.schema.artifact` capability descriptor
+/// above (`b"s.procedural.generation3d"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.procedural.generation3d@1/*#editor` / `s.procedural.generation3d@1/*#viewer`.
+pub const GENERATION3D_DIALECT: Dialect = Dialect { artifact_kind: "s.procedural.generation3d", standard: StandardId("1"), subset: SubsetId::ANY };
 
-
-
-/// 🚫️ Why a gumball refuses its selection — each a NAMED fault code `generation3d.gumball.*` that a shell localizes; the
-/// English [`GumballRefusal::detail`] is only the developer detail.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum GumballRefusal {
-    UnknownOperation,
-    NoShapeSource,
-    KindUnavailable(String),
-    NoShapeOutput,
-    ListOutput,
-    IdentifierOccupied,
-    TransformUnavailable(String),
-    MeshMissing,
-    NotIndexedMesh,
-    SelectionChanged,
-    ComponentSelection(String),
-    HostEdit(String),
-}
-
-impl GumballRefusal {
-    /// 🏷️ The named fault code.
-    pub fn code(&self) -> &'static str {
-        match self {
-            Self::UnknownOperation => "generation3d.gumball.unknown-operation",
-            Self::NoShapeSource => "generation3d.gumball.no-shape-source",
-            Self::KindUnavailable(_) => "generation3d.gumball.kind-unavailable",
-            Self::NoShapeOutput => "generation3d.gumball.no-shape-output",
-            Self::ListOutput => "generation3d.gumball.list-output",
-            Self::IdentifierOccupied => "generation3d.gumball.identifier-occupied",
-            Self::TransformUnavailable(_) => "generation3d.gumball.transform-unavailable",
-            Self::MeshMissing => "generation3d.gumball.mesh-missing",
-            Self::NotIndexedMesh => "generation3d.gumball.not-indexed-mesh",
-            Self::SelectionChanged => "generation3d.gumball.selection-changed",
-            Self::ComponentSelection(_) => "generation3d.gumball.component-selection",
-            Self::HostEdit(_) => "generation3d.gumball.host-edit",
-        }
-    }
-
-    /// 🧑‍💻️ The English developer detail of the refusal.
-    pub fn detail(&self) -> String {
-        match self {
-            Self::UnknownOperation => "unknown transform operation".into(),
-            Self::NoShapeSource => "select a shape-producing widget".into(),
-            Self::KindUnavailable(kind) => format!("widget kind {kind} is unavailable"),
-            Self::NoShapeOutput => "the selected output does not contain a shape".into(),
-            Self::ListOutput => "extract a single shape from the list before transforming it".into(),
-            Self::IdentifierOccupied => "the generated transform identifier is already occupied".into(),
-            Self::TransformUnavailable(kind) => format!("transform {kind} is unavailable"),
-            Self::MeshMissing => "the selected mesh no longer exists".into(),
-            Self::NotIndexedMesh => "select a single indexed mesh output; convert B-Rep geometry to a mesh first".into(),
-            Self::SelectionChanged => "the component selection changed during the transform".into(),
-            Self::ComponentSelection(detail) | Self::HostEdit(detail) => detail.clone(),
-        }
+//#region 🔖️Helpers
+/// 🌡️ A flow widget's stable id, across every widget variant (mirrors flow's private accessor).
+pub fn widget_id(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
     }
 }
+/// 👁️ Whether a widget contributes preview geometry at all. A `Neuron` carries its own author-set
+/// `preview` toggle; an `OutputPreview` is a preview by construction; a `Cluster` has no toggle of
+/// its own, so its contract output channels always preview, which is the only way a grouped
+/// sub-graph's geometry reaches the 3D world at all.
+pub fn widget_previews(widget: &Widget) -> bool {
+    matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. } | Widget::Cluster { .. })
+}
 
+//#endregion 🔖️Helpers
 
-/// 🎚️ The literals a gumball composes from on an operator it inserts: a translate's zero offset, a rotate's zero turn about
-/// +z, a scale's unit factors — the inserted record holds its kind's declared defaults (design §20.9), which need not be the
-/// identity, so the gesture's relative leaf only composes correctly after these land.
-pub fn gumball_identity(operation: &str) -> Vec<(&'static str, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue)> {
-    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
-    match operation {
-        "translate" => vec![("offset", WidgetInputValue::Vector([0.0; 3]))],
-        "rotate" => vec![("axis", WidgetInputValue::Vector([0.0, 0.0, 1.0])), ("angle", WidgetInputValue::Number(0.0))],
-        "scale" => vec![("factor", WidgetInputValue::Vector([1.0; 3]))],
-        _ => Vec::new(),
+//#region 🔖️FaultNotices
+/// 🪆️ The refusal code of a loaded parent whose composed children cannot be projected.
+pub const GENERATION3D_CHILD_PROJECTION: &str = "generation3d.child.projection";
+/// 📤️ The refusal code of a document export that could not be written.
+pub const GENERATION3D_IO_EXPORT: &str = "generation3d.io.export";
+/// 📂️ The refusal code of an import whose accepted file types cannot be determined.
+pub const GENERATION3D_IO_IMPORT_ACCEPT: &str = "generation3d.io.import-accept";
+/// 🧩️ The refusal code of a node the editor could not add.
+pub const GENERATION3D_WIDGET_ADD: &str = "generation3d.widget.add";
+
+/// 📣️ The localized notices of the document-level refusals both surfaces raise (design §20.12).
+pub fn generation3d_document_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
+    use semio_framework_ui_locale::LocalizedLabel;
+    static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 4]> = std::sync::LazyLock::new(|| {
+        [
+            (GENERATION3D_CHILD_PROJECTION, LocalizedLabel::native("The document's composed parts cannot be restored.", "Die zusammengesetzten Teile des Dokuments können nicht wiederhergestellt werden.")),
+            (GENERATION3D_IO_EXPORT, LocalizedLabel::native("The document could not be exported.", "Das Dokument konnte nicht exportiert werden.")),
+            (GENERATION3D_IO_IMPORT_ACCEPT, LocalizedLabel::native("The importable file types could not be determined.", "Die importierbaren Dateitypen konnten nicht bestimmt werden.")),
+            (GENERATION3D_WIDGET_ADD, LocalizedLabel::native("The node could not be added.", "Der Knoten konnte nicht hinzugefügt werden.")),
+        ]
+    });
+    &*NOTICES
+}
+//#endregion 🔖️FaultNotices
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::generation3d::create_generation3d_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "3d.generation".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Generation", "3D-Generierung"),
+        source_format: "generation.3d".into(),
+        component_kind: "generation3d".into(),
+        dimension: "3d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
+        schema: "generation.3d".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        // 🖼️ "stdio.json"/"stdio.png" stay out of exports (generation2d owns those EXPORT claims, D3)
+        // but stay in imports below — see `🚪️io/🦀️.rs`'s `🚪️IoRegistry` region.
+        export_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.las".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.stl".into()],
+        import_stdio_kinds: vec!["stdio.dwg".into(), "stdio.gltf".into(), "stdio.json".into(), "stdio.obj".into(), "stdio.ply".into(), "stdio.stl".into()],
     }
 }
+//#endregion 🔖️ArtifactKind
 
-/// 🧾️ The `change-widget-input` leaves an inserted operator's record needs to hold `wanted` (design §19.4): one per wanted
-/// channel the record holds with another literal, typed like the record's own literal (a point stays a point); a channel
-/// the record does not hold is not one of its inputs and is skipped.
-pub fn record_input_leaves(record: &Widget, wanted: &[(&str, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue)]) -> Vec<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
-    let Widget::Neuron { id, params, .. } = record else { return Vec::new() };
-    wanted
-        .iter()
-        .filter_map(|(channel, value)| {
-            let stored = WidgetInputValue::of_neural_value(params.get(channel)?)?;
-            let typed = match (value, &stored) {
-                (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Point(_)) => WidgetInputValue::Point(*axes),
-                (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Vector(_)) => WidgetInputValue::Vector(*axes),
-                (value, stored) if value.schema() == stored.schema() => value.clone(),
-                _ => return None,
-            };
-            (typed != stored).then(|| change_widget_input(id.clone(), *channel, typed))
-        })
-        .collect()
-}
-//#endregion 🔖️GumballTransforms
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
@@ -602,3 +363,22 @@ pub use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 pub use semio_framework_artifact_flow_flow::Widget;
 pub use semio_framework_artifact_playbook_playbook::GenerationPlayState;
 //#endregion 🔁️Re-exports
+
+#[path = "."]
+pub mod catalogue {
+    #[path = "🗂️catalogue/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod diff {
+    #[path = "🔺️diff/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}

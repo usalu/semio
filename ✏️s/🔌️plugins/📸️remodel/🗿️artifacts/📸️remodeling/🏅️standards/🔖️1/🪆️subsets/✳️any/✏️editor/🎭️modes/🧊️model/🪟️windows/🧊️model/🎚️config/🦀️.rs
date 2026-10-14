@@ -199,9 +199,6 @@ pub fn addressed_layers(view: &semio_framework_plugin::ViewModel, layers: Remode
     Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingModelWindowConfigOwner>(id, RemodelingModelWindowConfigMutation::SetLayers { layers }))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
-mod window_ownership_tests;
 
 //#region 🔺️Diff
 /// 🔺️ Sparse field delta for the window configuration; an absent field is untouched.

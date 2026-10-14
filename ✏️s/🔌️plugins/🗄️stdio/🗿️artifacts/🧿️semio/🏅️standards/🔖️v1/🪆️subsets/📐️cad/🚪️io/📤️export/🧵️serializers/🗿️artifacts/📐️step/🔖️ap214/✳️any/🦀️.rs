@@ -79,7 +79,7 @@ impl ArtifactSerializer for SemioCadToStep {
             }
         }
         let header = StepHeader { file_description: Default::default(), file_name: StepFileName { name: "semio-cad-export".into(), ..Default::default() }, file_schema: StepFileSchema { schemas: vec!["AUTOMOTIVE_DESIGN".into()] } };
-        Ok(StepSnapshot { schema: semio_s_artifact_stdio_step::STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities })
+        Ok(StepSnapshot { schema: semio_s_artifact_stdio_step::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA.into(), header, entities })
     }
 }
 //#endregion 🔖️Serializer

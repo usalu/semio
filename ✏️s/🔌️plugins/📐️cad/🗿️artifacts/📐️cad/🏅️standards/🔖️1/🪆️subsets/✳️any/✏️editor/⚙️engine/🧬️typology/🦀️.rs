@@ -12,6 +12,7 @@
 //! typology id → golden-angle hue → HSL→hex), so a typology with no authored `style` block paints the
 //! same colour on every target.
 
+
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -204,85 +205,25 @@ pub struct AttributeDefinitionSpec {
     pub geometry_selector: Option<AttributeGeometrySelector>,
 }
 
-const RAW_MODEL_DEFINITION_ASSETS: &[&str] = &[
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🔣️modelDefinition.json"),
-    include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧱️aec.building.concrete/🔣️modelDefinition.json"),
-];
+const RAW_MODEL_DEFINITION_ASSETS: &[&[&str]] = &[semio_s_artifact_cad_cad_catalog_structure::MODEL_DEFINITIONS, semio_s_artifact_cad_cad_catalog_building::MODEL_DEFINITIONS, semio_s_artifact_cad_cad_catalog_fem::MODEL_DEFINITIONS, semio_s_artifact_cad_cad_catalog_shape::MODEL_DEFINITIONS, semio_s_artifact_cad_cad_catalog_energy::MODEL_DEFINITIONS];
 
-const RAW_TYPOLOGY_ASSETS: &[(&str, &str)] = &[
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🏛️ReinforcedConcreteColumn/🔣️typology.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🚧️ReinforcedConcreteInternal/🔣️typology.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🛡️ReinforcedConcreteExternal/🔣️typology.json")),
-    ("aec.building.structure.classic", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🗂️typologies/🧱️OneWayReinforcedConcreteSlab/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/⬆️Ceiling/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🏛️Column/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🏠️Roof/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🚧️Railing/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🚪️Door/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🛡️Wall/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🧱️Slab/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪜️Stair/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪟️Window/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪨️Foundation/🔣️typology.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🗂️typologies/🪵️Beam/🔣️typology.json")),
-    ("aec.building.structure.fem.line", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🗂️typologies/📏️LineElement/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/➡️ExtrudeCurve/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/⭕️Circle/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/〰️ControlPointCurve/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌀️Sweep1/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌊️InterpolateCurve/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌐️Sphere/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌙️Arc/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🌪️Sweep2/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🎢️Loft/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/📏️Line/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/📐️Polyline/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/📦️Box/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🕸️NetworkSurface/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🗺️Plane/🔣️typology.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🗂️typologies/🥫️Cylinder/🔣️typology.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🏠️Roof/🔣️typology.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🐚️Hull/🔣️typology.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🧱️ExternalWall/🔣️typology.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪟️Windows/🔣️typology.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🗂️typologies/🪨️BasePlate/🔣️typology.json")),
-    ("aec.building.structure.fem.surface", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🗂️typologies/🗺️SurfaceElement/🔣️typology.json")),
-    ("aec.building.structure.fem.solid", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🗂️typologies/🧊️SolidElement/🔣️typology.json")),
-];
+const RAW_TYPOLOGY_ASSETS: &[&[(&str, &str)]] = &[semio_s_artifact_cad_cad_catalog_structure::TYPOLOGIES, semio_s_artifact_cad_cad_catalog_building::TYPOLOGIES, semio_s_artifact_cad_cad_catalog_fem::TYPOLOGIES, semio_s_artifact_cad_cad_catalog_shape::TYPOLOGIES, semio_s_artifact_cad_cad_catalog_energy::TYPOLOGIES];
 
-const RAW_ATTRIBUTE_DEFINITION_ASSETS: &[(&str, &str)] = &[
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🌡️uvalue.json")),
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🌦️exposure.json")),
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔆️gvalue.json")),
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🔗️bondable.json")),
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🚪️opening.json")),
-    ("aec.building.structure", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏛️aec.building.structure/🏷️attributeDefinitions/🪨️material.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🚪️opening.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🏷️attributeDefinitions/🪨️material.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🌡️uvalue.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🏷️attributeDefinitions/🔆️gvalue.json")),
-];
+const RAW_ATTRIBUTE_DEFINITION_ASSETS: &[&[(&str, &str)]] = &[semio_s_artifact_cad_cad_catalog_structure::ATTRIBUTE_DEFINITIONS, semio_s_artifact_cad_cad_catalog_building::ATTRIBUTE_DEFINITIONS, semio_s_artifact_cad_cad_catalog_energy::ATTRIBUTE_DEFINITIONS];
 
 fn parsed_model_definitions() -> &'static [ModelDefinitionManifest] {
     static ROWS: OnceLock<Vec<ModelDefinitionManifest>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_MODEL_DEFINITION_ASSETS.iter().filter_map(|raw| semio_framework_pack_json::from_json_str::<ModelDefinitionManifest>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).collect())
+    ROWS.get_or_init(|| RAW_MODEL_DEFINITION_ASSETS.iter().flat_map(|assets| assets.iter()).filter_map(|raw| semio_framework_pack_json::from_json_str::<ModelDefinitionManifest>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).collect())
 }
 
 fn parsed_typologies() -> &'static [(&'static str, TypologySpec)] {
     static ROWS: OnceLock<Vec<(&'static str, TypologySpec)>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_TYPOLOGY_ASSETS.iter().filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<TypologySpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
+    ROWS.get_or_init(|| RAW_TYPOLOGY_ASSETS.iter().flat_map(|assets| assets.iter()).filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<TypologySpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
 }
 
 fn parsed_attribute_definitions() -> &'static [(&'static str, AttributeDefinitionSpec)] {
     static ROWS: OnceLock<Vec<(&'static str, AttributeDefinitionSpec)>> = OnceLock::new();
-    ROWS.get_or_init(|| RAW_ATTRIBUTE_DEFINITION_ASSETS.iter().filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<AttributeDefinitionSpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
+    ROWS.get_or_init(|| RAW_ATTRIBUTE_DEFINITION_ASSETS.iter().flat_map(|assets| assets.iter()).filter_map(|(owner, raw)| semio_framework_pack_json::from_json_str::<AttributeDefinitionSpec>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok().map(|spec| (*owner, spec))).collect())
 }
 //#endregion 🔖️Assets
 

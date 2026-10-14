@@ -1,0 +1,590 @@
+[
+  {
+    "file": ".vscode/launch.json",
+    "name": "⚖️verify-jack-native-composition🦀️",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 1200000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 1200000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  },
+  {
+    "file": ".vscode/launch.json",
+    "name": "🫴️ Record · Original Receiving Source",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  },
+  {
+    "file": ".vscode/launch.json",
+    "name": "🫴️ Record · Original Receiving Native",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  },
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "⚖️verify-jack-native-composition🦀️",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 1200000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 1200000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  },
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "🫴️ Record · Original Receiving Source",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  },
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "🫴️ Record · Original Receiving Native",
+    "originalCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": "${workspaceFolder}",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    },
+    "updatedCapabilities": {
+      "tool": "nx",
+      "workspaceRoot": ".",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+        "--skip-cache",
+        "--exclude-dependencies",
+        "--parallel=1",
+        "--configuration=prototype"
+      ],
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ]
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 180000
+        },
+        "network": {
+          "offline": false
+        }
+      }
+    }
+  }
+]

@@ -8,7 +8,7 @@ use store::os_store::snapshot_read::SnapshotRead;
 struct InputReadState<D, C> {
     document: Option<SnapshotRead<D>>,
     config: Option<SnapshotRead<C>>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 /// 🔒️ Frozen input roots remain retained until each Store registry ACCEPTS its return. Acceptance

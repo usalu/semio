@@ -1,38 +1,51 @@
 //! 📦️ DWG named object components, draw ordering and evaluation graph topology.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::ValueError;
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgAnnotationScale;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgDrawOrderEntry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlaceholder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgSortEntitiesTable;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDimensionDependencyBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraph;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphEdge;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationGraphNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterDependencyBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockRepresentationData;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgDynamicBlockPurgePreventer;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgDictionaryVariable;
 use super::number::Projection;
 use super::reader::{boolean,full_unsigned,high,low,ordinal,unsigned,Reader};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
-pub(super) fn project_placeholder(projection:&mut Projection<'_,'_>,id:i64,_:&DwgPlaceholder)->Result<(),ValueError>{projection.insert_key("dwg_placeholder",id,&[])}
-pub(super) fn reconstruct_placeholder(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgPlaceholder,ValueError>{reader.component("dwg_placeholder",id)?;Ok(DwgPlaceholder{})}
-pub(super) fn project_dictionary_variable(projection:&mut Projection<'_,'_>,id:i64,value:&DwgDictionaryVariable)->Result<(),ValueError>{projection.insert_key("dwg_dictionary_variable",id,&[T(&value.value)])}
-pub(super) fn reconstruct_dictionary_variable(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgDictionaryVariable,ValueError>{Ok(DwgDictionaryVariable{value:reader.component("dwg_dictionary_variable",id)?.text(1)?.into()})}
-pub(super) fn project_annotation_scale(projection:&mut Projection<'_,'_>,id:i64,value:&DwgAnnotationScale)->Result<(),ValueError>{projection.insert_key("dwg_annotation_scale",id,&[T(&value.name),R(value.paper_units),R(value.drawing_units),I(i64::from(value.is_unit_scale))])}
-pub(super) fn reconstruct_annotation_scale(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAnnotationScale,ValueError>{let row=reader.component("dwg_annotation_scale",id)?;Ok(DwgAnnotationScale{name:row.text(1)?.into(),paper_units:row.real(2)?,drawing_units:row.real(3)?,is_unit_scale:boolean(row,4)?})}
-pub(super) fn project_sort_entities_table(projection:&mut Projection<'_,'_>,id:i64,value:&DwgSortEntitiesTable)->Result<(),ValueError>{
+pub fn project_placeholder(projection:&mut Projection<'_,'_>,id:i64,_:&DwgPlaceholder)->Result<(),ValueError>{projection.insert_key("dwg_placeholder",id,&[])}
+pub fn reconstruct_placeholder(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgPlaceholder,ValueError>{reader.component("dwg_placeholder",id)?;Ok(DwgPlaceholder{})}
+pub fn project_dictionary_variable(projection:&mut Projection<'_,'_>,id:i64,value:&DwgDictionaryVariable)->Result<(),ValueError>{projection.insert_key("dwg_dictionary_variable",id,&[T(&value.value)])}
+pub fn reconstruct_dictionary_variable(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgDictionaryVariable,ValueError>{Ok(DwgDictionaryVariable{value:reader.component("dwg_dictionary_variable",id)?.text(1)?.into()})}
+pub fn project_annotation_scale(projection:&mut Projection<'_,'_>,id:i64,value:&DwgAnnotationScale)->Result<(),ValueError>{projection.insert_key("dwg_annotation_scale",id,&[T(&value.name),R(value.paper_units),R(value.drawing_units),I(i64::from(value.is_unit_scale))])}
+pub fn reconstruct_annotation_scale(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAnnotationScale,ValueError>{let row=reader.component("dwg_annotation_scale",id)?;Ok(DwgAnnotationScale{name:row.text(1)?.into(),paper_units:row.real(2)?,drawing_units:row.real(3)?,is_unit_scale:boolean(row,4)?})}
+pub fn project_sort_entities_table(projection:&mut Projection<'_,'_>,id:i64,value:&DwgSortEntitiesTable)->Result<(),ValueError>{
  projection.insert_key("dwg_sort_entities_table",id,&[I(high(value.block_header_handle)),I(low(value.block_header_handle))])?;
  for(index,value)in value.entries.iter().enumerate(){projection.insert("dwg_draw_order_entry",&[I(id),I(ordinal(index)?),I(high(value.entity_handle)),I(low(value.entity_handle)),I(high(value.sort_handle)),I(low(value.sort_handle))])?;}Ok(())
 }
-pub(super) fn reconstruct_sort_entities_table(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgSortEntitiesTable,ValueError>{
+pub fn reconstruct_sort_entities_table(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgSortEntitiesTable,ValueError>{
  let row=reader.component("dwg_sort_entities_table",id)?;
  Ok(DwgSortEntitiesTable{block_header_handle:full_unsigned(row,1,2)?,entries:reader.list("dwg_draw_order_entry",1,id,2)?.into_iter().map(|row|Ok(DwgDrawOrderEntry{entity_handle:full_unsigned(row,3,4)?,sort_handle:full_unsigned(row,5,6)?})).collect::<Result<_,ValueError>>()?})
 }
-pub(super) fn project_block_parameter_dependency_body(projection:&mut Projection<'_,'_>,id:i64,value:&DwgBlockParameterDependencyBody)->Result<(),ValueError>{projection.insert_key("dwg_block_parameter_dependency_body",id,&[T(&value.name)])}
-pub(super) fn reconstruct_block_parameter_dependency_body(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgBlockParameterDependencyBody,ValueError>{Ok(DwgBlockParameterDependencyBody{name:reader.component("dwg_block_parameter_dependency_body",id)?.text(1)?.into()})}
-pub(super) fn project_dimension_dependency_body(projection:&mut Projection<'_,'_>,id:i64,value:&DwgAssociativeDimensionDependencyBody)->Result<(),ValueError>{projection.insert_key("dwg_associative_dimension_dependency_body",id,&[T(&value.name)])}
-pub(super) fn reconstruct_dimension_dependency_body(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssociativeDimensionDependencyBody,ValueError>{Ok(DwgAssociativeDimensionDependencyBody{name:reader.component("dwg_associative_dimension_dependency_body",id)?.text(1)?.into()})}
-pub(super) fn project_representation_data(projection:&mut Projection<'_,'_>,id:i64,value:&DwgBlockRepresentationData)->Result<(),ValueError>{projection.insert_key("dwg_block_representation_data",id,&[I(high(value.represented_block_header_handle)),I(low(value.represented_block_header_handle))])}
-pub(super) fn reconstruct_representation_data(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgBlockRepresentationData,ValueError>{let row=reader.component("dwg_block_representation_data",id)?;Ok(DwgBlockRepresentationData{represented_block_header_handle:full_unsigned(row,1,2)?})}
-pub(super) fn project_purge_preventer(projection:&mut Projection<'_,'_>,id:i64,value:&DwgDynamicBlockPurgePreventer)->Result<(),ValueError>{projection.insert_key("dwg_dynamic_block_purge_preventer",id,&[I(high(value.protected_block_header_handle)),I(low(value.protected_block_header_handle))])}
-pub(super) fn reconstruct_purge_preventer(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgDynamicBlockPurgePreventer,ValueError>{let row=reader.component("dwg_dynamic_block_purge_preventer",id)?;Ok(DwgDynamicBlockPurgePreventer{protected_block_header_handle:full_unsigned(row,1,2)?})}
-pub(super) fn project_graph(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEvaluationGraph)->Result<(),ValueError>{
+pub fn project_block_parameter_dependency_body(projection:&mut Projection<'_,'_>,id:i64,value:&DwgBlockParameterDependencyBody)->Result<(),ValueError>{projection.insert_key("dwg_block_parameter_dependency_body",id,&[T(&value.name)])}
+pub fn reconstruct_block_parameter_dependency_body(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgBlockParameterDependencyBody,ValueError>{Ok(DwgBlockParameterDependencyBody{name:reader.component("dwg_block_parameter_dependency_body",id)?.text(1)?.into()})}
+pub fn project_dimension_dependency_body(projection:&mut Projection<'_,'_>,id:i64,value:&DwgAssociativeDimensionDependencyBody)->Result<(),ValueError>{projection.insert_key("dwg_associative_dimension_dependency_body",id,&[T(&value.name)])}
+pub fn reconstruct_dimension_dependency_body(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssociativeDimensionDependencyBody,ValueError>{Ok(DwgAssociativeDimensionDependencyBody{name:reader.component("dwg_associative_dimension_dependency_body",id)?.text(1)?.into()})}
+pub fn project_representation_data(projection:&mut Projection<'_,'_>,id:i64,value:&DwgBlockRepresentationData)->Result<(),ValueError>{projection.insert_key("dwg_block_representation_data",id,&[I(high(value.represented_block_header_handle)),I(low(value.represented_block_header_handle))])}
+pub fn reconstruct_representation_data(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgBlockRepresentationData,ValueError>{let row=reader.component("dwg_block_representation_data",id)?;Ok(DwgBlockRepresentationData{represented_block_header_handle:full_unsigned(row,1,2)?})}
+pub fn project_purge_preventer(projection:&mut Projection<'_,'_>,id:i64,value:&DwgDynamicBlockPurgePreventer)->Result<(),ValueError>{projection.insert_key("dwg_dynamic_block_purge_preventer",id,&[I(high(value.protected_block_header_handle)),I(low(value.protected_block_header_handle))])}
+pub fn reconstruct_purge_preventer(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgDynamicBlockPurgePreventer,ValueError>{let row=reader.component("dwg_dynamic_block_purge_preventer",id)?;Ok(DwgDynamicBlockPurgePreventer{protected_block_header_handle:full_unsigned(row,1,2)?})}
+pub fn project_graph(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEvaluationGraph)->Result<(),ValueError>{
  projection.insert_key("dwg_evaluation_graph",id,&[])?;
  for(index,node)in value.nodes.iter().enumerate(){projection.insert("dwg_evaluation_graph_node",&[I(id),I(ordinal(index)?),I(i64::from(node.id)),I(high(node.expression_handle)),I(low(node.expression_handle))])?;}
  for(index,edge)in value.edges.iter().enumerate(){projection.insert("dwg_evaluation_graph_edge",&[I(id),I(ordinal(index)?),I(i64::from(edge.from_node_id)),I(i64::from(edge.to_node_id)),I(i64::from(edge.reference_count)),I(i64::from(edge.invertible)),I(i64::from(edge.suppressed))])?;}Ok(())
 }
-pub(super) fn reconstruct_graph(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgEvaluationGraph,ValueError>{
+pub fn reconstruct_graph(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgEvaluationGraph,ValueError>{
  reader.component("dwg_evaluation_graph",id)?;
  Ok(DwgEvaluationGraph{
  nodes:reader.list("dwg_evaluation_graph_node",1,id,2)?.into_iter().map(|row|Ok(DwgEvaluationGraphNode{id:unsigned(row,3)?,expression_handle:full_unsigned(row,4,5)?})).collect::<Result<_,ValueError>>()?,

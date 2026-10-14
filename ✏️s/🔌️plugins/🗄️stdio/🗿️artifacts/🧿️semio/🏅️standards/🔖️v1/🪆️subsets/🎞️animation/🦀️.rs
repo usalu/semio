@@ -129,4 +129,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimChannel { t
 semio_framework_value::artifact_retire_struct!(schema::snapshot::AnimTimeline { name, channels });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioAnimationSnapshot { schema, timelines });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioAnimationSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioAnimationSnapshot, schema::mutations::SemioAnimationMutation);

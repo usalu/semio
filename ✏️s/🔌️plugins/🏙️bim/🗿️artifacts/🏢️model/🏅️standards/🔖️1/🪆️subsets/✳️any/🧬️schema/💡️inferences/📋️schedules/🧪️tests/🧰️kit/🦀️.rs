@@ -1,9 +1,9 @@
 //! 🧰️ The fixtures the schedule tests share: the committed IFC house (seven walls on two storeys in three phases, three windows, two doors, a void, two rooms) and the helpers that build a schedule over it.
 
-use crate::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 use crate::standards::v1::subsets::any::schema::inferences::schedules::{ScheduleRow, ScheduleTable};
-use crate::{ModelInference, ModelSnapshot, Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey}};
 use protocol::Inference;
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
@@ -16,7 +16,7 @@ pub fn house() -> ModelSnapshot {
 /// 🏠️ The house with every preset of the library as a schedule `sch-<key>`.
 pub fn scheduled() -> ModelSnapshot {
     let mut snapshot = house();
-    for key in crate::schedule_kit::PRESETS {
+    for key in crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::PRESETS {
         snapshot.schedules.insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));
     }
     snapshot

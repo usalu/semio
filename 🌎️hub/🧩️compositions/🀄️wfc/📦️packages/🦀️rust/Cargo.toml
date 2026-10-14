@@ -19,11 +19,11 @@ path = "../../🦀️.rs"
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-2d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-wfc-3d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-wfc-bitmap = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-wfc-grid2d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-wfc-grid3d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-wfc-2d = { workspace = true }
+semio-s-artifact-wfc-3d = { workspace = true }
+semio-s-artifact-wfc-bitmap = { workspace = true }
+semio-s-artifact-wfc-grid2d = { workspace = true }
+semio-s-artifact-wfc-grid3d = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

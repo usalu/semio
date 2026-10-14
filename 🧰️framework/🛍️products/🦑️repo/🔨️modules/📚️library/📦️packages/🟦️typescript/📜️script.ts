@@ -31,8 +31,8 @@ import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execu
  * coordinator therefore keeps its own `tsconfig.json` next to its `next.config.ts`, and both are checked. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
-    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "framework", "leases"), invocation: this.invocation, cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "b", "l", "m", "data"), invocation: this.invocation, cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
+    await typecheckProject({ workspace: this.repoRoot, stateRoot: resolve(this.repoRoot, ".cache", "framework"), leaseDirectory: resolve(this.repoRoot, ".cache", "b", "l", "m", "data"), invocation: this.invocation, cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
   }
 }
 
@@ -134,10 +134,10 @@ class TestScript extends BundleScript {
     }
 
     if (segments.length === 1 && segments[0] === "target-execution") {
-      const {targetExecutionPreparationControlV1,prepareTargetExecutionInventoryV1,verifyTargetExecutionInventoryV1}=await import("../../🔌️nx-plugin/🏃️execution/🧪️tests/📥️preparation/🟦️.ts");
+      const {targetExecutionPreparationControlV1,prepareTargetExecutionInventoryV1,verifyTargetExecutionInventoryV1}=await import("../../🏗️build/🏃️execution/🧪️tests/📥️preparation/🟦️.ts");
       const control=targetExecutionPreparationControlV1(this.invocation,{version:1,maximumElapsedMilliseconds:120000},()=>performance.now()),env=repoTestArtifactEnvironment(this.repoRoot,"target-execution"),output=join(env.SEMIO_TEST_ARTIFACT_DIR!,`execution-inventory-${process.pid}.json`);
       const {digest}=await prepareTargetExecutionInventoryV1(this.repoRoot,output,control);
-      await runRepositoryCommand(this.invocation,process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🏃️execution/🧪️tests/🟦️.ts")],this.repoRoot,"repository-target-execution",{version:1,maximumElapsedMilliseconds:control.remaining(),output:{maximumBytes:16777216,maximumLines:32768}},{env:{...env,SEMIO_TARGET_EXECUTION_INVENTORY_FILE:output,SEMIO_TARGET_EXECUTION_INVENTORY_SHA256:digest}});
+      await runRepositoryCommand(this.invocation,process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏃️execution/🧪️tests/🟦️.ts")],this.repoRoot,"repository-target-execution",{version:1,maximumElapsedMilliseconds:control.remaining(),output:{maximumBytes:16777216,maximumLines:32768}},{env:{...env,SEMIO_TARGET_EXECUTION_INVENTORY_FILE:output,SEMIO_TARGET_EXECUTION_INVENTORY_SHA256:digest}});
       await verifyTargetExecutionInventoryV1(output,digest,control);
       return;
     }
@@ -187,6 +187,12 @@ class TestScript extends BundleScript {
       if(segments.length!==1)throw Error("Expected test cargo-library-search-path");
       const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📚️library-search-path/🟦️.ts");
       await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-library-search-path"),budgetMs:150000});
+      return;
+    }
+    if (segments[0] === "build-discovery") {
+      if(segments.length!==1)throw Error("Expected test build-discovery");
+      const sources=["🕸️dependencies/🟦️typescript/🧪️tests/🟦️.ts","🏗️build/👁️observation/🧪️tests/🟦️.ts"].map(path=>join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",path));
+      await runRepositoryTestCommand(process.execPath,["test",...sources],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"build-discovery"),budgetMs:120000});
       return;
     }
     if (segments[0] === "nx-project-inference") {
@@ -890,7 +896,13 @@ class TestScript extends BundleScript {
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
       return;
     }
-    if (segments[0] === "mutation-case-pair") {
+        if (segments[0] === "rust-incremental-targets") {
+      if (segments.length !== 1) throw new Error("Expected test rust-incremental-targets");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦀️incremental-targets/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+if (segments[0] === "mutation-case-pair") {
       if (segments.length !== 1) throw new Error("Expected test mutation-case-pair");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-case-pair/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source, "--timeout", "240000"], { cwd: this.repoRoot, budgetMs: 480_000 });
@@ -933,7 +945,7 @@ class FixtureOwnershipTestScript extends BundleScript {
     
     
     
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" }, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(this.root, "🗑️generated", "fixture-ownership"),  progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`), groups: [
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [
           { package: "semio-framework-surface", target: { kind: "lib" }, laws: [
             "paint_stroke_refuses_locked_layers_and_locked_ancestors",
           ] },
@@ -961,7 +973,7 @@ class FixtureOwnershipTestScript extends BundleScript {
             "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback",
             "inference_approval_encoding_consumes_the_framework_owned_contract",
           ] },
-        ] });
+        ]});
       console.log(`fixture-ownership: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
     
   }

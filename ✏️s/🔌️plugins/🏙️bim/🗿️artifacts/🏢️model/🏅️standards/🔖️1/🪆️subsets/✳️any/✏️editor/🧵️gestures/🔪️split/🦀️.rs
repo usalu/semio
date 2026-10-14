@@ -4,7 +4,7 @@
 use super::opening::nearest_host;
 use super::plane::{axis_point_at, axis_tangent_at, P};
 use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📏️ How far past the face of the wall the cut mark reaches, in metres.
 const CUT_REACH: f64 = 0.15;
@@ -30,7 +30,7 @@ impl Split {
         let (at, tangent) = (axis_point_at(&host.axis, host.offset), axis_tangent_at(&host.axis, host.offset));
         let reach = host.thickness / 2.0 + CUT_REACH;
         let mark = [[at[0] - tangent[1] * reach, at[1] + tangent[0] * reach], [at[0] + tangent[1] * reach, at[1] - tangent[0] * reach]];
-        let probe = ModelMutation::SplitWall(crate::mutations::split_wall::SplitWall { id: host.host.clone(), t, new_id: "probe".into() });
+        let probe = ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: host.host.clone(), t, new_id: "probe".into() });
         Some(Cut { valid: ctx.accepts(&probe), wall: host.host, t, mark })
     }
 }
@@ -50,7 +50,7 @@ impl Tool for Split {
                     Some(cut) => {
                         let (id, t) = (cut.wall.clone(), cut.t);
                         let new_id = ctx.mint("wall");
-                        Step::write(ctx, ModelMutation::SplitWall(crate::mutations::split_wall::SplitWall { id, t, new_id }))
+                        Step::write(ctx, ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id, t, new_id }))
                     }
                 }
             }

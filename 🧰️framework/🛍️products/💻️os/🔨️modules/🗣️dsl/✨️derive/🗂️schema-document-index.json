@@ -5046,7 +5046,7 @@
       "semio://repo/caching/nx-graph-seal/v2": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🔏️seal/🧬️schema/🔣️.json",
       "semio://repo/caching/record-store-index/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗃️records/🧬️schema/🔣️.json",
       "semio://repo/discovery/policy/tool-run": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🧬️schema/🔣️.json",
-      "semio://repo/nx-plugin/inference-observation/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/👁️observation/🧬️schema/🔣️.json",
+      "semio://repo/build/inference-observation/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧬️schema/🔣️.json",
       "semio://repo/taxonomy/planner-blockers/v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🪡️planner-blockers/🔣️.json",
       "semio:cargo-command-entrypoint:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🎛️control/🚪️cli/🧩️entrypoint/🧬️schema/🔣️.json",
       "semio:cargo-command-request:v1": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🧬️schema/🔣️.json",

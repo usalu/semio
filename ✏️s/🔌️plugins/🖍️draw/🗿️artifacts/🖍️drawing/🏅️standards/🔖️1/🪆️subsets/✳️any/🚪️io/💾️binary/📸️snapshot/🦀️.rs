@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use store::PackError;
 
 //#region 🔖️HandcraftedArtifactPack

@@ -1,12 +1,12 @@
 use crate::editor::bim::gestures::session::{Shape, TYPE_MISSING};
 use crate::editor::bim::gestures::tests::fixture::{model, Rig};
-use crate::{Axis, ModelMutation, Point2, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, TopConstraint}, mutations::ModelMutation};
 
 fn line(start: (f64, f64), end: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }
 }
 
-fn created_wall(mutations: &[ModelMutation]) -> &crate::Wall {
+fn created_wall(mutations: &[ModelMutation]) -> &crate::standards::v1::subsets::any::schema::snapshot::Wall {
     match mutations {
         [ModelMutation::CreateWall(create)] => &create.wall,
         other => panic!("one create-wall expected, got {other:?}"),

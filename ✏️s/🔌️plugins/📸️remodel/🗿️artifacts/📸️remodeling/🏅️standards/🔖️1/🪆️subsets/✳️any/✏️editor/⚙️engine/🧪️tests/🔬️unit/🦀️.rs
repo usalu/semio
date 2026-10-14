@@ -1,4 +1,4 @@
-use crate::editor::remodeling::engine::step_ceiling;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 #[test]

@@ -1,13 +1,13 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-load-case`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::create_load_case;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::FemLoadCase;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️AddNodalLoad
 //#endregion 🔖️AddNodalLoad
@@ -36,6 +36,6 @@ pub struct AddLoadCase {
 
 pub fn handle(payload: &AddLoadCase, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.load_cases.iter().map(|lc| lc.id.clone()), "case-");
+    let id = semio_s_fem_app_surface::next_id(snapshot.load_cases.iter().map(|lc| lc.id.clone()), "case-");
     Ok(Emit::mutations(vec![Fem2dMutation::CreateLoadCase(create_load_case::CreateLoadCase { load_case: FemLoadCase { id, name: payload.name.clone(), loads: Vec::new(), self_weight: payload.self_weight }, index: None })]))
 }

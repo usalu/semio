@@ -1,5 +1,5 @@
 use super::*;
-use crate::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
 use store::InferredField;
 
 fn two_pose_snapshot() -> RemodelingSnapshot {

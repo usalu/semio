@@ -2,9 +2,9 @@
 //! calibration (the properties form always submits every intrinsics/distortion field together —
 //! the `update` verb's inseparable-facet exception, not a scalar `change`).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{CameraCalibration, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraCalibration;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -22,17 +22,20 @@ pub struct UpdateCameraCalibration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_camera_calibration(camera: CameraCalibration) -> RemodelingMutation {
-    RemodelingMutation::UpdateCameraCalibration(UpdateCameraCalibration { camera })
+pub fn update_camera_calibration<Op: From<UpdateCameraCalibration>>(camera: CameraCalibration) -> Op {
+    Op::from(UpdateCameraCalibration { camera })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateCameraCalibration {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for UpdateCameraCalibration
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<UpdateCameraCalibration>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera-calibration", kind: "update-camera-calibration", record: "UpdatedCameraCalibration" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

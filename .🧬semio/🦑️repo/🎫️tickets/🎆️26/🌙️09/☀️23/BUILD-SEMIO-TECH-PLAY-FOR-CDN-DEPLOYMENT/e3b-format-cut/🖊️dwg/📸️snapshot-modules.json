@@ -1,0 +1,192 @@
+{
+ "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+ "module": "crate::standards::v_ac1024::subsets::any::schema::snapshot",
+ "macros": "metadata",
+ "budget": {
+  "lines": 3000,
+  "bytes": 200000
+ },
+ "children": [
+  {
+   "name": "metadata",
+   "dir": "🎛️metadata",
+   "doc": "//! 🎛️ Record-metadata macros shared by every hand-written `DslRecord` of the AC1024 snapshot.",
+   "match": [
+    "^dwg_(ordinary|controlled|borrowed)_shape$",
+    "^dwg_borrowed_metadata$",
+    "^dwg_metadata$",
+    "^dwg_controlled_payloads$"
+   ]
+  },
+  {
+   "name": "geometry",
+   "dir": "🧮️geometry",
+   "doc": "//! 🧮️ The logical geometry projection: layers, entities and geometry records and their native drawing conversions.",
+   "match": [
+    "^DwgLogical(Geometry|GeometryKind|Layer|Entity)$",
+    "^vec[23]$"
+   ]
+  },
+  {
+   "name": "xrecord",
+   "dir": "🏷️xrecord",
+   "doc": "//! 🏷️ Extended data: xrecord values and bodies, dictionaries, extended entity data and named references.",
+   "match": [
+    "^DwgXRecord",
+    "^DwgDictionaryBody$",
+    "^DwgExtendedEntityData$",
+    "^DwgDictionaryVariable$",
+    "^DwgNamedReference$",
+    "^DwgObjectCategory$"
+   ]
+  },
+  {
+   "name": "tables",
+   "dir": "🗃️tables",
+   "doc": "//! 🗃️ Symbol tables: table controls, table records, complex colors and dimension-style parts.",
+   "match": [
+    "^DwgTableControl",
+    "^Dwg(Block|Linetype|DimensionStyle)TableControl$",
+    "^DwgTableRecord",
+    "TableRecord$",
+    "^DwgComplexColor",
+    "^DwgLinetypeDash$",
+    "^DwgDimension(Geometry|Behavior|Text|Units|R2010)$"
+   ]
+  },
+  {
+   "name": "entities",
+   "dir": "📐️entities",
+   "doc": "//! 📐️ Graphical entities: the common entity fields, every entity body and the viewport and dimension entities.",
+   "match": [
+    "^DwgEntity",
+    "Entity$",
+    "^DwgLwPolylineVertex$",
+    "^DwgDimension(TextAttachment|LineSpacingStyle|Status|EntityCommon)$",
+    "^DwgViewport(StatusFlag|RenderMode)$",
+    "^DwgOrthographicView$",
+    "^DwgShadePlotMode$",
+    "^DwgDefaultLightingType$"
+   ]
+  },
+  {
+   "name": "associativity",
+   "dir": "🔗️associativity",
+   "doc": "//! 🔗️ Associativity and evaluation: dependencies, actions, variables, evaluation expressions and graphs, networks.",
+   "match": [
+    "^DwgAssociative",
+    "^DwgEvaluation",
+    "^DwgAssocNetwork",
+    "^DwgDynamicBlockProxyNode$",
+    "^DwgBlockGripLocationComponent$",
+    "^DwgNamedEvaluationNodeReference$",
+    "^DwgPropertyExpressionReference$"
+   ]
+  },
+  {
+   "name": "styles",
+   "dir": "🖌️styles",
+   "doc": "//! 🖌️ Styles: visual styles, table and cell styles, multiline styles, multileader styles and materials.",
+   "match": [
+    "^DwgVisualStyle",
+    "^DwgCell",
+    "^DwgTableStyle$",
+    "^DwgMline",
+    "^DwgMLeader",
+    "^DwgMaterial"
+   ]
+  },
+  {
+   "name": "blocks",
+   "dir": "🧩️blocks",
+   "doc": "//! 🧩️ Dynamic blocks: parameters, grips, actions, visibility states and representation data.",
+   "match": [
+    "^DwgBlock",
+    "^DwgVisibility",
+    "^DwgStretch",
+    "^DwgDynamicBlockPurgePreventer$"
+   ]
+  },
+  {
+   "name": "constraints",
+   "dir": "📏️constraints",
+   "doc": "//! 📏️ Geometric and dimensional constraints of 2D constraint groups.",
+   "match": [
+    "^DwgConstraint",
+    "^DwgGeometricConstraint$",
+    "^DwgExplicitConstraint$",
+    "^DwgConstrained",
+    "^Dwg(Distance|Axis)Constraint$",
+    "^DwgAssoc2dConstraintGroup$"
+   ]
+  },
+  {
+   "name": "objects",
+   "dir": "📦️objects",
+   "doc": "//! 📦️ Non-graphical objects: layouts and plot settings, annotation scales, draw order and the object body union.",
+   "match": [
+    "^DwgPlaceholder$",
+    "^DwgAnnotationScale$",
+    "^DwgDrawOrderEntry$",
+    "^DwgSortEntitiesTable$",
+    "^DwgPlot",
+    "^DwgLayout",
+    "^DwgStandardScale$",
+    "^DwgShadePlot(Resolution)?$",
+    "^DwgLogicalObject"
+   ]
+  },
+  {
+   "name": "drawing",
+   "dir": "✏️drawing",
+   "doc": "//! ✏️ The logical drawing: its object graph and the standard handles of a new document.",
+   "match": [
+    "^DwgLogicalDrawing$",
+    "^new_document_handles$"
+   ]
+  },
+  {
+   "name": "header",
+   "dir": "🔧️header",
+   "doc": "//! 🔧️ Header variables: units, modes, settings, scalars, time state, space geometry, dimension settings and relations.",
+   "match": [
+    "^DwgHeader",
+    "^DwgDimensionSettings$",
+    "^DwgDrawingPolicy$"
+   ]
+  },
+  {
+   "name": "document",
+   "dir": "📄️document",
+   "doc": "//! 📄️ File-level sections: classes, dependencies, auxiliary header, revision history, preview, summary and application info.",
+   "match": [
+    "^DwgClass$",
+    "^DwgDependency$",
+    "^DwgJulianDate$",
+    "^DwgVersionStamp$",
+    "^DwgCompatibilityProfile$",
+    "^DwgAuxiliaryHeader$",
+    "^DwgRevisionHistory$",
+    "^DwgPreviewOrigin$",
+    "^DwgRgba$",
+    "^DwgIndexedPreview$",
+    "^DwgApplication",
+    "^DwgProductInformation$",
+    "^DwgCustomProperty$",
+    "^DwgSummaryInfo$",
+    "^DwgMeasurement$",
+    "^DwgTemplate$",
+    "^DWG_NEW_DOCUMENT_MAINTENANCE_VERSION$"
+   ]
+  }
+ ],
+ "keep": [
+  "^DwgSnapshot$",
+  "^controlled_metadata_tests$",
+  "^DWG_PREAMBLE_LEN$",
+  "^DwgExportError$",
+  "^WRITTEN_VERSION$",
+  "^is_preamble_only_document$",
+  "^unwritable_version$"
+ ]
+}

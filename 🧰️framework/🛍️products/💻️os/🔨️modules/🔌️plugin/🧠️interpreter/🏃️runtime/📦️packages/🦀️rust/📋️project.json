@@ -1,0 +1,37 @@
+{
+  "name": "@semio-tech/framework-plugin-interpreter-runtime",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-plugin"
+  ],
+  "targets": {
+    "check": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        {
+          "projects": [
+            "@semio-tech/framework-plugin-host-test-component"
+          ],
+          "target": "component"
+        }
+      ]
+    }
+  }
+}

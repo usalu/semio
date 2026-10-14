@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetSlab`: an absolute `SetSlab` carrying the base values of exactly the provided fields, none when the slab is absent.
 
 use super::SetSlab;
-use crate::{Assigned, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetSlab, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.slabs.get(&payload.id) {

@@ -2,7 +2,8 @@ use super::*;
 use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember};
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_s_artifact_stdio_semio_base::{SemioSnapshotRetirementFactory, SEMIO_ARTIFACT_SCHEMA_ID};
+use semio_s_artifact_stdio_semio_base::SemioSnapshotRetirementFactory;
+use semio_s_artifact_stdio_semio_base::SEMIO_ARTIFACT_SCHEMA_ID;
 use std::{marker::PhantomData, sync::Arc};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -138,8 +139,10 @@ async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
 /// witness.
 #[semio_framework_async_macros::async_test]
 async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them() {
-    use {semio_s_artifact_stdio_semio_value::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+    use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation};
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
     let seed = SemioValueSnapshot::default();
     let mut envelope = dsl::os_store::document_materialize::create_document_envelope::<SemioValueSnapshot, SemioValueMutation>(STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, "value-close-law", seed, None);
@@ -204,8 +207,10 @@ fn close_member(member: &mut SemioMembers) {
 /// 🧭️ Genuine superseded history and retained replay prefixes reach the same bounded Semio close cursor.
 #[semio_framework_async_macros::async_test]
 async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
-    use {semio_s_artifact_stdio_semio_value::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+    use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation};
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
     let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
     let document = case["document"].as_str().unwrap();
     let seed = SemioValueSnapshot::default();

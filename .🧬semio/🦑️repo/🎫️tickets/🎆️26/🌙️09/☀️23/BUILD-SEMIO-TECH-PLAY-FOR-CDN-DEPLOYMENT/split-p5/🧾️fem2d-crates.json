@@ -1,0 +1,247 @@
+{
+ "workspace": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml",
+ "registry_roots": [
+  "🧰️framework",
+  "✏️s/🔨️modules/🏗️fem",
+  "✏️s/🔌️plugins/🏗️fem",
+  "✏️s/🔌️plugins/🗄️stdio"
+ ],
+ "crates": [
+  {
+   "name": "semio-s-artifact-fem-2d-model",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d model: structural entities, schema, snapshot, diff, inferences and mutation guards",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-engine",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/⚙️engine/◻️2d/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d engine bridge: meshing, mesh preview and modal/buckling over the shared fem engine",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-mesh-topology",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d node and element mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-mesh",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d section and region mutations and the selection move",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-load",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d load case, load and combination mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-boundary",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d support mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-material",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d material mutations",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-analysis",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d analysis-settings mutation",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-mutations",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d mutation dispatch enum, inverse delegate and central apply",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   },
+   "tests": [
+    [
+     "mesh_topology_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_property_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️property-kinds/🦀️.rs"
+    ],
+    [
+     "mesh_selection_kinds",
+     "../../../../../🕸️mesh/🧪️tests/🔬️selection-kinds/🦀️.rs"
+    ],
+    [
+     "load_case_kinds",
+     "../../../../../🏋️load/🧪️tests/🔬️case-kinds/🦀️.rs"
+    ],
+    [
+     "load_combination_kinds",
+     "../../../../../🏋️load/🧪️tests/🔬️combination-kinds/🦀️.rs"
+    ],
+    [
+     "boundary_kinds",
+     "../../../../../🛡️boundary/🧪️tests/🔬️support-kinds/🦀️.rs"
+    ],
+    [
+     "material_kinds",
+     "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀️.rs"
+    ],
+    [
+     "analysis_kinds",
+     "../../../../../📈️analysis/🧪️tests/🔬️settings-kinds/🦀️.rs"
+    ]
+   ],
+   "extra": [
+    "semio-framework-os-command"
+   ],
+   "extra_dev": [
+    "semio-s-fem-test-support",
+    "semio-framework-pack-json"
+   ]
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-io",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d text, binary and SQLite codecs, stdio import and export, composers, languages and examples",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d-viewer",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust",
+   "lib": "🦀️.rs",
+   "role": "library",
+   "description": "FEM 2d viewer",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   }
+  },
+  {
+   "name": "semio-s-artifact-fem-2d",
+   "dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust",
+   "lib": "../../🦀️.rs",
+   "role": "artifact",
+   "description": "FEM 2d artifact: definition, declaration, editor and registration over the fem 2d crates",
+   "dev_features": {
+    "semio-framework-os-kernel": [
+     "protocol-laws",
+     "mutation-testing"
+    ],
+    "semio-framework-plugin": [
+     "artifact-app-testing"
+    ]
+   },
+   "raw": {
+    "machine": "machine = { path = \"../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust\", package = \"semio-framework-machine\" }"
+   }
+  }
+ ]
+}

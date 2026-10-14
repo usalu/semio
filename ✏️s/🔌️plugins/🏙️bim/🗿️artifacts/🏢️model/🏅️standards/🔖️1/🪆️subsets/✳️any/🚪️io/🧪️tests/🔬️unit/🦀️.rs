@@ -14,8 +14,8 @@ fn entry(direction: IoEntryDirection) -> &'static semio_framework_os_kernel::io:
 #[test]
 fn the_declaration_lists_the_ifc_export_and_import_between_the_bim_and_the_ifc_dialect() {
     let (export, import) = (entry(IoEntryDirection::Export), entry(IoEntryDirection::Import));
-    assert_eq!((export.from, export.into), (crate::BIM_MODEL_DIALECT, IFC_DIALECT));
-    assert_eq!((import.from, import.into), (IFC_DIALECT, crate::BIM_MODEL_DIALECT));
+    assert_eq!((export.from, export.into), (crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IFC_DIALECT));
+    assert_eq!((import.from, import.into), (IFC_DIALECT, crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT));
     assert!(import.sniff.is_some());
 }
 
@@ -43,7 +43,7 @@ fn the_io_declaration_lists_the_native_pack_and_text_codec_and_every_foreign_hop
     use crate::standards::v1::subsets::any::io::text::snapshot as text;
     use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     let declaration = io();
-    assert_eq!(declaration.native.codec.schema, crate::BIM_MODEL_DOCUMENT_SCHEMA);
+    assert_eq!(declaration.native.codec.schema, crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let model = house();
     assert_eq!(pack::decode(&pack::encode(&model)).expect("the pack carrier decodes"), model);
     assert_eq!(text::parse_dsl(&text::print_dsl(&model)).expect("the text carrier parses"), model);
@@ -66,10 +66,10 @@ fn the_io_declaration_lists_the_native_pack_and_text_codec_and_every_foreign_hop
             (IoEntryDirection::Import, "s.stdio.bcf", "s.bim.model", "1"),
         ]
     );
-    assert_eq!(<ModelIntoIfc4 as Serializer<crate::ModelSnapshot>>::INTO.standard.0, "4");
-    assert_eq!([<ModelIntoIfc2x3 as Serializer<crate::ModelSnapshot>>::INTO, <ModelIntoGlb as Serializer<crate::ModelSnapshot>>::INTO, <ModelIntoSvg as Serializer<crate::ModelSnapshot>>::INTO].map(|dialect| dialect.artifact_kind), ["s.stdio.ifc", "s.stdio.gltf", "s.stdio.svg"]);
-    assert_eq!(<Ifc2x3IntoModel as Deserializer<crate::ModelSnapshot>>::FROM, IFC_DIALECT);
-    assert_eq!(<Ifc4IntoModel as Deserializer<crate::ModelSnapshot>>::FROM, crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT);
+    assert_eq!(<ModelIntoIfc4 as Serializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::INTO.standard.0, "4");
+    assert_eq!([<ModelIntoIfc2x3 as Serializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::INTO, <ModelIntoGlb as Serializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::INTO, <ModelIntoSvg as Serializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::INTO].map(|dialect| dialect.artifact_kind), ["s.stdio.ifc", "s.stdio.gltf", "s.stdio.svg"]);
+    assert_eq!(<Ifc2x3IntoModel as Deserializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::FROM, IFC_DIALECT);
+    assert_eq!(<Ifc4IntoModel as Deserializer<crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot>>::FROM, crate::standards::v1::subsets::any::io::export::ifc::ifc4::IFC4_DIALECT);
 }
 
 #[test]
@@ -86,7 +86,7 @@ fn sweeps_attached_walls_and_reveals_survive_the_pack_and_the_text_carrier_and_t
     use crate::standards::v1::subsets::any::io::export::ifc::testkit::attic;
     use crate::standards::v1::subsets::any::io::import::ifc::attach::tests::with_depth;
     use crate::standards::v1::subsets::any::io::text::snapshot as text;
-    use crate::TopConstraint;
+    use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
     let model = attic();
     assert!(!model.wall_sweeps.is_empty() && model.openings.values().any(|opening| opening.reveal_depth.is_some() && opening.reveal_material.is_some()));
     assert!(model.walls.values().any(|wall| matches!(wall.top, TopConstraint::Roof { .. })) && model.walls.values().any(|wall| wall.base_slab.is_some()));

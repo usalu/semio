@@ -5,7 +5,7 @@
 
 use super::super::placement::{ramp_issue, refuse_stair};
 use super::SetRamp;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetRamp, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

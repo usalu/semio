@@ -113,19 +113,13 @@ fn pages_after(pages: &[OraclePage], mutation: &Json) -> Result<Vec<OraclePage>,
 
 //#region 🔖️Dispatch
 /// ▶️ Mutates independently decoded pages and rebuilds them using lopdf.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], mutation: &Json) -> Result<Vec<u8>, String> {
     let pages = pages_after(&independent_pages(input)?, mutation)?;
     build_document(&pages)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _mutation: &Json) -> Result<Vec<u8>, String> {
-    Err("The oracles feature is disabled".into())
-}
 
 /// ↩️ Captures only the fields required by the concrete opposite operation.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     let pages = independent_pages(base)?;
     pages_after(&pages, forward)?;
@@ -150,28 +144,18 @@ pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> 
     })
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("The oracles feature is disabled".into())
-}
 
 /// 🔁️ Re-serializes the original lopdf object graph without an identity mutation.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("The oracles feature is disabled".into())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️IndependentReader
 /// 👁️ Every page of the document, in reading order, read through `lopdf`'s own page-tree walk,
 /// `/MediaBox` inheritance chain and content-stream decoder — never through this repository's
 /// byte-search `decode_pdf`.
-#[cfg(feature = "oracles")]
 pub fn independent_pages(input: &[u8]) -> Result<Vec<OraclePage>, String> {
     oracles::pages(input)
 }
@@ -183,21 +167,12 @@ pub fn independent_pages(input: &[u8]) -> Result<Vec<OraclePage>, String> {
 /// snapshot does not retain it, and `%PDF-1.5` (which is what the committed thesis actually
 /// declares) surviving a `lopdf` round trip while our writer emits its own `%PDF-1.4` would report
 /// a divergence about a field neither producer was asked to carry.
-#[cfg(feature = "oracles")]
 pub fn project_pdf_1_4(input: &[u8]) -> Result<Json, String> {
     let pages = independent_pages(input)?;
     Ok(Json::Object(vec![("pageCount".to_string(), Json::Number(pages.len() as f64)), ("pages".to_string(), Json::Array(pages.iter().map(OraclePage::to_json).collect()))]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_pdf_1_4(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn independent_pages(_input: &[u8]) -> Result<Vec<OraclePage>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️IndependentReader
 
 //#region 🔖️IndependentWriter
@@ -206,19 +181,13 @@ pub fn independent_pages(_input: &[u8]) -> Result<Vec<OraclePage>, String> {
 /// `/Pages` node, each with its own `/MediaBox [0 0 width height]` and a content stream showing
 /// that page's text through a simple `/Type1` font, so what a reader recovers is what the snapshot
 /// said. A page whose text is empty gets an empty text object rather than a `Tj` of `""`.
-#[cfg(feature = "oracles")]
 pub fn build_document(pages: &[OraclePage]) -> Result<Vec<u8>, String> {
     oracles::build_document(pages)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn build_document(_pages: &[OraclePage]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️IndependentWriter
 
 //#region 🔖️Reference
-#[cfg(feature = "oracles")]
 mod oracles {
     use super::OraclePage;
     use lopdf::{
@@ -352,7 +321,7 @@ mod oracles {
 //#endregion 🔖️Reference
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

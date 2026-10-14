@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::schema::mutations::SemioAudioMutation;
-use crate::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use crate::viewer::modes::view;
 use crate::viewer::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

@@ -75,7 +75,7 @@ async fn the_wall_solids_projection_lists_the_straight_walls_with_their_layout_e
     let model = house();
     let inferred = ModelInference::infer(&model).expect("infers");
     let solids: serde_json::Value = serde_json::from_str(&encode_inference_projection_json(&model, "wall-solids").expect("known table")).expect("JSON table");
-    let straight: Vec<&String> = model.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::Axis::Line { .. })).map(|(id, _)| id).collect();
+    let straight: Vec<&String> = model.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { .. })).map(|(id, _)| id).collect();
     assert_eq!(solids.as_object().expect("table").len(), straight.len());
     for id in straight {
         let layout = &inferred.wall_layout[id];
@@ -88,7 +88,7 @@ async fn the_wall_solids_projection_lists_the_straight_walls_with_their_layout_e
 
 #[semio_framework_async_macros::async_test]
 async fn a_diff_outside_the_reads_serves_the_stored_result_without_walking_the_plan() {
-    use crate::{Entry, ModelDiff, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::StoreyPatch};
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
     let snapshot = house();
     let mut session = ModelInferenceSession::new();

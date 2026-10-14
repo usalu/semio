@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
-use crate::{DetailLevel, Point2, ViewCrop, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, Point2, ViewCrop, ViewKind};
 
 fn drawing(scale: u32, bounds: (f64, f64, f64, f64)) -> ViewLinework {
     let stroke = PlanPolyline { id: "l-1".into(), element: "w-1".into(), kind: PlanKind::WallOutline, style: PlanStyle::Cut, closed: false, vertices: vec![PlanVertex { x: bounds.0, y: bounds.1, bulge: 0.0 }, PlanVertex { x: bounds.2, y: bounds.3, bulge: 0.0 }] };

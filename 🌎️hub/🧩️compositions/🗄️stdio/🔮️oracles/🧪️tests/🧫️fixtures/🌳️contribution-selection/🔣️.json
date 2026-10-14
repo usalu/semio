@@ -4,10 +4,10 @@
     {
       "id": "explicit-artifact-package", "owner": "lower/plugin/artifact/case", "implementation": "rust",
       "contributions": [
-        { "owner": "higher/composition", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] },
-        { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] }
+        { "owner": "higher/composition", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] },
+        { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] }
       ],
-      "expected": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }]
+      "expected": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }]
     },
     {
       "id": "higher-owner-is-not-an-ancestor", "owner": "lower/plugin/artifact/case", "implementation": "rust",
@@ -31,11 +31,11 @@
       "id": "ancestor-and-subset-features-remain-separate-records", "owner": "lower/plugin/artifact/subset/case", "implementation": "rust",
       "contributions": [
         { "owner": "lower/plugin/artifact", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] },
-        { "owner": "lower/plugin/artifact/subset", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }] }
+        { "owner": "lower/plugin/artifact/subset", "oracleHostPackages": [{ "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }] }
       ],
       "expected": [
         { "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" },
-        { "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle", "features": ["oracles"] }
+        { "implementation": "rust", "package": "oracle", "path": "higher/composition/oracle" }
       ]
     }
   ]

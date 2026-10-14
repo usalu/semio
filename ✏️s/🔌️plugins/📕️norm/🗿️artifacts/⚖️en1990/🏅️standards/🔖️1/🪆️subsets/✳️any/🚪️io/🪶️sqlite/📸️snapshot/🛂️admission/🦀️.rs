@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn actions_count(root:&R)->Result<usize,ValueError>{let mut count=0;for id in 13..=16{count=n::add(count,n::list(n::field(root,id)?)?.len())?}Ok(count)}
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=n::add(1,actions_count(root)?.checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"norm action row extent overflow"))?)?;for id in 17..=19{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}Ok(rows)}
 fn push<'a>(frontier:&mut Vec<(&'a str,i64)>,text:&'a str,id:i64)->Result<(),ValueError>{if frontier.len()==frontier.capacity(){return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"norm borrowed reference frontier exceeded admitted backing"))}frontier.push((text,id));Ok(())}

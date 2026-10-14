@@ -1,6 +1,6 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::STDIO_STEP_DOCUMENT_SCHEMA;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 use crate::standards::v_ap214::subsets::base::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 #[test]

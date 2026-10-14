@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"id": "empty", "segments": [], "schema": ""},
+    {"id": "single", "segments": ["CREATE TABLE a(x INTEGER);"], "schema": "CREATE TABLE a(x INTEGER);"},
+    {"id": "separated", "segments": ["CREATE TABLE a(x INTEGER);", "\n", "CREATE TABLE b(y TEXT);"], "schema": "CREATE TABLE a(x INTEGER);\nCREATE TABLE b(y TEXT);"},
+    {"id": "multibyte", "segments": ["CREATE TABLE \"é\"(x);", "\n", "CREATE TABLE \"图\"(y);"], "schema": "CREATE TABLE \"é\"(x);\nCREATE TABLE \"图\"(y);"}
+  ]
+}

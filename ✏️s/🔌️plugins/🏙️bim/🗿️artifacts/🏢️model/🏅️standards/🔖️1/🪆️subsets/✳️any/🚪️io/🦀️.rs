@@ -18,7 +18,7 @@ pub mod bcf;
 
 //#region 🔖️Inference
 /// 🔮️ Reads the inference of `model` from the shared session (the one path every consumer takes), so an export after an edit recomputes only what the edit touched; a fault of the run is a refusal of `leaf`.
-pub fn with_inferred<R>(leaf: &str, model: &crate::ModelSnapshot, read: impl FnOnce(&crate::ModelInference) -> R) -> Result<R, semio_framework::io_schema::IoError> {
+pub fn with_inferred<R>(leaf: &str, model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, read: impl FnOnce(&crate::standards::v1::subsets::any::schema::inferences::ModelInference) -> R) -> Result<R, semio_framework::io_schema::IoError> {
     use semio_framework_value::{ValueError, ValueRefusalKind};
     crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, model, read).map_err(|error| semio_framework::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, format!("{leaf}: {error}"))))
 }
@@ -27,7 +27,7 @@ pub fn with_inferred<R>(leaf: &str, model: &crate::ModelSnapshot, read: impl FnO
 //#region 🔖️IoDeclaration
 /// 🚪️ The subset's io surface: every foreign-dialect hop, one `serializer_entry` / `deserializer_entry` per leaf.
 pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::{ModelMutation, ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
     use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;

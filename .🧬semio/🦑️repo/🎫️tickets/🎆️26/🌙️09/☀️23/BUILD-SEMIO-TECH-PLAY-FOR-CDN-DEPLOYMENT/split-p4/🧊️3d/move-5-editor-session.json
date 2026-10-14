@@ -1,0 +1,10 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "from_module": "editor::puzzle3d", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs", "to_module": "editor::puzzle3d::session",
+   "doc": "//! 🧵️ Puzzle 3d editing session — one document instance's resident state (precompute engine, instance residency, mesh\n//! lane), the process-global session registry that keeps it across calls, the action context every command arm reads,\n//! the engine bridge from the transient scene to the precompute session, and the context menu.",
+   "mount_in": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "mount": "#[path = \"🧵️session/🦀️.rs\"]\npub mod session;",
+   "select": ["regionx:🔖️Document/🔖️EngineBridge", "regionx:🔖️Document/🔖️ActionContext", "regionx:🔖️Document/🔖️ContextMenu", "regionx:🔖️Document/🔖️PlayApp/🎟️SessionRegistry", "regionx:🔖️Document/🔖️PlayApp/🧠️InstanceOperationOwner", "item#126", "with_puzzle3d_app_for", "with_puzzle3d_app", "macro#144", "Puzzle3dPlayApp"],
+   "exclude": ["impl ArtifactEditor for Puzzle3dPlayApp"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs", "from_module": "editor::puzzle3d::modes::edit::windows::main", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs", "to_module": "editor::puzzle3d::session",
+   "select": ["Puzzle3dInstanceResidency", "instance_record_json", "instance_record_fingerprint", "hash_dsl_value", "world_instances_geometry_json"]}
+ ]}

@@ -4,9 +4,11 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME positivity bounds
 //! `create-section` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, Fem2dSectionsModification};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSectionsModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceSection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

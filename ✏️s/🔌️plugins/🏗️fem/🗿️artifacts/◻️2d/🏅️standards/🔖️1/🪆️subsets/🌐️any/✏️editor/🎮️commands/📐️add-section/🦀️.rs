@@ -1,12 +1,12 @@
 //! 🧱️ 🧱️ Fem2d play app commands command — `add-section`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::FemSection;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️AddNode
 //#endregion 🔖️AddNode
@@ -39,6 +39,6 @@ pub struct AddSection {
 
 pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
-    let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy }, index: None })]))
+    let id = semio_s_fem_app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy }, index: None })]))
 }

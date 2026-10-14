@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/icon-contract-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:icon-contract"
+  ]
+}

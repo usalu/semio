@@ -1,0 +1,43 @@
+{
+ "keep": "pipeline",
+ "layers": {
+  "surface": {
+   "regions": [
+    "🔖️TriMesh",
+    "🔖️Topology",
+    "🔖️MarchingCubes"
+   ],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🔺️surface/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::mesh::surface",
+   "header": "//! 🔺️ Mesh surface: the indexed triangle mesh, its half-edge topology and iso-surface extraction from a TSDF volume or a dense field.\n"
+  },
+  "repair": {
+   "regions": [
+    "🔖️Clean",
+    "🔖️Repair",
+    "🔖️HoleFill",
+    "🔖️Close",
+    "🔖️Validate"
+   ],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🩹️repair/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::mesh::repair",
+   "header": "//! 🩹️ Mesh repair: cleaning, non-manifold repair, consistent orientation, hole filling, the closed voxel fallback and watertightness validation.\n"
+  },
+  "atlas": {
+   "regions": [
+    "🔖️Simplify",
+    "🔖️Unwrap",
+    "🔖️Texture"
+   ],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🗺️atlas/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::mesh::atlas",
+   "header": "//! 🗺️ Mesh atlas: quadric simplification, chart segmentation and LSCM unwrapping, and multi-view texture baking.\n"
+  },
+  "pipeline": {
+   "regions": [],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🥽️mesh/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::mesh",
+   "mounts": "#[path = \"🔺️surface/🦀️.rs\"]\npub mod surface;\n#[path = \"🩹️repair/🦀️.rs\"]\npub mod repair;\n#[path = \"🗺️atlas/🦀️.rs\"]\npub mod atlas;\n\n"
+  }
+ }
+}

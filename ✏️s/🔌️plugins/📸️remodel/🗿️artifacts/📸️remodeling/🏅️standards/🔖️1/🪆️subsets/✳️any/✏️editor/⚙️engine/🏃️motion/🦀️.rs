@@ -2,15 +2,22 @@
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
 // this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
-use crate::editor::remodeling::engine::{camera as remodeling_camera, feature as remodeling_feature, images as remodeling_image, sfm as remodeling_sfm};
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 
-pub use crate::lie::Se3;
-pub use remodeling_camera::{CameraPose, Intrinsics};
-pub use remodeling_image::{ImageGray, Pyramid};
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3;
+use remodeling_camera::{CameraPose, Intrinsics};
+use remodeling_image::{ImageGray, Pyramid};
 
-use crate::algebra::{solve_llsq, MatD, VecD};
-use crate::optimize::{levenberg_marquardt, numeric_jacobian, LeastSquaresProblem, LmConfig};
-use crate::spatial::KdTree;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::solve_llsq;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::MatD;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::VecD;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::levenberg_marquardt;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::numeric_jacobian;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::LeastSquaresProblem;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::LmConfig;
+use semio_s_artifact_remodel_remodeling_spatial::standards::v1::subsets::any::schema::spatial_internals::KdTree;
 use remodeling_feature::{forward_backward_prune, klt_track, shi_tomasi_grid};
 
 // #region 🔖️Vec3Helpers
@@ -264,7 +271,7 @@ const TRAJECTORY_WINDOW_RADIUS: usize = 3;
 /// `(CameraPose, Intrinsics)` per frame index, not a synced multi-camera rig. A lone camera cannot
 /// triangulate an instantaneous position from a single observation, so each output sample instead reuses a
 /// short sliding window of up to `2 * TRAJECTORY_WINDOW_RADIUS + 1` neighbouring frames' poses and this
-/// track's pixel observation at each of them as a multi-view [`remodeling_sfm::triangulate_dlt`] problem,
+/// track's pixel observation at each of them as a multi-view [`crate::editor::remodeling::engine::sfm::geometry::triangulate_dlt`] problem,
 /// under the documented quasi-static approximation that the tracked point moves little relative to the
 /// camera's baseline change across that short window. This is a deliberate simplification of the more
 /// general synced-rig formulation (multiple simultaneous observations at one frame index), which the flat
@@ -293,7 +300,7 @@ pub fn triangulate_tracks(cams_per_frame: &[(u32, CameraPose, Intrinsics)], trac
                 if poses.len() < 2 {
                     continue;
                 }
-                if let Some(p) = remodeling_sfm::triangulate_dlt(&poses, &obs) {
+                if let Some(p) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::triangulate_dlt(&poses, &obs) {
                     samples.push((ts, p));
                 }
             }
@@ -328,7 +335,7 @@ fn mean_dt(traj: &Trajectory3d) -> f64 {
 
 /// 📈️ Shared Savitzky-Golay derivative kernel for [`velocity`]/[`acceleration`]: assumes roughly-uniform
 /// sampling (`dt` = mean spacing between consecutive timestamps) and applies
-/// [`crate::signal::savitzky_golay`] independently to each of the x/y/z channels. Falls back to all
+/// [`crate::standards::v1::subsets::any::schema::signal_internals::savitzky_golay`] independently to each of the x/y/z channels. Falls back to all
 /// zeros when there are too few samples for even the smallest valid odd window (`< 3` points).
 fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
     let n = traj.samples.len();
@@ -342,9 +349,9 @@ fn sg_derivative(traj: &Trajectory3d, deriv: usize) -> Vec<[f64; 3]> {
     let xs: Vec<f64> = traj.samples.iter().map(|s| s.1[0]).collect();
     let ys: Vec<f64> = traj.samples.iter().map(|s| s.1[1]).collect();
     let zs: Vec<f64> = traj.samples.iter().map(|s| s.1[2]).collect();
-    let vx = crate::signal::savitzky_golay(&xs, window, order, deriv, dt);
-    let vy = crate::signal::savitzky_golay(&ys, window, order, deriv, dt);
-    let vz = crate::signal::savitzky_golay(&zs, window, order, deriv, dt);
+    let vx = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::savitzky_golay(&xs, window, order, deriv, dt);
+    let vy = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::savitzky_golay(&ys, window, order, deriv, dt);
+    let vz = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::savitzky_golay(&zs, window, order, deriv, dt);
     (0..n).map(|i| [vx[i], vy[i], vz[i]]).collect()
 }
 
@@ -471,10 +478,10 @@ fn half_power_bandwidth_damping(psd: &[f64], peak_idx: usize, bin_hz: f64, freq_
 }
 
 /// 🎵️ Per-track Welch-PSD modal analysis: extracts each track's y-displacement signal, computes
-/// `reference_track`'s power spectral density ([`crate::signal::welch_psd`]), picks the strongest
-/// `max_modes` peaks ([`crate::signal::find_peaks`]) above a PSD-relative prominence floor, estimates
+/// `reference_track`'s power spectral density ([`crate::standards::v1::subsets::any::schema::signal_internals::welch_psd`]), picks the strongest
+/// `max_modes` peaks ([`crate::standards::v1::subsets::any::schema::signal_internals::find_peaks`]) above a PSD-relative prominence floor, estimates
 /// each mode's half-power-bandwidth damping ratio, and derives every track's mode shape from cross-spectral
-/// analysis ([`crate::signal::cross_spectrum`]) against the reference track at each modal frequency.
+/// analysis ([`crate::standards::v1::subsets::any::schema::signal_internals::cross_spectrum`]) against the reference track at each modal frequency.
 /// <https://en.wikipedia.org/wiki/Q_factor#Bandwidth_definition>
 pub fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_modes: usize) -> ModalResult {
     if tracks.is_empty() || fps <= 0.0 || max_modes == 0 || reference_track >= tracks.len() {
@@ -485,17 +492,17 @@ pub fn modal_analysis(tracks: &[Track2d], fps: f64, reference_track: usize, max_
         return ModalResult { frequencies_hz: Vec::new(), damping_ratios: Vec::new(), mode_shapes: Vec::new() };
     }
     let seg_len = MODAL_WELCH_SEG_LEN.min(signals[reference_track].len());
-    let psd = crate::signal::welch_psd(&signals[reference_track], seg_len, MODAL_WELCH_OVERLAP);
-    let nfft = crate::signal::next_pow2(seg_len);
+    let psd = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::welch_psd(&signals[reference_track], seg_len, MODAL_WELCH_OVERLAP);
+    let nfft = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::next_pow2(seg_len);
     let bin_hz = fps / nfft as f64;
     let max_psd = psd.iter().copied().fold(0.0f64, f64::max);
 
-    let mut peaks = crate::signal::find_peaks(&psd, max_psd * MODAL_PROMINENCE_FRACTION);
+    let mut peaks = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::find_peaks(&psd, max_psd * MODAL_PROMINENCE_FRACTION);
     peaks.sort_by(|a, b| b.value.total_cmp(&a.value));
     peaks.truncate(max_modes);
     peaks.sort_by_key(|p| p.index);
 
-    let cross: Vec<(Vec<f64>, Vec<f64>)> = signals.iter().map(|sig| crate::signal::cross_spectrum(&signals[reference_track], sig, seg_len, MODAL_WELCH_OVERLAP)).collect();
+    let cross: Vec<(Vec<f64>, Vec<f64>)> = signals.iter().map(|sig| semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::cross_spectrum(&signals[reference_track], sig, seg_len, MODAL_WELCH_OVERLAP)).collect();
 
     let mut frequencies_hz = Vec::with_capacity(peaks.len());
     let mut damping_ratios = Vec::with_capacity(peaks.len());
@@ -529,8 +536,8 @@ pub struct SyncResult {
 
 /// 🔗️ Coarse sync-offset estimate between two per-frame motion-activity signals (e.g. mean optical-flow
 /// magnitude or track-position-change per frame): normalized cross-correlation
-/// ([`crate::signal::xcorr_normalized`]) locates the lag, sub-sample-refined
-/// ([`crate::signal::subsample_peak`]) to fractional-frame precision. `fps` is accepted for interface
+/// ([`crate::standards::v1::subsets::any::schema::signal_internals::xcorr_normalized`]) locates the lag, sub-sample-refined
+/// ([`crate::standards::v1::subsets::any::schema::signal_internals::subsample_peak`]) to fractional-frame precision. `fps` is accepted for interface
 /// symmetry with time-domain callers (and to mirror [`refine_subframe`]'s frame-domain contract) — the
 /// correlation itself already operates in frame-index units, so it does not change the computation.
 pub fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f64) -> SyncResult {
@@ -539,9 +546,9 @@ pub fn estimate_offset(motion_signal_a: &[f64], motion_signal_b: &[f64], fps: f6
         return SyncResult { offset_frames: 0.0, confidence: 0.0 };
     }
     let max_lag = (motion_signal_a.len().min(motion_signal_b.len()) / 4).max(4);
-    let xc = crate::signal::xcorr_normalized(motion_signal_a, motion_signal_b, max_lag);
+    let xc = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::xcorr_normalized(motion_signal_a, motion_signal_b, max_lag);
     let confidence = xc.iter().copied().fold(f64::MIN, f64::max).max(0.0);
-    let Some(peak_idx_f) = crate::signal::subsample_peak(&xc) else {
+    let Some(peak_idx_f) = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::subsample_peak(&xc) else {
         return SyncResult { offset_frames: 0.0, confidence };
     };
     SyncResult { offset_frames: peak_idx_f - max_lag as f64, confidence }
@@ -573,14 +580,14 @@ fn correlation_at_offset(a: &[f64], b: &[f64], offset: f64) -> f64 {
 }
 
 /// 🔬️ Sub-frame polish of a coarse sync offset: a local golden-section search
-/// ([`crate::optimize::golden_section`]) over `[coarse_offset - 1, coarse_offset + 1]` maximizing the
+/// ([`crate::standards::v1::subsets::any::schema::optimize_internals::golden_section`]) over `[coarse_offset - 1, coarse_offset + 1]` maximizing the
 /// linearly-interpolated normalized correlation between `motion_signal_a` and a continuously-shifted
 /// `motion_signal_b`.
 pub fn refine_subframe(motion_signal_a: &[f64], motion_signal_b: &[f64], coarse_offset: f64) -> f64 {
     if motion_signal_a.is_empty() || motion_signal_b.is_empty() {
         return coarse_offset;
     }
-    let (best_offset, _best_value) = crate::optimize::golden_section(|o| -correlation_at_offset(motion_signal_a, motion_signal_b, o), coarse_offset - 1.0, coarse_offset + 1.0, 1e-4);
+    let (best_offset, _best_value) = semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::golden_section(|o| -correlation_at_offset(motion_signal_a, motion_signal_b, o), coarse_offset - 1.0, coarse_offset + 1.0, 1e-4);
     best_offset
 }
 // #endregion 🔖️Sync
@@ -682,7 +689,7 @@ pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     let smoothed_twists = if twists.len() >= 3 {
         let win = odd_window(window, twists.len());
         let order = STABILIZE_SG_ORDER.min(win - 1);
-        let channels: Vec<Vec<f64>> = (0..6).map(|c| crate::signal::savitzky_golay(&twists.iter().map(|t| t[c]).collect::<Vec<f64>>(), win, order, 0, 1.0)).collect();
+        let channels: Vec<Vec<f64>> = (0..6).map(|c| semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::savitzky_golay(&twists.iter().map(|t| t[c]).collect::<Vec<f64>>(), win, order, 0, 1.0)).collect();
         (0..twists.len()).map(|i| std::array::from_fn(|c| channels[c][i])).collect()
     } else {
         twists
@@ -776,15 +783,15 @@ pub fn estimate_motion_psf(track_velocity_px_per_frame: (f32, f32), exposure_fra
 }
 
 /// 🔍️ Frequency-domain Wiener deconvolution against a known [`Psf`]: `G = conj(H) / (|H|² + 1/snr)` applied
-/// to the DFT of the (zero-padded, power-of-two) image via [`crate::signal::fft2`]/[`crate::signal::ifft2`],
+/// to the DFT of the (zero-padded, power-of-two) image via [`crate::standards::v1::subsets::any::schema::signal_internals::fft2`]/[`crate::standards::v1::subsets::any::schema::signal_internals::ifft2`],
 /// with the PSF's center wrapped to the origin for circular convolution, then cropped back to the input size.
 /// <https://en.wikipedia.org/wiki/Wiener_deconvolution>
 pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
     if img.width == 0 || img.height == 0 || psf.width == 0 || psf.height == 0 {
         return img.clone();
     }
-    let pad_w = crate::signal::next_pow2((img.width + psf.width) as usize);
-    let pad_h = crate::signal::next_pow2((img.height + psf.height) as usize);
+    let pad_w = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::next_pow2((img.width + psf.width) as usize);
+    let pad_h = semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::next_pow2((img.height + psf.height) as usize);
     let mut img_re = vec![0.0f64; pad_w * pad_h];
     let mut img_im = vec![0.0f64; pad_w * pad_h];
     for y in 0..img.height {
@@ -804,8 +811,8 @@ pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
             psf_re[oy * pad_w + ox] += f64::from(value);
         }
     }
-    crate::signal::fft2(&mut img_re, &mut img_im, pad_w, pad_h);
-    crate::signal::fft2(&mut psf_re, &mut psf_im, pad_w, pad_h);
+    semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::fft2(&mut img_re, &mut img_im, pad_w, pad_h);
+    semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::fft2(&mut psf_re, &mut psf_im, pad_w, pad_h);
     let inv_snr = 1.0f64 / f64::from(snr.max(DEBLUR_WIENER_EPS));
     let mut out_re = vec![0.0f64; pad_w * pad_h];
     let mut out_im = vec![0.0f64; pad_w * pad_h];
@@ -816,7 +823,7 @@ pub fn wiener_deconvolve(img: &ImageGray, psf: &Psf, snr: f32) -> ImageGray {
         out_re[i] = gr * img_re[i] - gi * img_im[i];
         out_im[i] = gr * img_im[i] + gi * img_re[i];
     }
-    crate::signal::ifft2(&mut out_re, &mut out_im, pad_w, pad_h);
+    semio_s_artifact_remodel_remodeling_signal::standards::v1::subsets::any::schema::signal_internals::ifft2(&mut out_re, &mut out_im, pad_w, pad_h);
     let mut result = ImageGray::new(img.width, img.height);
     for y in 0..img.height {
         for x in 0..img.width {
@@ -956,9 +963,9 @@ const POSE6D_SMOOTH_WINDOW: usize = 5;
 const POSE6D_MIN_VISIBLE_POINTS: usize = 6;
 
 /// 📦️ Per-frame rigid-body 6DoF pose from partially-visible model-point observations: for each frame, gathers
-/// the model points with a visible observation, solves an initial pose via `remodeling_sfm::epnp` (skipping
+/// the model points with a visible observation, solves an initial pose via `crate::editor::remodeling::engine::sfm::geometry::epnp` (skipping
 /// frames with fewer than [`POSE6D_MIN_VISIBLE_POINTS`] visible points, `epnp`'s own minimum), polishes it
-/// with `remodeling_sfm::refine_pose_lm`, then temporally smooths the recovered sequence via
+/// with `crate::editor::remodeling::engine::sfm::geometry::refine_pose_lm`, then temporally smooths the recovered sequence via
 /// [`smooth_camera_path`]'s SE(3) log-tangent Savitzky-Golay filter.
 pub fn track_rigid_body(model_points: &[[f64; 3]], per_frame_obs: &[(u32, Vec<Option<[f64; 2]>>)], intr: &Intrinsics) -> Vec<(u32, Se3)> {
     let mut raw: Vec<(u32, Se3)> = Vec::new();
@@ -976,8 +983,8 @@ pub fn track_rigid_body(model_points: &[[f64; 3]], per_frame_obs: &[(u32, Vec<Op
         if world_pts.len() < POSE6D_MIN_VISIBLE_POINTS {
             continue;
         }
-        let Some(initial) = remodeling_sfm::epnp(intr, &world_pts, &obs_px) else { continue };
-        let refined = remodeling_sfm::refine_pose_lm(intr, &world_pts, &obs_px, initial);
+        let Some(initial) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::epnp(intr, &world_pts, &obs_px) else { continue };
+        let refined = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::refine_pose_lm(intr, &world_pts, &obs_px, initial);
         raw.push((*frame, refined));
     }
     if raw.len() < 3 {

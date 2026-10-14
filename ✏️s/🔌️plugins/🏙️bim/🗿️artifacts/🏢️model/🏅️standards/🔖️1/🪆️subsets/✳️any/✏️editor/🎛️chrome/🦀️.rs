@@ -6,7 +6,7 @@ use crate::editor::bim::kit::bim_window_action;
 use crate::editor::bim::modes::edit::windows::{plan, schedule, section, sheet, world};
 use crate::editor::bim::terminology::{bim_labels, BimLabels};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::SeverityCounts;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::MeasureSelectItem;

@@ -3,7 +3,7 @@
 //! on create (`["solid", "height"]`) and uses it as is on set (`["height"]`).
 
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Family, FamilyParameter, FamilySolid, ModelSnapshot, ParametricProfile, Profile, SolidShape};
+use crate::standards::v1::subsets::any::schema::snapshot::{Family, FamilyParameter, FamilySolid, ModelSnapshot, ParametricProfile, Profile, SolidShape};
 use protocol::OutcomeCode;
 
 /// 🚫️ A rule broken: the outcome code, the message and the field of the record that breaks it.

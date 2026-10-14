@@ -19,10 +19,22 @@
 #[path="🔣️json/🦀️.rs"]
 pub(crate) mod remodeling_json;
 
-use crate::{
-    default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, Float32Buffer, ByteBuffer, RemodelingDurableArtifact,
-    RemodelingMesh, RemodelingSnapshot, SparseCloud,
-};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_content_handle;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::Float32Buffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
 use {semio_framework_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
@@ -223,9 +235,9 @@ fn mesh_durable_chunks(mesh: &MeshData) -> Vec<ByteBuffer> {
 }
 
 fn mesh_content_id(chunks: &[ByteBuffer]) -> String {
-    let mut digest = crate::RemodelingContentDigest::default();
+    let mut digest = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentDigest::default();
     for chunk in chunks { digest.record(&chunk.0); }
-    digest.content_id(crate::RemodelingContentKind::Mesh)
+    digest.content_id(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind::Mesh)
 }
 
 /// 🧱️ Admits an imported mesh into the scene as REAL durable content: content-addressed chunks in
@@ -374,177 +386,6 @@ pub fn image_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Resu
 }
 //#endregion 🔖️SemioBridge
 
-//#region 🎹️DerivedComposition
-/// 🎹️ Native-dialect-only composition facet, bound by `derive_artifact_facets!` in this subset's
-/// `🧬️schema/🦀️.rs`. Its nine foreign-format branches are GONE (W6): each called a
-/// `📥️import` leaf's `deserialize_bytes`, all of which were cross-type `ArtifactPack` casts. Foreign
-/// dialects now reach this subset only through the typed `IoEntry` rows `io()` publishes.
-pub mod derived_composition {
-    use crate::standards::v1::subsets::any::io::RemodelingAnalyzer;
-    use crate::RemodelingSnapshot;
-    use {store::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,store::io::ComposeError,store::io::ComposeSource,store::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
-    const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
-
-    pub struct RemodelingComposerComposition;
-
-    impl ArtifactComposition for RemodelingComposerComposition {
-        type Snapshot = RemodelingSnapshot;
-        const WRITES: Dialect = DIALECT;
-
-        fn reads() -> &'static [Dialect] {
-            &[DIALECT]
-        }
-
-        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
-            for source in sources {
-                if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
-                    };
-                    let analysis = RemodelingAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-            }
-            Err(ComposeError { message: "RemodelingComposerComposition: no source in this subset's own native dialect".into(), diagnostics: Vec::new() })
-        }
-    }
-}
-pub use derived_composition::*;
-//#endregion 🎹️DerivedComposition
-
-//#region 🚪️NativeComposer
-/// 🎹️ The ONE surviving row of the old `ComposerEntry` channel: this subset's own derive-generated
-/// native composer, which the OS document-open path still resolves by `IoKey`. The eight
-/// `compose_export_*` rows that sat beside it are deleted (see this file's module doc); every foreign
-/// hop now lives on the typed `io()` channel below.
-pub fn native_composer_entries() -> &'static [semio_framework_plugin::app::ComposerEntry] {
-    use crate::standards::v1::subsets::any::io::RemodelingComposer;
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::app::ComposerEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::composer_entry_of::<RemodelingComposer>()]).as_slice()
-}
-//#endregion 🚪️NativeComposer
-
-//#region 🔖️IoDeclaration
-/// 🚪️ This subset's complete io surface on the framework's `io_mechanism` channel — the five native
-/// `dsl::LanguageSpec`s plus one `IoEntry` per registered foreign hop, preflighted and registered by
-/// `commit_artifact_declarations` (one `io_register` per subset).
-pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
-    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-    use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use crate::{RemodelingMutation, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
-    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
-    use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
-    use std::sync::OnceLock;
-
-    /// 🗣️ The five hand-authored `dsl::LanguageSpec`s this subset carries — `OnceLock` because
-    /// `dsl::passthrough_hooks` is not `const fn`. Indices: 0=document 1=op 2=diff 3=pack 4=spr.
-    fn languages() -> &'static [semio_framework_dsl::LanguageSpec; 5] {
-        static LANGUAGES: OnceLock<[semio_framework_dsl::LanguageSpec; 5]> = OnceLock::new();
-        LANGUAGES.get_or_init(|| {
-            [
-                semio_framework_dsl::LanguageSpec {
-                    id: "remodeling.document",
-                    extension: Some("remodeling"),
-                    role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.document"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "remodeling.op",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.op"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "remodeling.diff",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(text::diff::COMPONENT_GRAMMAR_PATH),
-                    protocol: None,
-                    protocol_path: None,
-                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.diff"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "remodeling.pack",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Pack,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::snapshot::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.pack"),
-                },
-                semio_framework_dsl::LanguageSpec {
-                    id: "remodeling.spr",
-                    extension: None,
-                    role: semio_framework_dsl::LanguageRole::Spr,
-                    grammar: None,
-                    grammar_path: None,
-                    protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
-                    hooks: semio_framework_dsl::passthrough_hooks("remodeling.spr"),
-                },
-            ]
-        })
-    }
-
-    fn entries() -> &'static [IoEntry] {
-        static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    serializer_entry::<RemodelingSnapshot, export::json::v_rfc8259::any::RemodelingIntoJson>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::json::v_rfc8259::any::JsonIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::txt::v_utf_8::any::RemodelingIntoTxt>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::txt::v_utf_8::any::TxtIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::ply::v1_0::any::RemodelingIntoPly>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::ply::v1_0::any::PlyIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::las::v1_0::any::RemodelingIntoLas>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::las::v1_0::any::LasIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::obj::v3_0::any::RemodelingIntoObj>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::obj::v3_0::any::ObjIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::stl::v_ascii::any::RemodelingIntoStl>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::stl::v_ascii::any::StlIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::gltf::v2_0::any::RemodelingIntoGltf>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::gltf::v2_0::any::GltfIntoRemodeling>(REMODELING_DIALECT),
-                    serializer_entry::<RemodelingSnapshot, export::png::v1_2::any::RemodelingIntoPng>(REMODELING_DIALECT),
-                    deserializer_entry::<RemodelingSnapshot, import::png::v1_2::any::PngIntoRemodeling>(REMODELING_DIALECT),
-                ]
-            })
-            .as_slice()
-    }
-
-    let langs = languages();
-    IoDeclaration {
-        native: NativeCodecs {
-            snapshot: LanguagePair { text: Some(&langs[0]), binary: Some(&langs[3]) },
-            diff: LanguagePair { text: Some(&langs[2]), binary: None },
-            mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
-            inferences: None,
-            codec: store::bare_artifact_codec::<RemodelingSnapshot, RemodelingMutation>(REMODELING_DOCUMENT_SCHEMA.to_string()),
-        },
-        entries: entries(),
-    }
-}
-//#endregion 🔖️IoDeclaration
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️io/🦀️.rs"]
-mod io_tests;
-//#endregion 🧪️Tests
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -554,113 +395,3 @@ pub mod text;
 
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
-
-pub mod derived_construction {
-    use crate::schema::diff::RemodelingDiff;
-    use crate::schema::mutations::RemodelingMutation;
-    use crate::schema::snapshot::RemodelingSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct RemodelingBuilderConstruction {
-        snapshot: RemodelingSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for RemodelingBuilderConstruction {
-        type Snapshot = RemodelingSnapshot;
-        type Mutation = RemodelingMutation;
-        type Diff = RemodelingDiff;
-        fn empty() -> Self {
-            Self { snapshot: RemodelingSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<RemodelingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
-
-pub mod derived_analysis {
-    use crate::RemodelingSnapshot;
-    use {store::io::Analysis,store::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-
-    #[derive(Clone, Debug, Default)]
-    pub struct RemodelingParts {
-        pub snapshot: Option<RemodelingSnapshot>,
-    }
-
-    pub struct RemodelingAnalyzerAnalysis;
-
-    impl ArtifactAnalysis for RemodelingAnalyzerAnalysis {
-        type Parts = RemodelingParts;
-        const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
-
-        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
-            semio_framework_plugin::io::Confidence::Medium
-        }
-
-        fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-            let mut parts = RemodelingParts::default();
-            let mut diagnostics = Vec::new();
-            let mut confidence = semio_framework_plugin::io::Confidence::High;
-            for source in sources {
-                match source {
-                    AnalyzeSource::Text(text) => match <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                    AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
-                        Err(err) => {
-                            confidence = semio_framework_plugin::io::Confidence::Low;
-                            diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
-                        }
-                    },
-                }
-            }
-            Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }
-        }
-    }
-}
-pub use derived_analysis::*;
-
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec RemodelingBuilderFacets {
-        construction: RemodelingBuilderConstruction,
-        analysis: RemodelingAnalyzerAnalysis,
-        composition: RemodelingComposerComposition,
-    }
-    builder: RemodelingBuilder,
-    analyzer: RemodelingAnalyzer,
-    composer: RemodelingComposer,
-);

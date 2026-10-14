@@ -1,5 +1,5 @@
 //! 📉️ Work-granted Douglas–Peucker simplification preserves authored curve segments.
-use crate::PathSegment;
+use semio_s_artifact_draw_drawing_model::PathSegment;
 use semio_framework_value::list::PagedList;
 type Segments=PagedList<PathSegment,{usize::MAX}>;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -53,7 +53,7 @@ impl PathSimplifyJob {
                 let end=self.at-1;let force=if matches!(item,PathSegment::Close)&&matches!(self.source[start],PathSegment::Move {..}) {if self.point(start)==self.point(end) {2}else {1}}else {0};
                 self.stack.push(Self::span(start,end,force));return Ok(());
             }}
-            if !crate::schema::valid_path_segment(item) {return Err("Invalid path geometry");}
+            if !semio_s_artifact_draw_drawing_model::valid_path_segment(item) {return Err("Invalid path geometry");}
             match item {PathSegment::Move {..}=>self.contour=true,_ if !self.contour=>return Err("A contour must start with a move"),PathSegment::Close=>self.contour=false,_=>{}}
             if matches!(item,PathSegment::Line {..}) {
                 if self.at==0||matches!(self.source[self.at-1],PathSegment::Close) {return Err("A contour must start with a move");}

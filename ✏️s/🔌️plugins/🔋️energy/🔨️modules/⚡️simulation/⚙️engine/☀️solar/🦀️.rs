@@ -7,6 +7,8 @@
 //! coefficients, isotropic/horizon diffuse shading from a 6 × 24 sky-patch integration, and beam
 //! shadows by convex polygon clipping in the receiving plane.
 
+extern crate semio_s_plugin_energy_engine_geometry as geometry;
+
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 
@@ -320,11 +322,11 @@ pub fn shadowed_area_m2<'a>(receiver: &[[f64; 3]], normal: [f64; 3], casters: im
 /// hosts): `(A_gross − A_openings − shadow_gross + shadow_openings) / A_net`.
 pub fn sunlit_fraction<'a>(receiver: &[[f64; 3]], normal: [f64; 3], openings: impl Iterator<Item = &'a [[f64; 3]]> + Clone, casters: impl Iterator<Item = &'a [[f64; 3]]> + Clone, sun: [f64; 3]) -> f64 {
     let Some(gross_shadow) = shadowed_area_m2(receiver, normal, casters.clone(), sun) else { return 0.0 };
-    let gross = crate::geometry::surface_area_m2(receiver);
+    let gross = geometry::surface_area_m2(receiver);
     let mut net = gross;
     let mut net_shadow = gross_shadow;
     for opening in openings {
-        net -= crate::geometry::surface_area_m2(opening);
+        net -= geometry::surface_area_m2(opening);
         net_shadow -= shadowed_area_m2(opening, normal, casters.clone(), sun).unwrap_or(0.0);
     }
     if net <= 1e-9 {

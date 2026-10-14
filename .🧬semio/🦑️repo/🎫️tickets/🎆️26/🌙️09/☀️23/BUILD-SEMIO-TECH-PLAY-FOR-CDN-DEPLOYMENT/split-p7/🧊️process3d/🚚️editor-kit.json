@@ -1,0 +1,51 @@
+{
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "from_module": "crate::editor::process3d",
+   "to": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "to_module": "crate::editor::process3d::kit",
+   "items": [
+    "PROCESS_3D_PLAY_APP_ID",
+    "PROCESS_3D_PLAY_CONTROLLER_ID",
+    "PROCESS3D_INTERACTION_DOMAIN",
+    "PROCESS3D_GRANULARITY_OBJECT",
+    "PROCESS3D_GRANULARITY_FACE",
+    "Process3dInteractionSnapshot",
+    "Process3dDispatchCtx",
+    "process3d_interaction_definition",
+    "PROCESS3D_EXAMPLE_TIMBER",
+    "PROCESS3D_EXAMPLE_PLATE",
+    "PROCESS3D_EXAMPLE_CONCRETE_FOREST",
+    "process3d_action",
+    "ui_value_text",
+    "ui_value_bool",
+    "ui_value_number",
+    "ui_value_list",
+    "ui_value_map",
+    "ui_label",
+    "internal_action",
+    "set_active_utility_effect",
+    "iconed_tree_item_with_action",
+    "reset_process3d_document_effect",
+    "process3d_action_fault",
+    "process3d_io",
+    "axis_angle_from_up_to",
+    "ContributedMachineCatalog",
+    "ProcessMachinesTopicPayload",
+    "PROCESS_CONTRIBUTION_MAX_BYTES",
+    "PROCESS_CONTRIBUTION_MAX_DEPTH",
+    "PROCESS_CONTRIBUTION_MAX_ITEMS",
+    "PROCESS_CONTRIBUTION_MAX_STRING_BYTES",
+    "process_json_envelope_is_bounded",
+    "installable_contributions",
+    "contributed_machine_catalogs",
+    "builtin_installed_catalogs",
+    "installed_catalogs",
+    "catalog_machine"
+   ],
+   "doc": "//! 🧰️ Process3d editor kit: identifiers, the dispatch context, ui-value plumbing, the io ports and the installed machine\n//! catalogs every command, mode and panel builds on.",
+   "mount": "#[path = \"🧰️kit/🦀️.rs\"]\npub mod kit;"
+  }
+ ]
+}

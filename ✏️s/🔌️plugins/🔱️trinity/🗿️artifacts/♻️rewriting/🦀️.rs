@@ -11,7 +11,6 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate protocol as replication;
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
@@ -19,7 +18,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::rewriting::TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
@@ -263,7 +261,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -275,19 +272,15 @@ pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️1/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
                 #[path = "."]
                 pub mod schema {
@@ -555,7 +548,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -771,7 +763,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

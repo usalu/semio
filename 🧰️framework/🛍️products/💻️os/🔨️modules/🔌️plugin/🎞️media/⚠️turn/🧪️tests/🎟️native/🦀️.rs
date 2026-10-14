@@ -11,3 +11,12 @@ fn original_media_physical_publication_close(){semio_framework_plugin::media_tur
 fn original_media_cancellation_issuer(){semio_framework_plugin::media_turn_laws::media_original_cancellation_issuer_birth_and_close()}
 #[test]
 fn original_media_output_cold_birth(){semio_framework_plugin::media_turn_laws::media_original_output_cold_birth_and_close()}
+
+#[test]
+fn original_media_installed_snapshot_source(){semio_framework_plugin::media_turn_laws::media_original_installed_snapshot_source_and_paid_close()}
+
+#[test]
+fn original_media_completion_result_receiving(){semio_framework_plugin::media_turn_laws::media_original_completion_result_receiving_and_physical_close()}
+
+#[test]
+fn original_media_handle_receiving(){semio_framework_plugin::media_turn_laws::media_original_handle_receiving_and_physical_close()}

@@ -1,1 +1,17 @@
-{"operation":71,"generation":3,"epochs":[7,9],"refusedEpoch":0,"heapBytes":0}
+{
+  "operation": 71,
+  "generation": 3,
+  "totalGrant": [64, 4096, 65536, 65536, 64],
+  "callPolicy": [1, 4096, 65536, 65536, 64],
+  "epochs": [
+    7,
+    9
+  ],
+  "refusedEpoch": 0,
+  "heapBytes": 0,
+  "work": {
+    "clockBinding": 1471,
+    "absoluteDeadlineUs": 1000000,
+    "fuel": 64
+  }
+}

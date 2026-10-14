@@ -20,9 +20,6 @@
     "directory": "framework/module/schema"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

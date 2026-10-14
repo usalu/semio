@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_ifc::part21::Part21Decimal;
+use semio_s_artifact_stdio_contract::part21::Part21Decimal;
 
 fn real(value: f64) -> Part21Value {
     Part21Value::Real(Part21Decimal::from_f64(value))

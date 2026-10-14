@@ -23,7 +23,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) put(join(path!, "📋️project.json"), JSON.stringify({ name, targets: { wasm: {configurations:{prototype:{env:{SEMIO_BUILD_MODE:"prototype"}},release:{env:{SEMIO_BUILD_MODE:"release"}}}} } }));
   put(join(owner, "package.json"), '{"name":"native-owner","private":true}');
   put("component/Cargo.toml", '[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:sample"\n[package.metadata.semio]\ncomponent-kind = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "fixture"\n'.replaceAll("\\n", "\n"));
-  const { cacheInternals, libraryBootstrap } = await import("../../../🟨️.mjs");
+  const { cacheInternals, libraryBootstrap } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   await libraryBootstrap;
   const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
   for (const profile of fixture.profiles) {
@@ -139,14 +139,14 @@ if (operation === "consumer" || operation === "waiting") {
     assert.equal(validateManifest(manifest), true, JSON.stringify(validateManifest.errors));
     assert.deepEqual(require("lodash").map(manifest.modules, "pluginId"), [fixture.pluginId]);
     assert.equal(readFileSync(join(root, ".counts"), "utf8").trim().split("\n").filter(value => value === profile).length, cycle.publications);
-    assert.deepEqual(readdirSync(runtime).sort(), [".nx-artifact.json", "🔣️runtime.json"].sort(), "Variant runtimes must not duplicate shared component or descriptor bytes");
+    assert.deepEqual(readdirSync(runtime).sort(), [".semio-artifact.json", "🔣️runtime.json"].sort(), "Variant runtimes must not duplicate shared component or descriptor bytes");
     assert.deepEqual(readFileSync(join(runtime, manifest.modules[0].wasmPath)), readFileSync(join(root, "source", profile, "component.wasm")));
   }
   const locked = require("@iarna/toml").parse(readFileSync(join(workspace, "Cargo.lock"), "utf8")).package;
   const version = (name: string) => locked.find((entry: any) => entry.name === name).version;
   put("reader/Cargo.toml", `[package]\nname = "native-runtime-reader"\nversion = "0.1.0"\nedition = "2024"\n[[bin]]\nname = "reader"\npath = "🦀️.rs"\n[dependencies]\nserde = { version = "=${version("serde")}", features = ["derive"] }\nserde_json = "=${version("serde_json")}"\nsha2 = "=0.10.9"\n[workspace]\n`);
   put("reader/🦀️.rs", "#[path = " + JSON.stringify(join(native, "📦️modules/🦀️.rs")) + "]\nmod native;\n" + "use std::{fs, io::Read, path::Path};\nuse sha2::{Digest, Sha256};\nfn main() {\n    let args = std::env::args().collect::<Vec<_>>();\n    let path = Path::new(&args[1]);\n    let bytes = fs::read(path).unwrap();\n    let manifest = match native::NativeRuntimeManifest::read(native::NativeJsonPages::new(bytes.chunks(3)), &args[2]) {\n        Ok(value) => value,\n        Err(_) => std::process::exit(2),\n    };\n    if args.get(3).is_some_and(|arg| arg == \"validate\") { return; }\n    let mut rows = Vec::new();\n    for module in manifest.modules {\n        let wasm = fs::read(path.parent().unwrap().join(module.wasm_path)).unwrap();\n        assert_eq!(&wasm[..8], &[0, 97, 115, 109, 13, 0, 1, 0]);\n        assert_eq!(format!(\"{:x}\", Sha256::digest(&wasm)), module.wasm_sha256);\n        let bytes = fs::read(path.parent().unwrap().join(module.descriptor_path)).unwrap();\n        let descriptor: serde_json::Value = serde_json::from_reader(native::NativeJsonPages::new(bytes.chunks(7))).unwrap();\n        assert_eq!(descriptor[\"manifest\"][\"pluginId\"], module.plugin_id);\n        assert!(descriptor.get(\"hashes\").is_none());\n        rows.push(serde_json::json!({\"pluginId\": module.plugin_id, \"wasmSha256\": module.wasm_sha256}));\n    }\n    let pages: [&[u8]; 4] = [b\"\", b\"first\", b\"\", b\"second\"];\n    let mut reader = native::NativeJsonPages::new(pages.into_iter());\n    assert_eq!(reader.read(&mut []).unwrap(), 0);\n    let mut joined = Vec::new();\n    reader.read_to_end(&mut joined).unwrap();\n    assert_eq!(joined, b\"firstsecond\");\n    println!(\"{}\", serde_json::to_string(&rows).unwrap());\n}\n");
-  const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
+  const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
   const compile = new AbortController(), deadline = setTimeout(() => compile.abort(new Error("Native reader deadline")), 90_000);
   const cancelCompile = () => compile.abort(new Error("Native reader cancelled"));
   process.once("SIGINT", cancelCompile); process.once("SIGTERM", cancelCompile);

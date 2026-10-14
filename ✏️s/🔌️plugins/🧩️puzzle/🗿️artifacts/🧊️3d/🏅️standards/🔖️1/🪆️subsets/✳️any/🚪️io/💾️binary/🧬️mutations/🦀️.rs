@@ -74,7 +74,6 @@ mod wire_format_guard;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
@@ -120,25 +119,6 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_object::mutatio
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::mutation::{scale_selection, ScaleSelection};
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
 
-/// 📦️ Packs through the typed authority, so the play kind shares `Puzzle3dSnapshot`'s derived record
-/// layout and pack-schema identity.
-impl pack::snapshot::ArtifactPack for Puzzle3dPlaySnapshot {
-    
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.typed().encode_pack_with(options)
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
-    }
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::record_spec()
-    }
-}
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle3dPlaySnapshot {
-fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshotHost>::sqlite_codec())}
-}
 }
 #[cfg(test)] pub use mutations_codec::*;
 
@@ -146,8 +126,7 @@ mod native_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::{Puzzle3dMutation};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_puzzle3d_mutation};
-#[cfg(test)] use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-#[cfg(test)] pub use mutations_codec::*;
+#[cfg(test)] #[cfg(test)] pub use mutations_codec::*;
 
 impl OpBinary for Puzzle3dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

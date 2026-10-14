@@ -1,0 +1,9 @@
+[
+ {
+  "from": "crate",
+  "to": "crate::standards::v1::subsets::any::schema::snapshot",
+  "items": [
+   "artifact_kind"
+  ]
+ }
+]

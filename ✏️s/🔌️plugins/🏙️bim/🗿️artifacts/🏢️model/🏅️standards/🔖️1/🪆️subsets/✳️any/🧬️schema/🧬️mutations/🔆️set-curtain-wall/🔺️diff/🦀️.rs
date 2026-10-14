@@ -3,7 +3,7 @@
 
 use super::super::wall_geometry::{flaw, top_flaw, Flaw};
 use super::SetCurtainWall;
-use crate::{CurtainWall, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainWall, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn flaw_of(payload: &SetCurtainWall, base: &ModelSnapshot, wall: &CurtainWall) -> Option<Flaw> {

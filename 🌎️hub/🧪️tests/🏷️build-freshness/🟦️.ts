@@ -1,6 +1,6 @@
 /** 🏷️ Build freshness of a RUNNING hub: is the process answering on the hub's port built from the source tree as it is now?
  *
- * The hub's staging verbs (`os-hub:build-dev`, `build-dev-postgres`, `build`) stage a `semio.cargo.binary-sources/v1`
+ * The hub's staging verbs (`os-hub:build-dev`, `build`) stage a `semio.cargo.binary-sources/v1`
  * record beside the executable (`os-hub.sources.json`: every source file Cargo compiled it from — its dep-info over the
  * whole dependency closure — and when that build started). This check resolves the listening process, its executable
  * (the operating system's own view: `lsof` on macOS, `/proc/<pid>/exe` on Linux, `Get-Process` on Windows) and the record

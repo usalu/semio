@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetWallTypeOf`: a one-field wall patch. The wall type must exist; thickness and layers are inferred from it.
 
 use super::SetWallTypeOf;
-use crate::{Entry, ModelDiff, ModelSnapshot, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallTypeOf, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

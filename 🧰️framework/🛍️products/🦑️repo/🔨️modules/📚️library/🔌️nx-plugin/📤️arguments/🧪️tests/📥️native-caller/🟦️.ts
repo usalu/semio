@@ -8,7 +8,7 @@ import {validateJsonSchemaSubset} from "../../../../../../../../📦️packages/
 import nativeSchema from "../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
 const fixture=JSON.parse(readFileSync(new URL("../🧫️fixtures/📥️native-caller.json",import.meta.url),"utf8"));
 const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
-const api=await import(new URL("../../🟨️.mjs",import.meta.url).href);
+const api={...await import(new URL("../../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../../🟨️.mjs",import.meta.url).href)};
 const require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json"));
 const {createTaskGraph}=require(resolve(nxRoot,"dist/src/tasks-runner/create-task-graph.js"));
 function inputs(rawArguments:string[]=[],forward=false){

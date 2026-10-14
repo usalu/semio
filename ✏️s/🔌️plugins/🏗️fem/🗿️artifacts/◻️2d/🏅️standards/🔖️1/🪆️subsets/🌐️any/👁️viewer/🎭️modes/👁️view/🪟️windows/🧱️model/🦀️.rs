@@ -6,7 +6,10 @@
 //! (a viewer has no `Config`, so the camera is always `Viewport2d::default()`), no results overlay —
 //! that lives in the editor's separate results window, which this viewer does not (yet) mirror.
 
-use crate::{element_id, Fem2dSnapshot, Viewport2d, FemElement};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 
 //#region 🔖️Constants
@@ -30,7 +33,7 @@ fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-fn find_node_2d<'a>(nodes: &'a [crate::FemNode], id: &str) -> Option<&'a crate::FemNode> {
+fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
@@ -71,7 +74,7 @@ fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &st
 /// to call from either surface, not a duplication concern for THAT call).
 fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
-    let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
+    let Ok(meshes) = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
         for (tri_index, tri) in mesh.tris.iter().enumerate() {
             let id = format!("{}_t{}", mesh.region_id, tri_index);
@@ -103,7 +106,7 @@ pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<B
         }));
     }
     let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

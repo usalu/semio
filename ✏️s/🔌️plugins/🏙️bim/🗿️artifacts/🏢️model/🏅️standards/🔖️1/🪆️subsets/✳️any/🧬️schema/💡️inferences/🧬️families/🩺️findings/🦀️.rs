@@ -3,7 +3,7 @@
 //! free of the diagnostic vocabulary: `compute` maps a [`FindingCode`] to its `DiagnosticCode`.
 
 use super::{FamilyIssueCode, FamilyValue};
-use crate::{FamilyCategory, ModelSnapshot, Profile};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, Profile};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

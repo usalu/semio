@@ -2732,6 +2732,8 @@ pub use semio_framework_ui_contract::{PresenceUpdate, UiPatch, UiPatchOp};
 #[serde(rename_all = "camelCase")]
 pub struct Budget {
     pub retained: RetainedTurnInput,
+    pub retained_policy:semio_framework_value::RetainedCloneGrant,
+    pub work_fuel:u64,
     pub fuel: u64,
     pub deadline_us: u64,
     pub max_effects: u32,

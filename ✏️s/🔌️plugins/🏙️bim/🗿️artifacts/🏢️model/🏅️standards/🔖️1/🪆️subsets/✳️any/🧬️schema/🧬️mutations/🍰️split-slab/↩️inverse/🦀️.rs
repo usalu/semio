@@ -6,7 +6,7 @@ use super::super::delete_slab::DeleteSlab;
 use super::super::set_slab_boundary::SetSlabBoundary;
 use super::diff::pieces;
 use super::SplitSlab;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SplitSlab, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if pieces(payload, base).is_err() {

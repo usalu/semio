@@ -4,7 +4,7 @@
 
 use super::super::component_rules;
 use super::SetComponent;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetComponent, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

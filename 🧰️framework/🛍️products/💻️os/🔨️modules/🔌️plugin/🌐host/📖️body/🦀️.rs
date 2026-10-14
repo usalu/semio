@@ -2,30 +2,17 @@
 //! `Host::http_fetch`/`Host::blob_read`. The poll world has no live channel — a poll-world
 //! completion is one shot, and `🌐host/📮️requests::RequestRegistry::append_chunk`'s chunk-
 //! reassembly fix already buffers the WHOLE body before `Host` ever sees it — so `BodyReader::Poll`
-//! just replays that already-complete buffer in caller-sized slices. `BodyReader::Direct` wraps a
-//! REAL `wit_bindgen::StreamReader<u8>`, so a `component-guest-async` guest on a genuine
-//! wasm32-wasip2 build can start consuming a response before the host finishes sending it — see
-//! `🌐host/🦀️.rs`'s `direct` module doc for why the concrete stream only exists there.
+//! just replays that already-complete buffer in caller-sized slices.
 
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 
-/// 📖️ How many bytes one `Direct`-backend `read()` call asks the host for at a time. Not the
-/// safety cap (`cap` in `next_chunk`'s caller / `collect` is that); a throughput knob only, picked
-/// to keep a `StreamReader<u8>::read` call's per-read allocation modest without forcing a host
-/// round-trip per BYTE the way the crate's own built-in `.next()` convenience method would (see
-/// `wit-bindgen-0.57.1`'s `RawStreamReader::next`, which always reads with capacity 1).
-#[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-const DIRECT_READ_CHUNK: usize = 64 * 1024;
-
 /// 📖️ See module doc. Never constructed directly outside `🌐host/🦀️.rs` — use
-/// `BodyReader::poll_buffered`/`BodyReader::direct`.
+/// `BodyReader::poll_buffered`.
 pub enum BodyReader {
     Poll {
         bytes: Vec<u8>,
         consumed: usize,
     },
-    #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-    Direct(wit_bindgen::StreamReader<u8>),
 }
 
 impl BodyReader {
@@ -37,16 +24,8 @@ impl BodyReader {
         BodyReader::Poll { bytes, consumed: 0 }
     }
 
-    /// 🌊️ Wraps a real host-async `stream<u8>` — see `Host::http_fetch`/`Host::blob_read`'s
-    /// `Direct` arms, the only callers.
-    #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-    async fn direct(stream: wit_bindgen::StreamReader<u8>) -> Self {
-        BodyReader::Direct(stream)
-    }
-
-    /// ▶️ The next chunk, `None` once the body is exhausted. Poll world: the whole remaining buffer
-    /// in one shot (there is nothing left to actually await — see module doc). Direct world: one
-    /// real `StreamReader::read`, up to `DIRECT_READ_CHUNK` bytes.
+    /// ▶️ The next chunk, `None` once the body is exhausted: the whole remaining buffer in one shot
+    /// (there is nothing left to actually await — see module doc).
     pub async fn next_chunk(&mut self) -> Option<Vec<u8>> {
         match self {
             BodyReader::Poll { bytes, consumed } => {
@@ -56,15 +35,6 @@ impl BodyReader {
                 let chunk = bytes[*consumed..].to_vec();
                 *consumed = bytes.len();
                 Some(chunk)
-            }
-            #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-            BodyReader::Direct(stream) => {
-                let (status, buf) = stream.read(Vec::with_capacity(DIRECT_READ_CHUNK)).await;
-                if buf.is_empty() && matches!(status, wit_bindgen::StreamResult::Dropped) {
-                    None
-                } else {
-                    Some(buf)
-                }
             }
         }
     }

@@ -9,7 +9,7 @@
 
 use super::super::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
 use super::super::storey_levels::StoreyLevel;
-use crate::{MepShape, MepSystem, ModelSnapshot, Point3};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem, ModelSnapshot, Point3};
 use semio_framework_value::DslValue;
 
 #[path = "💥️clash/🦀️.rs"]

@@ -300,7 +300,7 @@ async fn inference_run_dispatches_a_neutral_declared_service_through_the_infer_c
     let (registry, channel, _workspace) = inference_run_harness(plugin_only_catalog("neutral-remote"));
     let result = call_inference_run(
         &registry,
-        serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"grant":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral-remote.document", "inferenceSchema": "test.neutral-remote.document.inference", "payload": { "probe": 1 }, "cancellationId": "cancel-neutral" }),
+        serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"work":{"clockBinding":1671,"absoluteDeadlineUs":1000000,"fuel":64},"grant":{"maximumItems":64,"maximumCopyBytes":4096,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral-remote.document", "inferenceSchema": "test.neutral-remote.document.inference", "payload": { "probe": 1 }, "cancellationId": "cancel-neutral" }),
     );
     assert!(!result.is_error, "installed neutral inference must not be a tool error: {result:?}");
     let structured = result.structured_content.expect("inference_run answers structured content");
@@ -324,7 +324,7 @@ async fn inference_run_dispatches_a_neutral_declared_service_through_the_infer_c
 #[tokio::test]
 async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
     let (registry, channel, _workspace) = inference_run_harness(neutral_only_catalog());
-    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"grant":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve", "cancellationId":"original wfc cancellation","payload": { "seed": 7 } }));
+    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"work":{"clockBinding":1671,"absoluteDeadlineUs":1000000,"fuel":64},"grant":{"maximumItems":64,"maximumCopyBytes":4096,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve", "cancellationId":"original wfc cancellation","payload": { "seed": 7 } }));
     assert!(!result.is_error, "neutral inference must not be a tool error: {result:?}");
     let structured = result.structured_content.expect("structured content");
     assert_eq!(structured["status"], "SUCCEEDED");
@@ -343,7 +343,7 @@ async fn inference_run_dispatches_a_previously_not_wired_service_identically() {
 #[tokio::test]
 async fn inference_run_refuses_an_undeclared_service() {
     let (registry, channel, _workspace) = inference_run_harness(neutral_only_catalog());
-    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"grant":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.nonexistent","cancellationId":"original undeclared cancellation" }));
+    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"work":{"clockBinding":1671,"absoluteDeadlineUs":1000000,"fuel":64},"grant":{"maximumItems":64,"maximumCopyBytes":4096,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.nonexistent","cancellationId":"original undeclared cancellation" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty(), "an undeclared service must never reach a plugin channel");
 }
@@ -365,7 +365,7 @@ async fn inference_run_is_scope_gated() {
     ));
     let mut registry = InMemoryToolRegistry::new();
     register_inference_job_tools(&mut registry, catalog, Some(workspace), actions, AgentPrincipal::from_scope_names("agent:test", "claude-code", &[], None), crate::handles::SessionHandle::new("sess_unscoped"));
-    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"grant":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve" }));
+    let result = call_inference_run(&registry, serde_json::json!({ "turn":{"operation":71,"generation":3,"epoch":19,"work":{"clockBinding":1671,"absoluteDeadlineUs":1000000,"fuel":64},"grant":{"maximumItems":64,"maximumCopyBytes":4096,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"retainedPolicy":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128},"revision":7,"workUnits":11,"maximumElapsedMilliseconds":13, "artifactKind": "test.neutral.wfc3d", "inferenceSchema": "test.neutral.wfc3d.solve" }));
     assert!(result.is_error);
     assert!(channel.frame_log().is_empty());
 }
@@ -493,7 +493,48 @@ fn original_mcp_inference_preserves_required_caller_authority(){
 
 /// 🎟️ The actual original command metadata borrows cancellation and preserves every supplied authority.
 #[test]
-fn original_mcp_source_requires_exact_turn_revision_cancellation_and_work(){
- let source=serde_json::json!({"turn":{"operation":71,"generation":3,"epoch":19,"grant":{"maximumItems":1,"maximumCopyBytes":3,"maximumCapacityBytes":524288,"maximumReleaseBytes":1048576,"maximumDepth":128}},"revision":7,"cancellationId":"original cancellation 源","workUnits":11,"maximumElapsedMilliseconds":13});let pointer=source["cancellationId"].as_str().unwrap().as_ptr();let(authority,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||inference_original_turn(&source));let authority=authority.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((authority.turn.operation,authority.turn.generation,authority.turn.epoch,authority.revision,authority.work_units,authority.maximum_elapsed_milliseconds),(71,3,19,7,11,13));assert_eq!(authority.cancellation_id.as_ptr(),pointer);assert_eq!(authority.turn.grant.maximum_copy_bytes,3);let independent:serde_json::Value=serde_json::from_str(&serde_json::to_string(&source).unwrap()).unwrap();assert_eq!(serde_json::to_value(authority.turn).unwrap(),independent["turn"]);
- for field in ["turn","revision","cancellationId","workUnits","maximumElapsedMilliseconds"]{let mut denied=source.clone();denied.as_object_mut().unwrap().remove(field);assert!(inference_original_turn(&denied).is_err());}for field in ["operation","generation","epoch"]{let mut denied=source.clone();denied["turn"][field]=serde_json::json!(0);assert!(inference_original_turn(&denied).is_err());}let mut denied=source.clone();denied["maximumElapsedMilliseconds"]=serde_json::json!(0);assert!(inference_original_turn(&denied).is_err());let mut denied=source.clone();denied["cancellationId"]=serde_json::json!("");assert!(inference_original_turn(&denied).is_err());let mut denied=source.clone();denied["turn"]["extra"]=serde_json::json!(0);assert!(inference_original_turn(&denied).is_err());eprintln!("[DEBUG] Original MCP source keeps operation71/generation3/epoch19/revision7/work11/elapsed13 and same cancellation pointer with System0");
+fn original_mcp_source_requires_exact_turn_revision_cancellation_and_work() {
+ let source: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/original-caller.json")).unwrap();
+ let pointer = source["cancellationId"].as_str().unwrap().as_ptr();
+ let (authority, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| inference_original_turn(&source));
+ let authority = authority.unwrap();
+ assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+ assert_eq!((authority.turn.operation, authority.turn.generation, authority.turn.epoch, authority.revision, authority.work_units, authority.maximum_elapsed_milliseconds), (71, 3, 19, 7, 11, 13));
+ assert_eq!(authority.cancellation_id.as_ptr(), pointer);
+ assert_eq!(authority.turn.grant.maximum_copy_bytes, 4096);
+ assert_eq!(authority.retained_policy.maximum_copy_bytes, 3);
+ let independent: semio_framework_actor::RetainedTurnInput = serde_json::from_value(source["turn"].clone()).unwrap();
+ assert_eq!(authority.turn, independent);
+ assert_eq!(serde_json::to_value(authority.turn).unwrap(), source["turn"]);
+ assert_eq!(serde_json::to_value(authority.retained_policy).unwrap(), source["retainedPolicy"]);
+ for field in ["turn", "retainedPolicy", "revision", "cancellationId", "workUnits", "maximumElapsedMilliseconds"] {
+  let mut denied = source.clone(); denied.as_object_mut().unwrap().remove(field);
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ for field in ["operation", "generation", "epoch"] {
+  let mut denied = source.clone(); denied["turn"][field] = serde_json::json!(0);
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ for field in ["clockBinding", "absoluteDeadlineUs", "fuel"] {
+  let mut denied = source.clone(); denied["turn"]["work"].as_object_mut().unwrap().remove(field);
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ for field in ["clockBinding", "absoluteDeadlineUs"] {
+  let mut denied = source.clone(); denied["turn"]["work"][field] = serde_json::json!(0);
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ for field in ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"] {
+  let mut denied = source.clone();
+  denied["retainedPolicy"][field] = serde_json::json!(source["turn"]["grant"][field].as_u64().unwrap() + 1);
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ for (field, value) in [("maximumElapsedMilliseconds", serde_json::json!(0)), ("cancellationId", serde_json::json!("")), ("workUnits", serde_json::json!(65))] {
+  let mut denied = source.clone(); denied[field] = value;
+  assert!(inference_original_turn(&denied).is_err());
+ }
+ let mut denied = source.clone(); denied["turn"]["extra"] = serde_json::json!(0);
+ assert!(inference_original_turn(&denied).is_err());
+ let mut denied = source.clone(); denied["turn"]["work"]["extra"] = serde_json::json!(0);
+ assert!(inference_original_turn(&denied).is_err());
+ eprintln!("[DEBUG] Actual MCP parser total fuel64/clock1671/deadline1000000 and physical64/4096; loan work11/items1/copy3; Serde equal; missing/extra/over-budget denied; cancellation borrowed System0");
 }

@@ -6,9 +6,9 @@
 //! `mutation.cascade` message counting the rows actually touched. Both rows are touched here, so
 //! the declared outcome carries that message.
 
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops/📸️snapshot/⬅️before/🔣️.json");

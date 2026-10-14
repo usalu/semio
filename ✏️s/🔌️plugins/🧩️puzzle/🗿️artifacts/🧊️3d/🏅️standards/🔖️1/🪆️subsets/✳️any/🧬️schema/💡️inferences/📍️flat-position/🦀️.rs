@@ -8,7 +8,7 @@
 //! this leaf holds the `InferredField` chains that drive incremental per-entity caching over that math.
 
 use crate::standards::v1::subsets::any::schema::inferences::flatten::{compute_child_plane, diagram_center, find_vortex, flatten_objects_with_assignment, orientation_to_plane, vortex_geom, FlattenParent, FlattenPlane};
-use crate::{Puzzle3dObjectAnchor, Puzzle3dSnapshot};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::Puzzle3dSnapshot};
 use std::collections::HashMap;
 
 //#region 🔖️DependencyHashChains

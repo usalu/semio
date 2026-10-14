@@ -5,8 +5,8 @@
 use crate::editor::bim::gestures::typed::point_of;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::mutations::elements::{placement, Placement};
-use crate::{ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::mutations::elements::{placement, Placement};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};
@@ -40,7 +40,7 @@ pub fn handle(payload: &PlaceAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
         return Ok(Emit::default());
     }
     let moved: BTreeMap<String, Placement> = placements.into_iter().map(|(id, placed)| (id.clone(), placed.translated(vector))).collect();
-    Ok(Emit::mutations(vec![ModelMutation::PlaceElements(crate::mutations::place_elements::PlaceElements { placements: moved })]))
+    Ok(Emit::mutations(vec![ModelMutation::PlaceElements(crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements { placements: moved })]))
 }
 
 #[cfg(test)]

@@ -9,7 +9,7 @@ use crate::editor::bim::panels::outliner::{item, leaf};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashGroup, ClashKind, ClashSetResult};
 use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
-use crate::{comments_of, Issue, IssueStatus, ModelInference, ModelSnapshot, Rule, RuleSeverity};
+use crate::standards::v1::subsets::any::schema::{snapshot::{comments_of, Issue, IssueStatus, ModelSnapshot, Rule, RuleSeverity}, inferences::ModelInference};
 use semio_framework_plugin::{BuiltNode, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, TreeWindows, UiAssemblyResult, UiValue};
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 
@@ -171,7 +171,7 @@ fn severity_word(labels: &BimLabels, severity: RuleSeverity) -> &str {
 }
 
 fn violation_row(snapshot: &ModelSnapshot, labels: &BimLabels, rule_id: &str, rule: &Rule, index: usize, finding: &crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding) -> UiAssemblyResult<BuiltNode> {
-    let unit = if rule.kind == crate::RuleKind::MaxCompartmentArea { "m²" } else if rule.kind == crate::RuleKind::MaxRampSlope { "" } else { "m" };
+    let unit = if rule.kind == crate::standards::v1::subsets::any::schema::snapshot::RuleKind::MaxCompartmentArea { "m²" } else if rule.kind == crate::standards::v1::subsets::any::schema::snapshot::RuleKind::MaxRampSlope { "" } else { "m" };
     let description = clip(&format!("{} · {} {} {} {}", severity_word(labels, rule.severity), format_number(finding.measured), unit, if rule.kind.is_maximum() { labels.rule_above.as_str() } else { labels.rule_below.as_str() }, format_number(finding.limit)));
     let mut node = tree_item_with_icon(format!("{RULES_ROOT}.{rule_id}.{index}"), Label::data(clip(&name_of(snapshot, &finding.element))), severity_icon(rule.severity), bim_action("selectFindings", Some(ui_value_map([("ids", ids_value(std::slice::from_ref(&finding.element))?)])?)))?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
@@ -216,12 +216,12 @@ pub fn status_label(labels: &BimLabels, status: IssueStatus) -> &str {
     }
 }
 
-fn priority_label(labels: &BimLabels, priority: crate::IssuePriority) -> &str {
+fn priority_label(labels: &BimLabels, priority: crate::standards::v1::subsets::any::schema::snapshot::IssuePriority) -> &str {
     match priority {
-        crate::IssuePriority::Low => labels.priority_low.as_str(),
-        crate::IssuePriority::Normal => labels.priority_normal.as_str(),
-        crate::IssuePriority::High => labels.priority_high.as_str(),
-        crate::IssuePriority::Critical => labels.priority_critical.as_str(),
+        crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::Low => labels.priority_low.as_str(),
+        crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::Normal => labels.priority_normal.as_str(),
+        crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::High => labels.priority_high.as_str(),
+        crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::Critical => labels.priority_critical.as_str(),
     }
 }
 

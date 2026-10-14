@@ -14,7 +14,7 @@
 //! `world3d_*` helpers (the same escape hatch the `📐️cad` pilot's own viewer used, for the identical
 //! reason) is the honest fit here, not `MeshWindowKit`.
 
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::world3d_scene;
 use semio_framework_plugin::world3d_selection_json;
 use semio_framework_plugin::BuiltNode;
@@ -68,7 +68,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `s.stdio.semio/v1/mesh` CHILD's real geometry through the same production bounded resolver. An
 /// unavailable durable handle renders no mesh entity, matching the editor's behavior.
 fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
-    let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
+    let Some(mesh) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) else {
         return "[]".into();
     };
     serde_json::to_string(&vec![json!({ "id": REMODELING_VIEW_MESH_ID, "data": mesh_data_json(&mesh) })]).unwrap_or_else(|_| "[]".into())

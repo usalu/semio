@@ -9,7 +9,7 @@
 pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 
 use super::super::storey_levels::StoreyLevel;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_value::DslValue;
 #[cfg(test)] use std::collections::BTreeMap;
@@ -248,7 +248,7 @@ macro_rules! anonymous {
     (phased $($record:ty),+) => {
         $(impl Anonymous for $record {
             fn anonymous(&self) -> Self {
-                Self { name: String::new(), phase: crate::Phase::New, ..self.clone() }
+                Self { name: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, ..self.clone() }
             }
         })+
     };
@@ -261,8 +261,8 @@ macro_rules! anonymous {
     };
 }
 
-anonymous!(phased crate::Wall, crate::CurtainWall, crate::Column, crate::Beam, crate::Slab, crate::Roof, crate::Stair, crate::Railing);
-anonymous!(crate::Ramp, crate::Opening, crate::Ceiling, crate::WallSweep, crate::Component, crate::MepElement);
+anonymous!(phased crate::standards::v1::subsets::any::schema::snapshot::Wall, crate::standards::v1::subsets::any::schema::snapshot::CurtainWall, crate::standards::v1::subsets::any::schema::snapshot::Column, crate::standards::v1::subsets::any::schema::snapshot::Beam, crate::standards::v1::subsets::any::schema::snapshot::Slab, crate::standards::v1::subsets::any::schema::snapshot::Roof, crate::standards::v1::subsets::any::schema::snapshot::Stair, crate::standards::v1::subsets::any::schema::snapshot::Railing);
+anonymous!(crate::standards::v1::subsets::any::schema::snapshot::Ramp, crate::standards::v1::subsets::any::schema::snapshot::Opening, crate::standards::v1::subsets::any::schema::snapshot::Ceiling, crate::standards::v1::subsets::any::schema::snapshot::WallSweep, crate::standards::v1::subsets::any::schema::snapshot::Component, crate::standards::v1::subsets::any::schema::snapshot::MepElement);
 
 /// 🔑️ A dependency value of keyed records, names left out.
 pub fn dep_records<'a, T: Anonymous + semio_framework_value::ToValue + 'a>(rows: impl IntoIterator<Item = (&'a String, &'a T)>) -> DslValue {
@@ -300,7 +300,7 @@ pub fn compute_element_solids(snapshot: &ModelSnapshot) -> BTreeMap<String, Elem
 /// 🧫️ The committed fixture cases `🧫️fixtures/💡️inferences/🧊️element-solids/<case>/🔣️.json`: an authored `snapshot`, the oracle-written `expected` table and the blessed `meshes`.
 #[cfg(test)]
 pub(crate) mod fixtures {
-    use crate::ModelSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     const STRAIGHT_OPENINGS: &str = include_str!("../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🚪️straight-openings/🔣️.json");

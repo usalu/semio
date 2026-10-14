@@ -18,7 +18,7 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
   });
   assert.equal(definitions.length, 1, "The Cargo command import closure must contain one native owner");
   const code = ts.transpileModule(definitions[0], { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-  const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
+  const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
   const root = mkdtempSync(join(output, "cargo-cleanup-")), controller = new AbortController(), signal = AbortSignal.any([controller.signal, AbortSignal.timeout(60000)]);
   const stop = (): void => controller.abort();
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
@@ -42,7 +42,7 @@ export async function testCargoCleanupBoundary(workspace: string, output: string
       assert.equal(existsSync(join(root, fixture.cleanupStamp)), false, `${operation} must not schedule cleanup after completing its Nx leaf`);
       assert.equal(existsSync(join(root, fixture.cleanupMarker)), false, `${operation} launched detached cleanup`);
     }
-    assert.ok(existsSync(join(root, "dist/build/.nx-artifact.json")), "Build still publishes owned artifacts");
+    assert.ok(existsSync(join(root, "dist/build/.semio-artifact.json")), "Build still publishes owned artifacts");
     const oracle = JSON.parse(await runTool("cargo",["metadata", "--locked", "--offline", "--no-deps", "--format-version=1"],root,signal,true,env,{version:1,directory:output,program:repositoryCargoPreparationStorageV1(process.cwd()).program}));
     assert.equal(oracle.packages[0].name, cargo.package);
     for (const entrypoint of fixture.entrypoints) assert.ok(!code.includes(entrypoint), "Cargo must not orchestrate cleanup indirectly");

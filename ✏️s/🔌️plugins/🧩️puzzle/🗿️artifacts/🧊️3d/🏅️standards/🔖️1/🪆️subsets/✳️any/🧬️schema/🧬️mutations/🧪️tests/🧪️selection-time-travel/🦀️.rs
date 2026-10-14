@@ -8,7 +8,7 @@
 //! (`🧪️w3-t-puzzle-oracle-selfcheck.py` in ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`).
 
 use super::*;
-use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
 use protocol::OpBinary;
 
 const CORPUS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🧫️selection-time-travel/🔣️.json");
@@ -78,7 +78,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
     assert!(cases.len() >= 7, "the corpus edits every selection leaf's parameters and targets");
     for case in cases {
         let id = case.id.as_str();
-        let mut store = crate::host::owned::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = crate::host::owned::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA, &format!("time-travel-{id}"), case.base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for (index, mutation) in case.log.iter().enumerate() {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: Some(gesture_transaction(index)) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a recorded gesture applies");
         }
@@ -89,7 +89,7 @@ async fn every_corpus_edit_previews_replays_and_overwrites_like_the_fresh_fold()
             operations.iter().map(|operation| operation.mutation_id.clone()).collect()
         };
         let head = store.snapshot_ref().clone();
-        let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_3D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+        let drafts: protocol::HistoryInputDrafts = [(ids[case.at].clone(), protocol::InputReplacement::Input { schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.into(), payload: case.replacement.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
         let mut preview = store.state_before(&ids[case.at], &drafts).expect("the preview base folds").as_ref().clone();
         apply_puzzle3d_mutation(&mut preview, &case.replacement).expect("the draft applies to its base");
         assert_eq!(preview, case.preview, "{id}: the preview is the state before the edited gesture plus the draft, nothing downstream");

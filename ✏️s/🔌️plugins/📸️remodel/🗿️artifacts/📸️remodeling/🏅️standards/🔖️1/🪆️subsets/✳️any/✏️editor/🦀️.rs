@@ -10,14 +10,30 @@
 //! routing table: `handle` → `RemodelingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::remodeling::engine::images as remodeling_image;
-use crate::editor::remodeling::modes::{analyze, capture, model};
-use crate::editor::remodeling::panels::{calibration as calibration_panel, document, media, parameters, quality, results, tracks};
-use crate::editor::remodeling::reconstruction_session::{ReconstructionRevalidateJob, ReconstructionRunJob};
-use crate::editor::remodeling::terminology::remodeling_labels;
-use crate::editor::remodeling::transient::{self, RemodelingWindowTransient};
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::calibration as calibration_panel;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::document;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::parameters;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::quality;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::results;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::tracks;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::ReconstructionRevalidateJob;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::ReconstructionRunJob;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::remodeling_labels;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -79,81 +95,14 @@ use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
-pub const REMODELING_PLAY_APP_ID: &str = "remodeling-play";
 /// 🔌️ Well-known stream id every `photos:in` import lands on — a stable identity so successive workflow
 /// imports keep appending frames to the SAME stream (a pure `import_media` call has no runtime scratch
 /// to remember which stream the last call used, unlike a UI drag-drop batch's `index == 0`/`> 0`
 /// convention — see `🎮️commands/🖼️import-frame-payload` for that one).
 const REMODELING_WORKFLOW_PHOTOS_STREAM_ID: &str = "workflow-photos";
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`, `☑️options/*`) builds its `on_change`/item actions with.
-pub fn remodeling_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(REMODELING_PLAY_APP_ID).action(action, args)
-}
-
-/// 🧱️ Admits one fixed UI text action value without JSON staging.
-pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    semio_framework_plugin::UiText::try_from_str(value.as_ref()).map(semio_framework_plugin::UiValue::Text).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI text admission failed"))
-}
-
-/// 🔘️ Admits one boolean UI action value.
-pub fn ui_value_bool(value: bool) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Bool(value)
-}
-
-/// 🔢️ Admits one numeric UI action value.
-pub fn ui_value_number(value: impl Into<f64>) -> semio_framework_plugin::UiValue {
-    semio_framework_plugin::UiValue::Number(value.into())
-}
-
-/// 📚️ Admits one fixed UI list action value without dynamic staging.
-pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiListBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list admission failed"))?;
-    for value in values {
-        builder.push(value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI list item admission failed"))?;
-    }
-    Ok(semio_framework_plugin::UiValue::List(builder.finish()))
-}
-
-/// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
-    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
-    for (key, value) in values {
-        builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
-    }
-    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
-}
-
-/// ☑️ A window-measure/`ActionDescriptor` action — `WindowMeasure` is the RETAINED (`ui_wgpu`) vocabulary
-/// and takes a plain `ActionDescriptor { controller_id, action, args }`, not the fallible
-/// `(ActionId, Option<UiValue>)` pair `remodeling_action` builds for semantic-contract chrome.
-pub fn remodeling_window_action(action: &str, args: Option<semio_framework_value::DslValue>) -> semio_framework_plugin::ActionDescriptor {
-    semio_framework_plugin::ActionDescriptor { controller_id: REMODELING_PLAY_APP_ID.into(), action: action.into(), args }
-}
-
-/// 🏷️ Admits one dynamic string as a semantic-contract `Label` — the SECOND `Label` type in scope
-/// (`plugin_app_close_prelude::Label`, what `PanelTreeBuilder::section`/`tree_item` take), never the
-/// retained `ui_wgpu` `Label` the SDK root's glob also re-exports and this file imports unqualified.
-pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI label admission failed"))
-}
-
-/// 🌳️ Admits fallibly assembled UI nodes into fixed child storage.
-pub use semio_framework_plugin::ui_node_list;
-
 //#endregion 🔖️Constants
 
-//#region 🔖️ResetDocument
-/// 🌱️ Builds an `Effect::LoadDocument` that swaps the live document to `document` OUTSIDE undo history — the sanctioned
-/// path for an example switch, a JSON load or an import: the whole document is load content, never mutation rows and never
-/// a before/after diff. The spr is a fresh, edit-free op-log for `document` (`store::os_store::text_format::empty_document_spr`).
-pub fn reset_document_effect(document: &RemodelingSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <RemodelingSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("remodeling", REMODELING_DOCUMENT_SCHEMA));
-    semio_framework_plugin::Effect::LoadDocument { pack, spr }
-}
-//#endregion 🔖️ResetDocument
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
@@ -212,28 +161,6 @@ pub fn remodeling_mesh_out_port() -> MediaPortSpec {
 }
 //#endregion 🔖️Io
 
-//#region 🔖️Payloads
-/// 📦️ Decodes a `requestFileOpen(readAs: "dataUrl")`/`RequestMediaFrames` payload into `(mime, bytes)`.
-/// Relocated from the artifact's `⚙️engine/🦀️.rs` (#2553): its only three consumers are all
-/// app-side (`🎮️commands/🖼️import-frame-payload`, `🎮️commands/🏗️run-reconstruction`, this app's own `import_media`).
-pub fn payload_from_data_url(data_url: &str) -> Option<(String, Vec<u8>)> {
-    let (header, encoded) = data_url.split_once(',')?;
-    let mime = header.strip_prefix("data:")?.split(';').next().unwrap_or("application/octet-stream").to_string();
-    let bytes = base64_codec::base64_standard_decode(encoded).ok()?;
-    Some((mime, bytes))
-}
-
-/// 🖼️ Decodes a still-image payload by mime — three consumers (`🎮️commands/🖼️import-frame-payload`,
-/// `🎮️commands/🏗️run-reconstruction`, this app's own `import_media`), and it takes no artifact-schema
-/// type, so it stays app-side (relocated from `⚙️engine/🦀️.rs`, #2553).
-pub fn decode_still_image(mime: &str, bytes: &[u8]) -> Result<remodeling_image::ImageRgba8, remodeling_image::ImageError> {
-    if mime.contains("jpeg") || mime.contains("jpg") {
-        remodeling_image::decode_jpeg(bytes)
-    } else {
-        remodeling_image::decode_png(bytes)
-    }
-}
-//#endregion 🔖️Payloads
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
@@ -306,12 +233,42 @@ impl RemodelingCommand {
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
-use crate::editor::remodeling::commands::{add_gcp, calibrate_cameras, edit_calibration, place_gcp_observation, remove_gcp};
-use crate::editor::remodeling::commands::{add_stream, import_abort, import_frame_payload, import_video_bytes_payload, import_video_done, import_video_frame_payload, remove_stream, set_stream_sync};
-use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
-use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
-use crate::editor::remodeling::commands::{set_active_example, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
-use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::add_gcp;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::calibrate_cameras;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::edit_calibration;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::place_gcp_observation;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::remove_gcp;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_abort;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_bytes_payload;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_done;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_frame_payload;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::remove_stream;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::set_stream_sync;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_dense;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_geo_products;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_mesh_result;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_result;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_sparse;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_tracks;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::reset_placeholder_mesh;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::export_qc_report;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frames;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::set_active_example;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_camera;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_frame_cursor;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_layer_visibility;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_report_table;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_dense_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_feature_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_geo_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_match_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_mesh_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_motion_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_sfm_params;
 //#endregion 🔖️Commands
 
 //#region 🔖️ActionBridge
@@ -495,7 +452,7 @@ mod args_bridge {
             "importFrames" => RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
-            "setActiveExample" => RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_or("exampleId", crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID) }),
+            "setActiveExample" => RemodelingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_or("exampleId", semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID) }),
             "importAbort" => RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: None }),
             _ => return Err(unknown(action)),
         })
@@ -813,7 +770,7 @@ impl ArtifactEditor for RemodelingPlayApp {
 
     type Command = RemodelingCommand;
 
-    const DIALECT: Dialect = crate::REMODELING_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = REMODELING_DOCUMENT_SCHEMA;
 
     /// 📬️ The document lane's one-item retained preparation — the framework's generic bounded
@@ -959,7 +916,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// artifact's own `default_remodeling_scene()` otherwise — the same shape `🧱️block`'s
     /// `default_block2d_snapshot()` uses, so an unparsable example degrades instead of panicking.
     fn initial_snapshot() -> RemodelingSnapshot {
-        crate::editor::remodeling::examples::boot_snapshot()
+        semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::boot_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -978,7 +935,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 // staleness gap, matches every prior exemplar in this ticket) rather than exporting a
                 // fabricated empty mesh.
                 let mesh =
-                    crate::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
+                    semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&doc.snapshot.durable_artifacts, &doc.snapshot.results.mesh.mesh).ok_or_else(|| MediaError::Payload(port.to_string(), "mesh:out: bounded composed mesh content is unavailable".into()))?;
                 let bytes = MeshExporter::export(&GlbExporter, &mesh).map_err(|error| MediaError::Payload(port.to_string(), error))?;
                 Ok(Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "3d.mesh".into(), json: base64_codec::base64_standard_encode(bytes) } })
             }
@@ -1009,10 +966,10 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let frame_index = scene.streams.iter().find(|stream| stream.id == stream_id).map_or(0, |stream| stream.frames.len() as u32);
                 let asset_key = format!("{stream_id}-frame-{frame_index}");
                 let asset = ImageAsset { mime: "image/png".into(), data: json.clone(), width, height };
-                let mut mutations = vec![crate::mutations::create_asset(asset_key.clone(), asset)];
+                let mut mutations = vec![semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
-                    true => mutations.push(crate::mutations::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
-                    false => mutations.push(crate::mutations::create_stream(MediaStream {
+                    true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
+                    false => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),
                         kind: MediaKind::ImageSequence,
@@ -1097,9 +1054,9 @@ impl ArtifactEditor for RemodelingPlayApp {
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
 pub fn create_remodeling_app() -> AppDefinition {
-    Editor::builder(crate::REMODELING_DIALECT)
+    Editor::builder(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT)
             .document(["semio", "remodeling"])
-            .artifact_kind(crate::artifact_kind())
+            .artifact_kind(semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::artifact_kind())
             // 🔌️ `photos:in`/`mesh:out` — `2d.image`/`3d.mesh` are declared by `shooting`/`lowpoly`
             // respectively (reused here, not redeclared).
             .media_input(remodeling_photos_in_port())
@@ -1310,9 +1267,9 @@ pub fn create_remodeling_app() -> AppDefinition {
             .action_args("setActiveExample", vec![ActionArgDef::select(
                 "exampleId",
                 LocalizedLabel::native("Example", "Beispiel"),
-                crate::editor::remodeling::examples::REMODELING_EXAMPLES.iter().map(|example| ActionArgOption::new(example.id, crate::editor::remodeling::examples::example_label(example))).collect(),
+                semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::REMODELING_EXAMPLES.iter().map(|example| ActionArgOption::new(example.id, semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::example_label(example))).collect(),
             )
-            .default_value(&crate::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
+            .default_value(&semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::REMODELING_EXAMPLE_BOOT_ID)])
             // 🧵️ Phase-8 dispositions. Every declared row is `Migrated`: each is backed by the
             // exact-owner `RemodelingRetainedCommandJobFactory` proof in `🧵️RetainedCommands` and by the
             // document/config one-item store preparations in `📬️StorePreparation`, so UI dispatch (which
@@ -1409,7 +1366,4 @@ pub fn create_remodeling_app() -> AppDefinition {
 //#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests

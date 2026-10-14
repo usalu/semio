@@ -3,7 +3,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteRow,SqliteValue,SqliteSnapshotControl,artifact::{Cell,Projection as PhysicalProjection}};
 use Cell::{Null as N,Text as T,Real as R,Integer as I};
 
-pub(super) fn numeric_positions(table:&str)->&'static [usize]{match table{
+pub fn numeric_positions(table:&str)->&'static [usize]{match table{
     "dwg_annotation_scale"=>&[2,3],
     "dwg_constraint_work_plane_coordinate"=>&[3],"dwg_constraint_coordinate"=>&[5],
     "dwg_mleader_style"=>&[5,6,8,11],"dwg_mleader_landing"|"dwg_mleader_dogleg"=>&[2],"dwg_mleader_arrow"=>&[3],"dwg_mleader_text_style"=>&[8,11],"dwg_mleader_block_style"=>&[4],"dwg_mleader_block_scale_coordinate"=>&[3],
@@ -42,10 +42,10 @@ fn cells(value:f64)->[Cell<'static>;3]{
     if value.is_nan(){[T("nan"),bits,N]}else if value==f64::INFINITY{[T("positive_infinity"),bits,N]}else if value==f64::NEG_INFINITY{[T("negative_infinity"),bits,N]}else if value==0.0&&value.is_sign_negative(){[T("negative_zero"),bits,N]}else{[T("finite"),bits,R(value)]}
 }
 enum Target<'c,'p>{Database(PhysicalProjection<'c,'p>),Admission{control:&'c mut SqliteSnapshotControl<'p>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,identifiers:std::collections::BTreeMap<&'static str,i64>}}
-pub(super) struct Projection<'c,'p>{target:Target<'c,'p>,rows:usize,bytes:usize}
+pub struct Projection<'c,'p>{target:Target<'c,'p>,rows:usize,bytes:usize}
 impl<'c,'p> Projection<'c,'p>{
-    pub(super) fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{Ok(Self{target:Target::Database(PhysicalProjection::new(sql,control)?),rows:0,bytes:0})}
-    pub(super) fn admission(sql:&str,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{
+    pub fn new(sql:&str,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{Ok(Self{target:Target::Database(PhysicalProjection::new(sql,control)?),rows:0,bytes:0})}
+    pub fn admission(sql:&str,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&'c mut SqliteSnapshotControl<'p>)->Result<Self,ValueError>{
         control.checkpoint(phase,0,0)?;
         if sql.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"DWG authored SQL exceeds schema byte limit"))}
         if control.limits().max_tables<277{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"DWG authored schema exceeds table limit"))}
@@ -73,27 +73,27 @@ impl<'c,'p> Projection<'c,'p>{
         for(index,value)in values.iter().copied().enumerate(){if positions.binary_search(&(index+1)).is_ok(){match value{N=>encoded.extend([N,N,N]),R(value)=>encoded.extend(cells(value)),_=>unreachable!()}}else{encoded.push(value);}}
         encoded
     }
-    pub(super) fn insert(&mut self,table:&'static str,values:&[Cell<'_>])->Result<i64,ValueError>{
+    pub fn insert(&mut self,table:&'static str,values:&[Cell<'_>])->Result<i64,ValueError>{
         let(columns,bytes)=self.measure(table,values)?;
         let id=match &mut self.target{Target::Database(physical)=>physical.insert(table,&Self::encode(table,values,columns))?,Target::Admission{identifiers,..}=>{let count=identifiers.entry(table).or_default();*count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG surrogate count overflow"))?;*count}};
         self.rows+=1;self.bytes=bytes;if self.rows%256==0{self.checkpoint()?;}Ok(id)
     }
-    pub(super) fn insert_key(&mut self,table:&'static str,id:i64,values:&[Cell<'_>])->Result<(),ValueError>{
+    pub fn insert_key(&mut self,table:&'static str,id:i64,values:&[Cell<'_>])->Result<(),ValueError>{
         let(columns,bytes)=self.measure(table,values)?;
         match &mut self.target{Target::Database(physical)=>physical.insert_key(table,id,&Self::encode(table,values,columns))?,Target::Admission{identifiers,..}=>{let count=identifiers.entry(table).or_default();*count=count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"DWG surrogate count overflow"))?;}}
         self.rows+=1;self.bytes=bytes;if self.rows%256==0{self.checkpoint()?;}Ok(())
     }
-    pub(super) fn checkpoint(&mut self)->Result<(),ValueError>{match &mut self.target{Target::Database(physical)=>physical.checkpoint(),Target::Admission{control,phase,..}=>control.checkpoint(*phase,self.rows,0)}}
-    pub(super) fn finish_admission(self)->Result<usize,ValueError>{match self.target{Target::Admission{control,phase,..}=>{control.checkpoint(phase,self.rows,self.rows)?;Ok(self.rows)},Target::Database(_)=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG admission requires its owned counting target"))}}
-    pub(super) fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,ValueError>{match self.target{Target::Database(physical)=>physical.finish(),Target::Admission{..}=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG counting target cannot materialize database rows"))}}
+    pub fn checkpoint(&mut self)->Result<(),ValueError>{match &mut self.target{Target::Database(physical)=>physical.checkpoint(),Target::Admission{control,phase,..}=>control.checkpoint(*phase,self.rows,0)}}
+    pub fn finish_admission(self)->Result<usize,ValueError>{match self.target{Target::Admission{control,phase,..}=>{control.checkpoint(phase,self.rows,self.rows)?;Ok(self.rows)},Target::Database(_)=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG admission requires its owned counting target"))}}
+    pub fn finish(self)->Result<semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase,ValueError>{match self.target{Target::Database(physical)=>physical.finish(),Target::Admission{..}=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"DWG counting target cannot materialize database rows"))}}
 }
 #[derive(Clone,Copy)]
-pub(super) struct Row<'a>{raw:&'a SqliteRow,numeric:&'static[usize],pub(super) rowid:i64}
+pub struct Row<'a>{raw:&'a SqliteRow,numeric:&'static[usize],pub rowid:i64}
 impl<'a> Row<'a>{
-    pub(super) fn new(table:&str,raw:&'a SqliteRow)->Self{Self{raw,numeric:numeric_positions(table),rowid:raw.rowid}}
-    pub(super) fn raw(self)->&'a SqliteRow{self.raw}
+    pub fn new(table:&str,raw:&'a SqliteRow)->Self{Self{raw,numeric:numeric_positions(table),rowid:raw.rowid}}
+    pub fn raw(self)->&'a SqliteRow{self.raw}
     fn position(self,column:usize)->usize{column+2*self.numeric.partition_point(|value|*value<column)}
-    pub(super) fn value(self,column:usize)->Result<Cell<'a>,ValueError>{
+    pub fn value(self,column:usize)->Result<Cell<'a>,ValueError>{
         let index=self.position(column);
         if self.numeric.binary_search(&column).is_ok(){
             match (self.raw.values.get(index),self.raw.values.get(index+1),self.raw.values.get(index+2)){
@@ -110,7 +110,7 @@ impl<'a> Row<'a>{
             }
         }else{match self.raw.values.get(index){Some(SqliteValue::Null)=>Ok(N),Some(SqliteValue::Integer(value))=>Ok(Cell::Integer(*value)),Some(SqliteValue::Real(_))=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG REAL has no authored numeric class")),Some(SqliteValue::Text(value))=>Ok(T(value)),Some(SqliteValue::Blob(value))=>Ok(Cell::Blob(value)),None=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG row column is missing"))}}
     }
-    pub(super) fn integer(self,column:usize)->Result<i64,ValueError>{match self.value(column)?{Cell::Integer(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG column requires INTEGER"))}}
-    pub(super) fn real(self,column:usize)->Result<f64,ValueError>{match self.value(column)?{R(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG numeric column requires a present value"))}}
-    pub(super) fn text(self,column:usize)->Result<&'a str,ValueError>{match self.value(column)?{T(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG column requires TEXT"))}}
+    pub fn integer(self,column:usize)->Result<i64,ValueError>{match self.value(column)?{Cell::Integer(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG column requires INTEGER"))}}
+    pub fn real(self,column:usize)->Result<f64,ValueError>{match self.value(column)?{R(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG numeric column requires a present value"))}}
+    pub fn text(self,column:usize)->Result<&'a str,ValueError>{match self.value(column)?{T(value)=>Ok(value),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG column requires TEXT"))}}
 }

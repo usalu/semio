@@ -17,12 +17,12 @@ if (segments[0] === "fem3d-numerical-child-native") {
       testFem3dMountedStiffnessOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(this.repoRoot, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧱️elements3d/🧪️tests/🧱️mounted-stiffness/🟦️.ts"), join(this.repoRoot, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🧪️tests/📦️numerical-close/🟦️.ts")], { cwd: this.repoRoot });
       const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--features", "component-app-assembly", "--lib", "mounted_3d_element_interfaces_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--features", "component-app-assembly", "--lib", "--", "--nocapture", "--test-threads=1", "live_visual::tests::", "mounted_3d_element_interfaces_"], this.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-2d", "--lib", "mounted_3d_element_interfaces_", "--", "--nocapture", "--test-threads=1"], this.repoRoot);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-fem-3d", "--lib", "--", "--nocapture", "--test-threads=1", "live_visual::tests::", "mounted_3d_element_interfaces_"], this.repoRoot);
       return;
     }
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-fem-3d", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTestFeatures: ["component-app-assembly"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-fem-3d", { commands: { verify: OwnedVerifyScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000 });

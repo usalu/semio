@@ -1,8 +1,9 @@
 //! 🔺️ Diff for `ReorderRuns`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Moves one run: the `runs` triple removes its base index and re-adds the same run at its landing position.

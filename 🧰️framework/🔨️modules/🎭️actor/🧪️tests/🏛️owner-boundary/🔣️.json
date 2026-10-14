@@ -16,7 +16,10 @@
     "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
     "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
     "🧪️tests/📣️public-facets/🟦️.ts",
-    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+    "📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+    "📦️packages/🟦️typescript/🫀️liveness/🟦️.ts",
+    "📮️shard-client/🧬️component-codec/🧪️tests/🟦️.ts"
   ],
   "entrypoints": [
     "🟦️.ts",
@@ -26,7 +29,9 @@
     "📦️packages/🟦️typescript/📃️page/🟦️.ts",
     "📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts",
     "📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts",
-    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts"
+    "📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts",
+    "📦️packages/🟦️typescript/🧬️codec/🟦️.ts",
+    "📦️packages/🟦️typescript/🫀️liveness/🟦️.ts"
   ],
   "references": [
     {

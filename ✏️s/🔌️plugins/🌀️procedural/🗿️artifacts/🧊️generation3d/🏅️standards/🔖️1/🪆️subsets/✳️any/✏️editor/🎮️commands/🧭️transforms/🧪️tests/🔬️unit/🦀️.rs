@@ -3,7 +3,7 @@
 //! leaves zero trace, an identity motion commits nothing; the motion algebra composes offsets, rotations and factors.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
+use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
 
 fn clock(ms: u64) -> protocol::HybridLogicalTimestamp {
     protocol::HybridLogicalTimestamp { actor: 0, physical_ms: ms, logical: 0 }
@@ -126,7 +126,7 @@ fn every_gumball_tool_declares_the_leaf_it_yields_as_its_intent() {
     for (verb, motion) in [("translateSelection", GumballMotion::Translate([1.0, 0.0, 0.0])), ("rotateSelection", GumballMotion::Rotate(AxisAngle { axis: [0.0, 0.0, 1.0], angle: 0.5 })), ("scaleSelection", GumballMotion::Scale([2.0, 1.0, 1.0]))] {
         let tool = format!("{}#{verb}", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID);
         let leaf = motion.leaf(vec!["t".into()]);
-        let kind = <Generation3dMutation as protocol::SemanticMutation<crate::Generation3dSnapshot>>::semantics(&leaf).kind;
+        let kind = <Generation3dMutation as protocol::SemanticMutation<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot>>::semantics(&leaf).kind;
         assert_eq!(<Editor as ArtifactEditor>::tool_intent_kinds(&tool), &[kind], "{tool}");
     }
     for verb in ["editMeshSelection", "knifeMeshSelection", "deleteSelection"] {

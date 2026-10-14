@@ -2,9 +2,9 @@
 //! (`GenerationPlayState.selected_generation_id`, restored when a saved document is loaded), or none. The selected row of
 //! a view is config (`SetSelectedGeneration`), never this leaf.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️SelectGeneration
 /// 👆️ Selects the generation `generation_id` names, or clears the selection when it is `None`.
@@ -18,11 +18,11 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Sele
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "selection", kind: "select-generation", record: "SelectedGeneration" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::select_generation::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
-        super::inverse::inverse(self, base)
+        crate::select_generation::inverse::inverse(self, base)
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

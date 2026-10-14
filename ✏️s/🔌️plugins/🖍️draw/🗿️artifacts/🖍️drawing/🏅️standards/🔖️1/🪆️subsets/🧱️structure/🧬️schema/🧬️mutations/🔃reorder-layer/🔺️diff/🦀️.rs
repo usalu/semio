@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ReorderLayer` — one tree-aware move row from the layer's base
 //! address to the new one — never the layer itself, never apply-then-capture.
-use crate::diff::{diff_reorder_layer, DrawingDiff};
-use crate::schema::{find_drawing_layer, find_drawing_layer_location};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_reorder_layer, DrawingDiff};
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, find_drawing_layer_location};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::ReorderLayer, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

@@ -1,0 +1,15 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object",
+  "oneOf":[{"required":["command"],"not":{"required":["commands"]}},{"required":["commands"],"not":{"required":["command"]}}],
+  "properties":{
+    "command":{"type":"string"},
+    "commands":{"type":"array","items":{"oneOf":[{"type":"string"},{"type":"object","required":["command"],"properties":{"command":{"type":"string"},"forwardAllArgs":{"type":"boolean"}},"additionalProperties":true}]}},
+    "args":{"type":"array","items":{"type":"string"}},
+    "__unparsed__":{"type":"array","items":{"type":"string"},"$default":{"$source":"unparsed"}},
+    "forwardAllArgs":{"type":"boolean"},
+    "cwd":{"type":"string"},
+    "env":{"type":"object","additionalProperties":{"type":"string"}}
+  },
+  "additionalProperties":true
+}

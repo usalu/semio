@@ -1,10 +1,18 @@
 //! 🗂️ 🗂️ Fem2d play app commands command — `remove-selection`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_combination,delete_element,delete_load_case,delete_material,delete_node,delete_region,delete_section,delete_support};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
+use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
 
-use crate::{element_id, Fem2dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

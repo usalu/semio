@@ -3,11 +3,11 @@ use semio_framework_value::retirement::{RetireOwned, RetirementCursor, deferred,
 use std::{borrow::Borrow, cmp::Ordering};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},value::list::{PagedList,PagedListRefusalKind}};
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetainedClone)]
 struct FoldIndexNode<K, V> { entry: Option<(K,V)>, retired_entry:Option<(K,V)>, left: Option<usize>, right: Option<usize>, height: usize, count: usize }
 
 /// 🌳️ Ordered fold facts own every arena slot and displaced key until exact retirement.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetainedClone)]
 pub struct HistoryFoldIndex<K, V> { nodes: PagedList<FoldIndexNode<K,V>,{usize::MAX}>, root: Option<usize>, free_head:Option<usize>, displaced_keys: PagedList<K,{usize::MAX}>, mutation_epoch:u64 }
 impl<K:Ord,V:PartialEq> PartialEq for HistoryFoldIndex<K,V>{fn eq(&self,other:&Self)->bool{self.len()==other.len()&&self.iter().eq(other.iter())}}
 impl<K:Ord,V:Eq> Eq for HistoryFoldIndex<K,V>{}
@@ -193,11 +193,9 @@ impl<V:semio_framework_value::FromValue> semio_framework_value::FromValue for Hi
         let mut index=Self::new();for(key,value)in value.into_object()? {if index.contains_key(&key){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"duplicate ordered key"));}index.insert(key,V::from_value(value)?);}Ok(index)
     }
 }
-#[cfg(any(test,feature="history-index-serde"))]
 impl<K:Ord+serde::Serialize,V:serde::Serialize> serde::Serialize for HistoryFoldIndex<K,V> {
     fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error> {use serde::ser::SerializeMap;let mut map=serializer.serialize_map(Some(self.len()))?;for(key,value)in self{map.serialize_entry(key,value)?;}map.end()}
 }
-#[cfg(any(test,feature="history-index-serde"))]
 impl<'de,K:Ord+serde::Deserialize<'de>,V:serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryFoldIndex<K,V> {
     fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error> {
         struct Visitor<K,V>(std::marker::PhantomData<(K,V)>);
@@ -210,7 +208,7 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for FoldIndexNode<K,V>{fn retireme
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.nodes),deferred(self.root),deferred(self.free_head),deferred(self.displaced_keys),deferred(self.mutation_epoch)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.nodes),deferred_birth_bytes_for(&self.root),deferred_birth_bytes_for(&self.free_head),deferred_birth_bytes_for(&self.displaced_keys),deferred_birth_bytes_for(&self.mutation_epoch)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
 
 /// 🧺️ Owns arbitrary original membership keys in the same retained ordered arena.
-#[derive(Clone,Debug,PartialEq,Eq)]
+#[derive(Clone,Debug,PartialEq,Eq, semio_framework_value::RetainedClone)]
 pub struct HistoryFoldSet<K:Ord>(HistoryFoldIndex<K,()>);
 impl<K:Ord> Default for HistoryFoldSet<K>{fn default()->Self{Self(HistoryFoldIndex::default())}}
 impl<K:Ord> HistoryFoldSet<K>{
@@ -263,9 +261,7 @@ impl<K:Ord> ExactSizeIterator for HistoryFoldSetIntoIter<K>{}
 impl<K:Ord> IntoIterator for HistoryFoldSet<K>{type Item=K;type IntoIter=HistoryFoldSetIntoIter<K>;fn into_iter(self)->Self::IntoIter{HistoryFoldSetIntoIter{entries:self.0.into_iter()}}}
 impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSet<K>{fn retirement(self)->Box<dyn RetirementCursor>{self.0.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.0.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
 impl<K:RetireOwned+Ord> RetireOwned for HistoryFoldSetIntoIter<K>{fn retirement(self)->Box<dyn RetirementCursor>{self.entries.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.entries.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()}}
-#[cfg(any(test,feature="history-index-serde"))]
 impl<K:Ord+serde::Serialize> serde::Serialize for HistoryFoldSet<K>{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{use serde::ser::SerializeSeq;let mut sequence=serializer.serialize_seq(Some(self.len()))?;for key in self{sequence.serialize_element(key)?;}sequence.end()}}
-#[cfg(any(test,feature="history-index-serde"))]
 impl<'de,K:Ord+serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryFoldSet<K>{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{<Vec<K> as serde::Deserialize>::deserialize(deserializer).map(|keys|keys.into_iter().collect())}}
 
 /// 🌲️ String-keyed fold indexes render as JSON objects in sorted key order; ordinal access walks the live sorted ranks.

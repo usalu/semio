@@ -12,26 +12,98 @@
 set -euo pipefail
 
 #region 🔖️Dispatch
+package_declares_workspace() {
+  LC_ALL=C awk '
+    function whitespace() { while (substr(document, position, 1) ~ /^[ \t\r\n]$/) position++ }
+    function string_value(    character, escape, digits, offset, code, digit) {
+      if (substr(document, position++, 1) != "\"") { invalid = 1; return }
+      token = ""
+      while (position <= length(document)) {
+        character = substr(document, position++, 1)
+        if (character == "\"") return
+        if (character ~ /[[:cntrl:]]/) { invalid = 1; return }
+        if (character == "\\") {
+          escape = substr(document, position++, 1)
+          if (escape == "u") {
+            digits = substr(document, position, 4)
+            if (length(digits) != 4 || digits ~ /[^0-9a-fA-F]/) { invalid = 1; return }
+            code = 0
+            for (offset = 1; offset <= 4; offset++) {
+              digit = index("0123456789abcdef", tolower(substr(digits, offset, 1))) - 1
+              code = code * 16 + digit
+            }
+            token = token (code > 0 && code < 128 ? sprintf("%c", code) : "#")
+            position += 4
+          } else if (escape ~ /^["\\\/bfnrt]$/) token = token (escape ~ /^["\\\/]$/ ? escape : "#")
+          else { invalid = 1; return }
+        } else token = token character
+      }
+      invalid = 1
+    }
+    function value(depth,    character, key, kind, part) {
+      whitespace()
+      character = substr(document, position, 1)
+      if (character == "{") {
+        position++; whitespace()
+        if (substr(document, position, 1) == "}") { position++; return 1 }
+        while (!invalid) {
+          whitespace(); string_value(); key = token; whitespace()
+          if (invalid || substr(document, position++, 1) != ":") { invalid = 1; return }
+          kind = value(depth + 1)
+          if (depth == 0 && key == "workspaces") workspace = kind == 1 || kind == 2
+          whitespace(); character = substr(document, position++, 1)
+          if (character == "}") return 1
+          if (character != ",") { invalid = 1; return }
+        }
+      } else if (character == "[") {
+        position++; whitespace()
+        if (substr(document, position, 1) == "]") { position++; return 2 }
+        while (!invalid) {
+          value(depth + 1); whitespace(); character = substr(document, position++, 1)
+          if (character == "]") return 2
+          if (character != ",") { invalid = 1; return }
+        }
+      } else if (character == "\"") { string_value(); return 3 }
+      else {
+        part = substr(document, position)
+        if (match(part, /^(true|false|null)/) || match(part, /^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/)) { position += RLENGTH; return 3 }
+        invalid = 1
+      }
+    }
+    { document = document $0 "\n" }
+    END { position = 1; value(0); whitespace(); if (invalid || position <= length(document)) exit 2; exit workspace ? 0 : 1 }
+  ' "$1"
+}
+
 resolve_repo_root() {
-  if [ -n "${COMPOSE_REPO_ROOT:-}" ]; then
-    printf '%s' "$(cd "${COMPOSE_REPO_ROOT}" && pwd)"
-    return
+  local dir explicit=0 status i=0 parent
+  if [ -n "${SEMIO_WORKSPACE_ROOT:-}" ]; then
+    dir="$(cd "$SEMIO_WORKSPACE_ROOT" && pwd)" || return 1
+    explicit=1
+  else
+    dir="$(cd "${1:-$(dirname "${BASH_SOURCE[0]}")}" && pwd)" || return 1
   fi
-  local dir
-  dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  local i=0
   while [ "$i" -lt 32 ]; do
-    if [ -f "$dir/nx.json" ]; then
-      printf '%s' "$dir"
-      return
+    if [ -f "$dir/📋️project.json" ] && [ ! -L "$dir/📋️project.json" ] && [ -f "$dir/package.json" ] && [ ! -L "$dir/package.json" ]; then
+      if package_declares_workspace "$dir/package.json"; then
+        printf '%s' "$dir"
+        return
+      else
+        status=$?
+        if [ "$status" -gt 1 ]; then
+          printf '%s\n' "Invalid workspace package: $dir/package.json" >&2
+          return 1
+        fi
+      fi
     fi
-    local parent
+    [ "$explicit" -eq 1 ] && break
     parent="$(dirname "$dir")"
     [ "$parent" = "$dir" ] && break
     dir="$parent"
     i=$((i + 1))
   done
-  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  printf '%s\n' "Workspace root requires paired package.json workspaces and 📋️project.json" >&2
+  return 1
 }
 REPO_ROOT="$(resolve_repo_root)"
 case "${1:-}" in
@@ -287,12 +359,11 @@ repo_bootstrap() {
     return 0
   fi
   cd "$REPO_ROOT"
-  export NX_WORKSPACE_DATA_DIRECTORY="${REPO_ROOT}/.nx/workspace-data"
-  mkdir -p "$NX_WORKSPACE_DATA_DIRECTORY"
+  export SEMIO_WORKSPACE_ROOT="$REPO_ROOT"
   log "workspace:setup…"
-  bun nx run workspace:setup
+  bun repo run workspace:setup
   log "Building repo client binary…"
-  bun nx run @semio-tech/repo-client:build || log "repo client build failed; install Go 1.21+ and rerun setup."
+  bun repo run @semio-tech/repo-client:build || log "repo client build failed; install Go 1.21+ and rerun setup."
 }
 #endregion 🔖️RepoBootstrap
 

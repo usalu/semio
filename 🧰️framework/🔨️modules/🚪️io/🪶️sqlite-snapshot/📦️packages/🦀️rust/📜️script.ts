@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { scriptInvocationBudget, BundleScript, ScriptRouter } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, testLevelBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { cmdBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 
@@ -23,7 +24,7 @@ class NativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     if (rest.length) throw Error("test-native accepts only an execution level");
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-io-sqlite-snapshot"], cwd: this.root, extraArgs: ["--lib", "--no-fail-fast", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-io-sqlite-snapshot"], cwd: this.root, extraArgs: ["--lib", "--no-fail-fast", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -33,7 +34,7 @@ class ReceivingSchemaScript extends BundleScript{
   if(segments.length)throw Error('test-receiving-schema accepts no arguments');
   const source=resolve(this.root,'../../🧩️artifact/🫴️receiving/🧪️tests/🟦️.ts');
   await runBudgetedTestCommand(process.execPath,['test',source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
-  await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-io-sqlite-snapshot'],cwd:this.root,extraArgs:['--lib','sqlite_snapshot_receiving_borrowed_schema_uses_original_work_without_owned_tokens','--no-fail-fast','--success-output','immediate'],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+  await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-io-sqlite-snapshot'],cwd:this.root,extraArgs:['--lib','sqlite_snapshot_receiving_borrowed_schema_uses_original_work_without_owned_tokens','--no-fail-fast','--success-output','immediate'],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 
@@ -64,7 +65,7 @@ class OriginalFixedLimitsScript extends BundleScript{
   const source=resolve(this.root,"../../⚠️refusal/💰️limits/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:cmdBudgetMs(),throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs(),throwOnFailure:true});
-  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:this.root,extraArgs:["--lib","sqlite_snapshot_original_fixed_limits_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:this.root,extraArgs:["--lib","sqlite_snapshot_original_fixed_limits_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 
@@ -76,7 +77,7 @@ class OriginalPhysicalScript extends BundleScript{
    const source=resolve(this.root,"../../🔁️transfer/🫴️receiving/🧪️tests/🟦️.ts");
    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
-  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:this.root,extraArgs:["--lib","sqlite_snapshot_original_physical_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-io-sqlite-snapshot"],cwd:this.root,extraArgs:["--lib","sqlite_snapshot_original_physical_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 

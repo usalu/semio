@@ -53,6 +53,12 @@ def owner(path):
         manifest = os.path.join(directory, "📦️packages", "🦀️rust", "Cargo.toml")
         if os.path.exists(manifest) and path in files_of(manifest):
             return manifest
+        if os.path.exists(os.path.join(directory, "Cargo.toml")) and re.search(r"(?m)^\[workspace\]", open(os.path.join(directory, "Cargo.toml"), encoding="utf-8").read()):
+            for dirpath, dirnames, filenames in os.walk(directory):
+                dirnames[:] = [d for d in dirnames if d not in ("node_modules", "target", "🗑️generated")]
+                if dirpath.endswith(os.path.join("📦️packages", "🦀️rust")) and "Cargo.toml" in filenames and path in files_of(os.path.join(dirpath, "Cargo.toml")):
+                    return os.path.join(dirpath, "Cargo.toml")
+            return None
         directory = os.path.dirname(directory)
     return None
 

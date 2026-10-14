@@ -7,7 +7,7 @@ use crate::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_
 use crate::editor::bim::panels::outliner::{item, leaf};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;

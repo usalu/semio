@@ -7,12 +7,12 @@ pub(crate) struct MountedChildGroupIdentitySource<'a> { pub(crate) parent: &'a s
 pub(crate) struct MountedChildGroupIdentityIssuer {
     hash: Option<semio_framework_hash::Sha256>,
     seal: Option<(usize, usize, usize, usize, [u8; 32], u32, u64)>,
-    field: usize,
-    offset: usize,
+    pub(crate) field: usize,
+    pub(crate) offset: usize,
     encoded: [u8; 70],
     output: ManuallyDrop<Option<Vec<u8>>>,
-    finished: bool,
-    closing: bool,
+    pub(crate) finished: bool,
+    pub(crate) closing: bool,
 }
 
 impl MountedChildGroupIdentityIssuer {

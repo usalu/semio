@@ -262,7 +262,7 @@ impl Generation3dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = crate::host::generation3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
+        let _ = semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Generation3d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -456,30 +456,30 @@ mod mounted_laws {
 
         let operation = OperationId(u64::MAX - 71);
         assert_eq!(
-            crate::host::generation3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, crate::host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS }),
+            semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS }),
             Err("generation3d-publication.initial-freshness")
         );
-        assert!(crate::host::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, crate::host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
-        assert_eq!(crate::host::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
         // 🔐️ A DIFFERENT operation id owns no lease at all, so the fail-closed answer is
         // `authority-missing`, not `wrong-operation`: leases are keyed BY operation
         // (`FixedOperationRegistry::get_operation`), so a lease whose recorded operation disagrees
         // with the id it was found under is unreachable without the `#[cfg(test)]` hostile
         // injection that `editor::…::unit`'s own hostile law drives
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        assert_eq!(crate::host::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.authority-missing"));
-        assert_eq!(crate::host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
-        crate::host::generation3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(crate::host::generation3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation3d-publication.wrong-base"));
-        assert!(crate::host::generation3d_release_publication_authority(operation, Generation(41)));
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.authority-missing"));
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
+        semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation3d-publication.wrong-base"));
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(operation, Generation(41)));
 
-        assert!(crate::host::generation3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, crate::host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
         .is_ok());
-        assert!(crate::host::generation3d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(crate::host::generation3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(crate::host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(crate::host::generation3d_release_publication_authority(operation, Generation(42)));
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(41)).is_err());
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(operation, Generation(42)));
     }
 
     #[test]
@@ -540,7 +540,7 @@ mod mounted_laws {
         assert!(oracle_fixture.contains("serde_json"));
         assert!(oracle_fixture.contains("Generation3dSemanticOracle"));
         assert!(oracle_fixture.contains("\"runtimeDependency\": false"));
-        assert!(crate::host::generation3d_retained_catalog_is_complete());
+        assert!(semio_s_artifact_procedural_3d_host::generation3d_retained_catalog_is_complete());
     }
 }
 //#endregion 🧪️MountedLaws

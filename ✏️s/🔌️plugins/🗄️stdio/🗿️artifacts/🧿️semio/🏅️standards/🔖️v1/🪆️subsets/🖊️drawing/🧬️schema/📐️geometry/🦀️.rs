@@ -1,6 +1,7 @@
 //! 📐️ Owned drawing geometry, affine transforms, and path evaluation.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::snapshot::PathSegment;
 
 pub type Affine = [f64; 6];

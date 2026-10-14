@@ -1,8 +1,9 @@
 //! 🎛️ Cheap selection eligibility for existing semantic inspector commands.
-use crate::{DrawingLayerNode,DrawingSnapshot};
-use crate::schema::layer_base;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::layer_base;
 
-pub(super) struct SelectionActionEligibility {
+pub struct SelectionActionEligibility {
     pub count:usize,
     pub locked:bool,
     pub same_parent:bool,

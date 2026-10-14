@@ -1,5 +1,6 @@
 use super::*;
-use semio_framework_plugin_interpreter::{decode_owned_result, GUEST_FAULT_MAXIMUM_BYTES};
+use semio_framework_plugin_interpreter_runtime::decode_owned_result;
+use semio_framework_plugin_guest_contract::GUEST_FAULT_MAXIMUM_BYTES;
 
 fn event(kind: &str) -> Event {
     let lifetime = semio_framework::kernel::ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime: 3 };

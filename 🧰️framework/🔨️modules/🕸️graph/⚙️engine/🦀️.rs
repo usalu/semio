@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use crate::manifest::{PropertyBag, PropertyValue};
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 
 // #region 🔖️Ids
 /// 🧩️ Stable node identifier.
@@ -15,10 +15,10 @@ pub type EdgeId = u64;
 
 // #region 🔖️Edge
 /// 🪢️ Edge with typed endpoints (node id or handle id).
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`; `E` is always `P::Endpoint` (`NodeId`/`HandleId`, both `u64`) in
 // practice, so the derive's auto-synthesized `E: ToValue + FromValue` bound is always satisfied.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct CoreEdge<E> {
     pub id: EdgeId,
     pub source: E,
@@ -178,18 +178,18 @@ impl PortModel for Ported {
 
 // #region 🔖️Storage
 /// 📦️ Per-node record: attribute bag plus, for ported storages, the handles anchored on it (stays empty for `Normal` storages).
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`; `PropertyBag`/`PropertyValue` (`🛂️manifest`) are already covered.
-#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct NodeRecord {
     pub attrs: PropertyBag,
     pub handles: Vec<HandleId>,
 }
 
 /// 📦️ Per-edge record: typed endpoints (node ids for `Normal`, handle ids for `Ported`) plus attribute bag.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeRecord` above; `E` is always `u64` in
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `NodeRecord` above; `E` is always `u64` in
 // practice (see `CoreEdge`'s note).
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct EdgeRecord<E> {
     pub source: E,
     pub target: E,
@@ -211,14 +211,14 @@ fn unlink_one(map: &mut BTreeMap<NodeId, BTreeMap<NodeId, Vec<EdgeId>>>, u: Node
 }
 
 /// 🗄️ Shared adjacency-map storage behind every per-kind facade crate; `BTreeMap` everywhere keeps iteration deterministic. Node-level adjacency (`successors`/`predecessors`) is always keyed by `NodeId`, even for `Ported` storages — port/handle detail lives only in `EdgeRecord::source`/`target` and is resolved down to owning nodes via `handle_owner`. For undirected storages `successors` already holds both directions of every edge, so `predecessors` stays empty and is never consulted (documented at each call site); a self-loop on an undirected storage is recorded twice in `successors[u][u]`, matching NetworkX's convention of counting a self-loop twice towards degree.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`. Every `BTreeMap` here is keyed by `NodeId`/`EdgeId`/`HandleId`
 // (all bare `u64`), not `String`, so each names a stringified-key `with` bridge (precedent: actor's
 // `ShardTable`/`actor_shard_map_to_value`) rather than the `BTreeMap<String, _>`-only blanket impl.
 // `#[value(bound = "...")]` replaces the derive's per-type-param auto bound (`P`/`D` themselves are
 // never touched — both live only behind a skipped `PhantomData` field) with the ONE bound the
 // `edges` bridge actually needs: `P::Endpoint` (always `NodeId`/`HandleId` = `u64` in practice).
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(bound = "P::Endpoint: semio_framework_value::ToValue + semio_framework_value::FromValue")]
 pub struct Storage<P: PortModel, D: Directedness> {
     #[value(with = "storage_nodes_bridge")]
@@ -582,9 +582,9 @@ impl<P: PortModel, D: Directedness> Storage<P, D> {
 
 // #region 🔖️View traits
 /// 🪢️ Node-level edge reference; carries its own id plus both endpoint node ids. Port/handle detail is already resolved away — algorithms never see a `HandleId`.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct EdgeRef {
     pub id: EdgeId,
     pub u: NodeId,
@@ -771,9 +771,9 @@ mod csr_node_index_bridge {
 }
 
 /// 🧊️ Frozen, index-based CSR adjacency snapshot for hot algorithms; supersedes the ad-hoc `algorithms::Adjacency` for NEW code (that type is left untouched — old call sites keep using it). Node index assignment is `0..n` in sorted `NodeId` order, so two snapshots of the same graph always assign the same indices.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`.
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct Csr {
     node_ids: Vec<NodeId>,
     #[value(with = "csr_node_index_bridge")]
@@ -1409,7 +1409,7 @@ impl<L: Ord + Clone + std::hash::Hash> Interner<L> {
 
 // #region 🔖️GraphError
 /// 🚨️ Flat, non-generic error enum mirroring the NetworkX exception hierarchy; every downstream algorithm crate returns `Result<_, GraphError>`. Nothing here is generic over node/edge label types — everything is `NodeId`/`EdgeId`/`u64`/`String` — so this shape stays stable across the whole family.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed and the derive's default
 // externally-tagged shape (unit variant -> bare wire-name string, data-carrying variant ->
 // `{"VariantName": payload}`) is simply the new wire shape. `NotImplementedForKind`'s two fields
@@ -1417,7 +1417,7 @@ impl<L: Ord + Clone + std::hash::Hash> Interner<L> {
 // string can honestly become `&'static str` without leaking memory — a greenfield, no-legacy-API
 // repo (CLAUDE.md) fixes the field type instead of working around it (both call sites already
 // pass a string literal, which `.into()`s into `String` for free).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum GraphError {
     NodeNotFound(NodeId),
     EdgeNotFound(EdgeId),
@@ -1670,9 +1670,9 @@ mod point_bridge {
 }
 
 /// 🔵️ Circle or axis-aligned rectangle node body.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum NodeShape {
     #[default]
     Circle,
@@ -1680,8 +1680,8 @@ pub enum NodeShape {
 }
 
 /// 🪝️ Port direction for directed edge wiring.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `NodeShape` above.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum HandleRole {
     Source,
     Target,
@@ -1690,17 +1690,17 @@ pub enum HandleRole {
 }
 
 /// 🏷️ Semantic kind and property payload shared by graph elements.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `PropertyBag` (`🛂️manifest`) already covered.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `PropertyBag` (`🛂️manifest`) already covered.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct ElementSemantics {
     pub kind: Option<String>,
     pub properties: PropertyBag,
 }
 
 /// 🟠️ Retained node state with world-space center and shape extents.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `center` bridges through
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `NodeShape` above; `center` bridges through
 // `point_bridge` (`geometry::Point` is a different owner's module).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct Node {
     pub id: NodeId,
     #[value(with = "point_bridge")]
@@ -1716,8 +1716,8 @@ pub struct Node {
 }
 
 /// 🟣️ Tangent handle anchored to a node at a polar angle.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `Node` above.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `Node` above.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct Handle {
     pub angle: f64,
     pub id: HandleId,
@@ -1755,17 +1755,17 @@ impl semio_framework_value::retirement::RetireOwned for Node{
 const FLOW_EPS: f64 = 1e-9;
 
 /// 🌊️ Directed residual-graph edge; its paired reverse edge always lives at the adjacent arena slot (`id ^ 1`).
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`.
-#[derive(Clone, Copy, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct FlowEdge {
     to: u32,
     capacity: f64,
 }
 
 /// 🌊️ Capacitated directed flow network on a `u32`-indexed arena, for [Dinic's algorithm](https://doi.org/10.1016/0898-1221(74)90074-0) (CLRS ch. 26). Edges are stored as forward/reverse residual pairs at adjacent slots so augmenting a path only ever touches two `Vec` entries; adjacency is `Vec<Vec<u32>>`, never a hash map, so traversal order — and therefore `min_cut`'s result — is fixed by construction order alone.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive, see `FlowEdge` above.
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive, see `FlowEdge` above.
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct FlowNetwork {
     node_count: u32,
     edges: Vec<FlowEdge>,

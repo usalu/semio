@@ -1,10 +1,11 @@
 //! ↩️ Inverse for `ScaleLayers` — `update-layer-transform` back to the BASE transform of exactly the layers the scaling reshapes.
-use crate::mutations::{drawing_moved_transform, drawing_placed_layers, drawing_scaling_matrix, drawing_targets_invariant, update_layer_transform, DrawingMutation};
-use crate::schema::layer_base;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_geometry::{drawing_moved_transform, drawing_placed_layers, drawing_scaling_matrix, drawing_targets_invariant};
+use crate::update_layer_transform::mutation::update_layer_transform;
+use semio_s_artifact_draw_drawing_model::layer_base;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::mutation::ScaleLayers, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::update_layer_transform::mutation::UpdateLayerTransform>>(payload: &super::mutation::ScaleLayers, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     if ![payload.pivot_x, payload.pivot_y, payload.scale_x, payload.scale_y].iter().all(|value| value.is_finite()) || payload.scale_x == 0.0 || payload.scale_y == 0.0 || drawing_targets_invariant(&payload.targets).is_err() {
         return Ok(Vec::new());
     }

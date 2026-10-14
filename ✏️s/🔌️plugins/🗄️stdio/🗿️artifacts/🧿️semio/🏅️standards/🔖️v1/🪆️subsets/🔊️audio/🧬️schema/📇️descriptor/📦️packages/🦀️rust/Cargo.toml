@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-audio-descriptor"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "📇️ The semio audio schema descriptor: every schema facet leaf of the subset, for the schema registry."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-schema-registry = { workspace = true }

@@ -3,7 +3,7 @@ use super::*;
 /// 🚀️ CAD owns its declared kind spellings and relay dialect independently of the OS catalog.
 #[test]
 fn cad_activation_coordinates_match_defining_artifact_and_relay() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🚀️activation/🔣️.json")).expect("CAD activation corpus");
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/🚀️activation/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/🚀️activation/🔣️.json").leak()).expect("CAD activation corpus");
     assert_eq!(corpus["artifactKinds"][0].as_str(), Some(CAD_DIALECT.artifact_kind));
     assert_eq!(corpus["artifactKinds"][1].as_str(), Some(artifact_kind().id.as_str()));
     let surface = format!("{}#{}", corpus["artifactRef"].as_str().unwrap(), corpus["role"].as_str().unwrap());

@@ -7,7 +7,7 @@
 
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
-use crate::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

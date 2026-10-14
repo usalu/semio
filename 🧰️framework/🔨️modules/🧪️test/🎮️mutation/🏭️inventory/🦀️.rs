@@ -194,10 +194,8 @@ pub struct MutationInventoryContribution<'a> {
 #[path = "🚪️command/🦀️.rs"]
 mod command;
 pub use command::inventory_for_command;
-#[cfg(feature = "replication")]
 #[path = "🔌️replication/🦀️.rs"]
 mod replication;
-#[cfg(feature = "replication")]
 pub use replication::replication_inventory_leaves;
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

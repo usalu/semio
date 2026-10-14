@@ -4,7 +4,7 @@
 
 use super::{PaperRect, PlacedViewport, ViewMap};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::{View, Viewport};
+use crate::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
 
 /// 📏️ The margin of the frame at the binding edge (the left side), as ISO 5457 asks for.
 pub const BINDING_MARGIN: f64 = 20.0;

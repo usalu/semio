@@ -18,11 +18,6 @@ path = "../../🦀️.rs"
 [[test]]
 name = "retirement_law"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️retirement-law/🦀️.rs"
-required-features = ["component-app-assembly"]
-
-[features]
-default = []
-component-app-assembly = ["dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -52,8 +47,8 @@ semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 
 [dev-dependencies]
 semio-s-plugin-block = { path = "../../../../📦️packages/🦀️rust", features = ["test-serde"] }

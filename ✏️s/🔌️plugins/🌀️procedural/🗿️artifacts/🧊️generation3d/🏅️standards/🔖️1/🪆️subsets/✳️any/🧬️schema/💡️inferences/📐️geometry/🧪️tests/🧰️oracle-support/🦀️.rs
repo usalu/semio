@@ -5,11 +5,23 @@
 
 #![allow(dead_code)]
 
-use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
-use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Port;
+use semio_s_artifact_procedural_3d_model::catalogue::PortType;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_framework_3d_brep_engine::{GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d_brep_queries::analysis::{edge_table, face_table, ShapeScope};
+use semio_framework_3d_brep_analysis::{edge_table, face_table, ShapeScope};
 use semio_framework_3d::mesh::HalfedgeMesh;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -119,7 +131,7 @@ fn session_handle(session: &mut KernelSession, recipe: &Value) -> GeometryHandle
                 .find(|handle| {
                     let value = session.export(handle).expect("edge export");
                     let ShapeRoot::Edge(id) = value.root else { return false };
-                    edge_table(&value.body, &ShapeScope::edge(id)).expect("edge table").first().is_some_and(|row| row.curve_kind != semio_framework_3d_brep_queries::analysis::CurveKind::Line)
+                    edge_table(&value.body, &ShapeScope::edge(id)).expect("edge table").first().is_some_and(|row| row.curve_kind != semio_framework_3d_brep_analysis::CurveKind::Line)
                 })
                 .expect("a curved edge")
         }

@@ -6,7 +6,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 use semio_framework_value::retirement::controlled::{ControlledRetirement,RetainedOwnerGate};
 use semio_framework_mesh_engine::HistoryFoldIndex;
 use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle, GeometryKind}, semio_framework_3d_brep_representation::contract::{ParamDomain, PointClassification, Vec3}};
-use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationStep};
+use semio_framework_3d_brep_tessellation::{TessellationJob, TessellationStep};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Arc,Weak};
@@ -590,7 +590,7 @@ struct RetainedTessellation {
     geometry:Option<GeometryHandle>,
     admission_claim:String,
     validation_units:usize,
-    validation:Option<semio_framework_3d_brep_queries::validation::BodyValidationJob>,
+    validation:Option<semio_framework_3d_brep_validation::BodyValidationJob>,
     validated:bool,
     job:TessellationJob,
     last_step:u64,
@@ -878,7 +878,10 @@ impl std::ops::Deref for SessionCapture {
     fn deref(&self)->&Session {self.session.as_ref().expect("open geometry capture")}
 }
 impl SessionCapture {
-    fn owned(session:Session)->Self {Self {session:ManuallyDrop::new(Some(session)),orphan:ManuallyDrop::new(None),allocation:ManuallyDrop::new(None),allocation_bytes:0}}
+    /// 🪺️ Takes sole ownership of a fresh session, as the browser module's `BrowserSession` does.
+    pub fn owned(session:Session)->Self {Self {session:ManuallyDrop::new(Some(session)),orphan:ManuallyDrop::new(None),allocation:ManuallyDrop::new(None),allocation_bytes:0}}
+    /// 🔍️ The open session, or `None` once close has released it.
+    pub fn session(&self)->Option<&Session> {self.session.as_ref()}
     pub fn terminal_is_empty(&self)->bool {self.session.is_none() && self.orphan.is_none() && self.allocation.is_none()}
     fn retained_state(&self)->Option<&SessionState> {self.session.as_ref().map(|session|&*session.state).or_else(||self.orphan.as_ref())}
     pub fn begin_close(&self) {if let Some(state)=self.retained_state() {state.begin_close();}}
@@ -1597,33 +1600,6 @@ impl semio_framework_os_flow::geometry::GeometryPort for SessionPort {
         if !self.retain_terminal_is_empty(){return self.retain_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
         if !self.authority.terminal_is_empty() {return self.authority.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
         self.anchor.close_step(grant)
-    }
-}
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "browser-publication"))]
-mod browser {
-    use wasm_bindgen::prelude::*;
-    #[wasm_bindgen]
-    pub struct BrowserSession {session:super::SessionCapture}
-    #[wasm_bindgen]
-    impl BrowserSession {
-        #[wasm_bindgen(constructor)]
-        pub fn new() -> Self { Self {session:super::SessionCapture::owned(super::Session::new())} }
-        pub fn brep_invoke(&self, method: &str, arguments: &str) -> String { self.session.session.as_ref().map_or_else(||"{\"error\":\"geometry.session-closed\"}".into(),|session|session.brep_invoke_json(method,arguments)) }
-        pub fn dispose(&self, handle: &str) -> Result<(), JsValue> { self.session.session.as_ref().ok_or_else(||JsValue::from_str("geometry.session-closed"))?.dispose_geometry(handle).map_err(|error|JsValue::from_str(&error)) }
-        pub fn begin_close(&self) { self.session.begin_close(); }
-        pub fn cancel_close(&self) { self.session.cancel_close(); }
-        pub fn resume_close(&self) { self.session.resume_close(); }
-        pub fn terminal_is_empty(&self) -> bool { self.session.terminal_is_empty() }
-        pub fn next_close_copy_byte_demand(&self)->Result<usize,JsValue> {self.session.next_close_copy_byte_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
-        pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,JsValue> {self.session.next_close_capacity_byte_demand(copy).map_err(|error|JsValue::from_str(&error.to_string()))}
-        pub fn next_close_release_byte_demand(&self)->Result<usize,JsValue> {self.session.next_close_release_byte_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
-        pub fn next_close_depth_demand(&self)->Result<usize,JsValue> {self.session.next_close_depth_demand().map_err(|error|JsValue::from_str(&error.to_string()))}
-        pub fn close_step(&mut self,maximum_items:usize,maximum_copy_bytes:usize,maximum_capacity_bytes:usize,maximum_release_bytes:usize,maximum_depth:usize)->String {
-            match self.session.close_step(super::RetainedCloneGrant {maximum_items,maximum_copy_bytes,maximum_capacity_bytes,maximum_release_bytes,maximum_depth}) {
-                Ok(step)=>{let progress=step.progress();let phase=if matches!(step,super::RetainedCloneStep::Complete(_)) {"complete"}else {"pending"};format!("{{\"phase\":\"{phase}\",\"items\":{},\"copyBytes\":{},\"capacityBytes\":{},\"releaseBytes\":{}}}",progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes)},
-                Err(error)=>semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".into(),semio_framework_pack_json::Value::String(error.to_string()))])),
-            }
-        }
     }
 }
 

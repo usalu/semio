@@ -45,17 +45,17 @@ pub fn render(document: &Generation2dSnapshot, _config: &Generation2dConfig, lab
         .window_section_or_placeholder(
             windows,
             GENERATION2D_PLAY_DOCUMENT_WIDGETS,
-            Some(crate::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?),
+            Some(semio_s_procedural_core_semantic_ui::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?),
             true,
             &document.host_snapshot.widgets,
             |widget| {
                 let mut node = tree_item(widget_id(widget), widget_id(widget).to_string())?;
                 if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-                    props.granularity = Some(crate::ui_text(GENERATION2D_GRANULARITY_NODE)?);
+                    props.granularity = Some(semio_s_procedural_core_semantic_ui::ui_text(GENERATION2D_GRANULARITY_NODE)?);
                 }
                 Ok(node)
             },
-            crate::ui_label(labels.none.as_str())?,
+            semio_s_procedural_core_semantic_ui::ui_label(labels.none.as_str())?,
         )?
         .interaction_domain(GENERATION2D_PLAY_APP_ID, GENERATION2D_INTERACTION_DOMAIN)?
         .build()

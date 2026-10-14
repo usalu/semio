@@ -1,9 +1,11 @@
 //! 🔺️ `create-generation` sparse diff construction — delegates the generation-field delta to the
 //! existing `semio_framework_artifact_playbook_playbook::GenerationMutation` engine, scoped to a single `Add` op.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationsDelta, Generation3dSelectionChange};
-use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationsDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSelectionChange;
+use crate::create_generation::CreateGeneration;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse generation-field delta for one new generation. `GenerationPlayState` is
 /// the document's single flat container, so there is no "unknown owner" case to detect here.

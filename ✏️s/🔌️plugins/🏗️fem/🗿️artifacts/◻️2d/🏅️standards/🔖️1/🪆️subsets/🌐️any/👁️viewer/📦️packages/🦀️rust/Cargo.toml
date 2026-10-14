@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-2d-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 2d viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-2d = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-fem-2d-engine = { workspace = true }
+semio-s-artifact-fem-2d-io = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-artifact-fem-2d-mutations = { workspace = true }
+semio-s-fem-app-surface = { workspace = true }
+
+[dev-dependencies]
+pack = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-ui-scene = { workspace = true }

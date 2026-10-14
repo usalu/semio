@@ -1,14 +1,15 @@
 //! 🕸️ Generation3d play app — the main flow-graph window (edit mode).
 
 use crate::editor::generation3d::config::Generation3dConfig;
-use crate::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use crate::editor::generation3d::PreviewInteractionMarks;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_CHANNEL;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
 use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::standards::v1::subsets::any::schema::{dag_host_snapshot_to_workflow, with_host};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, HasStackLayout, Trigger, UiAssemblyResult};
@@ -146,7 +147,7 @@ fn port_row(port: &NodeGraphPortRecord, directions: String) -> UiAssemblyResult<
     let name = port.label.as_deref().filter(|label| !label.is_empty()).unwrap_or(port.id.as_str());
     let mut node = tree_item_desc(&port.id, name, Some(directions))?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.granularity = Some(crate::ui_text(GENERATION_3D_INTERACTION_GRANULARITY)?);
+        props.granularity = Some(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_INTERACTION_GRANULARITY)?);
     }
     Ok(node)
 }
@@ -161,12 +162,12 @@ fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Optio
     let targets = graph_targets_json(GENERATION_3D_GRAPH_GRANULARITY_NODE, &node.id);
     let (hover, hover_args) = factory.action(
         semio_framework_plugin::INTERACTION_HOVER_ACTION_ID,
-        Some(crate::ui_value_map([("channel", crate::ui_value_text(GENERATION_3D_INTERACTION_CHANNEL)?), ("domainId", crate::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?), ("targets", crate::ui_value_text(&targets)?)])?),
+        Some(semio_s_procedural_core_semantic_ui::ui_value_map([("channel", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_CHANNEL)?), ("domainId", semio_s_procedural_core_semantic_ui::ui_value_text(GENERATION_3D_INTERACTION_DOMAIN)?), ("targets", semio_s_procedural_core_semantic_ui::ui_value_text(&targets)?)])?),
     )?;
-    let builder = semio_framework_ui_contract::tree_item(crate::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?);
-    let mut builder = builder.try_id(&node.id).map_err(|_| outline_error("node-row.id"))?.granularity(crate::ui_text(GENERATION_3D_GRAPH_GRANULARITY_NODE)?);
+    let builder = semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(node.label.as_deref().unwrap_or(node.id.as_str()))?);
+    let mut builder = builder.try_id(&node.id).map_err(|_| outline_error("node-row.id"))?.granularity(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_GRAPH_GRANULARITY_NODE)?);
     if let Some(status) = status {
-        builder = builder.description(crate::ui_text(status)?);
+        builder = builder.description(semio_s_procedural_core_semantic_ui::ui_text(status)?);
     }
     builder = builder.try_on_with(Trigger::HoverPreview, hover, hover_args.ok_or_else(|| outline_error("node-row.hover-args"))?).map_err(|_| outline_error("node-row.hover"))?;
     tree_window_item(windows, builder, &node.id, true, &ports, |(port, directions)| port_row(port, directions.clone()))
@@ -177,7 +178,7 @@ fn node_row(windows: &TreeWindows<'_>, node: &NodeGraphNodeRecord, status: Optio
 fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
     let mut node = tree_item(&edge.id, format!("{}@{} → {}@{}", edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id))?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
-        props.granularity = Some(crate::ui_text(GENERATION_3D_GRAPH_GRANULARITY_EDGE)?);
+        props.granularity = Some(semio_s_procedural_core_semantic_ui::ui_text(GENERATION_3D_GRAPH_GRANULARITY_EDGE)?);
     }
     Ok(node)
 }
@@ -192,10 +193,10 @@ fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
 pub(crate) fn graph_outline(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let factory = ActionFactory::new(GENERATION_3D_PLAY_APP_ID);
     PanelTreeBuilder::new(GENERATION_3D_PLAY_OUTLINE_MAIN)?
-        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_NODES, Some(crate::ui_label(labels.graph_nodes.as_str())?), true, nodes, |node| {
+        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_NODES, Some(semio_s_procedural_core_semantic_ui::ui_label(labels.graph_nodes.as_str())?), true, nodes, |node| {
             node_row(windows, node, node_status_label(status_json, &node.id, labels), labels, &factory)
-        }, crate::ui_label(labels.graph_empty.as_str())?)?
-        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_WIRES, Some(crate::ui_label(labels.graph_wires.as_str())?), true, edges, wire_row, crate::ui_label(labels.graph_unwired.as_str())?)?
+        }, semio_s_procedural_core_semantic_ui::ui_label(labels.graph_empty.as_str())?)?
+        .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_WIRES, Some(semio_s_procedural_core_semantic_ui::ui_label(labels.graph_wires.as_str())?), true, edges, wire_row, semio_s_procedural_core_semantic_ui::ui_label(labels.graph_unwired.as_str())?)?
         .interaction_domain(GENERATION_3D_PLAY_APP_ID, GENERATION_3D_INTERACTION_DOMAIN)?
         .build()
 }
@@ -237,7 +238,7 @@ fn kind_extension_name(kind: &str) -> (String, String) {
 /// the OS workflow window seeds `NodeGraphScene.operators` so the canvas can lay ports out without
 /// waiting for the app-static catalogue (which may not have been contributed yet). Built-in `core.*`
 /// widgets are omitted: the engine already knows them. Never the registered catalogue.
-fn document_operator_records(dag: &semio_framework_artifact_infinite_dag::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
+fn document_operator_records(dag: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot, nodes: &[NodeGraphNodeRecord]) -> Vec<NodeGraphOperatorRecord> {
     let catalogue = semio_framework_os_flow::flow_operator_catalogue_records();
     let node_by_id: std::collections::BTreeMap<&str, &NodeGraphNodeRecord> = nodes.iter().map(|node| (node.id.as_str(), node)).collect();
     let mut kinds: Vec<String> = Vec::new();
@@ -311,7 +312,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });
-    let surface = crate::accessible_scene_surface(
+    let surface = semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_MAIN,
         semio_framework_ui_contract::SurfaceKind::NodeGraph,
         &NodeGraphScene {
@@ -337,7 +338,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
     // binding and deliberately not an app chord: `SurfaceAccessibilityShell` fires it only for the
     // focused canvas and `preventDefault`s it, whereas an `enter` chord in the app keybinding table
     // would fire on every focused button in the shell.
-    let surface = crate::activatable_scene_surface(surface, GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
+    let surface = semio_s_procedural_core_semantic_ui::activatable_scene_surface(surface, GENERATION_3D_PLAY_APP_ID, "activateSelection", "Enter")?;
     semio_framework_ui_contract::column()
         .grow(true)
         .try_id("procedural-play-main.body")

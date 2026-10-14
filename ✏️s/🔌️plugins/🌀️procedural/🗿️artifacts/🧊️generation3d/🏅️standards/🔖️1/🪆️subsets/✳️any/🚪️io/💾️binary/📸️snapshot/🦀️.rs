@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[cfg(test)]
 use store::PackError;
 
@@ -1057,7 +1057,7 @@ mod retained_mounted_laws;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 #[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 #[cfg(test)] use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 #[cfg(test)] use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayState};
@@ -1067,7 +1067,9 @@ use crate::Generation3dSnapshot;
 #[cfg(test)] use semio_framework_artifact_flow_flow::neural::{Tree, Neuron, Synapse};
 #[cfg(test)] use semio_framework_value::ordered::{OrderedMap, OrderedSet};
 #[cfg(test)] use semio_framework_value::{DslValue, Number, ValueError};
-use crate::standards::v1::subsets::any::io::text::snapshot::{Generation3dSnapshotDsl,generation3d_document_to_dsl,generation3d_document_from_dsl};
+use semio_s_artifact_procedural_3d_io_text::snapshot::Generation3dSnapshotDsl;
+use semio_s_artifact_procedural_3d_io_text::snapshot::generation3d_document_to_dsl;
+use semio_s_artifact_procedural_3d_io_text::snapshot::generation3d_document_from_dsl;
 
 impl pack::snapshot::ArtifactPack for Generation3dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

@@ -1,11 +1,12 @@
 //! ↩️ `move-nodes` inverse — every moved widget back at its BASE position: absolute `move-widget` rows, never a negated
 //! offset.
 
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
-use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
-use crate::standards::v1::subsets::any::schema::mutations::{widget_index,Generation3dMutation};
+use crate::move_nodes::MoveNodes;
+use crate::move_widget::MoveWidget;
+use crate::widget_index;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// ↩️ One `move-widget` per addressed widget that has a stored base position.
 pub fn inverse(payload: &MoveNodes, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {

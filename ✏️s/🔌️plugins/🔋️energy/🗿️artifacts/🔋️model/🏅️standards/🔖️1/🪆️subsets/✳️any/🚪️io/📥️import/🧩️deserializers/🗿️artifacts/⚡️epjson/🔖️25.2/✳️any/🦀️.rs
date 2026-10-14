@@ -27,8 +27,9 @@ use crate::air_exchange::InfiltrationMethod;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::epjson::v25_2::any::{glazing_material_name, surface_basis, surface_normal, EpJsonDiagnostic, CONSTANT_DESIGN_FLOW_COEFFICIENTS, CONTRACT_OUTPUT_VARIABLES, DUAL_SETPOINT_CONTROL_SCHEDULE};
 use crate::model::{
     Construction, EntityId, EquipmentGain, Fenestration, GasKind, GasMaterial, GlazingMaterial, GroundTemperatureConfig, IdealLoadsSystem, Infiltration, LightingGain, Material, Model, OutputReportFrequency, OutputVariableSpec, OutsideBoundary,
-    PeopleGain, ScheduleId, Site, Space, Surface, SurfaceClass, Thermostat, Zone,
+    PeopleGain, Site, Space, Surface, SurfaceClass, Thermostat, Zone,
 };
+use crate::schedule::ScheduleId;
 use crate::schedule::{ConstantSchedule, DailySchedule, ScheduleInterpolation};
 use crate::EnergyModelSnapshot;
 use semio_framework_pack_json::{Object, Value};

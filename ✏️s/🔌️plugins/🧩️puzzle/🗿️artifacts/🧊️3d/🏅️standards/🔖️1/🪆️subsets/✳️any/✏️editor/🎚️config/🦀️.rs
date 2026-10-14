@@ -51,19 +51,19 @@ fn default_voxel_dims() -> [u32; 3] {
 }
 
 fn default_vortex_show() -> String {
-    crate::editor::puzzle3d::PUZZLE3D_VORTEX_SHOW_SELECTED.into()
+    crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_SELECTED.into()
 }
 
 fn default_vortex_direction() -> String {
-    crate::editor::puzzle3d::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
+    crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
 }
 
 fn default_selection_method() -> String {
-    crate::editor::puzzle3d::PUZZLE3D_SELECTION_METHOD_PICK.into()
+    crate::editor::puzzle3d::config::PUZZLE3D_SELECTION_METHOD_PICK.into()
 }
 
 fn default_window_ids() -> Vec<String> {
-    vec![crate::editor::puzzle3d::modes::edit::windows::main::WINDOW_KIND_ID.to_string()]
+    vec![crate::editor::puzzle3d::config::WINDOW_KIND_ID.to_string()]
 }
 
 /// 🏷️ The example a freshly created document was seeded from. `ArtifactApp::initial_snapshot` builds
@@ -74,7 +74,7 @@ fn default_window_ids() -> Vec<String> {
 /// `puzzle-3d.json` until the user switched examples at least once. `set_active_example("")` still
 /// writes the empty id explicitly, so a deliberately blanked document keeps the generic name.
 fn default_active_example_id() -> String {
-    crate::editor::puzzle3d::PUZZLE3D_EXAMPLE_CONCRETE_FOREST.into()
+    crate::editor::puzzle3d::config::PUZZLE3D_EXAMPLE_CONCRETE_FOREST.into()
 }
 //#endregion 🔖️Defaults
 
@@ -539,3 +539,33 @@ impl protocol::OpText for Puzzle3dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+pub const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+
+pub const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
+
+/// 🌀️ Window option: emit every object's vortices into the 3D scene.
+pub const PUZZLE3D_VORTEX_SHOW_ALWAYS: &str = "always";
+
+/// 🌀️ Window option: emit vortices only for hovered/selected objects (and vortex-only hover/selection).
+pub const PUZZLE3D_VORTEX_SHOW_SELECTED: &str = "selected";
+
+/// 🧭️ Window option: arrow tip points away from the vortex point along `direction`.
+pub const PUZZLE3D_VORTEX_DIRECTION_OUTWARDS: &str = "outwards";
+
+/// 🧭️ Window option: arrow tip ends on the vortex point; shaft starts at `point - direction * length`.
+pub const PUZZLE3D_VORTEX_DIRECTION_INWARDS: &str = "inwards";
+
+/// 🖱️ Viewport marquee method: a plain click picks, a drag sweeps an axis-aligned rectangle. The
+/// three values below are exactly `protocol::SelectionMethod`'s wire spellings, which is what
+/// `World3dHost` reads out of the scene's `selection.method` to choose the marquee shape and its
+/// coverage rule.
+pub const PUZZLE3D_SELECTION_METHOD_PICK: &str = "pick";
+
+/// 🖱️ Viewport marquee method: rectangle sweep.
+pub const PUZZLE3D_SELECTION_METHOD_RECTANGLE: &str = "rectangle";
+
+/// 🖱️ Viewport marquee method: free-hand lasso polygon.
+pub const PUZZLE3D_SELECTION_METHOD_LASSO: &str = "lasso";
+
+pub const WINDOW_KIND_ID: &str = "puzzle3d-main";

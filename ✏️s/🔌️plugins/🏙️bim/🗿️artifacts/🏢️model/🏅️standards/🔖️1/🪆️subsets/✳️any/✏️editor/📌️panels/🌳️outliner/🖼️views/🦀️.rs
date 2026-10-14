@@ -4,7 +4,7 @@
 use super::{entity_item, item, leaf};
 use crate::editor::bim::entities::kind_of;
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ModelSnapshot, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;

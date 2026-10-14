@@ -20,7 +20,7 @@ surface_law!(din18599_surface_laws_hold, semio_s_artifact_norm_din18599::editor:
 surface_law!(en1990_surface_laws_hold, semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer);
 surface_law!(en1991_surface_laws_hold, semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer);
 surface_law!(en1992_surface_laws_hold, semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer);
-surface_law!(en1993_surface_laws_hold, semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp, semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer);
+surface_law!(en1993_surface_laws_hold, semio_s_artifact_norm_en1993_editor::En1993PlayApp, semio_s_artifact_norm_en1993_viewer::En1993Viewer);
 surface_law!(en1994_surface_laws_hold, semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer);
 surface_law!(en1995_surface_laws_hold, semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer);
 surface_law!(en1996_surface_laws_hold, semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer);
@@ -135,12 +135,12 @@ set_active_example_case!(
 );
 set_active_example_case!(
     en1993_set_active_example_loads_high_strength_connection,
-    semio_s_artifact_norm_en1993::editor::en1993::create_en1993_app,
-    semio_s_artifact_norm_en1993::editor::en1993::En1993Command,
+    semio_s_artifact_norm_en1993_editor::create_en1993_app,
+    semio_s_artifact_norm_en1993_editor::En1993Command,
     semio_s_artifact_norm_en1993::editor::en1993::commands::set_active_example,
-    semio_s_artifact_norm_en1993::high_strength_connection::ID,
-    semio_s_artifact_norm_en1993::high_strength_connection::PRIMARY_TEXT,
-    semio_s_artifact_norm_en1993::En1993Snapshot
+    semio_s_artifact_norm_en1993_examples::high_strength_connection::ID,
+    semio_s_artifact_norm_en1993_examples::high_strength_connection::PRIMARY_TEXT,
+    semio_s_artifact_norm_en1993_model::En1993Snapshot
 );
 set_active_example_case!(
     en1994_set_active_example_loads_composite_bridge_girder,
@@ -269,7 +269,7 @@ roster_examples_case!(din18599_roster_examples_all_load, semio_s_artifact_norm_d
 roster_examples_case!(en1990_roster_examples_all_load, semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::editor::en1990::commands::set_active_example, semio_s_artifact_norm_en1990::En1990Snapshot, "⚖️en1990");
 roster_examples_case!(en1991_roster_examples_all_load, semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::editor::en1991::commands::set_active_example, semio_s_artifact_norm_en1991::En1991Snapshot, "🏋️en1991");
 roster_examples_case!(en1992_roster_examples_all_load, semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::editor::en1992::commands::set_active_example, semio_s_artifact_norm_en1992::En1992Snapshot, "🏛️en1992");
-roster_examples_case!(en1993_roster_examples_all_load, semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp, semio_s_artifact_norm_en1993::editor::en1993::commands::set_active_example, semio_s_artifact_norm_en1993::En1993Snapshot, "🔩️en1993");
+roster_examples_case!(en1993_roster_examples_all_load, semio_s_artifact_norm_en1993_editor::En1993PlayApp, semio_s_artifact_norm_en1993::editor::en1993::commands::set_active_example, semio_s_artifact_norm_en1993_model::En1993Snapshot, "🔩️en1993");
 roster_examples_case!(en1994_roster_examples_all_load, semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::editor::en1994::commands::set_active_example, semio_s_artifact_norm_en1994::En1994Snapshot, "🧩️en1994");
 roster_examples_case!(en1995_roster_examples_all_load, semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::editor::en1995::commands::set_active_example, semio_s_artifact_norm_en1995::En1995Snapshot, "🪵️en1995");
 roster_examples_case!(en1996_roster_examples_all_load, semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::editor::en1996::commands::set_active_example, semio_s_artifact_norm_en1996::En1996Snapshot, "🪨️en1996");

@@ -1,4 +1,7 @@
 use super::*;
+use semio_framework_ui_prepared::{PreparedRenderJob, PreparedRenderInput, DrawMeasureCursor};
+use semio_framework_ui_prepared::testing::{prepared_process_guard, drive_preparation_until_terminal, close_packet_step, close_job_step};
+use std::mem::size_of;
 
 /// 🧵️ Original wire and point leases submit empty surface domains without fabricating triangles or requesting another mesh.
 #[cfg(not(target_arch = "wasm32"))]
@@ -169,11 +172,11 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
         let Some(command) = packet.command_pages().get(index) else { continue };
         let authored = match command.draw_cursor() {
             Some(DrawMeasureCursor::LayerUi { layer, item, overlay: false }) => {
-                let value = &packet.draw.layers[layer].ui_instances[item];
+                let value = &packet.draw().layers[layer].ui_instances[item];
                 steps.iter().find(|step| step["op"] == "solid" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.rect[index]) && (0..4).all(|index| step["rgba"][index].as_u64().unwrap() as f32 / 255.0 == value.color[index]))
             }
-            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw.scene_passes.len() => {
-                let value = &packet.draw.scene_passes[pass];
+            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw().scene_passes.len() => {
+                let value = &packet.draw().scene_passes[pass];
                 steps.iter().find(|step| step["op"] == "scene" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.viewport[index]))
             }
             _ => None,
@@ -234,7 +237,7 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
         let Some(command) = packet.command_pages().get(index) else { continue };
         let authored = match command.draw_cursor() {
             Some(DrawMeasureCursor::LayerUi { layer, item, overlay }) => {
-                let values = if overlay { &packet.draw.layers[layer].overlay_ui_instances } else { &packet.draw.layers[layer].ui_instances };
+                let values = if overlay { &packet.draw().layers[layer].overlay_ui_instances } else { &packet.draw().layers[layer].ui_instances };
                 let value = &values[item];
                 steps.iter().find(|step| {
                     step["op"] == "solid"
@@ -244,11 +247,11 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
                 })
             }
             Some(DrawMeasureCursor::LayerRaster { layer, raster, overlay: false }) => {
-                let (key, value) = &packet.draw.layers[layer].raster_instances[raster];
+                let (key, value) = &packet.draw().layers[layer].raster_instances[raster];
                 steps.iter().find(|step| step["op"] == "raster" && step["rasterKey"] == key.as_str() && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.rect[index]))
             }
-            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw.scene_passes.len() => {
-                let value = &packet.draw.scene_passes[pass];
+            Some(DrawMeasureCursor::PassHeader(pass)) if pass < packet.draw().scene_passes.len() => {
+                let value = &packet.draw().scene_passes[pass];
                 steps.iter().find(|step| step["op"] == "scene" && (0..4).all(|index| step["rect"][index].as_f64().unwrap() as f32 == value.viewport[index]))
             }
             _ => None,
@@ -313,11 +316,11 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
         let Some(command) = packet.command_pages().get(index) else { continue };
         let item = match command.draw_cursor() {
             Some(DrawMeasureCursor::LayerUi { layer, item, overlay: false }) => {
-                let value = &packet.draw.layers[layer].ui_instances[item];
+                let value = &packet.draw().layers[layer].ui_instances[item];
                 Some((value.rect, value.color))
             }
-            Some(DrawMeasureCursor::Glass(region)) if region < packet.draw.glass_regions.len() => {
-                let value = &packet.draw.glass_regions[region];
+            Some(DrawMeasureCursor::Glass(region)) if region < packet.draw().glass_regions.len() => {
+                let value = &packet.draw().glass_regions[region];
                 Some((value.rect, [value.tint.r, value.tint.g, value.tint.b, value.alpha]))
             }
             _ => None,

@@ -117,12 +117,12 @@ impl ColdDocumentPairOwner {
 pub(crate) struct ColdDocumentPairLoad {
     owner: Rc<RefCell<ColdDocumentPairOwner>>,
     files: Rc<store::os_store::serialization::ArtifactPackFiles>,
-    finished: bool,
+    pub(crate) finished: bool,
 }
 
 impl ColdDocumentPairLoad {
     #[cfg(test)]
-    fn lifetime(&self) -> ActorInstanceLifetime {
+    pub(crate) fn lifetime(&self) -> ActorInstanceLifetime {
         self.owner.borrow().header.lifetime
     }
 

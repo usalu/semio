@@ -15,10 +15,11 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{CanonicalDescriptorValue, PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_framework_plugin_interpreter::{OwnedCompiledGuest, OwnedRuntime, TurnFault};
-/// 🧠️ The owned interpreter the emitter drives; the owned core-export law reads its export set.
+use semio_framework_plugin_guest_contract::TurnFault;
+use semio_framework_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedRuntime};
+/// 🧠️ The owned core-export set of the interpreter the emitter drives; the owned core-export law reads it.
 #[cfg(test)]
-use semio_framework_plugin_interpreter::interpreter;
+use semio_framework_plugin_interpreter::OwnedSemioExport;
 
 //#region 🔖️ActorBindings
 #[cfg(test)]

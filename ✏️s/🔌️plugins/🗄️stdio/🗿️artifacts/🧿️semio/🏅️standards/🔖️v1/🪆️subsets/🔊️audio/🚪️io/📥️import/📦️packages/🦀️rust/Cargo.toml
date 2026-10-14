@@ -20,7 +20,7 @@ semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️f
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-s-artifact-stdio-semio-audio = { workspace = true }
+semio-s-artifact-stdio-semio-audio-model = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 # 🧩️ Capability Dependencies
 semio-s-artifact-stdio-mp3 = { workspace = true }

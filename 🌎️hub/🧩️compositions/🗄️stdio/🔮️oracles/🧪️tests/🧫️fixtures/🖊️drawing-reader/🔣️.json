@@ -4,8 +4,7 @@
   "package": "semio-s-plugin-stdio-drawing-test-oracle",
   "library": "semio_s_plugin_stdio_drawing_test_oracle",
   "externalDependency": {
-    "version": "0.6",
-    "optional": true
+    "version": "0.6"
   },
   "functions": [
     {

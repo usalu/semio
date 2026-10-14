@@ -3,7 +3,7 @@
 //! encloses volume (a solid, a compound of solids, or a closed shell).
 
 use super::{manifold_report, ShapeKind, ShapeScope, Watertightness};
-use crate::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, mass_from_moments, solid_mass_with_area_centroid, MassProperties};
+use semio_framework_3d_brep_queries::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, mass_from_moments, solid_mass_with_area_centroid, MassProperties};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::Body;
 use semio_framework_3d::inertia::{combine, principal_inertia, InertiaPiece, PrincipalInertia};

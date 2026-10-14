@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetCurtainWallTypeOf`: a one-field curtain wall patch. The curtain wall type must exist; grid, mullions and panels are inferred from it.
 
 use super::SetCurtainWallTypeOf;
-use crate::{CurtainWallPatch, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::CurtainWallPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCurtainWallTypeOf, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

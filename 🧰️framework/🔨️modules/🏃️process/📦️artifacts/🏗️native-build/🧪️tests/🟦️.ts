@@ -21,7 +21,7 @@ function target(message:Readonly<Record<string,unknown>>):Readonly<Record<string
 
 const relayInvocation = <T>(run: (invocation: any) => Promise<T>): Promise<T> => withScriptProcessEnvelope(createScriptProcessEnvelope({ version: 1, owner: "native-artifacts-test", maximumElapsedMilliseconds: 0 }, {}, Date.now()), run);
 const fixtureOutput = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
-const fixtureLeaseDirectory=join(process.cwd(),".cache/framework/leases");
+const fixtureLeaseDirectory=join(process.cwd(),".cache/b/l/m/data");
 if (fixtureOutput.length > 129) throw Error("Native artifact fixture output exceeds the admitted compiler suffix path budget");
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const resourceReadSchema = JSON.parse(readFileSync(new URL("../📥️resources/🧬️schema/🔣️.json", import.meta.url), "utf8"));

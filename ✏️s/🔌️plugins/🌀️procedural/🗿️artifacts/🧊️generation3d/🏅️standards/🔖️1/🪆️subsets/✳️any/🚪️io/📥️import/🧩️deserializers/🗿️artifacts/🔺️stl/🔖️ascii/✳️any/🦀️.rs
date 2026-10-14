@@ -10,8 +10,10 @@
 //! evaluator turns into real BRep geometry through the same kernel every bundled example uses. The
 //! bytes are decoded FIRST (stl's own `decode_stl_auto`, ASCII or binary) so a file that is not STL
 //! fails loudly here instead of becoming a graph that fails later at evaluation time.
-use crate::standards::v1::subsets::any::io::mesh_bridge::{base64_encode, import_document, io_error};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mesh_bridge::base64_encode;
+use semio_s_artifact_procedural_3d_mesh_bridge::import_document;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;

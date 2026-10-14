@@ -3,9 +3,10 @@
 /// ♻️ Rebuilt source, removed layer, reverse arena and forward arena.
 type DrawingRebuiltLayerOwners = (DrawingNativeLayers, Option<DrawingLayerNode>, Vec<DrawingLayerNode>, Vec<DrawingLayerNode>);
 
-use crate::op::DrawingMutation;
-use crate::{DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, PathSegment, StrokeStyle};
-#[cfg(test)] use crate::{GradientStop};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, FillStyle, PathSegment, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+#[cfg(test)] use semio_s_artifact_draw_drawing_model::GradientStop;
 use protocol::{Mutation, OpBinary};
 use store::ErasedSnapshotRetirement as _;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep};
@@ -1252,7 +1253,7 @@ impl DrawingSnapshotBoundsAuthority {
     }
 }
 
-pub(crate) struct DrawingNativeCloneAuthority<T: RetainedClone> {
+pub struct DrawingNativeCloneAuthority<T: RetainedClone> {
     cursor: T::Cursor,
     value: std::mem::ManuallyDrop<Option<T>>,
     retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>>,
@@ -1261,7 +1262,7 @@ pub(crate) struct DrawingNativeCloneAuthority<T: RetainedClone> {
 }
 
 impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             cursor: T::retained_clone_cursor(),
             value: std::mem::ManuallyDrop::new(None),
@@ -1272,7 +1273,7 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
     }
 
     /// 🧬️ Clones from a sealed original source ref; every turn is funded by the job's retained wallet.
-    pub(crate) fn step(&mut self, source: RetainedCloneRef<'_, T>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, source: RetainedCloneRef<'_, T>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal { return Ok(true); }
         let grant = cx.retained_grant();
         match self.phase {
@@ -1303,14 +1304,14 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
         Ok(self.terminal)
     }
 
-    pub(crate) fn take(&mut self) -> Option<T> {
+    pub fn take(&mut self) -> Option<T> {
         self.terminal.then(|| self.value.take()).flatten()
     }
 
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.cursor.terminal_is_empty() && self.value.is_none() && self.retirement.is_none()
     }
-    pub(crate) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{
         if !self.cursor.terminal_is_empty(){self.cursor.begin_close();return self.cursor.close_step(grant);}
         if self.value.is_some(){
             if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<T>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -1320,7 +1321,7 @@ impl<T: RetainedClone> DrawingNativeCloneAuthority<T> {
         if let Some(owner)=self.retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.retirement.take();}return Ok(step);}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    pub(crate) fn close_demands(&self,copy:usize)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{
+    pub fn close_demands(&self,copy:usize)->Result<RetainedCloneGrant,semio_framework_value::ValueError>{
         if !self.cursor.terminal_is_empty(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_close_copy_byte_demand()?,maximum_capacity_bytes:self.cursor.next_close_capacity_byte_demand(copy)?,maximum_release_bytes:self.cursor.next_close_release_byte_demand()?,maximum_depth:self.cursor.next_close_depth_demand()?});}
         if self.value.is_some(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:size_of::<T>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});}
         if let Some(owner)=self.retirement.as_ref(){return Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:owner.next_copy_byte_demand()?,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:owner.next_release_byte_demand()?,maximum_depth:owner.next_depth_demand()?});}
@@ -1355,12 +1356,12 @@ impl DrawingNativeCloneAuthority<DrawingLayerNode> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct DrawingCloneWorkTotals {
-    pub(crate) items: usize,
-    pub(crate) bytes: usize,
+pub struct DrawingCloneWorkTotals {
+    pub items: usize,
+    pub bytes: usize,
 }
 
-pub(crate) struct DrawingLayerCloneWorkAuthority {
+pub struct DrawingLayerCloneWorkAuthority {
     depth: usize,
     path: [usize; DRAWING_MAXIMUM_LAYER_DEPTH],
     frames: [DrawingTraversalFrame; DRAWING_MAXIMUM_LAYER_DEPTH],
@@ -1371,7 +1372,7 @@ pub(crate) struct DrawingLayerCloneWorkAuthority {
 }
 
 impl DrawingLayerCloneWorkAuthority {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], items: 1, bytes: size_of::<DrawingLayerNode>(), direct: native_text_footprint::DrawingLayerFootprintCursor::default(), terminal: false }
     }
 
@@ -1391,7 +1392,7 @@ impl DrawingLayerCloneWorkAuthority {
         Ok((1usize.checked_add(value.capacity()).ok_or("drawing-store.mutation-clone-item-overflow")?, value.allocated_bytes()))
     }
 
-    pub(crate) fn step(&mut self, root: &DrawingLayerNode, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &DrawingLayerNode, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1431,7 +1432,7 @@ impl DrawingLayerCloneWorkAuthority {
         }
     }
 
-    pub(crate) fn totals(&self) -> Option<DrawingCloneWorkTotals> {
+    pub fn totals(&self) -> Option<DrawingCloneWorkTotals> {
         self.terminal.then_some(DrawingCloneWorkTotals { items: self.items, bytes: self.bytes })
     }
 }
@@ -1466,9 +1467,9 @@ fn clone_drawing_string(source: &str) -> Result<String, &'static str> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
-pub(crate) struct DrawingLayerAddress {
-    pub(crate) length: usize,
-    pub(crate) indices: [usize; DRAWING_MAXIMUM_LAYER_DEPTH],
+pub struct DrawingLayerAddress {
+    pub length: usize,
+    pub indices: [usize; DRAWING_MAXIMUM_LAYER_DEPTH],
 }
 
 impl DrawingLayerAddress {
@@ -1481,7 +1482,7 @@ impl DrawingLayerAddress {
     }
 }
 
-pub(crate) struct DrawingLayerLocator {
+pub struct DrawingLayerLocator {
     asset: bool,
     root: usize,
     depth: usize,
@@ -1493,12 +1494,12 @@ pub(crate) struct DrawingLayerLocator {
 }
 
 impl DrawingLayerLocator {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { asset:false, root: 0, depth: 0, path: [0; DRAWING_MAXIMUM_LAYER_DEPTH], frames: [DrawingTraversalFrame::EMPTY; DRAWING_MAXIMUM_LAYER_DEPTH], found: None, equality: native_text_footprint::DrawingTextEqualityCursor::default(), terminal: false }
     }
     fn asset_reference()->Self{let mut cursor=Self::new();cursor.asset=true;cursor}
 
-    pub(crate) fn node_at(snapshot: &DrawingSnapshot, address: DrawingLayerAddress) -> Option<&DrawingLayerNode> {
+    pub fn node_at(snapshot: &DrawingSnapshot, address: DrawingLayerAddress) -> Option<&DrawingLayerNode> {
         let mut value = snapshot.layers.get(address.indices[0])?;
         for index in &address.indices[1..address.length] {
             let DrawingLayerNode::Group(group) = value else { return None };
@@ -1527,7 +1528,7 @@ impl DrawingLayerLocator {
         }
     }
 
-    pub(crate) fn step(&mut self, snapshot: &DrawingSnapshot, target: &DrawingNativeText, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, snapshot: &DrawingSnapshot, target: &DrawingNativeText, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -1537,7 +1538,7 @@ impl DrawingLayerLocator {
         };
         let node = DrawingSnapshotBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("drawing-store.mutation-locator-path")?;
         if self.frames[self.depth].phase == 0 {
-            let key=if self.asset{match node{DrawingLayerNode::Image(image)=>Some(&image.image_key),DrawingLayerNode::Trace(trace)=>Some(&trace.source_key),_=>None}}else{Some(crate::schema::layer_id(node))};
+            let key=if self.asset{match node{DrawingLayerNode::Image(image)=>Some(&image.image_key),DrawingLayerNode::Trace(trace)=>Some(&trace.source_key),_=>None}}else{Some(semio_s_artifact_draw_drawing_model::layer_id(node))};
             let Some(key)=key else{self.frames[self.depth].phase=1;cx.consume_fuel(1);return Ok(false);};
             let compared = self.equality.step(key, target, 1, DRAWING_OWNED_FIELD_BYTES)?;
             cx.consume_fuel(compared.compared_bytes.max(1) as u64);
@@ -1582,7 +1583,7 @@ impl DrawingLayerLocator {
         Ok(false)
     }
 
-    pub(crate) fn found(&self) -> Option<DrawingLayerAddress> {
+    pub fn found(&self) -> Option<DrawingLayerAddress> {
         self.found
     }
 }
@@ -2433,7 +2434,7 @@ impl DrawingLayerDigestAuthority {
             return Ok(true);
         }
         let node = DrawingSnapshotBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("drawing-store.digest-layer-path")?;
-        let base = crate::schema::layer_base(node);
+        let base = semio_s_artifact_draw_drawing_model::layer_base(node);
         let phase = self.frames[self.depth].phase;
         match phase {
             0 => {
@@ -2495,7 +2496,7 @@ impl DrawingLayerDigestAuthority {
                 }
             }
             15 => {
-                credit.observe(digest, 113, &[u8::from(base.attributes.fill_rule == crate::FillRule::Nonzero)], cx)?;
+                credit.observe(digest, 113, &[u8::from(base.attributes.fill_rule == semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero)], cx)?;
                 self.frames[self.depth].phase = 16;
             }
             16 => {
@@ -2624,7 +2625,7 @@ impl DrawingMutationDigestAuthority {
                     self.credit.observe(digest, 2, &[u8::from(value.parent_id.is_some())], cx)?;
                     self.phase = if value.parent_id.is_some() { 2 } else { 3 };
                 }
-                DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => {
+                DrawingMutation::DragLayers(semio_s_artifact_draw_drawing_transform::drag_layers::mutation::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(semio_s_artifact_draw_drawing_transform::scale_layers::mutation::ScaleLayers { targets, .. }) => {
                     self.credit.source_vec(targets)?;
                     self.credit.scalar_usize(digest, 2, targets.len(), cx)?;
                     self.phase = 2;
@@ -2643,7 +2644,7 @@ impl DrawingMutationDigestAuthority {
             return Ok(false);
         }
         match mutation {
-            DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => {
+            DrawingMutation::DragLayers(semio_s_artifact_draw_drawing_transform::drag_layers::mutation::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(semio_s_artifact_draw_drawing_transform::scale_layers::mutation::ScaleLayers { targets, .. }) => {
                 if let Some(target) = targets.get(self.segment_index) {
                     if !self.credit.observe_owned_string(digest, 3, target, false, cx)? { return Ok(false); }
                     self.segment_index += 1;
@@ -2663,9 +2664,9 @@ impl DrawingMutationDigestAuthority {
                 if let Some(target) = value.targets.get(self.segment_index) {
                     if !self.credit.observe_owned_string(digest, 3, &target.layer_id, false, cx)? { return Ok(false); }
                     let point = match target.point {
-                        crate::schema::geometry::editing::PathPoint::Anchor => 0u64,
-                        crate::schema::geometry::editing::PathPoint::Control1 => 1,
-                        crate::schema::geometry::editing::PathPoint::Control2 => 2,
+                        semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor => 0u64,
+                        semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Control1 => 1,
+                        semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Control2 => 2,
                     };
                     self.credit.scalar_usize(digest, 4, (target.index as u64).checked_mul(3).and_then(|index| index.checked_add(point)).ok_or("drawing-store.mutation-point-index-overflow")? as usize, cx)?;
                     self.segment_index += 1;
@@ -2691,7 +2692,7 @@ impl DrawingMutationDigestAuthority {
                 }
                 _ => {
                     let Some(segment) = value.segments.get(self.segment_index) else { return self.finish(digest, cx) };
-                    if !crate::schema::valid_path_segment(segment) { return Err("drawing-store.path-invalid-segment"); }
+                    if !semio_s_artifact_draw_drawing_model::valid_path_segment(segment) { return Err("drawing-store.path-invalid-segment"); }
                     let cursor = self.segment.get_or_insert_with(DrawingPathSegmentDigestAuthority::new);
                     if cursor.step(segment, digest, &mut self.credit, cx)? { self.segment = None; self.segment_index += 1; }
                     Ok(false)
@@ -2717,7 +2718,7 @@ impl DrawingMutationDigestAuthority {
             }
             DrawingMutation::SetLayerFillRule(value) => {
                 if self.phase == 2 {
-                    self.credit.observe(digest,3,&[u8::from(value.fill_rule==crate::FillRule::Nonzero)],cx)?;
+                    self.credit.observe(digest,3,&[u8::from(value.fill_rule==semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero)],cx)?;
                     self.phase=3;Ok(false)
                 } else {self.finish(digest,cx)}
             }
@@ -3034,7 +3035,7 @@ impl DrawingDuplicateReferenceSearch {
         if self.result.is_some() { return Ok(true); }
         let node = Self::node_at(root, &self.path[..self.depth]).ok_or("drawing-store.duplicate-reference-path")?;
         if self.frames[self.depth].phase == 0 {
-            let step = self.equality.step(crate::schema::layer_id(node), target, 1, DRAWING_OWNED_FIELD_BYTES)?;
+            let step = self.equality.step(semio_s_artifact_draw_drawing_model::layer_id(node), target, 1, DRAWING_OWNED_FIELD_BYTES)?;
             cx.consume_fuel(step.compared_bytes.max(1) as u64);
             if !step.complete { return Ok(false); }
             let equal = self.equality.result().ok_or("drawing-store.duplicate-reference-equality")?;
@@ -3125,7 +3126,7 @@ impl DrawingDuplicateRewriteAuthority {
         Ok(RetainedCloneStep::Progress(progress))
     }
 
-    fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value::list::PagedList<crate::schema::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn step(&mut self, root: &mut DrawingLayerNode, original: &DrawingLayerNode, document:&DrawingSnapshot, identities:&semio_framework_value::list::PagedList<semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment,{usize::MAX}>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal { return Ok(true); }
         let owners = (root as *const _ as usize, original as *const _ as usize);
         if self.owners.is_some_and(|held| held != owners) { return Err("drawing-store.duplicate-root-changed"); }
@@ -3136,7 +3137,7 @@ impl DrawingDuplicateRewriteAuthority {
         let phase = self.frames[self.depth].phase;
         if self.mode==0&&phase==0{
             if let Some(assignment)=identities.get(self.assignment_scan){
-                if assignment.source==*crate::schema::layer_id(source){if self.identity_index.is_some(){return Err("drawing-store.duplicate-identity-repeated-source");}self.identity_index=Some(self.assignment_scan);}
+                if assignment.source==*semio_s_artifact_draw_drawing_model::layer_id(source){if self.identity_index.is_some(){return Err("drawing-store.duplicate-identity-repeated-source");}self.identity_index=Some(self.assignment_scan);}
                 self.assignment_scan+=1;cx.consume_fuel(1);return Ok(false);
             }
             let identity=identities.get(self.identity_index.ok_or("drawing-store.duplicate-identity-missing")?).ok_or("drawing-store.duplicate-identity-index")?;
@@ -3170,14 +3171,14 @@ impl DrawingDuplicateRewriteAuthority {
                 }
                 2 => { if self.close_append(grant)? { self.frames[self.depth].phase = 3; }cx.consume_fuel(1); }
                 3 => {
-                    std::mem::swap(&mut crate::schema::layer_base_mut(node).id, &mut self.native_id);
+                    std::mem::swap(&mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).id, &mut self.native_id);
                     self.identity.close_step(1);self.identity = Default::default();self.identities_observed+=1;self.frames[self.depth].phase = 4;
                     cx.consume_fuel(size_of::<DrawingNativeText>() as u64);
                 }
                 4 => { if matches!(self.retire_displaced_granted(grant).map_err(|_| "drawing-store.duplicate-text-close")?, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 5; }cx.consume_fuel(1); }
                 5 if self.depth == 0 => {
                     self.append_active = true;
-                    let step = self.append.advance(" copy", &mut crate::schema::layer_base_mut(node).name, grant).map_err(|_| "drawing-store.duplicate-name-append")?;
+                    let step = self.append.advance(" copy", &mut semio_s_artifact_draw_drawing_model::layer_base_mut(node).name, grant).map_err(|_| "drawing-store.duplicate-name-append")?;
                     cx.consume_fuel(step.progress().copied_items.max(1) as u64);
                     if matches!(step, RetainedCloneStep::Complete(_)) { self.frames[self.depth].phase = 6; }
                 }
@@ -3483,7 +3484,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::ReplaceLayerStroke(value) => Some(&value.layer_id),
             DrawingMutation::SetLayerBooleanOperation(value) => Some(&value.layer_id),
             DrawingMutation::UpdateLayerTraceParams(value) => Some(&value.layer_id),
-            DrawingMutation::CreateLayer(value) => Some(crate::schema::layer_id(&value.layer)),
+            DrawingMutation::CreateLayer(value) => Some(semio_s_artifact_draw_drawing_model::layer_id(&value.layer)),
             DrawingMutation::DuplicateLayer(value) => Some(&value.layer_id),
             DrawingMutation::DeleteLayer(value) => Some(&value.layer_id),
             DrawingMutation::ReorderLayer(value) => Some(&value.layer_id),
@@ -3491,7 +3492,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::UpdateText(value) => Some(&value.layer_id),
             DrawingMutation::UpdateImage(value) => Some(&value.layer_id),
             DrawingMutation::SetShapeCoordinate(value) => Some(&value.layer_id),
-            DrawingMutation::DragLayers(crate::mutations::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(crate::mutations::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(crate::mutations::ScaleLayers { targets, .. }) => targets.first(),
+            DrawingMutation::DragLayers(semio_s_artifact_draw_drawing_transform::drag_layers::mutation::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(semio_s_artifact_draw_drawing_transform::scale_layers::mutation::ScaleLayers { targets, .. }) => targets.first(),
             DrawingMutation::DragPathPoints(value) => value.targets.first().map(|target| &target.layer_id),
         }
     }
@@ -3507,9 +3508,9 @@ impl DrawingMutationCandidateAuthority {
         let mut retired: semio_framework_value::list::PagedList<semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>, {usize::MAX}> = Default::default();
         for entry in outcome.diff().layers.iter().flat_map(|delta| delta.modified.iter()) {
             let mut fault = None;
-            let found = crate::schema::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {
+            let found = semio_s_artifact_draw_drawing_model::update_layer_in_tree(&mut source.layers, &entry.id, &mut |layer| {
                 if let Some(transform) = entry.patch.transform.as_ref() {
-                    crate::schema::layer_base_mut(layer).transform = transform.clone();
+                    semio_s_artifact_draw_drawing_model::layer_base_mut(layer).transform = transform.clone();
                 }
                 if let Some(segments) = entry.patch.path_segments.as_ref() {
                     match layer {
@@ -3990,29 +3991,29 @@ impl DrawingMutationCandidateAuthority {
                 let address = self.primary;
                 match mutation {
                     DrawingMutation::SetLayerVisible(value) => {
-                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible;
+                        semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).visible = value.visible;
                     }
                     DrawingMutation::SetLayerLocked(value) => {
-                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
+                        semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).locked = value.locked;
                     }
                     DrawingMutation::SetGroupIsolation(value) => {
                         let DrawingLayerNode::Group(group)=DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else {return Err("drawing-store.mutation-isolation-target-not-group");};
                         group.isolation=value.isolation;
                     }
                     DrawingMutation::SetLayerFillRule(value) => {
-                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill_rule=value.fill_rule;
+                        semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill_rule=value.fill_rule;
                     }
                     DrawingMutation::SetLayerOpacity(value) if value.opacity.is_finite() => {
-                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
+                        semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).opacity = value.opacity;
                     }
                     DrawingMutation::SetLayerOpacity(_) => return Err("drawing-store.mutation-opacity-invalid"),
                     DrawingMutation::SetLayerBlendMode(value) => {
-                        if !crate::DRAWING_BLEND_MODES.iter().any(|allowed| value.blend_mode.eq_str(allowed)) { return Err("drawing-store.mutation-blend-mode-invalid"); }
-                        self.adopt_native_text(&mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).blend_mode)?;
+                        if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.iter().any(|allowed| value.blend_mode.eq_str(allowed)) { return Err("drawing-store.mutation-blend-mode-invalid"); }
+                        self.adopt_native_text(&mut semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).blend_mode)?;
                     }
                     DrawingMutation::SetShapeCoordinate(value)=>{
                         let DrawingLayerNode::Shape(shape)=DrawingLayerLocator::node_at_mut(source,address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else{return Err("drawing-store.shape-target-kind");};
-                        crate::schema::shape_geometry::set_shape_coordinate(shape,value.field,value.index,value.value)?;
+                        semio_s_artifact_draw_drawing_model::shape_geometry::set_shape_coordinate(shape,value.field,value.index,value.value)?;
                     }
                     DrawingMutation::UpdateImage(value)=>{
                         if ![value.width,value.height].iter().all(|number|number.is_finite()&&*number>0.0){return Err("drawing-store.image-dimension-invalid");}
@@ -4026,13 +4027,13 @@ impl DrawingMutationCandidateAuthority {
                         text.size = value.size;
                     }
                     DrawingMutation::RenameLayer(_) => {
-                        self.adopt_native_text(&mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).name)?;
+                        self.adopt_native_text(&mut semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).name)?;
                     }
                     DrawingMutation::UpdateLayerTransform(value)
                         if [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation, value.transform.shear].iter().all(|field| field.is_finite()) =>
                     {
-                        crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).transform =
-                            crate::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation, shear: value.transform.shear };
+                        semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).transform =
+                            semio_s_artifact_draw_drawing_model::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation, shear: value.transform.shear };
                     }
                     DrawingMutation::UpdateLayerTransform(_) => return Err("drawing-store.mutation-transform-invalid"),
                     DrawingMutation::UpdatePathGeometry(_) => {
@@ -4048,7 +4049,7 @@ impl DrawingMutationCandidateAuthority {
                             None => None,
                         };
                         let old = std::mem::replace(
-                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill,
+                            &mut semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.fill,
                             replacement,
                         );
                         if let Some(old) = old {
@@ -4065,7 +4066,7 @@ impl DrawingMutationCandidateAuthority {
                             None => None,
                         };
                         let old = std::mem::replace(
-                            &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.stroke,
+                            &mut semio_s_artifact_draw_drawing_model::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).attributes.stroke,
                             replacement,
                         );
                         if let Some(old) = old {
@@ -4086,7 +4087,7 @@ impl DrawingMutationCandidateAuthority {
                         let DrawingLayerNode::Trace(target) = DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else {
                             return Err("drawing-store.mutation-trace-target");
                         };
-                        target.params = crate::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon };
+                        target.params = semio_s_artifact_draw_drawing_model::DrawingTraceParams { threshold: value.params.threshold, simplify_epsilon: value.params.simplify_epsilon };
                     }
                     DrawingMutation::UpdateLayerTraceParams(_) => return Err("drawing-store.mutation-trace-invalid"),
                     DrawingMutation::CreateLayer(_) | DrawingMutation::DuplicateLayer(_) | DrawingMutation::DeleteLayer(_) | DrawingMutation::ReorderLayer(_) => {
@@ -4902,7 +4903,7 @@ impl DrawingStoreInitializationAuthority {
                     self.fail(b"drawing-store.initializer-envelope-missing");
                     return DrawingInitializationTurn::Yield;
                 };
-                if envelope.schema != crate::DRAWING_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > DRAWING_OWNED_FIELD_BYTES {
+                if envelope.schema != semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA || envelope.id.is_empty() || envelope.id.len() > DRAWING_OWNED_FIELD_BYTES {
                     self.fail(b"drawing-store.initializer-envelope-invalid");
                 } else {
                     self.phase = DrawingStoreInitializationPhase::ValidateEditId { edit: 0 };
@@ -5387,7 +5388,7 @@ mod retained_mutation_authority_tests;
 
 /// 🧷️ Allocation-free stand-in kept in the history ledger while its original forward is in sealed custody.
 fn drawing_forward_placeholder() -> DrawingMutation {
-    DrawingMutation::DeleteLayer(crate::mutations::DeleteLayer { layer_id: Default::default() })
+    DrawingMutation::DeleteLayer(semio_s_artifact_draw_drawing_structure::delete_layer::mutation::DeleteLayer { layer_id: Default::default() })
 }
 
 fn initial_snapshot_clone_grant(turn: usize) -> RetainedCloneGrant {

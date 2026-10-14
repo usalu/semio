@@ -2,7 +2,7 @@
 //! absent.
 
 use super::SetStair;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetStair, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(stair) = base.stairs.get(&payload.id) else {

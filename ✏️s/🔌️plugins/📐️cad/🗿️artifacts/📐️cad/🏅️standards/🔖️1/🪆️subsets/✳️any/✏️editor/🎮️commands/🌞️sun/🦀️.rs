@@ -1,10 +1,10 @@
 //! 🌞️ CAD sun controls persisted by the exact invoking world window.
 
-use crate::editor::cad::config::{cad_sun_config_from_world, cad_sun_config_to_world, CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::windows::config as window_config;
-use crate::op::CadMutation;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{cad_sun_config_from_world, cad_sun_config_to_world, CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_modes::windows::config as window_config;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_plugin::apply_world3d_sun_action;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

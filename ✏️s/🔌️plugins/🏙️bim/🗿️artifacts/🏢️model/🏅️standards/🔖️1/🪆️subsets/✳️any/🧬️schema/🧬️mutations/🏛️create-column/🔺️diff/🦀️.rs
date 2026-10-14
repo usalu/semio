@@ -5,7 +5,7 @@ use super::super::elements;
 use super::super::wall_geometry::tilt_flaw;
 use super::CreateColumn;
 use super::super::placement::rise;
-use crate::{Entry, ModelDiff, ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateColumn, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

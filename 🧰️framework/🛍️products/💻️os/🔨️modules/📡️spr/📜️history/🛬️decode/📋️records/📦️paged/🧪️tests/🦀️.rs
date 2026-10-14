@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::ErasedSnapshotRetirement;
 use super::super::{HistoryEdit,HistoryEdits,OriginalHistoryEdits,RetainedHistoryIdDecode};
-use super::super::retained_history_transition::tests::close_original;
+use crate::test_retirement::close_original;
 use protocol::{codec::{RetainedWireFieldDecode,RetainedWireByteSource},dictionary::RetainedSourceDictionary};
 use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeAllocation,NativeDecodeAllocationPort,NativeDecodeRetirementRecipient};
 fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){crate::test_allocation::observe_backing(operation)}

@@ -1,7 +1,9 @@
-use super::*;
-use crate::editor::remodeling::commands::{set_frame_cursor, set_layer_visibility, set_report_table};
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_camera::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_frame_cursor;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_layer_visibility;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_report_table;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 /// 🕹️ Relocated from the deleted `set-selection` command file (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): remodeling's selection now lives in the

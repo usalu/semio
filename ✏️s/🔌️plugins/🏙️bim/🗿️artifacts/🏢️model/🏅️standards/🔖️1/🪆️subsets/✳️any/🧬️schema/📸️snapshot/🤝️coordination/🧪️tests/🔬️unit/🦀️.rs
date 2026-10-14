@@ -1,7 +1,7 @@
 //! 🧪️ The coordination rules: element classes, storeys and phases, selectors, scopes, moments and why a clash set, a rule, an issue or a comment cannot be written.
 
 use super::*;
-use crate::{Point2, Point3, SectionBox, ViewCamera};
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
@@ -23,8 +23,8 @@ fn issue() -> Issue {
     Issue {
         title: "Beam hits the wall".into(),
         description: String::new(),
-        status: crate::IssueStatus::Open,
-        priority: crate::IssuePriority::Normal,
+        status: crate::standards::v1::subsets::any::schema::snapshot::IssueStatus::Open,
+        priority: crate::standards::v1::subsets::any::schema::snapshot::IssuePriority::Normal,
         assignee: String::new(),
         author: "UG".into(),
         created: "2026-10-09T08:30:00Z".into(),
@@ -114,7 +114,7 @@ fn a_clash_set_needs_a_name_sane_distances_and_selectors_that_exist() {
 #[test]
 fn a_rule_needs_a_name_a_limit_the_kind_accepts_and_a_scope_that_exists() {
     let model = model();
-    let rule = Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: crate::RuleSeverity::Error, scope: RuleScope::all() };
+    let rule = Rule { name: "Riser".into(), kind: RuleKind::MaxRiser, limit: 0.19, severity: crate::standards::v1::subsets::any::schema::snapshot::RuleSeverity::Error, scope: RuleScope::all() };
     assert_eq!(rule_problem(&model, "r-1", &rule), None);
     let problem = |rule: Rule| rule_problem(&model, "r-1", &rule).expect("a problem");
     assert_eq!(problem(Rule { name: "".into(), ..rule.clone() }).field, "name");

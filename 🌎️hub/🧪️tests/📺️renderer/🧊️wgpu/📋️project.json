@@ -41,25 +41,25 @@
       },
       "configurations": {
         "wasm32": {
-          "args": "--journey wasm32"
+          "args": ["--journey", "wasm32"]
         },
         "wasm32-react": {
-          "args": "--journey wasm32-react"
+          "args": ["--journey", "wasm32-react"]
         },
         "wasm32-native": {
-          "args": "--journey wasm32-native"
+          "args": ["--journey", "wasm32-native"]
         },
         "native-react": {
-          "args": "--journey native-react"
+          "args": ["--journey", "native-react"]
         },
         "native-react-cursors": {
-          "args": "--journey native-react-cursors"
+          "args": ["--journey", "native-react-cursors"]
         },
         "cursors": {
-          "args": "--journey cursors"
+          "args": ["--journey", "cursors"]
         },
         "agent-pixels": {
-          "args": "--journey agent-pixels"
+          "args": ["--journey", "agent-pixels"]
         }
       }
     },

@@ -12,7 +12,7 @@ impl MediaFaultProjection {
     fn fault(&self) -> Option<&Fault> {
         self.fault.original()
     }
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.fault.terminal_is_empty()
     }
     fn close_step(&mut self, owner: &mut crate::io::control::NativeSnapshotEncodeOwner<'_, '_>) -> Result<MediaStep, MediaValueError> {

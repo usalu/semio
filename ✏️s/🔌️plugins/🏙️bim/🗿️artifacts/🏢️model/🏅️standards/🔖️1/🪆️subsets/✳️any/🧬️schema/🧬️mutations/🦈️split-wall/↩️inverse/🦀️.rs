@@ -7,7 +7,7 @@ use super::super::move_opening::MoveOpening;
 use super::super::set_wall_axis::SetWallAxis;
 use super::super::wall_geometry::split;
 use super::SplitWall;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SplitWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(wall) = base.walls.get(&payload.id) else {

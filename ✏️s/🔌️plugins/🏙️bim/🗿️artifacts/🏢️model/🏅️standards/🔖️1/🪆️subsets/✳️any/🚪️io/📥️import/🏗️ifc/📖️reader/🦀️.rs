@@ -2,7 +2,7 @@
 //! classifications), placement chains, curves, profiles and the swept body of a product.
 
 use super::frames::{bulge_of, Rigid};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
 
 pub type Args = Vec<Part21Value>;

@@ -1,13 +1,13 @@
 //! 🧪️ CAD native codecs preserve exact model and drawing child identities.
 
-use crate::schema::CadArtifact;
-use crate::{CadDiff, CadSnapshot};
+use semio_s_artifact_cad_cad_model::CadArtifact;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, snapshot::CadSnapshot};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 use semio_framework_os_kernel::{DiffBinary, DiffText};
 
 #[test]
 fn cad_document_contract_round_trips_exact_child_identities() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🔬️contract/🪪️document/🔣️.json").leak()).unwrap();
     let source = fixture["document"].to_string();
     let artifact: CadArtifact = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let snapshot: CadSnapshot = semio_framework_pack_json::from_json_str(&source, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -39,11 +39,11 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     for row in fixture["invalidDiffs"].as_array().unwrap() {
         assert!(semio_framework_pack_json::from_json_str::<CadDiff>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());
     }
-    let alias=crate::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }).unwrap();
+    let alias=semio_s_artifact_cad_cad_model::snapshot::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-b".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } }).unwrap();
     assert_eq!(alias.child_id,"model-a");
     assert_eq!(alias.target.artifact_id,"model-b");
-    assert!(crate::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_err());
-    assert!(crate::cad_drawing_child("drawing-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "drawing-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_ok());
+    assert!(semio_s_artifact_cad_cad_model::snapshot::cad_model_child("model-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_err());
+    assert!(semio_s_artifact_cad_cad_model::snapshot::cad_drawing_child("drawing-a", &semio_framework_artifact_reference::ArtifactRef { artifact_id: "drawing-a".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() } }).is_ok());
     eprintln!("[DEBUG] Cad document preserves two exact child identities, {} reference keys, snapshot text/binary and sparse/replacement diff round trips against the serde_json corpus", expected.len());
 }
 
@@ -52,27 +52,27 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
     use protocol::{Mutation, OpBinary, OpText};
     let cases = [
         (
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json"),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/➡️after/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🗣️.dsl.semio").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🔺️diff/🔣️.json").leak(),
         ),
         (
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json"),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/➡️after/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🗣️.dsl.semio").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🔺️diff/🔣️.json").leak(),
         ),
     ];
     for (before, after, input, text, diff) in cases {
         let before: CadSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let after: CadSnapshot = semio_framework_pack_json::from_json_str(after, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mutation: crate::CadMutation = semio_framework_pack_json::from_json_str(input, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mutation: semio_s_artifact_cad_cad_mutations::CadMutation = semio_framework_pack_json::from_json_str(input, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).unwrap(), serde_json::from_str::<serde_json::Value>(input).unwrap());
-        assert_eq!(crate::CadMutation::parse_op(text.trim()).unwrap(), mutation);
-        assert_eq!(crate::CadMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+        assert_eq!(semio_s_artifact_cad_cad_mutations::CadMutation::parse_op(text.trim()).unwrap(), mutation);
+        assert_eq!(semio_s_artifact_cad_cad_mutations::CadMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         let outcome = mutation.diff(&before);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).unwrap(), serde_json::from_str::<serde_json::Value>(diff).unwrap());
         assert_eq!(protocol::apply_diff(outcome.diff(), &before).unwrap(), after);
@@ -88,17 +88,17 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
 async fn cad_brep_events_invert_to_the_negative_diff() {
     let cases = [
         (
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json").leak(),
         ),
         (
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json").leak(),
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json")).expect("../../../🧪️tests/🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json").leak(),
         ),
     ];
     for (before, input) in cases {
         let before: CadSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mutation: crate::CadMutation = semio_framework_pack_json::from_json_str(input, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mutation: semio_s_artifact_cad_cad_mutations::CadMutation = semio_framework_pack_json::from_json_str(input, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
     }
 }

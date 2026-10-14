@@ -1,0 +1,46 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-io-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d geometry interchange: the native B-Rep and mesh interchange and polygon-source computes and the native compute context"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-artifact-flow-flow = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-mesh-engine = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
+semio-s-artifact-procedural-3d-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-support = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-phased-job = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../📦️packages/🦀️rust" }
+parry3d = "0.17"
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
+serde_json = { workspace = true }

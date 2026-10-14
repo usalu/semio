@@ -4,7 +4,8 @@
 
 use crate::schema::mutations::SemioObjectMutation;
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use {crate::schema::mutations::create_brep::CreateBrep, crate::schema::mutations::create_mesh::CreateMesh, crate::schema::mutations::create_properties::CreateProperties, crate::schema::mutations::delete_brep::DeleteBrep, crate::schema::mutations::delete_mesh::DeleteMesh, crate::schema::mutations::delete_properties::DeleteProperties, crate::schema::mutations::move_object::MoveObject, crate::schema::mutations::rotate_object::RotateObject, crate::schema::mutations::scale_object::ScaleObject};
 
 //#region 📖️SemioGrammar

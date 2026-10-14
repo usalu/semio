@@ -2,27 +2,15 @@
 //! the command transaction codec shared by the text format, the history fold and the composition coordinator.
 //!
 //! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
-use crate::os_spr::command::ArtifactMessageSource;
-use semio_framework_value::FromValue;
-use semio_framework_value::ToValue;
-use crate::os_spr::{MutationId, UndoPolicy};
-use crate::os_spr::{DiffRegions, Mutation, MutationDiff, OpBinary, OpText};
-use serde::{Deserialize, Serialize};
-use crate::os_vcs::{Author, VcsError};
-use crate::os_vcs::{
-    Identified, Patchable,
-};
-use super::store_schema::{ArtifactCommand, HistoryLane, SupersedeInput};
-use semio_framework_diagnostic::TextError;
-use semio_framework_diagnostic::TextSpan;
-use crate::os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal};
-use crate::os_pack::pack_rt;
-use super::ledger::retire_supersede_inputs;
-use super::canonical_edit::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonTree,
-};
+use protocol::{MutationId, UndoPolicy, Mutation, MutationDiff, OpBinary, OpText};
+use semio_framework_os_vcs::{Author, VcsError};
+use semio_framework_diagnostic::{TextError, TextSpan};
+use semio_framework_os_pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, PackRefusal, pack_rt};
+#[path="🧬️schema/🦀️.rs"]
+mod schema;
+pub use schema::{ArtifactCommand, HistoryLane, OpenToolTransaction, SupersedeInput};
+#[path="♻️retirement/🦀️.rs"]
+mod retirement;
 
 #[path="🛬️receiving/🦀️.rs"]
 pub mod receiving;
@@ -31,12 +19,12 @@ pub mod receiving;
 /// (bare-preferred, quoted only when needed — e.g. a name containing a space), then the optional
 /// avatar — every field the transition's content-addressed id covers.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct OpsAuthor {
+pub struct OpsAuthor {
     #[dsl(positional)]
-    pub(crate) id: String,
+    pub id: String,
     #[dsl(positional)]
-    pub(crate) name: String,
-    pub(crate) avatar: Option<String>,
+    pub name: String,
+    pub avatar: Option<String>,
 }
 
 impl From<&Author> for OpsAuthor {
@@ -45,30 +33,36 @@ impl From<&Author> for OpsAuthor {
     }
 }
 
+impl From<OpsAuthor> for Author {
+    fn from(author: OpsAuthor) -> Self {
+        Self { id: author.id, name: author.name, avatar: author.avatar }
+    }
+}
+
 /// 📌️ One `pins=[...]` entry on a `repin` line: child artifact uri, then its checkpoint.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct OpsPin {
+pub struct OpsPin {
     #[dsl(positional)]
-    pub(crate) child: String,
+    pub child: String,
     #[dsl(positional)]
-    pub(crate) checkpoint: String,
+    pub checkpoint: String,
 }
 
 /// ✏️ One `inputs=[...]` entry on a `supersede` line: the superseded operation, then its
 /// replacement — `schema` plus the base64 `OpBinary` `payload`, or neither for a withdrawal.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-pub(crate) struct OpsSupersededInput {
+pub struct OpsSupersededInput {
     #[dsl(positional)]
-    pub(crate) target: String,
-    pub(crate) schema: Option<String>,
-    pub(crate) payload: Option<String>,
+    pub target: String,
+    pub schema: Option<String>,
+    pub payload: Option<String>,
 }
 
-impl From<crate::os_spr::SupersededInput> for OpsSupersededInput {
-    fn from(input: crate::os_spr::SupersededInput) -> Self {
+impl From<protocol::SupersededInput> for OpsSupersededInput {
+    fn from(input: protocol::SupersededInput) -> Self {
         match input.replacement {
-            crate::os_spr::InputReplacement::Input { schema, payload } => Self { target: input.target.0, schema: Some(schema), payload: Some(semio_framework_io_base64::base64_standard_encode(&payload)) },
-            crate::os_spr::InputReplacement::Withdrawn => Self { target: input.target.0, schema: None, payload: None },
+            protocol::InputReplacement::Input { schema, payload } => Self { target: input.target.0, schema: Some(schema), payload: Some(semio_framework_io_base64::base64_standard_encode(&payload)) },
+            protocol::InputReplacement::Withdrawn => Self { target: input.target.0, schema: None, payload: None },
         }
     }
 }
@@ -83,7 +77,7 @@ impl From<crate::os_spr::SupersededInput> for OpsSupersededInput {
 /// sentinel); `operations`/`after`/`by`/`pins` are real DSL lists (`by=[ u1 "Ueli Saluz" ]`), not
 /// comma-joined, percent-escaped strings.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum OpsHeaderLine {
+pub enum OpsHeaderLine {
     Doc {
         #[dsl(positional)]
         id: String,
@@ -191,7 +185,7 @@ pub(crate) enum OpsHeaderLine {
 }
 
 /// 🌿️ A text record explicitly carries zero trunk/unknown or one authored branch identity.
-pub(crate) fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextError> {
+pub fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextError> {
     if lines.len() > 1 {
         return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("history line admits zero or one identity").to_string(),TextSpan::at(1,1)));
     }
@@ -221,34 +215,34 @@ impl OpText for OpsHeaderLine {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl OpBinary for OpsHeaderLine {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let body = semio_framework_os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        semio_framework_os_pack::write_varint_u64(&mut out, ordinal as u64);
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 
@@ -260,7 +254,7 @@ impl OpBinary for OpsHeaderLine {
 /// for `UndoWithPolicy` (token = kebab of the `UndoPolicy` variant name), optionally followed by an
 /// indented nested command block for `semantic-undo`/`compensating-action`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum CommandHeaderLine {
+pub enum CommandHeaderLine {
     /// ▶️ `transaction`/`tool` are the [`protocol::TransactionRef`] halves, present together or not at all.
     Apply {
         transaction: Option<String>,
@@ -340,7 +334,7 @@ pub(crate) enum CommandHeaderLine {
 /// ✏️ One 2-space-indented input line under a `supersede` command: `replace <target>` followed by the replacement's
 /// 4-space-indented `print_op` line, or `withdraw <target>`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum SupersedeInputLine {
+pub enum SupersedeInputLine {
     Replace {
         #[dsl(positional)]
         target: String,
@@ -372,7 +366,7 @@ impl OpText for SupersedeInputLine {
 }
 
 /// 📤️ Prints supersede inputs as their indented input lines (see [`SupersedeInputLine`]).
-pub(crate) fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[SupersedeInput<Op>]) -> Result<(), VcsError> {
+pub fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[SupersedeInput<Op>]) -> Result<(), VcsError> {
     for input in inputs {
         let line = match &input.replacement {
             Some(_) => SupersedeInputLine::Replace { target: input.target.0.clone() },
@@ -396,7 +390,7 @@ pub(crate) fn print_supersede_inputs<Op: OpText>(out: &mut String, inputs: &[Sup
 
 /// 📥️ Parses the indented input lines [`print_supersede_inputs`] prints; at least one input is required. All-or-nothing:
 /// on any failure every replacement parsed so far retires through its technology's cold disposal.
-pub(crate) fn parse_supersede_inputs<P, Op: OpText + Mutation<P>>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
+pub fn parse_supersede_inputs<P, Op: OpText + Mutation<P>>(lines: &[&str]) -> Result<Vec<SupersedeInput<Op>>, TextError> {
     let mut inputs: Vec<SupersedeInput<Op>> = Vec::new();
     match parse_supersede_input_lines(lines, &mut inputs) {
         Ok(()) => Ok(inputs),
@@ -408,7 +402,7 @@ pub(crate) fn parse_supersede_inputs<P, Op: OpText + Mutation<P>>(lines: &[&str]
 }
 
 /// 🧺️ Parses supersede input lines into `inputs`, leaving every parsed input there on failure.
-pub(crate) fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<SupersedeInput<Op>>) -> Result<(), TextError> {
+pub fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &mut Vec<SupersedeInput<Op>>) -> Result<(), TextError> {
     let mut awaiting_replacement = false;
     for raw in lines {
         if let Some(operation) = raw.strip_prefix("    ") {
@@ -444,15 +438,15 @@ pub(crate) fn parse_supersede_input_lines<Op: OpText>(lines: &[&str], inputs: &m
 }
 
 /// 🎯️ Binary twin of [`print_supersede_inputs`]: `count varint | (target str | 0 u8 | op len varint | op bytes | 1 u8)*`.
-pub(crate) fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeInput<Op>]) -> Result<(), crate::os_spr::ProtocolError> {
-    crate::os_pack::write_varint_u64(out, inputs.len() as u64);
+pub fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[SupersedeInput<Op>]) -> Result<(), protocol::ProtocolError> {
+    semio_framework_os_pack::write_varint_u64(out, inputs.len() as u64);
     for input in inputs {
         write_command_str(out, &input.target.0);
         match &input.replacement {
             Some(replacement) => {
                 out.push(0);
                 let bytes = replacement.encode_op()?;
-                crate::os_pack::write_varint_u64(out, bytes.len() as u64);
+                semio_framework_os_pack::write_varint_u64(out, bytes.len() as u64);
                 out.extend_from_slice(&bytes);
             }
             None => out.push(1),
@@ -463,7 +457,7 @@ pub(crate) fn write_supersede_inputs<Op: OpBinary>(out: &mut Vec<u8>, inputs: &[
 
 /// 🗳️ Reads a supersede command's inputs all-or-nothing: on any failure every replacement decoded so far retires through
 /// its technology's cold disposal, so a refused command never drops a live operation.
-pub(crate) fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
+pub fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Vec<SupersedeInput<Op>>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut inputs = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -482,12 +476,12 @@ pub(crate) fn read_supersede_inputs<P, Op: OpBinary + Mutation<P>>(reader: &mut 
 }
 
 /// 🎫️ One supersede input: its target and its replacement operation or withdrawal tag.
-pub(crate) fn read_supersede_input<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
+pub fn read_supersede_input<Op: OpBinary>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<SupersedeInput<Op>, CommandDecodeError> {
     let target = MutationId(read_command_str(reader)?);
     let replacement = match reader.read_u8()? {
         0 => Some(read_command_op(reader).map_err(|error| CommandDecodeError::Operation { index: 0, error })?),
         1 => None,
-        tag => return Err(crate::os_spr::ProtocolError::Malformed { what: "supersede input tag", offset: reader.position() as u64, detail: format!("unknown supersede input tag {tag}") }.into()),
+        tag => return Err(protocol::ProtocolError::Malformed { what: "supersede input tag", offset: reader.position() as u64, detail: format!("unknown supersede input tag {tag}") }.into()),
     };
     Ok(SupersedeInput { target, replacement })
 }
@@ -515,38 +509,38 @@ impl OpText for CommandHeaderLine {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl OpBinary for CommandHeaderLine {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
         let spec = (variants[ordinal].1.ordinary)();
-        let body = crate::os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let body = semio_framework_os_pack::encode_record_body(&spec, &record, &PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        crate::os_pack::write_varint_u64(&mut out, ordinal as u64);
+        semio_framework_os_pack::write_varint_u64(&mut out, ordinal as u64);
         out.extend_from_slice(&body);
         Ok(out)
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = crate::os_pack::ByteReader::new(bytes);
+        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
         let format = reader.read_u8()?;
         if format != OP_BINARY_FORMAT {
-            return Err(crate::os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(crate::os_spr::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = (spec_fn.ordinary)();
         let body = &bytes[reader.position()..];
-        let (record, _report) = crate::os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(crate::os_spr::ProtocolError::from)?;
+        let (record, _report) = semio_framework_os_pack::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
         let record_offset = reader.position() as u64;
-        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: record_offset, detail: error.to_string() })
     }
 }
 
-pub(crate) async fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
+pub async fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
     match policy {
         UndoPolicy::ExactBaseOnly => "exact-base-only",
         UndoPolicy::TransformAgainstConcurrent => "transform-against-concurrent",
@@ -555,7 +549,7 @@ pub(crate) async fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
     }
 }
 
-pub(crate) async fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, TextError> {
+pub async fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, TextError> {
     match token {
         "exact-base-only" => Ok(UndoPolicy::ExactBaseOnly),
         "transform-against-concurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
@@ -565,7 +559,7 @@ pub(crate) async fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, T
     }
 }
 
-pub(crate) fn undo_policy_ordinal(policy: UndoPolicy) -> u8 {
+pub fn undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     match policy {
         UndoPolicy::ExactBaseOnly => 0,
         UndoPolicy::TransformAgainstConcurrent => 1,
@@ -574,26 +568,26 @@ pub(crate) fn undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     }
 }
 
-pub(crate) fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, crate::os_spr::ProtocolError> {
+pub fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, protocol::ProtocolError> {
     match ordinal {
         0 => Ok(UndoPolicy::ExactBaseOnly),
         1 => Ok(UndoPolicy::TransformAgainstConcurrent),
         2 => Ok(UndoPolicy::SemanticUndo),
         3 => Ok(UndoPolicy::CompensatingAction),
-        other => Err(crate::os_spr::ProtocolError::Malformed { what: "undo policy ordinal", offset: 0, detail: format!("unknown undo policy ordinal {other}") }),
+        other => Err(protocol::ProtocolError::Malformed { what: "undo policy ordinal", offset: 0, detail: format!("unknown undo policy ordinal {other}") }),
     }
 }
 
 /// 🛤️ `HistoryLane`'s text token — the `ApplyInLane`/`UndoInLane`/
 /// `RedoInLane` command lines' `lane=...` value, mirroring `undo_policy_to_token`'s convention.
-pub(crate) async fn history_lane_to_token(lane: HistoryLane) -> &'static str {
+pub async fn history_lane_to_token(lane: HistoryLane) -> &'static str {
     match lane {
         HistoryLane::Document => "document",
         HistoryLane::Interaction => "interaction",
     }
 }
 
-pub(crate) async fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError> {
+pub async fn parse_history_lane_token(token: &str) -> Result<HistoryLane, TextError> {
     match token {
         "document" => Ok(HistoryLane::Document),
         "interaction" => Ok(HistoryLane::Interaction),
@@ -602,77 +596,77 @@ pub(crate) async fn parse_history_lane_token(token: &str) -> Result<HistoryLane,
 }
 
 /// 🛤️ `HistoryLane`'s binary ordinal, mirroring `undo_policy_ordinal`'s convention.
-pub(crate) fn history_lane_ordinal(lane: HistoryLane) -> u8 {
+pub fn history_lane_ordinal(lane: HistoryLane) -> u8 {
     match lane {
         HistoryLane::Document => 0,
         HistoryLane::Interaction => 1,
     }
 }
 
-pub(crate) fn history_lane_from_ordinal(ordinal: u8) -> Result<HistoryLane, crate::os_spr::ProtocolError> {
+pub fn history_lane_from_ordinal(ordinal: u8) -> Result<HistoryLane, protocol::ProtocolError> {
     match ordinal {
         0 => Ok(HistoryLane::Document),
         1 => Ok(HistoryLane::Interaction),
-        other => Err(crate::os_spr::ProtocolError::Malformed { what: "history lane ordinal", offset: 0, detail: format!("unknown history lane ordinal {other}") }),
+        other => Err(protocol::ProtocolError::Malformed { what: "history lane ordinal", offset: 0, detail: format!("unknown history lane ordinal {other}") }),
     }
 }
 
-/// ⚖️ `crate::os_spr::MergePolicy`'s text token — the `SetMergePolicy` command line's
+/// ⚖️ `protocol::MergePolicy`'s text token — the `SetMergePolicy` command line's
 /// `policy=...` value, mirroring `undo_policy_to_token`'s convention.
-pub(crate) async fn merge_policy_to_token(policy: crate::os_spr::MergePolicy) -> &'static str {
+pub async fn merge_policy_to_token(policy: protocol::MergePolicy) -> &'static str {
     match policy {
-        crate::os_spr::MergePolicy::LaissezFaire => "laissez-faire",
-        crate::os_spr::MergePolicy::Normal => "normal",
-        crate::os_spr::MergePolicy::Vigilant => "vigilant",
+        protocol::MergePolicy::LaissezFaire => "laissez-faire",
+        protocol::MergePolicy::Normal => "normal",
+        protocol::MergePolicy::Vigilant => "vigilant",
     }
 }
 
-pub(crate) async fn parse_merge_policy_token(token: &str) -> Result<crate::os_spr::MergePolicy, TextError> {
+pub async fn parse_merge_policy_token(token: &str) -> Result<protocol::MergePolicy, TextError> {
     match token {
-        "laissez-faire" => Ok(crate::os_spr::MergePolicy::LaissezFaire),
-        "normal" => Ok(crate::os_spr::MergePolicy::Normal),
-        "vigilant" => Ok(crate::os_spr::MergePolicy::Vigilant),
+        "laissez-faire" => Ok(protocol::MergePolicy::LaissezFaire),
+        "normal" => Ok(protocol::MergePolicy::Normal),
+        "vigilant" => Ok(protocol::MergePolicy::Vigilant),
         other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown merge policy token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
-/// ⚔️ `crate::os_spr::ConflictResolution`'s text token — the `ResolveConflict` command line's
+/// ⚔️ `protocol::ConflictResolution`'s text token — the `ResolveConflict` command line's
 /// `resolution=...` value, mirroring `undo_policy_to_token`'s convention.
-pub(crate) async fn conflict_resolution_to_token(resolution: crate::os_spr::ConflictResolution) -> &'static str {
+pub async fn conflict_resolution_to_token(resolution: protocol::ConflictResolution) -> &'static str {
     match resolution {
-        crate::os_spr::ConflictResolution::Accept => "accept",
-        crate::os_spr::ConflictResolution::Discard => "discard",
+        protocol::ConflictResolution::Accept => "accept",
+        protocol::ConflictResolution::Discard => "discard",
     }
 }
 
-pub(crate) async fn parse_conflict_resolution_token(token: &str) -> Result<crate::os_spr::ConflictResolution, TextError> {
+pub async fn parse_conflict_resolution_token(token: &str) -> Result<protocol::ConflictResolution, TextError> {
     match token {
-        "accept" => Ok(crate::os_spr::ConflictResolution::Accept),
-        "discard" => Ok(crate::os_spr::ConflictResolution::Discard),
+        "accept" => Ok(protocol::ConflictResolution::Accept),
+        "discard" => Ok(protocol::ConflictResolution::Discard),
         other => Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown conflict resolution token {other:?}")).to_string(),TextSpan::at(1,1))),
     }
 }
 
-/// ⚔️ `crate::os_spr::ConflictResolution`'s binary ordinal, mirroring
+/// ⚔️ `protocol::ConflictResolution`'s binary ordinal, mirroring
 /// `undo_policy_ordinal`'s convention.
-pub(crate) fn conflict_resolution_ordinal(resolution: crate::os_spr::ConflictResolution) -> u8 {
+pub fn conflict_resolution_ordinal(resolution: protocol::ConflictResolution) -> u8 {
     match resolution {
-        crate::os_spr::ConflictResolution::Accept => 0,
-        crate::os_spr::ConflictResolution::Discard => 1,
+        protocol::ConflictResolution::Accept => 0,
+        protocol::ConflictResolution::Discard => 1,
     }
 }
 
-pub(crate) fn conflict_resolution_from_ordinal(ordinal: u8) -> Result<crate::os_spr::ConflictResolution, crate::os_spr::ProtocolError> {
+pub fn conflict_resolution_from_ordinal(ordinal: u8) -> Result<protocol::ConflictResolution, protocol::ProtocolError> {
     match ordinal {
-        0 => Ok(crate::os_spr::ConflictResolution::Accept),
-        1 => Ok(crate::os_spr::ConflictResolution::Discard),
-        other => Err(crate::os_spr::ProtocolError::Malformed { what: "conflict resolution ordinal", offset: 0, detail: format!("unknown conflict resolution ordinal {other}") }),
+        0 => Ok(protocol::ConflictResolution::Accept),
+        1 => Ok(protocol::ConflictResolution::Discard),
+        other => Err(protocol::ProtocolError::Malformed { what: "conflict resolution ordinal", offset: 0, detail: format!("unknown conflict resolution ordinal {other}") }),
     }
 }
 
 /// 📤️ Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
 /// erroring exactly like `print_edit_lines` if any op prints a line containing a newline.
-pub(crate) async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> Result<(), VcsError> {
+pub async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: &[Op]) -> Result<(), VcsError> {
     for mutation in mutations {
         let printed = mutation.print_op();
         if printed.contains('\n') {
@@ -688,7 +682,7 @@ pub(crate) async fn print_indented_ops<Op: OpText>(out: &mut String, mutations: 
 /// 📥️ Parses every already-2-space-indented body line of an `apply`/`amend` command as one
 /// operation each — the command-level twin of `replay_ops`'s indented-op-line branch.
 /// All-or-nothing: on any failure every operation parsed so far retires through its technology's cold disposal.
-pub(crate) async fn parse_indented_ops<P, Op: OpText + Mutation<P>>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
+pub async fn parse_indented_ops<P, Op: OpText + Mutation<P>>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
     let mut mutations = Vec::with_capacity(body_lines.len());
     for raw in body_lines {
         let parsed = match raw.starts_with("  ") {
@@ -709,7 +703,7 @@ pub(crate) async fn parse_indented_ops<P, Op: OpText + Mutation<P>>(body_lines: 
 /// 📥️ Strips exactly one 2-space indent level from every line, joining them back into a
 /// standalone command text — used to recurse `parse_command` into a `semantic-undo`/
 /// `compensating-action` nested command block.
-pub(crate) async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
+pub async fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
     let mut out = String::new();
     for raw in lines {
         if !raw.starts_with("  ") {
@@ -900,7 +894,7 @@ pub async fn parse_command<P, Op: OpText + Mutation<P>>(text: &str) -> Result<Ar
 }
 
 /// 🧾️ A transaction reference as its two text attributes.
-pub(crate) fn transaction_text(transaction: Option<&protocol::TransactionRef>) -> (Option<String>, Option<String>) {
+pub fn transaction_text(transaction: Option<&protocol::TransactionRef>) -> (Option<String>, Option<String>) {
     match transaction {
         Some(transaction) => (Some(transaction.id.clone()), Some(transaction.tool.clone())),
         None => (None, None),
@@ -908,7 +902,7 @@ pub(crate) fn transaction_text(transaction: Option<&protocol::TransactionRef>) -
 }
 
 /// 🧾️ Inverse of [`transaction_text`]: both attributes or neither.
-pub(crate) fn transaction_from_text(transaction: Option<String>, tool: Option<String>) -> Result<Option<protocol::TransactionRef>, TextError> {
+pub fn transaction_from_text(transaction: Option<String>, tool: Option<String>) -> Result<Option<protocol::TransactionRef>, TextError> {
     match (transaction, tool) {
         (Some(id), Some(tool)) => Ok(Some(protocol::TransactionRef { id, tool })),
         (None, None) => Ok(None),
@@ -918,16 +912,16 @@ pub(crate) fn transaction_from_text(transaction: Option<String>, tool: Option<St
 
 /// 🧾️ Binary twin of [`transaction_text`]: the id and tool strings after a `0b10` presence bit; every other presence bit
 /// is unassigned and refused.
-pub(crate) fn write_command_transaction(out: &mut Vec<u8>, transaction: Option<&protocol::TransactionRef>) {
+pub fn write_command_transaction(out: &mut Vec<u8>, transaction: Option<&protocol::TransactionRef>) {
     if let Some(transaction) = transaction {
         write_command_str(out, &transaction.id);
         write_command_str(out, &transaction.tool);
     }
 }
 
-pub(crate) fn read_command_transaction(reader: &mut crate::os_pack::ByteReader<'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, crate::os_spr::ProtocolError> {
+pub fn read_command_transaction(reader: &mut semio_framework_os_pack::ByteReader<'_>, presence: u8) -> Result<Option<protocol::TransactionRef>, protocol::ProtocolError> {
     if presence & !0b10 != 0 {
-        return Err(crate::os_spr::ProtocolError::Malformed { what: "command presence", offset: 0, detail: format!("presence bits {presence:#04b} are unassigned beyond the 0b10 transaction bit") });
+        return Err(protocol::ProtocolError::Malformed { what: "command presence", offset: 0, detail: format!("presence bits {presence:#04b} are unassigned beyond the 0b10 transaction bit") });
     }
     if presence & 0b10 == 0 {
         return Ok(None);
@@ -941,22 +935,22 @@ pub(crate) fn read_command_transaction(reader: &mut crate::os_pack::ByteReader<'
 /// (B-R6 "one wire convention": `format u8 | ordinal varint | record body`).
 pub const COMMAND_BINARY_FORMAT: u8 = 1;
 
-pub(crate) fn write_command_str(out: &mut Vec<u8>, s: &str) {
-    crate::os_pack::write_varint_u64(out, s.len() as u64);
+pub fn write_command_str(out: &mut Vec<u8>, s: &str) {
+    semio_framework_os_pack::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
 
-pub(crate) fn read_command_str(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<String, crate::os_spr::ProtocolError> {
+pub fn read_command_str(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<String, protocol::ProtocolError> {
     let len = reader.read_varint_u64()?;
     let bytes = reader.read_bytes(len as usize)?;
-    std::str::from_utf8(bytes).map(str::to_string).map_err(|error| crate::os_spr::ProtocolError::Malformed { what: "command string", offset: 0, detail: error.to_string() })
+    std::str::from_utf8(bytes).map(str::to_string).map_err(|error| protocol::ProtocolError::Malformed { what: "command string", offset: 0, detail: error.to_string() })
 }
 
-pub(crate) fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Result<(), crate::os_spr::ProtocolError> {
-    crate::os_pack::write_varint_u64(out, mutations.len() as u64);
+pub fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op]) -> Result<(), protocol::ProtocolError> {
+    semio_framework_os_pack::write_varint_u64(out, mutations.len() as u64);
     for mutation in mutations {
         let bytes = mutation.encode_op()?;
-        crate::os_pack::write_varint_u64(out, bytes.len() as u64);
+        semio_framework_os_pack::write_varint_u64(out, bytes.len() as u64);
         out.extend_from_slice(&bytes);
     }
     Ok(())
@@ -964,7 +958,7 @@ pub(crate) fn write_command_ops<Op: OpBinary>(out: &mut Vec<u8>, mutations: &[Op
 
 /// 🪣️ Reads a command's operation list all-or-nothing: on any failure every operation decoded so far retires through its
 /// technology's cold disposal, so a refused list never drops a live operation.
-pub(crate) fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
+pub fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Vec<Op>, CommandDecodeError> {
     let count = reader.read_varint_u64()?;
     let mut mutations = Vec::with_capacity(count.min(reader.remaining() as u64) as usize);
     for index in 0..count as usize {
@@ -980,7 +974,7 @@ pub(crate) fn read_command_ops<P, Op: OpBinary + Mutation<P>>(reader: &mut crate
 }
 
 /// 🔹️ One length-prefixed operation of a command.
-pub(crate) fn read_command_op<Op: OpBinary>(reader: &mut crate::os_pack::ByteReader<'_>) -> Result<Op, crate::os_spr::ProtocolError> {
+pub fn read_command_op<Op: OpBinary>(reader: &mut semio_framework_os_pack::ByteReader<'_>) -> Result<Op, protocol::ProtocolError> {
     let len = reader.read_varint_u64()?;
     Op::decode_op(reader.read_bytes(len as usize)?)
 }
@@ -990,9 +984,9 @@ pub(crate) fn read_command_op<Op: OpBinary>(reader: &mut crate::os_pack::ByteRea
 #[derive(Clone, Debug, PartialEq)]
 pub enum CommandDecodeError {
     /// 📐️ The command's own layout — its format, ordinal, a field, the framing of a list, or bytes past its end.
-    Layout(crate::os_spr::ProtocolError),
+    Layout(protocol::ProtocolError),
     /// 🧩️ Entry `index` of the command's operation list or supersede inputs does not decode as one operation.
-    Operation { index: usize, error: crate::os_spr::ProtocolError },
+    Operation { index: usize, error: protocol::ProtocolError },
 }
 
 impl std::fmt::Display for CommandDecodeError {
@@ -1008,8 +1002,8 @@ impl std::error::Error for CommandDecodeError {
     fn source(&self)->Option<&(dyn std::error::Error+'static)>{match self{Self::Layout(error)|Self::Operation{error,..}=>Some(error)}}
 }
 
-impl From<crate::os_spr::ProtocolError> for CommandDecodeError {
-    fn from(error: crate::os_spr::ProtocolError) -> Self {
+impl From<protocol::ProtocolError> for CommandDecodeError {
+    fn from(error: protocol::ProtocolError) -> Self {
         Self::Layout(error)
     }
 }
@@ -1025,14 +1019,14 @@ impl From<PackRefusal> for CommandDecodeError {
 }
 
 /// 🧊️ Retires operations nobody will apply through their technology's cold disposal.
-pub(crate) fn retire_operations<P, Op: Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
+pub fn retire_operations<P, Op: Mutation<P>>(operations: impl IntoIterator<Item = Op>) {
     for operation in operations {
         Op::retire_cold(operation);
     }
 }
 
 /// 🪦️ Retires every operation a command owns — its operation list, its supersede replacements, its nested command.
-pub(crate) fn retire_command<P, Op: Mutation<P>>(command: ArtifactCommand<Op>) {
+pub fn retire_command<P, Op: Mutation<P>>(command: ArtifactCommand<Op>) {
     match command {
         ArtifactCommand::Apply { mutations, .. } | ArtifactCommand::ApplyInLane { mutations, .. } | ArtifactCommand::AppendTransaction { mutations, .. } => retire_operations::<P, Op>(mutations),
         ArtifactCommand::Supersede { inputs, .. } | ArtifactCommand::CreateAlternativeWithSupersede { inputs, .. } => retire_supersede_inputs::<P, Op>(inputs),
@@ -1054,3 +1048,58 @@ pub(crate) fn retire_command<P, Op: Mutation<P>>(command: ArtifactCommand<Op>) {
         | ArtifactCommand::AbortTransaction { .. } => {}
     }
 }
+
+mod operation_envelope_serde {
+    /// 🧵️ `ToValue` twin of the former `serialize` — identical byte framing, wire shape is
+    /// `DslValue::Array` of `DslValue::Number` (one per byte), matching `Vec<u8>`'s own
+    /// `ToValue` codec exactly (so this is equivalent to `ToValue::to_value(&bytes)`).
+    pub fn to_value(envelope: &protocol::MutationEnvelope) -> semio_framework_value::DslValue {
+        let mut bytes = Vec::new();
+        protocol::encode_envelope(envelope, &mut bytes);
+        semio_framework_value::ToValue::to_value(&bytes)
+    }
+
+    /// 🧵️ `FromValue` twin of `to_value` above.
+    pub fn from_value(value: semio_framework_value::DslValue) -> Result<protocol::MutationEnvelope, semio_framework_value::ValueError> {
+        let bytes: Vec<u8> = semio_framework_value::FromValue::from_value(value)?;
+        let mut pos = 0;
+        protocol::decode_envelope(&bytes, &mut pos).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+    }
+}
+
+/// 🫗️ Retires every typed replacement of a refused supersession's `inputs`, none of which was encoded.
+pub fn retire_supersede_inputs<P, Mutation>(inputs: Vec<SupersedeInput<Mutation>>)
+where
+    Mutation: protocol::Mutation<P>,
+{
+    for replacement in inputs.into_iter().filter_map(|input| input.replacement) {
+        protocol::Mutation::<P>::retire_cold(replacement);
+    }
+}
+
+
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+/// 🧊️ Cold-retires scratch operations (a rebased or discarded inverse): an operation may own a
+/// fail-closed root, so a displaced copy never reaches `Drop` owning it.
+pub fn retire_scratch_operations<P, Mutation>(operations: impl IntoIterator<Item = Mutation>)
+where
+    Mutation: protocol::Mutation<P>,
+{
+    for operation in operations {
+        protocol::Mutation::<P>::retire_cold(operation);
+    }
+}
+
+pub fn retire_scratch_edits<P, Mutation>(edits: impl IntoIterator<Item = protocol::Edit<Mutation>>)
+where
+    Mutation: protocol::Mutation<P>,
+{
+    for edit in edits {
+        retire_scratch_operations::<P, Mutation>(edit.forwards);
+        retire_scratch_operations::<P, Mutation>(edit.inverse);
+    }
+}
+

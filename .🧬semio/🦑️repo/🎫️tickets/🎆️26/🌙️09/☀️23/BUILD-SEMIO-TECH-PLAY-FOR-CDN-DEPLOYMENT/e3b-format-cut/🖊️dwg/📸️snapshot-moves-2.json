@@ -1,0 +1,19 @@
+{
+ "ident": "semio_s_artifact_stdio_dwg_model",
+ "moves": [
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::geometry",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::drawing::geometry",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/🦀️.rs",
+   "dir": "🧮️geometry"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::header",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::document::header",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/🦀️.rs",
+   "dir": "🔧️header"
+  }
+ ]
+}

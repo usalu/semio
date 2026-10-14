@@ -61,15 +61,6 @@ semio-framework-typeset = { path = "../../../../../🧰️framework/🔨️modul
 semio-framework-raster = { path = "../../../../../🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust", package = "semio-framework-raster" }
 semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
-[features]
-preview-window = ["winit"]
-
-[dependencies.winit]
-version = "0.30.12"
-default-features = false
-features = ["rwh_06"]
-optional = true
-
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 roxmltree = "0.20.0"

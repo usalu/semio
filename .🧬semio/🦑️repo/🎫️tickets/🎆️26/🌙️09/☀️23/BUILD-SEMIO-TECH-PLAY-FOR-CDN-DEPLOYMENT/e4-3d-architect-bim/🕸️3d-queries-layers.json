@@ -1,0 +1,47 @@
+{
+ "order": [
+  "🌳bounding-volume",
+  "🔎️analysis",
+  "✂️intersect",
+  "📏mass-properties",
+  "🧩tessellation",
+  "🏷️classification",
+  "✅validation",
+  "root"
+ ],
+ "allow": {},
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "^🌳bounding-volume/",
+   "🌳bounding-volume"
+  ],
+  [
+   "^🔎️analysis/",
+   "🔎️analysis"
+  ],
+  [
+   "^✂️intersect/",
+   "✂️intersect"
+  ],
+  [
+   "^📏mass-properties/",
+   "📏mass-properties"
+  ],
+  [
+   "^🧩tessellation/",
+   "🧩tessellation"
+  ],
+  [
+   "^🏷️classification/",
+   "🏷️classification"
+  ],
+  [
+   "^✅validation/",
+   "✅validation"
+  ]
+ ]
+}

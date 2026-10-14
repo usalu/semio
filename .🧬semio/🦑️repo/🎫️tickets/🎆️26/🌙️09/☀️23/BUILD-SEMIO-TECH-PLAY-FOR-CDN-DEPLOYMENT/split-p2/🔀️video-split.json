@@ -1,0 +1,35 @@
+{
+ "keep": "video",
+ "layers": {
+  "h264": {
+   "regions": [
+    "🔖️H264",
+    "🔖️Bits",
+    "🔖️Rbsp",
+    "🔖️Sps",
+    "🔖️Pps",
+    "🔖️SliceHeader",
+    "🔖️Cavlc",
+    "🔖️Transform",
+    "🔖️Picture",
+    "🔖️Intra",
+    "🔖️Inter",
+    "🔖️Deblock",
+    "🔖️Dpb",
+    "🔖️Yuv",
+    "🔖️SliceData",
+    "🔖️Decoder",
+    "🔖️H264Enc"
+   ],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🎞️h264/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::video::h264",
+   "header": "//! 🎞️ Baseline H.264: bitstream and RBSP reading, SPS/PPS/slice headers, CAVLC, transform, intra/inter prediction, deblocking, the decoder and the I_PCM/P_SKIP encoder.\n"
+  },
+  "video": {
+   "regions": [],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::video",
+   "mounts": "#[path = \"🎞️h264/🦀️.rs\"]\npub mod h264;\n\n"
+  }
+ }
+}

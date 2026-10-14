@@ -7,7 +7,7 @@ const root = resolve(import.meta.dirname, "../..");
 const workspace = resolve(root, "../../../../../..");
 describe("host variant Nx fan-out", () => {
   test("a host crate's web prepare stays boot-scoped while native still fans out every registered component", async () => {
-    const { cacheInternals, libraryBootstrap } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+    const { cacheInternals, libraryBootstrap } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
     await libraryBootstrap;
     const base = join(workspace, ".🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/host-activation");
     mkdirSync(base, { recursive: true });

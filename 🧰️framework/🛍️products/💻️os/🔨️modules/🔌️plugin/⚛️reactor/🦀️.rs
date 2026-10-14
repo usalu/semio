@@ -155,7 +155,7 @@ const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
 struct JobRenderBinding {
     job: u64,
     instance: u32,
-    generation: u64,
+    pub(crate) generation: u64,
 }
 
 struct JobRenderBindingRegistry {
@@ -226,11 +226,11 @@ mod job_render_binding_tests;
 struct ReactorFixedSlots<T> {
     values: Box<[std::mem::MaybeUninit<T>]>,
     occupied: [u64; REACTOR_FIXED_WORDS],
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl<T> ReactorFixedSlots<T> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut values = Vec::new();
         let allocation_admitted = values.try_reserve_exact(REACTOR_TASK_SLOTS).is_ok();
         if allocation_admitted {
@@ -307,7 +307,7 @@ struct TaskRecordRegistry {
 }
 
 impl TaskRecordRegistry {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: ReactorFixedSlots::new() }
     }
 
@@ -375,7 +375,7 @@ struct ReactorCloseRegistry {
 }
 
 impl ReactorCloseRegistry {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: ReactorFixedSlots::new() }
     }
 
@@ -410,11 +410,11 @@ struct FixedTimerRegistry {
     head: Option<usize>,
     tail: Option<usize>,
     live: usize,
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl FixedTimerRegistry {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let slots = ReactorFixedSlots::new();
         let allocation_admitted = slots.allocation_admitted;
         Self { slots, head: None, tail: None, live: 0, allocation_admitted }
@@ -493,7 +493,7 @@ impl FixedTimerRegistry {
         rows
     }
 
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.live == 0
     }
 
@@ -512,7 +512,7 @@ impl FixedTimerRegistry {
 
 struct InstanceMetadata {
     instance: u32,
-    app_id: String,
+    pub(crate) app_id: String,
     quota: semio_framework::kernel::QuotaSchema,
 }
 
@@ -521,7 +521,7 @@ struct InstanceMetadataRegistry {
 }
 
 impl InstanceMetadataRegistry {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: ReactorFixedSlots::new() }
     }
 
@@ -632,11 +632,11 @@ impl PendingResume {
 
 struct FixedResumeQueue {
     entries: std::mem::ManuallyDrop<VecDeque<PendingResume>>,
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl FixedResumeQueue {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut entries = VecDeque::new();
         let allocation_admitted = entries.try_reserve_exact(REACTOR_RESUME_SLOTS).is_ok();
         Self { entries: std::mem::ManuallyDrop::new(entries), allocation_admitted }
@@ -660,7 +660,7 @@ impl FixedResumeQueue {
         self.entries.pop_front()
     }
 
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
@@ -1277,7 +1277,7 @@ mod wit_bridge {
         for event in events {
             kernel_events.push(wit_event_to_kernel(event));
         }
-        let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, retained_policy:wit_retained_grant_to_kernel(budget.retained_policy)?,work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
         turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
     }
@@ -1584,9 +1584,10 @@ mod wit_bridge {
     /// no STRUCTURAL wit change is needed to repoint what it carries: `wit-flip`'s doc comment there
     /// still names the OLD replication `PresencePeer` payload; this packet's report carries the exact
     /// (doc-comment-only, plus a field rename for clarity) WIT diff as a registrar lease-request.
-    fn wit_retained_input_to_kernel(input:crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework::Fault>{let extent=|value:u64|usize::try_from(value).map_err(|_|staging_fault("original retained wire extent exceeds native address space"));let grant=input.grant;let input=semio_framework::kernel::RetainedTurnInput{operation:input.operation,generation:input.generation,epoch:input.epoch,grant:semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?}};input.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;Ok(input)}
+    fn wit_retained_grant_to_kernel(grant:crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant)->Result<semio_framework_value::RetainedCloneGrant,semio_framework::Fault>{let extent=|value|usize::try_from(value).map_err(|_|staging_fault("original policy wire extent exceeds native address space"));Ok(semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?})}
+    fn wit_retained_input_to_kernel(input:crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput)->Result<semio_framework::kernel::RetainedTurnInput,semio_framework::Fault>{let extent=|value:u64|usize::try_from(value).map_err(|_|staging_fault("original retained wire extent exceeds native address space"));let grant=input.grant;let input=semio_framework::kernel::RetainedTurnInput{operation:input.operation,generation:input.generation,epoch:input.epoch,work:semio_framework_actor::OriginalActorTurnWork{clock_binding:input.work.clock_binding,absolute_deadline_us:input.work.absolute_deadline_us,fuel:input.work.fuel},grant:semio_framework_value::RetainedCloneGrant{maximum_items:extent(grant.maximum_items)?,maximum_copy_bytes:extent(grant.maximum_copy_bytes)?,maximum_capacity_bytes:extent(grant.maximum_capacity_bytes)?,maximum_release_bytes:extent(grant.maximum_release_bytes)?,maximum_depth:extent(grant.maximum_depth)?}};input.validate().map_err(|error|semio_framework_diagnostic::FaultFrom::to_fault(&error))?;Ok(input)}
     fn kernel_retained_grant_to_wit(grant:semio_framework_value::RetainedCloneGrant)->crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant{use crate::component::wasip2::exports::semio::framework::reactor as wit;wit::RetainedGrant{maximum_items:grant.maximum_items as u64,maximum_copy_bytes:grant.maximum_copy_bytes as u64,maximum_capacity_bytes:grant.maximum_capacity_bytes as u64,maximum_release_bytes:grant.maximum_release_bytes as u64,maximum_depth:grant.maximum_depth as u64}}
-    fn kernel_retained_receipt_to_wit(receipt:semio_framework::kernel::RetainedTurnReceipt)->crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnReceipt{use crate::component::wasip2::exports::semio::framework::reactor as wit;wit::RetainedTurnReceipt{input:wit::RetainedTurnInput{operation:receipt.input.operation,generation:receipt.input.generation,epoch:receipt.input.epoch,grant:kernel_retained_grant_to_wit(receipt.input.grant)},spent:wit::RetainedProgress{copied_items:receipt.spent.copied_items as u64,copied_bytes:receipt.spent.copied_bytes as u64,retained_capacity_bytes:receipt.spent.retained_capacity_bytes as u64,released_bytes:receipt.spent.released_bytes as u64},remaining:kernel_retained_grant_to_wit(receipt.remaining)}}
+    fn kernel_retained_receipt_to_wit(receipt:semio_framework::kernel::RetainedTurnReceipt)->crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnReceipt{use crate::component::wasip2::exports::semio::framework::reactor as wit;wit::RetainedTurnReceipt{input:wit::RetainedTurnInput{operation:receipt.input.operation,generation:receipt.input.generation,epoch:receipt.input.epoch,work:wit::OriginalActorTurnWork{clock_binding:receipt.input.work.clock_binding,absolute_deadline_us:receipt.input.work.absolute_deadline_us,fuel:receipt.input.work.fuel},grant:kernel_retained_grant_to_wit(receipt.input.grant)},spent:wit::RetainedProgress{copied_items:receipt.spent.copied_items as u64,copied_bytes:receipt.spent.copied_bytes as u64,retained_capacity_bytes:receipt.spent.retained_capacity_bytes as u64,released_bytes:receipt.spent.released_bytes as u64},work_units_spent:receipt.work_units_spent,remaining:kernel_retained_grant_to_wit(receipt.remaining),remaining_fuel:receipt.remaining_fuel}}
 
     fn kernel_turn_result_to_wit(
         result: &semio_framework::kernel::TurnResult,

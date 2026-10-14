@@ -42,7 +42,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const metadata = JSON.parse(cargo.stdout.toString());
   const cargoRoots = metadata.packages.map((pkg: any) => relative(root, dirname(pkg.manifest_path)).replaceAll("\\", "/")).sort();
   assert.deepEqual(cargoRoots, Object.keys(fixture.projects).sort());
-  const { cacheInternals } = await import("../../../../📚️library/🟨️.mjs");
+  const { cacheInternals } = await import("../../../../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const projects: Record<string, any> = { [project.name]: project };
   for (const [path, name] of Object.entries(fixture.projects)) projects[String(name)] = { name, root: path, namedInputs: cacheInternals.projectInputs({ name, targets: {} }, path, root, new Map()), targets: {} };
   const edges = await plugin.createDependencies({}, { workspaceRoot: root, projects });
@@ -91,7 +91,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const helper = readFileSync(join(workspace, testDomain, "🕸️dependencies/🟨️.mjs"), "utf8");
   put("plugin/🟨️.mjs", readFileSync(join(workspace, testDomain, "🟨️.mjs"), "utf8"));
   put("plugin/🕸️dependencies/🟨️.mjs", helper);
-  put("📚️library/🟨️.mjs", `export { cacheInternals } from ${JSON.stringify(pathToFileURL(join(workspace, library, "🟨️.mjs")).href)};\n`);
+  put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", `export { cacheInternals } from ${JSON.stringify(pathToFileURL(join(workspace, library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};\n`);
   put("reload/📜️script.ts", [
     'import assert from "node:assert/strict";',
     'import { readFileSync, writeFileSync } from "node:fs";',

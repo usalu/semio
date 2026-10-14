@@ -4,12 +4,13 @@
 //! run, its progress panel and its trace, and the viewport paints every tested candidate with its verdict.
 //! Accepting a candidate stays the separate one-shot `acceptSuggestion` placement.
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use crate::editor::puzzle3d::modes::edit::windows::main;
 use crate::editor::puzzle3d::precompute::brush::{BrushSuggestionsLink, BrushSuggestionsRequest, BrushSuggestionsRunJob};
 use crate::editor::puzzle3d::precompute::shared_brush_mesh;
 use crate::editor::puzzle3d::terminology::{puzzle3d_brush_suggestions_run_counters, puzzle3d_brush_suggestions_run_reasons, puzzle3d_brush_suggestions_run_stages, puzzle3d_brush_suggestions_run_unit, Puzzle3dLabels};
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_scene_snapshot_from_document, scene_config, Puzzle3dInstanceOperationOwner, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
+use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::editor::puzzle3d::snapshot::puzzle3d_distribution_group, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document, crate::editor::puzzle3d::session::scene_config, crate::editor::puzzle3d::session::Puzzle3dInstanceOperationOwner, crate::editor::puzzle3d::session::Puzzle3dEditor, crate::editor::puzzle3d::snapshot::Puzzle3dScene};
 use semio_framework_plugin::Effect;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::Fault;
@@ -96,7 +97,7 @@ pub fn options(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowMeasu
 
 //#region 🔖️Run
 /// 🧵️ Builds the brush suggestions run job for the framework ledger; `None` for any other tool.
-pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>) -> Result<Option<ToolRunJob>, Fault> {
+pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp<A>>) -> Result<Option<ToolRunJob>, Fault> {
     if request.tool_id != UTILITY_ID || request.purpose != ToolRunJobPurpose::Run {
         return Ok(None);
     }

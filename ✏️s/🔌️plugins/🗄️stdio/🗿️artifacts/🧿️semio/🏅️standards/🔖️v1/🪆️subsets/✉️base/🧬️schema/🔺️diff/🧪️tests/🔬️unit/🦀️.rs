@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn audio_snapshot(sample_rate: u32) -> SemioSnapshot {

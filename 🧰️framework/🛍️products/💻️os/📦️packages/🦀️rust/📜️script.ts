@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation,scriptInvocationBudget } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { runBudgetedTestCommand } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-os-kernel` task router. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -63,12 +64,12 @@ class PagedHistoryStackScript extends BundleScript {
     const canonical = storeCanonicalEditSealerSelfTests();
     console.log("paged-history-canonical-oracles: " + JSON.stringify(canonical));
     if (args[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: 3_600_000, listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
           "os_vcs::tests::paged_history_stack_traversal_follows_the_portable_deque_vectors",
           "os_vcs::tests::history_branch_provenance_follows_portable_required_wire_vectors",
           "os_store::component::canonical_edit::tests::edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
           "os_store::component::canonical_edit::tests::canonical_authority_final_unicode_strings_retire_under_single_byte_grants",
-        ] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+        ] }]});
       for (const receipt of receipts) console.log("paged-history-stack-native-receipt: " + JSON.stringify(receipt));
     }
     console.log(`paged-history-stack-check: vectors=${fixture.vectors.length} independent-array/Ajv=passed`);
@@ -117,7 +118,7 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
     }
     console.log("database-history-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
@@ -128,9 +129,9 @@ class DatabaseHistoryCompletionCheckScript extends BundleScript {
           "artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release",
           "artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty",
         ],
-      }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      }],progress(event) {
         console.log("database-history-completion-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
-      } });
+      }});
     for (const receipt of receipts) console.log("database-history-completion-native-receipt: " + JSON.stringify(receipt));
   }
 }
@@ -211,7 +212,7 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
     }
     console.log("database-catalog-read-ownership-check: behavior-oracles=retained sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-os-kernel-db",
         target: { kind: "lib", name: "db" },
         cargoArgs: ["--all-features"],
@@ -227,9 +228,9 @@ class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
           "database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key",
           "database_catalog_read_terminal_result_drop_hands_back_exact_result",
         ],
-      }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      }],progress(event) {
         console.log("database-catalog-read-ownership-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
-      } });
+      }});
     for (const receipt of receipts) console.log("database-catalog-read-ownership-native-receipt: " + JSON.stringify(receipt));
   }
 }
@@ -330,7 +331,7 @@ class DatabaseCapabilityCompletionCheckScript extends BundleScript {
     }
     console.log("database-capability-completion-check: behavior-oracles=retained sqlite-publication=" + fixture.publication.length + " sqlite-retirement=" + fixture.retirement.length + " sqlite-drive-ownership=" + fixture.driveOwnership.length + " sqlite-lease-completion=" + fixture.leaseCompletion.length);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -355,9 +356,9 @@ class DatabaseCapabilityCompletionCheckScript extends BundleScript {
             "open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog",
           ],
         },
-      ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      ],progress(event) {
         console.log("database-capability-completion-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
-      } });
+      }});
     for (const receipt of receipts) console.log("database-capability-completion-native-receipt: " + JSON.stringify(receipt));
   }
 }
@@ -672,7 +673,7 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const retainedFixtureLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️db-io-retained-fixtures", "🦀️.rs"), "utf8");
     assert(retainedFixtureLaws.includes("fn wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch()"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -720,9 +721,9 @@ class WalWriterAuthorityCheckScript extends BundleScript {
             "database_compaction_future_acquires_pool_use_before_admission",
           ],
         },
-      ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      ],progress(event) {
         console.log(`wal-writer-authority-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      } });
+      }});
     for (const receipt of receipts) console.log(`wal-writer-authority-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
@@ -878,7 +879,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     assert(source.includes("fn wal_read_canonical_varint"), "retained readers must reject noncanonical and overflowing u64 fields");
     console.log(`wal-retained-decoder-independent-oracle: behavior-oracles=retained LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-framework-os-kernel-db",
             target: { kind: "lib", name: "db" },
@@ -909,9 +910,9 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
               "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
             ],
           },
-        ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+        ],progress(event) {
           console.log(`wal-committed-transactions-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-        } });
+        }});
       for (const receipt of receipts) console.log(`wal-committed-transactions-native-receipt: ${JSON.stringify(receipt)}`);
     }
   }
@@ -1350,7 +1351,7 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     }
     console.log(`document-mount-single-flight-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
           package: "semio-framework-os-kernel-db",
           target: { kind: "lib", name: "db" },
@@ -1383,9 +1384,9 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
             "db_artifact::tests::more_live_authorities_than_pool_maintenance_hooks_retire_through_one_shared_hook",
           ],
         },
-      ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      ],progress(event) {
         console.log(`document-mount-single-flight-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      } });
+      }});
     console.log(`document-mount-single-flight-native-receipts: ${JSON.stringify(receipts)}`);
   }
 }
@@ -1397,7 +1398,7 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
     const { testDurableOwnedGroupDecisionFixture } = await import("../../🔨️modules/🏪️store/🧪️tests/🗄️durable-owned-group/🟦️.ts");
     testDurableOwnedGroupDecisionFixture();
     if (segments[0] === "--native") {
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
           {
             package: "semio-framework-os-kernel",
             target: { kind: "lib" },
@@ -1420,9 +1421,9 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
               "durable_group::tests::durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_trusted_absence",
             ],
           },
-        ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+        ],progress(event) {
           console.log(`durable-owned-group-decision-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-        } });
+        }});
       for (const receipt of receipts) console.log(`durable-owned-group-decision-native-receipt: ${JSON.stringify(receipt)}`);
     }
   }
@@ -1534,9 +1535,9 @@ class DurableGroupJournalCheckScript extends BundleScript {
       `durable-group-journal-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
     );
     if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 180_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws }],progress(event) {
         console.log(`durable-group-journal-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      } });
+      }});
     console.log(`durable-group-journal-native-receipts: ${JSON.stringify(receipts)}`);
   }
 }
@@ -1745,7 +1746,7 @@ class CheckScript extends BundleScript {
 class CanonicalArchitectureScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("canonical-architecture accepts no arguments");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-os-kernel",
         target: { kind: "lib", name: "semio_framework_os_kernel" },
         laws: [
@@ -1763,9 +1764,9 @@ class CanonicalArchitectureScript extends BundleScript {
           "artifact_store_one_item_stale_saturation_and_cancel_leave_root_generation_and_revision_unchanged",
           "retained_member_publication_rejects_wrong_owner_staleness_and_cancels_without_commit",
         ],
-      }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      }],progress(event) {
         console.log("canonical-architecture-native " + event.stage + ": " + (event.law ?? ""));
-      } });
+      }});
     console.log("canonical-architecture-native receipts=" + receipts.length);
   }
 }
@@ -1776,7 +1777,7 @@ class TestScript extends BundleScript {
       await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,0),lawMilliseconds:600000},cwd:this.repoRoot,cargoArgs:segments.slice(1),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_inference::component::tests::original_inferred_source_binding_preserves_actual_caller_before_unfunded_plan","os_inference::component::tests::original_inferred_graph_planning_quotes_each_borrowed_source_and_page"]},{package:"semio-framework-dsl-record",target:{kind:"test",name:"field_refusal_public"},laws:["retained_projection_measure_and_step_follow_original_payload_across_borrowed_headers"]},{package:"semio-framework-plugin",target:{kind:"lib"},laws:["tool_contract::original_inference_admission_tests::original_mounted_inference_admission_retains_source_and_quotes_actual_registry_events"]}]});return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: ["--features", "mutation-testing", ...rest] }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: ["--features", "mutation-testing", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -1786,19 +1787,19 @@ class CommandTransportSourceTestScript extends BundleScript {
 }
 /** 🪪️ Keeps all original CLI and SPR I/O laws beside actual retained caller-context laws. */
 class CommandTransportNativeTestScript extends BundleScript {
- async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_) | test(os_pack::cli::tests::) | test(os_spr::cli::tests::) | test(os_spr::io::native::tests::)","--no-fail-fast"]);}
+ async run(segments:string[]):Promise<void>{if(segments.length)throw Error("test-command-transport-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","-E","test(command_transport_neutral_) | test(os_pack::cli::tests::) | test(os_spr::cli::tests::) | test(os_spr::io::native::tests::)","--no-fail-fast"]);}
 }
 
 class ListRecordNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-list-record-boundaries accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","--no-fail-fast","list_record_"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-list-record-boundaries accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--no-fail-fast","list_record_"]);}
 }
 
 class ComposedPackSchemaTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-composed-pack-schema accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","composed_pack_schema_tests::"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-composed-pack-schema accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","composed_pack_schema_tests::"]);}
 }
 
 class IeeePayloadNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","ieee_payload_"]);}
+  async run(segments:string[]):Promise<void>{if(segments.length)throw new Error("test-ieee-payload-native accepts no arguments");await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","ieee_payload_"]);}
 }
 
 class IeeePayloadSourceTestScript extends BundleScript {
@@ -2059,16 +2060,16 @@ class RetainedCloneCheckScript extends BundleScript {
 class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("document-opening-attempt-native-check accepts no arguments");
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [
+    const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [
         {
           package: "semio-framework-os-kernel",
           target: { kind: "lib" },
           cargoArgs: ["--features", "sync"],
           laws: ["os_store::sync::tests::document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages"],
         },
-      ], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) {
+      ],progress(event) {
         console.log(`document-opening-attempt-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
-      } });
+      }});
     console.log(`document-opening-attempt-native-receipts: ${JSON.stringify(receipts)}`);
   }
 }
@@ -2077,7 +2078,7 @@ class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
 class IntrinsicRetirementNativeTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-intrinsic-retirement-native accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","--features","sync,ureq","value_intrinsic_retirement_full_system_requests_and_release","--no-fail-fast"]);
+  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_intrinsic_retirement_full_system_requests_and_release","--no-fail-fast"]);
  }
 }
 
@@ -2085,14 +2086,14 @@ class IntrinsicRetirementNativeTestScript extends BundleScript {
 class BorrowedKeyIndexNativeTestScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw new Error("test-borrowed-key-index-native accepts no arguments");
-  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","--features","sync,ureq","value_borrowed_key_index_full_requests_and_same_caller_are_admitted","--no-fail-fast"]);
+  await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","--features","sync,ureq","value_borrowed_key_index_full_requests_and_same_caller_are_admitted","--no-fail-fast"]);
  }
 }
 
 class NativeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib", "--features", "sync,ureq", ...rest]);
+    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib", "--features", "sync,ureq", ...rest]);
   }
 }
 
@@ -2116,7 +2117,7 @@ class DirectoryDescriptorDigestSourceScript extends BundleScript {
   }
 }
 class DirectoryDescriptorDigestNativeScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","os_directory::io::binary::","--no-fail-fast",...rest,"--","--nocapture"]);}
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","os_directory::io::binary::","--no-fail-fast",...rest,"--","--nocapture"]);}
 }
 
 class DirectoryCheckpointPairSourceScript extends BundleScript {
@@ -2130,12 +2131,12 @@ class DirectoryCheckpointPairSourceScript extends BundleScript {
 class DirectoryCheckpointPairNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib", "os_directory::io::binary::checkpoint_pair::tests::", "--no-fail-fast", ...rest, "--", "--nocapture"]);
+    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib", "os_directory::io::binary::checkpoint_pair::tests::", "--no-fail-fast", ...rest, "--", "--nocapture"]);
   }
 }
 
 class SpaceHistorySqliteNativeTestScript extends BundleScript {
-  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
+  async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--lib","sqlite_snapshot_framework_space_history_","--no-fail-fast",...rest,...(rest.includes("--")?[]:["--","--nocapture"])]);}
 }
 class SpaceHistorySqliteSourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -2171,7 +2172,7 @@ class SnapshotRouteAdmissionScript extends BundleScript {
    assert.deepEqual(oracle.query('SELECT axis,remaining FROM original_authority ORDER BY axis').all(),Object.entries(fixture.original.grant).map(([axis,remaining])=>({axis,remaining})).sort((left,right)=>left.axis.localeCompare(right.axis)));
    oracle.run('CREATE TABLE original_hops(ordinal INTEGER PRIMARY KEY,source TEXT,destination TEXT,is_sqlite INTEGER)');for(const row of fixture.cases){oracle.run('DELETE FROM original_hops');for(const[index,hop]of row.route.hops.entries()){const coordinate=(value:{artifactKind:string;standard:string;subset:string})=>JSON.stringify([value.artifactKind,value.standard,value.subset]);const sqlite=(value:{artifactKind:string;standard:string;subset:string})=>value.artifactKind==='s.framework.sqlite-snapshot'&&value.standard==='1'&&value.subset==='*';oracle.run('INSERT INTO original_hops VALUES(?,?,?,?)',index,coordinate(hop.from),coordinate(hop.into),Number(sqlite(hop.from)||sqlite(hop.into)));}const observed=oracle.query("SELECT CASE WHEN count(*)=0 OR EXISTS(SELECT 1 FROM original_hops a JOIN original_hops b ON b.ordinal=a.ordinal+1 WHERE a.destination<>b.source) THEN 'io_run: route must contain connected hops' WHEN max(is_sqlite)=1 AND (count(*)<>1 OR ?<>'Exact') THEN 'io_run: SQLite snapshots are exact endpoint transfers and cannot be intermediate hops' WHEN max(is_sqlite)=1 AND min(source=destination)=1 THEN 'io_run: inconsistent SQLite snapshot descriptor' ELSE NULL END cause FROM original_hops").get(row.route.fidelity)as{cause:string|null};assert.equal(observed.cause,row.cause,row.id);assert.equal(observed.cause===null,row.accepted,row.id);}}finally{oracle.close();}
   console.log('[DEBUG] Original OS route admission uses canonical per-route/Grant schemas and independent SQLite identity/cause/edge-adjacency/fidelity/zero-authority outcomes; whole-test schema absent; Native custody remains separately observed');
-  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation.control,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_whole_hop_original_route_refusals','--no-fail-fast','--success-output','immediate']);
+  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_whole_hop_original_route_refusals','--no-fail-fast','--success-output','immediate']);
  }
 }
 
@@ -2179,7 +2180,7 @@ class SnapshotRouteAdmissionScript extends BundleScript {
 class SnapshotReceivingNativeScript extends BundleScript{
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("Expected test-snapshot-receiving-native");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","original_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 
@@ -2197,7 +2198,7 @@ class SnapshotCodecReceivingScript extends BundleScript {
   const ordered=new Database(':memory:');try{ordered.run('CREATE TABLE original_values(ordinal INTEGER PRIMARY KEY,value INTEGER)');for(const row of fixture.relocationCases){ordered.run('DELETE FROM original_values');for(const[index,value]of row.values.entries())ordered.run('INSERT INTO original_values VALUES(?,?)',index,value);assert.deepEqual(ordered.query('SELECT value FROM original_values ORDER BY ordinal').all().map((value:{value:number})=>value.value),row.values);assert.deepEqual([...row.original,...row.replacement].sort((a:number,b:number)=>a-b),[...row.values].sort((a:number,b:number)=>a-b));if(row.completed)assert.deepEqual(row.original,row.values);}}finally{ordered.close();}
   const defaults=new Database(':memory:');try{defaults.run('CREATE TABLE refusal(ordinal INTEGER PRIMARY KEY,operation TEXT,kind TEXT,cause TEXT)');for(const[index,row]of fixture.defaultRefusalCases.entries())defaults.run('INSERT INTO refusal VALUES(?,?,?,?)',index,row.operation,row.kind,row.cause);assert.deepEqual(defaults.query('SELECT operation,kind,cause FROM refusal ORDER BY ordinal').all(),fixture.defaultRefusalCases.map((row:{operation:string;kind:string;cause:string})=>({operation:row.operation,kind:row.kind,cause:row.cause})));}finally{defaults.close();}
   console.log('[DEBUG] Original SQLite codec receiving neutral custody cases='+fixture.custodyCases.length+' semantic cases='+fixture.cases.length+' relocation cases='+fixture.relocationCases.length+' default refusal cases='+fixture.defaultRefusalCases.length+' independent Ajv/SQLite original scalar/order/refusal owners passed');
-  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation.control,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_codec_','--no-fail-fast','--success-output','immediate']);
+  if(segments[0]==='native')await runRepositoryCargoTests(['semio-framework-os-kernel'],this.repoRoot,this.invocation,['--test','sqlite_snapshot_native_admission','sqlite_snapshot_codec_','--no-fail-fast','--success-output','immediate']);
  }
 }
 
@@ -2206,7 +2207,7 @@ class SnapshotNativeAdmissionTestScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🪶️native-decoding/🧪️tests/🚪️public/🧩️ownership/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🗣️dsl/📖️grammar/📡️literal/🧪️tests/🟦️.ts"), join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🧪️tests/🚦️controlled/🟦️.ts"), join(this.repoRoot, "🧰️framework/🔨️modules/🚪️io/🧬️schema/🔗️reference/🧪️tests/🟦️.ts")], { cwd: this.repoRoot });
     if (segments.length === 1 && segments[0] === "portable") return;
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--test", "sqlite_snapshot_native_admission", ...rest, ...(rest.includes("--no-fail-fast") ? [] : ["--no-fail-fast"])]);
+    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test", "sqlite_snapshot_native_admission", ...rest, ...(rest.includes("--no-fail-fast") ? [] : ["--no-fail-fast"])]);
   }
 }
 
@@ -2672,9 +2673,9 @@ class DocumentHttpCheckScript extends BundleScript {
     const validate = ajv.compile(JSON.parse(fixture.neutral.operations[0].inputSchema));
     for (const vector of fixture.vectors) assert.equal(validate(vector.value), vector.valid, vector.name);
     for (const law of ["os_directory::client::document_http::tests::owner_removal_preserves_neutral_document_transport", "os_directory::client::document_http::tests::schema_vectors_match_owned_validator", "os_directory::client::document_http::tests::decoded_replies_obey_the_same_node_bounds_as_owner_inputs"]) {
-      await runRepositoryCargoTests(["semio-framework-os-kernel"], this.root, this.invocation.control, ["--lib", "--", law, "--exact", "--nocapture"]);
+      await runRepositoryCargoTests(["semio-framework-os-kernel"], this.root, this.invocation, ["--lib", "--", law, "--exact", "--nocapture"]);
     }
-    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.root, this.invocation.control, ["--lib", "--", "os_directory::client::tests::document_http_transport_preserves_scope_bounds_and_owner_decode", "--exact"]);
+    await runRepositoryCargoTests(["semio-framework-os-kernel"], this.root, this.invocation, ["--lib", "--", "os_directory::client::tests::document_http_transport_preserves_scope_bounds_and_owner_decode", "--exact"]);
     console.log("document-http: Ajv vectors, removal/reinstall, scope, bounds and owner decoding passed");
   }
 }
@@ -2783,7 +2784,7 @@ class ArtifactKindNativeScript extends BundleScript {
     
      
     
-      const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 }, cwd: this.repoRoot, artifactDir,  progress: event => console.log(`[artifact-kind] ${event.stage}`), groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }] });
+      const receipts = await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 60_000 },cwd: this.repoRoot,progress: event => console.log(`[artifact-kind] ${event.stage}`),groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_io::tests::artifact_kind_id_follows_owner_neutral_corpus"] }]});
       console.log(`[DEBUG] artifact-kind native laws=${receipts.reduce((count, receipt) => count + receipt.assertions, 0)}`);
     
 
@@ -2793,7 +2794,7 @@ class ArtifactKindNativeScript extends BundleScript {
 class SnapshotSqliteAdmissionScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
  if(segments.length)throw Error("test-snapshot-sqlite-admission accepts no arguments");
- await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation.control, ["--test","sqlite_snapshot_native_admission"]);
+ await runRepositoryCargoTests(["semio-framework-os-kernel"], this.repoRoot, this.invocation, ["--test","sqlite_snapshot_native_admission"]);
  }
 }
 router.register("test-artifact-kind",ArtifactKindNativeScript).register("test-snapshot-sqlite-admission",SnapshotSqliteAdmissionScript);
@@ -2807,7 +2808,7 @@ class ReturnedReadCustodyScript extends BundleScript {
   for(const row of fixture.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);
   const artifactDir=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactDir)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned native output");
   
-  const receipts=await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 }, cwd:this.repoRoot, ...exactCargoStageEnvironments(), artifactDir,  progress:event=>console.log("[DEBUG] returned-read native "+event.stage), groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}] });console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));
+  const receipts=await runRepositoryExactCargoLaws({preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60000, lawMilliseconds: 120000 },cwd:this.repoRoot,...exactCargoStageEnvironments(),progress:event=>console.log("[DEBUG] returned-read native "+event.stage),groups:[{package:"semio-framework-os-kernel",target:{kind:"lib"},laws:["os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_alias_has_exact_physical_custody","os_store::component::retained_read_return_retirement::tests::original_returned_read_registry_parallel_aliases_credit_exactly_one_frame"]}]});console.log("[DEBUG] returned-read custody receipts "+JSON.stringify(receipts));
  }
 }
 router.register("test-returned-read-custody",ReturnedReadCustodyScript);
@@ -2871,7 +2872,7 @@ router.register("test-typed-snapshot-file-source",TypedSnapshotFileSourceScript)
 class TypedSnapshotFileNativeScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("test-typed-snapshot-file-native accepts no arguments");
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_and_route","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_and_route","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 router.register("test-typed-snapshot-file-native",TypedSnapshotFileNativeScript);
@@ -2884,7 +2885,7 @@ class SpaceHistoryValidationScript extends BundleScript{
    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🛂️validation/🧪️tests/🟦️.ts");
    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
    await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot});
-  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_borrowed_validation_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","sqlite_snapshot_framework_space_history_borrowed_validation_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 router.register("test-space-history-validation",SpaceHistoryValidationScript);
@@ -2897,7 +2898,7 @@ class ConfigPagedSourceScript extends BundleScript{
    const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧪️tests/🟦️.ts");
    await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
-  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+  }else await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","artifact_store_resident_paged_source_preserves_original_pages_order_and_funded_cleanup","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 router.register("test-config-paged-source",ConfigPagedSourceScript);
@@ -2908,9 +2909,20 @@ class OriginalCleanupContextNativeScript extends BundleScript{
   if(segments.length)throw Error("test-original-cleanup-context-native accepts no arguments");
   const source=join(this.repoRoot,"🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
-  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","-E","test(interactive_envelope_close_reclaims_every_owner_through_the_job_protocol) | test(field_close_failure_preserves_real_receipts_through_the_original_decode_job) | test(normal_decode_release_records_original_wallet_even_after_child_fault) | test(retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open) | test(registered_rejected_pages_obey_zero_short_and_exact_grants) | test(unadmitted_rejected_pages_obey_zero_short_and_exact_grants) | test(original_field_release_survives_registered_and_unadmitted_refusal)","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env));
+  await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-os-kernel"],cwd:this.repoRoot,extraArgs:["--lib","-E","test(interactive_envelope_close_reclaims_every_owner_through_the_job_protocol) | test(field_close_failure_preserves_real_receipts_through_the_original_decode_job) | test(normal_decode_release_records_original_wallet_even_after_child_fault) | test(retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open) | test(registered_rejected_pages_obey_zero_short_and_exact_grants) | test(unadmitted_rejected_pages_obey_zero_short_and_exact_grants) | test(original_field_release_survives_registered_and_unadmitted_refusal)","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:()=>this.invocation.control.remainingMilliseconds()},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 router.register("test-original-cleanup-context-native",OriginalCleanupContextNativeScript);
+
+/** 📦️ Checks actual independent Rust production boundaries against the portable ownership corpus. */
+class CrateBoundariesSourceScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-crate-boundaries accepts no arguments");
+  const source=join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🧪️tests/📦️crate-boundaries/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+  await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:this.invocation.control.remainingMilliseconds(),signal:this.invocation.control.signal,throwOnFailure:true});
+ }
+}
+router.register("test-crate-boundaries",CrateBoundariesSourceScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "check" }) }));

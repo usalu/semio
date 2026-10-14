@@ -186,7 +186,7 @@ fn glob(pattern: &str, name: &str) -> bool {
 fn is_relative(text: &str) -> bool { !text.starts_with(['/', '~', '\\']) && !text.contains(['\\', '\0']) && !(text.len() > 1 && text.as_bytes()[1] == b':' && text.as_bytes()[0].is_ascii_alphabetic()) && text.split('/').all(|part| part != "..") }
 
 /// 🚫️ The runner variables the dashboard owns; a declaration never stores them.
-pub const NOISE_ENV: &[&str] = &["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_BUILD_DYNAMIC_OUTPUT", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"];
+pub const NOISE_ENV: &[&str] = &["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"];
 const ABSOLUTE_ROOTS: &[&str] = &["Users", "home", "root", "private", "tmp", "var", "opt", "usr", "etc", "mnt", "workspaces", "Volumes"];
 
 fn is_absolute_literal(text: &str) -> bool {
@@ -589,7 +589,9 @@ impl Request {
 pub const GRAPH_REUSE: (&str, &str) = ("SEMIO_BUILD_REUSE_GRAPH", "true");
 /// 🖥️ The variables that keep terminal rendering and process lifecycle with the dashboard.
 pub const RUNNER_ENV: &[(&str, &str)] = &[("SEMIO_BUILD_TERMINAL", "false")];
-const GRAPH_FILE: &str = ".🧬semio/🦑️repo/⚡️cache/build/graph.json";
+#[path = "../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
+mod publication;
+pub use publication::graph_file;
 /// 🧱️ The workspace files besides project manifests that define the project graph.
 pub const GRAPH_OWNERS: &[&str] = &["package.json"];
 
@@ -640,14 +642,14 @@ pub struct GraphBasis { pub graph: Fingerprint, pub hashes: BTreeMap<String, u64
 impl GraphBasis {
     /// 📖️ Captures inputs only when the graph publication is newer than every source.
     pub fn read(root: &Path, files: &[String]) -> Option<Self> {
-        let graph = Fingerprint::of(&root.join(GRAPH_FILE))?;
+        let graph = Fingerprint::of(&root.join(graph_file()))?;
         let mut hashes = BTreeMap::new();
         for file in files {
             let path = root.join(file);
             if Fingerprint::of(&path)?.modified > graph.modified { return None; }
             hashes.insert(file.clone(), xxh3_64(&std::fs::read(path).ok()?));
         }
-        (Fingerprint::of(&root.join(GRAPH_FILE)) == Some(graph)).then_some(Self { graph, hashes })
+        (Fingerprint::of(&root.join(graph_file())) == Some(graph)).then_some(Self { graph, hashes })
     }
 }
 // #endregion 🔖️RunPolicy
@@ -923,7 +925,7 @@ impl Registry {
         let mut problems = facts.problems.clone();
         let mut entries: Vec<Entry> = Vec::new();
         let (mut axes, mut axes_source) = (Vec::new(), String::new());
-        let source = |project: &ProjectFacts| if project.manifest.is_empty() { format!("{GRAPH_FILE} (project {})", project.name) } else { project.manifest.clone() };
+        let source = |project: &ProjectFacts| if project.manifest.is_empty() { format!("{} (project {})", graph_file(), project.name) } else { project.manifest.clone() };
         for project in &facts.projects {
             let file = source(project);
             if RESERVED_KINDS.contains(&project.name.as_str()) || project.name.contains(|c: char| c == ':' || c.is_whitespace()) { problems.push(Problem { file: file.clone(), at: "name".into(), message: format!("project name {:?} cannot be told from a command kind", project.name) }); continue; }
@@ -1207,7 +1209,7 @@ impl Registry {
     /// `SEMIO_DASHBOARD_GRAPH=fresh` always answers no.
     pub fn graph_is_current(&self) -> bool {
         if std::env::var("SEMIO_DASHBOARD_GRAPH").is_ok_and(|value| value == "fresh") { return false; }
-        let Some(graph) = Fingerprint::of(&self.root.join(GRAPH_FILE)) else { return false };
+        let Some(graph) = Fingerprint::of(&self.root.join(graph_file())) else { return false };
         let mut basis = self.basis.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if !basis.as_ref().is_some_and(|known| known.graph == graph) { *basis = GraphBasis::read(&self.root, &self.definitions); }
         let Some(basis) = basis.as_ref().filter(|known| known.graph == graph) else { return false };

@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "linux": [
+    {
+      "name": "exact loop mount",
+      "line": "35 29 7:0 / /repo/fixed/m rw,relatime - ext4 /dev/loop0 rw",
+      "root": "/repo/fixed/m",
+      "valid": true
+    },
+    {
+      "name": "escaped mount",
+      "line": "35 29 7:1 / /repo/fixed\\040name/m rw - ext4 /dev/loop1 rw",
+      "root": "/repo/fixed name/m",
+      "valid": true
+    },
+    {
+      "name": "bind subtree refused",
+      "line": "35 29 7:0 /subtree /repo/fixed/m rw - ext4 /dev/loop0 rw",
+      "root": "/repo/fixed/m",
+      "valid": false
+    },
+    {
+      "name": "unbounded filesystem refused",
+      "line": "35 29 0:18 / /repo/fixed/m rw - tmpfs tmpfs rw",
+      "root": "/repo/fixed/m",
+      "valid": false
+    },
+    {
+      "name": "different mount refused",
+      "line": "35 29 7:0 / /repo/other/m rw - ext4 /dev/loop0 rw",
+      "root": "/repo/fixed/m",
+      "valid": false
+    }
+  ],
+  "vhd": [
+    {
+      "type": 2,
+      "currentBytes": 33554432,
+      "fileBytes": 33554944,
+      "valid": true
+    },
+    {
+      "type": 3,
+      "currentBytes": 33554432,
+      "fileBytes": 33554944,
+      "valid": false
+    },
+    {
+      "type": 2,
+      "currentBytes": 33554432,
+      "fileBytes": 33554432,
+      "valid": false
+    },
+    {
+      "type": 2,
+      "currentBytes": 67108864,
+      "fileBytes": 67109376,
+      "valid": false
+    }
+  ],
+  "platforms": [
+    {
+      "platform": "darwin",
+      "backend": "macos"
+    },
+    {
+      "platform": "linux",
+      "backend": "linux"
+    },
+    {
+      "platform": "win32",
+      "backend": "windows"
+    },
+    {
+      "platform": "freebsd",
+      "backend": null
+    }
+  ],
+  "paths": [
+    {
+      "path": "nested/output",
+      "accepted": true
+    },
+    {
+      "path": "../outside/output",
+      "accepted": false
+    },
+    {
+      "path": "dangling/output",
+      "accepted": false
+    },
+    {
+      "path": "..cache/output",
+      "accepted": true
+    }
+  ]
+}

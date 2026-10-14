@@ -11,7 +11,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
   const temporary = mkdtempSync(join(outputDirectory, "browser-distribution-")), source = join(temporary, "source");
   const put = (path: string, value: string) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, value); };
   for (const [name, value] of Object.entries({ ...fixture.files, ...fixture.ambient })) put(join(source, name), String(value));
-  const marker = { version: 1, owner: fixture.owner, files: Object.keys(fixture.files) }, manifest = join(source, ".nx-artifact.json");
+  const marker = { version: 1, owner: fixture.owner, files: Object.keys(fixture.files) }, manifest = join(source, ".semio-artifact.json");
   put(manifest, JSON.stringify(marker));
   const require = createRequire(import.meta.url), schema = JSON.parse(readFileSync(join(moduleRoot, "../🧬️schema/🔣️.json"), "utf8"));
   const validator = new (require("ajv").default)(); validator.addSchema(schema);
@@ -30,7 +30,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.equal(count, Object.keys(fixture.files).length);
     assert.equal(progress.length, count);
     for (const [name, value] of Object.entries(fixture.files)) assert.equal(readFileSync(join(output, fixture.destination, name), "utf8"), name.endsWith("bridge.js") ? fixture.rewrittenBridge : value);
-    for (const name of [...Object.keys(fixture.ambient), ".nx-artifact.json"]) assert.equal(existsSync(join(output, fixture.destination, name)), false);
+    for (const name of [...Object.keys(fixture.ambient), ".semio-artifact.json"]) assert.equal(existsSync(join(output, fixture.destination, name)), false);
     for (const owner of fixture.invalidOwners) {
       put(manifest, JSON.stringify({ ...marker, owner }));
       await assert.rejects(() => copyBrowserArtifacts(join(temporary, "bad-owner"), sources), /owner/i);
@@ -66,7 +66,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     await build({ root: app, configFile: false, publicDir: false, logLevel: "silent", plugins: [browserArtifactVitePlugin(sources)], build: { outDir: buildOutput, emptyOutDir: true } });
     assert.ok(readFileSync(join(buildOutput, "index.html"), "utf8").includes("/assets/"));
     for (const [name, value] of Object.entries(fixture.files)) assert.equal(readFileSync(join(buildOutput, fixture.destination, name), "utf8"), name.endsWith("bridge.js") ? fixture.rewrittenBridge : value);
-    for (const name of [...Object.keys(fixture.ambient), ".nx-artifact.json"]) assert.equal(existsSync(join(buildOutput, fixture.destination, name)), false);
+    for (const name of [...Object.keys(fixture.ambient), ".semio-artifact.json"]) assert.equal(existsSync(join(buildOutput, fixture.destination, name)), false);
     await assert.rejects(() => build({ root: app, configFile: false, publicDir: false, logLevel: "silent", plugins: [browserArtifactVitePlugin([{ ...sources[0], owner: "wrong" }])], build: { outDir: join(temporary, "bad-vite-output"), emptyOutDir: true } }), /owner/i);
     const { buildViteArtifact, serveVite } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts"));
     const config = join(app, "⚙️vite.config.ts"), published = join(temporary, "published");
@@ -75,10 +75,10 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.ok(existsSync(join(temporary, lifecycle.storage.config)), "Vite config compilation must stay inside the private fixture");
     const resolvedConfig = await resolveConfig({ root: app, configFile: false }, "serve");
     assert.equal(resolvedConfig.cacheDir, join(temporary, lifecycle.storage.optimizer), "Vite dependency optimization must stay inside the private fixture");
-    const publishedIndex = readFileSync(join(published, "index.html"), "utf8"), publishedMarker = JSON.parse(readFileSync(join(published, ".nx-artifact.json"), "utf8"));
+    const publishedIndex = readFileSync(join(published, "index.html"), "utf8"), publishedMarker = JSON.parse(readFileSync(join(published, ".semio-artifact.json"), "utf8"));
     assert.equal(publishedMarker.owner, fixture.owner);
     assert.ok(publishedMarker.files.includes("index.html"));
-    assert.deepEqual(publishedMarker.files, (await require("fast-glob")("**/*", { cwd: published, dot: true, onlyFiles: true })).filter((file: string) => file !== ".nx-artifact.json").sort());
+    assert.deepEqual(publishedMarker.files, (await require("fast-glob")("**/*", { cwd: published, dot: true, onlyFiles: true })).filter((file: string) => file !== ".semio-artifact.json").sort());
     put(config, 'throw new Error("fixture build failure"); export default {};');
     await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary }), /Vite build failed/i);
     assert.equal(readFileSync(join(published, "index.html"), "utf8"), publishedIndex);

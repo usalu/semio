@@ -4,10 +4,40 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `✏️editor` module (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::schema::inferences::forest_play_scene;
-use crate::viewer::cad::modes::view;
-use crate::viewer::cad::modes::view::windows::shape;
-use crate::{CadSnapshot, CAD_DIALECT, CAD_DOCUMENT_SCHEMA};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "."]
+    pub mod view {
+        #[path = "🎭️modes/👁️view/🦀️.rs"]
+        mod component;
+        pub use component::*;
+        #[path = "."]
+        pub mod windows {
+            #[path = "🎭️modes/👁️view/🪟️windows/📐️shape/🦀️.rs"]
+            pub mod shape;
+        }
+    }
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_cad_cad_inferences::forest_play_scene;
+use crate::modes::view;
+use crate::modes::view::windows::shape;
+use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, snapshot::CAD_DIALECT, snapshot::CAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
 use semio_framework_plugin::Fault;
@@ -49,7 +79,7 @@ pub struct CadViewer;
 
 impl ArtifactViewer for CadViewer {
     type Snapshot = CadSnapshot;
-    type Mutation = crate::op::CadMutation;
+    type Mutation = semio_s_artifact_cad_cad_mutations::CadMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -64,13 +94,13 @@ impl ArtifactViewer for CadViewer {
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        crate::cad_child_restore_projection(snapshot)
+        semio_s_artifact_cad_cad_model::snapshot::cad_child_restore_projection(snapshot)
     }
 
     /// 🌱️ See [`crate::cad_genesis_child_pack`].
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::cad_genesis_child_pack(snapshot, slot, child_id)
+        semio_s_artifact_cad_cad_play::cad_genesis_child_pack(snapshot, slot, child_id)
     
 })())
 }

@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-guest-contract"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Vocabulary every plugin guest runtime shares: guest call faults, job steps, codec pairs, caller cancellation, original operation authority, original actor context and the SQLite snapshot wire"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-guest-contract"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-actor = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-async = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
+
+[[test]]
+name = "original_native_frame_caller"
+path = "../../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original_actor_poll_input"
+path = "../../../⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs"

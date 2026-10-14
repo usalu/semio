@@ -2,8 +2,10 @@ use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_child, dec_child};
-use semio_s_artifact_stdio_semio_base::io::binary::codec::{write_child, read_child};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_child;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_child;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 pub(crate) fn fixture()->SemioObjectSnapshot{let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let target=|i:usize|semio_framework_artifact_reference::ArtifactRef{artifact_id:f["children"][i][0].as_str().unwrap().into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:f["children"][i][1].as_str().unwrap().into(),standard:f["children"][i][2].as_str().unwrap().into(),subset:f["children"][i][3].as_str().unwrap().into()}};let mut value=SemioObjectSnapshot::default();value.transform.translation.x=f["translation"][0].as_f64().unwrap();value.transform.translation.y=f["translation"][1].as_f64().unwrap();value.transform.translation.z=f["translation"][2].as_f64().unwrap();value.transform.scale.x=-1.0;value.transform.scale.y=2.0;value.transform.scale.z=0.5;value.brep=Some(store::os_store::artifact_child::ArtifactChild::new("brep-owned".into(),target(0)));value.mesh=Some(store::os_store::artifact_child::ArtifactChild::new("mesh-owned".into(),target(1)));value.properties=Some(store::os_store::artifact_child::ArtifactChild::new("value-owned".into(),target(2)));value}
 fn project(value:&SemioObjectSnapshot)->SqliteDatabase{semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| value.to_sqlite_database(control)).unwrap()}

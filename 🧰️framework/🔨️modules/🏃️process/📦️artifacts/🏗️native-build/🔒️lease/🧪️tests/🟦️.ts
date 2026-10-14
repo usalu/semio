@@ -13,7 +13,7 @@ import { cargoBuildLeaseIdentityV1 } from "../🟦️.ts";
 export async function proveCargoBuildLeasesV1(artifactRoot: string): Promise<void> {
   mkdirSync(artifactRoot, { recursive: true });
   const root = mkdtempSync(join(artifactRoot, "c-"));
-  const leaseRoot=join(process.cwd(),".cache/framework/leases");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"c-"));
+  const leaseRoot=join(process.cwd(),".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"c-"));
   const implementation = fileURLToPath(new URL("../🟦️.ts", import.meta.url));
   const worker = join(root, "📜️script.ts");
   const oracle = new Ajv({ strict: true }).addSchema(schema);

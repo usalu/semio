@@ -11,7 +11,7 @@ use semio_framework_schema_composition::ChildRefFields;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_plugin::{Fault,FaultOrigin,FaultCode,app::{ChildContentView,ChildEmitPreparation}};
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme;
 
 /// 🧩️ Every native Jack runtime installs this composition explicitly, including its actual member roster.

@@ -10,7 +10,7 @@
 //! Diagnostic, therefore `#[ignore]`:
 //! `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture engine::reconstruction::retention`
 
-use super::*;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::*;
 
 /// 🛑️ Retained-TSDF ceiling this probe refuses to cross: past it the native host would start swapping
 /// for numbers that are already conclusive, so the probe reports the growth and stops.
@@ -109,12 +109,12 @@ fn retention(engine: &ReconstructionEngine) -> Retention {
 
 /// 🛰️ The `synthetic-orbit` engine, frames pushed exactly as `🧵️reconstruction-session` pushes them.
 fn synthetic_orbit_engine() -> ReconstructionEngine {
-    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("the synthetic-orbit document parses");
+    let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("the synthetic-orbit document parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     eprintln!("[RETAIN] params voxel={} truncation={} dense={:?} sources={} texture={}", params.tsdf_voxel_size, params.tsdf_truncation, params.dense, params.dense_source_views, params.texture_enabled);
     let mut engine = ReconstructionEngine::new(&params);
-    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
-        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("the fixture frame decodes");
+    for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
+        let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("the fixture frame decodes");
         engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
     }
     engine

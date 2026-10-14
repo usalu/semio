@@ -2,7 +2,7 @@
 
 use super::super::delete_slab_type::DeleteSlabType;
 use super::CreateSlabType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateSlabType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.slab_types.contains_key(&payload.id) {

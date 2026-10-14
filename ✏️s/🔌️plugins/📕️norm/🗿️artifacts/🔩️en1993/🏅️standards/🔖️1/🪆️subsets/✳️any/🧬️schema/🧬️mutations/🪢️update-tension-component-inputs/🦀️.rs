@@ -1,6 +1,6 @@
 //! `upsert-tension-component` — upsert a `TensionComponent` by id into `tension_components`.
 
-use crate::{TensionComponent, En1993Mutation, En1993Snapshot};
+use semio_s_artifact_norm_en1993_model::{TensionComponent, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +13,15 @@ pub struct UpdateTensionComponentInputs {
     pub tension_component: TensionComponent,
 }
 
-impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTensionComponentInputs {
+impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateTensionComponentInputs where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_tension_component_inputs::UpdateTensionComponentInputs> + From<crate::remove_tension_component::RemoveTensionComponent> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "tensionComponent", kind: "update-tension-component-inputs", record: "UpdatedTensionComponent" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
+        crate::update_tension_component_inputs::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_tension_component_inputs::inverse::inverse(self, base)?
     
     })
 }
@@ -36,3 +36,10 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateTensionCom
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

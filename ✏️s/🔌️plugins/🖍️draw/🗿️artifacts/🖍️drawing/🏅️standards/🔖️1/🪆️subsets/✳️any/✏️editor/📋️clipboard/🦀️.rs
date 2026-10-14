@@ -1,7 +1,8 @@
 //! 📋️ Typed selection fragments reuse framework clipboard effects and semantic mutations.
-use crate::{DrawingSnapshot,DrawingLayerNode,DrawingImageAsset};
-use crate::schema::{layer_base,layer_base_mut,find_drawing_layer,find_drawing_layer_location};
-use crate::mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
+use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, find_drawing_layer, find_drawing_layer_location};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_framework_plugin::{MediaType,MediaClass,MediaForm};
 use semio_framework_plugin::kernel::{ClipboardFragment,ClipboardError,PastePlacement,PasteAnchor};
 use std::collections::{BTreeMap,BTreeSet};
@@ -16,7 +17,7 @@ mod encode;
 #[path="🛬️decode/🦀️.rs"]
 mod decode;
 #[path="🧵️job/🦀️.rs"]
-pub(crate) mod job;
+pub mod job;
 #[path="🖼️assets/🦀️.rs"]
 mod assets;
 pub use assets::DrawingClipboardAssets;
@@ -31,10 +32,10 @@ fn world(document:&DrawingSnapshot,id:&str)->Result<[f64;6],ClipboardError> {
     while let Some(id)=current {
         if transforms.len()>=32 {return Err(invalid("Clipboard ancestry exceeds capacity"));}
         let node=find_drawing_layer(document,id.as_str()).ok_or_else(||invalid("Selected layer no longer exists / Ausgewählte Ebene existiert nicht mehr"))?;
-        transforms.push(crate::schema::drawing_transform_to_matrix(&layer_base(node).transform));
+        transforms.push(semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&layer_base(node).transform));
         current=find_drawing_layer_location(document,id.as_str()).and_then(|location|location.parent_id.map(|id|id.to_string_owner()));
     }
-    Ok(transforms.into_iter().rev().fold([1.0,0.0,0.0,1.0,0.0,0.0],crate::schema::geometry::multiply))
+    Ok(transforms.into_iter().rev().fold([1.0,0.0,0.0,1.0,0.0,0.0],semio_s_artifact_draw_drawing_geometry::multiply))
 }
 fn visit<'a>(roots:&'a [DrawingLayerNode],output:&mut Vec<&'a DrawingLayerNode>){for node in roots {output.push(node);if let DrawingLayerNode::Group(group)=node {for child in &group.children {visit(std::slice::from_ref(child),output);}}}}
 fn layer_ids(roots:&[DrawingLayerNode])->BTreeSet<String> {let mut nodes=Vec::new();visit(roots,&mut nodes);nodes.into_iter().map(|node|layer_base(node).id.to_string_owner()).collect()}
@@ -67,9 +68,9 @@ pub fn copy(document:&DrawingSnapshot,ids:&[String])->Result<ClipboardFragment,C
         let mut matrix=world(document,&id)?;
         if matches!(node,DrawingLayerNode::Boolean(_)) {
             let parent=find_drawing_layer_location(document,&id).and_then(|location|location.parent_id).map(|id|world(document,&id.to_string_owner())).transpose()?.unwrap_or([1.0,0.0,0.0,1.0,0.0,0.0]);
-            matrix=crate::schema::geometry::multiply(matrix,invert(parent)?);
+            matrix=semio_s_artifact_draw_drawing_geometry::multiply(matrix,invert(parent)?);
         }
-        layer_base_mut(&mut node).transform=crate::schema::geometry::affine::drawing_matrix_to_transform(matrix);
+        layer_base_mut(&mut node).transform=semio_s_artifact_draw_drawing_model::affine::drawing_matrix_to_transform(matrix);
         packet.roots.push(node);
     }
     let mut nodes=Vec::new();visit(&packet.roots,&mut nodes);
@@ -112,14 +113,14 @@ pub fn cut(document:&DrawingSnapshot,ids:&[String])->Result<Vec<DrawingMutation>
     let selected=roots(document,ids)?;
     let mut removed=BTreeSet::new();
     for id in &selected {
-        if crate::schema::drawing_layer_is_locked(document,id){return Err(invalid("Unlock selected layers before cutting / Ausgewählte Ebenen vor dem Ausschneiden entsperren"));}
+        if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document,id){return Err(invalid("Unlock selected layers before cutting / Ausgewählte Ebenen vor dem Ausschneiden entsperren"));}
         let node=find_drawing_layer(document,id).ok_or_else(||invalid("Selected layer no longer exists"))?;
         let mut descendants=Vec::new();visit(std::slice::from_ref(node),&mut descendants);
         if descendants.iter().any(|node|layer_base(node).locked){return Err(invalid("Unlock selected descendants before cutting / Ausgewählte Unterebenen vor dem Ausschneiden entsperren"));}
         removed.extend(layer_ids(std::slice::from_ref(node)));
     }
-    for node in crate::schema::flatten_drawing_layers(&document.layers) {if !removed.contains(&layer_base(node).id.to_string_owner()) {if let DrawingLayerNode::Boolean(boolean)=node {if boolean.children.iter().any(|id|removed.contains(&id.to_string_owner())){return Err(invalid("A Boolean outside the selection still uses these layers / Ein Boolean außerhalb der Auswahl verwendet diese Ebenen"));}}}}
-    Ok(selected.iter().map(|id|crate::mutations::delete_layer(id.as_str().into())).collect())
+    for node in semio_s_artifact_draw_drawing_model::flatten_drawing_layers(&document.layers) {if !removed.contains(&layer_base(node).id.to_string_owner()) {if let DrawingLayerNode::Boolean(boolean)=node {if boolean.children.iter().any(|id|removed.contains(&id.to_string_owner())){return Err(invalid("A Boolean outside the selection still uses these layers / Ein Boolean außerhalb der Auswahl verwendet diese Ebenen"));}}}}
+    Ok(selected.iter().map(|id|semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(id.as_str().into())).collect())
 }
 pub fn paste(document:&DrawingSnapshot,mut packet:DrawingClipboard,placement:&PastePlacement,parent_id:Option<&str>,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(Vec<DrawingMutation>,Vec<String>),ClipboardError> {
     plan_paste(document,&mut packet,placement,parent_id,control)
@@ -128,29 +129,29 @@ fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&
     validate(&packet)?;
     let destination=if let Some(parent)=parent_id {
         let Some(DrawingLayerNode::Group(_))=find_drawing_layer(document,parent) else {return Err(invalid("Paste destination must be a group"));};
-        if crate::schema::drawing_layer_is_locked(document,parent){return Err(invalid("Unlock the destination group before pasting / Zielgruppe vor dem Einfügen entsperren"));}
+        if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document,parent){return Err(invalid("Unlock the destination group before pasting / Zielgruppe vor dem Einfügen entsperren"));}
         world(document,parent)?
     }else{[1.0,0.0,0.0,1.0,0.0,0.0]};
     let inverse=invert(destination)?;
-    let occupied=crate::schema::flatten_drawing_layers(&document.layers).into_iter().map(|node|layer_base(node).id.to_string_owner()).collect::<BTreeSet<_>>();
+    let occupied=semio_s_artifact_draw_drawing_model::flatten_drawing_layers(&document.layers).into_iter().map(|node|layer_base(node).id.to_string_owner()).collect::<BTreeSet<_>>();
     let source_ids=layer_ids(&packet.roots);
     let mut ordinal=0usize;
     let identity_map=loop{
-        let mapping=source_ids.iter().map(|id|paste_identity(crate::schema::identity::DrawingIdentityKind::Layer,&document.id,id,ordinal,control).map(|target|(id.clone(),target))).collect::<Result<BTreeMap<_,_>,_>>()?;
+        let mapping=source_ids.iter().map(|id|paste_identity(semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind::Layer,&document.id,id,ordinal,control).map(|target|(id.clone(),target))).collect::<Result<BTreeMap<_,_>,_>>()?;
         if mapping.values().all(|id|!occupied.contains(id))&&mapping.values().collect::<BTreeSet<_>>().len()==mapping.len(){break mapping;}
         ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Unable to assign clipboard identities"))?;
     };
     let mut mutations=Vec::new();let mut asset_map=BTreeMap::new();let mut asset_ids=document.assets.iter().map(|(id,_)|id.to_string_owner()).collect::<BTreeSet<_>>();
     let mut bounds=None::<[f64;4]>;
-    if !matches!(placement.anchor,PasteAnchor::Original){for node in &packet.roots {if let Some((x,y,w,h))=crate::schema::drawing_layer_world_bounds(node) {bounds=Some(match bounds {None=>[x,y,x+w,y+h],Some([left,top,right,bottom])=>[left.min(x),top.min(y),right.max(x+w),bottom.max(y+h)]});}}}
+    if !matches!(placement.anchor,PasteAnchor::Original){for node in &packet.roots {if let Some((x,y,w,h))=semio_s_artifact_draw_drawing_geometry::drawing_layer_world_bounds(node) {bounds=Some(match bounds {None=>[x,y,x+w,y+h],Some([left,top,right,bottom])=>[left.min(x),top.min(y),right.max(x+w),bottom.max(y+h)]});}}}
     let [left,top,right,bottom]=bounds.unwrap_or([0.0;4]);
     let anchor=match placement.anchor {PasteAnchor::Original=>[0.0,0.0],PasteAnchor::Middle|PasteAnchor::Centroid=>[(left+right)/2.0,(top+bottom)/2.0],PasteAnchor::BottomLeft=>[left,bottom],PasteAnchor::BottomRight=>[right,bottom],PasteAnchor::TopLeft=>[left,top],PasteAnchor::TopRight=>[right,top]};
     let offset=placement.position.map(|position|[position[0]-anchor[0],position[1]-anchor[1]]).unwrap_or([16.0,16.0]);
     if !offset.iter().all(|n|n.is_finite()){return Err(invalid("Paste placement must be finite"));}
     for (id,asset) in std::mem::take(&mut packet.assets) {
         let mapped={
-            let mut ordinal=0usize;let mapped=loop{let target=paste_identity(crate::schema::identity::DrawingIdentityKind::ImageAsset,&document.id,&id,ordinal,control)?;if !asset_ids.contains(&target){break target;}ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Unable to assign image identity"))?;};
-            asset_ids.insert(mapped.clone());mutations.push(crate::mutations::import_image_asset(mapped.clone(),asset));mapped
+            let mut ordinal=0usize;let mapped=loop{let target=paste_identity(semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind::ImageAsset,&document.id,&id,ordinal,control)?;if !asset_ids.contains(&target){break target;}ordinal=ordinal.checked_add(1).ok_or_else(||invalid("Unable to assign image identity"))?;};
+            asset_ids.insert(mapped.clone());mutations.push(semio_s_artifact_draw_drawing_structure::import_image_asset::mutation::import_image_asset(mapped.clone(),asset));mapped
         };asset_map.insert(id,mapped);
     }
     fn remap(node:&mut DrawingLayerNode,ids:&BTreeMap<String,String>,assets:&BTreeMap<String,String>) {
@@ -163,12 +164,12 @@ fn plan_paste(document:&DrawingSnapshot,packet:&mut DrawingClipboard,placement:&
         }
     }
     for mut node in packet.roots.drain(..) {
-        let matrix=crate::schema::drawing_transform_to_matrix(&layer_base(&node).transform);
-        let matrix=crate::schema::geometry::multiply([1.0,0.0,0.0,1.0,offset[0],offset[1]],matrix);
-        let mut matrix=crate::schema::geometry::multiply(inverse,matrix);
-        if matches!(node,DrawingLayerNode::Boolean(_)){matrix=crate::schema::geometry::multiply(matrix,destination);}
-        layer_base_mut(&mut node).transform=crate::schema::geometry::affine::drawing_matrix_to_transform(matrix);
-        remap(&mut node,&identity_map,&asset_map);mutations.push(crate::mutations::create_layer(parent_id.map(Into::into),None,node));
+        let matrix=semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&layer_base(&node).transform);
+        let matrix=semio_s_artifact_draw_drawing_geometry::multiply([1.0,0.0,0.0,1.0,offset[0],offset[1]],matrix);
+        let mut matrix=semio_s_artifact_draw_drawing_geometry::multiply(inverse,matrix);
+        if matches!(node,DrawingLayerNode::Boolean(_)){matrix=semio_s_artifact_draw_drawing_geometry::multiply(matrix,destination);}
+        layer_base_mut(&mut node).transform=semio_s_artifact_draw_drawing_model::affine::drawing_matrix_to_transform(matrix);
+        remap(&mut node,&identity_map,&asset_map);mutations.push(semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(parent_id.map(Into::into),None,node));
     }
     Ok((mutations,packet.selected.iter().map(|id|identity_map[id].clone()).collect()))
 }
@@ -183,5 +184,5 @@ mod tests;
 
 fn paste_identity(kind:crate::schema::identity::DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<String,ClipboardError>{
  let mut material=[0u8;4096];let mut output=[0u8;76];
- let text=crate::standards::v1::subsets::any::io::text::identity::paste::prepare_paste_identity(kind,document,source,ordinal,&mut material,&mut output,control).map_err(|error|invalid(&error.to_string()))?;control.copy_text(text).map_err(|error|invalid(&error.to_string()))
+ let text=semio_s_artifact_draw_drawing_io::text::identity::paste::prepare_paste_identity(kind,document,source,ordinal,&mut material,&mut output,control).map_err(|error|invalid(&error.to_string()))?;control.copy_text(text).map_err(|error|invalid(&error.to_string()))
 }

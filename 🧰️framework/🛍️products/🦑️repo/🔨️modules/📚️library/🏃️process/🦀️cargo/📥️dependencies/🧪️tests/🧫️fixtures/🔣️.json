@@ -1,0 +1,43 @@
+{
+  "manifest": "Cargo.toml",
+  "cases": [
+    {
+      "network": {
+        "offline": true
+      },
+      "args": [
+        "build",
+        "--target",
+        "wasm32-wasip2"
+      ],
+      "suffix": [
+        "--offline"
+      ]
+    },
+    {
+      "network": {
+        "offline": false
+      },
+      "args": [
+        "test",
+        "--offline"
+      ],
+      "suffix": [
+        "--offline"
+      ]
+    },
+    {
+      "network": {
+        "offline": false
+      },
+      "args": [
+        "build",
+        "--target=x86_64-unknown-linux-gnu"
+      ],
+      "suffix": []
+    }
+  ],
+  "manifestSource": "[package]\nname = \"bounded-inputs\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[workspace]\n[lib]\npath = \"lib.rs\"\n[profile.prototype]\ninherits = \"dev\"\n",
+  "librarySource": "pub fn bounded() -> u8 { 7 }\n#[cfg(test)] mod tests { #[test] fn original_fixture() { assert_eq!(super::bounded(), 7); } }\n",
+  "lockSource": "version = 4\n[[package]]\nname = \"bounded-inputs\"\nversion = \"0.1.0\"\n"
+}

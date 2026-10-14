@@ -40,19 +40,16 @@ pub mod db_index;
 #[path = "../../🗄️storage/🦀️.rs"]
 pub mod db_storage;
 
-#[cfg(all(not(target_arch = "wasm32"), any(feature = "postgres", feature = "neo4j")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[path = "../../🗄️storage/🧵️driver-runtime/🦀️.rs"]
 pub mod db_storage_driver_runtime;
 
-#[cfg(feature = "postgres")]
 #[path = "../../🗄️storage/🐘️postgres/🦀️.rs"]
 pub mod db_storage_postgres;
 
-#[cfg(feature = "sqlite")]
 #[path = "../../🗄️storage/🪶️sqlite/🦀️.rs"]
 pub mod db_storage_sqlite;
 
-#[cfg(feature = "neo4j")]
 #[path = "../../🗄️storage/🌐️neo4j/🦀️.rs"]
 pub mod db_storage_neo4j;
 

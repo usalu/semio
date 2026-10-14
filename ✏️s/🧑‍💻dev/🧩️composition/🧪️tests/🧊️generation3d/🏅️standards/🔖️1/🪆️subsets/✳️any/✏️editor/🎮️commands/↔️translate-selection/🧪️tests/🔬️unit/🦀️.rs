@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{app, dispatch};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
-use semio_s_artifact_procedural_generation3d::widget_id;
+use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
 use crate::editor_domain::editor_laws::context;
 
@@ -105,7 +105,9 @@ fn streamed(phase: &str, offset: [f64; 3]) -> semio_s_artifact_procedural_genera
 #[test]
 fn an_open_gesture_previews_exactly_what_its_release_commits() {
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{generation3d_gumball_preview, transform_commands::GumballGestures, PreviewInteractionMarks};
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{example_snapshot, mutations::central_apply::apply_generation3d_mutation, PROCEDURAL_EXAMPLE_HEX_COLUMN};
+    use semio_s_artifact_procedural_3d_model::example_snapshot;
+    use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
+    use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let committed = example_snapshot(PROCEDURAL_EXAMPLE_HEX_COLUMN).expect("the hexagonal column example");
     let operator = "extrude__gumball_translate";
@@ -115,7 +117,7 @@ fn an_open_gesture_previews_exactly_what_its_release_commits() {
         assert!(gestures.dispatch(streamed("stream", offset), &committed.host_snapshot).expect("a tick streams").artifact_mutations.is_empty(), "a tick is provisional");
     }
     let (overlay, following) = generation3d_gumball_preview(&committed, &marks, &gestures).expect("an open gesture paints");
-    let previews = |snapshot: &semio_s_artifact_procedural_generation3d::Generation3dSnapshot, id: &str| snapshot.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(|widget| matches!(widget, Widget::Neuron { preview: true, .. }));
+    let previews = |snapshot: &semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, id: &str| snapshot.host_snapshot.widgets.iter().find(|widget| widget_id(widget) == id).map(|widget| matches!(widget, Widget::Neuron { preview: true, .. }));
     assert_eq!((previews(&overlay, operator), previews(&overlay, "extrude")), (Some(true), Some(false)), "the operator is painted in place of the shape");
     assert_eq!(previews(&committed, operator), None, "the committed snapshot never sees the open gesture");
     assert_eq!(following.selected, [operator.to_string()].into(), "the marks follow the selection onto the operator");

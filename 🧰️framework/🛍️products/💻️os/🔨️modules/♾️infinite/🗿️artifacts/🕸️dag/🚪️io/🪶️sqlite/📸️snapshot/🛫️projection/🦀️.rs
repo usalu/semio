@@ -3,7 +3,7 @@ use crate::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 fn work(message:&str)->ValueError{ValueError::new(ValueRefusalKind::WorkLimit,message)}
-use graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{DslValue, Number};
 use store::sqlite_snapshot::{
     artifact::{insert_ieee754, Cell, FloatColumn, Projection},

@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Generation3dDiffText = String;
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueRefusalKind};
 

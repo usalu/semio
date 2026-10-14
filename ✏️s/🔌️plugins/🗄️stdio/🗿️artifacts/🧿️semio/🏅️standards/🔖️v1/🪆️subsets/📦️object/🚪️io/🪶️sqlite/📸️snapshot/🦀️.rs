@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
 use crate::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
-use {semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
+use {semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
 use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion}, semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity};
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]

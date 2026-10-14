@@ -1,9 +1,9 @@
 //! 🕸️ Controlled rich graph records with exact words and guarded nested property ownership.
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use crate::schema::snapshot::{SemioGraphSnapshot, SemioGraphNode, SemioGraphEdge, SemioGraphPort, SemioGraphPortKind, GraphNodeId, GraphEdgeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
-use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_decoding as values;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding as values;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 pub(crate) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioGraphSnapshot,ValueError>{

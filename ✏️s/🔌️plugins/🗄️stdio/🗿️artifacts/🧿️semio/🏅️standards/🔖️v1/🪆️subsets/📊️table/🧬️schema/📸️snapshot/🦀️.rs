@@ -24,7 +24,7 @@
 
 
 
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids

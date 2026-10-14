@@ -3,8 +3,8 @@
 //! leaves); `#[derive(dsl::Mutations)]` generates `impl protocol::Mutation<RemodelingSnapshot>` and
 //! `impl protocol::SemanticMutation<RemodelingSnapshot>` from those payloads — no hand-written
 //! apply/diff/inverse dispatch here.
-use crate::diff::RemodelingDiff;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use protocol::Mutation as _;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -61,62 +61,50 @@ pub enum RemodelingMutation {
 }
 //#endregion 🔖️Mutations
 
-//#region 🔖️Reexports
-pub use super::append_content::{append_content, AppendContent};
-pub use super::add_gcp_observation::{add_gcp_observation, AddGcpObservation};
-pub use super::add_stream_frame::{add_stream_frame, AddStreamFrame};
-pub use super::change_stream_sync::{change_stream_sync, ChangeStreamSync};
-pub use super::commit_reconstruction::{commit_reconstruction, rebind_asset, CommitReconstruction, ReconstructionAssetCommit};
-pub use super::create_asset::{create_asset, CreateAsset};
-pub use super::create_camera_calibration::{create_camera_calibration, CreateCameraCalibration};
-pub use super::create_gcp::{create_gcp, CreateGcp};
-pub use super::create_rig_extrinsic::{create_rig_extrinsic, CreateRigExtrinsic};
-pub use super::create_stream::{create_stream, CreateStream};
-pub use super::delete_asset::{delete_asset, DeleteAsset};
-pub use super::delete_camera_calibration::{delete_camera_calibration, DeleteCameraCalibration};
-pub use super::delete_gcp::{delete_gcp, DeleteGcp};
-pub use super::delete_rig_extrinsic::{delete_rig_extrinsic, DeleteRigExtrinsic};
-pub use super::delete_stream::{delete_stream, DeleteStream};
-pub use super::remove_gcp_observation::{remove_gcp_observation, RemoveGcpObservation};
-pub use super::remove_stream_frame::{remove_stream_frame, RemoveStreamFrame};
-pub use super::replace_dense::{replace_dense, ReplaceDense};
-pub use super::replace_geo_products::{replace_geo_products, ReplaceGeoProducts};
-pub use super::replace_mesh_result::{replace_mesh_result, ReplaceMeshResult};
-pub use super::replace_qc::{replace_qc, ReplaceQc};
-pub use super::replace_sparse::{replace_sparse, ReplaceSparse};
-pub use super::replace_stream_source::{replace_stream_source, ReplaceStreamSource};
-pub use super::replace_tracks::{replace_tracks, ReplaceTracks};
-pub use super::replace_trajectory::{replace_trajectory, ReplaceTrajectory};
-pub use super::update_camera_calibration::{update_camera_calibration, UpdateCameraCalibration};
-pub use super::update_dense_params::{update_dense_params, UpdateDenseParams};
-pub use super::update_feature_params::{update_feature_params, UpdateFeatureParams};
-pub use super::update_geo_params::{update_geo_params, UpdateGeoParams};
-pub use super::update_ingest_params::{update_ingest_params, UpdateIngestParams};
-pub use super::update_match_params::{update_match_params, UpdateMatchParams};
-pub use super::update_mesh_params::{update_mesh_params, UpdateMeshParams};
-pub use super::update_motion_params::{update_motion_params, UpdateMotionParams};
-pub use super::update_rig_extrinsic::{update_rig_extrinsic, UpdateRigExtrinsic};
-pub use super::remove_content::{remove_content, RemoveContent};
-pub use super::update_sfm_params::{update_sfm_params, UpdateSfmParams};
-//#endregion 🔖️Reexports
+//#region 🔖️LeafPayloads
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::add_gcp_observation::AddGcpObservation;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::AddStreamFrame;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::change_stream_sync::ChangeStreamSync;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::CommitReconstruction;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_camera_calibration::CreateCameraCalibration;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp::CreateGcp;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_rig_extrinsic::CreateRigExtrinsic;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::CreateStream;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::delete_camera_calibration::DeleteCameraCalibration;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::delete_gcp::DeleteGcp;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::delete_rig_extrinsic::DeleteRigExtrinsic;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::delete_stream::DeleteStream;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::remove_gcp_observation::RemoveGcpObservation;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::remove_stream_frame::RemoveStreamFrame;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_dense::ReplaceDense;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_geo_products::ReplaceGeoProducts;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_mesh_result::ReplaceMeshResult;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_qc::ReplaceQc;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_sparse::ReplaceSparse;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::replace_stream_source::ReplaceStreamSource;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_tracks::ReplaceTracks;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_trajectory::ReplaceTrajectory;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::update_camera_calibration::UpdateCameraCalibration;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_dense_params::UpdateDenseParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_feature_params::UpdateFeatureParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_geo_params::UpdateGeoParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::UpdateIngestParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_match_params::UpdateMatchParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_mesh_params::UpdateMeshParams;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_motion_params::UpdateMotionParams;
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::update_rig_extrinsic::UpdateRigExtrinsic;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::remove_content::RemoveContent;
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_sfm_params::UpdateSfmParams;
+//#endregion 🔖️LeafPayloads
 
-//#region 🔖️CanonicalOrder
-/// 🔢️ Insertion point that keeps a keyed collection in ascending key order. Every collection this
-/// vocabulary addresses by key — `streams` and `gcps` by `id`, `calibration.cameras` by `id`,
-/// `calibration.rig` by `camera_id`, a stream's `frames` by `(index, asset_id)`, a GCP's
-/// `observations` by `(stream_id, frame_index)` — is a canonically ordered document invariant, so a
-/// `create-*`/`add-*` puts its member exactly where a later `delete-*`/`remove-*` took it from and
-/// `inverse(m, before)` applied to `after` restores `before` member positions included.
-pub fn ordered_index<T, K: Ord>(items: &[T], key: &K, key_of: impl Fn(&T) -> K) -> usize {
-    items.partition_point(|item| key_of(item) < *key)
-}
-//#endregion 🔖️CanonicalOrder
 
 //#region 🔖️ApplyInverse
 #[path = "🚪️io/🦀️.rs"]
 mod apply_boundary;
-pub use apply_boundary::apply_remodeling_mutation;
-pub(crate) use apply_boundary::bridge_step;
+pub use apply_boundary::{apply_remodeling_mutation, bridge_step};
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
 /// `🎬️sequence`'s `inverse_sequence_mutation`).
@@ -192,3 +180,8 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
+
+//#region 🔖️Leaves
+/// 🧾️ The mutation facet's five format leaves.
+pub const MUTATION_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🔖️Leaves

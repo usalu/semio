@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::BimModelApp;
-use crate::{ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, Rgb, RoofType, SlabType, Swing, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, Rgb, RoofType, SlabType, Swing, WindowType};
 use semio_framework_plugin::ArtifactEditor;
 
 /// 🧰️ The fixtures every tool test shares: the demo model without its walls, extended by one type of each family, and a rig that drives a tool session pointer event by pointer event and
@@ -27,10 +27,10 @@ pub(crate) mod fixture {
         snapshot.slab_types.insert("sl-200".into(), SlabType { name: "Slab".into(), layers: vec![layer("m-concrete", 0.2)] });
         snapshot.roof_types.insert("rf-200".into(), RoofType { name: "Roof".into(), layers: vec![layer("m-concrete", 0.2)] });
         snapshot.column_types.insert("col-30".into(), ColumnType { name: "Column".into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material: "m-concrete".into() });
-        snapshot.beam_types.insert("bm-20".into(), crate::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
+        snapshot.beam_types.insert("bm-20".into(), crate::standards::v1::subsets::any::schema::snapshot::BeamType { name: "Beam".into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material: "m-concrete".into() });
         snapshot.window_types.insert("win-12".into(), WindowType { name: "Window".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
         snapshot.curtain_wall_types.clear();
-        snapshot.curtain_wall_types.insert("cw-fa".into(), crate::CurtainWallType { name: "Facade".into(), u_grid: crate::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: crate::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
+        snapshot.curtain_wall_types.insert("cw-fa".into(), crate::standards::v1::subsets::any::schema::snapshot::CurtainWallType { name: "Facade".into(), u_grid: crate::standards::v1::subsets::any::schema::snapshot::CurtainGrid::Spacing { spacing: 1.5 }, v_grid: crate::standards::v1::subsets::any::schema::snapshot::CurtainGrid::Spacing { spacing: 1.5 }, interior_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, border_mullion: Profile::Rectangle { width: 0.05, depth: 0.1 }, panel: crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel::Glass, panel_material: "m-glass".into(), mullion_material: "m-steel".into(), u_value: None, g_value: None, frame_fraction: None });
         snapshot.door_types.insert("door-09".into(), DoorType { name: "Door".into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material: "m-steel".into(), u_value: None });
         snapshot
     }
@@ -124,7 +124,7 @@ pub(crate) mod fixture {
             let (step, preview) = feed(&mut self.session, &mut context);
             self.preview = preview;
             for mutation in &step.mutations {
-                self.snapshot = crate::mutations::apply_model_mutation(&self.snapshot, mutation).expect("an emitted mutation applies");
+                self.snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&self.snapshot, mutation).expect("an emitted mutation applies");
             }
             step
         }
@@ -273,7 +273,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     section.down(3.0, 3.0);
     section.mv(3.0, 3.5);
     let step = section.up(3.0, 3.5);
-    assert!(matches!(step.mutations.as_slice(), [crate::ModelMutation::SetStoreyHeight(set)] if set.id == "st-ground" && (set.height - 3.5).abs() < 1e-9), "the handle writes exactly one set-storey-height, got {:?}", step.mutations);
+    assert!(matches!(step.mutations.as_slice(), [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] if set.id == "st-ground" && (set.height - 3.5).abs() < 1e-9), "the handle writes exactly one set-storey-height, got {:?}", step.mutations);
     let after = infer(&section.snapshot);
     assert!(after.wall_layout.values().all(|layout| (layout.height - 3.5).abs() < 1e-9), "the four walls follow the storey");
     assert!((after.opening_frames[&opening].host_height - 3.5).abs() < 1e-9, "the window frame follows its host");
@@ -328,7 +328,7 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
         let mut rig = Rig::on("select", room(), Surface::Section { start: [0.0, 0.0], end: [8.0, 0.0] });
         rig.down(4.0, top);
         let step = rig.up(4.0, case["pointer"].as_f64().expect("pointer"));
-        let [crate::ModelMutation::SetStoreyHeight(set)] = step.mutations.as_slice() else { panic!("a set-storey-height for {case}, got {:?}", step.mutations) };
+        let [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetStoreyHeight(set)] = step.mutations.as_slice() else { panic!("a set-storey-height for {case}, got {:?}", step.mutations) };
         assert!((set.height - case["height"].as_f64().expect("height")).abs() < 1e-9 && set.id == storey, "height {case}: {}", set.height);
     }
     for case in each("rotations") {
@@ -338,14 +338,14 @@ async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_
         rig.click(pivot[0], pivot[1]);
         rig.click(reference[0], reference[1]);
         let step = rig.click(target[0], target[1]);
-        let [crate::ModelMutation::RotateElements(turned)] = step.mutations.as_slice() else { panic!("a rotate-elements for {case}, got {:?}", step.mutations) };
+        let [crate::standards::v1::subsets::any::schema::mutations::ModelMutation::RotateElements(turned)] = step.mutations.as_slice() else { panic!("a rotate-elements for {case}, got {:?}", step.mutations) };
         assert!((turned.angle - case["angle"].as_f64().expect("angle")).abs() < 1e-9, "rotation {case}: {}", turned.angle);
     }
 }
 
 //#region 🔖️ModifyPreviews
 fn modify_scene() -> ModelSnapshot {
-    use crate::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall};
+    use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall};
     let mut snapshot = room();
     let line = |start: (f64, f64), end: (f64, f64)| Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } };
     let wall = |axis: Axis, name: &str| Wall { axis, name: name.into(), ..snapshot.walls["w-south"].clone() };

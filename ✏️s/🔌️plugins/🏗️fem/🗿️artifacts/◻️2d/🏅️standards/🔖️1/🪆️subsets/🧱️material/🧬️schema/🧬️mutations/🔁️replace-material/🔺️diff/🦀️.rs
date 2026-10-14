@@ -4,9 +4,11 @@
 //! `mutation.target-mismatch` (Error) when the replacement renames it, the SAME elasticity bounds
 //! `create-material` runs (`mutation.invariant`, Fatal), and finally `mutation.no-op`.
 use super::ReplaceMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, Fem2dMaterialsModification};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dMaterialsModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceMaterial, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

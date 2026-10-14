@@ -4927,7 +4927,6 @@ mod long {
 
     /// 📈️ The same growth over SQLite storage, the hub's storage backend of choice: past every former
     /// wall (the eighth index entry, the 128th replaced value) with a small payload.
-    #[cfg(feature = "sqlite")]
     #[semio_framework_async_macros::async_test]
     async fn a_sqlite_document_keeps_accepting_edits_past_every_former_wall() {
         const EDITS: usize = 150;

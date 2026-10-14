@@ -10,8 +10,10 @@ import { acquireResourceLease } from "../../../🔒️leases/🟦️.ts";
 /** 📦️ Verifies portable publication, cancellation and complete bytes through independent Python. */
 export async function testArtifactPublication(output: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(resolve(import.meta.dirname, "🧫️fixtures/🔣️.json"), "utf8"));
-  assert.ok(new (createRequire(import.meta.url)("ajv").default)({strict:true}).validate(JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8")),fixture));
-  const root = mkdtempSync(join(output, "ap-")), staging = join(root, "dist"), leaseRoot = resolve(process.cwd(), ".cache/framework/leases");
+  const validator = new (createRequire(import.meta.url)("ajv").default)({strict:true}), schema = JSON.parse(readFileSync(resolve(import.meta.dirname,"../🧬️schema/🔣️.json"),"utf8"));
+  assert.ok(validator.validate(schema,fixture));
+  assert.equal(validator.validate(schema,{...fixture,markerFilename:"foreign-artifact.json"}),false);
+  const root = mkdtempSync(join(output, "ap-")), staging = join(root, "dist"), leaseRoot = resolve(process.cwd(), ".cache/b/l/m/data");
   mkdirSync(leaseRoot, { recursive: true });
   const leaseDirectory = mkdtempSync(join(leaseRoot, "ap-"));
   const files = new Map<string, string>();
@@ -33,7 +35,11 @@ export async function testArtifactPublication(output: string): Promise<void> {
     assert.ok(waits > 0, "Waiting must report progress");
     lease.release();
     await pending;
-    const program = "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps({str(f.relative_to(p)).replace('\\\\','/'):f.read_text() for f in p.rglob('*') if f.is_file() and f.name!='.nx-artifact.json'}))";
+    const markerOracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps(json.loads((p/sys.argv[2]).read_text())))", staging, fixture.markerFilename], { stdout: "pipe", stderr: "pipe" });
+    assert.equal(markerOracle.exitCode, 0, markerOracle.stderr.toString());
+    assert.deepEqual(JSON.parse(markerOracle.stdout.toString()), { version: 1, owner: fixture.owner, files: Object.keys(fixture.files).sort() });
+    console.log(`[DEBUG] Published ${fixture.markerFilename} with independently verified owner and ${files.size} declared files`);
+    const program = "import json,pathlib,sys\np=pathlib.Path(sys.argv[1]);print(json.dumps({str(f.relative_to(p)).replace('\\\\','/'):f.read_text() for f in p.rglob('*') if f.is_file() and f.name!='.semio-artifact.json'}))";
     const oracle = Bun.spawnSync([Bun.which("python3") ?? "python", "-c", program, staging], { stdout: "pipe", stderr: "pipe" });
     assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
     assert.deepEqual(JSON.parse(oracle.stdout.toString()), fixture.files);
@@ -59,7 +65,7 @@ export async function testArtifactPublication(output: string): Promise<void> {
     } finally { prototype.read = read; }
     await assert.rejects(() => stageArtifacts(staging, "foreign", files, { leaseDirectory }), /Unowned/);
     await assert.rejects(() => stageArtifacts(staging, fixture.owner, new Map([["../escape", files.values().next().value!]]), { leaseDirectory }), /Invalid artifact/);
-    assert.deepEqual(readdirSync(staging).sort(), [".nx-artifact.json", "nested", "support.js"]);
+    assert.deepEqual(readdirSync(staging).sort(), [".semio-artifact.json", "nested", "support.js"]);
     const native = { ...nativeFs };
     let attempts = 0;
     const emulateRename = (code: string, failures: number): void => {

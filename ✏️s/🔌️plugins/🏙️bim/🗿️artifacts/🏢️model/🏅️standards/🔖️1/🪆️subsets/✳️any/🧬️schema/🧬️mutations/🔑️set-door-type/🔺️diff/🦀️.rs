@@ -2,7 +2,7 @@
 //! must exist and every provided value must keep the dimensions valid; providing nothing new is a no-op.
 
 use super::SetDoorType;
-use crate::{is_positive_length, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

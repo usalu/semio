@@ -1,6 +1,19 @@
 //! 🧭️ The image editor's edit rules: which snapshot pointer raises which ONE concrete image mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete, ent, ins, keyed, list_move, named, positions, rem, resolve, spread_snake, Entries, Reshape, INDEX, ITEM};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::complete;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::list_move;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::positions;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_snake;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ITEM;
 use crate::schema::mutations::SemioImageMutation;
 use crate::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::Fault;

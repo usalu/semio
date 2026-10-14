@@ -78,7 +78,8 @@
         "unitGraphFile": "unit-graph",
         "warmRunPrefix": "w",
         "warmRunRetentionMs": 86400000,
-        "randomSuffixUnits": 6
+        "randomSuffixUnits": 6,
+        "storageReserveBytes": 2147483648
       }
     },
     "AbsolutePath": {

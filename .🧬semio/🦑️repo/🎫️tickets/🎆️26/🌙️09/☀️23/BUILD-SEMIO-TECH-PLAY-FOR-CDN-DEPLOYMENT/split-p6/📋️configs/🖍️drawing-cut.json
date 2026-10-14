@@ -1,0 +1,569 @@
+{
+ "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+ "crate": "semio_s_artifact_draw_drawing",
+ "aggregator": "agg",
+ "consumers": [
+  "🌎️hub",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🖍️draw/🏭️bridge",
+  "✏️s/🔌️plugins/🖨️raster",
+  "✏️s/🔌️plugins/📏️layout",
+  "✏️s/🔌️plugins/🗒️note"
+ ],
+ "crates": {
+  "agg": {
+   "ident": "semio_s_artifact_draw_drawing",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+   "doc": "//! ✏️ Drawing artifact — registration and composition of the drawing family.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "model": {
+   "ident": "semio_s_artifact_draw_drawing_model",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "doc": "//! 🧬️ Drawing model.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "geometry": {
+   "ident": "semio_s_artifact_draw_drawing_geometry",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🦀️.rs",
+   "doc": "//! 🧮️ Drawing geometry.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "scene": {
+   "ident": "semio_s_artifact_draw_drawing_scene",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🦀️.rs",
+   "doc": "//! 🎬️ Drawing scene: preparation, paint, raster, booleans, trace and text of the flattened drawing scene.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "diff": {
+   "ident": "semio_s_artifact_draw_drawing_diff",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "doc": "//! 🔺️ Drawing diff.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "mutations": {
+   "ident": "semio_s_artifact_draw_drawing_mutations",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "doc": "//! 🧬️ Drawing mutations.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "structure": {
+   "ident": "semio_s_artifact_draw_drawing_structure",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🦀️.rs",
+   "doc": "//! 🧱️ The `structure` subset of the drawing artifact: the layer-tree mutation leaves (create, duplicate, delete, reorder, image assets).",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "style": {
+   "ident": "semio_s_artifact_draw_drawing_style",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🦀️.rs",
+   "doc": "//! 🎨️ The `style` subset of the drawing artifact: the paint and text mutation leaves (fill, stroke, opacity, blend mode, fill rule, isolation, text, image).",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "transform": {
+   "ident": "semio_s_artifact_draw_drawing_transform",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🦀️.rs",
+   "doc": "//! 🔀️ The `transform` subset of the drawing artifact: the placement and geometry mutation leaves (transform, drag, rotate, scale, path points, shape coordinates, boolean operation, trace parameters).",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "metadata": {
+   "ident": "semio_s_artifact_draw_drawing_metadata",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🦀️.rs",
+   "doc": "//! 🏷️ The `metadata` subset of the drawing artifact: the naming, visibility and lock mutation leaves.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "io": {
+   "ident": "semio_s_artifact_draw_drawing_io",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "doc": "//! 🚪️ Drawing io.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "read": {
+   "ident": "semio_s_artifact_draw_drawing_read",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🦀️.rs",
+   "doc": "//! 📥️ Drawing import: the deserializers that read SVG and JSON documents into a drawing.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "write": {
+   "ident": "semio_s_artifact_draw_drawing_write",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "doc": "//! 📤️ Drawing export: the serializers that write a drawing as SVG, PDF, PNG, JSON, DWG and DXF, and the owned export job.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "host": {
+   "ident": "semio_s_artifact_draw_drawing_host",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🦀️.rs",
+   "doc": "//! 🏠️ Drawing host: the retained store owner, its mutation authorities and the store initialization job.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "editor": {
+   "ident": "semio_s_artifact_draw_drawing_editor",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "doc": "//! ✏️ Drawing editor.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "viewer": {
+   "ident": "semio_s_artifact_draw_drawing_viewer",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "doc": "//! 👁️ Drawing viewer.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  },
+  "examples": {
+   "ident": "semio_s_artifact_draw_drawing_examples",
+   "root": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "doc": "//! 📚️ Drawing examples: the example documents the subset advertises and `setActiveExample` loads.",
+   "header": [
+    "#![allow(clippy::result_large_err)]",
+    "#![allow(unexpected_cfgs)]",
+    "",
+    "extern crate semio_framework_os_kernel as dsl;",
+    "extern crate semio_framework_os_kernel as protocol;",
+    "extern crate semio_framework_os_kernel as store;",
+    "extern crate semio_framework_schema as framework_schema;"
+   ]
+  }
+ },
+ "rules": [
+  [
+   "",
+   "agg",
+   ""
+  ],
+  [
+   "standards",
+   "agg",
+   "standards"
+  ],
+  [
+   "graph_manifest",
+   "agg",
+   "graph_manifest"
+  ],
+  [
+   "standards::v1::subsets::any::schema",
+   "model",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::geometry",
+   "geometry",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::diff",
+   "diff",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::mutations",
+   "mutations",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io",
+   "io",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io::import",
+   "read",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io::export",
+   "write",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::io::text::mutations",
+   "mutations",
+   "text"
+  ],
+  [
+   "standards::v1::subsets::any::io::binary::mutations",
+   "mutations",
+   "binary"
+  ],
+  [
+   "standards::v1::subsets::structure::schema::mutations",
+   "structure",
+   ""
+  ],
+  [
+   "standards::v1::subsets::style::schema::mutations",
+   "style",
+   ""
+  ],
+  [
+   "standards::v1::subsets::transform::schema::mutations",
+   "transform",
+   ""
+  ],
+  [
+   "standards::v1::subsets::metadata::schema::mutations",
+   "metadata",
+   ""
+  ],
+  [
+   "editor",
+   "editor",
+   ""
+  ],
+  [
+   "editor::drawing",
+   "editor",
+   ""
+  ],
+  [
+   "viewer",
+   "viewer",
+   ""
+  ],
+  [
+   "viewer::drawing",
+   "viewer",
+   ""
+  ],
+  [
+   "host",
+   "host",
+   ""
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_raster",
+   "scene",
+   "raster"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_preparation",
+   "scene",
+   "preparation"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_text",
+   "scene",
+   "text"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_booleans",
+   "scene",
+   "booleans"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_trace",
+   "scene",
+   "trace"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_retirement",
+   "scene",
+   "retirement"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_paint",
+   "scene",
+   "paint"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_placement",
+   "scene",
+   "placement"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_identity",
+   "scene",
+   "identity"
+  ],
+  [
+   "standards::v1::subsets::any::schema::scene_view",
+   "scene",
+   "view"
+  ],
+  [
+   "examples",
+   "examples",
+   ""
+  ]
+ ],
+ "files": [
+  [
+   "🧮️geometry/🎯️picking/🎨️paint/🦀️\\.rs$",
+   "scene",
+   "picking"
+  ],
+  [
+   "🚪️io/📤️export/📦️owned/🦀️\\.rs$",
+   "write",
+   "owned"
+  ],
+  [
+   "🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🦀️\\.rs$",
+   "structure",
+   "import_image_asset::mutation"
+  ],
+  [
+   "🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🦀️\\.rs$",
+   "structure",
+   "remove_image_asset::mutation"
+  ],
+  [
+   "🧮️geometry/↗️affine/🦀️\\.rs$",
+   "model",
+   "affine"
+  ],
+  [
+   "✏️rename-layer/🎮️prepare/🦀️\\.rs$",
+   "mutations",
+   "rename_prepare"
+  ]
+ ],
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "items": [
+    "(?!definition$|artifact$|DrawingApplication$).*"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🦀️.rs",
+   "items": [
+    "layer_to_path_segments",
+    "ellipse_path_segments",
+    "shape_path_segment",
+    "shape_to_path_segments",
+    "drawing_layer_world_bounds",
+    "drawing_layer_bounds_with_parent",
+    "segment_to_point",
+    "drawing_map_point_by_matrix",
+    "transform_path_segments",
+    "transform_path_by_matrix",
+    "scale_path_segments",
+    "split_path_segments_by_contour",
+    "path_segments_bounds",
+    "path_segments_bounds_with_matrix",
+    "filter_path_segments_by_contour_area",
+    "arc_ellipse_point",
+    "arc_approx_unit_arc",
+    "arc_segment_to_cubics",
+    "flatten_curve_segments",
+    "CURVE_LINE_SAMPLE_STEPS",
+    "sample_quad_points",
+    "sample_cubic_points",
+    "flatten_segments_to_lines",
+    "to_kernel_segment",
+    "from_kernel_segment",
+    "to_kernel_segments",
+    "from_kernel_segments",
+    "resolve_drawing_artboard",
+    "canvas_layer_records"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🦀️.rs",
+   "items": [
+    "scene_node_for_path",
+    "flatten_drawing_document_to_scene_nodes",
+    "flatten_drawing_document_with_transformation",
+    "resolve_boolean_layer_segments",
+    "resolve_trace_layer_segments",
+    "drawing_image_asset_luma"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🦀️.rs",
+   "items": [
+    "DRAWING_IDENTITY_MATRIX",
+    "DrawingPlacedLayer",
+    "drawing_placed_layers",
+    "drawing_targets_invariant",
+    "drawing_selection_partial",
+    "drawing_dragged_transform",
+    "drawing_moved_transform",
+    "drawing_rotation_matrix",
+    "drawing_scaling_matrix"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "items": [
+    "drawing_label_number",
+    "drawing_label_layers"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "items": [
+    "resolve_drawing_document_artboard",
+    "matrix_to_semio_transform",
+    "to_semio_path_segment",
+    "solid_fill_to_semio_rgba",
+    "intern_semio_style",
+    "semio_drawing_node_from_scene_node",
+    "drawing_document_to_semio_drawing"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🦀️.rs",
+   "items": [
+    "io"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🦀️.rs",
+   "items": [
+    "drawing_document_to_svg",
+    "drawing_document_json_to_svg"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "items": [
+    "Construction"
+   ]
+  },
+  {
+   "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "items": [
+    "examples"
+   ]
+  }
+ ],
+ "monolithManifest": ".🧬semio/🦑️repo/⚡️cache/p6/orig/🖍️drawing/📦️packages/🦀️rust/Cargo.toml"
+}

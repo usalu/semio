@@ -2,7 +2,7 @@
 
 use super::super::delete_mep_element::DeleteMepElement;
 use super::CreateMepElement;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateMepElement, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.mep_elements.contains_key(&payload.id) {

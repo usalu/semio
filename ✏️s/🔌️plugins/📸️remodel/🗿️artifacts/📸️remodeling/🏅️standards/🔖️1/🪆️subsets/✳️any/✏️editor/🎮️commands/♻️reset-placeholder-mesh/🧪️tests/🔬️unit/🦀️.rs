@@ -1,13 +1,18 @@
-use super::*;
-use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks};
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::reset_placeholder_mesh::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_dense;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_geo_products;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_mesh_result;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_result;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_sparse;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::clear_tracks;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 use semio_framework_plugin::artifact_app_laws;
 
 /// 🧩️ `results.mesh.mesh` is a composed CHILD handle now — reads the real vertex count through
 /// `remodeling_mesh_workspace`'s working-scene cache (0 on a cold cache, matching an empty mesh).
 fn mesh_vertex_count(snapshot: &RemodelingSnapshot) -> usize {
-    crate::remodeling_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
+    semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_workspace(&snapshot.results.mesh.mesh).map_or(0, |mesh| mesh.vertex_count())
 }
 
 #[semio_framework_async_macros::async_test]

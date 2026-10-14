@@ -3,11 +3,11 @@
 //! zero trace, and every host payload states the RELATIVE motion from its own start pose.
 
 use super::*;
-use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep};
-use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle,quat_mul};
+use {crate::standards::v1::subsets::any::schema::quat_from_axis_angle, crate::standards::v1::subsets::any::schema::quat_mul};
 
-use crate::{Puzzle3dObject, Puzzle3dTargetVolume, Puzzle3dVortex};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
 
 /// 🧱️ Two objects facing each other along x — `a` locked-free with vortex `a:v` at +x, `b` with vortex `b:v` at -x —
 /// a locked `pin`, and one target volume.
@@ -15,7 +15,7 @@ fn scene() -> Puzzle3dSnapshot {
     let vortex = |id: &str, x: f64| Puzzle3dVortex { id: id.into(), vortex_kind: None, label: None, position: [x, 0.0, 0.0], direction: Some([x.signum(), 0.0, 0.0]), radius: None, hidden: false, locked: false };
     let object = |id: &str, x: f64, vortices: Vec<Puzzle3dVortex>, locked: bool| Puzzle3dObject { id: id.into(), label: None, object_kind: None, anchor: Default::default(), origin: [x, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices, hidden: false, locked };
     Puzzle3dSnapshot {
-        schema: crate::PUZZLE_3D_SCHEMA.into(),
+        schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.into(),
         objects: vec![object("a", 0.0, vec![vortex("v", 1.0)], false), object("b", 10.0, vec![vortex("v", -1.0)], false), object("pin", 20.0, Vec::new(), true)],
         target_volumes: vec![Puzzle3dTargetVolume { id: "box".into(), origin: [0.0; 3], orientation: None, scale: None, hidden: false, locked: false }],
         ..Default::default()
@@ -113,7 +113,7 @@ fn a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds() {
     for (index, y) in [0.2, -0.3, 0.6, 2.0, 0.1].into_iter().enumerate() {
         base.objects.push(Puzzle3dObject { id: format!("n{index}"), label: None, object_kind: None, anchor: Default::default(), origin: [1.5, y, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![vortex(0.0)], hidden: false, locked: false });
     }
-    base.attractions.push(crate::Puzzle3dAttraction { id: "held".into(), attracting: "n4:v".into(), attracted: "b:v".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    base.attractions.push(crate::standards::v1::subsets::any::schema::Puzzle3dAttraction { id: "held".into(), attracting: "n4:v".into(), attracted: "b:v".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
     let whole = puzzle3d_relocate_record(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
     assert_eq!(whole.attractions, vec![("a:v".to_string(), "b:v".to_string()), ("n0:v".to_string(), "b:v".to_string()), ("n1:v".to_string(), "b:v".to_string()), ("n2:v".to_string(), "b:v".to_string())], "every free vortex within the radius, in document order; `n4` is already attracted and `n3` is out of reach");
     for page in 1..=base.objects.len() + 1 {

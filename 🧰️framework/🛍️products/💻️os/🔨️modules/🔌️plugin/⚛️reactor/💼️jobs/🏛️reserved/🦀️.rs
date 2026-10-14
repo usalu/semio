@@ -89,7 +89,7 @@ struct FrameworkReservedBoundedJob {
     source_close:Option<ControlledRetirement<(Vec<u8>,Option<Vec<u8>>)>>,
     output:Option<Vec<u8>>,
     output_close:Option<ControlledRetirement<Vec<u8>>>,
-    phase:u8,
+    pub(crate) phase:u8,
     scan:usize,
     prefix:usize,
     matched:bool,

@@ -11,7 +11,9 @@ mechanical fixes the compiler names:
 
 An import lands in the decomposed module that textually owns the error site (the file itself, the module that
 `include!`s it, or the parent whose `use super::*` it reads), gated with `#[cfg(test)]` when the run checks the
-test configuration. Usage: fix-loop.py <tag> [--test] [--target T] [--features F] [--apply]
+test configuration. Usage: fix-loop.py <tag> [--test] [--target T] [--features F] [--apply]   (E2B_SNAP=1: check the live plugin inside the
+private source snapshot `⚡️cache/e2b/snap`, whose broken peer crates carry private local fixes; diagnostics map back to
+the live tree because both share one relative layout)
 """
 import json, os, re, subprocess, sys
 from collections import defaultdict
@@ -33,9 +35,15 @@ def run(tag, args):
     log = f"{E2}/logs/{tag}.json"
     os.makedirs(f"{E2}/logs", exist_ok=True)
     env = dict(os.environ, CARGO_TARGET_DIR=f"{E2}/target", CARGO_TERM_COLOR="never")
+    cwd = REPO
+    if os.environ.get("E2B_SNAP"):
+        snap = f"{E2}/snap"
+        subprocess.run(["rsync", "-a", "--delete", "--max-size=8m", "--exclude", "node_modules", "--exclude", "target", "--exclude", "🗑️generated", f"{PLUGIN}/", f"{snap}/{os.path.relpath(PLUGIN, REPO)}/"], check=True)
+        env.update(CARGO_BUILD_BUILD_DIR=f"{E2}/snapbuild")
+        cwd = snap
     cmd = [os.path.join(os.path.dirname(HERE), "🚦️cargo-slot.sh"), f"e2b-{tag}", "--", "cargo", "check", "-p", "semio-framework-plugin", "--lib", "--message-format=json"] + args
     with open(log, "w") as out:
-        subprocess.run(cmd, cwd=REPO, env=env, stdout=out, stderr=subprocess.DEVNULL)
+        subprocess.run(cmd, cwd=cwd, env=env, stdout=out, stderr=subprocess.DEVNULL)
     msgs, foreign = [], set()
     for line in open(log):
         try:
@@ -47,6 +55,7 @@ def run(tag, args):
         elif j.get("reason") == "compiler-message" and j["message"]["level"] == "error":
             foreign.add(j["target"]["name"])
     if foreign: print(f"[fix-loop] {tag}: DEPENDENCY BROKEN, plugin not checked: {sorted(foreign)}")
+    elif '"reason":"build-finished"' not in open(log).read(): print(f"[fix-loop] {tag}: DEPENDENCY BROKEN, cargo stopped before building (manifest or resolver)")
     return msgs
 
 

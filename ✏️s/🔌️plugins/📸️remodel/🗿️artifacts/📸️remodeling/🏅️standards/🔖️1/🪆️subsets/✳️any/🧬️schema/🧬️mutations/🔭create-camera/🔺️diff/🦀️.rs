@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `CreateCameraCalibration` — inserts at the camera's canonical `id`
 //! position so `delete-camera-calibration` puts it back exactly where it was. Duplicate `camera.id` ⇒
 //! Fatal.
-use crate::diff::{RemodelingDiff, RemodelingRow};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

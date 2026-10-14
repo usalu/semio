@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "nodes", "caller", "outputs", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "nodes": {"type": "integer", "minimum": 0},
+    "caller": {"const": {"operation": 969, "generation": 17, "clockUs": 1, "deadlineUs": 1000000, "fuel": 2048, "stock": [1024, 65536, 1048576, 1048576, 64]}},
+    "outputs": {"type": "array", "items": {"type": "object", "required": ["source", "value"], "properties": {"source": {"type": "integer", "minimum": 0}, "value": {"type": "integer"}}, "additionalProperties": false}},
+    "laws": {"const": ["originalSourceLoan", "oneRowPerTurn", "exactPhysicalReserve", "unchangedDeniedDonor", "paidPartialClose", "sourceReturnedLast"]}
+  },
+  "additionalProperties": false
+}

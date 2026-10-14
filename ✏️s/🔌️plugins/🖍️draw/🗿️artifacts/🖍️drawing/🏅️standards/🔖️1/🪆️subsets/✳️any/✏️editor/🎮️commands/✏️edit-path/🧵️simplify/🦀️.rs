@@ -1,12 +1,13 @@
 //! 🧵️ Retains cancellable path simplification until one semantic geometry mutation is ready.
 use super::*;
-use crate::schema::geometry::editing::{PathEdit,simplify::PathSimplifyJob};
+use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
+use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
-use crate::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
 type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 #[derive(semio_framework_value::RetireOwned)]
-struct Workspace {source:PagedList<crate::PathSegment,{usize::MAX}>,job:Option<PathSimplifyJob>}
+struct Workspace {source:PagedList<semio_s_artifact_draw_drawing_model::PathSegment,{usize::MAX}>,job:Option<PathSimplifyJob>}
 struct Work {workspace:Option<ControlledRetirement<Workspace>>,identity:Option<usize>,complete:bool,closing:bool}
 impl Work {
     fn new()->Self {Self {workspace:None,identity:None,complete:false,closing:false}}
@@ -14,11 +15,11 @@ impl Work {
 impl ArtifactCommandWork<App> for Work {
     fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
     fn tool_id(&self)->&'static str {"editPath"}
-    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:size_of::<Self>()+size_of::<crate::PathSegment>(),depth:1,..Default::default()})}
+    fn work_demands(&self,_input:&ArtifactCommandInputs<'_,App>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError> {Ok(semio_framework_value::RetirementDemand {copy_bytes:size_of::<Self>()+size_of::<semio_s_artifact_draw_drawing_model::PathSegment>(),depth:1,..Default::default()})}
     fn extent(&self,command:&DrawingCommand,snapshot:&DrawingSnapshot,interaction:&protocol::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<App>>)->Option<usize> {
         let DrawingCommand::EditPath(payload)=command else {return None};
         if let PathEdit::Simplify {tolerance}=payload.edit.as_ref() {if !tolerance.is_finite()||!(1e-6..=1e6).contains(tolerance) {return None;}}
-        let DrawingLayerNode::Path(path)=crate::schema::find_drawing_layer(snapshot,&payload.layer_id)? else {return None};
+        let DrawingLayerNode::Path(path)=semio_s_artifact_draw_drawing_model::find_drawing_layer(snapshot,&payload.layer_id)? else {return None};
         (!self.complete&&path.segments.len()<=65536&&snapshot.layers.len()+snapshot.assets.len()<=4096&&interaction.selection.values().all(|value|value.ids.len()<=4096)).then_some(1)
     }
     fn step(&mut self,input:&ArtifactCommandInputs<'_,App>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ArtifactCommandWorkStep<App>, semio_framework_job::OriginalTurnFailure> {
@@ -33,8 +34,8 @@ impl ArtifactCommandWork<App> for Work {
         let identity=input.snapshot as*const DrawingSnapshot as usize;
         if self.identity.is_some_and(|previous|previous!=identity) {return Err(Fault::from("Path simplification source changed"));}
         self.identity=Some(identity);
-        if crate::schema::drawing_layer_is_locked(input.snapshot,&payload.layer_id) {return Err(Fault::from("Unlock the path before editing"));}
-        let Some(DrawingLayerNode::Path(path))=crate::schema::find_drawing_layer(input.snapshot,&payload.layer_id) else {return Err(Fault::from("Select a path to edit"));};
+        if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(input.snapshot,&payload.layer_id) {return Err(Fault::from("Unlock the path before editing"));}
+        let Some(DrawingLayerNode::Path(path))=semio_s_artifact_draw_drawing_model::find_drawing_layer(input.snapshot,&payload.layer_id) else {return Err(Fault::from("Select a path to edit"));};
         let owner=self.workspace.get_or_insert_with(||ControlledRetirement::new(Workspace {source:Default::default(),job:None}).unwrap_or_else(|_|unreachable!()));
         let workspace=owner.original_mut().ok_or_else(||Fault::from("drawing-path-retirement-started"))?;
         while !cx.should_yield() {
@@ -50,13 +51,13 @@ impl ArtifactCommandWork<App> for Work {
             }
             let job=workspace.job.as_mut().unwrap();
             let progress=job.advance(1).map_err(Fault::from)?;
-            cx.set_stage(match progress.phase {crate::schema::geometry::editing::simplify::PathSimplifyPhase::Scanning=>"path-scan",crate::schema::geometry::editing::simplify::PathSimplifyPhase::Reducing=>"path-simplify",crate::schema::geometry::editing::simplify::PathSimplifyPhase::Building=>"path-build",crate::schema::geometry::editing::simplify::PathSimplifyPhase::Complete=>"path-publish"});
+            cx.set_stage(match progress.phase {semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Scanning=>"path-scan",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Reducing=>"path-simplify",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Building=>"path-build",semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyPhase::Complete=>"path-publish"});
             cx.consume_fuel(1);
             if !progress.done {continue;}
             self.complete=true;
             if job.result().map_err(Fault::from)?.len()==path.segments.len() {return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));}
             let segments=job.take_result().map_err(Fault::from)?;
-            let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(path.base.id.clone(),segments)]);
+            let mut emit=Emit::mutations(vec![semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(path.base.id.clone(),segments)]);
             if let Some(selection)=input.interaction.selection.get(DRAWING_POINT_DOMAIN) {
                 let retained=selection.ids.iter().filter(|id|interaction::points::parse_point_id(id).is_some_and(|point|point.layer_id!=payload.layer_id)).cloned().collect::<Vec<_>>();
                 emit.effects.push(canvas_pointer_down::point_selection_effect(&retained));
@@ -81,8 +82,8 @@ impl ArtifactCommandWork<App> for Work {
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {self.workspace.as_ref().map(|owner|owner.next_depth_demand()).unwrap_or(Ok(0))}
     fn terminal_is_empty(&self)->bool {self.closing&&self.workspace.as_ref().is_none_or(|owner|owner.terminal_is_empty())}
 }
-pub(super) struct DrawingPathCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
-impl DrawingPathCommandJobFactory {pub(super) fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"editPath")]}}}
+pub struct DrawingPathCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
+impl DrawingPathCommandJobFactory {pub fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"editPath")]}}}
 impl semio_framework::ToolJobFactory for DrawingPathCommandJobFactory {
     type Payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
     type Job=semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<App>;
@@ -102,7 +103,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingPathCommandJ
     const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS:&'static[semio_framework_plugin::ArtifactToolPublicationContract]=DRAWING_PATH_PUBLICATION_CONTRACTS;
 }
-pub(super) fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->Result<semio_framework::ToolOperationSpec,Fault> {
+pub fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->Result<semio_framework::ToolOperationSpec,Fault> {
     let work=Work::new();
     if request.tool_id!="editPath"||work.extent(&request.command,&request.snapshot,&request.interaction_state,Some(&request.context))!=Some(1) {return Err(Fault::from("Path editing exceeds its registered source capacity"));}
     let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,retained: request.retained,authoring_seed:request.authoring_seed.clone()};

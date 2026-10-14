@@ -1,6 +1,6 @@
 //! 📸️ Authored Remodeling entities, literal scalar words and owned relationships.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::snapshot::*;
 #[path="📏️cells/🦀️.rs"]mod semantic_cells;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,RowWriter}};
 use std::collections::{BTreeMap,BTreeSet};
@@ -8,9 +8,6 @@ use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 
 pub const SCHEMA:&str=include_str!("🗄️.sql");
-#[cfg(test)]
-#[path="./🧪️tests/🧬️owned/🦀️.rs"]
-mod typed_tests;
 
 #[derive(Clone,Copy)]
 struct Decimal{bytes:[u8;20],start:usize}
@@ -303,6 +300,3 @@ fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteData
 fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,c)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

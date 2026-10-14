@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::bim::gestures::session::Shape;
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
 
-fn created(step: &Step) -> &crate::mutations::create_opening::CreateOpening {
+fn created(step: &Step) -> &crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening {
     match step.mutations.as_slice() {
         [ModelMutation::CreateOpening(create)] => create,
         other => panic!("one create-opening expected, got {other:?}"),

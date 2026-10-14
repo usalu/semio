@@ -4,7 +4,7 @@
 
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
 //#region 🔖️Payload
 /// 🎚️ `set-edge-property` payload — the edge, the key of its property and the value that property takes.
@@ -28,7 +28,7 @@ impl protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation> for SetEdgeP
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let (key, owner) = (&self.key, &self.edge_id.value);
-        match semio_s_artifact_stdio_semio_value::schema::snapshot::semio_value_scalar_label(&self.value) {
+        match semio_s_artifact_stdio_semio_value_model::schema::snapshot::semio_value_scalar_label(&self.value) {
             Some((en, de)) => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of edge \"{owner}\" to {en}"), &format!("\"{key}\" von Kante \"{owner}\" auf {de} setzen")),
             None => semio_framework_ui_locale::LocalizedLabel::native(&format!("Set \"{key}\" of edge \"{owner}\""), &format!("\"{key}\" von Kante \"{owner}\" setzen")),
         }

@@ -179,7 +179,7 @@ fn sqlite_snapshot_named_objects_associative_state_and_evaluation_tags() {
 fn sqlite_snapshot_all_43_body_domains_and_14_constraint_tags_independent_sqlite() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎭️bodies/🔣️.json")).unwrap();
     let mut snapshot=DwgSnapshot::default();
-    snapshot.drawing=DwgLogicalDrawing::from_native(&crate::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default()).unwrap();
+    snapshot.drawing=DwgLogicalDrawing::from_native(&semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default()).unwrap();
     for (index,body) in bodies::authored_bodies().into_iter().enumerate(){
         snapshot.drawing.objects.push(DwgLogicalObject{handle:10000+index as u64,type_code:u16::MAX,class_name:"authored body vector".into(),category:DwgObjectCategory::Object,owner_handle:Some(u64::MAX),reactor_handles:vec![0,u64::MAX],extension_dictionary_handle:Some(0),referenced_handles:vec![9007199254740993],extended_data:vec![],body:Some(body)});
     }

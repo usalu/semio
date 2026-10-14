@@ -11,6 +11,11 @@ build = false
 role = "framework"
 id = "ui"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 1048576
+maxSourceFiles = 128
+maxActiveLines = 12000
+
 [lints]
 workspace = true
 
@@ -19,7 +24,7 @@ path = "🦀️.rs"
 
 [features]
 default = []
-testkit = ["wgpu-engine"]
+testkit = ["wgpu-engine", "semio-framework-ui-retained-tree/testkit"]
 # ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
 tui = ["dep:semio-framework-async"]
 # 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
@@ -34,12 +39,16 @@ tui-bindgen = ["tui", "dep:wasm-bindgen"]
 # backs `prepared.rs`'s job-driven CPU staging/admission state machine (first-party, itself already
 # wasip2-safe). Neither reintroduces the `wasm-bindgen` leak this ticket closes. Ticket
 # 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-wgpu = ["dep:serde", "dep:serde_json", "dep:semio-framework-ui-locale", "dep:semio-framework-value-derive", "dep:bytemuck", "dep:semio-framework-job"]
+wgpu = ["dep:semio-framework-ui-draw-contract", "dep:semio-framework-ui-prepared", "dep:semio-framework-ui-raster-owner", "dep:semio-framework-ui-action", "dep:semio-framework-ui-theme", "dep:semio-framework-ui-declaration", "dep:serde", "dep:serde_json", "dep:semio-framework-ui-locale", "dep:semio-framework-value-derive", "dep:bytemuck", "dep:semio-framework-job"]
 # 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
 wgpu-engine = [
+    "semio-framework-ui-prepared/browser-presenter",
+    "dep:semio-framework-ui-surface-identity",
+    "dep:semio-framework-ui-retained-tree",
+    "dep:semio-framework-ui-select-behavior",
+    "dep:semio-framework-ui-arena",
     "wgpu",
-    "dep:parley",
-    "dep:swash",
+    "dep:semio-framework-ui-text",
     "dep:bytemuck",
     "dep:winit",
     "dep:wgpu",
@@ -58,6 +67,17 @@ wgpu-engine = [
 typegen = ["wgpu"]
 
 [dependencies]
+semio-framework-ui-surface-identity = { path = "../../🪟️surface/🪪️identity/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-raster-owner = { path = "../../🖼️raster/🧵️ownership/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-retained-tree = { path = "../../🌳️retained/🌳️tree/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-select-behavior = { path = "../../🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-arena = { path = "../../🌳️retained/🏟️arena/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-action = { path = "../../🎬️action/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-theme = { path = "../../🎨️styling/🎭️theme/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-text = { path = "../../🔤️typography/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-declaration = { path = "../../📜️declaration/📦️packages/🦀️rust", optional = true }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 # 🎬️ The 15 product scene structs (`World3dScene`/`TableScene`/...) and the generic 3D scene math
@@ -86,8 +106,6 @@ serde_json = { version = "1.0.140", optional = true }
 # atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
 # pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
 # `no_std` + `libm` like `ui-render`: embedded font bytes only, no fontique path/mmap sources.
-parley = { version = "0.5.0", default-features = false, features = ["libm"], optional = true }
-swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
 # 🧷️ `extern_crate_alloc` (requested by `image`) and `min_const_generics` (requested by `font-types`) are pinned here, in
 # every hub component's closure, so all components compile one `bytemuck` unit.
 bytemuck = { version = "1.24.0", features = ["derive", "extern_crate_alloc", "min_const_generics"], optional = true }
@@ -145,6 +163,10 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "metal
 arboard = { version = "3", optional = true }
 
 [dev-dependencies]
+semio-framework-ui-prepared = { path = "../../🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-draw-contract = { path = "../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-raster-owner = { path = "../../🖼️raster/🧵️ownership/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-retained-tree = { path = "../../🌳️retained/🌳️tree/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"] }

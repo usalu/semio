@@ -20,7 +20,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
     fn summarize(&self, source: &str) -> Result<NormRetainedDispositionSummary, String> {
         let value: serde_json::Value = serde_json::from_str(source).map_err(|error| error.to_string())?;
         let routes = value["routes"].as_array().ok_or("routes must be an array")?;
-        let expected_ids = super::NORM_RETAINED_TOOL_IDS;
+        let expected_ids = crate::NORM_RETAINED_TOOL_IDS;
         if routes.len() != expected_ids.len() {
             return Err(format!("route count must be exactly {}", expected_ids.len()));
         }
@@ -37,7 +37,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
         }
         let apps = value["apps"].as_array().ok_or("apps must be an array")?;
         let publication_contracts = value["publicationContracts"].as_array().ok_or("publicationContracts must be an array")?;
-        let declared = super::NORM_PUBLICATION_CONTRACTS.iter().map(|contract| serde_json::json!({ "toolId": contract.tool_id, "lanes": contract.lanes.iter().copied().map(super::publication_lane_id).collect::<Vec<_>>() })).collect::<Vec<_>>();
+        let declared = crate::NORM_PUBLICATION_CONTRACTS.iter().map(|contract| serde_json::json!({ "toolId": contract.tool_id, "lanes": contract.lanes.iter().copied().map(crate::publication_lane_id).collect::<Vec<_>>() })).collect::<Vec<_>>();
         if publication_contracts != &declared {
             return Err("publication contracts do not match the live factory declaration".into());
         }
@@ -46,7 +46,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
                 return Err("route publication lanes diverge from the factory publication contract".into());
             }
         }
-        if value["factory"]["payloadSchema"] != super::NORM_RETAINED_PAYLOAD_SCHEMA || value["factory"]["maximumRawBytes"] != serde_json::json!(super::NORM_RETAINED_RAW_BYTES) {
+        if value["factory"]["payloadSchema"] != crate::NORM_RETAINED_PAYLOAD_SCHEMA || value["factory"]["maximumRawBytes"] != serde_json::json!(crate::NORM_RETAINED_RAW_BYTES) {
             return Err("factory identity does not match the live shared factory".into());
         }
         let summary = NormRetainedDispositionSummary {

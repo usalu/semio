@@ -1,7 +1,7 @@
 use super::super::compute::dependency;
 use super::super::{kinds, plan, ModelInferenceSession};
 use super::*;
-use crate::{ModelDiff, ModelInference};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference};
 use protocol::{DiffRegions, Inference};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_value::DslValue;

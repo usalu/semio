@@ -5,7 +5,7 @@
 use super::super::wall_depth::reveal_flaw;
 use super::super::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
 use super::SetOpening;
-use crate::{Entry, ModelDiff, ModelSnapshot, OpeningPatch, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::OpeningPatch, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetOpening, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

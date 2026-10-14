@@ -35,8 +35,8 @@ pub(crate) struct MountedCommandEntry {
     count: u32,
     parent_touched: bool,
     child_edit_count: usize,
-    field: usize,
-    closing: bool,
+    pub(crate) field: usize,
+    pub(crate) closing: bool,
 }
 
 impl MountedCommandEntry {

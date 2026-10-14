@@ -19,7 +19,9 @@
 //! REFERENCED style (which never touches this entity's own node fields) still correctly
 //! invalidates its cached value. `Image` inherits the world transform and has no style field.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use crate::schema::diff::{node_at, NodePath};
 use crate::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
 

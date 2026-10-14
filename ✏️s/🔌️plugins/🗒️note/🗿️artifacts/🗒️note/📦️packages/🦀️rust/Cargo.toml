@@ -37,7 +37,7 @@ semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework = { workspace = true }
-semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -45,13 +45,13 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-semio-text = { workspace = true }
+semio-s-artifact-stdio-semio-text-model = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 # 🛠️ The ink tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-tool-machine = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
@@ -59,7 +59,8 @@ serde_json.workspace = true
 [dev-dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-plugin-host = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-plugin-interpreter = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
+semio-framework-plugin-guest-contract = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter-runtime = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
 semio-framework-hash = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }

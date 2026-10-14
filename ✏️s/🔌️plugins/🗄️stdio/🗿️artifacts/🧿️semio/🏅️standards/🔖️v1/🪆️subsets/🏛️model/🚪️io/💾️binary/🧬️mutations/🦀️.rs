@@ -7,9 +7,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioQuaternion, SemioTransform};
-use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
 use semio_s_artifact_stdio_semio_base::io::text::codec::parse_f64;
 use crate::io::text::snapshot::dec_relation;

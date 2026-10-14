@@ -8,9 +8,6 @@
     "test-exhaustive": "bun repo run @semio-tech/schema-registry-rs:test -- exhaustive",
     "test-neutrality": "bun repo run @semio-tech/schema-registry-rs:test-neutrality"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

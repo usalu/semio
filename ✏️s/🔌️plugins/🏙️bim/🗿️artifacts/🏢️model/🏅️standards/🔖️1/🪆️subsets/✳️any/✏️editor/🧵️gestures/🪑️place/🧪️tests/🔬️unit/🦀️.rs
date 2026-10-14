@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::bim::entities::components::tests::furnished;
 use crate::editor::bim::gestures::session::{Modifiers, Shape};
 use crate::editor::bim::gestures::tests::fixture::Rig;
-use crate::Point2;
+use crate::standards::v1::subsets::any::schema::snapshot::Point2;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 fn created(step: &Step) -> &Component {
@@ -184,7 +184,7 @@ async fn the_library_selection_chooses_the_family_and_escape_leaves_the_tool() {
 #[semio_framework_async_macros::async_test]
 async fn without_a_family_or_a_storey_the_click_is_refused() {
     let mut bare = furnished();
-    bare.families.retain(|_, family| family.category == crate::FamilyCategory::Profile);
+    bare.families.retain(|_, family| family.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile);
     let mut rig = Rig::plan(UTILITY, bare);
     assert_eq!(rig.down(2.0, 2.0).refused, Some(FAMILY_MISSING));
     assert!(rig.snapshot.components.is_empty());

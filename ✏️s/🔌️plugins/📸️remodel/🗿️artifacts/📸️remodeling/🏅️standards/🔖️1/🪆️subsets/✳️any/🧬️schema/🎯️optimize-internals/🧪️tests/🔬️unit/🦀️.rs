@@ -1,5 +1,5 @@
 use super::*;
-use crate::algebra::solve_llsq;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::solve_llsq;
 
 // #region 🔖️RosenbrockTests
 struct Rosenbrock;

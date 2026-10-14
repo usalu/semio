@@ -1,0 +1,11 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["version","widgets","wires","expected","orderedOutputs","allOutputOwnersClosed","monotonicProgress"],
+ "properties":{
+  "version":{"const":1},
+  "widgets":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["id","kind","params"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["mesh.primitive.plane","mesh.inspect.edge"]},"params":{"type":"object","additionalProperties":false,"properties":{"width":{"type":"number","exclusiveMinimum":0},"depth":{"type":"number","exclusiveMinimum":0},"edge":{"const":[0]}}}}}},
+  "wires":{"type":"array","minItems":1,"maxItems":1,"items":{"type":"object","additionalProperties":false,"required":["from","fromPort","to","toPort"],"properties":{"from":{"type":"string","minLength":1},"fromPort":{"const":"mesh"},"to":{"type":"string","minLength":1},"toPort":{"const":"mesh"}}}},
+  "expected":{"type":"object","additionalProperties":false,"required":["start","end","length"],"properties":{"start":{"const":[-2,0,-3]},"end":{"const":[2,0,-3]},"length":{"const":4}}},
+  "orderedOutputs":{"const":["start","end","length"]},"allOutputOwnersClosed":{"const":true},"monotonicProgress":{"const":true}
+ }
+}

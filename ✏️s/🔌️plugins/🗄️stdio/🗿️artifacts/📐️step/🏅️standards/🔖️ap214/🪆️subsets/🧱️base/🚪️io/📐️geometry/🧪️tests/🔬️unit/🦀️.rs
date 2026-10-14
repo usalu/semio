@@ -55,7 +55,7 @@ async fn real_export_reads_optional_placement_slots_and_straight_bsplines_as_lin
 async fn read_faces_carry_pcurves_and_validate_clean() {
     let body = read_step(CONCRETE_FOREST_STEP).expect("read");
     assert!(body.coedges.iter().all(|(_, coedge)| coedge.pcurve.is_some()), "every imported coedge carries a p-curve");
-    let issues = semio_framework_3d_brep_queries::validation::validate_body(&body);
+    let issues = semio_framework_3d_brep_validation::validate_body(&body);
     assert!(issues.is_empty(), "a valid export validates clean: {issues:?}");
 }
 

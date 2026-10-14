@@ -1,10 +1,10 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, rows, string, tags, target};
 use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
-use crate::Point3;
+use crate::standards::v1::subsets::any::schema::snapshot::Point3;
 
-fn duct(path: Vec<Point3>) -> crate::MepElement {
-    crate::MepElement { storey: "st-ground".into(), system: MepSystem::Supply, shape: MepShape::Duct { width: 0.4, height: 0.25 }, path, name: "Extra Duct".into() }
+fn duct(path: Vec<Point3>) -> crate::standards::v1::subsets::any::schema::snapshot::MepElement {
+    crate::standards::v1::subsets::any::schema::snapshot::MepElement { storey: "st-ground".into(), system: MepSystem::Supply, shape: MepShape::Duct { width: 0.4, height: 0.25 }, path, name: "Extra Duct".into() }
 }
 
 #[test]

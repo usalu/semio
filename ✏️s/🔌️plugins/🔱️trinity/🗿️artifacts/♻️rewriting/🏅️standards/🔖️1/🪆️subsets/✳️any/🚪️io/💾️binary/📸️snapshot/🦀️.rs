@@ -33,7 +33,7 @@ use crate::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 impl pack::snapshot::ArtifactPack for RewritingSnapshot {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

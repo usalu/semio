@@ -143,7 +143,7 @@ pub fn component_pivot(data: &str, mode: &str, ids: &[u32]) -> Option<[f64; 3]> 
 pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &mut semio_framework_os_flow::FlowEvalSession, ids: &[String], revision: Option<&[u8; 32]>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), String> {
     let (target, _) = component_group(ids)?;
     if target.analytic.is_none() && target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
-    crate::standards::v1::subsets::any::schema::with_host_session(snapshot, session, grant, |host, session| {
+    semio_s_artifact_procedural_3d_model::with_host_session(snapshot, session, grant, |host, session| {
         let pending = host.evaluate_cold_step(semio_framework_os_flow::neural::EvalStepBudget::PROBE,&|_|true).map_err(|error| error.to_string())?.into_iter().collect::<BTreeSet<_>>();
         if let Some(source) = &target.analytic {
             if pending.contains(target.widget) { return Err("The selected geometry is still being evaluated".into()); }
@@ -167,7 +167,7 @@ pub fn validate_cached_components(snapshot: &semio_framework_artifact_flow_flow:
                     return Ok(());
                 }
             }
-            let Some(semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. }) = snapshot.widgets.iter().find(|item| crate::widget_id(item) == widget) else { break };
+            let Some(semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. }) = snapshot.widgets.iter().find(|item| semio_s_artifact_procedural_3d_model::widget_id(item) == widget) else { break };
             if channel != "meshOut" || !matches!(neuron_kind.as_str(), "brep.mesh.translateComponents" | "brep.mesh.rotateComponents" | "brep.mesh.scaleComponents") { break; }
             let mut wires = snapshot.synapses.iter().filter(|wire| wire.to == widget && wire.to_port == "mesh");
             let Some(source) = wires.next() else { break };

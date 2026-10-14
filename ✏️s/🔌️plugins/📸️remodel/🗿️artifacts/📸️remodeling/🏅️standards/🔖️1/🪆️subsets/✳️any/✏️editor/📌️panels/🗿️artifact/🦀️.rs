@@ -3,8 +3,8 @@
 //! the trace list and the start/pause/step/abort/finalize buttons are the framework panel's
 //! (`📋️tool-run-contract.md` §2.5, §4.1); this panel never keeps run state of its own.
 
-use crate::editor::remodeling::modes::model::tools::reconstruction;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model::tools::reconstruction;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::Locale;
@@ -89,13 +89,10 @@ pub fn render(scene: &RemodelingSnapshot, run: Option<&ToolRunView>, locale: Loc
         rows.push((format!("remodeling-pipeline.keys.{}", action.id()), format!("{} — {}", action.chord(), action.label().text(locale))));
     }
     PanelTreeBuilder::new("remodeling-pipeline")?
-        .window_section(windows, "remodeling-pipeline.reconstruction", Some(crate::editor::remodeling::ui_label(say(locale, "Reconstruction", "Rekonstruktion"))?), true, &rows, |(id, text)| tree_item(id.as_str(), text.as_str()))?
+        .window_section(windows, "remodeling-pipeline.reconstruction", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(say(locale, "Reconstruction", "Rekonstruktion"))?), true, &rows, |(id, text)| tree_item(id.as_str(), text.as_str()))?
         .build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

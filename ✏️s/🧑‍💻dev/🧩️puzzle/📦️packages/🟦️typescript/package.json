@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-puzzle-fill-policy-self-tests": "bun repo run @semio-tech/s-puzzle-composition-tests:verify-puzzle-fill-policy-self-tests",
     "verify-browser-contribution": "bun repo run @semio-tech/s-puzzle-composition-tests:verify-browser-contribution"

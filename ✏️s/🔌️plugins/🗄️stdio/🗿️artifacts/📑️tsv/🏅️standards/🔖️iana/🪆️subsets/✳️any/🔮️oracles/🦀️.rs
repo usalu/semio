@@ -21,14 +21,12 @@ use semio_repo_test_host::Json;
 /// ↩️ Independent line-ending tag — NOT the subject's own `LineEnding`
 /// (`../🧬️schema/📸️snapshot/🦀️.rs`): the oracle role must not link the subject crate at
 /// all (fleet brief §5.3), so this is a standalone copy of the same two-value concept.
-#[cfg(feature = "oracles")]
 #[derive(Clone, Copy, PartialEq)]
 enum TsvLineEnding {
     Lf,
     Crlf,
 }
 
-#[cfg(feature = "oracles")]
 impl TsvLineEnding {
     fn as_str(self) -> &'static str {
         match self {
@@ -66,7 +64,6 @@ impl TsvLineEnding {
 /// retention concerns `TsvMutation::SetTrailingNewline`/`SetLineEnding` mutate — REAL bytes here,
 /// not cosmetic metadata: IANA TSV draws no header/data distinction for that role to fall to
 /// instead, so this subset's own serialization choices are what its vocabulary makes substantive.
-#[cfg(feature = "oracles")]
 struct TsvBody {
     records: Vec<Vec<String>>,
     trailing_newline: bool,
@@ -78,7 +75,6 @@ struct TsvBody {
 /// reader's default PERMISSIVE terminator so either a bare `\n` or a `\r\n` source splits into
 /// records correctly regardless of which this file happens to use. `flexible(true)` because row
 /// width is real per-row information, not a rectangular grid the format guarantees.
-#[cfg(feature = "oracles")]
 fn read_tsv(input: &[u8]) -> Result<TsvBody, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("independent reader: input is not UTF-8: {error}"))?;
     let line_ending = TsvLineEnding::sniff(text);
@@ -94,7 +90,6 @@ fn read_tsv(input: &[u8]) -> Result<TsvBody, String> {
 /// choice as the record terminator. The reference writer always terminates every record it writes,
 /// including the last, so a body that wants no trailing terminator has that final separator
 /// stripped back off afterward.
-#[cfg(feature = "oracles")]
 fn write_tsv(body: &TsvBody) -> Result<Vec<u8>, String> {
     let terminator = match body.line_ending {
         TsvLineEnding::Lf => csv::Terminator::Any(b'\n'),
@@ -119,45 +114,38 @@ fn write_tsv(body: &TsvBody) -> Result<Vec<u8>, String> {
 /// 📊️ Public, JSON-friendly mirror of [`TsvBody`] — what the sibling test case's adapter reads
 /// real pre-mutation state out of (to build an inverse mutation's own spec) without depending on
 /// this module's private `TsvLineEnding` type.
-#[cfg(feature = "oracles")]
 pub struct TsvGrid {
     pub records: Vec<Vec<String>>,
     pub trailing_newline: bool,
     pub line_ending: String,
 }
 
-#[cfg(feature = "oracles")]
 pub fn read_grid(input: &[u8]) -> Result<TsvGrid, String> {
     let body = read_tsv(input)?;
     Ok(TsvGrid { records: body.records, trailing_newline: body.trailing_newline, line_ending: body.line_ending.as_json().to_string() })
 }
 
-#[cfg(feature = "oracles")]
 pub fn write_grid(grid: &TsvGrid) -> Result<Vec<u8>, String> {
     write_tsv(&TsvBody { records: grid.records.clone(), trailing_newline: grid.trailing_newline, line_ending: TsvLineEnding::from_json(&grid.line_ending)? })
 }
 //#endregion 🔖️Grid
 
 //#region 🔖️SpecReaders
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn boolean(value: &Json, key: &str) -> Option<bool> {
     match value.get(key) {
         Some(Json::Bool(flag)) => Some(*flag),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn strings(value: &Json, key: &str) -> Vec<String> {
     value
         .array(key)
@@ -168,7 +156,6 @@ fn strings(value: &Json, key: &str) -> Vec<String> {
         })
         .collect()
 }
-#[cfg(feature = "oracles")]
 fn rows(value: &Json, key: &str) -> Vec<Vec<String>> {
     value
         .array(key)
@@ -185,7 +172,6 @@ fn rows(value: &Json, key: &str) -> Vec<Vec<String>> {
         })
         .collect()
 }
-#[cfg(feature = "oracles")]
 fn line_ending_param(value: &Json, key: &str) -> Result<Option<TsvLineEnding>, String> {
     match value.get(key) {
         Some(Json::String(text)) => TsvLineEnding::from_json(text).map(Some),
@@ -198,7 +184,6 @@ fn line_ending_param(value: &Json, key: &str) -> Result<Option<TsvLineEnding>, S
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -245,11 +230,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
@@ -261,7 +241,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// `semantic-tabular-mutate-v1` profile keeps both fields live in the comparison rather than
 /// ignoring them the way the base `semantic-tabular-v1` profile does for RFC 4180's writer-freedom
 /// equivalents.
-#[cfg(feature = "oracles")]
 pub fn project_tsv_grid(bytes: &[u8]) -> Result<Json, String> {
     let body = read_tsv(bytes)?;
     Ok(Json::Object(vec![
@@ -273,14 +252,10 @@ pub fn project_tsv_grid(bytes: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_tsv_grid(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

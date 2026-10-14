@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_
 #[test]
 fn the_components_survive_the_round_trip_exactly_in_both_schemas() {
     let model = components();
-    for (bytes, importer) in [(export_ifc2x3(&model).expect("2x3 export").0, import_ifc2x3 as fn(&[u8]) -> Result<(crate::ModelSnapshot, Vec<String>), String>), (export_ifc4(&model).expect("4 export").0, import_ifc4)] {
+    for (bytes, importer) in [(export_ifc2x3(&model).expect("2x3 export").0, import_ifc2x3 as fn(&[u8]) -> Result<(crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, Vec<String>), String>), (export_ifc4(&model).expect("4 export").0, import_ifc4)] {
         let (back, notes) = importer(&bytes).expect("the file imports");
         assert!(notes.iter().all(|note| !note.contains("cmp-") && !note.contains("mep-")), "{notes:?}");
         assert_eq!(back.components, model.components);
@@ -38,21 +38,21 @@ fn a_foreign_product_becomes_a_component_of_a_generic_cuboid_family() {
     let table = &back.components["cmp-table"];
     let family = &back.families[&table.family];
     assert_eq!(family.name, "Table");
-    assert_eq!(family.category, crate::FamilyCategory::Furniture);
-    assert!(matches!(back.family_solids.values().find(|solid| solid.family == table.family).map(|solid| &solid.shape), Some(crate::SolidShape::Cuboid { .. })));
+    assert_eq!(family.category, crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Furniture);
+    assert!(matches!(back.family_solids.values().find(|solid| solid.family == table.family).map(|solid| &solid.shape), Some(crate::standards::v1::subsets::any::schema::snapshot::SolidShape::Cuboid { .. })));
     assert!((table.position.x - 1.5).abs() < 1e-6 && (table.position.y - 1.5).abs() < 1e-6 && (table.rotation - 0.5).abs() < 1e-6, "{table:?}");
     assert_eq!(table.storey, "st-ground");
-    assert_eq!(back.components["cmp-lamp"].system, Some(crate::MepSystem::Lighting));
-    assert_eq!(back.components["cmp-diffuser"].system, Some(crate::MepSystem::Supply));
+    assert_eq!(back.components["cmp-lamp"].system, Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Lighting));
+    assert_eq!(back.components["cmp-diffuser"].system, Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Supply));
     assert_eq!(back.components["cmp-kitchen"].storey, "st-ground");
 }
 
 #[test]
 fn the_system_of_a_group_is_read_from_its_name_or_predefined_type() {
-    assert_eq!(system_named("Supply"), Some(crate::MepSystem::Supply));
-    assert_eq!(system_named("Domestic Water"), Some(crate::MepSystem::DomesticWater));
-    assert_eq!(system_named("WASTEWATER"), Some(crate::MepSystem::Waste));
-    assert_eq!(system_named("ELECTRICAL"), Some(crate::MepSystem::Power));
+    assert_eq!(system_named("Supply"), Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Supply));
+    assert_eq!(system_named("Domestic Water"), Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::DomesticWater));
+    assert_eq!(system_named("WASTEWATER"), Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Waste));
+    assert_eq!(system_named("ELECTRICAL"), Some(crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Power));
     assert_eq!(system_named("unknown"), None);
 }
 

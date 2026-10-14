@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
+import {runRepositoryCargoCommandV1} from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from "../../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -27,7 +29,7 @@ class TestScript extends BundleScript {
     }
     const { rest } = resolveTestLevel(segments);
     await runBudgetedTestCommand(process.execPath, ["../../🧪️tests/🌐️browser-host/🟨️.js"], { cwd: this.root, budgetMs: buildBudgetMs() });
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-host"], cwd: this.root, extraArgs: ["--no-fail-fast", ...rest] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -35,7 +37,7 @@ class TestScript extends BundleScript {
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host native check accepts no arguments");
-    await runBudgetedTestCommand("cargo", ["check", "--manifest-path", "Cargo.toml", "--lib"], { cwd: this.root, budgetMs: buildBudgetMs() });
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib"],this.root,process.env,buildBudgetMs());
   }
 }
 
@@ -43,7 +45,7 @@ class CheckScript extends BundleScript {
 class CheckWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("UI-host Wasm check accepts no arguments");
-    await runBudgetedTestCommand("cargo", ["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-unknown-unknown"], { cwd: this.root, budgetMs: buildBudgetMs() });
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check", "--manifest-path", "Cargo.toml", "--lib", "--target", "wasm32-unknown-unknown"],this.root,process.env,buildBudgetMs());
   }
 }
 

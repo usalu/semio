@@ -1,8 +1,9 @@
 //! 🔺️ Sparse diff builder for `UpdateRigExtrinsic`. A missing target ⇒ Error
 //! `mutation.target-missing`; a non-finite rotation or translation ⇒ Fatal `mutation.invariant`;
 //! an identical pose ⇒ Warning `mutation.no-op`.
-use crate::diff::{RemodelingDiff, RemodelingRow};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateRigExtrinsic, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

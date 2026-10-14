@@ -1,5 +1,7 @@
 use super::*;
-use crate::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
 use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -137,7 +139,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
 /// 🎯️ Position law: removing ANY run (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn remove_run_inverts_at_every_position() {
-    let base = crate::schema::snapshot::demo_text_snapshot();
+    let base = semio_s_artifact_stdio_semio_text_model::schema::snapshot::demo_text_snapshot();
     assert!(base.runs.len() >= 3, "the law needs a middle run");
     for index in 0..base.runs.len() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTextMutation::RemoveRun(remove_run::RemoveRun { index }), &base).await;
@@ -147,7 +149,7 @@ async fn remove_run_inverts_at_every_position() {
 /// 🎯️ Position law: moving a run between ANY two positions is undone exactly.
 #[semio_framework_async_macros::async_test]
 async fn reorder_runs_inverts_between_every_pair_of_positions() {
-    let base = crate::schema::snapshot::demo_text_snapshot();
+    let base = semio_s_artifact_stdio_semio_text_model::schema::snapshot::demo_text_snapshot();
     for from in 0..base.runs.len() {
         for to in 0..base.runs.len() {
             protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTextMutation::ReorderRuns(reorder_runs::ReorderRuns { from, to }), &base).await;

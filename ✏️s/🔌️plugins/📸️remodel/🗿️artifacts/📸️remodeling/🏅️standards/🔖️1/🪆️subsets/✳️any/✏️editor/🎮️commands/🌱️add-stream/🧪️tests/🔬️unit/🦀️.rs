@@ -1,7 +1,7 @@
-use super::*;
-use crate::editor::remodeling::panels::media;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream::*;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media;
 use crate::editor::remodeling::unit_tests::context::{app_with_registry, dispatch, render_json};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 use semio_framework_plugin::artifact_app_laws;
 
 /// 🖥️ The mounted path the react host drives: a registry-backed app answers before its bounded retained

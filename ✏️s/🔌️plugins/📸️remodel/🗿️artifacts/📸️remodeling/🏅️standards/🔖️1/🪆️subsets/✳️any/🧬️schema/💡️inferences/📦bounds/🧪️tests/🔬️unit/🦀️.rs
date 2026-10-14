@@ -1,6 +1,6 @@
 use super::*;
-use crate::mint_and_stash_mesh;
-use crate::standards::v1::subsets::any::io::seed_remodeling_mesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::mint_and_stash_mesh;
+use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io::seed_remodeling_mesh;
 use semio_framework::MeshData;
 
 #[semio_framework_async_macros::async_test]

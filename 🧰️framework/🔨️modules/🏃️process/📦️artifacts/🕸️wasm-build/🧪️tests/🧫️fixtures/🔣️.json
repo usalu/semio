@@ -3,6 +3,13 @@
   "policy": {
     "version": 1,
     "cwd": "/owner",
+    "workspaceRoot": "/repository",
+    "sourceBoundary": {
+      "version": 1,
+      "maxSourceBytes": 262144,
+      "maxSourceFiles": 32,
+      "maxActiveLines": 4000
+    },
     "mode": "prototype",
     "artifactDirectory": "/captures",
     "buildDirectory": "/compiler",
@@ -48,6 +55,12 @@
       "status": 0,
       "output": true,
       "mode": "release"
+    },
+    {
+      "name": "refused",
+      "status": 0,
+      "output": false,
+      "refused": true
     }
   ],
   "modePublications": [

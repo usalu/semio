@@ -65,7 +65,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
   await testCiResolution();
   await testCiBaselineCommand(workspace, output);
   testDevcontainerContext(workspace);
-  testContainerRuntimeBootstrap(workspace,join(workspace,(await (await import("../../../🟨️.mjs")).cacheInternals.workspaceCatalogNxContributionsV1(workspace))[0].publication.outputRoot));
+  testContainerRuntimeBootstrap(workspace,join(workspace,(await (await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs")).cacheInternals.workspaceCatalogBuildContributionsV1(workspace))[0].publication.outputRoot));
   await testDevcontainerLifecycle(workspace, output);
   await testDerivedConfig(workspace);
   const { testExtensionHostBuild } = await import("../../../../💻️client/🧩️vscode/🧪️tests/🧩️host-build/🟦️.ts");
@@ -135,7 +135,7 @@ export async function testCommandInputs(workspace: string, output: string, invoc
     
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-    const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🟨️.mjs")).href);
+    const { cacheInternals } = await import(pathToFileURL(join(workspace, library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
     const inputs = cacheInternals.projectInputs({ name: "fixture", targets: {} }, "domain/📦️packages/🦀️rust", root, new Map());
     assert.ok(Array.isArray(inputs.nativeSources), "Cargo projects need separate native source inputs");
     const match = (path: string) => {
@@ -203,7 +203,7 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/runtime-components");
   const fixture = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
   
-  const pluginModule = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const pluginModule = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
   await pluginModule.libraryBootstrap;
   const { cacheInternals } = pluginModule;
   assert.equal(typeof cacheInternals.runtimeComponentClosure, "function", "Runtime preparation needs transitive component consumption");
@@ -238,7 +238,7 @@ export async function testBunDependencies(workspace: string, output: string): Pr
   const require = createRequire(import.meta.url), fixtures = join(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/bun-dependencies");
   const cases = JSON.parse(readFileSync(join(fixtures, "🔣️.json"), "utf8"));
   
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
   assert.equal(typeof cacheInternals.bunLockGraph, "function", "Bun inputs require resolved-location dependency identity");
   const graph = cacheInternals.bunLockGraph(cases.lock, cases.patches);
   for (const row of cases.resolutions) assert.equal(graph.resolve(row.from, row.name), row.key);
@@ -389,7 +389,7 @@ writeFileSync(dependency, process.env.SEMIO_CAPTURE_REPLACEMENT_BYTES!);
   const root = mkdtempSync(join(output, "native-preparation-"));
   try {
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
-    const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+    const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
     assert.equal(typeof cacheInternals.nativePreparation, "function", "native codegen needs an explicit transitive prerequisite resolver");
     const cargo = Bun.spawnSync(["cargo", "metadata", "--offline", "--format-version=1"], { cwd: root, stdout: "pipe", stderr: "pipe" });
     assert.equal(cargo.exitCode, 0, cargo.stderr.toString());
@@ -542,7 +542,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { semioBuildParallelFlag } = await import("../../../📦️packages/🟦️typescript/🟦️.ts");
     assert.deepEqual(semioBuildParallelFlag(), ["--parallel", String(semioBuildParallel())]);
     assert.equal(JSON.parse(readFileSync(join(getWorkspaceRoot(), "nx.json"), "utf8")).parallel, undefined);
-    for (const name of policy.nxSerialTargets) {
+    for (const name of policy.serialTargets) {
       const target = authoredWorkspace.targets[name];
       if (target?.parallelism !== undefined) assert.equal(target.parallelism, false, name);
     }
@@ -694,8 +694,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const variant of vectors.playgroundSessions.variants) {
       const session = sessionProject.targets[`session-${variant}`];
       assert.equal(session?.cache, true, `${variant} needs its own cacheable playground session`);
-      assert.ok(session.dependsOn.includes((await cacheInternals.workspaceCatalogNxContributionsV1(root))[0].project+":"+(await cacheInternals.workspaceCatalogNxContributionsV1(root))[0].generateTarget));
-      assert.deepEqual(session.dependsOn, [(await cacheInternals.workspaceCatalogNxContributionsV1(root))[0].project+":"+(await cacheInternals.workspaceCatalogNxContributionsV1(root))[0].generateTarget], `${variant} session needs no component build`);
+      assert.ok(session.dependsOn.includes((await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].project+":"+(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].generateTarget));
+      assert.deepEqual(session.dependsOn, [(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].project+":"+(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].generateTarget], `${variant} session needs no component build`);
       const descriptors = session.inputs.filter((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/"));
       assert.ok(descriptors.length > 0 && descriptors.every((input: string) => vectors.playgroundSessions.descriptorInputs.some((name: string) => input.endsWith(`/${name}`))), `${variant} session hashes the committed semantic descriptors of its closure`);
       assert.deepEqual(session.outputs, [`{projectRoot}/dist/sessions/${variant}`]);
@@ -754,7 +754,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         const moduleOf = (pluginId: string) => contracts.find((project) => project.name === componentLaunchers.find((entry) => entry.pluginId === pluginId)?.project);
         const hostDirectory = moduleOf(playground.pluginId) && toml.parse(readFileSync(join(root, moduleOf(playground.pluginId)!.root, "Cargo.toml"), "utf8")).package.metadata.semio["deployment-directory"];
         if (hostDirectory !== undefined) assert.ok(preparation.outputs.some((output: string) => output.endsWith(`/${hostDirectory}`)), `${targetName}: boot prepare must publish the host module`);
-        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogNxContributionsV1(root))[0].publication.outputRoot))).plugins;
+        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root,(await cacheInternals.workspaceCatalogBuildContributionsV1(root))[0].publication.outputRoot))).plugins;
         assert.ok(preparation.outputs.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
         if (fullSession.length > preparation.outputs.length + 5) assert.ok(preparation.outputs.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
         for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(preparation.dependsOn.includes(prerequisite));

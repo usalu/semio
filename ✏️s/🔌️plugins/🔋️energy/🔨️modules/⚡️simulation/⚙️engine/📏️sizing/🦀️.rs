@@ -1,5 +1,10 @@
 //! 📐️ Zone and equipment sizing from design-day calculations.
 
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_site as site;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::model::Model;
 use crate::results::{SizingResult, SizingTables};
 use crate::site::{DesignDay, DesignDayKind};
@@ -27,7 +32,7 @@ impl Default for SizingConfig {
                 day: 21,
                 dry_bulb_max_c: -10.0,
                 daily_range_k: 6.0,
-                humidity_condition: crate::site::DesignDayHumidity::RelativeHumidity { rh: 0.8 },
+                humidity_condition: site::DesignDayHumidity::RelativeHumidity { rh: 0.8 },
                 wind_speed_m_s: 3.0,
                 solar_model: false,
             },
@@ -38,7 +43,7 @@ impl Default for SizingConfig {
                 day: 21,
                 dry_bulb_max_c: 35.0,
                 daily_range_k: 10.0,
-                humidity_condition: crate::site::DesignDayHumidity::Wetbulb { wetbulb_at_max_c: 24.0 },
+                humidity_condition: site::DesignDayHumidity::Wetbulb { wetbulb_at_max_c: 24.0 },
                 wind_speed_m_s: 2.0,
                 solar_model: true,
             },
@@ -52,7 +57,7 @@ impl Default for SizingConfig {
 // #region 🔖️Sizing
 /// 🧭️ Cursor-owned sizing pass used by interactive simulation finalization.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) struct SizingBuilder {
+pub struct SizingBuilder {
     config: SizingConfig,
     stage: SizingStage,
     zone_cursor: usize,
@@ -69,14 +74,14 @@ pub(crate) struct SizingBuilder {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum SizingFault {
+pub enum SizingFault {
     ZoneResults,
     EquipmentResults,
     Name,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum SizingStage {
+pub enum SizingStage {
     ReserveZoneResults,
     ReserveEquipmentResults,
     ScanZoneSurface,
@@ -97,8 +102,7 @@ pub(crate) enum SizingStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(crate) const P7C1_SIZING_STAGES: [SizingStage; 18] = [
+pub const P7C1_SIZING_STAGES: [SizingStage; 18] = [
     SizingStage::ReserveZoneResults,
     SizingStage::ReserveEquipmentResults,
     SizingStage::ScanZoneSurface,
@@ -120,7 +124,7 @@ pub(crate) const P7C1_SIZING_STAGES: [SizingStage; 18] = [
 ];
 
 impl SizingBuilder {
-    pub(crate) fn new(config: SizingConfig) -> Self {
+    pub fn new(config: SizingConfig) -> Self {
         Self {
             config,
             stage: SizingStage::ReserveZoneResults,
@@ -138,25 +142,23 @@ impl SizingBuilder {
         }
     }
 
-    pub(crate) fn is_complete(&self, _model: &Model) -> bool {
+    pub fn is_complete(&self, _model: &Model) -> bool {
         self.stage == SizingStage::Complete
     }
 
-    pub(crate) fn fault(&self) -> Option<SizingFault> {
+    pub fn fault(&self) -> Option<SizingFault> {
         self.fault
     }
 
-    #[cfg(test)]
-    pub(crate) fn stage_for_gate(&self) -> SizingStage {
+    pub fn stage_for_gate(&self) -> SizingStage {
         self.stage
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_stage_for_gate(&mut self, stage: SizingStage) {
+    pub fn set_stage_for_gate(&mut self, stage: SizingStage) {
         self.stage = stage;
     }
 
-    pub(crate) fn step(&mut self, model: &Model) {
+    pub fn step(&mut self, model: &Model) {
         let factor = self.config.sizing_factor * self.config.safety_factor;
         match self.stage {
             SizingStage::ReserveZoneResults => {
@@ -282,11 +284,11 @@ impl SizingBuilder {
         self.name_cursor += character.len_utf8();
     }
 
-    pub(crate) fn finish(self) -> SizingTables {
+    pub fn finish(self) -> SizingTables {
         self.tables
     }
 
-    pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
         if !self.pending_name.is_empty() {
             if maximum_bytes == 0 {
                 return (false, 0, 0);
@@ -333,7 +335,7 @@ pub struct SizingManager;
 impl SizingManager {
     /// 📐️ Run sizing pass and populate sizing tables.
     #[cfg(test)]
-    pub(crate) fn size(model: &Model, config: &SizingConfig) -> SizingTables {
+    pub fn size(model: &Model, config: &SizingConfig) -> SizingTables {
         let mut builder = SizingBuilder::new(config.clone());
         while !builder.is_complete(model) {
             builder.step(model);

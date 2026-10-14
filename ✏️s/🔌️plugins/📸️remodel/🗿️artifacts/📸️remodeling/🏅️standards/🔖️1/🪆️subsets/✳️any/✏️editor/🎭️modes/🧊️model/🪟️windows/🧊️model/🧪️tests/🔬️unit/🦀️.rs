@@ -1,5 +1,5 @@
-use super::*;
-use crate::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model::windows::model::*;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
 use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

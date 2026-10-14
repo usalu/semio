@@ -1,0 +1,8 @@
+{"workspace": "✏️s/🔌️plugins/🏗️fem/Cargo.toml",
+ "registry_roots": ["🧰️framework", "✏️s/🔨️modules/🏗️fem", "✏️s/🔌️plugins/🏗️fem", "✏️s/🔌️plugins/🗄️stdio"],
+ "crates": [
+  {"name": "semio-s-fem-app-surface", "dir": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🖥️app-surface/📦️packages/🦀️rust", "role": "library",
+   "description": "Shared fem editor surfaces: result display modes, results animation and scene helpers of both fem artifacts"},
+  {"name": "semio-s-fem-sqlite", "dir": "✏️s/🔌️plugins/🏗️fem/🧩️sqlite/📦️packages/🦀️rust", "role": "library",
+   "description": "Borrowed typed SQLite row admission and projection shared by the fem 2d and 3d snapshot codecs"}
+ ]}

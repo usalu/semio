@@ -22,7 +22,6 @@ use semio_repo_test_host::Json;
 //#region 🔖️Model
 /// 📸️ Independent, minimal OBJ model — every field this subset's `ObjSnapshot` also carries, typed
 /// with this module's own structs so nothing here is the subject's type reused under another name.
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct Vertex {
     x: f64,
@@ -31,7 +30,6 @@ struct Vertex {
     w: Option<f64>,
 }
 
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct TexCoord {
     u: f64,
@@ -39,7 +37,6 @@ struct TexCoord {
     w: Option<f64>,
 }
 
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct Normal {
     x: f64,
@@ -47,7 +44,6 @@ struct Normal {
     z: f64,
 }
 
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct FaceVertex {
     vertex: u32,
@@ -55,7 +51,6 @@ struct FaceVertex {
     normal: Option<u32>,
 }
 
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct Face {
     vertices: Vec<FaceVertex>,
@@ -64,7 +59,6 @@ struct Face {
 /// 🧊️ The whole document: index-keyed geometry, name-keyed group/object face membership
 /// (sticky-range, matching this format's own real-file assumption), range-tagged
 /// material/smoothing transitions, and retained unknown/comment lines.
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, Default)]
 struct Model {
     vertices: Vec<Vertex>,
@@ -81,7 +75,6 @@ struct Model {
 //#endregion 🔖️Model
 
 //#region 🔖️Parse
-#[cfg(feature = "oracles")]
 fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
     if raw > 0 {
         return Ok((raw - 1) as u32);
@@ -93,7 +86,6 @@ fn resolve_index(current_len: usize, raw: i64) -> Result<u32, String> {
     Err("index 0 is not valid in a 1-based OBJ reference".to_string())
 }
 
-#[cfg(feature = "oracles")]
 fn parse_face_vertex_token(token: &str, vertex_count: usize, texcoord_count: usize, normal_count: usize) -> Result<FaceVertex, String> {
     let mut pieces = token.split('/');
     let raw_v: i64 = pieces.next().ok_or("empty face vertex token")?.parse().map_err(|error| format!("{error}"))?;
@@ -105,7 +97,6 @@ fn parse_face_vertex_token(token: &str, vertex_count: usize, texcoord_count: usi
 /// 📥️ Independent parse of the same grammar `decode_obj` documents: sticky `o`/`g`/`usemtl`/`s`
 /// ranges, `#` and unrecognised keywords retained verbatim. Its own loop, own structs, own
 /// index resolution — not a call into this subset's `decode_obj`.
-#[cfg(feature = "oracles")]
 fn parse(text: &str) -> Result<Model, String> {
     let mut model = Model::default();
     let mut group_index: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
@@ -207,7 +198,6 @@ fn parse(text: &str) -> Result<Model, String> {
 //#endregion 🔖️Parse
 
 //#region 🔖️Render
-#[cfg(feature = "oracles")]
 fn write_face_vertex(fv: &FaceVertex) -> String {
     match (fv.texcoord, fv.normal) {
         (Some(vt), Some(vn)) => format!("{}/{}/{}", fv.vertex + 1, vt + 1, vn + 1),
@@ -217,7 +207,6 @@ fn write_face_vertex(fv: &FaceVertex) -> String {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn faces_by_group(groups: &[(String, Vec<usize>)], face_count: usize) -> Vec<Vec<String>> {
     let mut out = vec![Vec::new(); face_count];
     for (name, faces) in groups {
@@ -230,7 +219,6 @@ fn faces_by_group(groups: &[(String, Vec<usize>)], face_count: usize) -> Vec<Vec
     out
 }
 
-#[cfg(feature = "oracles")]
 fn faces_by_object(objects: &[(String, Vec<usize>)], face_count: usize) -> Vec<Option<String>> {
     let mut out = vec![None; face_count];
     for (name, faces) in objects {
@@ -243,7 +231,6 @@ fn faces_by_object(objects: &[(String, Vec<usize>)], face_count: usize) -> Vec<O
     out
 }
 
-#[cfg(feature = "oracles")]
 fn faces_by_material_range(ranges: &[(usize, String)], face_count: usize) -> Vec<Option<String>> {
     let mut sorted = ranges.to_vec();
     sorted.sort_by_key(|(from, _)| *from);
@@ -261,7 +248,6 @@ fn faces_by_material_range(ranges: &[(usize, String)], face_count: usize) -> Vec
 /// happens to change — a model that declares NO smoothing at all must emit no `s` line, and a
 /// declared `s off` at face 0 must survive being written out and read back. Deriving the statements
 /// from a per-face value instead makes both of those wrong in opposite directions.
-#[cfg(feature = "oracles")]
 fn smoothing_statement_before_face(ranges: &[(usize, Option<u32>)], face_count: usize) -> Vec<Option<Option<u32>>> {
     let mut sorted = ranges.to_vec();
     sorted.sort_by_key(|(from, _)| *from);
@@ -280,7 +266,6 @@ fn smoothing_statement_before_face(ranges: &[(usize, Option<u32>)], face_count: 
 /// preceded by whichever of `o`/`g`/`usemtl`/`s` actually changed since the previous face — the same
 /// transition-only shape `encode_obj` documents, computed here from this module's own per-face
 /// lookup tables rather than shared with it.
-#[cfg(feature = "oracles")]
 fn render(model: &Model) -> String {
     let mut out = String::new();
     if let Some(lib) = &model.mtllib {
@@ -350,7 +335,6 @@ fn render(model: &Model) -> String {
 //#endregion 🔖️Render
 
 //#region 🔖️JsonHelpers
-#[cfg(feature = "oracles")]
 fn num(value: &Json, key: &str) -> Result<f64, String> {
     match value.get(key) {
         Some(Json::Number(number)) => Ok(*number),
@@ -358,7 +342,6 @@ fn num(value: &Json, key: &str) -> Result<f64, String> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn num_opt(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
@@ -366,7 +349,6 @@ fn num_opt(value: &Json, key: &str) -> Option<f64> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn str_opt(value: &Json, key: &str) -> Option<String> {
     match value.get(key) {
         Some(Json::String(text)) => Some(text.clone()),
@@ -374,17 +356,14 @@ fn str_opt(value: &Json, key: &str) -> Option<String> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn str_field(value: &Json, key: &str) -> Result<String, String> {
     str_opt(value, key).ok_or_else(|| format!("expected string field {key:?}"))
 }
 
-#[cfg(feature = "oracles")]
 fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
     num(value, key).map(|number| number as usize)
 }
 
-#[cfg(feature = "oracles")]
 fn usize_array(value: &Json, key: &str) -> Result<Vec<usize>, String> {
     value
         .array(key)
@@ -398,22 +377,18 @@ fn usize_array(value: &Json, key: &str) -> Result<Vec<usize>, String> {
 //#endregion 🔖️JsonHelpers
 
 //#region 🔖️ItemParsing
-#[cfg(feature = "oracles")]
 fn parse_vertex(value: &Json) -> Result<Vertex, String> {
     Ok(Vertex { x: num(value, "x")?, y: num(value, "y")?, z: num(value, "z")?, w: num_opt(value, "w") })
 }
 
-#[cfg(feature = "oracles")]
 fn parse_texcoord(value: &Json) -> Result<TexCoord, String> {
     Ok(TexCoord { u: num(value, "u")?, v: num_opt(value, "v").unwrap_or(0.0), w: num_opt(value, "w") })
 }
 
-#[cfg(feature = "oracles")]
 fn parse_normal(value: &Json) -> Result<Normal, String> {
     Ok(Normal { x: num(value, "x")?, y: num(value, "y")?, z: num(value, "z")? })
 }
 
-#[cfg(feature = "oracles")]
 fn parse_face(value: &Json) -> Result<Face, String> {
     let mut vertices = Vec::new();
     for entry in value.array("vertices") {
@@ -426,7 +401,6 @@ fn parse_face(value: &Json) -> Result<Face, String> {
 }
 
 /// 🕳️ `ObjUnknownStatement` wire entries — `{lineIndex, raw}` — as the model's retained lines.
-#[cfg(feature = "oracles")]
 fn unknown_statements(entries: &[Json]) -> Result<Vec<(usize, String)>, String> {
     entries.iter().map(|entry| Ok((usize_field(entry, "lineIndex")?, str_field(entry, "raw")?))).collect()
 }
@@ -434,17 +408,14 @@ fn unknown_statements(entries: &[Json]) -> Result<Vec<(usize, String)>, String> 
 
 //#region 🔖️ItemRendering
 /// 🔢️ A JSON object built from `(key, value)` pairs, the shape every params grammar here speaks.
-#[cfg(feature = "oracles")]
 fn json_object(entries: Vec<(&str, Json)>) -> Json {
     Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
 
-#[cfg(feature = "oracles")]
 fn optional_number(value: Option<f64>) -> Option<Json> {
     value.map(Json::Number)
 }
 
-#[cfg(feature = "oracles")]
 fn vertex_to_json(vertex: &Vertex) -> Json {
     let mut entries = vec![("x", Json::Number(vertex.x)), ("y", Json::Number(vertex.y)), ("z", Json::Number(vertex.z))];
     if let Some(w) = optional_number(vertex.w) {
@@ -453,7 +424,6 @@ fn vertex_to_json(vertex: &Vertex) -> Json {
     json_object(entries)
 }
 
-#[cfg(feature = "oracles")]
 fn texcoord_to_json(texcoord: &TexCoord) -> Json {
     let mut entries = vec![("u", Json::Number(texcoord.u)), ("v", Json::Number(texcoord.v))];
     if let Some(w) = optional_number(texcoord.w) {
@@ -462,12 +432,10 @@ fn texcoord_to_json(texcoord: &TexCoord) -> Json {
     json_object(entries)
 }
 
-#[cfg(feature = "oracles")]
 fn normal_to_json(normal: &Normal) -> Json {
     json_object(vec![("x", Json::Number(normal.x)), ("y", Json::Number(normal.y)), ("z", Json::Number(normal.z))])
 }
 
-#[cfg(feature = "oracles")]
 fn face_to_json(face: &Face) -> Json {
     json_object(vec![(
         "vertices",
@@ -489,14 +457,12 @@ fn face_to_json(face: &Face) -> Json {
     )])
 }
 
-#[cfg(feature = "oracles")]
 fn membership_to_json(entries: &[(String, Vec<usize>)]) -> Json {
     Json::Array(entries.iter().map(|(name, faces)| json_object(vec![("name", Json::String(name.clone())), ("faces", Json::Array(faces.iter().map(|index| Json::Number(*index as f64)).collect()))])).collect())
 }
 
 /// 📦️ The `ObjSnapshot` wire emitted from an independently parsed model — what an adapter reads the pristine document's
 /// memberships and statements out of, instead of handing the pristine input bytes to the comparison.
-#[cfg(feature = "oracles")]
 fn model_to_json(model: &Model) -> Json {
     let mut entries = vec![
         ("schema", Json::String("stdio.obj".to_string())),
@@ -539,7 +505,6 @@ fn model_to_json(model: &Model) -> Json {
 /// invisible in the mesh projection alone. Extent and sum are what make it visible while staying
 /// comparable under a numeric tolerance, which a text digest of the same rows would not be: the two
 /// producers format their decimals differently and a digest would diverge on formatting.
-#[cfg(feature = "oracles")]
 fn block_fingerprint(rows: &[Vec<f64>], components: usize) -> Json {
     let mut minimum = vec![f64::INFINITY; components];
     let mut maximum = vec![f64::NEG_INFINITY; components];
@@ -555,7 +520,6 @@ fn block_fingerprint(rows: &[Vec<f64>], components: usize) -> Json {
     json_object(vec![("count", Json::Number(rows.len() as f64)), ("min", axis(&minimum)), ("max", axis(&maximum)), ("sum", axis(&total))])
 }
 
-#[cfg(feature = "oracles")]
 fn range_membership_json(entries: &[(String, Vec<usize>)]) -> Json {
     Json::Array(
         entries
@@ -577,7 +541,6 @@ fn range_membership_json(entries: &[(String, Vec<usize>)]) -> Json {
 /// the `g`/`o` membership spans, the `usemtl`/`s` run starts and the retained comment lines.
 /// Composed with `mesh::project_obj`'s `tobj` reading by the case adapter, this is what makes every
 /// declared kind observable — 14 of the 22 move nothing in the mesh projection at all.
-#[cfg(feature = "oracles")]
 pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
     let model = parse(text)?;
@@ -601,10 +564,6 @@ pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️DocumentProjection
 
 //#region 🔖️FaceIndexSpace
@@ -612,7 +571,6 @@ pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
 /// so inserting a face at `index` moves every reference at or after it by one. Skipping the shift
 /// does not merely leave stale numbers behind — the grammar's sticky runs re-emit from them, so the
 /// very next render silently re-bands every face after the insertion point.
-#[cfg(feature = "oracles")]
 fn shift_face_index_space_for_insert(model: &mut Model, index: usize) {
     for (_, faces) in model.groups.iter_mut().chain(model.objects.iter_mut()) {
         for face in faces.iter_mut() {
@@ -637,7 +595,6 @@ fn shift_face_index_space_for_insert(model: &mut Model, index: usize) {
 /// list, and everything after it closes up by one. A range START that pointed AT the removed face
 /// stays where it is — the next face inherits the run, which is what the `usemtl`/`s` sticky
 /// semantics mean.
-#[cfg(feature = "oracles")]
 fn shift_face_index_space_for_remove(model: &mut Model, index: usize) {
     for (_, faces) in model.groups.iter_mut().chain(model.objects.iter_mut()) {
         faces.retain(|face| *face != index);
@@ -663,7 +620,6 @@ fn shift_face_index_space_for_remove(model: &mut Model, index: usize) {
 //#region 🔖️Apply
 /// 🦠️ Applies one declared kind to the independently-parsed model — one arm per `ObjMutation`
 /// variant this subset's catalog declares, matched by its kebab-case `KINDS` spelling.
-#[cfg(feature = "oracles")]
 fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
     match kind {
         "insert-vertex" => {
@@ -806,7 +762,6 @@ fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -821,38 +776,23 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 /// 🔁️ The identity round trip's own producer: the independent parse re-rendered from the model alone, never the input bytes.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
     Ok(render(&parse(text)?).into_bytes())
 }
 
 /// 📦️ The whole document as the `ObjSnapshot` wire, read independently of this subset's own `ObjSnapshot`.
-#[cfg(feature = "oracles")]
 pub fn oracle_snapshot_json(input: &[u8]) -> Result<Json, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
     Ok(model_to_json(&parse(text)?))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_json(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

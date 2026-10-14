@@ -1,5 +1,6 @@
 //! 🎞️ Controlled timeline, channel, keyframe and typed animation sample construction.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use crate::schema::snapshot::{SemioAnimationSnapshot, AnimTimeline, AnimChannel, AnimTarget, AnimTargetProperty, AnimInterpolation, AnimKeyframe, AnimValue, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};

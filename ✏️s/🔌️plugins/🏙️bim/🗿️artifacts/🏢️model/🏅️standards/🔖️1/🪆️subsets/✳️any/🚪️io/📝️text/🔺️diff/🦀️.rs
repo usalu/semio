@@ -4,7 +4,7 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-use crate::ModelDiff;
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
 
 /// 🚚️ The carrier this facet's `parse`/`print` speak.
 pub type ModelDiffText = String;

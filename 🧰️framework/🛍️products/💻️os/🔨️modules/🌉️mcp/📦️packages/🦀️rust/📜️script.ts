@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -84,7 +85,7 @@ function proveMcpEntrypointCredentialMarker(executable: string, root: string): v
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  sourcesRecord: MCP_BINARY_SOURCES_FILE });
   }
 }
 
@@ -99,7 +100,7 @@ class BuildScript extends BundleScript {
 class BuildReleaseScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-release" });
     const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
     if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
     signExecutableForDistribution(staged);
@@ -133,7 +134,26 @@ class InstalledServiceCheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation, rest);
+  }
+}
+
+/** 🎟️ Checks the original caller schema and independent loan oracle before native protocol tests. */
+class OriginalInferenceSourceScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Original inference source law has no arguments");
+    const source = join(this.root, "..", "..", "💡️inference", "🧪️tests", "💼️inference-service-law", "🟦️.ts");
+    const budget = {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null} as const;
+    await runRepositoryCommand(this.invocation, process.execPath, [Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
+    await runRepositoryCommand(this.invocation, process.execPath, ["test",source], this.repoRoot, "mcp:original-inference:source", budget, {env:process.env});
+  }
+}
+
+/** 🧪️ Runs the actual original MCP parser and independent Serde caller laws. */
+class OriginalInferenceNativeScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("Original inference native law has a fixed selector");
+    await runRepositoryCargoTests([MCP_CARGO_PACKAGE], this.repoRoot, this.invocation, ["--offline", "--lib", "original_mcp_", "--", "--nocapture"]);
   }
 }
 
@@ -149,7 +169,7 @@ class ProbeSqliteSourceScript extends BundleScript {
 class ProbeSqliteNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite native law has a fixed original selector");
-    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation.control, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
+    await runRepositoryCargoTests(["semio-framework-os-mcp"], this.repoRoot, this.invocation, ["--lib", "probe_sqlite_original", "--", "--nocapture"]);
   }
 }
 
@@ -603,6 +623,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("publish", PublishScript)
   .register("check", CheckScript)
   .register("test", TestScript)
+  .register("test-original-inference-source", OriginalInferenceSourceScript)
+  .register("test-original-inference-native", OriginalInferenceNativeScript)
   .register("probe-sqlite-source", ProbeSqliteSourceScript)
   .register("probe-sqlite-native", ProbeSqliteNativeScript)
   .register("installed-service-check", InstalledServiceCheckScript)

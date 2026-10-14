@@ -50,12 +50,13 @@ use semio_framework_actor::ActorId as RuntimeActorId;
 // `semio_framework_actor` (e.g. `🏃️run`, which only depends on THIS crate) still needs a path to
 // name them in order to construct one, exactly the way `GuestRuntime`/`GuestInstance`/`Budget`
 // already reach it through this crate's own public API.
-use semio_framework_plugin_interpreter::{decode_guest_fault_bytes, identity_turn_fault, sqlite_wire, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, IoEntryRouteConflict, IoRouteConflict, JobBudget, JobStep, OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime, PluginHostError, TurnFault, GUEST_DIAGNOSTICS_CAPACITY_BYTES};
+use semio_framework_plugin_guest_contract::{decode_guest_fault_bytes, identity_turn_fault, sqlite_wire, GuestCallCancellation, GuestDocumentMirror, GuestDocumentPair, IoEntryRouteConflict, IoRouteConflict, JobBudget, JobStep, PluginHostError, TurnFault, GUEST_DIAGNOSTICS_CAPACITY_BYTES};
+use semio_framework_plugin_interpreter_runtime::{OwnedCompiledGuest, OwnedGuestInstance, OwnedRuntime};
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_actor::{OriginalJobBudget,OriginalJobSource,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputReply,OriginalJobOutputAckReply,OriginalJobCancelReply,OriginalGuestExecutionBudget,OriginalGuestExecutionReceipt};
-use semio_framework_plugin_interpreter::OriginalGuestJobCall;
+use semio_framework_plugin_interpreter_runtime::OriginalGuestJobCall;
 use std::collections::VecDeque;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -658,6 +659,9 @@ mod original_instance_opening;
 pub use original_instance_opening::GuestActorOpening;
 
 impl GuestInstance {
+    pub fn bind_original_clock_from_source(&mut self,source:&semio_framework_job::OriginalCallerSourceLoan)->Result<(),semio_framework_value::ValueError>{let(binding,clock,_)=source.original_clock_source()?;match &mut self.state{GuestInstanceState::Owned(state)=>state.bind_original_clock_from_source(source),GuestInstanceState::Wasmtime(state)=>{state.store.data_mut().original_job_clock=Some((binding,clock));Ok(())},_=>Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original clock provider requires its actual live guest"))}}
+    pub fn original_clock_observation(&self,binding:u64)->Option<u64>{match &self.state{GuestInstanceState::Owned(state)=>state.original_clock_observation(binding),GuestInstanceState::Wasmtime(state)=>state.store.data().original_job_clock.filter(|(original,_)|*original==binding).and_then(|(_,clock)|clock()),_=>None}}
+    pub fn release_original_clock(&mut self,binding:u64)->bool{match &mut self.state{GuestInstanceState::Owned(state)=>state.release_original_clock(binding),GuestInstanceState::Wasmtime(state)=>{let original=&mut state.store.data_mut().original_job_clock;if original.is_some_and(|source|source.0==binding){*original=None;true}else{false}},_=>false}}
     /// 🎟️ The paid Core retains the exact supplied startup input without inferring it from the actor identifier.
     /// 👁️ Borrows funded original memory while the complete instance remains owned.
     pub fn original_memory(&self,index:u32)->Option<&[u8]>{match &self.state{GuestInstanceState::Owned(owner)=>owner.original_memory(index),_=>None}}
@@ -1303,7 +1307,7 @@ use actor_bindings::exports::semio::framework::{jobs as wit_jobs, reactor as wit
 /// asset_map }` — `limiter` is an implementation necessity (`Store::limiter` needs somewhere to
 /// read bounds from), not part of the design's literal 5-field list.
 struct ActorHostState {
-    original_job_clock:Option<fn()->Option<u64>>,
+    original_job_clock:Option<(u64,fn()->Option<u64>)>,
     operation_slot:operation::slot::OperationSlot,
     plugin_id: String,
     #[allow(dead_code)]
@@ -1429,7 +1433,7 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
         eprintln!("[actor:{}:{level}] {message}", self.plugin_id);
     }
 
-    fn operation_clock_us(&mut self)->Option<u64>{self.original_job_clock.and_then(|clock|clock())}
+    fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{self.original_job_clock.filter(|(binding,_)|*binding==clock_binding).and_then(|(_,clock)|clock())}
 
     fn now_ms(&mut self) -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
@@ -1443,7 +1447,7 @@ impl actor_bindings::semio::framework::pure::Host for ActorHostState {
 impl operation::wasmtime::OperationHostStore for ActorHostState{
  fn operation_slot(&mut self)->&mut operation::slot::OperationSlot{&mut self.operation_slot}
  fn operation_log(&mut self,level:String,message:String){actor_bindings::semio::framework::pure::Host::log(self,level,message)}
- fn operation_clock_us(&mut self)->Option<u64>{actor_bindings::semio::framework::pure::Host::operation_clock_us(self)}
+ fn operation_clock_us(&mut self,clock_binding:u64)->Option<u64>{actor_bindings::semio::framework::pure::Host::operation_clock_us(self,clock_binding)}
  fn operation_now_ms(&mut self)->i64{actor_bindings::semio::framework::pure::Host::now_ms(self)}
  fn operation_trace_span(&mut self,name:String){actor_bindings::semio::framework::pure::Host::trace_span(self,name)}
 }
@@ -1976,8 +1980,8 @@ impl GuestRuntimes {
 //#endregion 🗂️GuestCodecDispatch
 
 impl GuestRuntime for WasmtimeRuntime {
-    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::admission_from_wit(original)}
-    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,input).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::close_from_wit(original)}
+    async fn admit_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorAdmissionReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_admit_actor_context(accessor,input,retained_turn_wire::grant_to_wit(budget.retained_policy)).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::admission_from_wit(original)}
+    async fn close_actor_context(&self,inst:&mut GuestInstance,input:semio_framework::kernel::RetainedTurnInput,budget:Budget,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<semio_framework_actor::retained_turn::context::OriginalActorCloseReply,TurnFault>{let _=identity;let GuestInstanceState::Wasmtime(state)=&mut inst.state else{return Err(identity_turn_fault(crate::operation_authority::refusal(4)))};let WasmtimeInstanceState{store,bindings,deadline,..}=state;arm_store_fuel(store,self.fuel_metering,budget.fuel).map_err(|error|TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;let _epoch=self.epoch.arm_original(store,deadline,budget.deadline_us)?;let input=retained_turn_wire::input_to_wit(input);let original=store.run_concurrent(async|accessor|bindings.semio_framework_reactor().call_close_actor_context(accessor,input,retained_turn_wire::grant_to_wit(budget.retained_policy)).await).await.and_then(|result|result).map_err(|trap|classify_guest_trap(&trap))?;retained_turn_wire::close_from_wit(original)}
 
     /// 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
     /// silently dropping this call's future: the on-disk compilation cache write never ran, so
@@ -2010,7 +2014,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let (wasi, diagnostics) = guest_wasi_ctx();
         let host_state = ActorHostState {
-            original_job_clock:Some(self.original_clock),
+            original_job_clock:None,
             operation_slot:operation::slot::OperationSlot::new(),
             plugin_id: format!("actor-{}", actor.0),
             actor,
@@ -2069,7 +2073,7 @@ impl GuestRuntime for WasmtimeRuntime {
         let WasmtimeInstanceState { store, bindings, instance_id, deadline } = state;
         arm_store_fuel(store, self.fuel_metering, budget.fuel).map_err(|error| TurnFault::Host(PluginHostError::Wasmtime(error.to_string())))?;
         let _epoch = self.epoch.arm_original(store, deadline, budget.deadline_us)?;
-        let wit_budget = wit_reactor::Budget { retained:retained_turn_wire::input_to_wit(budget.retained), fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let wit_budget = wit_reactor::Budget { retained:retained_turn_wire::input_to_wit(budget.retained), retained_policy:retained_turn_wire::grant_to_wit(budget.retained_policy),work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let (wit_events, wit_command_page, wit_cold_pair_page) = kernel_turn_inputs_to_wit(events, *instance_id).await?;
         let call_result = store
             .run_concurrent(async |accessor| {

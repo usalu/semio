@@ -13,7 +13,7 @@ const hash = (bytes: Uint8Array): string => createHash("sha256").update(bytes).d
 const identity = hash(source), owner = "@semio-tech/print:deps-tex", names = new Set<string>();
 if (manifest.version !== 1 || !manifest.url.startsWith("https://") || !Number.isSafeInteger(manifest.archiveBytes) || manifest.archiveBytes < 1 || !manifest.files.length) throw new Error("Invalid Print bundle manifest");
 for (const file of manifest.files) {
-  if (!file.name || /[/\\]/.test(file.name) || [".", "..", "SHA256SUM", ".nx-artifact.json"].includes(file.name) || names.has(file.name) || !/^[a-f0-9]{64}$/.test(file.sha256) || !Number.isSafeInteger(file.offset) || file.offset < 0 || !Number.isSafeInteger(file.bytes) || file.bytes < 0 || file.bytes > 16777216 || file.offset + file.bytes > manifest.archiveBytes) throw new Error(`Invalid Print bundle file: ${file.name}`);
+  if (!file.name || /[/\\]/.test(file.name) || [".", "..", "SHA256SUM", ".semio-artifact.json"].includes(file.name) || names.has(file.name) || !/^[a-f0-9]{64}$/.test(file.sha256) || !Number.isSafeInteger(file.offset) || file.offset < 0 || !Number.isSafeInteger(file.bytes) || file.bytes < 0 || file.bytes > 16777216 || file.offset + file.bytes > manifest.archiveBytes) throw new Error(`Invalid Print bundle file: ${file.name}`);
   names.add(file.name);
 }
 
@@ -25,7 +25,7 @@ export function printBundleDirectory(workspace = getWorkspaceRoot()): string {
 /** 🔏️ Admits only the exact pinned support files before a compiler can consume them. */
 export function preparedPrintBundle(workspace = getWorkspaceRoot()): string {
   const directory = printBundleDirectory(workspace);
-  if (JSON.parse(readFileSync(join(directory, ".nx-artifact.json"), "utf8")).owner !== owner || readFileSync(join(directory, "SHA256SUM"), "utf8").trim() !== identity || readdirSync(directory).length !== names.size + 2) throw new Error("Print bundle identity is invalid");
+  if (JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8")).owner !== owner || readFileSync(join(directory, "SHA256SUM"), "utf8").trim() !== identity || readdirSync(directory).length !== names.size + 2) throw new Error("Print bundle identity is invalid");
   for (const file of manifest.files) if (hash(readFileSync(join(directory, file.name))) !== file.sha256) throw new Error(`Print bundle checksum mismatch: ${file.name}`);
   return directory;
 }

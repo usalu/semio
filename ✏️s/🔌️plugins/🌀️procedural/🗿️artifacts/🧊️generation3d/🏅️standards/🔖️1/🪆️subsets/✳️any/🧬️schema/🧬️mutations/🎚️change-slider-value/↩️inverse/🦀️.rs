@@ -1,10 +1,10 @@
 //! ↩️ `change-slider-value` inverse — the BASE slider widget restored whole (value AND the range a widening value
 //! moved), an absolute row; nothing when the slider does not exist on the base.
 
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
-use crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use crate::change_slider_value::ChangeSliderValue;
+use crate::update_widget::UpdateWidget;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 
 /// ↩️ The base widget, when it is a slider.

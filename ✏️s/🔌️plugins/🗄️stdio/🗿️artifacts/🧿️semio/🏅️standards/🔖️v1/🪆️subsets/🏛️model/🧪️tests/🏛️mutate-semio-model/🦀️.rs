@@ -36,7 +36,9 @@ use semio_repo_test_host::Adapter;
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
     use semio_framework_os_kernel::apply_diff;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio_model::schema::mutations::{diff_semio_model_mutation, drag_elements, insert_element, insert_relation, insert_spatial_node, remove_element, remove_relation, remove_spatial_node, rotate_elements, scale_elements, semio_model_mutation_inverse, set_element, set_relation, set_spatial_node, SemioModelMutation};
     use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};

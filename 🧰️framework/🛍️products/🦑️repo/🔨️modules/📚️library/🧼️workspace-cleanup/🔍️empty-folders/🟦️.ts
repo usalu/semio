@@ -1,6 +1,6 @@
 import { lstatSync, readdirSync } from "node:fs";
 import { relative } from "node:path";
-import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, SPACE_DATA_DIR_NAME } from "../../🟦️.ts";
+import { HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, SPACE_DATA_DIR_NAME } from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
 import { cleanWalkDirs, cleanPathBytes } from "../🔍️candidate-discovery/🟦️.ts";
 import {
   CLEAN_CACHE_DIR_NAME,

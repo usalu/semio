@@ -1,5 +1,7 @@
 use super::*;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag};
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
 
 #[semio_framework_async_macros::async_test]
 async fn real_samples_honestly_error_rather_than_fabricate_compressed_frames() {

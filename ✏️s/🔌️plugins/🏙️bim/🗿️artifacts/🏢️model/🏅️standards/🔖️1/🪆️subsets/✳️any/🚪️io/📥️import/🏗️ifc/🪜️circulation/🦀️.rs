@@ -8,9 +8,9 @@ use super::data::label;
 use super::reader::{real, text, Doc, Section};
 use super::spatial::{authoring_of, phase_of, quantity};
 use super::Import;
-use crate::{Infill, Point2, Profile, Railing, RiserKind, Stair, StairFlight, StairStringer, StringerKind, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{Infill, Point2, Profile, Railing, RiserKind, Stair, StairFlight, StairStringer, StringerKind, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn foreign_stair(i: &mut Import<'_>, ifc: u64, args: &[Part21Value], storey: &str) -> Option<Stair> {
     let flights: Vec<u64> = i.doc.index.parts.get(&ifc)?.iter().copied().filter(|part| i.doc.args(*part, "IFCSTAIRFLIGHT").is_some()).collect();

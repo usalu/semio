@@ -2,7 +2,7 @@ mod role_chrome_tests {
     use super::super::layout::ActionDescriptor;
     use super::super::utilities::{utility_button, utility_toggle};
     use super::*;
-    use crate::wgpu::IconName;
+    use crate::IconName;
 
     #[semio_framework_async_macros::async_test]
     async fn from_boot_env_accepts_viewer_and_falls_back_to_editor() {

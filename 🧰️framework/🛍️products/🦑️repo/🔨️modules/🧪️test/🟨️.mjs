@@ -1,16 +1,18 @@
+import {receiveScriptProcessInvocation} from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 // 🧪️ Nx plugin: one virtual project per test OWNER (the directory holding a `🧪️tests` directory of discovered cases).
 //
 // Discovery is every taxonomy-declared kind-only feature beneath `🧪️tests/*`. There are no hand-authored `📋️project.json` files
 // for tests, so a case can never be silently omitted. An owner project carries exactly two targets: `lint` (the contract phase
-// over every case) and `test`, whose level, facet and case are ARGUMENTS (`nx run <owner>:test long --facet oracle --case x`),
+// over every case) and `test`, whose level, facet and case are ARGUMENTS (`bun repo run <owner>:test -- long --facet oracle --case x`),
 // never separate targets; Nx caches every argument combination on its own.
 //
 // The exclusion set, the case slug rule, the adapter filenames and the location of the testing
 // domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
-import { observeDependencies, observedFs, observeInference } from "../📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
-import { targetBuildModes } from "../📚️library/🔌️nx-plugin/🎚️mode/🟨️.mjs";
+import { observeDependencies, observedFs, observeInference } from "../📚️library/🏗️build/👁️observation/🟨️.mjs";
+import { targetBuildModes } from "../📚️library/🏗️build/🎚️mode/🟨️.mjs";
+import {repositoryBuildGraphDataDirectoryV1,repositoryBuildGraphWriterDirectoryV1,withRepositoryBuildGraphFactStoreV1} from "../📚️library/🏗️build/📥️inputs/💾️storage/🟨️.mjs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -18,7 +20,7 @@ import { fileURLToPath } from "node:url";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
-const inputModule = new URL("../📚️library/🔌️nx-plugin/📥️inputs/🟨️.mjs", import.meta.url);
+const inputModule = new URL("../📚️library/🏗️build/📥️inputs/🟨️.mjs", import.meta.url);
 const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
 const inputRevision = createHash("sha256").update(readAuthoritySource(inputModule)).digest("hex");
 let cargoPackage, localPackagePath, rustSubjectPackage, ownerContributions, packagesForOwner, compactSourceInputs;
@@ -161,7 +163,7 @@ function nativeInputsFor(workspaceRoot, vocabulary, ownerRel, adapters, phase, n
     if (!state.names.has(root)) {
       const authored = join(workspaceRoot, root, "📋️project.json");
       const name = existsSync(authored) ? JSON.parse(readFileSync(authored, "utf8")).name : cargoPackage(workspaceRoot, root)?.name;
-      if (!name) throw new Error(`Test dependency has no Nx project identity: ${root}`);
+      if (!name) throw new Error(`Test dependency has no build project identity: ${root}`);
       state.names.set(root, name);
     }
     return state.names.get(root);
@@ -213,7 +215,7 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 /** 🎚️ One generated target routed through the testing domain's own router. */
 function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs = false) {
   return targetBuildModes(scope.split("/").at(-1), {
-    executor: "nx:run-commands",
+    executor: "repo:script",
     options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
     configurations: Object.fromEntries(["prototype", "release"].map(mode => [mode, { env: { SEMIO_TEST_OUTPUT_SCOPE: `${scope}/${mode}` } }])),
@@ -238,7 +240,7 @@ async function testCaseProjects(configFiles, _options, context) {
   if (!authority.file(policyPath)) throw new Error("Test discovery requires real no-follow cache policy authority");
   const policy = JSON.parse(readFileSync(join(workspaceRoot, policyPath), "utf8"));
   if (featureCandidates.length === 0) return results;
-  const libraryModule = new URL("../📚️library/🟨️.mjs", import.meta.url);
+  const libraryModule = new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url);
   const libraryRevision = createHash("sha256").update(readAuthoritySource(libraryModule)).digest("hex");
   const { cacheInternals: native, libraryBootstrap } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
   await libraryBootstrap;
@@ -316,30 +318,36 @@ function testCaseDependencies(_options, context) {
       ?? preferred;
     if (!existsSync(join(context.workspaceRoot, sourceFile))) return [];
     return [...targets].map((target) => {
-      if (!context.projects[target]) throw new Error(`Test dependency has no Nx project: ${source} → ${target}`);
+      if (!context.projects[target]) throw new Error(`Test dependency has no build project: ${source} → ${target}`);
       return { source, target, sourceFile, type: "static" };
     });
   });
 }
 
-/** ♻️ Refreshes resident inference after authored source changes without discarding Nx state. */
-async function invokeCurrentImplementation(kind, args) {
+/** 🗂️ Names test inference within the current declared graph fact store. */
+export function testBuildInferenceDirectoryV1(workspace){return repositoryBuildGraphDataDirectoryV1(workspace,"inference");}
+
+/** ♻️ Refreshes resident inference after authored source changes without discarding build state. */
+async function withTestInferenceWriterV1(context,body){const run=invocation=>withRepositoryBuildGraphFactStoreV1(context.workspaceRoot,invocation,()=>body());return context.invocation?run(context.invocation):receiveScriptProcessInvocation(process.env,run);}
+
+async function invokeCurrentImplementation(kind,args){return withTestInferenceWriterV1(kind==="nodes"?args[2]:args[1],()=>invokeCurrentImplementationV1(kind,args));}
+
+async function invokeCurrentImplementationV1(kind, args) {
   await testBootstrap;
   const revision = implementationRevision();
   if (revision === loadedRevision) {
-    if (kind !== "nodes") return observeDependencies({ receiptPath: join(process.env.NX_WORKSPACE_DATA_DIRECTORY || join(resolve(args[1].workspaceRoot), ".nx", "workspace-data"), "inference", "test-cases.receipt.json") }, () => testCaseDependencies(...args));
-    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = createHash("sha256").update(readAuthoritySource(new URL("../📚️library/🟨️.mjs", import.meta.url))).digest("hex");
-    return observeInference({ cachePath: join(process.env.NX_WORKSPACE_DATA_DIRECTORY || join(workspaceRoot, ".nx", "workspace-data"), "inference", "test-cases.json"), key: [revision, libraryRevision, args[0], args[1] ?? null, workspaceRoot] }, () => testCaseProjects(...args));
+    if (kind !== "nodes") return observeDependencies({ receiptPath: join(repositoryBuildGraphWriterDirectoryV1(resolve(args[1].workspaceRoot),"inference"), "test-cases.receipt.json") }, () => testCaseDependencies(...args));
+    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = createHash("sha256").update(readAuthoritySource(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url))).digest("hex");
+    return observeInference({ cachePath: join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"inference"), "test-cases.json"), key: [revision, libraryRevision, args[0], args[1] ?? null, workspaceRoot] }, () => testCaseProjects(...args));
   }
   const url = new URL(import.meta.url);
   url.searchParams.set("revision", revision);
   const current = await import(url.href);
-  if (current.default === plugin) throw new Error("The graph runtime retained stale ESM code; run inference through native Nx on Node.js");
+  if (current.default === plugin) throw new Error("The build graph runtime retained stale source code; restart the owned build invocation");
   return kind === "nodes" ? current.default.createNodesV2[1](...args) : current.createDependencies(...args);
 }
 
 export function createDependencies(...args) {
-  if (process.platform === "win32") return [];
   return invokeCurrentImplementation("dependencies", args);
 }
 
@@ -391,7 +399,7 @@ export function discoverCaseDirs(workspaceRoot) {
 }
 
 /** 🏗️ Supplies portable test-owner projects without acquiring a task-runner runtime. */
-export async function discoverTestBuildProjectsV1(files,options,context) { await testBootstrap; return testCaseProjects(files,options,context); }
+export async function discoverTestBuildProjectsV1(files,options,context) { return withTestInferenceWriterV1(context,async()=>{await testBootstrap;return testCaseProjects(files,options,context);}); }
 
 /** 🪢️ Supplies test-owner dependency edges from the portable project inventory. */
-export async function discoverTestBuildDependenciesV1(options,context) { await testBootstrap; return testCaseDependencies(options,context); }
+export async function discoverTestBuildDependenciesV1(options,context) { return withTestInferenceWriterV1(context,async()=>{await testBootstrap;return testCaseDependencies(options,context);}); }

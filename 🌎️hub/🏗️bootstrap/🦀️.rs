@@ -25,7 +25,6 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
-#[cfg(any(test, feature = "native-artifact-execution"))]
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationStatusV1, SPACE_ARTIFACT_CREATION_MAX_BYTES};
 use directory::os_directory::{self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, ConnectionView, DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_MAX_BYTES, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS};
 use directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
@@ -37,18 +36,13 @@ use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, Appl
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
 use semio_framework_trace::record::{EventCount, Span, TraceLevel, TraceOutcome, TraceRecord, Tracer, SERVER_SPAN_EVENTS};
-#[cfg(feature = "neo4j")]
 use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
-#[cfg(feature = "postgres")]
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
-#[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
 #[cfg(test)]
 use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
 use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
-#[cfg(any(test, feature = "native-artifact-execution"))]
 use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactCreationCommitAuthorityV1, ArtifactCreationCommitFutureV1, ArtifactCreationCommitLeaseV1, ArtifactCreationServiceV1};
-#[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogAsset, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
 use semio_hub::artifact_authority::trusted_catalog::plugin_module::plugin_module_content_type;
@@ -80,7 +74,6 @@ use semio_hub::directory::model::{
     AdminEffectCommitV1, AdminOperationAuditRecord, AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
-#[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
     directory_command_result_kind, published_artifact_checkpoint, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, DirectoryCommandExecutionV1, DirectoryService,
@@ -88,18 +81,15 @@ use semio_hub::directory::{
     DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
 use semio_hub::directory::{identity_subject_digest, AgentDelegationCapability, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
-#[cfg(all(test, feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(all(test, feature = "integration-fixtures"))]
 use semio_hub::inference::runtime::UnavailableGisMapApprovalCommitterV1;
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::runtime::{
     GisMapApprovalCheckpointPublisherV1, GisMapApprovalCheckpointRequestV1, GisMapApprovalCommitErrorV1, GisMapApprovalIngressAuthorityV1, GisMapDocumentWriteAuthorityV1, HubInferenceRuntimeV1, InferenceApprovalRouteContextV1, InferenceRouteErrorV1,
     RetainedGisMapApprovalCommitterV1,
 };
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
-#[cfg(feature = "native-artifact-execution")]
 use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
@@ -130,7 +120,6 @@ enum HubError {
     Db(db::DbError),
     DatabaseOpen(db::engine::DatabaseOpenAtRejected),
     StorageOpen(db::db_storage::DbStorageOpenRejected),
-    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     InferenceShutdown(GisMapApprovalCommitErrorV1),
     Io(std::io::Error),
     UnknownStorageBackend(String),
@@ -147,7 +136,6 @@ impl std::fmt::Display for HubError {
             Self::Db(error) => std::fmt::Display::fmt(error, formatter),
             Self::DatabaseOpen(error) => std::fmt::Display::fmt(error.error(), formatter),
             Self::StorageOpen(error) => std::fmt::Display::fmt(error.error(), formatter),
-            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             Self::InferenceShutdown(error) => write!(formatter, "inference runtime shutdown failed: {error:?}"),
             Self::Io(error) => write!(formatter, "io error: {error}"),
             Self::UnknownStorageBackend(backend) => write!(formatter, "unknown OS_HUB_STORAGE_BACKEND: {backend}"),
@@ -166,7 +154,6 @@ impl std::error::Error for HubError {
             Self::Db(error) => Some(error),
             Self::DatabaseOpen(error) => Some(error.error()),
             Self::StorageOpen(error) => Some(error.error()),
-            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             Self::InferenceShutdown(_) => None,
             Self::Io(error) => Some(error),
             Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) | Self::UnsafeAuthConfiguration(_) | Self::InstanceStorage(_) => None,
@@ -2124,18 +2111,13 @@ struct HubState {
     rebootstrap: Arc<VerifiedRebootstrapSource>,
     artifact_authority: Option<Arc<HubArtifactAuthority>>,
     verified_catalog: Option<Arc<VerifiedTrustedCatalog>>,
-    #[cfg(feature = "native-artifact-execution")]
     artifact_creation: Option<Arc<ArtifactCreationServiceV1>>,
-    #[cfg(feature = "native-artifact-execution")]
     artifact_creation_commit_authority: Arc<HubArtifactCreationCommitAuthorityV1>,
-    #[cfg(feature = "native-artifact-execution")]
     artifact_creation_tasks: Arc<ArtifactCreationHttpTaskOwnerV1>,
-    #[cfg(feature = "native-artifact-execution")]
     gis_map_binding: Option<Arc<VerifiedGisMapArtifactBindingV1>>,
     /// 💡️ The sole GIS Map proposal authority — present only when a verified trusted profile
     /// froze a writable Map editor selection; otherwise every inference route fails closed with
     /// `inference.unavailable` and readiness publishes `inference: false`.
-    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     inference_runtime: Option<Arc<HubInferenceRuntimeV1>>,
     openable_catalog: Option<Arc<dyn DocumentOpenCatalogAuthorityV1>>,
     artifact_publication: Arc<HubArtifactPublication>,
@@ -4352,12 +4334,10 @@ fn ledger_artifact_frontier(scope: &DocumentScope, snapshot: &db::CheckpointPubl
     })
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 struct GisMapApprovalPublicationControlV1 {
     deadline_ms: u64,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl AuthorityOperationControl for GisMapApprovalPublicationControlV1 {
     fn now_ms(&self) -> u64 {
         SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
@@ -4370,7 +4350,6 @@ impl AuthorityOperationControl for GisMapApprovalPublicationControlV1 {
     fn report(&self, _progress: AuthorityProgress) {}
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 struct GisMapApprovalVerifiedPublisherV1 {
     directory: Arc<HubDirectories>,
     directory_service: Arc<DirectoryService>,
@@ -4383,7 +4362,6 @@ struct GisMapApprovalVerifiedPublisherV1 {
     expected_snapshot: db::CheckpointPublicationSnapshot,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl GisMapApprovalVerifiedPublisherV1 {
     async fn authority_is_current(&self) -> Result<bool, AuthorityError> {
         let descriptor = self.directory.get_document_descriptor(&self.scope).await.map_err(|error| AuthorityError::Publication(error.to_string()))?;
@@ -4393,7 +4371,6 @@ impl GisMapApprovalVerifiedPublisherV1 {
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl VerifiedCheckpointPublisher for GisMapApprovalVerifiedPublisherV1 {
     async fn reserve(&self, plan: &semio_hub::artifact_authority::chunk_cas::ArtifactCasOwnershipPlanV1, context: &OperationContext<'_>) -> Result<semio_hub::artifact_authority::chunk_cas::ArtifactCasReservation, AuthorityError> {
         context.checkpoint()?;
@@ -4416,7 +4393,6 @@ impl VerifiedCheckpointPublisher for GisMapApprovalVerifiedPublisherV1 {
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 struct GisMapApprovalCheckpointPublisherV1Impl {
     directory: Arc<HubDirectories>,
     directory_service: Arc<DirectoryService>,
@@ -4426,7 +4402,6 @@ struct GisMapApprovalCheckpointPublisherV1Impl {
     fanout_capacity: usize,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl GisMapApprovalCheckpointPublisherV1Impl {
     fn matches_published(request: &GisMapApprovalCheckpointRequestV1, checkpoint: &PublishedArtifactCheckpoint) -> bool {
         let Some(frontier) = ledger_artifact_frontier(&request.scope, &request.actor_snapshot) else { return false };
@@ -4450,7 +4425,6 @@ impl GisMapApprovalCheckpointPublisherV1Impl {
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1Impl {
     fn publish<'a>(
         &'a self,
@@ -4518,7 +4492,6 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn publish_gis_map_checkpoint_change(fanout: &ShardedMap<String, broadcast::Sender<ServerFrame>>, fanout_capacity: usize, checkpoint: &PublishedArtifactCheckpoint) {
     let key = document_scope_key_v1(&checkpoint.scope);
     let sender = fanout.get_or_insert_with_cloned(key, || broadcast::channel(fanout_capacity).0);
@@ -6357,21 +6330,17 @@ async fn revalidate_directory_caller(state: &HubState, caller: &AuthedUser) -> R
     Ok(())
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct HubArtifactCreationCommitLeaseV1 {
     _guards: Vec<SocketBindingGuardV1>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationCommitLeaseV1 for HubArtifactCreationCommitLeaseV1 {}
 
-#[cfg(feature = "native-artifact-execution")]
 struct HubArtifactCreationCommitAuthorityV1 {
     directory: Arc<HubDirectories>,
     gates: Arc<SocketBindingGatesV1>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 {
     fn acquire<'a>(&'a self, actor: &'a ArtifactCreationActorV1, space_id: &'a str) -> ArtifactCreationCommitFutureV1<'a> {
         Box::pin(async move {
@@ -6398,12 +6367,10 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_space_id_v1(space_id: &str) -> bool {
     !space_id.is_empty() && space_id.len() <= 256 && space_id.as_bytes()[0].is_ascii_alphanumeric() && space_id.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(&byte))
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token: Option<&str>) -> Result<(ArtifactCreationActorV1, Vec<SocketBindingGuardV1>), StatusCode> {
     if !artifact_creation_space_id_v1(space_id) {
         return Err(StatusCode::BAD_REQUEST);
@@ -6432,12 +6399,9 @@ async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 const ARTIFACT_CREATION_HTTP_CAPACITY: usize = 8;
-#[cfg(feature = "native-artifact-execution")]
 const ARTIFACT_CREATION_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(32);
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpControlV1 {
     cancelled: std::sync::atomic::AtomicBool,
     shutdown_cancelled: Option<Arc<std::sync::atomic::AtomicBool>>,
@@ -6445,7 +6409,6 @@ struct ArtifactCreationHttpControlV1 {
     progress: Mutex<Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationProgressV1>>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationHttpControlV1 {
     /// 🛑️ Cancellation only. The control used to carry a wall-clock instant of its own and report
     /// `is_cancelled` past it, which made every creation a race against the calendar twice over —
@@ -6479,7 +6442,6 @@ impl ArtifactCreationHttpControlV1 {
 
 /// 🧭️ The creation stage an authority progress stage belongs to; a stage that says nothing about
 /// where the creation is keeps the stage already reported.
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_stage(stage: semio_hub::artifact_authority::AuthorityProgressStage) -> Option<directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1> {
     use semio_hub::artifact_authority::AuthorityProgressStage;
     use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationStageV1;
@@ -6506,7 +6468,6 @@ fn artifact_creation_stage(stage: semio_hub::artifact_authority::AuthorityProgre
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
     fn now_ms(&self) -> u64 {
         SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX))
@@ -6532,21 +6493,18 @@ impl AuthorityOperationControl for ArtifactCreationHttpControlV1 {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpTaskV1 {
     control: Arc<ArtifactCreationHttpControlV1>,
     pending: Arc<ArtifactCreationHttpPendingV1>,
     task: tokio::task::JoinHandle<()>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpPendingV1 {
     control: Arc<ArtifactCreationHttpControlV1>,
     disposition: std::sync::atomic::AtomicU8,
     changed: tokio::sync::Notify,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpTaskOwnerStateV1 {
     closing: bool,
     reservations: BTreeMap<String, Arc<ArtifactCreationHttpPendingV1>>,
@@ -6554,14 +6512,12 @@ struct ArtifactCreationHttpTaskOwnerStateV1 {
     recovery: Option<tokio::task::JoinHandle<()>>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpTaskOwnerV1 {
     state: Mutex<ArtifactCreationHttpTaskOwnerStateV1>,
     changed: Arc<tokio::sync::Notify>,
     recovery_cancelled: Arc<std::sync::atomic::AtomicBool>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct ArtifactCreationHttpReservationV1 {
     owner: Arc<ArtifactCreationHttpTaskOwnerV1>,
     key: String,
@@ -6569,14 +6525,12 @@ struct ArtifactCreationHttpReservationV1 {
     activated: bool,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 enum ArtifactCreationHttpAdmissionV1 {
     Owner(ArtifactCreationHttpReservationV1),
     Join(Arc<ArtifactCreationHttpPendingV1>),
     Unavailable,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationHttpTaskOwnerV1 {
     fn new() -> Self {
         Self {
@@ -6744,7 +6698,6 @@ impl ArtifactCreationHttpTaskOwnerV1 {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl ArtifactCreationHttpReservationV1 {
     fn activate<F>(mut self, future: F)
     where
@@ -6779,7 +6732,6 @@ impl ArtifactCreationHttpReservationV1 {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl Drop for ArtifactCreationHttpReservationV1 {
     fn drop(&mut self) {
         if self.activated {
@@ -6796,7 +6748,6 @@ impl Drop for ArtifactCreationHttpReservationV1 {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHttpPendingV1) -> Option<u8> {
     let disposition = pending.disposition.load(std::sync::atomic::Ordering::Acquire);
     if disposition != 0 {
@@ -6816,17 +6767,14 @@ async fn await_artifact_creation_http_admission_v1(pending: &ArtifactCreationHtt
     .ok()
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_task_key_v1(user_id: &str, space_id: &str, request_id: &str) -> String {
     format!("{user_id}\0{space_id}\0{request_id}")
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_request_id_v1(request_id: &str) -> bool {
     request_id.len() == 32 && request_id.bytes().any(|byte| byte != b'0') && request_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
     match error {
         DirectoryError::NotFound(_) => StatusCode::NOT_FOUND,
@@ -6836,7 +6784,6 @@ fn artifact_creation_error_status(error: DirectoryError) -> StatusCode {
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> Response {
     let code = match status.phase {
         SpaceArtifactCreationPhaseV1::Accepted | SpaceArtifactCreationPhaseV1::Preparing => StatusCode::ACCEPTED,
@@ -6847,7 +6794,6 @@ fn artifact_creation_status_response(status: SpaceArtifactCreationStatusV1) -> R
     response
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
     if uri.query().is_some() {
         return StatusCode::BAD_REQUEST.into_response();
@@ -6870,7 +6816,6 @@ async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, Origi
 /// 🧗️ No socket is waiting on what follows: the route has already answered 202 and the
 /// client polls the durable status. Its bound is therefore the stall bound, fed by the
 /// guest codec's own fuel progress, never the calendar.
-#[cfg(feature = "native-artifact-execution")]
 async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     if uri.query().is_some()
         || body.is_empty()
@@ -6947,7 +6892,6 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
     artifact_creation_status_response(acceptance.status)
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Response {
     if uri.query().is_some() || !artifact_creation_request_id_v1(&request_id) {
         return StatusCode::BAD_REQUEST.into_response();
@@ -6968,7 +6912,6 @@ async fn get_space_artifact_creation_status(Path((space_id, request_id)): Path<(
     }
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn post_space_artifact_creation_cancel(Path((space_id, request_id)): Path<(String, String)>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     if uri.query().is_some() || !body.is_empty() || !artifact_creation_request_id_v1(&request_id) {
         return StatusCode::BAD_REQUEST.into_response();
@@ -10502,7 +10445,7 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
     let data_dir_bytes = state.extensions_root.parent().map(dir_size).unwrap_or(0);
     let response = serde_json::json!({
         "counts": { "spaces": counts.spaces, "users": counts.users, "connections": counts.connections },
-        "backends": { "sqlite": cfg!(feature = "sqlite"), "postgres": cfg!(feature = "postgres"), "neo4j": cfg!(feature = "neo4j") },
+        "backends": { "sqlite": true, "postgres": true, "neo4j": true },
         "dataDirBytes": data_dir_bytes,
         "headSeq": head_seq,
         "openArtifacts": state.db.catalog().await.artifacts.len(),
@@ -11035,7 +10978,6 @@ async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
 
 //#region 💡️Inference
 /// 🧾️ The one closed error body every inference route publishes; it never names a private object.
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct InferenceErrorBodyV1 {
@@ -11043,21 +10985,18 @@ struct InferenceErrorBodyV1 {
     code: &'static str,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_error_response(error: InferenceRouteErrorV1) -> Response {
     let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     (status, Json(InferenceErrorBodyV1 { schema: "semio.hub.inference-error/v1", code: error.code() })).into_response()
 }
 
 /// 🎟️ One private Hub approval admission retaining the exact sorted identity and space guards.
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 struct HubGisMapApprovalIngressAuthorityV1 {
     scope: DocumentScope,
     caller: AuthedUser,
     _guards: Vec<SocketBindingGuardV1>,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
     fn scope(&self) -> &DocumentScope {
         &self.scope
@@ -11076,7 +11015,6 @@ impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
     revalidate_directory_caller(state, &authority.caller).await.map_err(|status| if status == StatusCode::SERVICE_UNAVAILABLE { InferenceRouteErrorV1::Unavailable } else { InferenceRouteErrorV1::Denied })?;
     let role =
@@ -11088,7 +11026,6 @@ async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &Hub
     Ok(())
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope, token: Option<&str>) -> Result<Arc<HubGisMapApprovalIngressAuthorityV1>, InferenceRouteErrorV1> {
     let caller = resolve_bearer_user(state, token).await.ok_or(InferenceRouteErrorV1::Denied)?;
     let guards = tokio::time::timeout(
@@ -11107,7 +11044,6 @@ async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope
     Ok(authority)
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str, token: &'a Option<String>) -> Result<semio_hub::inference::runtime::InferenceRouteContextV1<'a>, Response> {
     let runtime = state.inference_runtime.as_ref().ok_or_else(|| inference_error_response(InferenceRouteErrorV1::Unavailable))?;
     let scope = DocumentScope::new(space_id, document_id);
@@ -11122,7 +11058,6 @@ fn inference_context<'a>(state: &'a HubState, space_id: &str, document_id: &str,
     })
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11135,7 +11070,6 @@ async fn post_inference_gis_map_job(Path((space_id, document_id)): Path<(String,
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job_reconcile(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11148,7 +11082,6 @@ async fn post_inference_gis_map_job_reconcile(Path((space_id, document_id)): Pat
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)): Path<(String, String, String)>, Query(query): Query<InferenceEventQueryV1>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11162,14 +11095,12 @@ async fn get_inference_gis_map_job_events(Path((space_id, document_id, job_id)):
 }
 
 /// 🔖️ The only inference query parameter: an exact bounded progress cursor.
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct InferenceEventQueryV1 {
     after: Option<u64>,
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Response {
     let token = bearer(&headers);
     let context = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11187,7 +11118,6 @@ async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id))
 /// durable the answer is its receipt. A second directory check after the commit could only fail for availability
 /// (a 2 s directory read on a loaded hub) and answered `503 inference.unavailable` for a committed approval — the
 /// document advanced while the caller was told nothing happened (ticket 26/09/23 G10, 7800 quartet runs 3/5/6).
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let route = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11207,7 +11137,6 @@ async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id
 
 /// ↩️ Undoes one approval under the same ingress law as [`post_inference_gis_map_job_approval`]: a durable
 /// undo is answered with its receipt.
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
     let route = match inference_context(&state, &space_id, &document_id, &token) {
@@ -11225,7 +11154,6 @@ async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Pat
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 fn inference_routes(router: Router<HubState>) -> Router<HubState> {
     router
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs", post(post_inference_gis_map_job).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
@@ -11236,17 +11164,11 @@ fn inference_routes(router: Router<HubState>) -> Router<HubState> {
         .route("/spaces/{space_id}/documents/{document_id}/inference/gis-map/approval-undos", post(post_inference_gis_map_approval_undo).layer(DefaultBodyLimit::max(INFERENCE_REQUEST_MAX_BYTES)))
 }
 
-#[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
-fn inference_routes(router: Router<HubState>) -> Router<HubState> {
-    router
-}
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 const INFERENCE_REQUEST_MAX_BYTES: usize = 1024;
 //#endregion 💡️Inference
 
 //#region 🔖️Main
-#[cfg(feature = "native-artifact-execution")]
 fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
     router
         .route("/spaces/{space_id}/artifact-creations", get(get_space_artifact_creation_catalog).post(post_space_artifact_creation).layer(DefaultBodyLimit::max(SPACE_ARTIFACT_CREATION_MAX_BYTES)))
@@ -11254,10 +11176,6 @@ fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
         .route("/spaces/{space_id}/artifact-creations/{request_id}/cancel", post(post_space_artifact_creation_cancel).layer(DefaultBodyLimit::max(0)))
 }
 
-#[cfg(not(feature = "native-artifact-execution"))]
-fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
-    router
-}
 
 /// 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
 /// for why this must cover the whole router, not just `/directory/*`.
@@ -11379,19 +11297,16 @@ async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError
             let root = data_dir.join("db");
             Ok(db::Database::open_at(pool, &root, profile).await?)
         }
-        #[cfg(feature = "sqlite")]
         "sqlite" => {
             let path = std::env::var("OS_HUB_DB_SQLITE").unwrap_or_else(|_| data_dir.join("db.sqlite3").to_string_lossy().into_owned());
             let storage = db::storage_sqlite::SqliteStorage::open(pool.clone(), std::path::Path::new(&path)).await?;
             Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Sqlite(storage))).await?)
         }
-        #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
             let storage = db::storage_postgres::PostgresStorage::connect(pool.clone(), &database_url).await?;
             Ok(db::Database::open(pool, db::DbConfig::for_profile(profile), Arc::new(db::storage::DbBackend::Postgres(storage))).await?)
         }
-        #[cfg(feature = "neo4j")]
         "neo4j" => {
             let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
@@ -11408,17 +11323,14 @@ async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<Artifact
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
     let storage = match backend.as_str() {
         "fs" | "" => ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&data_dir.join("artifact-cas/v1")).await?),
-        #[cfg(feature = "sqlite")]
         "sqlite" => {
             let path = std::env::var("OS_HUB_DB_SQLITE").unwrap_or_else(|_| data_dir.join("db.sqlite3").to_string_lossy().into_owned());
             ArtifactChunkCasStores::Sqlite(SqliteArtifactChunkCasStorage::open(std::path::Path::new(&path)).await?)
         }
-        #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
             ArtifactChunkCasStores::Postgres(PostgresArtifactChunkCasStorage::connect(&database_url).await?)
         }
-        #[cfg(feature = "neo4j")]
         "neo4j" => {
             let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
@@ -11439,11 +11351,9 @@ async fn connect_artifact_cas(data_dir: &std::path::Path) -> Result<Arc<Artifact
 // URIs/connection strings instead, never a local path) — whenever the `sqlite` feature is off it
 // goes genuinely unused (whether or not another backend feature is on), so the allow is scoped to
 // exactly that condition rather than blanket-silencing the lint for every feature set.
-#[cfg_attr(not(feature = "sqlite"), allow(unused_variables))]
 async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirectories>, HubError> {
     let backend = std::env::var("OS_HUB_DIRECTORY_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {
-        #[cfg(feature = "sqlite")]
         "sqlite" | "" => {
             let path = data_dir.join("directory.db");
             if let Some(parent) = path.parent() {
@@ -11453,14 +11363,12 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
             directory.seed().await?;
             Ok(Arc::new(directory.into()))
         }
-        #[cfg(feature = "postgres")]
         "postgres" => {
             let database_url = std::env::var("OS_HUB_DIRECTORY_DATABASE_URL").map_err(|_| HubError::UnknownDirectoryBackend("postgres requires OS_HUB_DIRECTORY_DATABASE_URL".into()))?;
             let directory = semio_hub::directory::postgres::PostgresDirectory::connect(&database_url).await?;
             directory.seed().await?;
             Ok(Arc::new(directory.into()))
         }
-        #[cfg(feature = "neo4j")]
         "neo4j" => {
             let uri = std::env::var("OS_HUB_DIRECTORY_NEO4J_URI").map_err(|_| HubError::UnknownDirectoryBackend("neo4j requires OS_HUB_DIRECTORY_NEO4J_URI".into()))?;
             let user = std::env::var("OS_HUB_DIRECTORY_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
@@ -11734,12 +11642,8 @@ async fn serve() -> Result<(), HubError> {
     let admin_subjects = configured_admin_subjects()?;
     validate_auth_startup(mode, bind, identity_verifier.as_ref(), local_bootstrap.as_ref(), &admin_subjects, credential_sign_in.is_enabled(), &cross_origin, forwarded_tls)?;
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
-    #[cfg(feature = "native-artifact-execution")]
     let native_codec_providers = NativeCodecProviderSetV1::linked();
-    #[cfg(feature = "native-artifact-execution")]
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = Some(&native_codec_providers);
-    #[cfg(not(feature = "native-artifact-execution"))]
-    let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = None;
     let tracer = Tracer::from_environment();
     let startup_cancellation = StartupCancellationV1::default();
     let addr = SocketAddr::new(bind, port);
@@ -11806,26 +11710,20 @@ async fn serve() -> Result<(), HubError> {
         let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
         let agent_delegation_ready = directory.list_agent_delegations(AGENT_DELEGATION_READINESS_PROBE_SCOPE, AGENT_DELEGATION_READINESS_PROBE_SCOPE, 1).await.is_ok();
         let verified_catalog = artifact_authority.as_ref().map(|configured| configured.catalog.clone());
-        #[cfg(feature = "native-artifact-execution")]
         let gis_map_binding = match verified_catalog.as_ref() {
             Some(catalog) => verified_gis_map_binding(catalog.clone()).map_err(|error| AuthorityError::Catalog(format!("verified GIS Map inference binding rejected: {error:?}")))?,
             None => None,
         };
         let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
         let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
-        #[cfg(feature = "native-artifact-execution")]
         let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
-        #[cfg(feature = "native-artifact-execution")]
         let artifact_creation_tasks = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
-        #[cfg(feature = "native-artifact-execution")]
         let artifact_creation = verified_catalog.as_ref().map(|catalog| Arc::new(ArtifactCreationServiceV1::new(directory_service.clone(), catalog.clone(), artifact_cas.clone())));
-        #[cfg(feature = "native-artifact-execution")]
         if let Some(service) = artifact_creation.as_ref() {
             artifact_creation_tasks.start_recovery(service.clone(), artifact_creation_commit_authority.clone(), tracer.clone());
         }
         let fanout = Arc::new(ShardedMap::new());
         let fanout_capacity = 256;
-        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         let inference_runtime = match gis_map_binding.as_ref() {
             Some(binding) => {
                 let root = data_dir.join("inference");
@@ -11855,12 +11753,9 @@ async fn serve() -> Result<(), HubError> {
             }
             None => None,
         };
-        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         let inference_ready = inference_runtime.is_some();
-        #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
-        let inference_ready = false;
         let artifact_authority_reason =
-            artifact_authority_closed_reason(cfg!(feature = "native-artifact-execution"), trusted_catalog_stalled, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
+            artifact_authority_closed_reason(true, trusted_catalog_stalled, data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false));
         let readiness = Arc::new(declare_public_session_issuance(
             with_checkpoint_policy(
                 hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, agent_delegation_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
@@ -11889,15 +11784,10 @@ async fn serve() -> Result<(), HubError> {
             rebootstrap,
             artifact_authority: artifact_authority.map(|configured| configured.authority),
             verified_catalog,
-            #[cfg(feature = "native-artifact-execution")]
             artifact_creation,
-            #[cfg(feature = "native-artifact-execution")]
             artifact_creation_commit_authority,
-            #[cfg(feature = "native-artifact-execution")]
             artifact_creation_tasks: artifact_creation_tasks.clone(),
-            #[cfg(feature = "native-artifact-execution")]
             gis_map_binding,
-            #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             inference_runtime: inference_runtime.clone(),
             openable_catalog,
             artifact_publication,
@@ -11948,7 +11838,6 @@ async fn serve() -> Result<(), HubError> {
         let saga_drain = SagaDrainSupervisor::start(state.instance.clone(), state.tracer.clone(), SAGA_DRAIN_INTERVAL);
         let catalog_verification = state.verified_catalog.clone().map(|catalog| tokio::spawn(verify_pending_catalog_guests(catalog, tracer.clone(), startup_cancellation.clone(), startup_progress.clone())));
         let admin_operation_tasks = state.admin_operation_tasks.clone();
-        #[cfg(feature = "native-artifact-execution")]
         let artifact_creation_tasks = state.artifact_creation_tasks.clone();
         let bootstrap_task = local_bootstrap.clone().map(|transport| {
             let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
@@ -12001,20 +11890,16 @@ async fn serve() -> Result<(), HubError> {
         socket_drain.begin();
         let retained_sockets = socket_drain.drained(SOCKET_DRAIN_DEADLINE).await;
         admin_operation_tasks.shutdown().await;
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation_tasks.shutdown().await;
         check_ins.cancel_all();
         let check_in_drain_started = std::time::Instant::now();
         while check_ins.live_count() != 0 && check_in_drain_started.elapsed() < SOCKET_DRAIN_DEADLINE {
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
-        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         let inference_close_result = match inference_runtime {
             Some(inference_runtime) => inference_runtime.close().await.map_err(HubError::InferenceShutdown),
             None => Ok(()),
         };
-        #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
-        let inference_close_result: Result<(), HubError> = Ok(());
         artifact_maintenance.shutdown().await;
         if let Some(verification) = catalog_verification {
             verification.abort();
@@ -12068,7 +11953,7 @@ mod credential_command;
 #[path = "../🧪️tests/🗂️artifact-root/🦀️.rs"]
 mod test_artifact_root;
 
-#[cfg(all(test, feature = "sqlite"))]
+#[cfg(test)]
 #[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]
 mod tests;
 

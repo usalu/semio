@@ -1,6 +1,6 @@
 //! 🔖️ `create-tag` payload. Brings a new tag onto a storey plan: text read from an element (name, type, number or size) and placed beside it, so the tag follows the element.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Tag};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Tag}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -105,7 +105,7 @@ pub(crate) struct ToolRunJobSlot<C> {
     pub(crate) outcome_received: bool,
     pub(crate) original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     failure_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<C> ToolRunJobSlot<C> {
@@ -127,7 +127,7 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.job_is_empty() && self.authority.is_none() && self.outcome.is_none() && self.original_failure.is_none() && self.failure_retirement.is_none() && self.cancel.is_none() && self.cancel_retirement.is_none()
     }
 
@@ -146,7 +146,7 @@ impl<C> ToolRunJobSlot<C> {
         }
     }
 
-    fn begin_close(&mut self) {
+    pub(crate) fn begin_close(&mut self) {
         if !self.closing {
             if let Some(cancel) = self.cancel.as_ref() {
                 cancel.cancel_now();
@@ -374,7 +374,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     /// 🏃️ Whether a driver turn has work for this run; a job waiting on its port is not work.
-    fn has_pending_work(&self) -> bool {
+    pub(crate) fn has_pending_work(&self) -> bool {
         let stepping = self.job.is_none() || !self.port.is_waiting();
         self.port.has_effects()
             || self.refold_is_work()
@@ -637,7 +637,7 @@ pub struct ToolRunLedger<A: ArtifactApp> {
 
 /// 🪟️ One scene window the trace lane was delivered to: its body key and what its renderer last echoed.
 pub(crate) struct ToolRunTraceWindow {
-    body_key: String,
+    pub(crate) body_key: String,
     echoed: Option<ToolRunTraceCursor>,
     answered: bool,
     stalls: u8,

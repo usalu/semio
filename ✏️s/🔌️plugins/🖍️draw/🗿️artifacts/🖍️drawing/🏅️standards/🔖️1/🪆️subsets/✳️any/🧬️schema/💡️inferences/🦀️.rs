@@ -4,10 +4,10 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
-use crate::DrawingSnapshot;
+use crate::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 
-use super::topology::compute_drawing_topology;
+use crate::inferences::topology::compute_drawing_topology;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a drawing snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — `layers` is a
@@ -73,5 +73,10 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::topology::DrawingTopology;
+pub use crate::inferences::topology::DrawingTopology;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧭topology/🦀️.rs"]
+pub mod topology;
+//#endregion 🪢️TaxonomyMounts

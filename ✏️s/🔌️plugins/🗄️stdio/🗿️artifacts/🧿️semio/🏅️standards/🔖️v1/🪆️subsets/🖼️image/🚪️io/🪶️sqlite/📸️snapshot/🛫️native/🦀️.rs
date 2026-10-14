@@ -1,7 +1,8 @@
 //! 🖼️ Writes image dimensions, color provenance, independent ICC bytes and every ordered frame.
 use semio_framework_value::ValueError;
 use crate::schema::snapshot::{SemioImageSnapshot, SemioImageFrame, SemioImageMetadataEntry};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioImageSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.image.dsl v1\n","s.stdio.semio.image.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn frame(value:&SemioImageFrame,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.fixed_u32(value.delay_ms,encoding)?;writer.delimiter(b",",encoding)?;writer.octets(&value.rgba8,encoding)?;writer.delimiter(b"]",encoding)}

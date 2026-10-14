@@ -164,7 +164,7 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
@@ -301,7 +301,7 @@ use semio_framework_diagnostic::TextSpan;
     //#endregion 🔖️Analyzer
 
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
 }
 pub use derived_analysis::*;
 

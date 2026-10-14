@@ -93,7 +93,7 @@ impl InteractiveJob for FrameBuildJob {
         }
         let grant = cx.retained_grant();
         let copy_bytes = size_of::<FrameDirectives>();
-        if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes {
+        if cx.retirement_should_yield() || grant.maximum_items == 0 || grant.maximum_copy_bytes < copy_bytes {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         if grant.maximum_depth == 0 {
@@ -227,7 +227,7 @@ fn run_frame_owner_turn(cx: &mut StepContext<'_>, advance: impl FnOnce(&mut Step
 
 fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, witness: &CancelToken) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
     let grant=cx.retained_grant();
-    if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+    if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
     let empty = match phase {
         ActiveFramePhase::DeadlineAdmission { job, params, cancel_retirement } => {
             if params.is_some() {
@@ -547,7 +547,7 @@ impl InteractiveJob for ActiveFrameBuild {
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         self.begin_close();
         let grant=cx.retained_grant();
-        if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if let Some(frame) = self.completed.as_mut() {
             if !frame.discard_presented_input_candidate(&self.runtime) { return Ok(InteractiveJobCloseStep::Blocked); }
             if !frame.terminal_is_empty() { return crate::frame_receive_close(crate::frame_child_step(frame.close_step(grant), grant, frame.terminal_is_empty()),cx); }
@@ -643,7 +643,7 @@ impl FrameBuildHandle {
 
     /// ♻️ Returns pending admission and checked-out custody before closing the same admitted session.
     pub(crate) fn close_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        self.closing=true;let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        self.closing=true;let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         if let Some(owner)=self.original_outcome.as_mut(){let step=owner.acknowledge_outcome(grant);cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if matches!(step,semio_framework_job::RetainedCloneStep::Complete(_)){self.original_outcome.take().unwrap().begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}
@@ -898,6 +898,8 @@ impl FrameBuildHandle {
     pub(crate) fn has_live_session(&self) -> bool {
         self.session.is_some() || self.rejected.is_some() || self.original_job.is_some() || self.original_params.is_some() || self.original_outcome.is_some()
     }
+
+    pub(crate) fn original_event_terminal_is_empty(&self)->bool{!self.has_live_session()&&self.original_params_cancel_retirement.is_none()&&self.original_outcome_kind.is_none()&&self.original_refused_receipt.is_none()&&self.original_presentation_generation.is_none()}
 
     /// 🪢 Retires one frame owner unit so a component-close bridge created by that frame can run.
     /// Unlike [`Self::close_step`], this keeps the handle reusable and preserves its installed wake.

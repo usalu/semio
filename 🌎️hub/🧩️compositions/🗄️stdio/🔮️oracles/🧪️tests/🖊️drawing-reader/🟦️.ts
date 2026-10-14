@@ -37,7 +37,7 @@ test("the actual artifact-free family owns every original semantic reader body e
   expect(Bun.TOML.parse(raw)).toEqual(cargo);
   expect(cargo.dependencies.dxf).toEqual(contract.externalDependency);
   expect(Object.keys(cargo.dependencies).sort()).toEqual(["dxf", "semio-repo-test-host"]);
-  expect(cargo.features.oracles).toEqual(["dep:dxf"]);
+  expect(cargo).not.toHaveProperty("features");
 });
 
 test("both actual providers select the lower reader without sibling or higher assembly edges", () => {
@@ -47,7 +47,7 @@ test("both actual providers select the lower reader without sibling or higher as
     const dependency = cargo.dependencies[contract.package];
     expect(dependency, original.path).toBeDefined();
     expect(resolve(root, original.path, "..", dependency.path)).toBe(resolve(root, familyManifest, ".."));
-    expect(cargo.features.oracles).toContain(`${contract.package}/oracles`);
+    expect(cargo).not.toHaveProperty("features");
     expect(Object.keys(cargo.dependencies).some((name) => name.startsWith("semio-s-artifact-") || name.startsWith("semio-hub-"))).toBe(false);
   }
   const note = contract.originals.find(({ path }) => path.includes("/🗒️note/") && path.endsWith("/🦀️.rs"))!;
@@ -73,10 +73,8 @@ test("the actual private shared helpers and public byte boundary carry no foreig
   expect(support).not.toMatch(/pub (?:fn|struct|enum|type|use)/u);
   const source = read(`${contract.owner}/🦀️.rs`);
   expect(source).toContain("pub use reader::project_dxf_r12;");
-  for (const parameter of ["bytes: &[u8]", "_bytes: &[u8]"]) expect(source).toContain(`pub fn project_dxf_r12(${parameter}) -> Result<Json, String>`);
-  const original = contract.originals.find(({ path }) => path === contract.functions[0]!.source)!.source;
-  const refusal = /pub fn project_dxf_r12\(_bytes: &\[u8\]\) -> Result<Json, String> (\{[^}]*\})/u.exec(original)![1]!;
-  expect(source).toContain(refusal);
+  expect(source).toContain("pub fn project_dxf_r12(bytes: &[u8]) -> Result<Json, String>");
+  expect(source).not.toContain("pub fn project_dxf_r12(_bytes: &[u8])");
   const mounts = contract.originals.filter(({ path }) => path === contract.functions[0]!.source).flatMap(({ path }) => inspectRustCompileReferences(read(path)).filter((row) => row.path.includes("🧰️support")).map((row) => resolve(root, path, "..", row.path)));
   expect(mounts).toEqual([resolve(root, contract.owner, "🧰️support/🦀️.rs")]);
   expect(inspectRustCompileReferences(source).filter(({ path }) => path.includes("🧰️support")).map(({ path }) => resolve(root, contract.owner, path))).toEqual(mounts);
@@ -89,13 +87,13 @@ test("additive complete lower native cohort preserves the original full oracle r
   for (const binding of ["contract.neutralLaw.source", "contract.providers.map", "contract.families.map", "contract.grammar.package.path", "contract.package.path"]) expect(route).toContain(binding);
   expect(route).toContain('if (rest.length) throw new Error');
   expect(route).toContain('runRepositoryTestCommand("cargo", ["test", "--manifest-path"');
-  expect(route).toContain('const features = path === packages[0] ? [] : ["--features", "oracles"]');
+  expect(route).not.toContain('"--features"');
   const project = JSON.parse(read("🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📋️project.json"));
   expect(project.targets["test-native-drawing-reader"]?.options.command).toBe("bun 📜️script.ts test-native-drawing-reader");
   const command = script.match(/class NativeDrawingReaderTestScript[\s\S]*?\n\}/u)?.[0];
   expect(command).toContain("contract.families.find(({ module }) => module === \"drawing\")");
   expect(command).toContain("if (rest.length) throw new Error");
-  expect(command).toContain("\"--features\", \"oracles\"");
+  expect(command).not.toContain("\"--features\"");
   expect(command).toContain("budgetMs: 900_000");
 });
 

@@ -4,7 +4,7 @@ name = "semio-s-artifact-remodel-remodeling"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "remodel remodeling artifact"
+description = "remodel remodeling artifact: identity, definition and the standard/subset declaration of the remodeling family"
 
 [package.metadata.semio]
 role = "artifact"
@@ -15,100 +15,53 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = ["video-containers"]
-# 🧩️ Capability Features
-video-containers = ["video-avi","video-mp4"]
-video-avi = ["dep:semio-s-artifact-stdio-avi"]
-video-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
-# /🧩️ Capability Features
-
 [dependencies]
+pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-# 🧩️ Capability Dependencies
-semio-s-artifact-stdio-avi = { workspace = true, optional = true }
-semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
-# /🧩️ Capability Dependencies
-semio-s-artifact-stdio-gltf-model = { workspace = true }
-semio-s-artifact-stdio-jpg = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-las = { workspace = true }
-semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-ply = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
-# 🖼️ `conversion-image` carries the `s.stdio.semio/v1/image` <-> `s.stdio.png` composers the texture/DSM
-# asset bridge (`🚪️io` `semio_image_from_png_bytes`/`png_bytes_from_semio_image`) dispatches through;
-# without it `io_dispatch` answers `no composer registered for s.stdio.semio/v1/image … s.stdio.png`.
-semio-s-artifact-stdio-semio = { workspace = true }
-semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
-semio-s-artifact-stdio-semio-image = { workspace = true }
-semio-s-artifact-stdio-semio-image-export = { workspace = true }
-semio-s-artifact-stdio-semio-image-import = { workspace = true }
-semio-s-artifact-stdio-semio-mesh = { workspace = true }
-semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
-semio-s-artifact-stdio-semio-mesh-import = { workspace = true }
-semio-s-artifact-stdio-stl = { workspace = true }
-# 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d moved
-# `algebra`/`optimize`/`lie`/`signal`/`spatial` wholesale into this crate's own artifact schema as
-# `crate::algebra`/`crate::optimize`/`crate::lie`/`crate::signal`/`crate::spatial`. Wave FIXALG (same
-# ticket) then relocated `➕️algebra-internals`'s generic `VecG`/`MatG` types out to
-# `semio-framework-number`'s own `algebra` module (a second, framework-tier consumer had appeared —
-# see that wave's report) — this dependency, renamed `number`, replaces the old `math` dependency
-# that `math::number::…` used to resolve through; the only survivor still needing it is
-# `➕️algebra-internals`'s own `lll_reduce`, now built on `number::VecG`/`number::Rational` directly.
-number = { path = "../../../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
-geometry = { path = "../../../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework = { workspace = true }
-semio-framework-os = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
-# 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
-# signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
-semio-framework-job = { workspace = true }
-# ⏯️ The reconstruction tool run declares its `ToolRunDefinition` and writes `ToolRunTick`s through the
-# domain-neutral writer.
-semio-framework-tool-run = { workspace = true }
-# 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY: `scene_surface`/`PanelTreeBuilder` speak the semantic
-# contract's own `SurfaceKind`/`BuiltNode`, a different type from the retained `ui_wgpu` spelling the SDK
-# root re-exports — the same explicit dependency `🧱️block` and `🌊️flow` carry for their window scenes.
-semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-serde.workspace = true
-serde_json.workspace = true
-
-# 🖼️ `images` engine topic file.
-base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
-semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
-
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-editor = { workspace = true }
+semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
+semio-s-artifact-remodel-remodeling-io = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
+semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-read = { workspace = true }
+semio-s-artifact-remodel-remodeling-schema = { workspace = true }
+semio-s-artifact-remodel-remodeling-viewer = { workspace = true }
+semio-s-artifact-remodel-remodeling-write = { workspace = true }
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
-semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes
-# are readable by/match the reference decoder/encoder — see 🖼️images/🦀️.rs's test module.
+base64_codec = { workspace = true }
+number = { workspace = true }
 png = "0.17.16"
-# 🔬️ Test oracle only: an independent Hamming distance over bit vectors recomputes every traced match
-# candidate verdict of the reconstruction tool run.
-bitvec = "1.0.1"
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-cmd-ingest = { workspace = true }
+semio-s-artifact-remodel-remodeling-cmd-workflow = { workspace = true }
+semio-s-artifact-remodel-remodeling-examples = { workspace = true }
+semio-s-artifact-remodel-remodeling-feature = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-lie = { workspace = true }
+semio-s-artifact-remodel-remodeling-modes = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-media = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-results = { workspace = true }
+semio-s-artifact-remodel-remodeling-panels = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+serde_json = { workspace = true }
+
+[[test]]
+name = "editor"
+path = "../../🧪️tests/🔬️editor/🦀️.rs"
 
 [package.metadata.semio.preparation]
 script = "📜️script.ts"

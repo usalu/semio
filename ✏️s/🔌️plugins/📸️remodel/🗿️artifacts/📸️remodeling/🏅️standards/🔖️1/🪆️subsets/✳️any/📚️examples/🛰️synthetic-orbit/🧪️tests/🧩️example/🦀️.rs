@@ -8,13 +8,26 @@
 //! (stdlib Python), which produced the committed bytes. PNG containers differ between encoders;
 //! decoded rasters do not, and that equality is what these tests assert.
 
-use super::{CAMERA_ID, FRAMES, FRAME_MIME, GROUND_TRUTH_JSON, ID, PRIMARY_TEXT, STREAM_ID};
-use crate::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
-use crate::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::CAMERA_ID;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::FRAME_MIME;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::GROUND_TRUTH_JSON;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::ID;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::STREAM_ID;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::ImportFramePayload;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::unit_tests::context::{app_with_registry, close, dispatch, durable, host_turn, pump_run, settle, run_action, run_arguments, start_reconstruction, RemodelingApp};
-use crate::editor::remodeling::RemodelingCommand;
-use crate::lie::{umeyama, Quatd, Sim3, So3};
-use crate::{CameraCalibration, FrameRef, MediaKind, MediaStream, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Quatd;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Sim3;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraCalibration;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️FixtureConstants
 /// 🎲 splitmix64 seed shared with the Python reference generator.
@@ -510,7 +523,13 @@ fn frame_payload(bytes: &[u8]) -> String {
 /// commands: the boot document is the uncalibrated `demo` (ORB, 5 mm voxels, textured), under which
 /// this scene has no chance, and a user who reconstructs a calibrated capture edits exactly these.
 async fn imported_app() -> RemodelingApp {
-    use crate::editor::remodeling::commands::{edit_calibration::EditCalibration, set_dense_params::SetDenseParams, set_feature_params::SetFeatureParams, set_ingest_params::SetIngestParams, set_match_params::SetMatchParams, set_mesh_params::SetMeshParams, set_sfm_params::SetSfmParams};
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::edit_calibration::EditCalibration;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_dense_params::SetDenseParams;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_feature_params::SetFeatureParams;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params::SetIngestParams;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_match_params::SetMatchParams;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_mesh_params::SetMeshParams;
+    use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_sfm_params::SetSfmParams;
     let mut app = app_with_registry().await;
     let fixture = fixture_document();
     let camera = &fixture.calibration.cameras[0];
@@ -532,8 +551,8 @@ async fn imported_app() -> RemodelingApp {
     };
     dispatch(&mut app, RemodelingCommand::EditCalibration(calibration)).await;
     settle(&mut app, "the camera calibration").await;
-    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
-        let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: FRAMES.len() as u32 };
+    for (index, (_, bytes)) in frames().enumerate() {
+        let payload = ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: frames().count() as u32 };
         dispatch(&mut app, RemodelingCommand::ImportFramePayload(payload)).await;
         settle(&mut app, "the frame import").await;
     }
@@ -597,7 +616,7 @@ async fn finalize_reconstruction(app: &mut RemodelingApp) -> (RemodelingSnapshot
 async fn primary_asset_is_nonempty() {
     assert!(PRIMARY_TEXT.len() > 8);
     assert_eq!(ID, "synthetic-orbit");
-    assert_eq!(FRAMES.len(), FRAME_COUNT);
+    assert_eq!(frames().count(), FRAME_COUNT);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -614,19 +633,19 @@ async fn dsl_declares_the_ground_truth_camera_and_the_full_frame_table() {
     let stream = scene.streams.iter().find(|stream| stream.id == STREAM_ID).expect("declared stream");
     assert_eq!(stream.kind, MediaKind::ImageSequence);
     assert_eq!(stream.camera_id.as_deref(), Some(CAMERA_ID));
-    assert_eq!(stream.frames.len(), FRAMES.len(), "the DSL frame table must list every committed frame");
-    for (frame, (asset_id, _)) in stream.frames.iter().zip(FRAMES) {
+    assert_eq!(stream.frames.len(), frames().count(), "the DSL frame table must list every committed frame");
+    for (frame, (asset_id, _)) in stream.frames.iter().zip(frames()) {
         assert_eq!(frame.asset_id, asset_id);
         assert!((frame.timestamp_ms - f64::from(frame.index) * 1000.0 / FPS_HINT).abs() < 1e-6);
     }
-    assert_eq!(truth.centers.len(), FRAMES.len());
-    assert_eq!(truth.rotations_camera_to_world.len(), FRAMES.len());
+    assert_eq!(truth.centers.len(), frames().count());
+    assert_eq!(truth.rotations_camera_to_world.len(), frames().count());
     assert!(truth.points.len() >= 100, "ground truth must carry a real point set, got {}", truth.points.len());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn committed_frames_match_the_png_oracle_and_the_reference_renderer() {
-    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
+    for (index, (_, bytes)) in frames().enumerate() {
         let ours = remodeling_image::decode_png(*bytes).expect("plugin PNG decode");
         assert_eq!((ours.width, ours.height), (WIDTH, HEIGHT));
 
@@ -649,7 +668,7 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     let truth = ground_truth();
     let mut app = imported_app().await;
     let imported = app.snapshot().expect("imported snapshot");
-    assert_eq!(imported.streams.iter().map(|stream| stream.frames.len()).sum::<usize>(), FRAMES.len(), "every committed frame must reach the document");
+    assert_eq!(imported.streams.iter().map(|stream| stream.frames.len()).sum::<usize>(), frames().count(), "every committed frame must reach the document");
 
     let (scene, stages) = finalize_reconstruction(&mut app).await;
     assert!(stages.windows(2).all(|pair| pair[1] >= pair[0]), "reported stages must never move backwards: {stages:?}");
@@ -675,10 +694,10 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
     assert!(translation_ratio < MAX_TRANSLATION_RMSE_RATIO * UNCALIBRATED_GAUGE_SLACK, "aligned translation RMSE {:.3}% of scene scale exceeds the gauge-slackened bound; per pose (truth camera, rotation°, centre error/scale): {ledger:?}", translation_ratio * 100.0);
 
     let mesh = &scene.results.mesh;
-    assert_ne!(mesh.source, crate::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
+    assert_ne!(mesh.source, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
     let recovered: Vec<[f64; 3]> = poses.iter().map(|(_, center)| *center).collect();
     let (sim, _) = align_to_truth(&recovered, &truth.centers).expect("recovered cameras must admit a Sim(3) registration onto the truth orbit");
-    let data = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &mesh.mesh).expect("the finalized mesh resolves");
+    let data = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &mesh.mesh).expect("the finalized mesh resolves");
     let vertices: Vec<[f64; 3]> = data.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect();
     let (median, p90, completeness) = mesh_surface_errors(&vertices, &truth.points);
     println!("[mesh-truth] {} vertices: surface distance median {median:.3} / p90 {p90:.3} (cube half-sizes), truth points within {MESH_COMPLETENESS_RADIUS} of a vertex {:.1}%", vertices.len(), completeness * 100.0);
@@ -702,7 +721,7 @@ async fn aborting_the_synthetic_orbit_reconstruction_mid_run_leaves_the_document
     assert_eq!(before.2, after.2, "an aborted reconstruction leaves no history trace");
     let scene = app.snapshot().expect("aborted snapshot");
     assert!(scene.results.sparse.is_none(), "an aborted run commits no sparse cloud");
-    assert_eq!(scene.results.mesh.source, crate::MeshSource::Placeholder, "an aborted run leaves the seeded placeholder mesh in place");
+    assert_eq!(scene.results.mesh.source, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource::Placeholder, "an aborted run leaves the seeded placeholder mesh in place");
     close(app);
 }
 #[semio_framework_async_macros::async_test]
@@ -736,8 +755,8 @@ async fn a_finalized_reconstruction_is_one_undoable_edit() {
 #[semio_framework_async_macros::async_test]
 async fn an_unregistrable_capture_completes_without_cameras() {
     let mut app = app_with_registry().await;
-    for (index, (_, bytes)) in FRAMES.iter().enumerate() {
-        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: FRAMES.len() as u32 })).await;
+    for (index, (_, bytes)) in frames().enumerate() {
+        dispatch(&mut app, RemodelingCommand::ImportFramePayload(ImportFramePayload { payload: frame_payload(*bytes), name: format!("🎞️frame-{index:02}.png"), index: index as u32, total: frames().count() as u32 })).await;
         settle(&mut app, "the frame import").await;
     }
     let before = durable(&mut app).await;
@@ -771,7 +790,7 @@ async fn an_unregistrable_capture_completes_without_cameras() {
 #[test]
 #[ignore = "diagnostic feature audit over synthetic orbit steps, run explicitly"]
 fn diagnose_orb_matching_vs_orbit_step() {
-    use crate::editor::remodeling::engine::feature as remodeling_feature;
+    use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
     let eye_at = |angle: f64| [ORBIT_RADIUS * angle.cos(), ORBIT_ELEVATION, ORBIT_RADIUS * angle.sin()];
     let luma = |image: &remodeling_image::ImageRgba8| remodeling_image::ImageGray::from_rgba8_luma(image);
     let detect = |gray: remodeling_image::ImageGray, upright: bool| {
@@ -857,7 +876,7 @@ fn regenerates_the_synthetic_orbit_example() {
         let bytes = remodeling_image::encode_png(&render_reference_frame(index)).expect("encode fixture frame");
         std::fs::write(assets.join(format!("🎞️frame-{index:02}.png")), &bytes).expect("write fixture frame");
         let r_cw = camera_to_world_rotation(*eye);
-        let rotation_cw = So3(crate::algebra::Mat3d::from_axes([r_cw[0][0], r_cw[1][0], r_cw[2][0]], [r_cw[0][1], r_cw[1][1], r_cw[2][1]], [r_cw[0][2], r_cw[1][2], r_cw[2][2]]));
+        let rotation_cw = So3(semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d::from_axes([r_cw[0][0], r_cw[1][0], r_cw[2][0]], [r_cw[0][1], r_cw[1][1], r_cw[2][1]], [r_cw[0][2], r_cw[1][2], r_cw[2][2]]));
         let rotation_wc = rotation_cw.inverse();
         let translation = rotation_wc.act(*eye);
         let (q_wc, q_cw) = (rotation_wc.to_quat(), rotation_cw.to_quat());
@@ -891,7 +910,7 @@ fn regenerates_the_synthetic_orbit_example() {
 /// 🗣️ The committed document: the engine-tuning params this fixture reconstructs under, the rendering
 /// camera's true calibration, and the stream whose frame table the loader binds pixels to.
 fn fixture_document() -> RemodelingSnapshot {
-    let mut scene = crate::default_remodeling_scene();
+    let mut scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene();
     scene.calibration.cameras = vec![CameraCalibration {
         id: CAMERA_ID.into(),
         label: "Synthetic Orbit Camera".into(),
@@ -909,13 +928,13 @@ fn fixture_document() -> RemodelingSnapshot {
     scene.params.ingest.max_frames = 64;
     scene.params.ingest.downscale_long_edge_px = WIDTH;
     scene.params.ingest.min_sharpness = 0.0;
-    scene.params.feature.detector = crate::FeatureDetector::Akaze;
+    scene.params.feature.detector = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureDetector::Akaze;
     scene.params.feature.target_count = 600;
     scene.params.matching.ratio_test = 0.85;
     scene.params.matching.sequential_window = 3;
     scene.params.sfm.min_track_length = 2;
     scene.params.sfm.ba_max_iterations = 25;
-    scene.params.dense.resolution = crate::DenseResolution::Low;
+    scene.params.dense.resolution = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseResolution::Low;
     scene.params.dense.window_radius_px = 2;
     scene.params.dense.max_points = 50_000;
     scene.params.mesh.tsdf_voxel_size_mm = 100.0;

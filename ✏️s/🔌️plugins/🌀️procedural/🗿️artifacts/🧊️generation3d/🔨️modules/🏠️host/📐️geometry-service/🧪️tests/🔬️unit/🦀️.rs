@@ -1,11 +1,32 @@
 //! 🧪️ Service laws: the executable contextual inference answers the published payload contract, spends its budget in widget steps, resumes from its own result, cancels, honours the cache modes and reports faults in both languages.
 
 use super::*;
-use crate::host::geometry_service::GeometryHost;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+use crate::GeometryHost as NativeGeometryHost;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMap, OrderedSet, SynapseSpec, Widget};
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
+use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use std::{rc::Rc,cell::RefCell,mem::ManuallyDrop};
+
+fn original_clock()->Option<u64>{Some(1)}
+fn original_stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<28,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:256}}
+struct FixtureCaller{caller:Option<OriginalJobFixtureCaller>}
+impl Drop for FixtureCaller{fn drop(&mut self){if let Some(caller)=self.caller.take(){caller.retire(original_stock())}}}
+struct OriginalOracle<T:RetireOwned>{value:ManuallyDrop<Option<T>>,caller:Rc<RefCell<FixtureCaller>>}
+impl<T:RetireOwned>std::ops::Deref for OriginalOracle<T>{type Target=T;fn deref(&self)->&T{self.value.as_ref().unwrap()}}
+impl<T:RetireOwned+std::fmt::Debug>std::fmt::Debug for OriginalOracle<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{std::fmt::Debug::fmt(std::ops::Deref::deref(self),f)}}
+impl<T:RetireOwned>Drop for OriginalOracle<T>{fn drop(&mut self){let mut owner=ControlledRetirement::new(self.value.take().unwrap()).ok().unwrap();let mut source=self.caller.borrow_mut();close_owner(&mut owner,source.caller.as_mut().unwrap());}}
+fn close_owner<T:RetireOwned>(owner:&mut ControlledRetirement<T>,caller:&mut OriginalJobFixtureCaller){for _ in 0..100000{if owner.terminal_is_empty(){return}caller.turn(original_stock(),|cx|cx.with_original_retirement(|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())})).unwrap();}assert!(owner.terminal_is_empty());}
+struct GeometryHost{host:NativeGeometryHost,caller:Rc<RefCell<FixtureCaller>>}
+impl Default for GeometryHost{fn default()->Self{Self{host:NativeGeometryHost::default(),caller:Rc::new(RefCell::new(FixtureCaller{caller:Some(OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),original_stock(),original_clock,1_000_000_000,64_000_000))}))}}}
+impl std::ops::Deref for GeometryHost{type Target=NativeGeometryHost;fn deref(&self)->&Self::Target{&self.host}}
+impl GeometryHost{
+ fn infer(&self,request:&ArtifactInferenceExecutionRequest<'_>,context:Option<&dyn std::any::Any>)->Result<OriginalOracle<ArtifactInferenceExecution>,OriginalOracle<ArtifactInferenceExecutionError>>{let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{let mut result=None;caller.turn(request.retained,|cx|cx.with_original_work_loan(request.budgets.work_units,cx.deadline_us(),|cx|{result=Some(match context{Some(context)=>geometry_inference_service().infer_with_context(request,context,cx),None=>geometry_inference_service().infer(request,cx)});Ok(())})).unwrap();match result.unwrap(){Ok(step)=>{if let Some(execution)=step.execution{return Ok(OriginalOracle{value:ManuallyDrop::new(Some(execution)),caller:Rc::clone(&self.caller)})}},Err(error)=>return Err(OriginalOracle{value:ManuallyDrop::new(Some(error)),caller:Rc::clone(&self.caller)})}}panic!("actual geometry service did not produce an execution or refusal")}
+ fn close(&mut self){let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if self.host.terminal_is_empty(){return}let outcome=caller.turn(original_stock(),|cx|cx.with_original_retirement(|cx|{let admitted=self.host.with(|engine|engine.admit_failure(cx)).unwrap()?;if let Some(original)=admitted{return Ok(Some(original))}let mut admission=self.host.admission.borrow_mut();if let Some(owner)=admission.as_mut(){match owner.close_step(cx){Ok(true)=>{admission.take();},Ok(false)=>return Ok(None),Err(original)=>{self.host.with(|engine|engine.hold_failure(original)).unwrap();return Ok(None)}}}drop(admission);if let Err(original)=self.host.with(|engine|engine.close_original_step(cx)).unwrap(){self.host.with(|engine|engine.hold_failure(original)).unwrap();}Ok(None)})).unwrap();if let Some(original)=outcome{let mut owner=ControlledRetirement::new(original).ok().unwrap();close_owner(&mut owner,caller);}}assert!(self.host.terminal_is_empty());}
+}
+impl Drop for GeometryHost{fn drop(&mut self){self.close();}}
 
 //#region 🧸️Fixtures
 const FIXTURE: &str = include_str!("../🧫️fixtures/🔣️.json");
@@ -47,13 +68,13 @@ struct Call<'a> {
     mode: WireArtifactInferenceCacheMode,
 }
 
-fn call(host: &GeometryHost, call: Call<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
+fn call(host: &GeometryHost, call: Call<'_>) -> Result<OriginalOracle<ArtifactInferenceExecution>, OriginalOracle<ArtifactInferenceExecutionError>> {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: call.work_units, recursion_depth: 8 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "geometry-test", previous_state: call.previous, requested_cache_mode: call.mode, canonical_payload: call.payload.as_bytes(), dependencies: &[] };
-    geometry_inference_service().infer_with_context(&request, host).map(|step| step.execution.expect("a geometry step carries its execution"))
+    host.infer(&request,Some(&host.host))
 }
 
-fn once(host: &GeometryHost, payload: &str, work_units: u64) -> ArtifactInferenceExecution {
+fn once(host: &GeometryHost, payload: &str, work_units: u64) -> OriginalOracle<ArtifactInferenceExecution> {
     call(host, Call { payload, work_units, previous: None, mode: WireArtifactInferenceCacheMode::Incremental }).expect("the service answers")
 }
 
@@ -86,8 +107,8 @@ fn the_registered_metadata_publishes_the_widget_step_contract_and_both_schemas_p
 fn a_service_without_its_geometry_host_refuses_by_name() {
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 10, recursion_depth: 1 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &budgets, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: b"{}", dependencies: &[] };
-    assert_eq!(geometry_inference_service().infer(&request).err().expect("the service refuses").code, "artifact-inference.context-required");
-    assert_eq!(geometry_inference_service().infer_with_context(&request, &0u8).err().expect("the service refuses").code, "generation3d.geometry.context");
+    let host=GeometryHost::default();assert_eq!(host.infer(&request,None).err().expect("the service refuses").code, "artifact-inference.context-required");
+    assert_eq!(host.infer(&request,Some(&0u8)).err().expect("the service refuses").code, "generation3d.geometry.context");
 }
 
 #[test]
@@ -127,7 +148,7 @@ fn a_run_resumes_from_its_own_result_and_equals_the_complete_run_for_every_work_
             }
             let partial = typed(&execution);
             assert!(partial.cursor.is_some() && !partial.complete && partial.progress.completed < partial.progress.total);
-            previous = execution.canonical_payload;
+            previous = execution.canonical_payload.clone();
         };
         assert_eq!(last.widgets, reference.widgets, "{units} units per call");
         assert_eq!(calls, 4usize.div_ceil(units as usize), "{units} units per call: one unit per computed widget");
@@ -214,9 +235,9 @@ fn invalid_requests_and_budgets_are_refused_by_name() {
     assert_eq!(refusal("not json", 10).code, "generation3d.geometry.invalid-request");
     let tight = WireArtifactInferenceBudget { allocation_bytes: 8, work_units: 10, recursion_depth: 1 };
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128}, policy: &[], budgets: &tight, cancellation_id: "x", previous_state: None, requested_cache_mode: WireArtifactInferenceCacheMode::Incremental, canonical_payload: payload.as_bytes(), dependencies: &[] };
-    assert_eq!(geometry_inference_service().infer_with_context(&request, &host).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
+    assert_eq!(host.infer(&request,Some(&host.host)).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
     let garbage = ArtifactInferenceExecutionRequest { previous_state: Some(b"nope"), budgets: &WireArtifactInferenceBudget { allocation_bytes: 1 << 24, work_units: 10, recursion_depth: 1 }, ..request };
-    assert_eq!(geometry_inference_service().infer_with_context(&garbage, &host).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
+    assert_eq!(host.infer(&garbage,Some(&host.host)).err().expect("the service refuses").code, "generation3d.geometry.invalid-request");
 }
 
 #[test]

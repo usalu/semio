@@ -2,7 +2,6 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 mod oracles {
     use image::ImageDecoder;
     use semio_repo_test_host::{digest, Json};
@@ -295,43 +294,26 @@ mod oracles {
 }
 
 //#region 🔖️Dispatch
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     oracles::apply_mutation(input, spec)
 }
 
-#[cfg(feature = "oracles")]
 pub fn oracle_undo_mutation(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     oracles::undo_mutation(original_input, spec, mutated)
 }
 
-#[cfg(feature = "oracles")]
 pub fn project_bmp_mutation(input: &[u8]) -> Result<Json, String> {
     oracles::project(input)
 }
 
 /// 🖼️ Independent image-rs visual meaning behind an owned test interface.
-#[cfg(feature = "oracles")]
 pub fn oracle_visual_rgba8(input: &[u8]) -> Result<(u32, u32, Vec<u8>), String> {
     let decoded = image::load_from_memory_with_format(input, image::ImageFormat::Bmp).map_err(|error| error.to_string())?.to_rgba8();
     Ok((decoded.width(), decoded.height(), decoded.into_raw()))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_undo_mutation(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_bmp_mutation(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️FixtureDerivation
@@ -349,19 +331,16 @@ pub fn project_bmp_mutation(_input: &[u8]) -> Result<Json, String> {
 /// palette does not already contain, and the derivation asserts that no pixel references any of
 /// them — a padded table whose padding collided with a real colour would silently reintroduce
 /// exactly the problem it exists to avoid.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️fixture-derivation/🦀️.rs"]
 mod fixture_derivation;
 //#endregion 🔖️FixtureDerivation
 
 //#region RoundTrip
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { oracles::encode(&oracles::decode(input)?) }
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
 //#endregion RoundTrip
 
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 mod canonical_byte_authority {
     use image::ImageDecoder;
 

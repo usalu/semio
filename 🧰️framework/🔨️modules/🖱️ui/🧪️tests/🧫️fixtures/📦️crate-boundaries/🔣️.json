@@ -1,0 +1,521 @@
+{
+  "version": 1,
+  "crates": [
+    {
+      "package": "semio-framework-ui-surface-identity",
+      "manifest": "🪟️surface/🪪️identity/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🪟️surface/🪪️identity/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-prepared",
+      "manifest": "🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-draw-contract",
+        "semio-framework-ui-scene",
+        "semio-framework-ui-prepared-staging",
+        "semio-framework-job",
+        "semio-framework-value",
+        "js-sys",
+        "semio-framework-ui-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-prepared-staging",
+      "manifest": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-scene",
+        "semio-framework-ui-raster-owner",
+        "semio-framework-job",
+        "semio-framework-value"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-draw-contract",
+      "manifest": "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-scene",
+        "semio-framework-ui-theme",
+        "semio-framework-ui-styling",
+        "semio-framework-job",
+        "semio-framework-value",
+        "bytemuck"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-raster-owner",
+      "manifest": "🖼️raster/🧵️ownership/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🖼️raster/🧵️ownership/🦀️.rs",
+      "dependencies": [
+        "semio-framework-value"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-select-behavior",
+      "manifest": "🧱️elements/🔽️Select/🧭️behavior/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🧱️elements/🔽️Select/🧭️behavior/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-theme"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-retained-tree",
+      "manifest": "🌳️retained/🌳️tree/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🌳️retained/🌳️tree/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-arena",
+        "semio-framework-ui-action",
+        "semio-framework-ui-declaration",
+        "semio-framework-ui-layout",
+        "semio-framework-ui-contract",
+        "semio-framework-ui-locale",
+        "semio-framework-ui-select-behavior",
+        "semio-framework-ui-theme",
+        "semio-framework-value",
+        "semio-framework-ui-scene",
+        "serde",
+        "serde_json"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-arena",
+      "manifest": "🌳️retained/🏟️arena/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🌳️retained/🏟️arena/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-action",
+      "manifest": "🎬️action/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎬️action/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-contract",
+        "semio-framework-ui-layout",
+        "semio-framework-value"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-declaration",
+      "manifest": "📜️declaration/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📜️declaration/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-contract",
+        "semio-framework-ui-locale",
+        "semio-framework-ui-scene",
+        "semio-framework-value",
+        "serde",
+        "serde_json",
+        "semio-framework-ui-layout",
+        "semio-framework-icon-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-layout",
+      "manifest": "📜️declaration/📐️layout/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "📜️declaration/📐️layout/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-contract",
+        "semio-framework-value",
+        "semio-framework-icon-contract",
+        "serde",
+        "serde_json"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-icon-contract",
+      "manifest": "../🖼️assets/🔣️icons/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔣️icons/🧬️schema/🦀️.rs",
+      "dependencies": [
+        "semio-framework-value",
+        "serde",
+        "serde_json"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-plugin",
+        "semio-framework-os-kernel",
+        "wgpu",
+        "winit",
+        "parley",
+        "swash",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-anta-latin-regular",
+      "manifest": "../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-kelly-slab-latin-regular",
+      "manifest": "../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-share-tech-mono-latin-regular",
+      "manifest": "../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-regions-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-flags-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-symbols-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-objects-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-activities-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-travel-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-food-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-nature-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-people-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-faces-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-joined-forms-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-font-noto-emoji-supplement-regular",
+      "manifest": "../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🦀️.rs",
+      "dependencies": [],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-text",
+      "manifest": "🔤️typography/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🔤️typography/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-theme",
+        "semio-framework-font-anta-latin-regular",
+        "semio-framework-font-kelly-slab-latin-regular",
+        "semio-framework-font-share-tech-mono-latin-regular",
+        "semio-framework-font-noto-emoji-regions-regular",
+        "semio-framework-font-noto-emoji-flags-regular",
+        "semio-framework-font-noto-emoji-symbols-regular",
+        "semio-framework-font-noto-emoji-objects-regular",
+        "semio-framework-font-noto-emoji-activities-regular",
+        "semio-framework-font-noto-emoji-travel-regular",
+        "semio-framework-font-noto-emoji-food-regular",
+        "semio-framework-font-noto-emoji-nature-regular",
+        "semio-framework-font-noto-emoji-people-regular",
+        "semio-framework-font-noto-emoji-faces-regular",
+        "semio-framework-font-noto-emoji-joined-forms-regular",
+        "semio-framework-font-noto-emoji-supplement-regular",
+        "semio-framework-value",
+        "parley",
+        "swash",
+        "serde",
+        "js-sys",
+        "semio-framework-async",
+        "wasm-bindgen",
+        "web-sys"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    },
+    {
+      "package": "semio-framework-ui-theme",
+      "manifest": "🎨️styling/🎭️theme/📦️packages/🦀️rust/Cargo.toml",
+      "entry": "🎨️styling/🎭️theme/🦀️.rs",
+      "dependencies": [
+        "semio-framework-ui-styling",
+        "semio-framework-ui-contract"
+      ],
+      "forbiddenDependencies": [
+        "semio-framework-ui",
+        "semio-framework-os-kernel",
+        "semio-framework-plugin",
+        "wgpu",
+        "winit",
+        "taffy"
+      ]
+    }
+  ]
+}

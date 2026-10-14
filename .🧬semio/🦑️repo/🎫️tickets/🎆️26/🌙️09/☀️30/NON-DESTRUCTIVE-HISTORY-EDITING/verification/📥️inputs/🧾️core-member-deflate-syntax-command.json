@@ -1,11 +1,11 @@
 {
   "workspaceRoot": "/Users/ueli/Documents/semio",
   "arguments": [
-    "nx",
+    "repo",
     "exec",
     "--projects=workspace",
-    "--excludeTaskDependencies",
-    "--skip-nx-cache",
+    "--exclude-dependencies",
+    "--skip-cache",
     "--parallel=1",
     "--",
     "bun",
@@ -26,11 +26,11 @@
     "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs"
   ],
   "selection": [
-    "nx",
+    "repo",
     "exec",
     "--projects=workspace",
-    "--excludeTaskDependencies",
-    "--skip-nx-cache",
+    "--exclude-dependencies",
+    "--skip-cache",
     "--parallel=1",
     "--",
     "bun",
@@ -63,5 +63,6 @@
       "offline": false
     }
   },
-  "buildMode": "prototype"
+  "buildMode": "prototype",
+  "tool": "nx"
 }

@@ -1,5 +1,5 @@
 use super::*;
-use crate::{FemElement, FemNode};
+use crate::standards::v1::subsets::any::schema::structure::{FemElement, FemNode};
 
 //#region 🧸️Fixtures
 fn sample_snapshot() -> Fem2dSnapshot {

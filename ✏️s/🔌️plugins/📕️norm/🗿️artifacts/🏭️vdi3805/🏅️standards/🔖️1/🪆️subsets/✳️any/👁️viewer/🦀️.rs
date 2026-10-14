@@ -53,7 +53,7 @@ impl ArtifactViewer for Vdi3805Viewer {
     const DIALECT: Dialect = VDI3805_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VDI3805_DOCUMENT_SCHEMA;
 
-    semio_s_artifact_norm_contract::norm_exact_viewer_store_ownership!();
+    semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
     fn initial_snapshot() -> Vdi3805Snapshot {
         Vdi3805Snapshot::default()

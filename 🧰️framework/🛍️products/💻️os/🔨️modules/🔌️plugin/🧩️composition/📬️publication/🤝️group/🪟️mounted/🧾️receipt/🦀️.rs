@@ -12,9 +12,9 @@ pub(crate) const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
 pub(crate) struct MountedReceiptBytes {
     bytes: ManuallyDrop<Vec<u8>>,
     candidate: ManuallyDrop<Option<Vec<u8>>>,
-    copied: usize,
+    pub(crate) copied: usize,
     required: Option<usize>,
-    closing: bool,
+    pub(crate) closing: bool,
     closed: bool,
 }
 
@@ -98,7 +98,7 @@ pub(crate) struct MountedPreparedOperationBytes {
     encoded_complete: bool,
     cursor_closed: bool,
     failed: bool,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl MountedPreparedOperationBytes {
@@ -167,13 +167,13 @@ pub(crate) struct MountedPreparedOperationsBytes {
     operation: Option<MountedPreparedOperationBytes>,
     encoded: ManuallyDrop<Option<Vec<u8>>>,
     count: usize,
-    index: usize,
+    pub(crate) index: usize,
     phase: MountedOperationFramingPhase,
     integer: [u8; 10],
     integer_len: usize,
     integer_offset: usize,
     payload_offset: usize,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl MountedPreparedOperationsBytes {
@@ -285,16 +285,16 @@ pub(crate) struct MountedKernelMutationReceipt {
     dependency: Option<MountedReceiptBytes>,
     author: ManuallyDrop<Option<SharedUtf8>>,
     phase: MountedKernelReceiptPhase,
-    field: usize,
+    pub(crate) field: usize,
     segment: usize,
-    offset: usize,
+    pub(crate) offset: usize,
     dependency_index: usize,
-    closing: bool,
+    pub(crate) closing: bool,
     transferred: bool,
 }
 
 impl MountedKernelMutationReceipt {
-    fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
     pub(crate) fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptBytes::new()), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), author: ManuallyDrop::new(None), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
     fn validate(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<(), ValueError> { if self.closing || self.transferred || self.identity != source.identity() || self.document != source.document || self.base_version != source.base_version || self.timestamp != source.timestamp || self.undo_policy != source.undo_policy { Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted host receipt lost its exact original causal source")) } else { Ok(()) } }
     fn active_bytes(&self) -> Option<&MountedReceiptBytes> { match self.phase { MountedKernelReceiptPhase::Strings => self.strings.get(self.field), MountedKernelReceiptPhase::Inverse => self.inverse.get(self.field), MountedKernelReceiptPhase::Dependencies => self.dependency.as_ref(), _ => None } }
@@ -406,7 +406,7 @@ impl Drop for MountedKernelMutationReceipt { fn drop(&mut self) { assert!(std::t
 
 pub(crate) struct MountedArtifactHandleIssuer {
     identity: Option<(usize, usize)>,
-    offset: usize,
+    pub(crate) offset: usize,
     first: u64,
     second: u64,
     complete: bool,

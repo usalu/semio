@@ -15,7 +15,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairLanding, StairRun, StairWinder};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{HostSide, ModelSnapshot, Railing, RailingHost, Ramp, Slab};
+use crate::standards::v1::subsets::any::schema::snapshot::{HostSide, ModelSnapshot, Railing, RailingHost, Ramp, Slab};
 use semio_framework_geometry::loops;
 use semio_framework_value::DslValue;
 use std::f64::consts::PI;

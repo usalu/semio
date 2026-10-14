@@ -2,7 +2,7 @@
 
 use super::super::delete_grid_line::DeleteGridLine;
 use super::CreateGridLine;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateGridLine, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.grids.contains_key(&payload.id) {

@@ -15,7 +15,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-repo-events"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-framework-repo-events"], this.repoRoot, this.invocation, rest);
   }
 }
 

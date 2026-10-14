@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::{PropertyTemplate, PropertyValue, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::snapshot::{PropertyTemplate, PropertyValue, TemplateTarget};
 
 fn edit(op: &str, index: &str, field: &str, value: &str) -> EditTemplate {
     EditTemplate { id: "pt-wall".into(), op: op.into(), index: index.into(), field: field.into(), value: value.into() }

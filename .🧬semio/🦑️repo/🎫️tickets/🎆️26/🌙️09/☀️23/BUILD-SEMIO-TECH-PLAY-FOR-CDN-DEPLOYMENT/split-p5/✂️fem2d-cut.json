@@ -1,0 +1,169 @@
+{
+ "artifact": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d",
+ "layers": "🧊️fem2d-layers.json",
+ "crate": "semio_s_artifact_fem_2d",
+ "aggregator": "aggregator",
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-fem-2d-model",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📦️packages/🦀️rust"
+  },
+  "engine": {
+   "package": "semio-s-artifact-fem-2d-engine",
+   "dir": "⚙️engine/◻️2d/📦️packages/🦀️rust"
+  },
+  "mesh-topology": {
+   "package": "semio-s-artifact-fem-2d-mesh-topology",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/📦️packages/🦀️rust"
+  },
+  "mesh": {
+   "package": "semio-s-artifact-fem-2d-mesh",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "load": {
+   "package": "semio-s-artifact-fem-2d-load",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "boundary": {
+   "package": "semio-s-artifact-fem-2d-boundary",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "material": {
+   "package": "semio-s-artifact-fem-2d-material",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "analysis": {
+   "package": "semio-s-artifact-fem-2d-analysis",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-fem-2d-mutations",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "io": {
+   "package": "semio-s-artifact-fem-2d-io",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/🚪️io/📦️packages/🦀️rust"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-fem-2d-viewer",
+   "dir": "🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "model": [
+   "//! 🧬️ `s.fem.fem2d` model: structural entities, artifact schema, snapshot, diff, inferences and the shared mutation guards.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "engine": [
+   "//! ⚙️ `s.fem.fem2d` engine bridge: meshing, mesh preview and modal/buckling over the shared fem engine.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "mesh-topology": [
+   "//! 🕸️ `s.fem.fem2d` mesh mutations of nodes and elements (create, delete, replace).",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "mesh": [
+   "//! 🕸️ `s.fem.fem2d` mesh mutations of sections and regions, and the selection move.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "load": [
+   "//! 🏋️ `s.fem.fem2d` load mutations: load cases, loads and combinations.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "boundary": [
+   "//! 🛡️ `s.fem.fem2d` boundary mutations: supports.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "material": [
+   "//! 🧱️ `s.fem.fem2d` material mutations.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "analysis": [
+   "//! 📈️ `s.fem.fem2d` analysis-settings mutation.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "mutations": [
+   "//! ⚡️ `s.fem.fem2d` semantic mutation dispatch enum, its inverse delegate and the central apply.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "io": [
+   "//! 🚪️ `s.fem.fem2d` io: text, binary and SQLite codecs, stdio import and export, composers, languages and examples.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ],
+  "viewer": [
+   "//! 👁️ `s.fem.fem2d` viewer: the read-only view mode, presence and config.",
+   "",
+   "#![allow(clippy::result_large_err)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_os_kernel as vcs;"
+  ]
+ },
+ "consumers": [
+  "✏️s/🔌️plugins/🏗️fem",
+  "🌎️hub/🧩️compositions/🏗️fem",
+  "✏️s/🔌️plugins/📕️norm"
+ ]
+}

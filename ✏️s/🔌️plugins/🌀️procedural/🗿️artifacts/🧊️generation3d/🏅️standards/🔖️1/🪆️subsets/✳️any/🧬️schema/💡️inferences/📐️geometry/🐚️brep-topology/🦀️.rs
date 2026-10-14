@@ -1,10 +1,21 @@
 //! 🐚️ The `brep.topology` widgets: vertices, decomposition into vertices, edges, faces and shells, compounds, persistent labels, sewing, healing and NURBS conversion.
 //!
 //! Selected edges and faces are persistent labels of the input value and resolve through the imported session (`generation3d.geometry.selection-stale` when a label is gone). Every component of a decomposition is exported one per unit of fuel, so a large shape never holds the interactive turn.
+#![allow(clippy::result_large_err)]
 
-use super::brep_curve::guarded;
-use super::phased_job::{Pipeline, Work};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{GeometryHandle, GeometryKind};
 
 const EMPTY: &str = "generation3d.geometry.topology-empty";
@@ -179,6 +190,8 @@ fn convert_to_nurbs(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-topology", include_str!("../../../🗂️catalogue/🔣️brep-topology.json"));
 /// 🗃️ Every `brep.topology` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.topology.vertex", start: vertex },

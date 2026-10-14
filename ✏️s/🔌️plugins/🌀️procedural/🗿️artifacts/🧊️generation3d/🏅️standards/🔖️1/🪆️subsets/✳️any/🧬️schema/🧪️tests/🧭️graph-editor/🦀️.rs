@@ -1,8 +1,9 @@
-use super::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::example_snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_model::*;
+use semio_s_artifact_procedural_3d_mutations::GraphEditor;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 /// 🧭️ The document the host would normalise `bundled` to — the base every replay law is stated on, so a normalisation the
 /// host applies on open is not mistaken for an edit.
@@ -119,7 +120,7 @@ fn graph_editor_replay_reaches_the_host_snapshot_for_a_splice() {
         _ => None,
     }).expect("the example previews an operator");
     let (leaves, _) = recorded_replay_reaches_the_host(&base, |editor| {
-        crate::standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node(editor, &source, "translate").expect("the translate operator is spliced");
+        crate::editor::generation3d::transform_commands::ensure_gumball_node(editor, &source, "translate").expect("the translate operator is spliced");
     });
     let kinds = kinds(&leaves);
     assert!(kinds.starts_with(&["create-widget", "move-widget"]) && kinds.contains(&"update-widget"), "{kinds:?}");

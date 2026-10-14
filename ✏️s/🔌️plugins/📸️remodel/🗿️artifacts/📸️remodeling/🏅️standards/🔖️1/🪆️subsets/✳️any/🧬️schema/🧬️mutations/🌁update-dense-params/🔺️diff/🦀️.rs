@@ -2,8 +2,9 @@
 //! (a struct field, not an id-keyed collection). The invariant is checked BEFORE the
 //! identical-resubmission warning, the one guard order the whole vocabulary follows — non-finite
 //! confidence threshold ⇒ Fatal.
-use crate::diff::{RemodelingDiff, RemodelingParamsDiff};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingParamsDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateDenseParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

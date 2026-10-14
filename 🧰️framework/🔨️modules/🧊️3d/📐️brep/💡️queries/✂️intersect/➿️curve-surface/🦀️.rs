@@ -10,12 +10,12 @@
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, upgraded in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A).
 
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::IntersectError;
-use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -287,7 +287,7 @@ fn intersect_general(curve: &Curve3, surface: &Surface, tol: f64) -> Result<Vec<
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 #[allow(clippy::too_many_arguments)]
 fn subdivide_seed(
-    bez: &semio_framework_3d_brep_representation::curve::bezier::RationalBezier3,
+    bez: &semio_framework_3d_brep_curve::bezier::RationalBezier3,
     t0: f64,
     t1: f64,
     curve: &Curve3,

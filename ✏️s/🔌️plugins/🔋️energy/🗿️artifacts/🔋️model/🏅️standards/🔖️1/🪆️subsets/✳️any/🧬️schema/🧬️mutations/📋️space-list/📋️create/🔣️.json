@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️space-list/📋️create",
+  "semanticKind": "create-space-list",
+  "displayName": "Create Space List",
+  "emoji": "📋️",
+  "aggregateVariant": "CreateSpaceList",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "create-space-list",
+  "binaryTag": 242,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

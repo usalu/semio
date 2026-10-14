@@ -41,7 +41,6 @@
 //! @see ../🧬️schema/📸️snapshot/🦀️.rs — the `MdBlock`/`MdInline` shape this module's JSON
 //! mirrors field-for-field (same `kind`-tagged, camelCase shape `serde` derives for both enums).
 
-#[cfg(feature = "oracles")]
 mod live {
     use comrak::nodes::{AstNode, ListDelimType, ListType, NodeCode, NodeCodeBlock, NodeHeading, NodeHtmlBlock, NodeLink, NodeList, NodeValue};
     use comrak::{format_commonmark, parse_document, Arena, Options};
@@ -538,31 +537,8 @@ mod live {
     //#endregion 🔖️Inverse
 }
 
-#[cfg(feature = "oracles")]
 pub use live::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all, and every
-/// entry point fails loudly. A missing oracle must never degrade into a silently skipped test.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use semio_repo_test_host::Json;
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<(Vec<u8>, Json), String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<(Vec<u8>, Json), String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_md(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_md};
 //#endregion 🔖️Unavailable

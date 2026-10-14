@@ -1,12 +1,13 @@
 //! 📥️ CAD play app commands — the shell file round-trip: native/spatial import and the three export flavours.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::modes::edit::tools::transform::cad_import_object_emit;
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{cad_solid_export_effect, cad_spatial_export_effect, cad_pane_from_view, export_solid_for_pane, export_solid_modelspace, export_spatial_json, publish_engagement, reset_document_effect, runtime_of, CadInteractionSnapshot, CadPlayView};
-use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
-use crate::{CadPaneId, CadSnapshot};
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_transform::cad_import_object_emit;
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_kit::{cad_solid_export_effect, cad_spatial_export_effect, export_solid_for_pane, export_solid_modelspace, export_spatial_json, publish_engagement, reset_document_effect, CadInteractionSnapshot, CadPlayView};
+use semio_s_artifact_cad_cad_modes::{windows::config::cad_pane_from_view, windows::config::runtime_of};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_io::{import_cad_object_by_extension, scene_from_spatial_payload, unwrap_spatial_load_payload, CAD_SOLID_EXPORT_DIALECT_OBJ, CAD_SOLID_EXPORT_DIALECT_STEP, CAD_SOLID_EXPORT_DIALECT_STL};
+use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot};
 use semio_framework_value::DslValue;
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};

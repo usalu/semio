@@ -5,7 +5,7 @@
 pub use crate::standards::v1::subsets::any::schema::authored::plan::{mark, point, segment_of as seg};
 use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
-use crate::{Layer, ModelSnapshot, Profile, StairFlight, Vertex as PlanVertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, Profile, StairFlight, Vertex as PlanVertex};
 use semio_framework_geometry::loops::Vertex;
 use semio_framework_geometry::{Point, Vec2};
 
@@ -104,7 +104,7 @@ pub fn is_curved(snapshot: &ModelSnapshot, id: &str) -> bool {
 pub mod testing {
     use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
     use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, set_storey_height::SetStoreyHeight};
-    use crate::{ModelMutation, ModelSnapshot};
+    use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
     use std::collections::BTreeMap;
 

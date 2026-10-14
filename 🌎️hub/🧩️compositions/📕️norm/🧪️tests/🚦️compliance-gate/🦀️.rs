@@ -6,8 +6,8 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
-use semio_s_artifact_norm_contract::app_surface::{apply_remedy_edit, get_value_at_path, parse_path, set_value_at_path};
-use semio_s_artifact_norm_contract::document::{CheckReport, CheckStatus, NormFamily, RemedyBound};
+use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, parse_path, set_value_at_path};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckStatus, NormFamily, RemedyBound};
 use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
@@ -122,7 +122,7 @@ where
         if check.remedies.is_empty() {
             continue;
         }
-        let applicables: Vec<(usize, &semio_s_artifact_norm_contract::document::Remedy)> = check
+        let applicables: Vec<(usize, &semio_s_plugin_norm_compliance::Remedy)> = check
             .remedies
             .iter()
             .enumerate()
@@ -480,11 +480,11 @@ fn compliance_gate_all_families() {
             ("liquid_retaining_fem_anchor", semio_s_artifact_norm_en1992::liquid_retaining_fem_anchor::PRIMARY_TEXT),
         ],
     ));
-    results.push(gate_family::<semio_s_artifact_norm_en1993::editor::en1993::En1993Family>(
+    results.push(gate_family::<semio_s_artifact_norm_en1993_editor::En1993Family>(
         "en1993",
         &[
-            ("heb240_compliant", semio_s_artifact_norm_en1993::heb240_compliant::PRIMARY_TEXT),
-            ("high_strength_connection", semio_s_artifact_norm_en1993::high_strength_connection::PRIMARY_TEXT),
+            ("heb240_compliant", semio_s_artifact_norm_en1993_examples::heb240_compliant::PRIMARY_TEXT),
+            ("high_strength_connection", semio_s_artifact_norm_en1993_examples::high_strength_connection::PRIMARY_TEXT),
         ],
     ));
     results.push(gate_family::<semio_s_artifact_norm_en1994::editor::en1994::En1994Family>(

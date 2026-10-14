@@ -1,0 +1,46 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust/🦀️.rs",
+ "layers": "🧮️read-layers.json",
+ "crate": "semio_s_artifact_stdio_dwg_read",
+ "aggregator": "read",
+ "crates": {
+  "records": {
+   "package": "semio-s-artifact-stdio-dwg-read-records",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🧱️records/📦️packages/🦀️rust"
+  },
+  "objects": {
+   "package": "semio-s-artifact-stdio-dwg-read-objects",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "records": [
+   "//! 🧱️ `stdio.dwg` reader records: the R2004 and R2007 containers, object-record field readers, entity records and file-level sections.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as store;"
+  ],
+  "objects": [
+   "//! 📦️ `stdio.dwg` reader objects: the object-record walk and every non-entity object decoder.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as store;"
+  ]
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ],
+ "descriptions": {
+  "records": "Stdio dwg reader: containers, fields, entity records and file-level sections",
+  "objects": "Stdio dwg reader: object records"
+ }
+}

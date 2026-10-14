@@ -6,10 +6,10 @@
 //! empty (it is handed no session).
 
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 
-pub use crate::preview_eval::FlowEvalResolve;
+
 
 pub fn handle(_payload: &FlowEvalResolve, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>) -> Result<ViewEmit<Generation3dViewConfigMutation>, Fault> {
     Ok(ViewEmit::default())

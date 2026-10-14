@@ -6,6 +6,14 @@ import policySchema from "./📋️policy/🧬️schema/🔣️.json";
 import configuredPolicy from "./📋️policy/🔣️.json";
 import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { advanceScriptInvocation, checkScriptInvocation, type ScriptInvocation } from "../../../🧭️routing/📥️invocation/🟦️.ts";
+import {scriptCompilerAdmissionControlV1,requestedCompilerAdmissionControlV1,compilerAdmissionBudgetV1} from "../../../🏗️build/🎟️capacity/🟦️.ts";
+import {acquireCompilerCapacityLeaseV1} from "../../../🏗️build/🎟️capacity/🟦️.ts";
+import {acquireCargoBuildLeaseV1} from "../../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "../../../📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1} from "../../../📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import type {ResourceLeaseControl} from "../../../🔒️leases/🟦️.ts";
 
 export type ExactCargoLawGroup = {
   package: string;
@@ -15,7 +23,10 @@ export type ExactCargoLawGroup = {
 };
 export type ExactCargoLawStage = "build" | "list" | "native";
 /** 🔌️ Owned process/fingerprint port permits deterministic hostile runner laws without compiling Cargo. */
+export type ExactCargoLawPreparationOptionsV1=Omit<OwnedProcessCaptureOptions,"stdoutPath"|"stderrPath">;
 export type ExactCargoLawPort = {
+  prepare?: (command:string,args:string[],options:ExactCargoLawPreparationOptionsV1)=>Promise<void>;
+  withBuildInputs?: <T>(command:string,args:string[],options:ExactCargoLawPreparationOptionsV1,control:ResourceLeaseControl,body:()=>Promise<T>)=>Promise<T>;
   probe: (command: string, args: string[], options: OwnedProcessCaptureOptions) => Promise<OwnedProcessCaptureResult>;
   fingerprint: (path: string) => { path: string; sha256: string };
   nativeLibraryDirectory?: (options:OwnedProcessCaptureOptions)=>Promise<string>;
@@ -31,6 +42,11 @@ export function readExactCargoLawPolicyV1(value: unknown): ExactCargoLawPolicyV1
 export function configuredExactCargoLawPolicyV1(): ExactCargoLawPolicyV1 { return readExactCargoLawPolicyV1(configuredPolicy); }
 export type ExactCargoLawOptions = {
   invocation: ScriptInvocation;
+  storage:NativeStorageReservationV1;
+  leaseDirectory:string;
+  sourceBoundary:CargoSourceBoundaryPolicyV1;
+  planningPort?:CargoCompilerPlanningPortV1;
+  sourcePort?:CargoSourceAdmissionPortV1;
   policy: ExactCargoLawPolicyV1;
   cwd: string;
   groups: readonly ExactCargoLawGroup[];
@@ -195,6 +211,7 @@ const originalExactCargoPort:ExactCargoLawPort={probe:captureOwnedProcess,finger
 export async function runExactCargoLaws(options: ExactCargoLawOptions, port: ExactCargoLawPort = originalExactCargoPort): Promise<readonly ExactCargoLawReceipt[]> {
   const policy = readExactCargoLawPolicyV1(options.policy);
   checkScriptInvocation(options.invocation);
+  const control=scriptCompilerAdmissionControlV1(options.invocation,"exact-cargo:storage",0),storage=requireNativeStorageReservationV1(options.storage,control);if(storage.allocation.kind!=="compiler-workspace")throw Error("Original exact Cargo compiler storage required");await storage.recheck();
   if (options.invocation.policy.maximumElapsedMilliseconds > 0 && policy.buildMilliseconds === 0) throw Error("Finite original owner requires positive build authority");
   const configuredEnv = options.env ?? process.env;
   const artifactRoot = options.artifactDir ?? configuredEnv.SEMIO_TEST_ARTIFACT_DIR;
@@ -204,9 +221,11 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
   const targetBoundary = process.platform === "win32" ? cargoTargetDir.toLowerCase() : cargoTargetDir;
   const sourceBoundary = process.platform === "win32" ? resolve(options.cwd).toLowerCase() : resolve(options.cwd);
   if (sourceBoundary === targetBoundary || sourceBoundary.startsWith(targetBoundary + sep)) throw new Error("Cargo target must not contain the source workspace");
-  const env = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
+  const env:Record<string,string|undefined> = { ...configuredEnv, CARGO_TARGET_DIR: cargoTargetDir };
   const nativeEnv: Record<string, string | undefined> = { ...env, ...options.nativeEnv, CARGO_TARGET_DIR: cargoTargetDir };
   delete nativeEnv.RUST_TEST_NOCAPTURE;
+  for(const path of [artifactRoot,cargoTargetDir,env.CARGO_HOME,env.CARGO_BUILD_BUILD_DIR]){if(!path)throw Error("Original bounded exact Cargo directories required");requireNativeStoragePathV1(storage.backing.root,path);}
+  for(const name of ["TMPDIR","TMP","TEMP","SEMIO_TEST_ARTIFACT_DIR"] as const)for(const environment of [env,nativeEnv])if(environment[name])requireNativeStoragePathV1(storage.backing.root,environment[name]!);
   if (!isAbsolute(options.cwd) || !options.groups.length || options.groups.length > 64) throw new Error("Exact Cargo laws require a bounded nonempty target list and absolute cwd");
   const groupKeys = options.groups.map((group) => JSON.stringify([group.package, group.target.kind, group.target.name ?? ""]));
   if (new Set(groupKeys).size !== groupKeys.length) throw new Error("Exact Cargo groups must combine laws for the same package/target");
@@ -238,11 +257,17 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
       };
       const capture = async (next: ExactCargoLawStage, command: string, args: string[], budget: number, name: string): Promise<OwnedProcessCaptureResult> => {
         stage = next;
+        const phaseControl=requestedCompilerAdmissionControlV1(control,budget);
         checkpoint();
+        await storage.recheck();
+        const preparation={cwd:options.cwd,env,budgetMs:compilerAdmissionBudgetV1(phaseControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,invocation:options.invocation};
+        if(next==="build")await port.prepare?.(command,args,preparation);
+        const execute=async()=>{
+        if(next==="build"){const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:command,prefix:[],args,environment:env,maximumOutputBytes:16777216},phaseControl,options.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,phaseControl,options.sourcePort??actualCargoSourceAdmissionPortV1(env,options.cwd));await storage.recheck();}
         await advanceScriptInvocation(options.invocation, "exact-cargo:" + stage + ":" + group.package, "running");
         await options.progress?.({ stage, package: group.package, ...(next === "native" ? { law: args[0] } : {}), artifactDir: groupRoot });
         checkpoint();
-        const admittedBudget = originalBudget(budget);
+        const admittedBudget = compilerAdmissionBudgetV1(phaseControl);
         if (!runRoot) {
           mkdirSync(artifactRoot, { recursive: true });
           endLease = beginExactCargoLease(artifactRoot);
@@ -252,12 +277,15 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
         if (groupRoot !== selectedGroupRoot) { mkdirSync(selectedGroupRoot); groupRoot = selectedGroupRoot; }
         const stdoutPath = join(groupRoot, `${name}.stdout`);
         const stderrPath = join(groupRoot, `${name}.stderr`);
-        last = await port.probe(command, args, { cwd: options.cwd, env: next === "build" ? env : nativeEnv, budgetMs: admittedBudget, maxOutputBytes: next === "build" ? policy.transport.maximumBuildOutputBytes : policy.transport.maximumNativeOutputBytes, stdoutPath, stderrPath, invocation: options.invocation });
+        if(next==="build"){const lease=await acquireCargoBuildLeaseV1({directory:options.leaseDirectory,buildDirectory:env.CARGO_BUILD_BUILD_DIR!,targetDirectory:cargoTargetDir,args,signal:phaseControl.signal,control:phaseControl});try{const capacity=await acquireCompilerCapacityLeaseV1({directory:options.leaseDirectory,control:phaseControl,environment:env});try{last=await port.probe(command,args,{cwd:options.cwd,env:{...env,...(!env.MAKEFLAGS&&!env.CARGO_MAKEFLAGS?{CARGO_BUILD_JOBS:String(capacity.parallelism)}:{})},budgetMs:compilerAdmissionBudgetV1(phaseControl),maxOutputBytes:policy.transport.maximumBuildOutputBytes,stdoutPath,stderrPath,invocation:options.invocation});}finally{capacity.release();}}finally{lease.release();}}else last = await port.probe(command, args, { cwd: options.cwd, env: nativeEnv, budgetMs: admittedBudget, maxOutputBytes: policy.transport.maximumNativeOutputBytes, stdoutPath, stderrPath, invocation: options.invocation });
+        await storage.recheck();
         if (!existsSync(stdoutPath)) writeFileSync(stdoutPath, last.stdout, { flag: "wx", mode: 0o600 });
         if (!existsSync(stderrPath)) writeFileSync(stderrPath, last.stderr, { flag: "wx", mode: 0o600 });
         writeFileSync(join(groupRoot, `${name}.json`), JSON.stringify({ command, args, cargoTargetDir, status: last.status, signal: last.signal, reason: last.reason ?? "exit" }), { flag: "wx", mode: 0o600 });
         checkpoint();
         return last;
+        };
+        return next==="build"&&port.withBuildInputs?await port.withBuildInputs(command,args,preparation,phaseControl,execute):await execute();
       };
       const target = group.target.kind === "lib" ? ["--lib"] : [`--${group.target.kind}`, group.target.name];
       const cargoArgs = [...(options.cargoArgs ?? []), ...(group.cargoArgs ?? [])];
@@ -334,7 +362,7 @@ export async function runExactCargoLaws(options: ExactCargoLawOptions, port: Exa
       if (new Set(laws).size !== laws.length) fail("Law selectors resolve to the same native assertion");
       for (const [lawIndex, law] of laws.entries()) {
         verify();
-        const result = await capture("native", initial.path, [law, "--exact", "--test-threads=1", "--show-output"], policy.lawMilliseconds, `law-${lawIndex}`);
+        const result = await capture("native", initial.path, [law, "--exact", "--include-ignored", "--test-threads=1", "--show-output"], policy.lawMilliseconds, `law-${lawIndex}`);
         verify();
         const terminals = [...result.stdout.matchAll(/^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;/gm)];
         if (

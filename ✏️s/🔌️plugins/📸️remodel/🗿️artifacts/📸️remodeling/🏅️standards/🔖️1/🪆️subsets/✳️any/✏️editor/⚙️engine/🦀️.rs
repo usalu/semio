@@ -9,10 +9,21 @@
 //! why it cannot live in `🧬️schema/` (artifacts must never depend on apps) and instead lives beside the
 //! topic modules it bridges.
 
-use crate::editor::remodeling::engine::{camera as remodeling_camera, feature as remodeling_feature, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
+use semio_s_artifact_remodel_remodeling_geo::editor::remodeling::engine::geo as remodeling_geo;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction as remodeling_engine;
 #[cfg(test)]
-use crate::ImageAsset;
-use crate::{CalibrationState, CameraPosePreview, DenseResolution, FeatureDetector, QcReportSnapshot, ReconstructionParams, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CalibrationState;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraPosePreview;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseResolution;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureDetector;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RobustLossKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoCodec as DocumentVideoCodec;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::WatertightReportSnapshot;
 
 //#region 🔖️EngineMapping
 /// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`
@@ -61,9 +72,9 @@ pub fn build_engine_params(params: &ReconstructionParams, calibration: &Calibrat
     engine_params.sfm.min_track_length = params.sfm.min_track_length as usize;
     engine_params.sfm.ba_max_iterations = params.sfm.ba_max_iterations as usize;
     engine_params.sfm.robust_loss = match params.sfm.robust_loss {
-        RobustLossKind::L2 => remodeling_sfm::RobustLoss::Trivial,
-        RobustLossKind::Huber => remodeling_sfm::RobustLoss::Huber(f64::from(params.sfm.huber_delta_px)),
-        RobustLossKind::Cauchy => remodeling_sfm::RobustLoss::Cauchy(f64::from(params.sfm.huber_delta_px)),
+        RobustLossKind::L2 => semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::RobustLoss::Trivial,
+        RobustLossKind::Huber => semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::RobustLoss::Huber(f64::from(params.sfm.huber_delta_px)),
+        RobustLossKind::Cauchy => semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::RobustLoss::Cauchy(f64::from(params.sfm.huber_delta_px)),
     };
     engine_params.dense.window_radius = params.dense.window_radius_px as i32;
     engine_params.dense.iterations = match params.dense.resolution {
@@ -103,7 +114,7 @@ pub fn camera_pose_preview(index: u32, pose: &remodeling_camera::CameraPose) -> 
     CameraPosePreview { camera_id: format!("cam-{index}"), rotation_wxyz: [quat.w as f32, quat.x as f32, quat.y as f32, quat.z as f32], translation }
 }
 
-pub fn watertight_snapshot(report: &remodeling_mesh::WatertightReport) -> WatertightReportSnapshot {
+pub fn watertight_snapshot(report: &semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::WatertightReport) -> WatertightReportSnapshot {
     WatertightReportSnapshot {
         vertex_count: report.vertex_count as u32,
         triangle_count: report.triangle_count as u32,
@@ -385,19 +396,19 @@ fn png_crc32(bytes: &[u8]) -> u32 {
 }
 //#endregion 🔖️BoundedRasterPng
 
-pub fn video_codec_to_artifact(codec: remodeling_video::VideoCodec) -> DocumentVideoCodec {
+pub fn video_codec_to_artifact(codec: semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec) -> DocumentVideoCodec {
     match codec {
-        remodeling_video::VideoCodec::Avc => DocumentVideoCodec::Avc,
-        remodeling_video::VideoCodec::Hevc => DocumentVideoCodec::Hevc,
-        remodeling_video::VideoCodec::Vp9 => DocumentVideoCodec::Vp9,
-        remodeling_video::VideoCodec::Av1 => DocumentVideoCodec::Av1,
-        remodeling_video::VideoCodec::Mjpeg => DocumentVideoCodec::Mjpeg,
-        remodeling_video::VideoCodec::Unknown(_) => DocumentVideoCodec::Unknown,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Avc => DocumentVideoCodec::Avc,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Hevc => DocumentVideoCodec::Hevc,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Vp9 => DocumentVideoCodec::Vp9,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Av1 => DocumentVideoCodec::Av1,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Mjpeg => DocumentVideoCodec::Mjpeg,
+        semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec::Unknown(_) => DocumentVideoCodec::Unknown,
     }
 }
 
 /// 🏷️ Owned codec, dimensions, duration and container identity from the admitted probe.
-pub fn describe_video_probe(probe: &remodeling_video::VideoProbe) -> (remodeling_video::VideoCodec, u32, u32, f64, &str) {
+pub fn describe_video_probe(probe: &semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoProbe) -> (semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoCodec, u32, u32, f64, &str) {
     (probe.codec, probe.width, probe.height, probe.duration_ms, &probe.container)
 }
 //#endregion 🔖️EngineMapping
@@ -409,4 +420,4 @@ mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-use crate::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;

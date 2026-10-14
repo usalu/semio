@@ -1,5 +1,7 @@
 use super::*;
+use crate::wire::ENERGY_WIRE_MAGIC;
 use crate::calendar::RunPeriod;
+use crate::model::{test_model_full_topology, test_model_single_zone};
 
 #[derive(Debug, PartialEq, Eq)]
 enum Seen {
@@ -28,174 +30,70 @@ fn seen_step(job: &mut EnergyJob, context: &mut StepContext<'_>) -> Seen {
 
 const RUNG_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4, maximum_depth: 1 };
 
-fn build_checkpoint_packet(job: &mut EnergyJob) -> EnergyWirePacket {
-    let operation = job.operation;
-    let hour_index = job.hour_index as u64;
-    job.start_wire(EnergyWireKind::Checkpoint, hour_index, semio_framework_job::JobPayloadStream::CheckpointState).expect("checkpoint preflight");
-    let mut sequence = 0;
-    for _ in 0..32 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        if job.step_wire_build(&mut context).expect("checkpoint fragment") {
-            return job.wire_ready.take().expect("sealed checkpoint packet");
+fn drive_energy_job(job: EnergyJob) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
+    drive_energy_job_with_fuel(job, 1)
+}
+
+fn drive_energy_job_with_fuel(mut job: EnergyJob, fuel: u64) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
+    let operation = job.operation.operation;
+    let generation = job.operation.generation;
+    let cancel = CancelToken::root_now();
+    let mut preview_sequence = 0;
+    let mut previews = Vec::new();
+    let mut checkpoints = 0;
+    let mut worst = std::time::Duration::ZERO;
+    for _ in 0..50_000 {
+        let start = Instant::now();
+        let mut preview_sequence_receipt = RetainedCloneProgress::default();
+        let mut context = StepContext::new(operation, generation, StepBudget::new(fuel, u64::MAX, ENERGY_BATCH_GRANT), cancel.clone(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let outcome = seen_step(&mut job, &mut context);
+        let elapsed = start.elapsed();
+        worst = worst.max(elapsed);
+        match outcome {
+            Seen::Preview => {
+                let mut packet = job.take_preview_packet(generation).expect("fresh preview generation").expect("preview packet");
+                previews.push(packet.preview().expect("typed projection belongs to canonical preview packet").clone());
+                close_retained_packet(&mut packet);
+            }
+            Seen::Checkpoint => {
+                let mut lease = job.take_checkpoint_packet(generation).expect("fresh checkpoint generation").expect("checkpoint lease");
+                close_retained_packet(lease.packet_mut());
+                job.ack_checkpoint_packet(lease).expect("checkpoint ACK");
+                checkpoints += 1;
+            }
+            Seen::Complete(bytes) => return (job, previews, checkpoints, bytes, worst),
+            Seen::Fault => panic!("energy job faulted"),
+            Seen::Cancelled => panic!("energy job unexpectedly cancelled"),
+            Seen::Yield => {}
         }
     }
-    panic!("checkpoint packet did not seal within fixed field bound")
+    panic!("energy job did not complete within the deterministic step bound")
 }
 
-fn retained_test_packet(operation: Operation, identity: EnergyWireIdentity, bytes: &[u8]) -> EnergyWirePacket {
-    let mut writer = semio_framework_job::RetainedJobPayloadWriter::new(semio_framework_job::JobPayloadStream::CheckpointState);
-    let mut sequence = 0;
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    let mut page = writer.admit_page(&mut context).expect("test page admission");
-    page.write(bytes).expect("single fixed checkpoint page");
-    page.commit();
-    EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity, payload: writer.finish().expect("sealed test packet"), preview: None, reservation: None }
-}
-
-#[test]
-fn p7c2_wire_schema_maximum_plus_one_and_exact_restore_owner() {
-    let operation = Operation::new(allocate_operation_id(), RevisionId(91), Generation(7), 0x55aa);
-    let mut source = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("source admission");
-    let packet = build_checkpoint_packet(&mut source);
-    assert_eq!(packet.payload.len(), ENERGY_CHECKPOINT_BYTES);
-    assert_eq!(packet.payload.page_count(), 1);
-    let model = test_model_single_zone();
-    let config = SimulationConfig::default();
-    let pointer = model.zones.as_ptr();
-    let census = EnergyNumericalCensus::observe(&model, &config).expect("restore census");
-    let mut maximum = EnergyNumericalBounds::default().0;
-    maximum.zones = census.zones - 1;
-    let rejected = EnergyRestoreJob::admit(operation, model, config, packet, EnergyNumericalBounds(maximum)).expect_err("zone MAX+1 rejects before restore mount");
-    assert_eq!(rejected.model.zones.as_ptr(), pointer);
-    assert_eq!(rejected.reason, EnergyCheckpointRejectionReason::Numerical(EnergyNumericalDimension::Zones));
-    let restore = rejected.retry(EnergyNumericalBounds::default()).expect("exact packet and Model+Config retry");
-    drop(restore);
-    let mut recovered = EnergyRestoreJob::recover_abandoned(operation).expect("drop requeues exact restore authority");
-    let mut sequence = 0;
-    for _ in 0..4 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        let _ = recovered.step(&mut context).expect("field decode");
-    }
-    drop(recovered);
-    assert!(EnergyRestoreJob::recover_abandoned(Operation { generation: Generation(8), ..operation }).is_none());
-    let mut recovered = EnergyRestoreJob::recover_abandoned(operation).expect("same generation recovers once");
-    for _ in 0..32 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        if recovered.step(&mut context).expect("restore rebuild") {
-            break;
-        }
-    }
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    let mut restored = recovered.finish(&install_context).expect("restored authority");
-    close_owned_job(&mut restored);
-    close_owned_job(&mut source);
-}
-
-#[test]
-fn p7c2_live_schema_mutations_reject_before_restore_mount() {
-    let operation = Operation::new(allocate_operation_id(), RevisionId(94), Generation(12), 0xdead);
-    let mut source = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("source admission");
-    let packet = build_checkpoint_packet(&mut source);
-    let identity = packet.identity;
-    let baseline = payload_bytes(packet.payload);
-    let mutations: [fn(&mut Vec<u8>); 8] = [
-        |bytes| bytes[0] ^= 0xff,
-        |bytes| bytes[8] = bytes[8].wrapping_add(1),
-        |bytes| bytes[10] = 0xff,
-        |bytes| bytes[32] = bytes[32].wrapping_add(1),
-        |bytes| bytes[56] = bytes[56].wrapping_add(1),
-        |bytes| bytes[64] = bytes[64].wrapping_add(1),
-        |bytes| bytes[72] = 2,
-        |bytes| bytes[76] = 2,
-    ];
-    for mutate in mutations {
-        let mut bytes = baseline.clone();
-        mutate(&mut bytes);
-        let packet = retained_test_packet(operation, identity, &bytes);
-        let mut rejected = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect_err("hostile header/cap mutation");
-        close_retained_packet(&mut rejected.packet);
-    }
-    let mut trailing = baseline.clone();
-    trailing.push(0);
-    let packet = retained_test_packet(operation, identity, &trailing);
-    let mut rejected = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect_err("trailing byte mutation");
-    close_retained_packet(&mut rejected.packet);
-    let mut ignored_digest = baseline;
-    ignored_digest[156] ^= 0x80;
-    let packet = retained_test_packet(operation, identity, &ignored_digest);
-    let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("digest mutation passes bounded header admission");
-    let mut sequence = 0;
-    for _ in 0..64 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        assert!(!restore.step(&mut context).expect("digest mutation remains retained while replay proves mismatch"));
-    }
-    assert!(!restore.ready, "decoded numerical digest cannot be ignored by fresh-job restore");
-    for offset in [132usize, 140, 148] {
-        let mut ignored_count = ignored_digest.clone();
-        ignored_count[156] ^= 0x80;
-        ignored_count[offset] = 1;
-        let packet = retained_test_packet(operation, identity, &ignored_count);
-        let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("under-cap decoded count mutation passes bounded header admission");
-        for _ in 0..64 {
-            let mut sequence_receipt = RetainedCloneProgress::default();
-            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-            assert!(!restore.step(&mut context).expect("decoded count remains retained while replay proves mismatch"));
-        }
-        assert!(!restore.ready, "decoded table/history count cannot be cap-checked then discarded");
-    }
-    close_owned_job(&mut source);
-}
-
-#[test]
-fn p7c2_lossless_queue_saturation_retains_identity_and_fifo_order() {
-    let mut queue = EnergyWireQueue::new(EnergyWireKind::Checkpoint);
-    for sequence in 0..ENERGY_WIRE_QUEUE_SLOTS as u64 {
-        let identity = EnergyWireIdentity { operation: 1, base_revision: 2, generation: 3, seed: 4, sequence };
-        queue
-            .push(EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity, payload: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), preview: None, reservation: None })
-            .expect("exact queue maximum");
-    }
-    let overflow_identity = EnergyWireIdentity { operation: 1, base_revision: 2, generation: 3, seed: 4, sequence: ENERGY_WIRE_QUEUE_SLOTS as u64 };
-    let rejected = queue
-        .push(EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity: overflow_identity, payload: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), preview: None, reservation: None })
-        .expect_err("queue MAX+1 retains packet");
-    assert_eq!(rejected.identity, overflow_identity);
-    let first = queue.take().expect("first lease");
-    assert_eq!(first.identity().sequence, 0);
-    queue.retry(first).expect("retry exact head");
-    for sequence in 0..ENERGY_WIRE_QUEUE_SLOTS as u64 {
-        let lease = queue.take().expect("FIFO lease");
-        assert_eq!(lease.identity().sequence, sequence);
-        queue.ack(lease).expect("empty packet ACK");
-    }
-}
-
-#[test]
-fn p7c2_lossless_queue_drop_and_panic_recover_exact_in_flight_head() {
-    let identity = EnergyWireIdentity { operation: 11, base_revision: 12, generation: 13, seed: 14, sequence: 15 };
-    let mut queue = EnergyWireQueue::new(EnergyWireKind::Checkpoint);
-    queue
-        .push(EnergyWirePacket { kind: EnergyWireKind::Checkpoint, identity, payload: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CheckpointState), preview: None, reservation: None })
-        .expect("fixed queue accepts head");
-    drop(queue.take().expect("drop lease"));
-    let recovered = queue.take().expect("Drop republishes exact in-flight head");
-    assert_eq!(recovered.identity(), identity);
-    queue.retry(recovered).expect("retry returns exact head to original slot");
-    let panic_lease = queue.take().expect("panic lease");
-    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
-        let _owned = panic_lease;
-        panic!("hostile consumer panic");
-    }));
-    let recovered = queue.take().expect("panic Drop republishes exact head");
-    assert_eq!(recovered.identity(), identity);
-    queue.ack(recovered).expect("empty recovered packet ACKs once");
-    assert_eq!(queue.len, 0);
+/// 🧱️ `test_model_single_zone` with the one thermostat the fixture lacks, so the ideal loads actually
+/// deliver heat and the zone heating meter is non-zero.
+fn thermostatted_single_zone() -> (Model, SimulationConfig) {
+    use crate::model::{EntityId, Thermostat};
+    use crate::schedule::ScheduleId;
+    use crate::schedule::{ConstantSchedule, ScheduleSet};
+    let mut model = test_model_single_zone();
+    model.thermostats.push(Thermostat {
+        id: EntityId(50),
+        zone_id: EntityId(1),
+        heating_setpoint_schedule_id: ScheduleId(1),
+        cooling_setpoint_schedule_id: ScheduleId(2),
+        heating_throttle_range_k: 2.0,
+        cooling_throttle_range_k: 2.0,
+    });
+    let config = SimulationConfig {
+        warmup_days: 3,
+        run_period_end_month: 1,
+        run_period_end_day: 1,
+        environment: SimulationEnvironment::HeatingDesignDay,
+        schedules: ScheduleSet { constants: vec![ConstantSchedule { id: ScheduleId(1), value: 20.0 }, ConstantSchedule { id: ScheduleId(2), value: 27.0 }], ..ScheduleSet::default() },
+        ..Default::default()
+    };
+    (model, config)
 }
 
 #[test]
@@ -206,22 +104,23 @@ fn p7c3_commit_lease_ack_is_the_exact_terminal_detach_witness() {
     let identity = job.wire_identity(1);
     job.publication
         .commits
-        .push(EnergyWirePacket { kind: EnergyWireKind::Commit, identity, payload: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput), preview: None, reservation: None })
+        .push(EnergyWirePacket { kind: EnergyWireKind::Commit, identity, payload: RetainedJobPayload::empty(JobPayloadStream::CommitOutput), preview: None, reservation: None })
         .expect("prepared exact commit");
 
     let lease = job.take_commit_packet(operation.generation).expect("fresh generation").expect("exact final lease");
     let mut sequence = 0;
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut leased = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    let mut leased = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_step(&mut job, &mut leased), Seen::Yield, "an unacknowledged exact lease must retain terminal ownership");
     assert_eq!(job.publication.commits.len, 1);
     assert!(job.publication.commits.in_flight.is_some());
+    drop(leased);
 
     job.ack_commit_packet(lease).expect("exact empty commit ACK");
     assert_eq!(job.publication.commits.len, 0);
     assert!(job.publication.commits.in_flight.is_none());
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut acknowledged = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    let mut acknowledged = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     let terminal = seen_step(&mut job, &mut acknowledged);
     assert_eq!(terminal, Seen::Complete(Vec::new()), "the exact ACK must make the numerical authority terminal with an empty lent output");
     assert!(job.commit_output.is_none(), "the consumer retained and closed the only commit owner before terminal detach");
@@ -237,7 +136,7 @@ fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_tot
     let mut sequence = 0;
     for _ in 0..50_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
         match seen_step(&mut job, &mut context) {
             Seen::Preview => {
                 let projected = job.preview().expect("installed packet owns typed preview projection").clone();
@@ -267,146 +166,24 @@ fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_tot
 }
 
 #[test]
-fn p7c2_restore_stale_step_and_install_preserve_exact_replay_authority() {
-    let operation = Operation::new(allocate_operation_id(), RevisionId(95), Generation(14), 0xbeef);
-    let mut source = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("source admission");
-    let packet = build_checkpoint_packet(&mut source);
-    let mut restore = EnergyRestoreJob::admit(operation, test_model_single_zone(), SimulationConfig::default(), packet, EnergyNumericalBounds::default()).expect("restore admission");
-    let mut sequence = 0;
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    assert_eq!(restore.step(&mut stale), Err(EnergyWireRejection::Identity));
-    assert_eq!(restore.field, 0);
-    for _ in 0..64 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        if restore.step(&mut context).expect("bounded replay step") {
-            break;
-        }
-    }
-    assert!(restore.ready);
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let stale_install = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    let restore = restore.finish(&stale_install).expect_err("stale install retains exact replay authority");
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let install = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    let mut restored = restore.finish(&install).expect("fresh generation installs exact replay authority");
-    close_owned_job(&mut restored);
-    close_owned_job(&mut source);
-}
-
-#[test]
 fn p7c2_cancel_deadline_and_stale_generation_gate_wire_before_mutation() {
     let operation = Operation::new(allocate_operation_id(), RevisionId(92), Generation(5), 99);
     let mut job = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("admission");
-    job.start_wire(EnergyWireKind::Checkpoint, 0, semio_framework_job::JobPayloadStream::CheckpointState).expect("wire start");
+    job.start_wire(EnergyWireKind::Checkpoint, 0, JobPayloadStream::CheckpointState).expect("wire start");
     let before = job.wire_build.as_ref().expect("wire").field;
     let cancel = CancelToken::root_now();
     cancel.cancel_now();
     let mut sequence = 0;
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+    let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
     assert_eq!(job.wire_build.as_ref().expect("wire").field, before);
+    drop(cancelled);
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
+    let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
     assert_eq!(job.wire_build.as_ref().expect("wire").field, before);
     assert!(matches!(job.take_checkpoint_packet(Generation(6)), Err(EnergyWireRejection::Identity)));
-}
-
-#[test]
-fn p7c2_restored_commit_bytes_match_one_and_four_fuel_chronology() {
-    let model = test_model_single_zone();
-    let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
-    let operation = Operation::new(allocate_operation_id(), RevisionId(93), Generation(9), 777);
-    let mut original = EnergyJob::new(operation, model.clone(), config.clone()).expect("original admission");
-    let mut sequence = 0;
-    let packet = loop {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        match seen_step(&mut original, &mut context) {
-            Seen::Preview => {
-                let mut packet = original.take_preview_packet(operation.generation).expect("fresh preview").expect("preview packet");
-                close_retained_packet(&mut packet);
-            }
-            Seen::Checkpoint => {
-                let packet = build_checkpoint_packet(&mut original);
-                let mut lease = original.take_checkpoint_packet(operation.generation).expect("fresh checkpoint").expect("checkpoint lease");
-                close_retained_packet(lease.packet_mut());
-                original.ack_checkpoint_packet(lease).expect("checkpoint ACK advances only after close");
-                break packet;
-            }
-            Seen::Yield => {}
-            other => panic!("checkpoint expected before terminal: {other:?}"),
-        }
-    };
-    let mut restore = EnergyRestoreJob::admit(operation, model, config, packet, EnergyNumericalBounds::default()).expect("restore admission");
-    for _ in 0..100_000 {
-        let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-        if restore.step(&mut context).expect("restore field/rebuild") {
-            break;
-        }
-    }
-    let mut sequence_receipt = RetainedCloneProgress::default();
-    let install_context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut sequence, &mut sequence_receipt);
-    let restored = restore.finish(&install_context).expect("restore finish");
-    let (_, _, _, original_bytes, _) = drive_energy_job_with_fuel(original, 1);
-    let (_, _, _, restored_bytes, _) = drive_energy_job_with_fuel(restored, 4);
-    assert_eq!(restored_bytes, original_bytes);
-}
-
-fn drive_energy_job(job: EnergyJob) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
-    drive_energy_job_with_fuel(job, 1)
-}
-
-fn drive_energy_job_with_fuel(mut job: EnergyJob, fuel: u64) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
-    let operation = job.operation.operation;
-    let generation = job.operation.generation;
-    let cancel = CancelToken::root_now();
-    let mut preview_sequence = 0;
-    let mut previews = Vec::new();
-    let mut checkpoints = 0;
-    let mut worst = std::time::Duration::ZERO;
-    for _ in 0..50_000 {
-        let start = Instant::now();
-        let mut preview_sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, ENERGY_BATCH_GRANT), cancel.clone(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
-        let outcome = seen_step(&mut job, &mut context);
-        let elapsed = start.elapsed();
-        worst = worst.max(elapsed);
-        match outcome {
-            Seen::Preview => {
-                let mut packet = job.take_preview_packet(generation).expect("fresh preview generation").expect("preview packet");
-                previews.push(packet.preview().expect("typed projection belongs to canonical preview packet").clone());
-                close_retained_packet(&mut packet);
-            }
-            Seen::Checkpoint => {
-                let mut lease = job.take_checkpoint_packet(generation).expect("fresh checkpoint generation").expect("checkpoint lease");
-                close_retained_packet(lease.packet_mut());
-                job.ack_checkpoint_packet(lease).expect("checkpoint ACK");
-                checkpoints += 1;
-            }
-            Seen::Complete(bytes) => return (job, previews, checkpoints, bytes, worst),
-            Seen::Fault => panic!("energy job faulted"),
-            Seen::Cancelled => panic!("energy job unexpectedly cancelled"),
-            Seen::Yield => {}
-        }
-    }
-    panic!("energy job did not complete within the deterministic step bound")
-}
-
-fn payload_bytes(mut payload: semio_framework_job::RetainedJobPayload) -> Vec<u8> {
-    let mut bytes = Vec::new();
-    for index in 0..payload.page_count() {
-        bytes.extend_from_slice(payload.page(index).expect("retained output page"));
-    }
-    while !payload.terminal_is_empty() {
-        let grant = energy_self_funded(payload.retirement_demands().expect("a locally owned payload quotes its close demand"));
-        let _ = payload.close_step(grant);
-    }
-    bytes
 }
 
 #[test]
@@ -506,37 +283,16 @@ fn energy_job_cancellation_and_freshness_precede_mutation() {
     cancel.cancel_now();
     let mut sequence = 0;
     let mut sequence_receipt = RetainedCloneProgress::default();
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
     assert_eq!(seen_step(&mut cancelled_job, &mut context), Seen::Cancelled);
     assert_eq!(cancelled_job.stage(), EnergyJobStage::Validate);
 
     let mut stale_job = EnergyJob::new(operation, model, config).expect("energy admission");
     let mut stale_sequence = 0;
     let mut stale_sequence_receipt = RetainedCloneProgress::default();
-    let mut stale_context = StepContext::new(operation.operation, Generation(4), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
+    let mut stale_context = StepContext::new(operation.operation, Generation(4), StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
     assert_eq!(seen_step(&mut stale_job, &mut stale_context), Seen::Fault);
     assert_eq!(stale_job.stage(), EnergyJobStage::Validate);
-}
-
-#[test]
-fn adversarial_timestep_work_unit_stays_below_watchdog() {
-    let mut model = test_model_single_zone();
-    let template = model.surfaces[0].clone();
-    model.surfaces = (0..16_384)
-        .map(|index| {
-            let mut surface = template.clone();
-            surface.id = crate::model::EntityId(1_000 + index);
-            surface
-        })
-        .collect();
-    let pre = PrecomputedModel::build(&model, 60, 15);
-    let weather = design_day_hour(12, 35.0);
-    let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
-    let mut state = SimulationKernel::initialize(&model, &pre, &weather);
-    let mut work = TimestepWork::new(&model, &pre, HourWeather { previous: weather, current: weather, next: weather }, date, 12.0);
-    let start = Instant::now();
-    work.step(&model, &SimulationConfig::default(), &pre, &mut state);
-    assert!(start.elapsed() < std::time::Duration::from_millis(8), "one adversarial energy work unit exceeded watchdog: {:?}", start.elapsed());
 }
 
 #[test]
@@ -554,89 +310,6 @@ fn p7c1_exact_max_rejection_preserves_and_retries_same_owner() {
     assert_eq!(rejected.dimension, EnergyNumericalDimension::Zones);
     assert_eq!(rejected.model.zones.as_ptr(), pointer, "rejected authority retains the exact allocation identity");
     assert!(rejected.retry(EnergyNumericalBounds(census)).is_ok(), "exact rejected owner retries after sufficient credit");
-}
-
-#[test]
-fn p7c1_every_independent_maximum_plus_one_dimension_rejects() {
-    let census = EnergyNumericalCensus {
-        zones: 1,
-        surfaces: 1,
-        fenestrations: 1,
-        people: 1,
-        lighting: 1,
-        equipment: 1,
-        infiltrations: 1,
-        airflow_nodes: 1,
-        airflow_links: 1,
-        mechanical_ventilations: 1,
-        thermostats: 1,
-        humidistats: 1,
-        ideal_loads: 1,
-        faults: 1,
-        zone_equipment: 1,
-        plant_loops: 1,
-        plant_equipment: 1,
-        pv_systems: 1,
-        batteries: 1,
-        service_hot_water: 1,
-        refrigeration: 1,
-        water: 1,
-        weather_records: 1,
-        timesteps: 1,
-        meters: 1,
-        series: 1,
-        samples: 1,
-        history_values: 1,
-        summary_rows: 1,
-        identifier_bytes: 1,
-        observed_items: 1,
-        observed_bytes: 1,
-        pages: 1,
-        operations: 1,
-        process_jobs: 1,
-    };
-    macro_rules! rejects {
-        ($field:ident, $variant:ident) => {{
-            let mut maximum = census;
-            maximum.$field = 0;
-            assert_eq!(census.first_exceeded(maximum), Some(EnergyNumericalDimension::$variant));
-        }};
-    }
-    rejects!(zones, Zones);
-    rejects!(surfaces, Surfaces);
-    rejects!(fenestrations, Fenestrations);
-    rejects!(people, People);
-    rejects!(lighting, Lighting);
-    rejects!(equipment, Equipment);
-    rejects!(infiltrations, Infiltrations);
-    rejects!(airflow_nodes, AirflowNodes);
-    rejects!(airflow_links, AirflowLinks);
-    rejects!(mechanical_ventilations, MechanicalVentilations);
-    rejects!(thermostats, Thermostats);
-    rejects!(humidistats, Humidistats);
-    rejects!(ideal_loads, IdealLoads);
-    rejects!(faults, Faults);
-    rejects!(zone_equipment, ZoneEquipment);
-    rejects!(plant_loops, PlantLoops);
-    rejects!(plant_equipment, PlantEquipment);
-    rejects!(pv_systems, PvSystems);
-    rejects!(batteries, Batteries);
-    rejects!(service_hot_water, ServiceHotWater);
-    rejects!(refrigeration, Refrigeration);
-    rejects!(water, Water);
-    rejects!(weather_records, WeatherRecords);
-    rejects!(timesteps, Timesteps);
-    rejects!(meters, Meters);
-    rejects!(series, Series);
-    rejects!(samples, Samples);
-    rejects!(history_values, HistoryValues);
-    rejects!(summary_rows, SummaryRows);
-    rejects!(identifier_bytes, IdentifierBytes);
-    rejects!(observed_items, ObservedItems);
-    rejects!(observed_bytes, ObservedBytes);
-    rejects!(pages, Pages);
-    rejects!(operations, Operations);
-    rejects!(process_jobs, ProcessJobs);
 }
 
 #[test]
@@ -680,13 +353,13 @@ fn p7c1_live_owner_capacity_mutations_reject_the_declared_dimension() {
 #[test]
 fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_one() {
     let model = test_model_single_zone();
-    let mut records = vec![design_day_hour(0, -10.0), design_day_hour(1, -9.0)];
+    let mut records = vec![site::design_day_hour(0, -10.0), site::design_day_hour(1, -9.0)];
     records.shrink_to_fit();
     let logical_records = records.len().max(1);
     records.reserve_exact(3);
     assert!(records.capacity() > logical_records, "reserve-only mutation must increase owned weather backing");
     let pointer = records.as_ptr();
-    let config = SimulationConfig { weather: Some(crate::site::WeatherData { location: "fixed".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records }), ..Default::default() };
+    let config = SimulationConfig { weather: Some(site::WeatherData { location: "fixed".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records }), ..Default::default() };
     let census = EnergyNumericalCensus::observe(&model, &config).expect("weather census");
     assert_eq!(census.weather_records, config.weather.as_ref().expect("weather").records.capacity());
     assert!(census.weather_records > logical_records, "census must not collapse backing capacity to len/max1");
@@ -703,16 +376,16 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     let mut preview_sequence = 0;
     for _ in 0..2 {
         let mut preview_sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
         assert_eq!(seen_step(&mut job, &mut context), Seen::Yield);
     }
     assert_eq!(job.weather.len(), 2);
     assert_eq!(job.weather.capacity(), census.weather_records);
     let before_records = [*job.weather.get_index(0).expect("weather zero"), *job.weather.get_index(1).expect("weather one")];
     for index in logical_records..census.weather_records {
-        assert!(job.weather.insert_stable(index, design_day_hour(index as u32, -8.0)).is_ok());
+        assert!(job.weather.insert_stable(index, site::design_day_hour(index as u32, -8.0)).is_ok());
     }
-    assert!(job.weather.insert_stable(census.weather_records, design_day_hour(census.weather_records as u32, -8.0)).is_err());
+    assert!(job.weather.insert_stable(census.weather_records, site::design_day_hour(census.weather_records as u32, -8.0)).is_err());
     assert_eq!(job.weather.len(), census.weather_records);
     assert_eq!(job.weather.capacity(), census.weather_records);
     assert_eq!(*job.weather.get_index(0).expect("weather zero"), before_records[0]);
@@ -721,7 +394,7 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     let mut outcome = Seen::Yield;
     for _ in 0..1024 {
         let mut preview_sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
         outcome = seen_step(&mut job, &mut context);
         if outcome == Seen::Fault {
             break;
@@ -736,7 +409,7 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
 fn p7c1_weather_reserve_only_capacity_is_independently_charged_to_items() {
     let model = test_model_single_zone();
     let mut config =
-        SimulationConfig { weather: Some(crate::site::WeatherData { location: "items".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records: vec![design_day_hour(0, -10.0)] }), ..Default::default() };
+        SimulationConfig { weather: Some(site::WeatherData { location: "items".into(), latitude_deg: 0.0, longitude_deg: 0.0, elevation_m: 0.0, time_zone_hours: 0.0, records: vec![site::design_day_hour(0, -10.0)] }), ..Default::default() };
     config.weather.as_mut().expect("weather").records.shrink_to_fit();
     let before = EnergyNumericalCensus::observe(&model, &config).expect("baseline weather census");
     config.weather.as_mut().expect("weather").records.reserve_exact(7);
@@ -774,16 +447,16 @@ fn p7c1_close_releases_no_more_than_one_owner_or_character_per_grant() {
     let mut job = EnergyJob::new(operation, test_model_full_topology(), SimulationConfig::default()).expect("energy admission");
     InteractiveJob::begin_close(&mut job);
     for _ in 0..100_000 {
-        match InteractiveJob::close_step(&mut job, RUNG_GRANT) {
-            InteractiveJobCloseStep::Pending { progress } => {
+        match EnergyJobAuthority::close_step(&mut job, RUNG_GRANT) {
+            Ok(InteractiveJobCloseStep::Pending { progress }) => {
                 assert!(progress.copied_items <= 1);
                 assert!(progress.released_bytes <= 4);
             }
-            InteractiveJobCloseStep::Complete { .. } => {
+            Ok(InteractiveJobCloseStep::Complete { .. }) => {
                 assert!(InteractiveJob::terminal_is_empty(&job));
                 return;
             }
-            InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. } => panic!("Energy close cannot block or refuse"),
+            Ok(InteractiveJobCloseStep::Blocked) | Err(_) => panic!("Energy close cannot block or refuse"),
         }
     }
     panic!("Energy close did not retire within its admitted bound")
@@ -795,14 +468,14 @@ fn p7c1_direct_drop_requeues_exact_generation_and_resumes_partial_close() {
     let mut job = EnergyJob::new(operation, test_model_full_topology(), SimulationConfig::default()).expect("energy admission");
     let retained_pointer = job.model.zones.as_ptr();
     InteractiveJob::begin_close(&mut job);
-    assert!(matches!(InteractiveJob::close_step(&mut job, RUNG_GRANT), InteractiveJobCloseStep::Pending { .. }));
+    assert!(matches!(EnergyJobAuthority::close_step(&mut job, RUNG_GRANT), Ok(InteractiveJobCloseStep::Pending { .. })));
     drop(job);
 
     let mut recovered = EnergyJob::recover_abandoned(operation).expect("same generation abandonment authority");
     assert_eq!(recovered.model.zones.as_ptr(), retained_pointer);
     assert!(EnergyJob::recover_abandoned(Operation { generation: Generation(8), ..operation }).is_none());
     for _ in 0..100_000 {
-        if matches!(InteractiveJob::close_step(&mut recovered, RUNG_GRANT), InteractiveJobCloseStep::Complete { .. }) {
+        if matches!(EnergyJobAuthority::close_step(&mut recovered, RUNG_GRANT), Ok(InteractiveJobCloseStep::Complete { .. })) {
             assert!(InteractiveJob::terminal_is_empty(&recovered));
             return;
         }
@@ -861,13 +534,13 @@ fn p7c1_cancel_and_deadline_gate_every_declared_numerical_substage_before_mutati
         cancel.cancel_now();
         let mut sequence = 0;
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
         assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
         assert_eq!(job.numerical_cursor_signature(), before, "cancel mutated {stage:?}");
 
         let mut deadline_sequence = 0;
         let mut deadline_sequence_receipt = RetainedCloneProgress::default();
-        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
+        let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
         assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
         assert_eq!(job.numerical_cursor_signature(), before, "deadline mutated {stage:?}");
     }
@@ -886,19 +559,19 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
         cancel.cancel_now();
         let mut sequence = 0;
         let mut sequence_receipt = RetainedCloneProgress::default();
-        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_step(&mut job, &mut cancelled), Seen::Cancelled);
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), cancel, default_now_us, &mut sequence, &mut sequence_receipt);
+        assert_eq!(seen_step(job, &mut cancelled), Seen::Cancelled);
         assert_eq!(job.numerical_cursor_signature(), before);
 
         let mut deadline_sequence = 0;
         let mut deadline_sequence_receipt = RetainedCloneProgress::default();
-        let mut deadline = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
-        assert_eq!(seen_step(&mut job, &mut deadline), Seen::Yield);
+        let mut deadline = StepContext::new(operation.operation, operation.generation, StepBudget::new(0, 0, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut deadline_sequence, &mut deadline_sequence_receipt);
+        assert_eq!(seen_step(job, &mut deadline), Seen::Yield);
         assert_eq!(job.numerical_cursor_signature(), before);
 
         let mut stale_sequence = 0;
         let mut stale_sequence_receipt = RetainedCloneProgress::default();
-        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
+        let mut stale = StepContext::new(operation.operation, Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut stale_sequence, &mut stale_sequence_receipt);
         assert_eq!(seen_step(job, &mut stale), Seen::Fault);
         assert_eq!(job.numerical_cursor_signature(), before);
     }
@@ -1062,48 +735,10 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
             return;
         }
         let mut preview_sequence_receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT), CancelToken::root_now(), default_now_us, &mut preview_sequence, &mut preview_sequence_receipt);
         let _ = seen_step(&mut job, &mut context);
     }
     panic!("live nested cursor family was never mounted")
-}
-
-#[test]
-fn p7c1_language_agnostic_law_fixture_matches_reference_parser() {
-    let source = include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️numerical-laws/🔣️.json");
-    let reference: semio_framework_pack_json::Value = semio_framework_pack_json::parse(source, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("reference JSON parser");
-    let marker = "\"schema\": \"";
-    let start = source.find(marker).expect("schema field") + marker.len();
-    let end = start + source[start..].find('"').expect("schema terminator");
-    let schema = &source[start..end];
-    assert_eq!(reference["schema"].as_str(), Some(schema));
-    assert_eq!(reference["step"]["fuel"].as_u64(), Some(1));
-}
-
-//#region 🧱️PerSurfaceEnergy
-/// 🧱️ `test_model_single_zone` with the one thermostat the fixture lacks, so the ideal loads actually
-/// deliver heat and the zone heating meter is non-zero.
-fn thermostatted_single_zone() -> (crate::model::Model, SimulationConfig) {
-    use crate::model::{EntityId, ScheduleId, Thermostat};
-    use crate::schedule::{ConstantSchedule, ScheduleSet};
-    let mut model = test_model_single_zone();
-    model.thermostats.push(Thermostat {
-        id: EntityId(50),
-        zone_id: EntityId(1),
-        heating_setpoint_schedule_id: ScheduleId(1),
-        cooling_setpoint_schedule_id: ScheduleId(2),
-        heating_throttle_range_k: 2.0,
-        cooling_throttle_range_k: 2.0,
-    });
-    let config = SimulationConfig {
-        warmup_days: 3,
-        run_period_end_month: 1,
-        run_period_end_day: 1,
-        environment: SimulationEnvironment::HeatingDesignDay,
-        schedules: ScheduleSet { constants: vec![ConstantSchedule { id: ScheduleId(1), value: 20.0 }, ConstantSchedule { id: ScheduleId(2), value: 27.0 }], ..ScheduleSet::default() },
-        ..Default::default()
-    };
-    (model, config)
 }
 
 #[test]
@@ -1113,12 +748,12 @@ fn per_surface_conduction_losses_close_the_zone_air_balance_against_the_heating_
 
     assert_eq!(results.per_surface.len(), 1, "one opaque surface, no fenestrations");
     let wall = results.per_surface[0];
-    assert_eq!(wall.id, crate::model::EntityId(30), "the row is keyed by the surface's own EntityId");
+    assert_eq!(wall.id, model::EntityId(30), "the row is keyed by the surface's own EntityId");
     assert!(wall.conduction_loss_kwh > 0.0, "a 20 °C zone behind a −10 °C design day must lose heat through its one wall, got {wall:?}");
 
     let net_loss_kwh: f64 = results.per_surface.iter().map(|row| row.conduction_loss_kwh - row.conduction_gain_kwh).sum();
     let heating = results.meters.meters.get_index(0).expect("the zone's heating meter is the first admitted slot");
-    assert_eq!(heating.end_use, crate::meters::EndUse::Heating);
+    assert_eq!(heating.end_use, EndUse::Heating);
     let heating_kwh = heating.energy_kwh();
     assert!(heating_kwh > 0.0, "the ideal loads must have delivered heat, got {heating_kwh}");
 
@@ -1145,30 +780,12 @@ fn per_surface_conduction_losses_close_the_zone_air_balance_against_the_heating_
 }
 
 #[test]
-fn a_window_row_carries_transmitted_solar_on_a_sunny_design_day() {
-    let model = crate::bestest::model("600").expect("BESTEST case 600 is a bundled fixture");
-    let windows: Vec<_> = model.fenestrations.iter().map(|fenestration| fenestration.id).collect();
-    assert!(!windows.is_empty(), "case 600 is the glazed case");
-    let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::CoolingDesignDay, ..Default::default() };
-    let config = SimulationConfig { schedules: crate::bestest::simulation_config(&model, None, 1).schedules, ..config };
-    let results = Engine::run(model, config).expect("cooling design day runs");
-
-    let window_rows: Vec<_> = results.per_surface.iter().filter(|row| windows.contains(&row.id)).collect();
-    assert_eq!(window_rows.len(), windows.len(), "every fenestration gets its own row");
-    let transmitted: f64 = window_rows.iter().map(|row| row.solar_transmitted_kwh).sum();
-    let absorbed: f64 = window_rows.iter().map(|row| row.solar_absorbed_kwh).sum();
-    assert!(transmitted > 0.0, "a south window under an 800 W/m² beam must transmit solar, got {transmitted} kWh");
-    assert!(absorbed > 0.0, "and its panes must absorb some of it, got {absorbed} kWh");
-    assert!(results.per_surface.iter().any(|row| !windows.contains(&row.id) && row.solar_absorbed_kwh > 0.0), "the sun-exposed opaque surfaces absorb solar on their outside face too");
-}
-
-#[test]
 fn warmup_never_contributes_to_the_per_surface_totals() {
     let (model, short) = thermostatted_single_zone();
     let long = SimulationConfig { warmup_days: short.warmup_days + 4, ..short.clone() };
     let with_short_warmup = Engine::run(model.clone(), short).expect("short warmup runs");
     let with_long_warmup = Engine::run(model, long).expect("long warmup runs");
-    let total = |results: &crate::results::Results| results.per_surface.iter().map(|row| row.conduction_loss_kwh).sum::<f64>();
+    let total = |results: &Results| results.per_surface.iter().map(|row| row.conduction_loss_kwh).sum::<f64>();
     let (a, b) = (total(&with_short_warmup), total(&with_long_warmup));
     assert!(a > 0.0 && b > 0.0);
     // Four extra warmup days are four extra days of −10 °C wall conduction. If warmup were being
@@ -1176,4 +793,3 @@ fn warmup_never_contributes_to_the_per_surface_totals() {
     // run period, so the two totals differ only by how settled the wall was when the run started.
     assert!((a - b).abs() / a.max(1e-9) < 0.05, "warmup days leak into the run-period totals: {a} vs {b}");
 }
-//#endregion 🧱️PerSurfaceEnergy

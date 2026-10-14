@@ -1017,11 +1017,14 @@ pub fn inference_get_output_schema() -> serde_json::Value {
 /// 🎟️ The neutral five-axis caller schema is the only inference memory authority.
 fn inference_original_retained_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceRetainedAuthority"].take()}
 
+/// 🕰️ The caller declares its original clock binding, absolute deadline and remaining work.
+fn inference_original_work_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");schema["$defs"]["InferenceOriginalWork"].take()}
+
 /// 🎟️ The exact original turn reuses the canonical actor identity and one full grant.
-fn inference_original_turn_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut turn=schema["$defs"]["InferenceRetainedTurnInput"].take();turn["properties"]["grant"]=schema["$defs"]["InferenceRetainedAuthority"].take();turn}
+fn inference_original_turn_shape()->serde_json::Value{let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut turn=schema["$defs"]["InferenceRetainedTurnInput"].take();turn["properties"]["grant"]=schema["$defs"]["InferenceRetainedAuthority"].take();turn["properties"]["work"]=schema["$defs"]["InferenceOriginalWork"].take();turn}
 
 pub fn inference_submit_input_shape() -> serde_json::Value {
-    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceSubmitInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceSubmitInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input["properties"]["retainedPolicy"]=inference_original_retained_shape();input
 }
 
 pub fn inference_submit_input_schema() -> serde_json::Value {
@@ -1068,7 +1071,7 @@ pub fn inference_job_output_schema(capability_id: &str) -> serde_json::Value {
 /// caller's canonical request body for the plugin's own inference schema; `pluginId`/`artifactId`
 /// are optional disambiguators when a kind declares rows from more than one contributor.
 pub fn inference_run_input_shape() -> serde_json::Value {
-    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceRunInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input
+    let mut schema:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).expect("committed MCP schema is valid");let mut input=schema["$defs"]["InferenceRunInput"].take();input["properties"]["turn"]=inference_original_turn_shape();input["properties"]["retainedPolicy"]=inference_original_retained_shape();input
 }
 
 pub fn inference_run_input_schema() -> serde_json::Value {
@@ -1276,6 +1279,7 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
         ("InferenceApproveInput", inference_approve_input_shape()),
         ("InferenceJobOutput", inference_job_output_shape()),
         ("InferenceRetainedAuthority", inference_original_retained_shape()),
+        ("InferenceOriginalWork", inference_original_work_shape()),
         ("InferenceRetainedTurnInput", inference_original_turn_shape()),
         ("InferenceRunInput", inference_run_input_shape()),
         ("InferenceRunOutput", inference_run_output_shape()),
@@ -1486,6 +1490,7 @@ const EXPORTS: [SchemaExport; 74] = [
     SchemaExport { id: "InferenceListOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceRetainedAuthority", leaves: LEAVES },
     SchemaExport { id: "InferenceRetainedTurnInput", leaves: LEAVES },
+    SchemaExport { id: "InferenceOriginalWork", leaves: LEAVES },
     SchemaExport { id: "InferenceRunInput", leaves: LEAVES },
     SchemaExport { id: "InferenceRunOutput", leaves: LEAVES },
     SchemaExport { id: "InferenceSubmitInput", leaves: LEAVES },

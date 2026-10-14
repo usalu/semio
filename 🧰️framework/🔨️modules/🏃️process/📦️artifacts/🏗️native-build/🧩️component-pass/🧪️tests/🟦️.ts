@@ -10,7 +10,7 @@ import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import { readUnitHistoryV1, unitHistoryPathV1 } from "../../🎟️admission/🟦️.ts";
 import { schedulerBinaries } from "../../🧪️tests/🦀️cargo/🟦️.ts";
 import { readTimelineV1 } from "../../📈️telemetry/🟦️.ts";
-import { admitNativeBuildPlanV1, announcedRunIdentityV1, announcedUnitIdentityV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildJobV1, type NativeBuildPassV1, type NativeBuildPlanV1, type NativeBuildStageV1 } from "../🟦️.ts";
+import { admitNativeBuildPlanV1, announcedRunIdentityV1, announcedUnitIdentityV1, reclaimablePassFilesV1, componentArtifactV1, NATIVE_BUILD_DRIVER_POLICY_V1, nativeBuildGenerationKindV1, nativeBuildGenerationV1, nativeBuildPassArgsV1, nativeBuildJobWorkerBudgetV1, profileBuildModeV1, runNativeBuildDriverV1, unitGraphClosuresV1, unitGraphIdentityV1, type LinkedComponentV1, type NativeBuildJobV1, type NativeBuildPassV1, type NativeBuildPlanV1, type NativeBuildStageV1 } from "../🟦️.ts";
 
 const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
 mkdirSync(artifacts, { recursive: true });
@@ -76,6 +76,8 @@ test("unit-graph identities, closures and announced identities follow the langua
   expect(Object.fromEntries([...closures].map(([name, closure]) => [name, [...closure].sort()]))).toEqual(vector.closures);
   for (const row of vector.announced) expect(announcedUnitIdentityV1(row.message, row.target)).toBe(row.identity);
   for (const row of vector.runs) expect(announcedRunIdentityV1(row.packageId, row.outDir, row.target)).toBe(row.identity);
+  expect(reclaimablePassFilesV1(vector.reclaim.messages, vector.reclaim.target, new Set(vector.reclaim.live))).toEqual(vector.reclaim.files);
+  expect(reclaimablePassFilesV1(vector.reclaim.messages, vector.reclaim.target, new Set(vector.reclaim.messages.map((message: any) => announcedUnitIdentityV1(message, vector.reclaim.target))))).toEqual([]);
 });
 
 test("generations: the environment selects warm or fresh; fresh is a new one-letter-store directory, warm compiles into the shared stores", () => {

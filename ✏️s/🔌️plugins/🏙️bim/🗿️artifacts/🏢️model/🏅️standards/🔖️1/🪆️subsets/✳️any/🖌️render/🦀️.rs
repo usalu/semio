@@ -4,7 +4,7 @@
 //! element) used by both. The viewer must not import the editor,
 //! so this module is the single place both surfaces import.
 
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 #[path = "🪟️window-config/🦀️.rs"]
 pub mod window_config;

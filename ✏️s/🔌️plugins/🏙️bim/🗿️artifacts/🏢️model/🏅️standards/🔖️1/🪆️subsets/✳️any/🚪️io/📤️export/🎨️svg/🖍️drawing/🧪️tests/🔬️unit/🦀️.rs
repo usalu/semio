@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::io::export::svg::sheet::layout;
 use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, tags};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::compute_view_linework;
-use crate::ViewKind;
+use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
 
 fn view(id: &str) -> (SvgElement, PlanLinework, Slot) {
     let model = house();

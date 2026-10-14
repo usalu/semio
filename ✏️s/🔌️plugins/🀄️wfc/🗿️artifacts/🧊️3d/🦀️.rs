@@ -109,7 +109,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🎭️ The two apps this artifact contributes to its plugin's closed fleet.
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc3d::Wfc3dEditor>>>
@@ -117,7 +116,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::wfc3d::Wfc3dEditor>>>
@@ -127,7 +125,6 @@ impl<PA> ArtifactApps for PA where
 
 /// 🌳️ This artifact's declaration tree root — the ONLY registration channel for schema/io/viewer/
 /// editor rows.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -202,20 +199,16 @@ pub fn wfc3d_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️1/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
 
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 #[path = "."]
@@ -522,7 +515,6 @@ pub mod standards {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -569,7 +561,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]
@@ -664,11 +655,11 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::Wfc3dSnapshot;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 #[path = "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🗄️store-fixture/🦀️.rs"]
 mod store_fixture;
 //#endregion 🧪️Tests

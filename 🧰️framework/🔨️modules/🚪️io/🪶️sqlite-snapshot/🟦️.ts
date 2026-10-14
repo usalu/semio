@@ -27,6 +27,9 @@ export interface SqliteDatabaseOptions {
   readonly maxPages?: number;
 }
 
+/** 🧵️ Composes one handcrafted schema from the ordered DDL segments its projection modules own; mirrors the Rust `composition` const functions. @see https://sqlite.org/lang_createtable.html */
+export function composeSqliteSchema(segments: readonly string[]): string { return segments.join(""); }
+
 /** 🏗️ Operation-owned cumulative backing admission, independent of literal semantic bytes. */
 export class SqliteAllocationControl {
   private admitted = 0;

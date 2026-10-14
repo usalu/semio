@@ -1,0 +1,49 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-cad-cad-modes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad edit mode, world windows and options"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "cad_modes_window_config"
+path = "../../🪟️windows/🎚️config/🧪️tests/🔬️window/🦀️.rs"
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-cad-cad-config = { workspace = true }
+semio-s-artifact-cad-cad-inferences = { workspace = true }
+semio-s-artifact-cad-cad-interaction = { workspace = true }
+semio-s-artifact-cad-cad-kit = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-picking = { workspace = true }
+semio-s-artifact-cad-cad-transient = { workspace = true }
+semio-s-artifact-cad-cad-typology = { workspace = true }
+ui_wgpu = { workspace = true, features = ["wgpu"] }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-cad-cad-commands = { workspace = true }
+semio-s-artifact-cad-cad-editor = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+serde_json = { workspace = true }

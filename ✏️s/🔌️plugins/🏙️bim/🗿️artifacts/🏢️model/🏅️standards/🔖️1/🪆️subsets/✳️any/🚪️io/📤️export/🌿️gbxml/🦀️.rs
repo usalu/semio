@@ -10,7 +10,7 @@
 use super::holders::{holder_of, layers_of, Holder};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSpace};
-use crate::{ModelInference, ModelSnapshot, OpeningKind};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, OpeningKind}};
 use codec::{attr, element, leaf, number, quantity};
 use geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
@@ -565,7 +565,7 @@ fn campus_node(plan: &Plan, model: &ModelSnapshot, inferred: &ModelInference, si
         let Some(building_xml) = plan.buildings.get(building_id) else { continue };
         let spaces: Vec<&SpaceRow> = plan.spaces.iter().filter(|row| row.building == *building_id).collect();
         let mut inner = vec![leaf("Name", Vec::new(), &building.name), quantity("Area", None, round9(spaces.iter().map(|row| row.area).sum()))];
-        let mut storeys: Vec<(&String, &crate::Storey)> = model.storeys.iter().filter(|(_, storey)| storey.building == *building_id).collect();
+        let mut storeys: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Storey)> = model.storeys.iter().filter(|(_, storey)| storey.building == *building_id).collect();
         storeys.sort_by(|a, b| a.1.level.cmp(&b.1.level).then_with(|| a.0.cmp(b.0)));
         for (storey_id, storey) in storeys {
             let level = inferred.storey_levels.get(storey_id).map_or(0.0, |level| level.elevation);

@@ -15,8 +15,8 @@
     },
     "facets": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 7,
+      "maxItems": 7,
       "uniqueItems": true,
       "items": {
         "enum": [
@@ -124,6 +124,37 @@
             ],
             "schema": "🎟️retained-turn/🧬️schema/🔣️.json",
             "schemaExport": "originalRetainedReceiptSchema"
+          },
+          {
+            "subpath": "./codec",
+            "public": "🧬️codec/🟦️.ts",
+            "implementation": "📮️shard-client/🧬️component-codec/🟦️.ts",
+            "runtime": [
+              "ACTOR_CODEC_REFUSAL",
+              "actorCodecAnswer",
+              "actorComponentCodecSchema"
+            ],
+            "types": [
+              "ShardCodecRequest",
+              "ShardCodecDocumentPair",
+              "ShardCodecSuccess",
+              "ShardCodecAnswer",
+              "ActorCodecExports"
+            ],
+            "schema": "📮️shard-client/🧬️component-codec/🧬️schema/🔣️.json",
+            "schemaExport": "actorComponentCodecSchema"
+          },
+          {
+            "subpath": "./liveness",
+            "public": "🫀️liveness/🟦️.ts",
+            "implementation": "📮️shard-client/🫀️liveness/🟦️.ts",
+            "runtime": [
+              "SHARD_LIVENESS_POLICY",
+              "actorShardLivenessSchema"
+            ],
+            "types": [],
+            "schema": "📮️shard-client/🫀️liveness/🧬️schema/🔣️.json",
+            "schemaExport": "actorShardLivenessSchema"
           }
         ]
       }

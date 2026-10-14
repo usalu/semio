@@ -34,7 +34,7 @@ use semio_framework_plugin::WindowKindDefinition;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::WindowOptions;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "procedural-view-preview";
@@ -156,7 +156,9 @@ impl Generation3dViewMarks {
 /// legal for a viewer — it is mounted at the ARTIFACT level (`crate::preview_eval`), never reached
 /// through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-use crate::preview_eval::{self, PreviewChannelItem, PreviewInlineGeometry};
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 
 /// 🧮️ Evaluates the whole fixture once, IN PROCESS. TEST-ONLY and never on the live path: the
 /// served chain evaluates through `ExtensionInvocation` because a guest links no operators at all,
@@ -165,7 +167,7 @@ use crate::preview_eval::{self, PreviewChannelItem, PreviewInlineGeometry};
 /// evaluates" (`render_without_a_published_evaluation_paints_the_empty_world`).
 #[cfg(test)]
 pub fn evaluate_host_snapshot(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> String {
-    crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default())
+    semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default())
 }
 
 /// 👁️ One preview instance per geometry-bearing value per OUTPUT CHANNEL, each carrying its
@@ -390,7 +392,7 @@ pub fn preview_selection_json(config: &Generation3dViewConfig, payload: &ViewPre
 /// 👁️ Pure `(Generation3dSnapshot, Generation3dViewConfig, marks) -> BuiltNode` read: the camera,
 /// shading mode, LOD and sun all come from the viewer's own config, hover/selection from the
 /// framework-owned `graph` domain, geometry from the ephemeral evaluation when one exists.
-pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, run: Option<&semio_framework_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &crate::editor::generation3d::terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, eval_json: Option<&str>, session: Option<&semio_framework_os_flow::FlowEvalSession>, run: Option<&semio_framework_plugin::ToolRunView>, marks: &Generation3dViewMarks, labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let eval_json = eval_json.unwrap_or_default();
     let payload = preview_payload(eval_json, &document.host_snapshot, config, session, marks);
     let selection_json = preview_selection_json(config, &payload);
@@ -407,7 +409,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dViewConfig, 
     );
     let fit_json = preview_eval::preview_fit_json(&document.host_snapshot, &payload.meshes_json);
     let sun = config.sun();
-    crate::accessible_scene_surface(
+    semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         SURFACE_ID,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {

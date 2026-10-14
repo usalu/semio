@@ -5,6 +5,7 @@ use ui_wgpu::wgpu::{gizmo, pick_closest_mesh_url, ray_pick_instance, ray_pick_me
 
 use crate::framework_surface_terrain::TerrainSessionCore;
 use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 // 🧩️ Every name below is target-neutral (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
@@ -929,7 +930,7 @@ pub struct WorldCatalogueDropPreviewRecord {
 
 /// 🌉️ Hand-written, not derived: `scale: Option<serde_json::Value>` has no `ToValue`/`FromValue`
 /// for `serde_json::Value` (only the `DslValue <-> serde_json::Value` `From` bridges in
-/// `🌱️value/🦀️.rs` exist) — same reason as `graph::manifest::KindDef`.
+/// `🌱️value/🦀️.rs` exist) — same reason as `semio_framework_graph_manifest::KindDef`.
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldBrushPreviewRecord {
@@ -1180,6 +1181,65 @@ struct WorldDynamicRegistry<T, const N: usize> {
     len: u16,
     closing: bool,
 }
+
+pub use semio_framework_ui_contract::UiRevision as WorldNativeUiRevision;
+pub use semio_framework_ui_runtime::UiNativeMeshResource as WorldNativeMeshResource;
+pub use ui_wgpu::wgpu::kernel_3d_scene::Mesh3dResourceLoan as WorldNativeMeshLoan;
+
+#[derive(Debug)]
+enum WorldMeshSource {
+    Owned{lease:Option<Mesh3dLease>,closing:bool},
+    Native(WorldNativeMeshSource),
+}
+
+#[derive(Debug)]
+struct WorldNativeMeshSource {
+    loan: WorldNativeMeshLoan,
+    receipt: semio_framework::kernel::ActorUiPatchReceipt,
+    revision: WorldNativeUiRevision,
+    resource_ordinal: usize,
+    lookup_extent: usize,
+    frozen: bool,
+    gpu_returned: bool,
+}
+
+impl WorldMeshSource {
+    fn lease(&self)->Option<&Mesh3dLease>{match self{Self::Owned{lease,..}=>lease.as_ref(),Self::Native(source) if !source.frozen=>source.loan.lease_ref(),Self::Native(_)=>None}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ui_wgpu::wgpu::Mesh3dFault>{match self{
+        Self::Owned{lease,closing}=>{let Some(value)=*lease else{return Ok((true,Default::default()))};if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}if !*closing{match mesh3d_begin_close(value){Ok(())|Err(ui_wgpu::wgpu::Mesh3dFault::Closing)=>*closing=true,Err(ui_wgpu::wgpu::Mesh3dFault::Stale)=>{lease.take();return Ok((true,RetainedCloneProgress{copied_items:1,..Default::default()}))},Err(fault)=>return Err(fault)}return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))}let step=mesh3d_close_step(value,grant)?;if step.complete{lease.take();}Ok((step.complete,step.progress))},
+        Self::Native(source)=>{if !source.gpu_returned{return Ok((false,Default::default()))}let step=source.loan.return_step(grant)?;Ok((step.complete,step.progress))}
+    }}
+}
+
+#[derive(Default)]
+struct WorldMeshRegistry(WorldDynamicRegistry<WorldMeshSource,WORLD_DYNAMIC_MESH_CAPACITY>);
+
+impl std::ops::Deref for WorldMeshRegistry{type Target=WorldDynamicRegistry<WorldMeshSource,WORLD_DYNAMIC_MESH_CAPACITY>;fn deref(&self)->&Self::Target{&self.0}}
+impl std::ops::DerefMut for WorldMeshRegistry{fn deref_mut(&mut self)->&mut Self::Target{&mut self.0}}
+impl WorldMeshRegistry {
+    fn get(&self,id:&str)->Option<&Mesh3dLease>{self.0.get(id)?.lease()}
+    #[cfg(test)]
+    fn iter(&self)->impl Iterator<Item=(&String,&Mesh3dLease)>{self.0.slots.iter().flatten().filter_map(|entry|entry.value.lease().map(|lease|(&entry.id,lease)))}
+    #[cfg(test)]
+    fn insert(&mut self,id:String,value:Mesh3dLease)->Result<(WorldDynamicToken,Option<WorldDynamicEntry<WorldMeshSource>>),WorldDynamicRejected<Mesh3dLease>>{self.0.insert(id,WorldMeshSource::Owned{lease:Some(value),closing:false}).map_err(|rejected|WorldDynamicRejected{fault:rejected.fault,id:rejected.id,value})}
+    fn commit_insert(&mut self,plan:WorldDynamicInsertPlan,id:String,value:Mesh3dLease)->Result<(WorldDynamicToken,Option<WorldDynamicEntry<WorldMeshSource>>),WorldDynamicRejected<Mesh3dLease>>{self.0.commit_insert(plan,id,WorldMeshSource::Owned{lease:Some(value),closing:false}).map_err(|rejected|WorldDynamicRejected{fault:rejected.fault,id:rejected.id,value})}
+}
+
+struct WorldNativeMeshAdmission {
+    identity:ui_wgpu::wgpu::kernel_3d_scene::Mesh3dResourceIdentity,
+    lease:Mesh3dLease,
+    receipt:semio_framework::kernel::ActorUiPatchReceipt,
+    revision:WorldNativeUiRevision,
+    resource_ordinal:usize,
+    key:String,
+    extent:usize,
+    interaction_id:WorldInteractionId,
+    interaction_offset:usize,
+    allocated:bool,
+}
+
+#[derive(Debug)]
+pub enum WorldNativeMeshFailure { Binding, Registry(WorldDynamicFault), Mesh(ui_wgpu::wgpu::Mesh3dFault), Gpu(&'static str), Close(semio_framework_value::ValueError) }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct WorldDynamicInsertPlan {
@@ -1841,7 +1901,7 @@ pub struct World3dState {
     pub bounds: Rect,
     pub pick_bounds: Rect,
     pub orbit: OrbitController,
-    meshes: WorldDynamicRegistry<Mesh3dLease, WORLD_DYNAMIC_MESH_CAPACITY>,
+    meshes: WorldMeshRegistry,
     mesh_versions: WorldDynamicRegistry<u64, WORLD_DYNAMIC_MESH_CAPACITY>,
     mesh_appearances: WorldDynamicRegistry<World3dMeshAppearance, WORLD_DYNAMIC_MESH_CAPACITY>,
     draws: WorldDrawRegistry,
@@ -2023,8 +2083,9 @@ pub struct World3dState {
     scene_mesh_digests: HashMap<String, u64>,
     prepared_status: [Option<World3dPreparedStatus>; 2],
     dynamic_blocked_owner: Option<WorldOpaqueOwner>,
-    dynamic_mesh_close: Option<WorldDynamicEntry<Mesh3dLease>>,
-    dynamic_blocked_mesh: Option<WorldDynamicEntry<Mesh3dLease>>,
+    dynamic_mesh_close: Option<WorldDynamicEntry<WorldMeshSource>>,
+    dynamic_blocked_mesh: Option<WorldDynamicEntry<WorldMeshSource>>,
+    native_mesh_admission: Option<WorldNativeMeshAdmission>,
     placeholder_generation: u64,
     placeholder_build: Option<WorldPlaceholderMeshCursor>,
     terrain_build: Option<WorldTerrainMeshCursor>,
@@ -2207,7 +2268,7 @@ impl World3dState {
             bounds: Rect::default(),
             pick_bounds: Rect::default(),
             orbit: OrbitController::default(),
-            meshes: WorldDynamicRegistry::default(),
+            meshes: WorldMeshRegistry::default(),
             mesh_versions: WorldDynamicRegistry::default(),
             mesh_appearances: WorldDynamicRegistry::default(),
             draws: WorldDrawRegistry::default(),
@@ -2344,6 +2405,7 @@ impl World3dState {
             prepared_status: [None; 2],
             dynamic_blocked_owner: None,
             dynamic_mesh_close: None,
+            native_mesh_admission: None,
             dynamic_blocked_mesh: None,
             placeholder_generation: 0,
             placeholder_build: None,
@@ -2576,6 +2638,7 @@ impl World3dDynamicRetirement {
 
     fn step(&mut self, state: &mut World3dState, context:&mut semio_framework_job::StepContext<'_>) -> bool {
         self.blocked = None;
+        if state.native_mesh_admission.is_some(){if let Ok((_,progress))=world3d_close_native_mesh_admission_step(state,context.retained_grant()){if context.consume_retained(progress).is_ok()&&progress.copied_items!=0{context.consume_fuel(1);}}return false}
         if step_world3d_scene_bridge_close(state,context) {
             return false;
         }
@@ -2594,21 +2657,8 @@ impl World3dDynamicRetirement {
         }
         match self.phase {
             0 => {
-                if let Some(entry) = state.dynamic_mesh_close.as_mut() {
-                    match mesh3d_begin_close(entry.value) {
-                        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => {}
-                        Err(ui_wgpu::wgpu::Mesh3dFault::Stale) => {
-                            entry.id.clear();
-                            state.dynamic_mesh_close = None;
-                        }
-                        Err(_) => {
-                            self.blocked = Some(WorldDynamicFault::Closing);
-                        }
-                    }
-                    if state.dynamic_mesh_close.as_ref().is_some_and(|entry| ui_wgpu::wgpu::mesh3d_close_demands(entry.value, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(entry.value, grant)?) }).is_ok_and(|complete| complete)) {
-                        state.dynamic_mesh_close.as_mut().expect("mesh close owner retained above").id.clear();
-                        state.dynamic_mesh_close = None;
-                    }
+                if state.dynamic_mesh_close.is_some() {
+                    step_world3d_mesh_close(state,context);
                     return false;
                 }
                 let Some(entry) = state.meshes.take_one() else {
@@ -2697,7 +2747,7 @@ pub fn begin_world3d_dynamic_retirement(state: &mut World3dState) -> bool {
 }
 
 pub fn step_world3d_dynamic_retirement(state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> bool {
-    if context.should_yield() {
+    if context.retirement_should_yield() {
         return false;
     }
     if let Some(cursor) = state.placeholder_build.as_mut() {
@@ -2761,6 +2811,7 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.dynamic_blocked_owner.is_none()
         && state.dynamic_mesh_close.is_none()
         && state.dynamic_blocked_mesh.is_none()
+        && state.native_mesh_admission.is_none()
         && state.placeholder_build.is_none()
         && state.terrain_build.is_none() && state.terrain_pending.is_none()
         && state.face_overlay_build.is_none()
@@ -2793,7 +2844,8 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
 /// `World3dSnapshot` phase drives belongs here, or its work only advances while something ELSE keeps
 /// the frames coming.
 pub fn world3d_cursor_work_pending(state: &World3dState) -> bool {
-    state.placeholder_build.is_some()
+    state.native_mesh_admission.is_some()
+        || state.placeholder_build.is_some()
         || state.terrain_build.is_some() || state.terrain_pending.is_some()
         || state.face_overlay_build.is_some()
         || state.scene_bridge.is_some()
@@ -2827,7 +2879,7 @@ pub fn begin_world3d_draw_rebuild(state: &mut World3dState, descriptor: WorldDra
 /// at its `0` placeholder for every bridged draw. Matching the stale field faulted the whole
 /// interaction authority — every pick, hover, orbit and wheel on that surface.
 fn live_world3d_mesh_version(state: &World3dState, mesh_key: &str) -> u64 {
-    state.mesh_versions.get(mesh_key).copied().unwrap_or(0)
+    match state.meshes.0.get(mesh_key){Some(WorldMeshSource::Native(source)) if !source.frozen=>source.loan.identity().cache_epoch,_=>state.mesh_versions.get(mesh_key).copied().unwrap_or(0)}
 }
 
 pub fn world3d_draw_rebuild_admit_draw(state: &mut World3dState, mesh_key: &str, mesh_version: u64, instance_count: u16) -> Result<(), WorldDynamicFault> {
@@ -2935,7 +2987,7 @@ pub fn step_world3d_draw_rebuild(state: &mut World3dState, context: &mut semio_f
 }
 
 pub fn close_world3d_draw_rebuild_step(state: &mut World3dState, context: &mut semio_framework_job::StepContext<'_>) -> bool {
-    if context.should_yield() {
+    if context.retirement_should_yield() {
         return false;
     }
     if let Some(retired) = state.retired_draws.as_mut() {
@@ -3086,6 +3138,10 @@ impl WorldInteractionMeshRegistry {
         let Some(id) = WorldInteractionId::new(id) else {
             return Err(WorldDynamicFault::IdCapacity);
         };
+        self.plan_admit_id(id,version,mesh)
+    }
+
+    fn plan_admit_id(&self, id: WorldInteractionId, version: u64, mesh: Mesh3dLease) -> Result<WorldInteractionMeshPlan, WorldDynamicFault> {
         let Ok(schema) = mesh.schema() else {
             return Err(WorldDynamicFault::StaleToken);
         };
@@ -8645,7 +8701,7 @@ fn world3d_translucent_projected_depth(mesh: Mesh3dLease, instance: &Instance3d,
 /// preserving producer insertion order for exact depth ties without allocating inside the sort.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn sort_world3d_translucent_material_draws(
-    meshes: &WorldDynamicRegistry<Mesh3dLease, WORLD_DYNAMIC_MESH_CAPACITY>,
+    meshes: &WorldMeshRegistry,
     view_proj: Mat4,
     draws: &mut Vec<SceneMaterialDraw3d>,
 ) {
@@ -9489,7 +9545,7 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
         if !state.meshes.contains_key(&mesh_key) {
             continue;
         }
-        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, &mesh_key);
         tile_draws.push(TerrainTileDraw { mesh_key, mesh_version });
     }
     (tile_draws, evicted_mesh_keys)
@@ -9635,12 +9691,12 @@ enum WorldPlaceholderOwner {
 /// 🧊️ Where one in-flight mesh publication reads its vertices from: a generated marker primitive,
 /// or an inline `World3dScene.meshes_json` buffer set bridged in by [`stage_world3d_scene_bridge`].
 /// Both ride the identical fixed-credit `mesh3d_*` authority ladder below.
-enum WorldMeshSource {
+enum WorldMeshInput {
     Placeholder(WorldPlaceholderKind),
     Inline(Box<WorldMeshBuffers>),
 }
 
-impl WorldMeshSource {
+impl WorldMeshInput {
     fn position(&self, item: u32) -> [f32; 3] {
         match self {
             Self::Placeholder(kind) => placeholder_triangle(*kind, item / 3)[(item % 3) as usize],
@@ -9669,7 +9725,7 @@ impl WorldMeshSource {
 
 struct WorldPlaceholderMeshCursor {
     key: String,
-    source: WorldMeshSource,
+    source: WorldMeshInput,
     vertex_items: u32,
     index_items: u32,
     phase: WorldPlaceholderMeshPhase,
@@ -9711,7 +9767,7 @@ enum WorldPlaceholderMeshStep {
 impl WorldPlaceholderMeshCursor {
     fn new(key: &str, kind: WorldPlaceholderKind, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
         let items = kind.triangles().checked_mul(3).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-        Self::begin(key, WorldMeshSource::Placeholder(kind), items, items, generation, revision)
+        Self::begin(key, WorldMeshInput::Placeholder(kind), items, items, generation, revision)
     }
 
     /// 🌉️ The inline-wire twin of [`Self::new`]: an already-welded `meshes_json` buffer set, whose
@@ -9733,19 +9789,19 @@ impl WorldPlaceholderMeshCursor {
         let expanded=!buffers.indices.is_empty() && buffers.attributes.values().any(|attribute|attribute.domain==semio_framework::MeshAttributeDomain::Corner || attribute.domain==semio_framework::MeshAttributeDomain::Face);
         let source_tail_start = if expanded { buffers.vertex_ids.iter().position(|id| *id != u32::MAX).map_or(vertex_items, |item| item as u32) } else { vertex_items };
         let expanded_items = index_items.checked_add(vertex_items - source_tail_start).ok_or(ui_wgpu::wgpu::Mesh3dFault::ItemCapacity)?;
-        let mut cursor=Self::begin(key,WorldMeshSource::Inline(Box::new(buffers)),if expanded {expanded_items}else{vertex_items},index_items,generation,revision)?;
+        let mut cursor=Self::begin(key,WorldMeshInput::Inline(Box::new(buffers)),if expanded {expanded_items}else{vertex_items},index_items,generation,revision)?;
         cursor.expanded=expanded;
         cursor.source_tail_start=source_tail_start;
         Ok(cursor)
     }
 
-    fn begin(key: &str, source: WorldMeshSource, vertex_items: u32, index_items: u32, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
+    fn begin(key: &str, source: WorldMeshInput, vertex_items: u32, index_items: u32, generation: u64, revision: u64) -> Result<Self, ui_wgpu::wgpu::Mesh3dFault> {
         if key.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
             return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity);
         }
-        let (uvs,colors)=match &source {WorldMeshSource::Inline(buffers)=>(!buffers.uvs.is_empty()||buffers.attributes.values().any(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Uv),!buffers.colors.is_empty()||buffers.attributes.values().any(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Color)),_ => (false,false)};
-        let (face_ids,vertex_ids,edges,edge_ids)=match &source {WorldMeshSource::Inline(mesh)=>(mesh.face_ids.len() as u32,if mesh.vertex_ids.is_empty(){0}else{vertex_items},mesh.edge_positions.len() as u32/6,mesh.edge_ids.len() as u32),_ => (0,0,0,0)};
-        let schema=Mesh3dSchema{face_ids,vertex_ids,edges,edge_ids,uvs:if uvs {vertex_items}else{0},colors:if colors {vertex_items}else{0},surface_uvs:if uvs {[vertex_items;4]}else{[0;4]},tangents:if matches!(&source,WorldMeshSource::Inline(mesh) if mesh.attributes.contains_key("tangent")){vertex_items}else{0},..Mesh3dSchema::triangle_mesh(vertex_items,index_items)};
+        let (uvs,colors)=match &source {WorldMeshInput::Inline(buffers)=>(!buffers.uvs.is_empty()||buffers.attributes.values().any(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Uv),!buffers.colors.is_empty()||buffers.attributes.values().any(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Color)),_ => (false,false)};
+        let (face_ids,vertex_ids,edges,edge_ids)=match &source {WorldMeshInput::Inline(mesh)=>(mesh.face_ids.len() as u32,if mesh.vertex_ids.is_empty(){0}else{vertex_items},mesh.edge_positions.len() as u32/6,mesh.edge_ids.len() as u32),_ => (0,0,0,0)};
+        let schema=Mesh3dSchema{face_ids,vertex_ids,edges,edge_ids,uvs:if uvs {vertex_items}else{0},colors:if colors {vertex_items}else{0},surface_uvs:if uvs {[vertex_items;4]}else{[0;4]},tangents:if matches!(&source,WorldMeshInput::Inline(mesh) if mesh.attributes.contains_key("tangent")){vertex_items}else{0},..Mesh3dSchema::triangle_mesh(vertex_items,index_items)};
         let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_begin_capacity_byte_demand(), 0, 1);
         let (token, progress) = mesh3d_begin(generation, revision, schema, grant)?;
         let owner = WorldPlaceholderOwner::Writing(token);
@@ -9756,7 +9812,7 @@ impl WorldPlaceholderMeshCursor {
     fn source_vertex(&self,item:u32)->u32 {if self.expanded {if item < self.index_items {self.source.index(item)}else{self.source_tail_start + item - self.index_items}}else{item}}
 
     fn sample<const N:usize>(&self,semantic:semio_framework::MeshAttributeSemantic,item:u32,fallback:[f32;N])->Result<[f32;N],ui_wgpu::wgpu::Mesh3dFault> {
-        let WorldMeshSource::Inline(mesh)=&self.source else{return Ok(fallback)};
+        let WorldMeshInput::Inline(mesh)=&self.source else{return Ok(fallback)};
         let Some(attribute)=mesh.attributes.values().find(|attribute|attribute.semantic==semantic) else{return Ok(fallback)};
         if self.expanded && item >= self.index_items && attribute.domain != semio_framework::MeshAttributeDomain::Vertex { return Ok(fallback); }
         let domain=match attribute.domain {semio_framework::MeshAttributeDomain::Vertex=>self.source_vertex(item) as usize,semio_framework::MeshAttributeDomain::Corner=>item as usize,semio_framework::MeshAttributeDomain::Face=>item as usize/3,_=>return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
@@ -9765,7 +9821,7 @@ impl WorldPlaceholderMeshCursor {
     }
 
     fn uv_sample(&self,role:usize,item:u32)->Result<[f32;2],ui_wgpu::wgpu::Mesh3dFault> {
-        let WorldMeshSource::Inline(mesh)=&self.source else{return Ok([0.0;2])};
+        let WorldMeshInput::Inline(mesh)=&self.source else{return Ok([0.0;2])};
         let fields=["baseColorTexture","metallicRoughnessTexture","normalTexture","occlusionTexture","emissiveTexture"];
         let name=mesh.attributes.values().find(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Material).and_then(|attribute|attribute.value_at(item as usize/3)).and_then(|value|value.as_str()).or_else(||mesh.materials.keys().next().map(String::as_str));
         let material=name.and_then(|name|mesh.materials.get(name)).and_then(|value|value.as_object());
@@ -9781,7 +9837,7 @@ impl WorldPlaceholderMeshCursor {
     }
 
     fn material_step(&mut self)->Result<(),ui_wgpu::wgpu::Mesh3dFault> {
-        let WorldMeshSource::Inline(mesh)=&self.source else{return Ok(())};
+        let WorldMeshInput::Inline(mesh)=&self.source else{return Ok(())};
         if mesh.materials.is_empty(){return Ok(())}
         let attribute=mesh.attributes.values().find(|attribute|attribute.semantic==semio_framework::MeshAttributeSemantic::Material);
         let name=attribute.and_then(|attribute|attribute.value_at(self.item as usize/3)).and_then(|value|value.as_str()).or_else(||mesh.materials.keys().next().map(String::as_str)).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
@@ -9799,7 +9855,7 @@ impl WorldPlaceholderMeshCursor {
 
     fn texture_step(&mut self)->Result<bool,ui_wgpu::wgpu::Mesh3dFault> {
         if self.texture_retirement.is_some(){self.retire_texture_job()?;return Ok(false)}
-        let WorldMeshSource::Inline(mesh)=&mut self.source else{return Ok(true)};
+        let WorldMeshInput::Inline(mesh)=&mut self.source else{return Ok(true)};
         if self.texture_name.is_none(){let Some(id)=mesh.textures.keys().nth(self.texture_cursor)else{return Ok(true)};self.texture_name=Some(id.clone());self.texture_scan=0;self.texture_required=false;}
         let id=self.texture_name.as_ref().unwrap();let role=if self.texture_role==0 {"srgb"}else{"linear"};let key=format!("inline:{}:{id}:{role}",self.key);
         if key.len()>WORLD_DYNAMIC_ID_BYTE_CAPACITY{return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity)}
@@ -9891,7 +9947,7 @@ impl WorldPlaceholderMeshCursor {
             }
             WorldPlaceholderMeshPhase::Tangents=>{
                 if self.schema.tangents>0 {
-                    let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
+                    let WorldMeshInput::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};
                     let attribute=mesh.attributes.get("tangent").ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;
                     let mut value=[1.0,0.0,0.0,1.0];
                     if !(self.expanded && self.item>=self.index_items && attribute.domain!=semio_framework::MeshAttributeDomain::Vertex) {
@@ -9910,7 +9966,7 @@ impl WorldPlaceholderMeshCursor {
             }
             WorldPlaceholderMeshPhase::Colors => {
                 let token=self.token()?;
-                if self.schema.colors>0 {let fallback=match &self.source {WorldMeshSource::Inline(mesh)=>{let at=self.source_vertex(self.item) as usize*4;std::array::from_fn(|axis|mesh.colors.get(at+axis).copied().unwrap_or(1.0))},_=>[1.0;4]};mesh3d_write_vec4(token,Mesh3dField::Colors,self.sample::<4>(semio_framework::MeshAttributeSemantic::Color,self.item,fallback)?)?;self.item+=1;}
+                if self.schema.colors>0 {let fallback=match &self.source {WorldMeshInput::Inline(mesh)=>{let at=self.source_vertex(self.item) as usize*4;std::array::from_fn(|axis|mesh.colors.get(at+axis).copied().unwrap_or(1.0))},_=>[1.0;4]};mesh3d_write_vec4(token,Mesh3dField::Colors,self.sample::<4>(semio_framework::MeshAttributeSemantic::Color,self.item,fallback)?)?;self.item+=1;}
                 if self.schema.colors==0 || self.item==self.vertex_items {self.item=0;self.phase=WorldPlaceholderMeshPhase::Indices;}
             }
             WorldPlaceholderMeshPhase::Indices => {
@@ -9923,19 +9979,19 @@ impl WorldPlaceholderMeshCursor {
                 }
             }
             WorldPlaceholderMeshPhase::FaceIds => {
-                if self.item < self.schema.face_ids {let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};mesh3d_write_u32(self.token()?,Mesh3dField::FaceIds,mesh.face_ids[self.item as usize])?;self.item+=1;}
+                if self.item < self.schema.face_ids {let WorldMeshInput::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};mesh3d_write_u32(self.token()?,Mesh3dField::FaceIds,mesh.face_ids[self.item as usize])?;self.item+=1;}
                 else {self.item=0;self.phase=WorldPlaceholderMeshPhase::VertexIds;}
             }
             WorldPlaceholderMeshPhase::VertexIds => {
-                if self.item < self.schema.vertex_ids {let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let id=*mesh.vertex_ids.get(self.source_vertex(self.item) as usize).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;mesh3d_write_u32(self.token()?,Mesh3dField::VertexIds,id)?;self.item+=1;}
+                if self.item < self.schema.vertex_ids {let WorldMeshInput::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let id=*mesh.vertex_ids.get(self.source_vertex(self.item) as usize).ok_or(ui_wgpu::wgpu::Mesh3dFault::Schema)?;mesh3d_write_u32(self.token()?,Mesh3dField::VertexIds,id)?;self.item+=1;}
                 else {self.item=0;self.phase=WorldPlaceholderMeshPhase::Edges;}
             }
             WorldPlaceholderMeshPhase::Edges => {
-                if self.item < self.schema.edges {let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let at=self.item as usize*6;ui_wgpu::wgpu::mesh3d_write_edge(self.token()?,[[mesh.edge_positions[at],mesh.edge_positions[at+1],mesh.edge_positions[at+2]],[mesh.edge_positions[at+3],mesh.edge_positions[at+4],mesh.edge_positions[at+5]]])?;self.item+=1;}
+                if self.item < self.schema.edges {let WorldMeshInput::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};let at=self.item as usize*6;ui_wgpu::wgpu::mesh3d_write_edge(self.token()?,[[mesh.edge_positions[at],mesh.edge_positions[at+1],mesh.edge_positions[at+2]],[mesh.edge_positions[at+3],mesh.edge_positions[at+4],mesh.edge_positions[at+5]]])?;self.item+=1;}
                 else {self.item=0;self.phase=WorldPlaceholderMeshPhase::EdgeIds;}
             }
             WorldPlaceholderMeshPhase::EdgeIds => {
-                if self.item < self.schema.edge_ids {let WorldMeshSource::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};mesh3d_write_u32(self.token()?,Mesh3dField::EdgeIds,mesh.edge_ids[self.item as usize])?;self.item+=1;}
+                if self.item < self.schema.edge_ids {let WorldMeshInput::Inline(mesh)=&self.source else{return Err(ui_wgpu::wgpu::Mesh3dFault::Schema)};mesh3d_write_u32(self.token()?,Mesh3dField::EdgeIds,mesh.edge_ids[self.item as usize])?;self.item+=1;}
                 else {self.item=0;self.phase=WorldPlaceholderMeshPhase::Materials;}
             }
             WorldPlaceholderMeshPhase::Materials => {
@@ -9950,7 +10006,7 @@ impl WorldPlaceholderMeshCursor {
             }
             WorldPlaceholderMeshPhase::Provenance => {
                 let token = self.token()?;
-                if let WorldMeshSource::Inline(mesh) = &mut self.source {
+                if let WorldMeshInput::Inline(mesh) = &mut self.source {
                     let grant = world_mesh_ownership_grant(0, ui_wgpu::wgpu::mesh3d_component_capacity_byte_demand(&mesh.component_references)?, 0, 1);
                     let progress = ui_wgpu::wgpu::mesh3d_move_component_references(token, &mut mesh.component_references, grant)?;
                     if !progress.fits(grant) { return Err(ui_wgpu::wgpu::Mesh3dFault::ByteCapacity); }
@@ -9980,7 +10036,7 @@ impl WorldPlaceholderMeshCursor {
     }
 
     fn source_retirement_grant(&self,copy_bytes:usize)->Result<semio_framework_value::retained_clone::RetainedCloneGrant,ui_wgpu::wgpu::Mesh3dFault> {
-        let Some(owner)=self.source_retirement.as_ref() else{return Ok(world_mesh_ownership_grant(0,0,0,usize::from(matches!(self.source,WorldMeshSource::Inline(_)))))};
+        let Some(owner)=self.source_retirement.as_ref() else{return Ok(world_mesh_ownership_grant(0,0,0,usize::from(matches!(self.source,WorldMeshInput::Inline(_)))))};
         owner.next_copy_byte_demand().map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Closing)?;
         Ok(world_mesh_ownership_grant(copy_bytes,owner.next_capacity_byte_demand(copy_bytes).map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Closing)?,owner.next_release_byte_demand().map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Closing)?,owner.next_depth_demand().map_err(|_|ui_wgpu::wgpu::Mesh3dFault::Closing)?))
     }
@@ -9997,12 +10053,12 @@ impl WorldPlaceholderMeshCursor {
             }
             return Ok(step)
         }
-        if !matches!(self.source,WorldMeshSource::Inline(_)){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}
+        if !matches!(self.source,WorldMeshInput::Inline(_)){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}
         if grant.maximum_items==0 || grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()))}
-        let WorldMeshSource::Inline(mesh)=std::mem::replace(&mut self.source,WorldMeshSource::Placeholder(WorldPlaceholderKind::Plane)) else{unreachable!()};
+        let WorldMeshInput::Inline(mesh)=std::mem::replace(&mut self.source,WorldMeshInput::Placeholder(WorldPlaceholderKind::Plane)) else{unreachable!()};
         match semio_framework_value::retirement::controlled::ControlledRetirement::new(mesh){
             Ok(owner)=>{self.source_retirement=Some(owner);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..RetainedCloneProgress::default()}))},
-            Err((_,mesh))=>{self.source=WorldMeshSource::Inline(mesh);Err(ui_wgpu::wgpu::Mesh3dFault::Closing)}
+            Err((_,mesh))=>{self.source=WorldMeshInput::Inline(mesh);Err(ui_wgpu::wgpu::Mesh3dFault::Closing)}
         }
     }
 
@@ -10081,7 +10137,7 @@ impl WorldPlaceholderMeshCursor {
         match self.owner {
             WorldPlaceholderOwner::Writing(_) => false,
             WorldPlaceholderOwner::Ready(lease) => mesh3d_terminal_is_empty(lease),
-            WorldPlaceholderOwner::Empty => self.key.is_empty() && self.source_retirement.is_none() && !matches!(self.source,WorldMeshSource::Inline(_)) && self.appearance.is_none() && self.primitives.is_empty() && self.textures.is_empty() && self.texture_job.is_none() && self.texture_retirement.is_none() && self.texture_image.is_none() && self.texture_worker.is_none() && self.texture_submission.is_none() && self.texture_bytes.is_empty() && self.texture_name.is_none(),
+            WorldPlaceholderOwner::Empty => self.key.is_empty() && self.source_retirement.is_none() && !matches!(self.source,WorldMeshInput::Inline(_)) && self.appearance.is_none() && self.primitives.is_empty() && self.textures.is_empty() && self.texture_job.is_none() && self.texture_retirement.is_none() && self.texture_image.is_none() && self.texture_worker.is_none() && self.texture_submission.is_none() && self.texture_bytes.is_empty() && self.texture_name.is_none(),
         }
     }
 }
@@ -11341,7 +11397,7 @@ fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mu
         let Some(color) = state.face_overlay_colors[index] else { continue };
         let mesh_key = format!("component-face-overlay:{}:{generation}:{index}", state.surface_id);
         let Some(mesh) = state.meshes.get(&mesh_key) else { continue };
-        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, &mesh_key);
         gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
         translucent.push(SceneDraw3d { mesh_key, mesh_version, instances: vec![Instance3d { component_source: None, id: format!("face-overlay-{index}"), model: Mat4::identity(), color, selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     }
@@ -11458,7 +11514,7 @@ fn append_gumball_geometry(
     gpu: &mut World3dBuildContext,
     state: &World3dState,
     camera: &Camera3d,
-    meshes: &WorldDynamicRegistry<Mesh3dLease, WORLD_DYNAMIC_MESH_CAPACITY>,
+    meshes: &WorldMeshRegistry,
     mesh_versions: &WorldDynamicRegistry<u64, WORLD_DYNAMIC_MESH_CAPACITY>,
 ) {
     let Some(pivot) = selection_centroid(state) else {
@@ -11854,6 +11910,60 @@ pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     }
 }
 
+/// 📥️ Borrows the validated host destination without moving its owner or reconstructing geometry.
+pub fn world3d_admit_native_mesh_step(state:&mut World3dState,donor:&mut Option<WorldNativeMeshResource>,receipt:semio_framework::kernel::ActorUiPatchReceipt,revision:WorldNativeUiRevision,resource_ordinal:usize,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),WorldNativeMeshFailure>{
+    let Some(row)=donor.as_ref()else{return Err(WorldNativeMeshFailure::Binding)};
+    let identity=row.owner.identity();let key=row.mesh_key.as_str();
+    if !receipt.is_valid()||revision.0==0||row.surface.as_str()!=state.surface_id||key.is_empty()||key.len()>WORLD_INTERACTION_ID_BYTE_CAPACITY{return Err(WorldNativeMeshFailure::Binding)}
+    if let Some(WorldMeshSource::Native(source))=state.meshes.0.get(key){return if source.receipt==receipt&&source.revision==revision&&source.resource_ordinal==resource_ordinal&&source.loan.identity()==identity&&source.loan.lease()==row.owner.lease()&&!source.frozen{Ok((true,Default::default()))}else{Err(WorldNativeMeshFailure::Binding)}}
+    if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}
+    if state.native_mesh_admission.is_none(){
+        if state.dynamic_mesh_close.is_some()||state.dynamic_blocked_mesh.is_some(){return Ok((false,Default::default()))}
+        let plan=state.meshes.plan_insert(key).map_err(WorldNativeMeshFailure::Registry)?;if plan.occupied{return Err(WorldNativeMeshFailure::Registry(WorldDynamicFault::StaleToken))}
+        state.native_mesh_admission=Some(WorldNativeMeshAdmission{identity,lease:row.owner.lease().ok_or(WorldNativeMeshFailure::Binding)?,receipt,revision,resource_ordinal,key:String::new(),extent:key.len(),interaction_id:WorldInteractionId{bytes:[0;WORLD_INTERACTION_ID_BYTE_CAPACITY],len:0},interaction_offset:0,allocated:false});
+        return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))
+    }
+    let cursor=state.native_mesh_admission.as_mut().unwrap();
+    if cursor.identity!=identity||Some(cursor.lease)!=row.owner.lease()||cursor.receipt!=receipt||cursor.revision!=revision||cursor.resource_ordinal!=resource_ordinal||cursor.extent!=key.len()||!key.starts_with(&cursor.key){return Err(WorldNativeMeshFailure::Binding)}
+    if !cursor.allocated{if grant.maximum_capacity_bytes<cursor.extent{return Ok((false,Default::default()))}cursor.key.try_reserve_exact(cursor.extent).map_err(|_|WorldNativeMeshFailure::Registry(WorldDynamicFault::ByteCapacity))?;cursor.allocated=true;return Ok((false,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:cursor.key.capacity(),..Default::default()}))}
+    if cursor.key.len()<cursor.extent{let start=cursor.key.len();let mut end=start.saturating_add(grant.maximum_copy_bytes).min(cursor.extent);while !key.is_char_boundary(end){end-=1;}if end==start{return Ok((false,Default::default()))}cursor.key.push_str(&key[start..end]);return Ok((false,RetainedCloneProgress{copied_items:1,copied_bytes:end-start,..Default::default()}))}
+    if cursor.interaction_offset<cursor.extent{let start=cursor.interaction_offset;let end=start.saturating_add(grant.maximum_copy_bytes).min(cursor.extent);if end==start{return Ok((false,Default::default()))}cursor.interaction_id.bytes[start..end].copy_from_slice(&key.as_bytes()[start..end]);cursor.interaction_offset=end;if end==cursor.extent{cursor.interaction_id.len=end as u16;}return Ok((false,RetainedCloneProgress{copied_items:1,copied_bytes:end-start,..Default::default()}))}
+    let plan=state.meshes.plan_insert(key).map_err(WorldNativeMeshFailure::Registry)?;if plan.occupied{return Err(WorldNativeMeshFailure::Registry(WorldDynamicFault::StaleToken))}
+    let lease=row.owner.lease().ok_or(WorldNativeMeshFailure::Binding)?;let mut interaction=state.interaction_meshes.plan_admit_id(cursor.interaction_id,identity.cache_epoch,lease).map_err(WorldNativeMeshFailure::Registry)?;interaction.value.generation=interaction.epoch.checked_add(1).ok_or(WorldNativeMeshFailure::Registry(WorldDynamicFault::StaleToken))?;
+    let Some((loan,progress))=row.owner.loan(grant).map_err(WorldNativeMeshFailure::Mesh)?else{return Ok((false,Default::default()))};
+    let cursor=state.native_mesh_admission.take().unwrap();let native=WorldNativeMeshSource{loan,receipt,revision,resource_ordinal,lookup_extent:cursor.extent,frozen:false,gpu_returned:false};
+    state.meshes.0.commit_insert(plan,cursor.key,WorldMeshSource::Native(native)).expect("exclusive World transaction preserves its prevalidated empty mesh slot");
+    state.interaction_meshes.commit_admit(interaction).expect("exclusive World transaction preserves its prevalidated interaction slot");state.geometry_generation=state.geometry_generation.wrapping_add(1).max(1);
+    Ok((true,progress))
+}
+
+/// ♻️ Closes a replaced host destination loan only after its exact GPU cache returns.
+#[cfg(not(all(target_arch="wasm32",target_env="p2")))]
+pub fn world3d_close_native_mesh_step(state:&mut World3dState,key:&str,receipt:semio_framework::kernel::ActorUiPatchReceipt,revision:WorldNativeUiRevision,resource_ordinal:usize,grant:RetainedCloneGrant,retire_gpu:impl FnOnce(&str,&WorldNativeMeshLoan)->Result<Option<ui_wgpu::wgpu::MeshGpuSourceReturn>,&'static str>)->Result<(bool,RetainedCloneProgress),WorldNativeMeshFailure>{
+    if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}
+    if state.dynamic_mesh_close.is_none(){
+        let Some(WorldMeshSource::Native(source))=state.meshes.0.get(key)else{return Ok((true,Default::default()))};
+        if source.receipt!=receipt||source.revision!=revision||source.resource_ordinal!=resource_ordinal{return Err(WorldNativeMeshFailure::Binding)}
+        let mut entry=state.meshes.remove(key).unwrap();let WorldMeshSource::Native(source)=&mut entry.value else{unreachable!()};source.frozen=true;state.dynamic_mesh_close=Some(entry);return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))
+    }
+    let entry=state.dynamic_mesh_close.as_mut().unwrap();let WorldMeshSource::Native(source)=&mut entry.value else{return Err(WorldNativeMeshFailure::Binding)};
+    if source.receipt!=receipt||source.revision!=revision||source.resource_ordinal!=resource_ordinal||source.lookup_extent!=key.len()||!key.starts_with(&entry.id){return Err(WorldNativeMeshFailure::Binding)}
+    if !source.gpu_returned{let Some(witness)=retire_gpu(key,&source.loan).map_err(WorldNativeMeshFailure::Gpu)?else{return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))};if !witness.validates(key,&source.loan).map_err(WorldNativeMeshFailure::Gpu)?{return Err(WorldNativeMeshFailure::Binding)}source.gpu_returned=true;return Ok((false,RetainedCloneProgress{copied_items:1,..Default::default()}))}
+    if !source.loan.terminal_is_empty(){let step=source.loan.return_step(grant).map_err(WorldNativeMeshFailure::Mesh)?;return Ok((false,step.progress))}
+    let close=world_close_string(&mut entry.id,grant).map_err(WorldNativeMeshFailure::Close)?;let complete=matches!(close,semio_framework_job::InteractiveJobCloseStep::Complete{..});let progress=if complete{RetainedCloneProgress{copied_items:1,..close.progress()}}else{close.progress()};if complete{state.dynamic_mesh_close.take();}Ok((complete,progress))
+}
+
+/// 🧹️ Cancels an unfinished lookup without touching its retained destination owner.
+pub fn world3d_close_native_mesh_admission_step(state:&mut World3dState,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),WorldNativeMeshFailure>{if grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}let Some(cursor)=state.native_mesh_admission.as_mut()else{return Ok((true,Default::default()))};let step=world_close_string(&mut cursor.key,grant).map_err(WorldNativeMeshFailure::Close)?;let complete=matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{..});let progress=if complete{RetainedCloneProgress{copied_items:1,..step.progress()}}else{step.progress()};if complete{state.native_mesh_admission.take();}Ok((complete,progress))}
+
+/// 🧊️ The closing World source retains its loan until the original renderer returns its cache.
+#[cfg(not(all(target_arch="wasm32",target_env="p2")))]
+pub fn world3d_return_native_mesh_gpu_step(state:&mut World3dState,grant:RetainedCloneGrant,retire_gpu:impl FnOnce(&str,&WorldNativeMeshLoan)->Result<Option<ui_wgpu::wgpu::MeshGpuSourceReturn>,&'static str>)->Result<RetainedCloneProgress,WorldNativeMeshFailure>{
+    let Some(entry)=state.dynamic_mesh_close.as_mut()else{return Ok(Default::default())};let WorldMeshSource::Native(source)=&mut entry.value else{return Ok(Default::default())};
+    if source.gpu_returned||grant.maximum_items==0||grant.maximum_depth==0{return Ok(Default::default())}source.frozen=true;
+    let Some(witness)=retire_gpu(&entry.id,&source.loan).map_err(WorldNativeMeshFailure::Gpu)?else{return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})};if !witness.validates(&entry.id,&source.loan).map_err(WorldNativeMeshFailure::Gpu)?{return Err(WorldNativeMeshFailure::Binding)}source.gpu_returned=true;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+}
+
 pub fn publish_world3d_mesh_lease(state: &mut World3dState, id: String, mesh: Mesh3dLease) -> Result<(), WorldDynamicRejected<Mesh3dLease>> {
     let version = mesh.generation().rotate_left(17) ^ mesh.revision();
     if state.dynamic_mesh_close.is_some() || state.dynamic_blocked_mesh.is_some() {
@@ -11885,7 +11995,7 @@ fn store_mesh(state: &mut World3dState, id: String, mesh: Mesh3dLease) {
 fn retain_rejected_world_mesh(state: &mut World3dState, rejected: WorldDynamicRejected<Mesh3dLease>) {
     let fault = rejected.fault;
     if state.dynamic_blocked_mesh.is_none() {
-        state.dynamic_blocked_mesh = Some(WorldDynamicEntry { id: rejected.id, epoch: 0, value: rejected.value });
+        state.dynamic_blocked_mesh = Some(WorldDynamicEntry { id: rejected.id, epoch: 0, value: WorldMeshSource::Owned{lease:Some(rejected.value),closing:false} });
     }
     mark_world_dynamic_fault(state, fault);
 }
@@ -11954,7 +12064,7 @@ pub struct DecodedMeshPaintImage {
 /// 🎨️ Publishes exact decoded paint pixels for a resident mesh with one UV per vertex.
 pub fn apply_decoded_mesh_paint_image(state: &mut World3dState, mesh_key: &str, decoded: DecodedMeshPaintImage) -> bool {
     let descriptor = decoded.raster.identity().descriptor();
-    let mesh_version = state.mesh_versions.get(mesh_key).copied().unwrap_or(0);
+    let mesh_version = live_world3d_mesh_version(state,mesh_key);
     let mesh_seal_is_current = state.meshes.get(mesh_key).and_then(|mesh| mesh.schema().ok()).is_some_and(|schema| {
         schema.uvs == schema.vertices
             && schema.uvs > 0
@@ -13285,7 +13395,7 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
         World3dSceneBridgePhase::Close=>unreachable!("original scene cursor close is drained before advancing"),
         World3dSceneBridgePhase::Meshes => {
             if state.dynamic_mesh_close.is_some() || state.dynamic_blocked_mesh.is_some() {
-                step_world3d_mesh_close(state);
+                step_world3d_mesh_close(state,context);
                 state.scene_bridge = Some(cursor);
                 return World3dSceneBridgeStep::Pending;
             }
@@ -13397,26 +13507,14 @@ impl WorldMeshDigestCursor {
 
 /// 🧹️ One turn of the superseded-mesh close ladder — the same steps the full-state retirement runs,
 /// reachable outside a teardown so a live scene can replace a mesh key without wedging.
-fn step_world3d_mesh_close(state: &mut World3dState) {
-    if state.dynamic_mesh_close.is_none() {
-        if let Some(entry) = state.dynamic_blocked_mesh.take() {
-            state.dynamic_mesh_close = Some(entry);
-        }
-        return;
-    }
-    let Some(entry) = state.dynamic_mesh_close.as_mut() else { return };
-    match mesh3d_begin_close(entry.value) {
-        Ok(()) | Err(ui_wgpu::wgpu::Mesh3dFault::Closing) => {}
-        Err(_) => {
-            entry.id.clear();
-            state.dynamic_mesh_close = None;
-            return;
-        }
-    }
-    if state.dynamic_mesh_close.as_ref().is_some_and(|entry| ui_wgpu::wgpu::mesh3d_close_demands(entry.value, ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES).and_then(|demand| { let grant = world_mesh_ownership_grant(ui_wgpu::wgpu::kernel_3d_scene::MESH3D_PAGE_BYTES, demand.capacity_bytes, demand.release_bytes, demand.depth); world_mesh_ownership_complete(grant, mesh3d_close_step(entry.value, grant)?) }).is_ok_and(|complete| complete)) {
-        state.dynamic_mesh_close.as_mut().expect("mesh close owner retained above").id.clear();
-        state.dynamic_mesh_close = None;
-    }
+fn step_world3d_mesh_close(state:&mut World3dState,context:&mut semio_framework_job::StepContext<'_>){
+    if context.retirement_should_yield(){return}
+    if state.dynamic_mesh_close.is_none(){if let Some(entry)=state.dynamic_blocked_mesh.take(){state.dynamic_mesh_close=Some(entry);}return}
+    let entry=state.dynamic_mesh_close.as_mut().unwrap();let grant=context.retained_grant();
+    let result=entry.value.close_step(grant);let Ok((complete,progress))=result else{return};
+    if context.consume_retained(progress).is_err(){return}if progress.copied_items!=0{context.consume_fuel(progress.copied_items as u64);return}
+    if !complete{return}
+    let Ok(step)=world_close_string(&mut entry.id,grant)else{return};if context.consume_retained(step.progress()).is_err(){return}if step.progress().copied_items!=0{context.consume_fuel(1);}if matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{..}){state.dynamic_mesh_close.take();}
 }
 
 /// 🧊️ Drains up to `budget` authority writes of the in-flight mesh publication.
@@ -13865,7 +13963,7 @@ fn append_tool_run_trace_draws(state: &mut World3dState, gpu: &mut World3dBuildC
         if !state.meshes.contains_key(&mesh_key) {
             begin_world_placeholder_mesh(state, &mesh_key, WorldPlaceholderKind::Box);
         }
-        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, &mesh_key);
         if let Some(mesh) = state.meshes.get(&mesh_key).copied() {
             gpu.ensure_mesh(&mesh_key, mesh_version, mesh);
             translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances, shadow_role: Default::default() });
@@ -13925,7 +14023,7 @@ fn append_world3d_section_cap(state: &mut World3dState, gpu: &mut World3dBuildCo
         begin_world_placeholder_mesh(state, GUMBALL_PLANE_MESH, WorldPlaceholderKind::Plane);
     }
     let Some(plane) = state.meshes.get(GUMBALL_PLANE_MESH).copied() else { return };
-    let plane_version = *state.mesh_versions.get(GUMBALL_PLANE_MESH).unwrap_or(&0);
+    let plane_version = live_world3d_mesh_version(state, GUMBALL_PLANE_MESH);
     gpu.ensure_mesh(GUMBALL_PLANE_MESH, plane_version, plane);
     let (mut low, mut high) = ([f32::INFINITY; 3], [f32::NEG_INFINITY; 3]);
     for draw in solids {
@@ -14247,7 +14345,7 @@ pub fn render_world_3d(
             continue;
         };
         let Ok((mesh_min, mesh_max)) = mesh.aabb() else { continue };
-        let mesh_version = *state.mesh_versions.get(&draw.mesh_key).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, &draw.mesh_key);
         let mut instances = Vec::new();
         let mut painted_instances = Vec::new();
         let mut celebration_instances = Vec::new();
@@ -14396,7 +14494,7 @@ pub fn render_world_3d(
     append_vortex_arrow_draws(state, gpu, &mut extra_draws);
     let vertex_instances = append_component_vertex_spheres(state);
     if !vertex_instances.is_empty() {
-        let mesh_version = *state.mesh_versions.get(VERTEX_MARKER_MESH).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, VERTEX_MARKER_MESH);
         if let Some(mesh) = state.meshes.get(VERTEX_MARKER_MESH) {
             gpu.ensure_mesh(VERTEX_MARKER_MESH, mesh_version, *mesh);
             extra_draws.push(SceneDraw3d { mesh_key: VERTEX_MARKER_MESH.into(), mesh_version, instances: vertex_instances, shadow_role: Default::default() });
@@ -14410,7 +14508,7 @@ pub fn render_world_3d(
         if !state.meshes.contains_key(&mesh_id) {
             begin_world_placeholder_mesh(state, &mesh_id, WorldPlaceholderKind::Box);
         }
-        let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, &mesh_id);
         if let Some(mesh) = state.meshes.get(&mesh_id).copied() {
             gpu.ensure_mesh(&mesh_id, mesh_version, mesh);
             translucent_draws.push(SceneDraw3d {
@@ -14439,7 +14537,7 @@ pub fn render_world_3d(
             }
             let rotation = preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             let scale = preview_scale(preview.scale.as_ref());
-            let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
+            let mesh_version = live_world3d_mesh_version(state, &mesh_id);
             if let Some(mesh) = state.meshes.get(&mesh_id).copied() {
                 gpu.ensure_mesh(&mesh_id, mesh_version, mesh);
                 translucent_draws.push(SceneDraw3d {
@@ -15785,7 +15883,7 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildCon
     ensure_primitive_mesh(state, VORTEX_ARROW_SHAFT_MESH);
     ensure_primitive_mesh(state, VORTEX_ARROW_HEAD_MESH);
     for (mesh_key, instances) in [("vortex-marker", point_instances), (VORTEX_ARROW_SHAFT_MESH, shaft_instances), (VORTEX_ARROW_HEAD_MESH, head_instances)] {
-        let mesh_version = *state.mesh_versions.get(mesh_key).unwrap_or(&0);
+        let mesh_version = live_world3d_mesh_version(state, mesh_key);
         if let Some(mesh) = state.meshes.get(mesh_key).copied() {
             gpu.ensure_mesh(mesh_key, mesh_version, mesh);
             extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances, shadow_role: Default::default() });

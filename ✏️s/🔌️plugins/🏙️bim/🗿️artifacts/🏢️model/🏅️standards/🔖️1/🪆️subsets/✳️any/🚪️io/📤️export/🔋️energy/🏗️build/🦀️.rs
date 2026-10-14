@@ -18,7 +18,7 @@ use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::the
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Boundary, EnvelopeSpace, EnvelopeSurface, SurfaceKind};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{Axis, Layer, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, ModelSnapshot};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 use std::collections::BTreeMap;
@@ -88,7 +88,7 @@ impl Build {
     }
 }
 
-fn building_of<'a>(snapshot: &'a ModelSnapshot, storey: &str) -> Option<(&'a str, &'a crate::Building)> {
+fn building_of<'a>(snapshot: &'a ModelSnapshot, storey: &str) -> Option<(&'a str, &'a crate::standards::v1::subsets::any::schema::snapshot::Building)> {
     let storey = snapshot.storeys.get(storey)?;
     snapshot.buildings.get_key_value(&storey.building).map(|(id, building)| (id.as_str(), building))
 }

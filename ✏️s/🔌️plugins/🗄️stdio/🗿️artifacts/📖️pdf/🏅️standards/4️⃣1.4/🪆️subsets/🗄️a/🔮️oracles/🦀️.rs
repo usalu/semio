@@ -12,7 +12,6 @@ pub const KINDS: &[&str] = &["set-page-text", "clear-page-text"];
 /// 🦠️ Applies one declared mutation kind to a real document and returns the re-serialized bytes. An
 /// unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped reports
 /// as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").ok_or("Missing mutation parameters")?;
     match spec.str("kind").as_str() {
@@ -30,14 +29,8 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// would extract.
 pub const CONFORMANT_TEXT: &str = "Reuse of load-bearing timber components in Swiss building stock";
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ↩️ The undo of `forward`, read out of `base` by the independent implementation alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     if !KINDS.contains(&forward.str("kind").as_str()) {
         return Err("Unknown inverse kind".into());
@@ -46,29 +39,19 @@ pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> 
     Ok(Json::Object(vec![("kind".into(), Json::String("set-page-text".into())), ("params".into(), Json::Object(vec![("text".into(), Json::String(previous))]))]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🔁️ The reference implementation's own decode/re-encode: `lopdf` parses the whole file and writes
 /// a fresh one from its own object graph alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 👁️ Projects document bytes onto exactly the axis `check_pdf_a_conformance` reads: the extractable
 /// page text, and the emptiness verdict the checker itself computes from it. `schemaGapUnverifiable`
 /// is reported as the constant `true` it genuinely is — the checker raises it unconditionally on
 /// every PDF 1.4 document, so recording it is honest bookkeeping of an axis no mutation can move,
 /// not a field pretending to carry evidence. Page COUNT is the stability anchor.
-#[cfg(feature = "oracles")]
 pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
     let text = oracles::read_page_text(input)?;
     Ok(Json::Object(vec![
@@ -80,14 +63,9 @@ pub fn project_conformance(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_conformance(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Reference
-#[cfg(feature = "oracles")]
 mod oracles {
     use lopdf::{content::Content, Document, Object};
 
@@ -163,7 +141,7 @@ mod oracles {
 //#endregion 🔖️Reference
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

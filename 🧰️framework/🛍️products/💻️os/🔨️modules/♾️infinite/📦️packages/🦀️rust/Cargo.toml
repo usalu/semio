@@ -13,27 +13,19 @@ id = "os-infinite"
 [lints]
 workspace = true
 
-[features]
-typegen = []
-# 🌉️ Declared (but never enabled) so `🗺️surface/🏔️terrain/🦀️.rs`'s path-mounted
-# `#[cfg(feature = "session-bindgen")]` wasm bridge doesn't trip `unexpected_cfgs` here — this
-# crate path-mounts that file without the surface crate's own `session-bindgen` default, by design
-# (avoids duplicate `TerrainSession` symbols linking surface+infinite into one cdylib).
-session-bindgen = []
-
 [lib]
 name = "semio_framework_os_infinite"
 crate-type = ["rlib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-os-infinite-directed-presentation = { path = "../../🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
@@ -46,9 +38,13 @@ semio-framework-tool-run = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-graph-manifest = { path = "../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+graph = { path = "../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
+semio-framework-graph-drawing = { path = "../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-ui-viewport = { path = "../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-framework-ui-runtime = { path = "../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -88,6 +84,7 @@ wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window", "Request", "RequestInit", "RequestMode", "Response", "console"] }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

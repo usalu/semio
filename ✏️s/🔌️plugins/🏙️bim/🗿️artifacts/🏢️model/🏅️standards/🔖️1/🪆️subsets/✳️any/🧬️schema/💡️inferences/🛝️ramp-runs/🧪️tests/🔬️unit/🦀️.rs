@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json;
-use crate::{TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
 use semio_framework_geometry::loops;
 
 const EPS: f64 = 1e-9;
@@ -10,7 +10,7 @@ fn level() -> StoreyLevel {
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
-    Vertex { point: crate::Point2 { x, y }, bulge }
+    Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge }
 }
 
 fn ramp(path: Vec<Vertex>, rise: f64) -> Ramp {
@@ -170,7 +170,7 @@ fn a_curved_strip_keeps_arcs_and_the_exact_area() {
 #[test]
 fn the_run_table_is_canonical_json_of_every_ramp() {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.storeys.insert("st-ground".into(), crate::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.storeys.insert("st-ground".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "b".into(), name: "G".into(), level: 0, height: 3.0, cut_height: None });
     snapshot.ramps.insert("rp".into(), straight(10.0, 0.5));
     let runs = compute_ramp_runs(&snapshot);
     assert_eq!(runs.len(), 1);
@@ -221,7 +221,7 @@ fn a_ramp_depends_on_its_storey_and_the_storey_its_top_targets() {
 #[test]
 fn the_ramps_are_gated_a_storey_edit_re_infers_the_ramps_it_reaches_and_a_material_edit_none() {
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::{Entry, MaterialPatch, ModelDiff, ModelInference, RampPatch, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, RampPatch, StoreyPatch}, ModelDiff}, inferences::ModelInference};
     use protocol::Inference;
     let snapshot = ramps();
     let mut session = ModelInferenceSession::new();
@@ -258,7 +258,7 @@ fn the_ramps_are_gated_a_storey_edit_re_infers_the_ramps_it_reaches_and_a_materi
 #[test]
 fn every_projection_of_a_model_with_ramps_is_cache_transparent_warm_equals_cold_equals_uncached() {
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::ModelInference;
+    use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     for snapshot in [ramps(), with_hosted_railings()] {
         let uncached = ModelInference::infer(&snapshot).expect("infers");
@@ -288,7 +288,7 @@ fn every_projection_of_a_model_with_ramps_is_cache_transparent_warm_equals_cold_
 #[test]
 fn the_hosted_railing_of_a_ramp_follows_the_ramp_when_it_moves() {
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::{Entry, ModelDiff, ModelInference, RampPatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RampPatch}, inferences::ModelInference};
     use protocol::Inference;
     let snapshot = with_hosted_railings();
     let mut session = ModelInferenceSession::new();

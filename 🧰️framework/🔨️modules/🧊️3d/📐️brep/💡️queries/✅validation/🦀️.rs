@@ -9,16 +9,18 @@
 //! integrity via `check_brep_referential_integrity`) is a DIFFERENT, complementary check and stays
 //! there — this file's `validate_body` is called directly by diff constructors on their own
 //! ephemeral rep, never on a persisted snapshot.
+//!
+//! Crate cut of `semio-framework-3d-brep-queries` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
 
 use semio_framework_3d_brep_representation::contract::Aabb;
-use crate::bounding_volume::face_aabb;
-use crate::mass_properties;
+use semio_framework_3d_brep_queries::bounding_volume::face_aabb;
+use semio_framework_3d_brep_queries::mass_properties;
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, VertexId};
-use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_curve::curve_ops;
 use semio_framework_3d_brep_representation::error::ValidationIssue;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, ReachSet};
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 
 type ValidationFindings = semio_framework_value::value::list::PagedList<ValidationIssue,{usize::MAX}>;
 trait ValidationIssueSink { fn push_issue(&mut self, issue:ValidationIssue); }
@@ -58,10 +60,10 @@ fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize
 
 // #region 🔖️Geometry
 
-fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_representation::tolerance::Tol, coarser: String, coarser_tol: semio_framework_3d_brep_representation::tolerance::Tol, issues: &mut impl ValidationIssueSink) {
+fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_tolerance::Tol, coarser: String, coarser_tol: semio_framework_3d_brep_tolerance::Tol, issues: &mut impl ValidationIssueSink) {
     #[cfg(test)]
     TOLERANCE_PROBES.with(|probes| probes.set(probes.get() + 1));
-    if let Some((finer, coarser)) = semio_framework_3d_brep_representation::tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
+    if let Some((finer, coarser)) = semio_framework_3d_brep_tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
         issues.push_issue(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
     }
 }
@@ -81,8 +83,8 @@ fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &semio_framework_3d_brep_re
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn same_parameter_deviation_at(
     surface: &Surface,
-    pcurve: &semio_framework_3d_brep_representation::curve::Curve2,
-    curve3: &semio_framework_3d_brep_representation::curve::Curve3,
+    pcurve: &semio_framework_3d_brep_curve::Curve2,
+    curve3: &semio_framework_3d_brep_curve::Curve3,
     prange: (f64, f64),
     range: (f64, f64),
     s: f64,
@@ -110,7 +112,7 @@ fn same_parameter_deviation_at(
 /// edge also has `v0 == v1` but a non-zero length, so it stays subject to the ordinary two-use
 /// rule.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
+pub fn is_point_edge(body: &Body, edge_id: EdgeId) -> bool {
     let Some(edge) = body.edges.get(edge_id) else { return false };
     if edge.v0 != edge.v1 {
         return false;
@@ -860,3 +862,9 @@ impl BodyValidationJob {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🧪️TestSupport
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
+//#endregion 🧪️TestSupport

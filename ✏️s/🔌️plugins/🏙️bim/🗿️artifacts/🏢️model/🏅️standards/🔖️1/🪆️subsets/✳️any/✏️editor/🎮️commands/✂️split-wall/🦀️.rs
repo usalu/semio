@@ -5,7 +5,7 @@ use crate::editor::bim::entities::id_taken;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect, IdMint};
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -44,7 +44,7 @@ pub fn handle(payload: &SplitWallAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
         let new_id = mint.mint("wall", |id| id_taken(snapshot, id));
         parts.push(("wall".to_string(), wall.clone()));
         parts.push(("wall".to_string(), new_id.clone()));
-        mutations.push(ModelMutation::SplitWall(crate::mutations::split_wall::SplitWall { id: wall.clone(), t, new_id }));
+        mutations.push(ModelMutation::SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall { id: wall.clone(), t, new_id }));
     }
     let mut emit = Emit::mutations(mutations);
     emit.effects.push(select_effect(BIM_ELEMENT_DOMAIN, &parts, "replace"));

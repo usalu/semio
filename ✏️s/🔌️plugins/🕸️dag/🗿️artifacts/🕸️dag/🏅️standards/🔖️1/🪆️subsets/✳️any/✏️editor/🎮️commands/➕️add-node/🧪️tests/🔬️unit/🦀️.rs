@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::dag::commands::{patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::unit_tests::context;
 use crate::editor::dag::DagCommand;
-use semio_framework_artifact_infinite_dag::DagNodeKind;
+use semio_framework_os_infinite_directed_presentation::DagNodeKind;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb};
 use semio_framework_plugin::PluginApp;
 

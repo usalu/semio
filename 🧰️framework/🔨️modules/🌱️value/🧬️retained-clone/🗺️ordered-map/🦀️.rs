@@ -179,6 +179,7 @@ impl<K: RetainedClone, V: RetainedClone> RetainedOrderedMapCloneCursor<K, V> {
 }
 
 impl<K: RetainedClone, V: RetainedClone> RetainedCloneCursor<RetainedOrderedMap<K, V>> for RetainedOrderedMapCloneCursor<K, V> {
+    fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
         if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered map cannot quote a closing or spent clone"));}
         if self.output.is_some(){return Ok(Default::default());}

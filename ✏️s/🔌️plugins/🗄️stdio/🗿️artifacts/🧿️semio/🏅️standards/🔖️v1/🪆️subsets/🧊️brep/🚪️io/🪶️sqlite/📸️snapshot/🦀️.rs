@@ -4,7 +4,8 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
 use crate::schema::snapshot::{SemioBrepSnapshot, BrepVertex, BrepEdge, BrepLoop, BrepLoopEdge, BrepCoedge, BrepFace, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepCurve, BrepCurve2, BrepSurface};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;

@@ -24,7 +24,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
 
 
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
@@ -278,7 +278,7 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 position: SemioPoint2 { x: 0.0, y: 0.0 },
                 width: 0.0, height: 0.0,
                 ports: vec![SemioGraphPort { name: "out".into(), kind: SemioGraphPortKind::Out, category: String::new(), properties: Vec::new() }],
-                properties: vec![SemioValueEntry { key: "weight".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Int { lexeme: "1".into() } }],
+                properties: vec![SemioValueEntry { key: "weight".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Int { lexeme: "1".into() } }],
             },
             SemioGraphNode {
                 id: GraphNodeId::new("n2"),
@@ -287,7 +287,7 @@ pub(crate) fn demo_graph_snapshot() -> SemioGraphSnapshot {
                 position: SemioPoint2 { x: 120.5, y: -30.25 },
                 width: 0.0, height: 0.0,
                 ports: vec![SemioGraphPort { name: "in".into(), kind: SemioGraphPortKind::In, category: String::new(), properties: Vec::new() }],
-                properties: vec![SemioValueEntry { key: "label".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Str { value: "sink node".into() } }],
+                properties: vec![SemioValueEntry { key: "label".into(), value: semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue::Str { value: "sink node".into() } }],
             },
         ],
         edges: vec![SemioGraphEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(), source_port: None, target_port: None, properties: Vec::new() }],

@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "loadable", "source": "valid", "accepted": true},
+    {"id": "missing-export", "source": "empty", "accepted": false},
+    {"id": "wrong-type", "source": "number", "accepted": false},
+    {"id": "unbundled-relative", "source": "relative", "accepted": false}
+  ]
+}

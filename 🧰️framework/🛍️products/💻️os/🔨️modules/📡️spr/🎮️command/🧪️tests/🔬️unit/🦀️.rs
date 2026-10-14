@@ -1,7 +1,7 @@
 use super::mutation_laws_fixture::{foreign_step_fixture, AddCounter, AddCounterFourTimes, AddCounterThenNotifyForeign, AddCounterTwice, CounterDiff, CounterMutation};
 use super::*;
-use crate::os_spr::fold::{fold_plan_diff, fold_plan_inverse};
-use crate::os_spr::io::text::OpText;
+use crate::fold::{fold_plan_diff, fold_plan_inverse};
+use protocol::io::text::OpText;
 
 fn json_oracle<T: protocol::value::ToValue>(value: &T) -> serde_json::Value {
     serde_json::from_str(&semio_framework_pack_json::to_json_string(value)).expect("independent JSON parser accepts first-party value encoding")
@@ -48,10 +48,10 @@ impl Patchable<i64> for Item {
 fn operation_diff_apply_matches_backwards_inverse() {
     let base: i64 = 10;
     let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
-    let forward = crate::os_spr::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
+    let forward = protocol::apply_diff(op.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(forward, 15);
     let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base).expect("valid retained mutation inverse fixture")).unwrap();
-    let restored = crate::os_spr::apply_diff(undo.diff(&forward).diff(), &forward).expect("valid inverse diff");
+    let restored = protocol::apply_diff(undo.diff(&forward).diff(), &forward).expect("valid inverse diff");
     assert_eq!(restored, base);
 }
 
@@ -60,7 +60,7 @@ fn operation_diff_absorb_accumulates() {
     let mut a = CounterDiff { deltas: vec![3] };
     a.absorb(CounterDiff { deltas: vec![4] });
     assert_eq!(a.deltas, vec![3, 4]);
-    assert_eq!(crate::os_spr::apply_diff(&a, &0), Ok(7));
+    assert_eq!(protocol::apply_diff(&a, &0), Ok(7));
 }
 
 #[test]
@@ -71,7 +71,7 @@ fn operation_defaults_are_stable() {
     assert_eq!(op.base_version(), None);
     assert_eq!(op.author_id(), None);
     assert_eq!(op.timestamp(), None);
-    assert_eq!(op.undo_policy(), crate::os_spr::UndoPolicy::ExactBaseOnly);
+    assert_eq!(op.undo_policy(), protocol::UndoPolicy::ExactBaseOnly);
     assert_eq!(op.state_class(), semio_framework_schema_state::StateClass::Artifact);
     assert!(op.foreign_step_source(&0, 0).expect("original local source").is_none());
 }
@@ -98,13 +98,13 @@ fn op_text_parse_error_carries_message() {
 #[test]
 fn operation_meta_value_round_trip_matches_serde_oracle() {
     let meta = MutationMeta {
-        mutation_id: Some(crate::os_spr::ids::MutationId("op-1".into())),
-        dependencies: vec![crate::os_spr::ids::MutationId("op-0".into())],
+        mutation_id: Some(protocol::ids::MutationId("op-1".into())),
+        dependencies: vec![protocol::ids::MutationId("op-0".into())],
         base_version: 3,
-        author_id: Some(crate::os_spr::ids::ActorId("actor-1".into())),
-        timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 1000),
-        undo_policy: crate::os_spr::UndoPolicy::TransformAgainstConcurrent,
-        payload_hash: Some(crate::os_spr::ids::PayloadHash([7u8; 32])),
+        author_id: Some(protocol::ids::ActorId("actor-1".into())),
+        timestamp: protocol::ids::HybridLogicalTimestamp::new(1, 1000),
+        undo_policy: protocol::UndoPolicy::TransformAgainstConcurrent,
+        payload_hash: Some(protocol::ids::PayloadHash([7u8; 32])),
         semantic_kind: None,
         label: None,
         group_id: Some("invocation-1".to_string()),
@@ -137,8 +137,8 @@ fn edit_value_round_trip_matches_serde_oracle() {
             dependencies: Vec::new(),
             base_version: 0,
             author_id: None,
-            timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
-            undo_policy: crate::os_spr::UndoPolicy::ExactBaseOnly,
+            timestamp: protocol::ids::HybridLogicalTimestamp::new(1, 0),
+            undo_policy: protocol::UndoPolicy::ExactBaseOnly,
             payload_hash: None,
             semantic_kind: None,
             label: None,
@@ -262,7 +262,7 @@ fn space_history_verbs_match_the_language_neutral_contract() {
 fn mutation_descriptor_semantics_participate_in_immutable_identity() {
     use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
     let semantics = <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS;
-    let construct = |semantics| MutationDescriptor::new(crate::os_spr::SchemaId("mini.doc#rename-mini".into()), crate::os_spr::SchemaVersion(1), semio_framework_schema_state::StateClass::Artifact, RenameMini::DESCRIPTOR, semantics).unwrap();
+    let construct = |semantics| MutationDescriptor::new(protocol::SchemaId("mini.doc#rename-mini".into()), protocol::SchemaVersion(1), semio_framework_schema_state::StateClass::Artifact, RenameMini::DESCRIPTOR, semantics).unwrap();
     let base = construct(semantics);
     let changed = construct(SemanticDescriptor { record: "RenamedMiniLabel", ..semantics });
     assert_ne!(base.fingerprint(), changed.fingerprint());
@@ -280,11 +280,11 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
     let mutation: MiniMutation = semio_framework_pack_json::from_json_str(&witness.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-mini wire witness");
     assert_eq!(mutation, RenameMini { new_name: "b".into() }.into());
     assert_eq!(json_oracle(&mutation), witness);
-    let after = crate::os_spr::apply_diff(mutation.diff(&base).diff(), &base).expect("valid forward diff");
+    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid forward diff");
     assert_eq!(after.name, "b");
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(crate::os_spr::apply_diff(inverse[0].diff(&after).diff(), &after), Ok(base));
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&after).diff(), &after), Ok(base));
     assert_eq!(MiniMutation::DESCRIPTORS, &[RenameMini::DESCRIPTOR]);
     assert_eq!(mutation.descriptor(), &RenameMini::DESCRIPTOR);
     assert_eq!(MiniMutation::kinds(), &[<RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS]);
@@ -307,7 +307,7 @@ fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
 #[test]
 fn descriptor_registry_rejects_conflicts_without_partial_publication() {
     use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
-    let build = |id: &str, state| MutationDescriptor::new(crate::os_spr::SchemaId(id.into()), crate::os_spr::SchemaVersion(1), state, RenameMini::DESCRIPTOR, <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS).unwrap();
+    let build = |id: &str, state| MutationDescriptor::new(protocol::SchemaId(id.into()), protocol::SchemaVersion(1), state, RenameMini::DESCRIPTOR, <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS).unwrap();
     let first = build("mini.first", semio_framework_schema_state::StateClass::Artifact);
     let conflict = build("mini.first", semio_framework_schema_state::StateClass::Config);
     let second = build("mini.second", semio_framework_schema_state::StateClass::Artifact);
@@ -630,7 +630,7 @@ fn mutation_leaf_descriptor_const_roster_boundaries_match_neutral_vectors() {
 // upcast(x)` holds because `max(max(x, 10), 10) == max(x, 10)` for every `x`.
 struct ClampToFloor;
 impl MutationUpcaster<i64> for ClampToFloor {
-    fn upcast(&self, _from_version: crate::os_spr::ids::SchemaVersion, op: i64) -> i64 {
+    fn upcast(&self, _from_version: protocol::ids::SchemaVersion, op: i64) -> i64 {
         op.max(10)
     }
 }
@@ -638,7 +638,7 @@ impl MutationUpcaster<i64> for ClampToFloor {
 #[test]
 fn upcaster_is_idempotent_at_target_version() {
     let upcaster = ClampToFloor;
-    let version = crate::os_spr::ids::SchemaVersion(1);
+    let version = protocol::ids::SchemaVersion(1);
     for start in [0i64, 3, 7, 10, 40] {
         let once = upcaster.upcast(version, start);
         let twice = upcaster.upcast(version, once);
@@ -700,11 +700,11 @@ fn inference_diff_consistency_law() {
     let base: i64 = 10;
     let noop = CounterDiff { deltas: vec![0] };
     assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_eq!(AddInference::infer(&crate::os_spr::apply_diff(&noop, &base).expect("valid no-op diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
+    assert_eq!(AddInference::infer(&protocol::apply_diff(&noop, &base).expect("valid no-op diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 
     let real = CounterDiff { deltas: vec![1] };
     assert!(real.touches().intersects_any(AddInference::fields()[0].reads));
-    assert_ne!(AddInference::infer(&crate::os_spr::apply_diff(&real, &base).expect("valid real diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
+    assert_ne!(AddInference::infer(&protocol::apply_diff(&real, &base).expect("valid real diff")).expect("valid materialized inference fixture"), AddInference::infer(&base).expect("valid materialized inference fixture"));
 }
 
 #[test]
@@ -755,7 +755,7 @@ fn command_outcome_default_is_empty() {
 #[test]
 fn operation_event_serde_round_trip() {
     let event = MutationEvent {
-        mutation_id: crate::os_spr::ids::MutationId("op-1".into()),
+        mutation_id: protocol::ids::MutationId("op-1".into()),
         state_class: semio_framework_schema_state::StateClass::Transient,
         payload: protocol::value::DslValue::object([("kind".to_string(), protocol::value::DslValue::String("toast".to_string())), ("text".to_string(), protocol::value::DslValue::String("saved".to_string()))]),
     };
@@ -771,28 +771,28 @@ fn fold_plan_diff_equals_sequential_apply() {
     let base: i64 = 10;
     let kind = AddCounterTwice { delta: 3 };
     let diff = fold_plan_diff(&kind, &base);
-    assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(16));
+    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(16));
 
     let steps = plan_of(&kind, &base).expect("plan succeeds");
     let mut sequential = base;
     for step in &steps {
         if let PlanStep::Local(op) = step {
-            sequential = crate::os_spr::apply_diff(op.diff(&sequential).diff(), &sequential).expect("valid planned diff");
+            sequential = protocol::apply_diff(op.diff(&sequential).diff(), &sequential).expect("valid planned diff");
         }
     }
-    assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
+    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(sequential), "fold_plan_diff must equal sequential application of the plan's local steps");
 }
 
 #[test]
 fn fold_plan_inverse_restores_base() {
     let base: i64 = 10;
     let kind = AddCounterTwice { delta: 3 };
-    let forward = crate::os_spr::apply_diff(fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded diff");
+    let forward = protocol::apply_diff(fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded diff");
     assert_ne!(forward, base);
     let inverses = fold_plan_inverse(&kind, &base).expect("valid retained mutation inverse fixture");
     let mut restored = forward;
     for op in inverses.iter().rev() {
-        restored = crate::os_spr::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
 }
@@ -802,7 +802,7 @@ fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
     let base: i64 = 0;
     let quad = AddCounterFourTimes { delta: 2 };
     let diff = fold_plan_diff(&quad, &base);
-    assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(8), "two nested AddCounterTwice{{delta:2}} embeds must fold to +8");
+    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(8), "two nested AddCounterTwice{{delta:2}} embeds must fold to +8");
 
     let steps = plan_of(&quad, &base).expect("plan succeeds");
     let local_deltas: Vec<i64> = steps
@@ -815,9 +815,9 @@ fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
     assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
     let inverses = fold_plan_inverse(&quad, &base).expect("valid retained mutation inverse fixture");
-    let mut restored = crate::os_spr::apply_diff(diff.diff(), &base).expect("valid folded diff");
+    let mut restored = protocol::apply_diff(diff.diff(), &base).expect("valid folded diff");
     for op in inverses.iter().rev() {
-        restored = crate::os_spr::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
 }
@@ -846,7 +846,7 @@ fn foreign_steps_are_excluded_from_fold_plan_diff() {
     let base: i64 = 5;
     let kind = AddCounterThenNotifyForeign { delta: 4, foreign_count: 2 };
     let diff = fold_plan_diff(&kind, &base);
-    assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
+    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
 
     let planned = plan_of(&kind, &base).expect("original independent cold plan");
     let foreign: Vec<_> = planned.iter().filter_map(|step| if let PlanStep::Foreign(value) = step { Some(value) } else { None }).collect();
@@ -872,11 +872,11 @@ fn derive_composite_mutation_wires_delegating_mutation_kind() {
     let base: i64 = 1;
     let kind = AddCounterTwice { delta: 5 };
     let diff = MutationKind::<i64, CounterMutation>::diff(&kind, &base);
-    assert_eq!(crate::os_spr::apply_diff(diff.diff(), &base), Ok(11));
+    assert_eq!(protocol::apply_diff(diff.diff(), &base), Ok(11));
     let inverse = MutationKind::<i64, CounterMutation>::inverse(&kind, &base).expect("valid retained mutation inverse fixture");
-    let mut restored = crate::os_spr::apply_diff(diff.diff(), &base).expect("valid folded diff");
+    let mut restored = protocol::apply_diff(diff.diff(), &base).expect("valid folded diff");
     for op in inverse.iter().rev() {
-        restored = crate::os_spr::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
+        restored = protocol::apply_diff(op.diff(&restored).diff(), &restored).expect("valid inverse diff");
     }
     assert_eq!(restored, base);
     assert_eq!(<AddCounterTwice as MutationKind<i64, CounterMutation>>::SEMANTICS.kind, "add-counter-twice");

@@ -1,12 +1,12 @@
 use super::*;
 use crate::editor::fem2d::interaction::{fem2d_layer_to_canvas, FEM2D_GRANULARITY_NODE};
 use crate::editor::fem2d::modes::edit::windows::model::{find_node_2d, screen_2d, WINDOW_KIND_ID};
-use crate::Viewport2d;
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel, ViewWindowInstance};
 use pack::snapshot::ArtifactDsl;
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;

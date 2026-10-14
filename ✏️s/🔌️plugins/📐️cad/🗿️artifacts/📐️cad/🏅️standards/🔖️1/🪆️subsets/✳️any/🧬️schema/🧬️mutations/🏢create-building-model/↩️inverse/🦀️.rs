@@ -3,14 +3,14 @@
 //! bare "delete", since `create-building-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateBuildingModel;
-use crate::mutations::{delete_building_model, CadMutation};
-use crate::CadSnapshot;
+use crate::delete_building_model;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateBuildingModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::create_building_model::CreateBuildingModel> + From<crate::delete_building_model::DeleteBuildingModel>>(_payload: &CreateBuildingModel, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match &base.building_model {
-        Some(existing) => vec![CadMutation::CreateBuildingModel(CreateBuildingModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
-        None => vec![CadMutation::DeleteBuildingModel(delete_building_model::DeleteBuildingModel {})],
+        Some(existing) => vec![Op::from(CreateBuildingModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
+        None => vec![Op::from(delete_building_model::DeleteBuildingModel {})],
     })
 }
 //#endregion 🔖️Inverse

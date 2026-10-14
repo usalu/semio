@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-plugin-norm-app-surface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm app surface: panels, windows, field meta, tool jobs and the retained editor"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+compliance-testing = ["semio-s-plugin-norm-app-surface/compliance-testing", "semio-s-plugin-norm-compliance/compliance-testing"]
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-results-config = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

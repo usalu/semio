@@ -7,10 +7,11 @@
 //!
 //! 📋️ Missing source remains the authored refusal; positive duplication carries explicit target identities.
 
-use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::schema::find_drawing_layer;
-use crate::{DrawingDiff, DrawingSnapshot};
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json");
@@ -90,7 +91,7 @@ async fn declared_outcome_holds() {
 /// ⚖️ A duplicate of a present layer sums its inverse diffs to exactly the negative of the forward insert.
 #[semio_framework_async_macros::async_test]
 async fn a_present_source_inverse_sums_to_the_negative_diff() {
-    let base = DrawingSnapshot { layers: vec![crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
-    let source = crate::schema::layer_id(&base.layers[0]).clone();
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::mutations::duplicate_layer(source.clone(),vec![crate::schema::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
+    let base = DrawingSnapshot { layers: vec![semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect")].into(), ..Default::default() };
+    let source = semio_s_artifact_draw_drawing_model::layer_id(&base.layers[0]).clone();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&crate::duplicate_layer::mutation::duplicate_layer(source.clone(),vec![semio_s_artifact_draw_drawing_model::identity::DrawingIdentityAssignment{source:source.clone(),target:"duplicate-target".into()}].into()), &base).await;
 }

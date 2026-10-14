@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-dwg-read-objects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dwg reader: object records"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-s-artifact-stdio-dwg-read-records = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-drawing = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }

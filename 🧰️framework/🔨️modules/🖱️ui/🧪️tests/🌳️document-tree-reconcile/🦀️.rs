@@ -11,11 +11,14 @@
 //! `🖱️ui/🧪️tests/🧫️fixtures/🌳️document-tree-reconcile/🔣️.json` as the shared fixture (its TypeScript twin is
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
-use super::*;
+use semio_framework_ui_retained_tree::reconcile::*;
 use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep, UI_RETIRED_COMPONENT_SCENE_CAPACITY};
 use crate::wgpu::text::FontAtlas;
-use crate::wgpu::tree::UiTree;
-use ui_contract::{SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
+use crate::wgpu::tree::{NodeKey, UiDocumentTree, UiTree};
+use semio_framework_ui_declaration::ui::{SurfaceKind, UiNode};
+use semio_framework_ui_arena::NodeId;
+use semio_framework_value::DslValue;
+use ui_contract::{UiNodeId, UiNodeRecord, SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
 
 fn law() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🌳️document-tree-reconcile/🔣️.json")).expect("document tree reconcile fixture")
@@ -668,7 +671,7 @@ fn the_reserved_media_transport_projects_only_truthful_localized_host_status() {
         assert_eq!(slot.body_key, extension_id, "the reserved address remains the stable slot identity");
         assert_eq!(slot.host_status.as_deref(), vector["expectedHostStatus"].as_str(), "{}", vector["name"]);
         assert_eq!(slot.params_json, serde_json::to_string(&vector["props"]).expect("fixture props serialize"), "hostContentHeight and future decoder inputs survive untouched");
-        assert_eq!(crate::wgpu::reconcile::media_transport_contract_valid(&vector["props"]), vector.get("contractValid").unwrap_or(&vector["schemaValid"]).as_bool().unwrap(), "{}", vector["name"]);
+        assert_eq!(crate::wgpu::reconcile::media_transport_contract_valid(&vector["props"].to_string()), vector.get("contractValid").unwrap_or(&vector["schemaValid"]).as_bool().unwrap(), "{}", vector["name"]);
         let projection = crate::wgpu::accessibility::accessibility_projection(&tree);
         let projected = projection.iter().find(|node| node.key == "media-slot").expect("media accessibility node");
         if extension_id == crate::wgpu::reconcile::MEDIA_TRANSPORT_EXTENSION_ID {

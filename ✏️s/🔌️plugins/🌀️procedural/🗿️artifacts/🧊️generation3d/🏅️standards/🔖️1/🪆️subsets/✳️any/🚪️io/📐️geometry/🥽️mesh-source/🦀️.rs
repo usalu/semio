@@ -1,5 +1,12 @@
 //! 🛂️ Native polygon-source admission for the catalogue construction operation.
-use crate::standards::v1::subsets::any::schema::inferences::geometry::{prelude::*,registry::mesh_support::{from_source,import_fault,Parse,BATCH}};
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_mesh_support::from_source;
+use semio_s_artifact_procedural_3d_mesh_support::import_fault;
+use semio_s_artifact_procedural_3d_mesh_support::Parse;
+use semio_s_artifact_procedural_3d_mesh_support::BATCH;
 use semio_framework_mesh_engine::io::text::PolygonSourcePreparation;
 
 fn construct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {

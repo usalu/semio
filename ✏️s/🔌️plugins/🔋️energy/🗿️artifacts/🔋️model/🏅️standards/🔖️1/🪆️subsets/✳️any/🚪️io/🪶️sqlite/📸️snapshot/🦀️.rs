@@ -2,6 +2,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1::subsets::any::schema::snapshot::EnergyModelSnapshot;
 use crate::model::*;
+use crate::schedule::ScheduleId;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}};
 use std::collections::BTreeMap;
 use semio_framework_value::ValueError;

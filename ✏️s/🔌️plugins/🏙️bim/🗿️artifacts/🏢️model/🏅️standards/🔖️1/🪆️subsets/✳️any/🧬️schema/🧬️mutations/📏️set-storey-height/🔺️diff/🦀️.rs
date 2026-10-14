@@ -2,7 +2,7 @@
 //! every wall resolved by this storey follows by inference.
 
 use super::SetStoreyHeight;
-use crate::{Entry, ModelDiff, ModelSnapshot, StoreyPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StoreyPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetStoreyHeight, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

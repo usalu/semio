@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine bridge: engine parameters and results from and to the document."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-camera = { workspace = true }
+semio-s-artifact-remodel-remodeling-feature = { workspace = true }
+semio-s-artifact-remodel-remodeling-geo = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh-repair = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-optimize = { workspace = true }
+semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
+semio-s-artifact-remodel-remodeling-video = { workspace = true }
+
+[dev-dependencies]
+geometry = { workspace = true }
+number = { workspace = true }
+pack = { workspace = true }
+png = "0.17.16"
+semio-framework = { workspace = true }
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
+semio-s-artifact-remodel-remodeling-examples = { workspace = true }
+semio-s-artifact-remodel-remodeling-lie = { workspace = true }
+serde_json = { workspace = true }

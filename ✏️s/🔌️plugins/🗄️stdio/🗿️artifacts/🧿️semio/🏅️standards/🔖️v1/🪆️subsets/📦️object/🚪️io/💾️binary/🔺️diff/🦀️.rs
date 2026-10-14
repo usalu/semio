@@ -11,7 +11,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;

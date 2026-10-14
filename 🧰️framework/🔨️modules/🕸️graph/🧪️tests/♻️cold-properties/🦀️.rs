@@ -1,5 +1,5 @@
 //! ♻️ Cold property cleanup drains original deep native owners on a finite stack.
-use crate::manifest::{PropertyBag,PropertyValue};
+use crate::{PropertyBag,PropertyValue};
 use semio_framework_value::FromValue;
 
 fn original(value:&serde_json::Value)->PropertyValue {

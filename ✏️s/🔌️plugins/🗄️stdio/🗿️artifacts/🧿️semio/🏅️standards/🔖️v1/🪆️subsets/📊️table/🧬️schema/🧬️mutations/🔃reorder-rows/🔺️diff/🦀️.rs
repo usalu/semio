@@ -1,8 +1,9 @@
 //! 🔺️ Diff for `ReorderRows`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Moves one row: the `rows` triple removes its base index and re-adds the same row at the landing position.

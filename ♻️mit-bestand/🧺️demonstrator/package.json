@@ -34,8 +34,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "mit-bestand/demonstrator"
   },
-  "bundleKind": "application",
-  "nx": {
-    "includedScripts": []
-  }
+  "bundleKind": "application"
 }

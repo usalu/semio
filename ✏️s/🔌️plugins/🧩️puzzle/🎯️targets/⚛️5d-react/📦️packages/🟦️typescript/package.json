@@ -22,9 +22,6 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
   }

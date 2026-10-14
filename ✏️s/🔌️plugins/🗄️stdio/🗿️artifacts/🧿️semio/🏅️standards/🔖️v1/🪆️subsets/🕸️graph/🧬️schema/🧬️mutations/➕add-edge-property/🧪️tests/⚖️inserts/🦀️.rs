@@ -71,7 +71,8 @@ async fn guard_branches_report_their_frozen_codes() {
     let base = snapshot(BEFORE);
     let codes = |leaf: SemioGraphMutation| -> Vec<String> { leaf.diff(&base).messages().iter().map(|message| message.code.0.to_string()).collect() };
     use crate::schema::snapshot::GraphEdgeId;
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
     use crate::schema::mutations::add_edge_property::AddEdgeProperty;
     let add = |edge: &str, key: &str| SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new(edge), index: 0, property: SemioValueEntry { key: key.into(), value: SemioValue::Null } });
     assert_eq!(codes(add("e1", "")), ["mutation.invariant"]);

@@ -3,8 +3,8 @@ use super::*;
 fn layer(value: &serde_json::Value) -> DrawingLayerNode {
     let kind = value["kind"].as_str().unwrap();
     let id = value["base"]["id"].as_str().unwrap();
-    let mut node = crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit(((if kind == "shape" { "shape:rect" } else { kind })).to_string().into()).expect("nonempty authored identity"), if kind == "shape" { "shape:rect" } else { kind });
-    let base = crate::schema::layer_base_mut(&mut node);
+    let mut node = semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((if kind == "shape" { "shape:rect" } else { kind })).to_string().into()).expect("nonempty authored identity"), if kind == "shape" { "shape:rect" } else { kind });
+    let base = semio_s_artifact_draw_drawing_model::layer_base_mut(&mut node);
     base.id = id.into();
     base.visible = value["base"]["visible"].as_bool().unwrap_or(true);
     base.locked = value["base"]["locked"].as_bool().unwrap_or(false);

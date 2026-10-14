@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, house};
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::{Axis, Ceiling, CeilingType, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Ceiling, CeilingType, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep};
 
 fn vertex(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }

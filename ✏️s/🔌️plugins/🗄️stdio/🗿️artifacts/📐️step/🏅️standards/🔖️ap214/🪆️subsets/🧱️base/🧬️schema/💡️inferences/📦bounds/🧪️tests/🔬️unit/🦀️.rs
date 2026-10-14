@@ -1,6 +1,6 @@
 use super::*;
-use crate::schema::snapshot::StepEntity;
-use crate::STDIO_STEP_DOCUMENT_SCHEMA;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn point_entity(id: u64, x: f64, y: f64, z: f64) -> StepEntity {

@@ -1,0 +1,5 @@
+{"moves": [
+ {"from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs", "from_module": "crate::editor::cad::kit",
+  "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs", "to_module": "crate::editor::cad::modes::edit::windows::config",
+  "items": ["cad_window_id_for_pane", "cad_pane_from_view", "runtime_of"]}
+]}

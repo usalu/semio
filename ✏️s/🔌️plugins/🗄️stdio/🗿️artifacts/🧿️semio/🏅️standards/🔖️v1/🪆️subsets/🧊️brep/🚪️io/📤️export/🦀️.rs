@@ -55,7 +55,7 @@ pub mod dwg {
             "dwg"
         }
         fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
-            let drawing = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing(mesh);
+            let drawing = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing(mesh);
             semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&drawing)
         }
     }

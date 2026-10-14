@@ -1,7 +1,7 @@
 use super::*;
 use super::super::tests::kit;
 use super::super::family_of;
-use crate::{BeamType, ColumnType, FamilyCategory, ParameterKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType, FamilyCategory, ParameterKind};
 
 fn values(snapshot: &ModelSnapshot) -> BTreeMap<String, FamilyValue> {
     snapshot.families.keys().map(|id| (id.clone(), family_of(snapshot, id, &BTreeMap::new()))).collect()

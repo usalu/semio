@@ -4,7 +4,7 @@
 use super::SetWallTypeOf;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🥞️set-wall-type-of/✅️retypes-the-wall/📸️snapshot/⬅️before/🔣️.json");
 

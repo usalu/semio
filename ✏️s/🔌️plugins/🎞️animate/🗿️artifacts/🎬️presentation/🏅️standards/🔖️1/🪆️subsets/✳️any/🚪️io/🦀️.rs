@@ -68,10 +68,10 @@ pub fn animate_presentation_document_json_to_svg(value: &semio_framework_pack_js
 
 /// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<semio_framework_value::DslValue, String> {
+pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<semio_framework_value::DslValue, String> {
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
-    let (svg, width, height) = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_svg(drawing)?;
+    let (svg, width, height) = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };

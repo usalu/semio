@@ -1,6 +1,6 @@
 //! 📈️ `set-schedule` payload. Sets any of a schedule's name, category, columns, sort, filter, grouping, itemization, storey scope and phase scope; absent fields stay untouched and a list replaces the whole list.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Phase, SchedulePatch, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::SchedulePatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, Phase, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -51,7 +51,7 @@ export type AcceptanceCheckResult = Readonly<{
 /** 🧩️ What a plan check needs from the gate's environment. */
 export type AcceptanceRequirement = "hub" | "serve" | "localServe" | "backends" | "hubAdmin";
 
-/** 🧪️ One check of the goal plan: an Nx target plus its arguments; `{hub}` and `{serve}` are substituted. */
+/** 🧪️ One check of the goal plan: a build target plus its arguments; `{hub}` and `{serve}` are substituted. */
 export type GoalPlanCheck = Readonly<{
   id: string;
   title: LocalizedText;
@@ -74,7 +74,7 @@ export type GoalPlanOutcome = Readonly<{ id: "1" | "2" | "3" | "4" | "5"; title:
 /** 🧩️ The requirements a provider can stand up when the command line does not name them. */
 export type ProvidedRequirement = "hub" | "serve" | "localServe";
 
-/** 🏗️ How the gate stands up one requirement zero-touch: an Nx target it holds for the whole run, answering at
+/** 🏗️ How the gate stands up one requirement zero-touch: a build target it holds for the whole run, answering at
  * `url` + `readyPath` within `readyBoundMs`; `{hub}` and `{runDir}` are substituted in `args` and `env`. A process that
  * exits while the url already answers is a reuse of a running server, not a failure. A hub provider's `adminCapability`
  * (repo-relative or absolute) names the admin-relay capability file its launcher keeps; the gate hands it to `hubAdmin`
@@ -300,7 +300,7 @@ export type GoalGateOptions = Readonly<{
 export type GoalGateProvisioner = (repoRoot: string, requirement: ProvidedRequirement, provider: GoalPlanProvider, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, signal: AbortSignal, onProgress: (line: string) => void) => Promise<Readonly<{ stop: () => Promise<void> }>>;
 
 /** 🚀️ Runs one check's command with its environment and log file and resolves its exit code. The default spawns
- * `bun repo run <project>:<target> -- <args>` in its own process group with `NX_DAEMON=false` (every nx invocation of the
+ * `bun repo run <project>:<target> -- <args>` in its own process group with the shared build invocation (every invocation of the
  * gate computes its own project graph, so a wedged or foreign daemon cannot stall a check); laws substitute a scripted
  * executor. */
 export type GoalGateExecutor = (repoRoot: string, check: GoalPlanCheck, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, children: Set<ChildProcess>) => Promise<number>;
@@ -436,7 +436,7 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   const logPath = join(options.outDir, `${check.id}.log`);
   const args = check.args.map((arg) => substitute(arg, options));
   const planned = Object.entries(check.env ?? {}).map(([key, value]) => [key, substitute(value, options)] as const).filter(([, value]) => value.length > 0);
-  const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, NX_TUI: "false", NX_DAEMON: "false" };
+  const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, SEMIO_BUILD_TERMINAL: "false" };
   console.log(`[goal-gate] ▶ ${check.id}: bun repo run ${check.project}:${check.target}${args.length ? ` -- ${args.join(" ")}` : ""}`);
   const exitCode = await (options.execute ?? spawnGoalGateCheck)(repoRoot, check, args, env, logPath, children);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, { exitCode }, { en: "cancelled while running", de: "während der Ausführung abgebrochen" }, [logPath]);
@@ -543,7 +543,7 @@ async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected:
     }
     const current: GoalGateOptions = { ...options, ...values };
     const args = provider.args.map((arg) => substitute(arg, current));
-    const env = { ...process.env, ...Object.fromEntries(Object.entries(provider.env ?? {}).map(([key, value]) => [key, substitute(value, current)])), NX_TUI: "false", NX_DAEMON: "false" };
+    const env = { ...process.env, ...Object.fromEntries(Object.entries(provider.env ?? {}).map(([key, value]) => [key, substitute(value, current)])), SEMIO_BUILD_TERMINAL: "false" };
     const logPath = join(options.outDir, `provider-${requirement}.log`);
     console.log(`[goal-gate] ▶ provider ${requirement}: bun repo run ${provider.project}:${provider.target}${args.length ? ` -- ${args.join(" ")}` : ""} → ${provider.url}`);
     try {
@@ -595,7 +595,7 @@ export async function runGoalGate(repoRoot: string, requested: GoalGateOptions):
     if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
       const backendsLog = join(options.outDir, "backends-up.log");
       console.log("[goal-gate] ▶ backends: bun repo run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
-      backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, NX_TUI: "false", NX_DAEMON: "false" }, backendsLog, children)) === 0;
+      backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, SEMIO_BUILD_TERMINAL: "false" }, backendsLog, children)) === 0;
       console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
     }
     for (const [index, step] of selected.entries()) {

@@ -1,5 +1,8 @@
 //! ♻️ Heat recovery: sensible/latent exchange via effectiveness-NTU with frost control.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::moist_air_enthalpy_j_per_kg;
 use crate::units::{CP_DRY_AIR, H_FG_0C};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

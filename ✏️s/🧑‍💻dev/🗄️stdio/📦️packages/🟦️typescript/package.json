@@ -72,9 +72,6 @@
     "@semio-tech/process": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
-  "nx": {
-    "includedScripts": []
-  },
   "semio": {
     "role": "library",
     "id": "@semio-tech/stdio-js"

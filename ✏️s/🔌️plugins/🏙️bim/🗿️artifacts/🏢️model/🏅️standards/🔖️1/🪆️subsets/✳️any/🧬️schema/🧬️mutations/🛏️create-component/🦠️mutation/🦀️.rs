@@ -1,6 +1,6 @@
 //! 🛏️ `create-component` payload. Places an instance of a family: a storey, a family, a plan position with an elevation above the storey, a rotation, a mirror flag, an optional host wall and an optional system for a terminal.
 
-use crate::{Component, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Component, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

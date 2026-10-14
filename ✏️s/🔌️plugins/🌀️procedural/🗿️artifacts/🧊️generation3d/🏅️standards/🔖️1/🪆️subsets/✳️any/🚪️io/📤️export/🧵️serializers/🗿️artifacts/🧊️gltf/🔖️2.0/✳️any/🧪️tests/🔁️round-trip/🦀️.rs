@@ -8,8 +8,8 @@
 //! Import plants owned polygon data on the existing editable mesh constructor.
 
 use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, assert_imported_polygon_is_unit_cube, unit_cube_semio_mesh};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any as export;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any as import;
+use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::gltf::v2_0::any as export;
+use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any as import;
 
 fn exported() -> Vec<u8> {
     export::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as gltf")

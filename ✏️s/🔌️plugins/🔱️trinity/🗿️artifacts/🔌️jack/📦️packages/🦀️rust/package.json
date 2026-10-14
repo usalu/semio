@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-jack-document-contract": "bun repo run @semio-tech/trinity-jack-rs:verify-jack-document-contract",
     "verify-jack-query-ownership": "bun repo run @semio-tech/trinity-jack-rs:verify-jack-query-ownership"

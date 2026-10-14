@@ -9,8 +9,7 @@
       "requiredScenarios": ["rgba-gradient-round-trips", "non-square-image-round-trips", "single-pixel-round-trips"],
       "role": "oracle",
       "implementation": "rust",
-      "execution": "all-original-scenarios",
-      "features": ["oracles"]
+      "execution": "all-original-scenarios"
     },
     {
       "id": "retained-original-ifc-oracle-with-step-absent",
@@ -20,8 +19,7 @@
       "requiredScenarios": [],
       "role": "oracle",
       "implementation": "rust",
-      "execution": "all-original-scenarios",
-      "features": ["oracles"]
+      "execution": "all-original-scenarios"
     }
   ],
   "lowerPlugin": {

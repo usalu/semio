@@ -1,5 +1,5 @@
 use semio_framework_3d::mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
-use semio_s_artifact_cad_cad::standards::v1::subsets::any::io::geometry_import::concrete_forest_left_shape_solid_face_loops;
+use semio_s_artifact_cad_cad_play::concrete_forest_left_shape_solid_face_loops;
 use std::collections::HashMap;
 
 /// Asserts every directed edge (by vertex id, after welding) has an opposite-winding counterpart, i.e. the

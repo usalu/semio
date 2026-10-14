@@ -271,7 +271,7 @@ describe("📐️ canonical test layout", () => {
   });
 
   test("Nx hashes semantic-owner cases while production excludes them", async () => {
-    const repoRoot = repoRootFromHere(), { cacheInternals, libraryBootstrap } = await import("../../../📚️library/🟨️.mjs");
+    const repoRoot = repoRootFromHere(), { cacheInternals, libraryBootstrap } = await import("../../../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
     await libraryBootstrap;
     const expanded = (groups: Record<string, readonly unknown[]>, name: string, seen = new Set<string>()): unknown[] => {
       if (seen.has(name)) throw Error("Cyclic original Nx named input " + name);

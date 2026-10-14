@@ -4,9 +4,19 @@
 //! (`plane-degenerate`), and a non-finite component is refused (`math-overflow`). A plane value always carries a unit normal.
 //!
 //! 🔗️ [Euclidean vector](https://en.wikipedia.org/wiki/Euclidean_vector) · [Plane](https://en.wikipedia.org/wiki/Plane_(geometry))
+#![allow(clippy::result_large_err)]
 
-use super::math_arithmetic::finite;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_math_arithmetic::finite;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 
 type Triple = [f64; 3];
 
@@ -195,6 +205,8 @@ fn plane_components(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Computes
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("math-vector", include_str!("../../../🗂️catalogue/🔣️math-vector.json"));
 /// 🗃️ Every math.vector catalogue kind and the compute that starts it.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "math.vectorFromComponents", start: vector_from_components },

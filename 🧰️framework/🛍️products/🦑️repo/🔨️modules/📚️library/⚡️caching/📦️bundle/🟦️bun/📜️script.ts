@@ -97,7 +97,7 @@ if (import.meta.main) {
   if (readBuildMode(process.env.SEMIO_BUILD_MODE) !== request.mode) throw Error("Bun compiler request contradicts the selected build mode");
   await receiveScriptProcessInvocation(process.env, async invocation => {
     const workspace = findWorkspaceRoot(import.meta.dir);
-    const result = await withWholeHostCompilerCapacity(join(workspace, ".cache/framework/leases"), scriptCompilerAdmissionControlV1(invocation, "bun:compile", 120_000), () => compileBunBundle(request));
+    const result = await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "bun:compile", 120_000), () => compileBunBundle(request));
     invocation.control.signal.throwIfAborted();
     const response = resolve(command === "debug" ? second! : first); if (response.length > 256) throw Error("Bun compiler response path exceeds 256 characters");
     const root = resolve(response, ".."); mkdirSync(root, { recursive: true });

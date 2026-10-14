@@ -51,7 +51,7 @@ type entrypointContractFixture struct {
 		ServerName string `json:"serverName"`
 	} `json:"profiles"`
 	BuildInstructions []string `json:"buildInstructions"`
-	Flow []string `json:"flow"`
+	Flow              []string `json:"flow"`
 }
 
 // 🧫️ Resolves protocol vectors through the current repository identity.

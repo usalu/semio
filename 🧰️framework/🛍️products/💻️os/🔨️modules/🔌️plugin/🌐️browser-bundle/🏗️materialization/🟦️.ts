@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { originalOperationWorkerSource } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
-import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts";
+import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 /** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
@@ -24,7 +24,7 @@ import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚
 import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
-import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts";
+import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
 

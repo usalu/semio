@@ -4,7 +4,7 @@ use super::super::testkit::{house_with_sheets, inferred, labels, texts};
 use super::super::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{tags, Tag};
 
-fn svg_of(sheet: &str) -> (String, crate::ModelInference) {
+fn svg_of(sheet: &str) -> (String, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {
     let model = house_with_sheets();
     let inferred = inferred(&model);
     (sheet_svg(&model, &inferred, sheet, &labels()).expect("a layout").expect("a document"), inferred)

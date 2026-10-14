@@ -8,14 +8,14 @@
 //! is certified only up to its sampling, like `distance_solid_solid`.
 
 use super::{ScopeMembers, ShapeKind, ShapeScope};
-use crate::bounding_volume::face_aabb;
-use crate::classification::point_in_solid;
-use crate::mass_properties::{closest_point_on_face, solids_overlap};
+use semio_framework_3d_brep_queries::bounding_volume::face_aabb;
+use semio_framework_3d_brep_queries::classification::point_in_solid;
+use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_face, solids_overlap};
 use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId};
-use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_curve::curve_ops;
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 
 /// 📍 The nearest pair of points between two shapes.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

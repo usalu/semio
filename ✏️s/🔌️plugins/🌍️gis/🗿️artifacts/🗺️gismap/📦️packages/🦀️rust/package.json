@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-gis-map-window-ownership": "bun repo run @semio-tech/gis-gismap-rs:verify-gis-map-window-ownership",
     "verify-map-document-contract": "bun repo run @semio-tech/gis-gismap-rs:verify-map-document-contract"

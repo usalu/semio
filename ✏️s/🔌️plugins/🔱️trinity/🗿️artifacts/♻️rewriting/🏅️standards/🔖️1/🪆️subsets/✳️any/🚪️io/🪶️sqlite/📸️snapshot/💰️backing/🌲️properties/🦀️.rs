@@ -1,6 +1,6 @@
 //! 🌲️ iterative six-family reconstruction using paid retained row identities.
 use super::indexes::{Rows,invalid};
-use semio_framework_graph::manifest::{PropertyBag,PropertyValue};
+use semio_framework_graph_manifest::{PropertyBag,PropertyValue};
 use semio_framework_value::{ValueError,ValueRefusalKind,DecodedValue};
 use semio_framework_value::FromValue;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteRow,transfer,artifact::{read_binary64,FloatColumn}};

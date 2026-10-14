@@ -3,7 +3,7 @@
 //! sync and import only and is never called from a mutation leaf.
 
 use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*, ModelSnapshot};
-use crate::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
+use crate::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
 use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, MutationApplyResult, MutationDiff, TouchedPaths};
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;

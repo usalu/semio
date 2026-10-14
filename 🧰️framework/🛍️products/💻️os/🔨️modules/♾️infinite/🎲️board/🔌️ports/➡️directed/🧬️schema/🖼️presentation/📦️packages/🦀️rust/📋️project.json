@@ -1,0 +1,33 @@
+{
+  "name": "semio-framework-os-infinite-directed-presentation",
+  "projectType": "library",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "test-source": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-source",
+        "forwardAllArgs": true
+      }
+    },
+    "test-native": {
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test-native",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

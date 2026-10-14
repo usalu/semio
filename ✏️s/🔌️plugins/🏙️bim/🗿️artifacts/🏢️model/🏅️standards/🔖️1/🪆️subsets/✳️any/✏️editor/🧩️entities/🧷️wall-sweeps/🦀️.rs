@@ -3,11 +3,11 @@
 
 use super::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, ramps, rename_element, variant, zoning, Created, FieldRow};
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::create_wall_sweep::CreateWallSweep;
-use crate::mutations::set_wall_base_slab::SetWallBaseSlab;
-use crate::mutations::set_wall_top::SetWallTop;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
 use crate::standards::v1::subsets::any::schema::authored::references::top_target;
-use crate::{Assigned, ModelMutation, ModelSnapshot, Profile, TopConstraint, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, TopConstraint, WallSide, WallSweep}};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 /// 📏️ How far a new sweep runs out of the wall face, in metres: a baseboard two centimetres deep.
@@ -59,7 +59,7 @@ pub fn write_base_slab(snapshot: &ModelSnapshot, id: &str, value: &str) -> Optio
 }
 
 /// 🔝️ The top that follows the roof, slab or ceiling `target` names, keeping the offset the wall already has over such a surface.
-pub fn attached_top(snapshot: &ModelSnapshot, wall: &crate::Wall, target: &str) -> Option<TopConstraint> {
+pub fn attached_top(snapshot: &ModelSnapshot, wall: &crate::standards::v1::subsets::any::schema::snapshot::Wall, target: &str) -> Option<TopConstraint> {
     let offset = top_target(&wall.top).map_or(0.0, |(_, offset)| offset);
     let target = target.trim().to_string();
     if snapshot.roofs.contains_key(&target) {

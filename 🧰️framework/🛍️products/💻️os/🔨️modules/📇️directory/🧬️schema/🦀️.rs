@@ -453,7 +453,7 @@ pub(crate) fn valid_directory_command_request_id(value: &str) -> bool {
 /// 🆕️ Mints one fresh 32-hex nonzero idempotency correlation from the platform identity boundary.
 /// It is a correlation, never a capability: knowing one grants nothing.
 pub fn mint_directory_command_request_id() -> String {
-    crate::os_identity::time_ordered_id().chars().filter(|character| *character != '-').collect()
+    semio_framework_os_identity::time_ordered_id().chars().filter(|character| *character != '-').collect()
 }
 
 
@@ -1135,7 +1135,7 @@ pub struct DocumentOpenPackageV1 {
     pub component_blake3: String,
     pub descriptor_byte_sha256: String,
     pub execution_protocol: DocumentExecutionProtocolV1,
-    pub component_receipt: crate::os_component_receipt::ComponentReceiptV1,
+    pub component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1,
 }
 
 impl DocumentOpenPackageV1 {
@@ -1345,7 +1345,7 @@ impl DocumentOpenPlanV1 {
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
             || !self.package.receipt_binds()
-            || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
+            || self.package.execution_protocol.app_channel_version != semio_framework_os_channel::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !self.grant.read
             || !self.grant.observe
@@ -1396,7 +1396,7 @@ impl DocumentPlanSocketGrantIntentV1 {
 //#region 🪪️ExecutionTargetLease
 /// 🧯️ Exact maximum accepted bytes for one verified execution-target component: the shipped `wasm-release` cap, because only
 /// shipped bytes execute and every shipped component's receipt is held to it.
-pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = crate::os_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
+pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = semio_framework_plugin_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
 /// 🧯️ Exact maximum accepted bytes for one verified raw package descriptor.
 pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -1471,7 +1471,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
             || !self.package.receipt_binds()
-            || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
+            || self.package.execution_protocol.app_channel_version != semio_framework_os_channel::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !valid_document_open_hash(&self.component.sha256)
             || !valid_document_open_hash(&self.component.blake3)

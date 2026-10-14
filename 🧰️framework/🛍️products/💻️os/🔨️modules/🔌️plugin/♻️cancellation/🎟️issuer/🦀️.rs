@@ -22,12 +22,12 @@ struct PendingLease {
  claim:Option<PublicationClaimHandle>,document_claim:Option<PublicationClaimHandle>,scope_claim:Option<PublicationClaimHandle>,lease_document_claim:Option<PublicationClaimHandle>,handle:Option<ToolCancellationHandle>,existing_document:bool,
 }
 impl PendingLease {
- fn into_parts(self)->crate::typed_operation::CancellationLeaseParts{
-  crate::typed_operation::CancellationLeaseParts::unpublished(self.handle,[self.token,self.scope_token,self.document],[self.claim,self.lease_document_claim,self.scope_claim,self.document_claim],self.keyed.then_some(u64::from(self.key.document.0)))
+ fn into_parts(self)->crate::tool_cancellation::CancellationLeaseParts{
+  crate::tool_cancellation::CancellationLeaseParts::unpublished(self.handle,[self.token,self.scope_token,self.document],[self.claim,self.lease_document_claim,self.scope_claim,self.document_claim],self.keyed.then_some(u64::from(self.key.document.0)))
  }
 }
 
-pub(crate) struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::typed_operation::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,cleanup_index:Option<usize>,closing:bool}
+pub(crate) struct ToolCancellationIssuer{admission:ManuallyDrop<Admission>,issued:ManuallyDrop<Option<ToolCancellationHandle>>,pending:ManuallyDrop<Option<PendingLease>>,pending_close:ManuallyDrop<Option<crate::tool_cancellation::CancellationLeaseParts>>,renew_cancel:ManuallyDrop<Option<semio_framework_job::CancelToken>>,renew_claim:ManuallyDrop<Option<PublicationClaimHandle>>,renew_source:Option<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>,renew_swapped:bool,cleanup_index:Option<usize>,closing:bool}
 impl ToolCancellationIssuer{
  pub(crate) const fn empty()->Self{Self{admission:ManuallyDrop::new(Admission::empty()),issued:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_close:ManuallyDrop::new(None),renew_cancel:ManuallyDrop::new(None),renew_claim:ManuallyDrop::new(None),renew_source:None,renew_swapped:false,cleanup_index:None,closing:false}}
  pub(crate) fn ready(&self)->bool{self.issued.is_some()}
@@ -125,7 +125,7 @@ impl ToolCancellationIssuer{
    if grant.maximum_copy_bytes<size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(){return Ok(false)}self.renew_source=None;self.renew_swapped=false;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<(semio_framework_job::OperationId,semio_framework_job::Generation,usize)>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)
   }else if self.renew_cancel.is_none(){let original=self.admission.source.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"renewal lost its retained creation authority"))?;let Some((token,paid))=original.cancellation()?.admit_child(grant)?else{return Ok(false)};*self.renew_cancel=Some(token);progress=paid;}
   else if self.renew_claim.is_none(){let Some((claim,paid))=PublicationClaim::admit(grant)?else{return Ok(false)};*self.renew_claim=Some(claim);progress=paid;}
-  else{let bytes=size_of::<semio_framework_job::CancelToken>()+size_of::<PublicationClaimHandle>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let canonical=self.issued.as_mut().unwrap();let token=std::mem::replace(&mut canonical.app_scope,self.renew_cancel.take().unwrap());let claim=std::mem::replace(&mut canonical.publication_scope,self.renew_claim.take().unwrap());*self.pending_close=Some(crate::typed_operation::CancellationLeaseParts::unpublished(None,[Some(token),None,None],[Some(claim),None,None,None],None));self.renew_swapped=true;progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};}
+  else{let bytes=size_of::<semio_framework_job::CancelToken>()+size_of::<PublicationClaimHandle>();if grant.maximum_copy_bytes<bytes{return Ok(false)}let canonical=self.issued.as_mut().unwrap();let token=std::mem::replace(&mut canonical.app_scope,self.renew_cancel.take().unwrap());let claim=std::mem::replace(&mut canonical.publication_scope,self.renew_claim.take().unwrap());*self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[Some(token),None,None],[Some(claim),None,None,None],None));self.renew_swapped=true;progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};}
   cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(false)
  }
  pub(crate) fn cancellation_cleanup_demands(&self,index:usize,body:usize,finished_only:bool)->Result<RetirementDemand,ValueError>{
@@ -149,7 +149,7 @@ impl ToolCancellationIssuer{
   let document=if index>=TOOL_CANCELLATION_SLOTS{let document=state.keyed_documents.get_mut(document_id).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"exact cancellation cleanup lost original document scope"))?;document.active-=1;if document.active==0{state.keyed_documents.remove(document_id)}else{None}}else{None};
   canonical.active.fetch_sub(1,std::sync::atomic::Ordering::AcqRel);drop(state);let ToolDocumentCancellationScope{token,publication_claim,..}=original;
   let(document_token,document_claim)=document.map_or((None,None),|ToolKeyedDocumentCancellationScope{token,publication_claim,..}|(Some(token),Some(publication_claim)));
-  *self.pending_close=Some(crate::typed_operation::CancellationLeaseParts::unpublished(None,[Some(token),document_token,None],[Some(publication_claim),document_claim,None,None],(index>=TOOL_CANCELLATION_SLOTS).then_some(document_id)));self.cleanup_index=Some(index);
+  *self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[Some(token),document_token,None],[Some(publication_claim),document_claim,None,None],(index>=TOOL_CANCELLATION_SLOTS).then_some(document_id)));self.cleanup_index=Some(index);
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
  }
  pub(crate) fn scope_generation(&self)->u64{self.issued.as_ref().map_or(0,ToolCancellationHandle::scope_generation)}
@@ -186,7 +186,7 @@ impl ToolCancellationIssuer{
   if !self.closing{self.closing=true;if let Some(handle)=self.issued.as_ref(){handle.cancel_scope_generation()}}
   else if let Some(pending)=self.pending.take(){*self.pending_close=Some(pending.into_parts());}
   else if let Some(parts)=self.pending_close.as_mut(){if parts.terminal_is_empty(){self.pending_close.take();}else{progress=parts.close_step(self.issued.as_ref().unwrap(),source.source.as_ref().unwrap().cancellation()?,grant)?.progress()}}
-  else if self.renew_cancel.is_some()||self.renew_claim.is_some(){*self.pending_close=Some(crate::typed_operation::CancellationLeaseParts::unpublished(None,[self.renew_cancel.take(),None,None],[self.renew_claim.take(),None,None,None],None));}
+  else if self.renew_cancel.is_some()||self.renew_claim.is_some(){*self.pending_close=Some(crate::tool_cancellation::CancellationLeaseParts::unpublished(None,[self.renew_cancel.take(),None,None],[self.renew_claim.take(),None,None,None],None));}
   else if let Some(handle)=self.issued.take(){let ToolCancellationHandle{state,app_scope,publication_scope,app_generation,active}=handle;source.state=Some(state);source.cancel=Some(app_scope);source.claim=Some(publication_scope);source.generation=Some(app_generation);source.active=Some(active)}
   else if let Some(state)=source.state.as_ref(){
    if Arc::strong_count(state)!=1||Arc::weak_count(state)!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}

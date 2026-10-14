@@ -2,7 +2,7 @@
 
 use super::super::delete_text_note::DeleteTextNote;
 use super::CreateTextNote;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateTextNote, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.text_notes.contains_key(&payload.id) {

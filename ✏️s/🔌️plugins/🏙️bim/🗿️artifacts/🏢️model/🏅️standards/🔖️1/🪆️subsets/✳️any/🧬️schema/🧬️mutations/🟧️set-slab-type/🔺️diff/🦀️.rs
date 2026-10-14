@@ -4,7 +4,7 @@
 //! together; its layers have no identity and nothing references one, so a provided stack replaces the stack as one field.
 
 use super::SetSlabType;
-use crate::{Entry, Layer, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn fault(layers: &[Layer], base: &ModelSnapshot) -> Option<(OutcomeCode, String, Option<&'static str>)> {

@@ -1,18 +1,48 @@
 //! 📄️ DWG document metadata, classes, application history and indexed preview entities.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::reader::{boolean,byte,document,full_unsigned,high,low,ordinal,unsigned,word,Reader};
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationHistory;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationInfo;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationProperty;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationPropertyKind;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgAuxiliaryHeader;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgClass;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgCompatibilityProfile;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgCustomProperty;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgDependency;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgIndexedPreview;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgJulianDate;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgMeasurement;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgPreviewOrigin;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgProductInformation;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgRevisionHistory;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgRgba;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgSummaryInfo;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgTemplate;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgVersionStamp;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::boolean;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::byte;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::document;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
-use super::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use Cell::{Integer as I,Text as T};
 
-pub(super) struct DocumentState {
+pub struct DocumentState {
     pub schema:String,pub version:String,pub maintenance_version:u8,pub codepage:u16,
     pub classes:Vec<DwgClass>,pub dependencies:Vec<DwgDependency>,pub summary:DwgSummaryInfo,
     pub application:DwgApplicationInfo,pub template:DwgTemplate,pub auxiliary_header:DwgAuxiliaryHeader,
     pub revision_history:DwgRevisionHistory,pub preview:DwgIndexedPreview,pub application_history:DwgApplicationHistory,
 }
-pub(super) fn project(projection:&mut Projection<'_,'_>,snapshot:&DwgSnapshot)->Result<(),ValueError>{
+pub fn project(projection:&mut Projection<'_,'_>,snapshot:&DwgSnapshot)->Result<(),ValueError>{
     projection.insert("dwg_document",&[T(&snapshot.schema),T(&snapshot.version),I(i64::from(snapshot.maintenance_version)),I(i64::from(snapshot.codepage))])?;
     let summary=&snapshot.summary;
     projection.insert("dwg_summary",&[I(1),T(&summary.title),T(&summary.subject),T(&summary.author),T(&summary.keywords),T(&summary.comments),T(&summary.last_saved_by),T(&summary.revision_number),T(&summary.hyperlink_base),I(high(summary.total_editing_time)),I(low(summary.total_editing_time)),I(i64::from(summary.created_at.days)),I(i64::from(summary.created_at.milliseconds)),I(i64::from(summary.modified_at.days)),I(i64::from(summary.modified_at.milliseconds))])?;
@@ -48,7 +78,7 @@ pub(super) fn project(projection:&mut Projection<'_,'_>,snapshot:&DwgSnapshot)->
     for(index,value)in snapshot.dependencies.iter().enumerate(){projection.insert("dwg_dependency",&[I(1),I(ordinal(index)?),T(&value.feature),T(&value.full_path),T(&value.relative_path),T(&value.fingerprint),T(&value.version),I(i64::from(value.timestamp)),I(i64::from(value.file_size)),I(i64::from(value.affects_graphics)),I(i64::from(value.reference_count))])?;}
     Ok(())
 }
-pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>)->Result<DocumentState,ValueError>{
+pub fn reconstruct(reader:&mut Reader<'_,'_,'_>)->Result<DocumentState,ValueError>{
     let row=reader.one("dwg_document")?;
     let schema=row.text(1)?.into();let version=row.text(2)?.into();let maintenance_version=byte(row,3)?;let codepage=word(row,4)?;
     let row=reader.one("dwg_summary")?;document(row)?;

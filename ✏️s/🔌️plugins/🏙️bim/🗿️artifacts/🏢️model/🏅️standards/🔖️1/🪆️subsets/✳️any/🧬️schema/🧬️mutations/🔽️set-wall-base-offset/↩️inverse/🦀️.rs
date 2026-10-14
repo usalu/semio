@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallBaseOffset`: an absolute `SetWallBaseOffset` back to the base offset, none when the wall is absent.
 
 use super::SetWallBaseOffset;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetWallBaseOffset, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.get(&payload.id) {

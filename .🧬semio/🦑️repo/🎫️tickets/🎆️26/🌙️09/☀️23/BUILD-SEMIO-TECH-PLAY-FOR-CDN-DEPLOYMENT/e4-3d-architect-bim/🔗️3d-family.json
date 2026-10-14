@@ -1,0 +1,42 @@
+{
+ "crates": {
+  "semio-framework-3d": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-representation": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-polynomial": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/〰️polynomial/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-vector": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-tolerance": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-curve": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-surface": "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-queries": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-intersect": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-tessellation": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-validation": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-analysis": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-operations": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust",
+  "semio-framework-3d-brep-engine": "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
+ },
+ "manifests": [
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/〰️polynomial/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml"
+ ]
+}

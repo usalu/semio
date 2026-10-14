@@ -470,10 +470,10 @@ pub trait PluginApp: Send + 'static {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"batch media export has no original owning source receiver").into())
     }
     /// 🎬️ Submits one interactive media export without awaiting terminal completion.
-    async fn submit_media_export(&mut self, _port: &str,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportHandle>,semio_framework_job::OriginalTurnFailure> {
+    async fn submit_media_export(&mut self, _port: &str,_receiver:&mut Option<ArtifactMediaExportHandle>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"media submission has no owning source receiver").into())
     }
-    async fn submit_media_export_checked(&mut self, _port: &str, _expected_parent_document_id: &str, _expected_base_revision: u64,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportHandle>,semio_framework_job::OriginalTurnFailure> {
+    async fn submit_media_export_checked(&mut self, _port: &str, _expected_parent_document_id: &str, _expected_base_revision: u64,_receiver:&mut Option<ArtifactMediaExportHandle>,_cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"checked media submission has no owning source receiver").into())
     }
     /// 📡️ Advances exactly one bounded worker slice and returns current progress/checkpoint/result.

@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-stdio-document-contract": "bun repo run @semio-tech/stdio-semio-rs:verify-stdio-document-contract"
   },

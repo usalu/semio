@@ -3,7 +3,7 @@
 use super::*;
 use crate::editor::bim::gestures::session::Modifiers;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 
 fn pointer(at: P) -> Pointer {
     Pointer { at, modifiers: Modifiers::default(), tolerance: 0.5 }
@@ -63,7 +63,7 @@ fn a_press_selects_the_viewport_under_the_pointer_and_a_drag_moves_it_to_the_who
     let released = tool.event(&mut context, &ToolEvent::Up(pointer([start[0] + 20.4, start[1] + 10.2])));
     let [ModelMutation::SetViewport(set)] = released.mutations.as_slice() else { panic!("one set-viewport: {released:?}") };
     assert_eq!(set.id, "vp-ground");
-    assert_eq!((set.position, set.scale), (Some(crate::Point2 { x: 50.0, y: 40.0 }), None));
+    assert_eq!((set.position, set.scale), (Some(crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 50.0, y: 40.0 }), None));
     assert!(tool.preview(&context).is_empty());
 }
 

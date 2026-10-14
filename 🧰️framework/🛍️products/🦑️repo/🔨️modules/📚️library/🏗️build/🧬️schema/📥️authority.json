@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "membership",
+    "graph",
+    "module",
+    "observations"
+  ],
+  "properties": {
+    "version": {
+      "const": 3
+    },
+    "module": {"type":"object","required":["implementation","publication"],"properties":{"implementation":{"type":"string","pattern":"^[a-f0-9]{64}$"},"publication":{"type":"string","pattern":"^[a-f0-9]{64}$"}},"additionalProperties":false},
+    "membership": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "graph": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "path",
+          "fact"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "file",
+              "exists",
+              "stat",
+              "lstat",
+              "readdir",
+              "realpath",
+              "realpathNative",
+              "resolve",
+              "readdirNames",
+              "fileExists",
+              "directoryExists",
+              "directories",
+              "typescriptText",
+              "typescriptRealpath",
+              "analysis"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fact": {}
+        }
+      }
+    }
+  }
+}

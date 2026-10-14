@@ -12,34 +12,46 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 #[allow(unused_imports)]
 mod operation_codec {
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
-use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
-use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::create_generation::CreateGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::delete_generation::DeleteGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget::DeleteWidget;
-use crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::DeleteWidgetPosition;
-use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
-use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::update_camera::UpdateCamera;
-use crate::standards::v1::subsets::any::schema::mutations::update_synapse::UpdateSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::io::text::snapshot::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl,
-    WidgetLayoutDsl,
-};
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::ChangeSliderValue;
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::DragTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::RotateTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::ScaleTransforms;
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{ChangeWidgetInput, WidgetInputValue};
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_preview::ChangeGenerationPreview;
-use crate::standards::v1::subsets::any::schema::mutations::select_generation::SelectGeneration;
+use semio_s_artifact_procedural_3d_mutations::change_generation_value::ChangeGenerationValue;
+use semio_s_artifact_procedural_3d_mutations::change_schema::ChangeSchema;
+use semio_s_artifact_procedural_3d_mutations::connect_synapse::ConnectSynapse;
+use semio_s_artifact_procedural_3d_mutations::create_generation::CreateGeneration;
+use semio_s_artifact_procedural_3d_mutations::create_widget::CreateWidget;
+use semio_s_artifact_procedural_3d_mutations::delete_generation::DeleteGeneration;
+use semio_s_artifact_procedural_3d_mutations::delete_widget::DeleteWidget;
+use semio_s_artifact_procedural_3d_mutations::delete_widget_position::DeleteWidgetPosition;
+use semio_s_artifact_procedural_3d_mutations::disconnect_synapse::DisconnectSynapse;
+use semio_s_artifact_procedural_3d_mutations::move_widget::MoveWidget;
+use semio_s_artifact_procedural_3d_mutations::rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::update_camera::UpdateCamera;
+use semio_s_artifact_procedural_3d_mutations::update_synapse::UpdateSynapse;
+use semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget;
+use crate::snapshot::camera_from_dsl;
+use crate::snapshot::camera_to_dsl;
+use crate::snapshot::form_generation_from_dsl;
+use crate::snapshot::form_generation_to_dsl;
+use crate::snapshot::layout_from_dsl;
+use crate::snapshot::layout_to_dsl;
+use crate::snapshot::synapse_from_dsl;
+use crate::snapshot::synapse_to_dsl;
+use crate::snapshot::widget_from_dsl;
+use crate::snapshot::widget_to_dsl;
+use crate::snapshot::CameraJsonDsl;
+use crate::snapshot::FormGenerationDsl;
+use crate::snapshot::SynapseSpecDsl;
+use crate::snapshot::WidgetDsl;
+use crate::snapshot::WidgetLayoutDsl;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mutations::change_slider_value::ChangeSliderValue;
+use semio_s_artifact_procedural_3d_mutations::drag_transforms::DragTransforms;
+use semio_s_artifact_procedural_3d_mutations::rotate_transforms::RotateTransforms;
+use semio_s_artifact_procedural_3d_mutations::scale_transforms::ScaleTransforms;
+use semio_s_artifact_procedural_3d_mutations::move_nodes::MoveNodes;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::ChangeWidgetInput;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::change_generation_preview::ChangeGenerationPreview;
+use semio_s_artifact_procedural_3d_mutations::select_generation::SelectGeneration;
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]

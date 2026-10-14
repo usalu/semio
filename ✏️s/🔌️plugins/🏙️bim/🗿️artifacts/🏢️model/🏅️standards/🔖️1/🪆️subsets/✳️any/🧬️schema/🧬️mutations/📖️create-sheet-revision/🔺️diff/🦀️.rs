@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateSheetRevision;
-use crate::{revision_problem, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{revision_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateSheetRevision, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

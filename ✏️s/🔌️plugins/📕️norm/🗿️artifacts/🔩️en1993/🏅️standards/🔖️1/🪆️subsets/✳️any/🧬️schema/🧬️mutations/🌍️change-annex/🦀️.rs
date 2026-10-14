@@ -1,7 +1,7 @@
 //! 🌍️ `change-annex` — sets the annex scalar.
 
-use crate::document::AnnexChoice;
-use crate::{En1993Mutation, En1993Snapshot};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -14,15 +14,15 @@ pub struct ChangeAnnex {
     pub new_annex: AnnexChoice,
 }
 
-impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for ChangeAnnex {
+impl<Op> protocol::MutationKind<En1993Snapshot, Op> for ChangeAnnex where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::change_annex::ChangeAnnex> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
+        crate::change_annex::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_annex::inverse::inverse(self, base)?
     
     })
 }
@@ -31,3 +31,10 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for ChangeAnnex {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

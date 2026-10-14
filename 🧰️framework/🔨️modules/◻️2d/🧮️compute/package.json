@@ -2,9 +2,6 @@
   "name": "@semio-tech/2d-compute",
   "private": true,
   "type": "module",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test-neutral-ownership": "bun repo run @semio-tech/2d-compute:test-neutral-ownership",
     "test-schema": "bun repo run @semio-tech/2d-compute:test-schema",

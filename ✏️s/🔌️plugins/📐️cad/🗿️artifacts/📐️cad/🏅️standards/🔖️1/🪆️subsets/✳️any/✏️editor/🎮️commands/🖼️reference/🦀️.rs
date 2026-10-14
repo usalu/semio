@@ -1,16 +1,17 @@
 //! 🖼️ CAD play app commands — the per-pane reference overlays: patch, set a flag, select, hover.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::CAD_WORLD_PICK_GRANULARITY;
-use crate::editor::cad::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, runtime_of, snapshot_of, CAD_INTERACTION_DOMAIN};
-use crate::mutations::change_reference_hidden::ChangeReferenceHidden;
-use crate::mutations::change_reference_locked::ChangeReferenceLocked;
-use crate::mutations::change_reference_width::ChangeReferenceWidth;
-use crate::mutations::move_reference::MoveReference;
-use crate::op::CadMutation;
-use crate::CadSnapshot;
-use crate::{cad_pane_from_model_definition_id, CadPaneId};
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_modes::CAD_WORLD_PICK_GRANULARITY;
+use semio_s_artifact_cad_cad_kit::{axis3_index, cad_pane_id_from_suffix, command_value_json, resolve_number_edit, snapshot_of, CAD_INTERACTION_DOMAIN};
+use semio_s_artifact_cad_cad_modes::windows::config::runtime_of;
+use semio_s_artifact_cad_cad_mut_references::change_reference_hidden::ChangeReferenceHidden;
+use semio_s_artifact_cad_cad_mut_references::change_reference_locked::ChangeReferenceLocked;
+use semio_s_artifact_cad_cad_mut_references::change_reference_width::ChangeReferenceWidth;
+use semio_s_artifact_cad_cad_mut_references::move_reference::MoveReference;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{snapshot::cad_pane_from_model_definition_id, snapshot::CadPaneId};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -63,7 +64,7 @@ pub mod patch_cad_play_reference {
 
 //#region 🙈️SetReferenceFlag
 /// 🔎️ The reference a set-verb addresses, if the document holds it.
-fn addressed_reference<'a>(document: &'a CadSnapshot, model_definition_id: &str, reference_id: &str) -> Option<&'a crate::CadReference> {
+fn addressed_reference<'a>(document: &'a CadSnapshot, model_definition_id: &str, reference_id: &str) -> Option<&'a semio_s_artifact_cad_cad_model::snapshot::CadReference> {
     document.references_by_model_definition_id.get(model_definition_id).and_then(|references| references.iter().find(|reference| reference.id == reference_id))
 }
 

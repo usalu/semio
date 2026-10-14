@@ -1,8 +1,10 @@
 //! 🔺️ Diff for `DeleteColumn`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::schema::diff::{SemioTableDiff, SemioTableRowDiff};
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableRowDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Removes one column and its cell from every row that has one.

@@ -1,6 +1,8 @@
 use super::*;
 use crate::FemAxis;
-use semio_s_artifact_fem_2d::editor::fem2d::transient::{fem_gumball_drive, FemGumballDrive, FemGumballTransient};
+use semio_s_artifact_fem_2d::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballDrive;
+use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransient;
 
 fn demo() -> Fem3dSnapshot {
     crate::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()

@@ -20,22 +20,22 @@ test("original owned job headers preserve the six current reply shapes without d
       bytes.set(Buffer.from(row.prefixHex, "hex"));
       if (row.refusal === "ownershipLimit") base[6] = 3;
       bytes.set(base, 8);
-      row.body.forEach((value, index) => bytes.writeBigUInt64LE(BigInt(value), 120 + index * 8));
+      row.body.forEach((value, index) => bytes.writeBigUInt64LE(BigInt(value), 144 + index * 8));
       db.query("insert into original_job values (?,?,?)").run(row.kind, bytes.subarray(0, 8), bytes);
-      expect(db.query("select length(bytes) as extent, hex(prefix) as prefix from original_job where kind=?").get(row.kind)).toEqual({ extent: 160, prefix: row.prefixHex.toUpperCase() });
+      expect(db.query("select length(bytes) as extent, hex(prefix) as prefix from original_job where kind=?").get(row.kind)).toEqual({ extent: 184, prefix: row.prefixHex.toUpperCase() });
       expect(bytes.subarray(8, 12).toString()).toBe("SAC2");
-      expect(row.body.map((_, index) => bytes.readBigUInt64LE(120 + index * 8).toString())).toEqual(row.body.map(String));
+      expect(row.body.map((_, index) => bytes.readBigUInt64LE(144 + index * 8).toString())).toEqual(row.body.map(String));
     }
     expect(db.query("select count(*) as count from original_job").get()).toEqual({ count: 6 });
-    for(const row of fixture.loanHandbacks)expect(Boolean((db.query("select (?1='original' and ?2=160) as accepted").get(row.pointer,row.extent)as{accepted:number}).accepted)).toBe(row.accepted);
+    for(const row of fixture.loanHandbacks)expect(Boolean((db.query("select (?1='original' and ?2=184) as accepted").get(row.pointer,row.extent)as{accepted:number}).accepted)).toBe(row.accepted);
     const source = resolve(import.meta.dir, "../🦀️.rs");
     expect(existsSync(source)).toBe(true);
     const text = readFileSync(source, "utf8");
     expect(text).toContain("pub struct OriginalOwnedJobFixedReceipt");
-    expect(text).toContain("[u8; 160]");
+    expect(text).toContain("[u8; 184]");
     expect(text).toContain("OriginalActorFixedReceipt::read");
     expect(text.includes("Vec<")).toBe(false);
     expect(text).toContain("OriginalOwnedJobReceiptLoan");expect(text).toContain("if self.borrowed");
   } finally { db.close(); }
-  console.log("[DEBUG] Original owned job headers sixShapes=true fixed160=true originalActorReceipt=true independentBufferSQLiteAjv=true");
+  console.log("[DEBUG] Original owned job headers sixShapes=true fixed184=true originalActorReceipt=true independentBufferSQLiteAjv=true");
 });

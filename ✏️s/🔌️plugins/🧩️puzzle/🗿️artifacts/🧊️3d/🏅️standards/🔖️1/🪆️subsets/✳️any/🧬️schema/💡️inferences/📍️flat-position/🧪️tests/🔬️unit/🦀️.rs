@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::dsl::InferredField;
-use crate::{Puzzle3dAttraction, Puzzle3dObject, Puzzle3dVortex};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
 use store::{InferenceCache, InferenceCacheConfig};
 
 //#region 🧸️Fixtures
@@ -22,7 +22,7 @@ pub(crate) fn chain_snapshot() -> Puzzle3dSnapshot {
     let attraction_a = Puzzle3dAttraction { id: "a1".into(), attracting: "root:top".into(), attracted: "mid:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 1.0, y: 0.0 };
     let attraction_b = Puzzle3dAttraction { id: "a2".into(), attracting: "mid:top".into(), attracted: "leaf:bottom".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 1.0 };
     Puzzle3dSnapshot {
-        schema: crate::PUZZLE_3D_SCHEMA.to_string(),
+        schema: crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA.to_string(),
         domain: "architecture".into(),
         meta: Default::default(),
         objects: vec![root, mid, leaf],

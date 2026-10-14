@@ -9,19 +9,19 @@
 //! queries (named as a future co-tenant of this facet) have not moved yet — still batch2 "queries"
 //! in the peel plan — so this file is classify-only for now.
 
-use crate::intersect::intersect_curve_surface;
+use semio_framework_3d_brep_intersect::intersect_curve_surface;
 use semio_framework_3d_brep_representation::contract::PointClassification;
 use crate::bounding_volume::{build_face_bvh, FaceBvh};
 use crate::mass_properties::closest_point_on_solid;
 use semio_framework_3d_brep_representation::arena::{FaceId, LoopId, SolidId};
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::{IntersectError, KernelError};
-use semio_framework_3d_brep_representation::surface::{surface_ops, Surface};
-use semio_framework_3d_brep_representation::tolerance::Iv;
+use semio_framework_3d_brep_surface::{surface_ops, Surface};
+use semio_framework_3d_brep_tolerance::Iv;
 use semio_framework_3d_brep_representation::topology::{Body, Coedge};
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::predicates::{orient2d, Orient};
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::predicates::{orient2d, Orient};
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Api
 

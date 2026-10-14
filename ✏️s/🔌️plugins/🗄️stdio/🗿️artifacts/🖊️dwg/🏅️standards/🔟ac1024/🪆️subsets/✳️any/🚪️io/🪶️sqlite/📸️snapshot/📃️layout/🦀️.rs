@@ -1,14 +1,33 @@
 //! 📃️ DWG paper layouts retain plot options, named coordinate vectors and references.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::number::Projection;
-use super::drawing::optional_words;
-use super::blocks::{project_handles,reconstruct_handles};
-use super::reader::{boolean,full_unsigned,high,low,optional_unsigned,ordinal,word,Reader};
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayout;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLayoutOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotArea;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotOptions;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotPaperUnit;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgPlotRotation;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlot;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgShadePlotResolution;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgStandardScale;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgOrthographicView;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks::project_handles;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks::reconstruct_handles;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::boolean;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn ortho(v:DwgOrthographicView)->&'static str{match v{DwgOrthographicView::None=>"none",DwgOrthographicView::Top=>"top",DwgOrthographicView::Bottom=>"bottom",DwgOrthographicView::Front=>"front",DwgOrthographicView::Back=>"back",DwgOrthographicView::Left=>"left",DwgOrthographicView::Right=>"right"}}
-pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgLayout)->Result<(),ValueError>{
+pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgLayout)->Result<(),ValueError>{
  let paper=match v.paper_unit{DwgPlotPaperUnit::Inches=>"inches"};let rotation=match v.rotation{DwgPlotRotation::QuarterTurn=>"quarter_turn"};let area=match v.plot_area{DwgPlotArea::Display=>"display",DwgPlotArea::Layout=>"layout"};let scale=match v.standard_scale{DwgStandardScale::Custom=>"custom",DwgStandardScale::OneToOne=>"one_to_one"};let shade=match v.shade_plot{DwgShadePlot::AsDisplayed=>"as_displayed"};let resolution=match v.shade_plot_resolution{DwgShadePlotResolution::Normal=>"normal"};
  let plot=optional_words(v.plot_view_handle);let visual=optional_words(v.visual_style_handle);let active=optional_words(v.active_viewport_handle);let base=optional_words(v.base_ucs_handle);let named=optional_words(v.named_ucs_handle);
  p.insert_key("dwg_layout",id,&[T(&v.page_setup_name),T(&v.printer_configuration),T(&v.canonical_media_name),T(&v.stylesheet),T(&v.name),T(paper),T(rotation),T(area),R(v.paper_units),R(v.drawing_units),T(scale),R(v.standard_scale_factor),T(shade),T(resolution),I(i64::from(v.shade_plot_dpi)),I(i64::from(v.tab_order)),I(i64::from(v.options.paper_space_linetype_scaling)),R(v.ucs_elevation),T(ortho(v.orthographic_view)),plot[0],plot[1],visual[0],visual[1],I(high(v.block_header_handle)),I(low(v.block_header_handle)),active[0],active[1],base[0],base[1],named[0],named[1]])?;
@@ -17,7 +36,7 @@ pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgLayout)->Result<(),V
  for(index,value)in values.iter().enumerate(){p.insert("dwg_layout_coordinate",&[I(id),T(name),I(ordered),I(ordinal(index)?),R(*value)])?;ordered+=1;}}
  project_handles(p,"dwg_layout_viewport_handle",id,&v.viewport_handles)
 }
-pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgLayout,ValueError>{
+pub fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgLayout,ValueError>{
  let row=r.component("dwg_layout",id)?;let o=r.component("dwg_plot_options",id)?;
  let mut vectors:[Vec<f64>;14]=std::array::from_fn(|_|Vec::new());let mut prior=0;
  for row in r.list("dwg_layout_coordinate",1,id,3)?{

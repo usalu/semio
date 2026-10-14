@@ -12,7 +12,7 @@ mod tests {
     use semio_s_artifact_block_2d::Block2dSnapshot as Block2dDefinition;
     use semio_s_artifact_block_3d::Block3dSnapshot as Block3dDefinition;
     use semio_s_artifact_block_5d::Block5dSnapshot as Block5dDefinition;
-    use semio_s_artifact_cad_cad::CadSnapshot;
+    use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
     use semio_s_artifact_dag_dag::DagSnapshot;
     use semio_s_artifact_draw_drawing::DrawingSnapshot;
     use semio_s_artifact_fem_2d::Fem2dSnapshot as Fem2dDocument;
@@ -24,7 +24,7 @@ mod tests {
     use semio_s_artifact_norm_en1990::En1990Snapshot as En1990Document;
     use semio_s_artifact_norm_en1991::En1991Snapshot as En1991Document;
     use semio_s_artifact_norm_en1992::En1992Snapshot as En1992Document;
-    use semio_s_artifact_norm_en1993::En1993Snapshot as En1993Document;
+    use semio_s_artifact_norm_en1993_model::En1993Snapshot as En1993Document;
     use semio_s_artifact_norm_en1994::En1994Snapshot as En1994Document;
     use semio_s_artifact_norm_en1995::En1995Snapshot as En1995Document;
     use semio_s_artifact_norm_en1996::En1996Snapshot as En1996Document;
@@ -52,7 +52,7 @@ mod tests {
     use semio_framework_artifact_playbook_playbook::PlaybookSpec;
     use semio_s_artifact_animate_presentation::PresentationSnapshot as PresentationDeck;
     use semio_s_artifact_procedural_generation2d::Generation2dSnapshot as Generation2dDocument;
-    use semio_s_artifact_procedural_generation3d::Generation3dSnapshot as Generation3dDocument;
+    use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot as Generation3dDocument;
     use semio_s_artifact_process_process3d::Process3dSnapshot as Process3dDocument;
     use semio_s_artifact_puzzle_2d::Puzzle2dSnapshot;
     use semio_s_artifact_puzzle_3d::Puzzle3dSnapshot;

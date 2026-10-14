@@ -8,7 +8,7 @@ mod snapshot_codec {
 use crate::standards::v4::subsets::any::io::sqlite::snapshot::native;
 use super::*;
 use crate::standards::v4::subsets::any::schema::snapshot::*;
-use crate::STDIO_IFC_DOCUMENT_SCHEMA;
+use crate::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 

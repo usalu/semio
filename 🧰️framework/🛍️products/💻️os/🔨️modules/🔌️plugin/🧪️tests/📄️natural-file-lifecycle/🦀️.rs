@@ -12,7 +12,7 @@ struct Fixture {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Format {
-    app_id: String,
+    pub(crate) app_id: String,
     format_kind: String,
     extension: String,
     media_type: String,
@@ -22,7 +22,7 @@ struct Format {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Unsupported {
-    app_id: String,
+    pub(crate) app_id: String,
 }
 
 #[derive(Deserialize)]

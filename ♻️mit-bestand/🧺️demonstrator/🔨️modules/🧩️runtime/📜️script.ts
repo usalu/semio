@@ -20,7 +20,7 @@ class PreparationScript extends BundleScript {
     const moduleRoot = join(plugin, "📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
     for (const name of [...pluginModuleDirNames.slice(2), ...extensionModuleDirNames]) {
-      const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".nx-artifact.json"), "utf8"));
+      const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
     }
     for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {

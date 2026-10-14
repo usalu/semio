@@ -38,10 +38,7 @@
 //! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself (`GifMutation::KINDS`).
 
-#[cfg(not(feature = "oracles"))]
-use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Available
 mod imp {
     use semio_repo_test_host::Json;
@@ -671,35 +668,12 @@ mod imp {
     //#endregion 🔖️Dispatch
 }
 
-#[cfg(feature = "oracles")]
 pub use imp::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_arrange, oracle_identity_round_trip, project};
 //#endregion 🔖️Available
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-/// 🎬️ The pre-state a kind needs to have something to act on. @see `imp::oracle_arrange`.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Unavailable

@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-table-series"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "📈️ Series complexity measures: regularity, ordinal and Markov entropies, multiscale and Lempel-Ziv complexity, spectra, wavelets and resampling inference."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-semio-table-entropy = { workspace = true }

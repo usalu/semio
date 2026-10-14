@@ -334,6 +334,7 @@ async fn dispatch_patch_positions(runtime: &WasmtimeRuntime, instance: &mut Gues
 }
 
 #[semio_framework_async_macros::async_test]
+#[ignore = "receipt-bound: only its producer `🌉️component-cold-map-patch/🟦️.ts` can bind SEMIO_GIS_COMPONENT_WASM; it selects this law by exact name"]
 async fn genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface() {
     let fixture = fixture();
     let component = component_bytes();
@@ -352,6 +353,7 @@ async fn genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surfac
 }
 
 #[semio_framework_async_macros::async_test]
+#[ignore = "receipt-bound: only its producer `🌉️component-cold-map-patch/🟦️.ts` can bind SEMIO_GIS_COMPONENT_WASM; it selects this law by exact name"]
 async fn genuine_gis_component_rejects_stale_cold_authority_before_loading() {
     let fixture = fixture();
     let component = component_bytes();

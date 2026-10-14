@@ -2,9 +2,13 @@
 //! write path in the app — import handlers always call this, overwriting is intentional so a retried
 //! import with the same key lands cleanly).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{ImageAsset, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::CommitReconstruction;
+use crate::standards::v1::subsets::any::schema::mutations::delete_asset::DeleteAsset;
+use crate::standards::v1::subsets::any::schema::mutations::remove_content::RemoveContent;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -23,17 +27,20 @@ pub struct CreateAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_asset(key: String, asset: ImageAsset) -> RemodelingMutation {
-    RemodelingMutation::CreateAsset(CreateAsset { key, asset })
+pub fn create_asset<Op: From<CreateAsset>>(key: String, asset: ImageAsset) -> Op {
+    Op::from(CreateAsset { key, asset })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateAsset {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for CreateAsset
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<AppendContent> + From<CommitReconstruction> + From<DeleteAsset> + From<RemoveContent>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "asset", kind: "create-asset", record: "CreatedAsset" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

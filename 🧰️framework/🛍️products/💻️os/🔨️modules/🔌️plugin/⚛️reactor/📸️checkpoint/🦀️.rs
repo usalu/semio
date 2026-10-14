@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 #[serde(deny_unknown_fields)]
 struct InstanceCheckpoint {
     id: u32,
-    app_id: String,
+    pub(crate) app_id: String,
     actor: String,
     document_pack: Vec<u8>,
 }

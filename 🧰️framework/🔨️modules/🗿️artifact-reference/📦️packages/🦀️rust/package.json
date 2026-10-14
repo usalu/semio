@@ -8,9 +8,6 @@
     "test-native": "bun repo run @semio-tech/framework-artifact-reference-rs:test-native",
     "test:binding": "bun repo run @semio-tech/framework-artifact-reference-rs:test-binding"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

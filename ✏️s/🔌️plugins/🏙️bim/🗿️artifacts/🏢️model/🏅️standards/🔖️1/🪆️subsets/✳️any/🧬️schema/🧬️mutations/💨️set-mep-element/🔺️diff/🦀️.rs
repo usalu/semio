@@ -3,7 +3,7 @@
 
 use super::super::component_rules;
 use super::SetMepElement;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetMepElement, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/🐛️change-type",
+  "semanticKind": "change-fault-type",
+  "displayName": "Change Fault Type",
+  "emoji": "🐛️",
+  "aggregateVariant": "ChangeFaultType",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-fault-type",
+  "binaryTag": 239,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -30,7 +30,7 @@ fn assert_round_trips(body: Body) {
     let snap2 = snapshot_from_body(&rebuilt);
     assert_eq!(snap1, snap2, "snapshot -> body -> snapshot must be identical");
     assert_eq!(counts(&body), counts(&rebuilt), "entity counts must match after round trip");
-    let issues = semio_framework_3d_brep_queries::validation::validate_body(&rebuilt);
+    let issues = semio_framework_3d_brep_validation::validate_body(&rebuilt);
     assert!(issues.is_empty(), "rebuilt body must validate cleanly: {issues:?}");
 }
 
@@ -91,7 +91,7 @@ async fn labels_are_preserved_as_decimal_ids() {
 /// fixture) addresses its entities: `to_snapshot` emits bare decimal labels, so re-keying every
 /// id to a non-numeric string is precisely the "no persistent-label history to preserve" case
 /// this file's module doc describes. It has to be a *valid* solid, because
-/// [`semio_framework_3d_brep_queries::validation::validate_body`]
+/// [`semio_framework_3d_brep_validation::validate_body`]
 /// checks p-curve presence, same-parameter agreement and shell closure — a single open face
 /// carrying no p-curves could never come back clean, whatever its ids looked like.
 #[semio_framework_async_macros::async_test]
@@ -151,7 +151,7 @@ async fn foreign_string_ids_mint_fresh_labels() {
     for (_, v) in rebuilt.vertices.iter() {
         assert!(v.label.0 >= numeric.next_label, "vertex label {:?} must be minted fresh above the document's high-water mark {}", v.label, numeric.next_label);
     }
-    let issues = semio_framework_3d_brep_queries::validation::validate_body(&rebuilt);
+    let issues = semio_framework_3d_brep_validation::validate_body(&rebuilt);
     assert!(issues.is_empty(), "{issues:?}");
 
     // 🧱️ The pre-`coedges` shape of the same document (STEP import, older fixtures) still rebuilds

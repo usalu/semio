@@ -1,6 +1,9 @@
 use super::*;
-use crate::algebra::{vec3d_cross, vec3d_normalize, vec3d_sub, Mat3d};
-use crate::lie::So3;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_cross;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_normalize;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_sub;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
 use remodeling_camera::Distortion;
 use remodeling_image::{build_pyramid, scharr_gradients, warp_affine};
 

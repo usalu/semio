@@ -1,8 +1,8 @@
 //! ➖️ `remove-bridge-fatigue` diff — removes the row at the index.
 
-use super::RemoveBridgeFatigue;
-use crate::diff::{En1993Diff, En1993BridgeFatigueDelta};
-use crate::En1993Snapshot;
+use crate::remove_bridge_fatigue::RemoveBridgeFatigue;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993BridgeFatigueDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveBridgeFatigue, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.bridge_fatigue.len() {

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "functions": [
+    "createRepositoryFilesystemJournalV1",
+    "repositoryFilesystemJournalPolicyV1",
+    "readFilesystemJournalRpcRequestV1",
+    "readFilesystemJournalRpcResponseV1",
+    "isGlobalGraphIdentityPathV1",
+    "writeSelectedGraphPublisherReceiptV1",
+    "selectedTaskScopeV1",
+    "nativeSelectedTaskPlannerV1",
+    "publishGraphFilesV1",
+    "withGraphPublisherControlV1",
+    "withNxDaemonStartupV1",
+    "withNxLoadedToolingUseV1",
+    "withOriginalNxFixedCacheV1",
+    "compactTaskPlans",
+    "sourceClosureTaskEnvironments",
+    "sourceClosureReceiptHolds",
+    "readNxGraphSourceProofV1"
+  ]
+}

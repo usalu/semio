@@ -1,5 +1,6 @@
 //! 🖼️ Packet asset entries use original paged backing and explicit candidate admission.
-use super::{DrawingImageAsset,MAX_NODES,MAX_ID_BYTES};
+use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
+use super::{MAX_NODES, MAX_ID_BYTES};
 use semio_framework_value::{DslValue,ToValue,FromValue,ValueError,ValueRefusalKind,NativeDecodeControl,NativeEncodeControl,list::PagedList};
 #[derive(Clone,Debug,Default,PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned)]
 pub struct DrawingClipboardAssets{entries:PagedList<(String,DrawingImageAsset),MAX_NODES>}
@@ -19,7 +20,7 @@ impl DrawingClipboardAssets{
   let mut ordinal=0;while !self.append_candidate_step(candidate,&mut ordinal,control)?{}Ok(())
  }
  /// 🔎️ Advances one bounded key comparison while the candidate and existing entries remain immutable.
- pub(crate) fn append_candidate_step(&mut self,candidate:&mut Option<(String,DrawingImageAsset)>,ordinal:&mut usize,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
+ pub fn append_candidate_step(&mut self,candidate:&mut Option<(String,DrawingImageAsset)>,ordinal:&mut usize,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
   control.checkpoint()?;let (key,_)=candidate.as_ref().ok_or_else(invalid)?;if key.is_empty()||key.len()>MAX_ID_BYTES||self.len()==MAX_NODES||*ordinal>self.len(){return Err(invalid());}
   if let Some((existing,_))=self.entry_at(*ordinal){if existing==key{return Err(invalid());}*ordinal+=1;return Ok(false);}
   while !self.entries.has_reserved_slot(){let bytes=self.entries.next_allocation_bytes()?;control.charge(bytes)?;self.entries.reserve_one(bytes).map_err(|error|ValueError::from(error.refusal()))?;}

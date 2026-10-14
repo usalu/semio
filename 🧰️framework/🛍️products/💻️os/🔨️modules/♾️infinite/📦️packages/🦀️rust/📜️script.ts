@@ -44,7 +44,7 @@ class FontsScript extends BundleScript {
 class TestWgpuWorldTerrainScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([], this.root, this.invocation.control, ["--lib", ...rest, "world::", "terrain"]);
+    await runRepositoryCargoTests([], this.root, this.invocation, ["--lib", ...rest, "world::", "terrain"]);
   }
 }
 

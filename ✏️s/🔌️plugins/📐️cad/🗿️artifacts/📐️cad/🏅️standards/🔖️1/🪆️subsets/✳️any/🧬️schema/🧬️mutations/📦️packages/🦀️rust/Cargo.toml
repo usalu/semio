@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-cad-cad-mutations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad mutation vocabulary: the dispatch enum and every leaf's fixture laws"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-mut-documents = { workspace = true }
+semio-s-artifact-cad-cad-mut-nodes = { workspace = true }
+semio-s-artifact-cad-cad-mut-references = { workspace = true }
+semio-s-artifact-cad-cad-mut-slots = { workspace = true }
+
+[dev-dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-cad-cad-testing = { workspace = true }
+serde_json = { workspace = true }

@@ -3,8 +3,8 @@
 
 use super::data::PARENTS_SET;
 use super::{model_to_part21, Schema};
-use crate::ModelSnapshot;
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance, Part21Value};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
 
 /// 📊️ The classes whose instances are counted (CamelCase as IfcOpenShell names them).
@@ -293,13 +293,13 @@ pub fn projection_in(schema: Schema, model: &ModelSnapshot) -> Projection {
 /// 📊️ The report of a written `document` of `model`, whatever path wrote it (the one-shot export or the stepped job).
 pub fn report(model: &ModelSnapshot, document: &Part21Document) -> Projection {
     project(document, |class, tag| match class {
-        "IfcWall" => model.walls.get(tag).is_some_and(|wall| matches!(wall.axis, crate::Axis::Line { .. }) && wall.base_slab.is_none() && !matches!(wall.top, crate::TopConstraint::Roof { .. } | crate::TopConstraint::Slab { .. } | crate::TopConstraint::Ceiling { .. })),
+        "IfcWall" => model.walls.get(tag).is_some_and(|wall| matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { .. }) && wall.base_slab.is_none() && !matches!(wall.top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { .. } | crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Slab { .. } | crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Ceiling { .. })),
         "IfcSlab" => model.slabs.get(tag).is_some_and(|slab| slab.slope.is_none() && slab.boundary.iter().chain(slab.holes.iter().flatten()).all(|vertex| vertex.bulge == 0.0)),
         "IfcCovering" => model.ceilings.get(tag).is_some_and(|ceiling| ceiling.slope.is_none() && ceiling.boundary.iter().chain(ceiling.holes.iter().flatten()).all(|vertex| vertex.bulge == 0.0)),
-        "IfcColumn" => model.columns.get(tag).and_then(|column| model.column_types.get(&column.column_type)).is_some_and(|kind| !matches!(kind.profile, crate::Profile::Circle { .. })),
-        "IfcBeam" => model.beams.get(tag).and_then(|beam| model.beam_types.get(&beam.beam_type)).is_some_and(|kind| !matches!(kind.profile, crate::Profile::Circle { .. })),
+        "IfcColumn" => model.columns.get(tag).and_then(|column| model.column_types.get(&column.column_type)).is_some_and(|kind| !matches!(kind.profile, crate::standards::v1::subsets::any::schema::snapshot::Profile::Circle { .. })),
+        "IfcBeam" => model.beams.get(tag).and_then(|beam| model.beam_types.get(&beam.beam_type)).is_some_and(|kind| !matches!(kind.profile, crate::standards::v1::subsets::any::schema::snapshot::Profile::Circle { .. })),
         "IfcFurnishingElement" | "IfcFlowTerminal" | "IfcBuildingElementProxy" => model.components.contains_key(tag),
-        "IfcFlowSegment" => model.mep_elements.get(tag).is_some_and(|element| !matches!(element.shape, crate::MepShape::Pipe { .. })),
+        "IfcFlowSegment" => model.mep_elements.get(tag).is_some_and(|element| !matches!(element.shape, crate::standards::v1::subsets::any::schema::snapshot::MepShape::Pipe { .. })),
         _ => true,
     })
 }

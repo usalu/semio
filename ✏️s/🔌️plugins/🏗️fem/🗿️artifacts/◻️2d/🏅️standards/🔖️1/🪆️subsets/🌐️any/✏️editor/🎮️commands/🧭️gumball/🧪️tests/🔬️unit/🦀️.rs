@@ -1,12 +1,12 @@
 use super::translate_selection::{handle, TranslateSelection};
 use crate::editor::fem2d::unit_tests::context::{close, dispatch, dispatch_rows, fem2d_mounted_app, history_verb, render, Fem2dApp};
 use crate::editor::fem2d::Fem2dCommand;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
 use pack::snapshot::ArtifactDsl;
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 fn demo() -> Fem2dSnapshot {
     Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).expect("demo document parses")

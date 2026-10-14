@@ -6,7 +6,7 @@ use super::{number, parse_count, parse_point, parse_text, partial, point, Create
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::io::export::sheets;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::scale_text;
-use crate::{view_is_drawn, Assigned, IsoSize, ModelMutation, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport, DEFAULT_VIEWPORT_SCALE, MAX_VIEWPORT_SCALE};
+use crate::standards::v1::subsets::any::schema::{snapshot::{view_is_drawn, IsoSize, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport, DEFAULT_VIEWPORT_SCALE, MAX_VIEWPORT_SCALE}, diff::Assigned, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 //#region 🔖️Text
@@ -112,7 +112,7 @@ pub fn next_number(snapshot: &ModelSnapshot) -> String {
 /// 📄️ A new sheet: A3 landscape, the next free number, named by the caller, with the project line and the author of the project in its title block.
 pub fn create_sheet(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let sheet = Sheet { project: snapshot.project.name.clone(), drawn_by: snapshot.project.author.clone(), ..Sheet::standard(&next_number(snapshot), name) };
-    Ok(ModelMutation::CreateSheet(crate::mutations::create_sheet::CreateSheet { id: id.into(), sheet }))
+    Ok(ModelMutation::CreateSheet(crate::standards::v1::subsets::any::schema::mutations::create_sheet::CreateSheet { id: id.into(), sheet }))
 }
 
 fn container(snapshot: &ModelSnapshot, parent: &str) -> Result<String, &'static str> {
@@ -138,7 +138,7 @@ pub fn create_viewport(snapshot: &ModelSnapshot, id: &str, parent: &str, _name: 
     let view = next_view(snapshot, &sheet).ok_or("bim.create.view-missing")?;
     let count = snapshot.viewports.values().filter(|row| row.sheet == sheet).count() as f64;
     let viewport = Viewport { scale: scale_of(snapshot, &view), ..Viewport::standard(&sheet, &view, Point2 { x: 30.0 + 10.0 * count, y: 30.0 + 10.0 * count }) };
-    Ok(ModelMutation::CreateViewport(crate::mutations::create_viewport::CreateViewport { id: id.into(), viewport }))
+    Ok(ModelMutation::CreateViewport(crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport { id: id.into(), viewport }))
 }
 
 /// 🧾️ The next revision mark of a sheet: the letter after the highest letter mark, `A` for the first.
@@ -151,7 +151,7 @@ pub fn next_mark(snapshot: &ModelSnapshot, sheet: &str) -> String {
 pub fn create_revision(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let sheet = container(snapshot, parent)?;
     let revision = SheetRevision { number: next_mark(snapshot, &sheet), date: String::new(), description: name.into(), author: snapshot.project.author.clone(), sheet };
-    Ok(ModelMutation::CreateSheetRevision(crate::mutations::create_sheet_revision::CreateSheetRevision { id: id.into(), sheet_revision: revision }))
+    Ok(ModelMutation::CreateSheetRevision(crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::CreateSheetRevision { id: id.into(), sheet_revision: revision }))
 }
 //#endregion 🔖️Create
 

@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::bim::gestures::plane::{axis_ends, signed_area};
 use crate::editor::bim::gestures::session::Shape;
 use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn every_form_of_the_grammar_parses_to_its_entry() {
@@ -87,7 +87,7 @@ async fn the_arc_wall_takes_its_start_end_and_a_point_on_the_arc() {
     }
     let step = rig.typed("2, -1");
     let [ModelMutation::CreateWall(created)] = step.mutations.as_slice() else { panic!("one arc wall, got {:?}", step.mutations) };
-    assert!(matches!(created.wall.axis, crate::Axis::Arc { bulge, .. } if (bulge - 0.5).abs() < 1e-9), "a 4 m chord with a 1 m sagitta bulges by 0.5");
+    assert!(matches!(created.wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { bulge, .. } if (bulge - 0.5).abs() < 1e-9), "a 4 m chord with a 1 m sagitta bulges by 0.5");
 }
 
 #[semio_framework_async_macros::async_test]

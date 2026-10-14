@@ -117,8 +117,9 @@ fn nx_inferred_targets_are_selectable_without_authored_project_rows() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    fs::create_dir_all(root.join(".🧬semio/🦑️repo/⚡️cache/build")).unwrap();
-    fs::write(root.join(".🧬semio/🦑️repo/⚡️cache/build/graph.json"), fixture["graph"].to_string()).unwrap();
+    let path = root.join(crate::registry::graph_file());
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(path, fixture["graph"].to_string()).unwrap();
     let mut found = Vec::new();
     leaves(&discover(&root), &mut found);
     let mut targets: Vec<String> = found.into_iter().map(|leaf| leaf.id).filter(|id| !id.starts_with("repo:")).collect();
@@ -132,8 +133,8 @@ fn nx_inferred_targets_survive_an_in_progress_graph_publication() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🌳️inferred-targets/🔣️.json")).unwrap();
     let root = temp_root("inferred-publication");
     fs::create_dir_all(root.join("owner/📦️packages/🦀️rust")).unwrap();
-    fs::create_dir_all(root.join(".🧬semio/🦑️repo/⚡️cache/build")).unwrap();
-    let path = root.join(".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+    let path = root.join(crate::registry::graph_file());
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(&path, "{").unwrap();
     let writer = std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(75));

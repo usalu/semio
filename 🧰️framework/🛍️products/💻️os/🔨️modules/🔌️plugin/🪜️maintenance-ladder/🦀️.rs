@@ -403,7 +403,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                     return Ok(PluginLifecycleStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
                 }
                 let authority = || maintenance_fault("interactive-job.maintenance-snapshot-authority", "live snapshot retirement authority changed during one fixed step");
-                let step = self.snapshot_retirements.get_mut(operation_id).ok_or_else(authority)?.close_step(grant)?;
+                let step = self.snapshot_retirements.get_mut(operation_id).ok_or_else(authority)?.close_step(cx,grant)?;
                 let PluginLifecycleStep::Complete(final_progress) = step else { return Ok(step) };
                 if !self.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
                     return Err(maintenance_fault("interactive-job.maintenance-snapshot-terminal-not-empty", "live snapshot retirement reported Complete without its exact terminal-empty witness"));

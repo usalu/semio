@@ -1,0 +1,1 @@
+{"version":1,"files":[{"path":"one","bytes":1},{"path":"nested/two","bytes":65537}],"quantumBytes":65536,"receiptBytes":4096,"copies":1,"logicalBytes":65538,"filesCount":2,"directories":2,"reservationBytes":524288}

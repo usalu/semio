@@ -14,7 +14,7 @@
 use super::super::element_solids::{dep_object, dep_value};
 use super::super::finishes::FinishSurface;
 use super::super::quantities::ElementQuantity;
-use crate::{AreaMeasure, AreaScheme, ModelSnapshot, Space, Zone};
+use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Space, Zone};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

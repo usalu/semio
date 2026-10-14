@@ -1,5 +1,7 @@
 use super::*;
-use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
 use store::{InferenceCache, InferenceCacheConfig};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

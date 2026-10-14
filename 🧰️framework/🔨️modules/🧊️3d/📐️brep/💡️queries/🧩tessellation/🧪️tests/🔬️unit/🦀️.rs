@@ -3,13 +3,13 @@ use crate::test_support::{observe_tessellation_system, MESH_RELEASES, OBSERVED_M
 use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_operations::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
 use semio_framework_3d_brep_representation::arena::ArenaId;
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Vec2};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt2, Vec2};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
@@ -585,13 +585,13 @@ fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant
         assert_eq!(caller.advance(&mut body,&mut rec).unwrap(),StageStep::Working);
         assert_eq!(caller.progress().phase,"tessellate","original Split Plan advanced before its cold child produced a mesh");assert_eq!(caller.progress().done,turn+1);assert!(caller.progress().total>=caller.progress().done);
     }
-    assert!((crate::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
+    assert!((semio_framework_3d_brep_queries::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
     eprintln!("[DEBUG] Tessellation cold ownership: no original topology collection before grants; one grant advanced one frontier; original box parity area=6 volume=1 triangles=12; original Split Plan remains on cold tessellation through eight granted caller turns");
 }
 
 #[test]
 fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() {
-    use crate::validation::BodyValidationJob;
+    use semio_framework_3d_brep_validation::BodyValidationJob;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["validationScratch"];
     let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());

@@ -1,8 +1,15 @@
 //! 🧭️ The video editor's edit rules: which snapshot pointer raises which ONE concrete video mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_in, ent, ins, rem, resolve, Entries, Reshape, INDEX};
-use crate::schema::mutations::SemioVideoMutation;
-use crate::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::complete_in;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
+use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};

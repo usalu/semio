@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 

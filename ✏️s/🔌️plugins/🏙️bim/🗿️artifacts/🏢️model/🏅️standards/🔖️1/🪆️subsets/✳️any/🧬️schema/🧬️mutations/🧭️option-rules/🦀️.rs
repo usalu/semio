@@ -1,5 +1,5 @@
 //! 🧭️ Authored-only validity of options, worksets and their memberships.
-use crate::{DesignOption, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{DesignOption, ModelSnapshot};
 
 /// 🛡️ Validates a design option against authored group and sibling references.
 pub fn option_problem(base: &ModelSnapshot, id: &str, value: &DesignOption) -> Option<&'static str> {

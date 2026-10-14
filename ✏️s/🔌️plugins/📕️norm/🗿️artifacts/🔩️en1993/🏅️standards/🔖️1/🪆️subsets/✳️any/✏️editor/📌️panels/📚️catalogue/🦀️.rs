@@ -6,12 +6,10 @@ use semio_framework_plugin::PanelTabDefinition;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use crate::document::ClauseId;
-use crate::snapshot::rolled_heb_catalogue;
-use crate::standards::v1::subsets::any::schema::{
-    GAMMA_M0_DE, GAMMA_M0_EN, GAMMA_M1_DE, GAMMA_M1_EN, GAMMA_M2_DE, GAMMA_M2_EN, GAMMA_M3_DE, GAMMA_M3_EN, GAMMA_MF_DE, GAMMA_MF_EN,
-};
+use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_compliance::ClauseId;
+use semio_s_artifact_norm_en1993_model::rolled_heb_catalogue;
+use semio_s_artifact_norm_en1993_checks::{GAMMA_M0_DE, GAMMA_M0_EN, GAMMA_M1_DE, GAMMA_M1_EN, GAMMA_M2_DE, GAMMA_M2_EN, GAMMA_M3_DE, GAMMA_M3_EN, GAMMA_MF_DE, GAMMA_MF_EN};
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1993.play.catalogue";
@@ -19,7 +17,7 @@ pub const BODY_CATALOGUE: &str = "norm.en1993.play.catalogue";
 
 //#region 🔖️Definition
 pub fn definition() -> PanelTabDefinition {
-    crate::app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
+    semio_s_plugin_norm_app_surface::panel_definition(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"), PanelGroup::Workbench, BODY_CATALOGUE)
 }
 //#endregion 🔖️Definition
 
@@ -78,7 +76,7 @@ fn section_property_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

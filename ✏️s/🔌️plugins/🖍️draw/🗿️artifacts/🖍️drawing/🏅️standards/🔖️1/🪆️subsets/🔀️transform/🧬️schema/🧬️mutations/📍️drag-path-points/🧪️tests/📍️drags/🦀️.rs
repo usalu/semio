@@ -1,10 +1,11 @@
 //! 🧪️ `drag-path-points` fixture — `📍️drags`. The committed quintet is computed by an independent Python
 //! implementation (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the
 //! Rust leaf to it byte for byte — the world offset mapped into the scaled path's axes, each anchor carrying its tangent.
-use crate::mutations::{drag_path_points, inverse_drawing_mutation, DrawingMutation, DrawingPathPointTarget};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::schema::geometry::editing::PathPoint;
-use crate::DrawingSnapshot;
+use crate::drag_path_points::mutation::{drag_path_points, DrawingPathPointTarget};
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_geometry::editing::PathPoint;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags/📸️snapshot/⬅️before/🔣️.json");
@@ -58,7 +59,7 @@ fn outcome_laws() {
     assert_eq!(codes(drag_path_points(vec![target("path-a", 9, PathPoint::Anchor)].into(), 1.0, 0.0), &base), vec![("Error".into(), "mutation.target-missing".into())]);
     assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor), target("ghost", 0, PathPoint::Anchor)].into(), 1.0, 0.0), &base), vec![("Warning".into(), "mutation.partial".into())]);
     let mut locked = base.clone();
-    crate::schema::layer_base_mut(&mut locked.layers[0]).locked = true;
+    semio_s_artifact_draw_drawing_model::layer_base_mut(&mut locked.layers[0]).locked = true;
     assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)].into(), 1.0, 0.0), &locked), vec![("Error".into(), "mutation.target-missing".into())]);
     assert_eq!(codes(drag_path_points(vec![target("path-a", 1, PathPoint::Anchor)].into(), 0.0, 0.0), &base), vec![("Warning".into(), "mutation.no-op".into())]);
     assert_eq!(codes(drag_path_points(Vec::new().into(), 1.0, 0.0), &base), vec![("Fatal".into(), "mutation.invariant".into())]);

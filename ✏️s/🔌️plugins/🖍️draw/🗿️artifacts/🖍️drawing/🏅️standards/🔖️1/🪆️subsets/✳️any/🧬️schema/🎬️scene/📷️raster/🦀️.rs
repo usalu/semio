@@ -1,6 +1,6 @@
 //! 🖼️ Resolved world-space scene inputs with isolated scopes and cropped private paint.
-use crate::{PathSegment,FillRule,FillStyle,StrokeStyle};
-use crate::schema::DrawingSceneGroup;
+use semio_s_artifact_draw_drawing_model::{PathSegment, FillStyle, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::DrawingSceneGroup;
 use semio_framework_pixels::RasterImage;
 use semio_framework_pixels::affine_sampling::{AffineImageJob,AffineImageInput,AffineSampling,AffineImageRetirement};
 use std::sync::Arc;
@@ -24,7 +24,8 @@ pub struct RasterSceneNode {pub id:String,pub groups:Vec<DrawingSceneGroup>,pub 
 pub struct RasterSceneInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize,pub assets:Vec<RasterSceneAsset>,pub nodes:Vec<RasterSceneNode>}
 #[derive(Clone,Debug)]
 pub struct RasterSceneProgress {pub phase:&'static str,pub nodes:usize,pub total_nodes:usize,pub pixels:usize,pub assets:usize,pub total_assets:usize,pub source_bytes:usize,pub admitted_images:usize,pub work:u64,pub done:bool}
-use crate::schema::geometry::{arc_geometry,raster::{PathRasterJob,PathRasterInput,PathRasterRetirement}};
+use semio_s_artifact_draw_drawing_geometry::arc_geometry;
+use semio_s_artifact_draw_drawing_geometry::raster::{PathRasterJob, PathRasterInput, PathRasterRetirement};
 use semio_framework_pixels::{editing::{validate_extent,validate_image},compositing::{CompositeJob,CompositeRetirement,CompositeLayer,CompositeContent,CompositeBlend}};
 use std::collections::VecDeque;
 use semio_framework_pixels::retirement::RasterLease;

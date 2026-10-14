@@ -1,6 +1,9 @@
-use super::*;
+use semio_s_artifact_procedural_3d_host::*;
+use semio_s_artifact_procedural_3d_host_envelope::*;
+use semio_s_artifact_procedural_3d_host_initialization::*;
 use crate::retirement_driver::{drive_erased_released, exact_grant, retire_owned_for_test, retire_shared_for_test, Stepped, STEP_GRANT};
-use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
+use semio_s_artifact_procedural_3d_io_binary::mutations::decode_op;
+use semio_s_artifact_procedural_3d_io_binary::mutations::encode_op;
 
 //#region 🔮️ThirdPartyOracle
 #[derive(Debug, PartialEq)]
@@ -121,9 +124,9 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 /// 🔐️ The lease table is process-global and four slots deep — every initializer law holds this for
 /// its whole body (`crate::publication_authority`).
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
-    generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::host::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
+    generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
         .expect("P3 initializer law publication authority");
-    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(crate::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
@@ -338,8 +341,12 @@ fn every_displaced_replay_owner_pays_its_own_flow_frontier_under_its_quoted_gran
 /// params state each declared input's default literal.
 #[test]
 fn semantic_wire_vectors_match_independent_json_oracle() {
-    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{WidgetInputPlane, WidgetInputValue};
-    use crate::standards::v1::subsets::any::schema::mutations::{generation3d_number_value,generation3d_param_number,generation3d_param_vector,generation3d_vector_value};
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+    use semio_s_artifact_procedural_3d_mutations::generation3d_number_value;
+    use semio_s_artifact_procedural_3d_mutations::generation3d_param_number;
+    use semio_s_artifact_procedural_3d_mutations::generation3d_param_vector;
+    use semio_s_artifact_procedural_3d_mutations::generation3d_vector_value;
 
     use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
     let record = |id: &str, kind: &str, params: Vec<(&str, semio_framework_artifact_flow_flow::neural::Value)>| Widget::Neuron {
@@ -386,7 +393,7 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
                 assert_eq!([layout.x, layout.y], [expected["layout"][0].as_f64().unwrap(), expected["layout"][1].as_f64().unwrap()]);
             }
             Generation3dMutation::ChangeWidgetInput(payload) => {
-                let params = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.id).map(semio_framework_value::ToValue::to_value).and_then(|widget| widget.get("params").cloned()).expect("addressed operator params");
+                let params = snapshot.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == payload.id).map(semio_framework_value::ToValue::to_value).and_then(|widget| widget.get("params").cloned()).expect("addressed operator params");
                 let literal: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(params.get(&payload.channel).expect("the addressed input"))).expect("literal json");
                 assert_eq!(literal, expected["input"], "{}.{}", payload.id, payload.channel);
             }

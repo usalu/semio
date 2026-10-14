@@ -5,7 +5,7 @@
 
 use super::super::horizontal_rules::loop_fault;
 use super::SetRoofFootprint;
-use crate::{Entry, ModelDiff, ModelSnapshot, RoofPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RoofPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetRoofFootprint, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

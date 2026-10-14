@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 // #region 🔖️Adjacency
 /// 🧮️ Compact adjacency built once per query batch.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct Adjacency {
     n: usize,
     out: Vec<Vec<usize>>,
@@ -46,9 +46,9 @@ pub fn adjacency(node_count: usize, edges: &[(usize, usize)], directed: bool) ->
 
 // #region 🔖️IdIndex
 /// 🔤️ Deterministic string-id <-> index bridge (ids sorted for reproducible ordering).
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
-#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct IdIndex {
     ids: Vec<String>,
     index: HashMap<String, usize>,
@@ -151,9 +151,9 @@ pub fn bfs_distances(adj: &Adjacency, seed: usize) -> Vec<Option<u32>> {
 
 // #region 🔖️Ordering
 /// ⚠️ A cycle was found where a DAG was required; `cycle` lists the node indices on the cycle.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct CycleError {
     pub cycle: Vec<usize>,
 }
@@ -292,9 +292,9 @@ fn find_cycle_among(adj: &Adjacency, candidates: &[usize]) -> Option<Vec<usize>>
 
 // #region 🔖️Components
 /// 🧮️ Union-find (disjoint-set) with path compression and union-by-rank.
-// 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+// 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
 // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub struct UnionFind {
     parent: Vec<usize>,
     rank: Vec<u8>,

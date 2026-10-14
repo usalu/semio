@@ -1,10 +1,10 @@
 //! 🧗️ Shared rules of the wall depth leaves: the invariants of a wall sweep, the attach of a wall top to a roof, slab or ceiling and of a wall base to a slab (target exists, same building, finite offset, no loop of
 //! references), and the authored reveal of an opening. Pure reads of the authored snapshot: no inference runs inside a diff, so the check of a loop walks the references of the records, never an inferred surface.
 
-use crate::mutations::wall_geometry::{material_flaw, profile_flaw, Flaw, EPS};
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{material_flaw, profile_flaw, Flaw, EPS};
 use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
 use crate::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
-use crate::{ModelSnapshot, TopConstraint, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, WallSweep};
 use protocol::OutcomeCode;
 
 fn invariant(path: &[&str], message: &str) -> Option<Flaw> {

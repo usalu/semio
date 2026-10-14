@@ -1,13 +1,13 @@
 //! ↩️ upsert inverse — restore prior entity or remove inserted one.
-use super::UpdateBoltInputs;
-use crate::mutations::remove_joint;
-use crate::{En1993Mutation, En1993Snapshot};
-pub fn inverse(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::update_bolt_inputs::UpdateBoltInputs;
+use crate::remove_joint;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &UpdateBoltInputs, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_bolt_inputs::UpdateBoltInputs> + From<crate::remove_joint::RemoveJoint> {
     Ok((|| {
     if let Some(prior) = base.joints.iter().find(|x| x.id == payload.joint.id) {
-        vec![En1993Mutation::UpdateBoltInputs(UpdateBoltInputs { joint: prior.clone() })]
+        vec![Op::from(UpdateBoltInputs { joint: prior.clone() })]
     } else {
-        vec![En1993Mutation::RemoveJoint(remove_joint::RemoveJoint { index: base.joints.len() })]
+        vec![Op::from(remove_joint::RemoveJoint { index: base.joints.len() })]
     }
 
     })())

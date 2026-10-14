@@ -1,7 +1,7 @@
 use super::testkit::{document, house, quantity, rows, string, tags};
 use super::*;
 use protocol::Inference;
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeSet;
 
 fn walk(value: &Part21Value, visit: &mut impl FnMut(u64)) {
@@ -83,7 +83,7 @@ fn global_ids_do_not_change_when_unrelated_elements_are_added() {
     let mut extra = larger.walls["w-free"].clone();
     extra.name = "Extra".into();
     larger.walls.insert("w-extra".into(), extra);
-    let guids = |model: &crate::ModelSnapshot| -> std::collections::BTreeMap<String, String> {
+    let guids = |model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot| -> std::collections::BTreeMap<String, String> {
         let document = document(model);
         let mut map = std::collections::BTreeMap::new();
         for entity in ["IFCWALL", "IFCWALLSTANDARDCASE", "IFCCOLUMN", "IFCSLAB", "IFCOPENINGELEMENT", "IFCBUILDINGSTOREY"] {
@@ -217,14 +217,14 @@ fn the_layers_of_a_roof_carry_the_volumes_of_the_take_off_and_of_their_solid() {
 
 #[test]
 fn every_phase_that_is_not_new_work_is_written_once_per_product_and_an_opening_carries_the_phase_of_its_host() {
-    use crate::Phase;
+    use crate::standards::v1::subsets::any::schema::snapshot::Phase;
     let mut model = house();
     macro_rules! cycle {
         ($($collection:ident),+) => { $( for (index, row) in model.$collection.values_mut().enumerate() { row.phase = Phase::ALL[(index + 1) % 4]; } )+ };
     }
     cycle!(walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces);
     let hosted = |host: &str| model.walls.get(host).map(|wall| wall.phase).or_else(|| model.curtain_walls.get(host).map(|curtain| curtain.phase)).expect("a host");
-    let fillers = model.openings.values().filter(|opening| !matches!(opening.kind, crate::OpeningKind::Void { .. })).filter(|opening| hosted(&opening.host) != Phase::New).count();
+    let fillers = model.openings.values().filter(|opening| !matches!(opening.kind, crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Void { .. })).filter(|opening| hosted(&opening.host) != Phase::New).count();
     let own = model.walls.values().map(|row| row.phase).chain(model.curtain_walls.values().map(|row| row.phase)).chain(model.columns.values().map(|row| row.phase)).chain(model.beams.values().map(|row| row.phase)).chain(model.slabs.values().map(|row| row.phase)).chain(model.roofs.values().map(|row| row.phase)).chain(model.stairs.values().map(|row| row.phase)).chain(model.railings.values().map(|row| row.phase)).chain(model.spaces.values().map(|row| row.phase)).filter(|phase| *phase != Phase::New).count();
     let document = document(&model);
     let written: Vec<String> = rows(&document, "IFCPROPERTYSINGLEVALUE").into_iter().filter(|(_, args)| string(args, 0).as_deref() == Some("Phase")).filter_map(|(_, args)| args.get(2).and_then(|value| value.as_typed()).and_then(|(_, items)| items.first()).and_then(|value| value.as_str()).map(str::to_string)).collect();

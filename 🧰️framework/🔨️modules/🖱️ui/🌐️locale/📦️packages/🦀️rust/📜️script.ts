@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 📇️ `@semio-tech/ui-locale-rs` router: `bun ./📜️script.ts test`. */
 
@@ -12,11 +13,11 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "retirement") {
       if (segments.length !== 1) throw Error("Expected test retirement");
-      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-locale"], cwd: this.root, extraArgs: ["--lib", "localized_label_original_backing", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env));
+      await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-locale"], cwd: this.root, extraArgs: ["--lib", "localized_label_original_backing", "--", "--nocapture"] }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
       return;
     }
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-locale"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-ui-locale"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 

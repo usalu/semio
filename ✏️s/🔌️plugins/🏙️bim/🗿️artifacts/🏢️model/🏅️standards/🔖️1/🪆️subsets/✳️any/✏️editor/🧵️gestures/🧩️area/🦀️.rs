@@ -8,7 +8,7 @@ use super::plane::{angle, counter_clockwise, dist, from_point2, loop_of, rectang
 use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
 use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
-use crate::{Ceiling, ModelMutation, Point2, Roof, RoofShape, Slab, Space, SpaceBoundary, Vertex};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, Point2, Roof, RoofShape, Slab, Space, SpaceBoundary, Vertex}, mutations::ModelMutation};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use std::f64::consts::PI;
@@ -71,8 +71,8 @@ impl Area {
                 let count = ctx.snapshot.roofs.values().filter(|roof| roof.storey == storey).count();
                 let name = ctx.name_of(|labels| labels.kind_roof, count);
                 let id = ctx.mint("roof");
-                let roof = Roof { storey, roof_type, footprint: loop_of(&ring), shape: RoofShape::Gable { pitch: GABLE_PITCH, ridge_direction: ridge_direction(&ring) }, overhang: ROOF_OVERHANG, base_offset: 0.0, phase: crate::Phase::New, name };
-                Step::write(ctx, ModelMutation::CreateRoof(crate::mutations::create_roof::CreateRoof { id, roof }))
+                let roof = Roof { storey, roof_type, footprint: loop_of(&ring), shape: RoofShape::Gable { pitch: GABLE_PITCH, ridge_direction: ridge_direction(&ring) }, overhang: ROOF_OVERHANG, base_offset: 0.0, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name };
+                Step::write(ctx, ModelMutation::CreateRoof(crate::standards::v1::subsets::any::schema::mutations::create_roof::CreateRoof { id, roof }))
             }
             Kind::Ceiling | Kind::CeilingFromSpace => self.ceiling_step(ctx, storey, loop_of(&ring), Vec::new()),
             Kind::Slab | Kind::SlabFromWalls => {
@@ -80,8 +80,8 @@ impl Area {
                 let count = ctx.snapshot.slabs.values().filter(|slab| slab.storey == storey).count();
                 let name = ctx.name_of(|labels| labels.kind_slab, count);
                 let id = ctx.mint("slab");
-                let slab = Slab { storey, slab_type, boundary: loop_of(&ring), holes: Vec::new(), offset: 0.0, slope: None, phase: crate::Phase::New, name };
-                Step::write(ctx, ModelMutation::CreateSlab(crate::mutations::create_slab::CreateSlab { id, slab }))
+                let slab = Slab { storey, slab_type, boundary: loop_of(&ring), holes: Vec::new(), offset: 0.0, slope: None, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name };
+                Step::write(ctx, ModelMutation::CreateSlab(crate::standards::v1::subsets::any::schema::mutations::create_slab::CreateSlab { id, slab }))
             }
         }
     }
@@ -92,7 +92,7 @@ impl Area {
         let name = ctx.name_of(|labels| labels.kind_ceiling, count);
         let id = ctx.mint("ceiling");
         let ceiling = Ceiling { storey, ceiling_type, boundary, holes, offset: DEFAULT_DROP, slope: None, name };
-        Step::write(ctx, ModelMutation::CreateCeiling(crate::mutations::create_ceiling::CreateCeiling { id, ceiling }))
+        Step::write(ctx, ModelMutation::CreateCeiling(crate::standards::v1::subsets::any::schema::mutations::create_ceiling::CreateCeiling { id, ceiling }))
     }
 
     fn space_at(&self, ctx: &mut ToolContext<'_>, at: P) -> Step {
@@ -105,7 +105,7 @@ impl Area {
                     return Step::refuse(STOREY_MISSING);
                 }
                 let mut probe = ctx.snapshot.clone();
-                probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+                probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
                 let mut rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe_rooms(ctx.instance, &probe);
                 rooms.remove("probe").filter(|room| room.status == SpaceStatus::Inferred)
             }
@@ -133,7 +133,7 @@ impl Area {
             return Step::refuse(STOREY_MISSING);
         }
         let mut probe = ctx.snapshot.clone();
-        probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
+        probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
         let rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe_rooms(ctx.instance, &probe);
         let ring: Vec<P> = rooms.get("probe").filter(|room| room.status == SpaceStatus::Inferred && room.outline.len() >= 3).map(|room| room.outline.iter().map(|vertex| from_point2(vertex.point)).collect()).unwrap_or_default();
         if ring.is_empty() { Step::refuse(super::session::REJECTED) } else { self.ring_step(ctx, &ring) }

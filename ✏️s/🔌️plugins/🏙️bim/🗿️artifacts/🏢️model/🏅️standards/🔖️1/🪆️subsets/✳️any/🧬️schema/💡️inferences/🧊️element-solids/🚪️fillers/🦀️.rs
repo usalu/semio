@@ -5,7 +5,7 @@
 
 use super::super::super::opening_frames::OpeningFrame;
 use super::super::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily};
-use crate::{DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, WindowType};
 use semio_framework_geometry::mesh::{extrude, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};
 use semio_framework_geometry::Point;

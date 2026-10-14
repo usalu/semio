@@ -8,17 +8,17 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_ap214::subsets::base::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::StepSnapshot;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::schema::snapshot::StepComplexType;
-use crate::schema::snapshot::StepEntity;
-use crate::schema::snapshot::StepFileDescription;
-use crate::schema::snapshot::StepFileName;
-use crate::schema::snapshot::StepFileSchema;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepComplexType;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepEntity;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileDescription;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileName;
+use crate::standards::v_ap214::subsets::base::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::schema::snapshot::{StepTypedValue, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepTypedValue, StepValue};
 
 /// 🧪️ P2-FG1: real LEB128-varint-framed binary primitives backing the upgraded `OpBinary`
 /// (`../🧬️mutations/🦀️.rs`) and `DiffCodec` (below) frames — mirrors md/dxf's own

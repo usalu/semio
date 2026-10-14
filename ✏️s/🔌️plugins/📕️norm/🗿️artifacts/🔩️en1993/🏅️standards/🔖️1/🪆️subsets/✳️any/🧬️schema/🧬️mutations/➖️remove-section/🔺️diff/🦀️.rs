@@ -1,8 +1,8 @@
 //! ➖️ `remove-section` diff — removes the row at the index.
 
-use super::RemoveSection;
-use crate::diff::{En1993Diff, En1993SectionDelta};
-use crate::En1993Snapshot;
+use crate::remove_section::RemoveSection;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993SectionDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveSection, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.sections.len() {

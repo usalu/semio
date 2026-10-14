@@ -1,0 +1,7 @@
+[
+ {"package":"semio-s-artifact-gis-gismap","feature":"mcp-service","mode":"off"},
+ {"package":"semio-s-dev-services","feature":"native-renderer","mode":"on"},
+ {"package":"semio-s-dev-services","feature":"mcp-service","mode":"on"},
+ {"package":"semio-s-dev-gis-services","feature":"native-renderer","mode":"on"},
+ {"package":"semio-s-dev-gis-services","feature":"mcp-service","mode":"on"}
+]

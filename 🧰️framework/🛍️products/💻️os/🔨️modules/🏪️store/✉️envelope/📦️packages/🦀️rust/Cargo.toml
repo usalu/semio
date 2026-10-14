@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-envelope"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-envelope"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-os-store-cursor = { path = "../../../🧭️cursor/📦️packages/🦀️rust" }
+semio-framework-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-message-ledger = { path = "../../../📒️ledger/📨️messages/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }

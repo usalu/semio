@@ -2,6 +2,16 @@
   "version": 1,
   "scope": "actor-component-codec-lane",
   "refusals": { "unexported": "actor-codec.unexported", "operation": "actor-codec.operation" },
+  "invalidAnswers": [
+    { "ok": 42 },
+    { "okHex": "00", "faultHex": "ff" },
+    { "okPair": { "packHex": "00" } },
+    { "okMirror": ["one"] },
+    { "okMirror": ["one", "two", "three"] },
+    { "okHex": "AB" },
+    { "faultHex": "f" },
+    { "okHex": "00", "extra": true }
+  ],
   "cases": [
     {
       "id": "pack-schema-hash-answers-the-fingerprint",

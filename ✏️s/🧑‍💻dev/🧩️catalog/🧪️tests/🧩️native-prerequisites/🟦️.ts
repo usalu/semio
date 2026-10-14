@@ -4,11 +4,11 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import fixture from "./🧫️fixtures/🧩️owners/🔣️.json";
-import {catalogNxContributionV1} from "../../📣️publication/🟦️.ts";
+import {catalogBuildContributionV1} from "../../📣️publication/🟦️.ts";
 
 test("current graph owners precede native and transitive component compilation in Nx", async () => {
   const workspace = process.env.SEMIO_WORKSPACE_ROOT ?? process.cwd();
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
   const contracts = JSON.parse(readFileSync(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).generatorContracts;
   const require = createRequire(import.meta.url);
   const { createTaskGraph } = require("nx/src/tasks-runner/create-task-graph");
@@ -36,7 +36,7 @@ test("current graph owners precede native and transitive component compilation i
 
 test("component description verifies the shipped bytes with its native emitter prerequisite", async () => {
   const workspace = process.env.SEMIO_WORKSPACE_ROOT ?? process.cwd();
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
   const crate = "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust", emitter = "@semio-tech/os-plugin-describe-rs:build";
   const targets = await cacheInternals.componentBuildTargets(crate, workspace);
   expect(targets.component.dependsOn).toContain(emitter);
@@ -66,9 +66,9 @@ test("component description verifies the shipped bytes with its native emitter p
 
 test("a session reads the committed semantic descriptors of its closure without any component build", async () => {
   const workspace = process.env.SEMIO_WORKSPACE_ROOT ?? process.cwd();
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
   const crate = "🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust";
-  const targets = await cacheInternals.playgroundSessionTargets([crate + "/Cargo.toml"], workspace,[catalogNxContributionV1()]);
+  const targets = await cacheInternals.playgroundSessionTargets([crate + "/Cargo.toml"], workspace,[catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")})]);
   expect(targets["session-draw"].dependsOn).toEqual(["@semio-tech/s-dev-composition:generate"]);
   expect(targets["session-draw"].inputs).toContain("{workspaceRoot}/🌎️hub/🧩️compositions/🖍️draw/🧩️component/🛂️.descriptor.semio");
   const {createTaskGraph} = createRequire(import.meta.url)("nx/src/tasks-runner/create-task-graph");
@@ -80,9 +80,9 @@ test("a session reads the committed semantic descriptors of its closure without 
 test("browser and native renderer inputs precede consumers in the installed Nx graph", async () => {
   const workspace=process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),require=createRequire(import.meta.url);
   const corpus=JSON.parse(readFileSync(join(import.meta.dir,"./🧫️fixtures/🎮️renderer-inputs/🔣️.json"),"utf8"));
-  const {cacheInternals}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
-  const manifests=JSON.parse(readFileSync(join(workspace,catalogNxContributionV1().publication.outputRoot,"🗂️sources.json"),"utf8")).map((row:{cratePath:string})=>row.cratePath+"/Cargo.toml");
-  const targets=cacheInternals.playgroundPreparationTargets(manifests,workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",{},[catalogNxContributionV1()]);
+  const {cacheInternals}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
+  const manifests=JSON.parse(readFileSync(join(workspace,catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")}).publication.outputRoot,"🗂️sources.json"),"utf8")).map((row:{cratePath:string})=>row.cratePath+"/Cargo.toml");
+  const targets=cacheInternals.playgroundPreparationTargets(manifests,workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",{},[catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")})]);
   const {createTaskGraph}=require("nx/src/tasks-runner/create-task-graph");
   for(const profile of corpus.profiles){
     for(const renderer of corpus.browserRenderers){
@@ -99,9 +99,9 @@ test("browser and native renderer inputs precede consumers in the installed Nx g
 
 test("native foreground tasks retain their child failure outcome",async()=>{
   const workspace=process.env.SEMIO_WORKSPACE_ROOT??process.cwd(),corpus=JSON.parse(readFileSync(join(import.meta.dir,"./🧫️fixtures/🎮️renderer-inputs/🔣️.json"),"utf8"));
-  const {cacheInternals}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
-  const manifests=JSON.parse(readFileSync(join(workspace,catalogNxContributionV1().publication.outputRoot,"🗂️sources.json"),"utf8")).map((row:{cratePath:string})=>row.cratePath+"/Cargo.toml");
-  const targets=cacheInternals.playgroundPreparationTargets(manifests,workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",{},[catalogNxContributionV1()]);
+  const {cacheInternals}=await import(pathToFileURL(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
+  const manifests=JSON.parse(readFileSync(join(workspace,catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")}).publication.outputRoot,"🗂️sources.json"),"utf8")).map((row:{cratePath:string})=>row.cratePath+"/Cargo.toml");
+  const targets=cacheInternals.playgroundPreparationTargets(manifests,workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",{},[catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")})]);
   for(const profile of corpus.profiles)for(const operation of ["run","smoke"])expect(targets[`${operation}-${corpus.variant}-native-${profile}`].continuous).toBe(corpus.nativeProcessStatus.continuous);
   const execute=createRequire(import.meta.url)("nx/src/executors/run-commands/run-commands.impl").default;
   const outcome=await execute({command:`bun -e "process.exit(${corpus.nativeProcessStatus.childFailureExit})"`,cwd:workspace,parallel:false,color:false,__unparsed__:[]},{root:workspace,isVerbose:false});

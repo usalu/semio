@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_validation::validate_body;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {

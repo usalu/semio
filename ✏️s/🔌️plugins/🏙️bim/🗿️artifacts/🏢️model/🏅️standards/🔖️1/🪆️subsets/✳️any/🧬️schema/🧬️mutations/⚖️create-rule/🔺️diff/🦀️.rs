@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateRule;
-use crate::{rule_problem, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{rule_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateRule, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

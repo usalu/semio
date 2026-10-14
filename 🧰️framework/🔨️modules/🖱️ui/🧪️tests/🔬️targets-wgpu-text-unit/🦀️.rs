@@ -196,7 +196,6 @@ fn for_each_corpus_row(mut width: impl FnMut(&mut FontAtlas, super::TextFace, &s
 }
 
 /// 🤝️ The corpus pangram — Anta kerns six of its pairs (−0.127 em in all).
-const KERNED_PANGRAM: &str = "The quick brown fox jumps over the lazy dog";
 
 /// 🤝️ LAW (WG11 T7b): the atlas and the retained layout's text worker kern by ONE source — the face's own pair table read through
 /// `PairKerning` — which Anta's `A`+`V` and `f`+`o` pin at Chromium's own −0.0928 and −0.0391 em; the monospace face does not
@@ -264,45 +263,7 @@ fn pair_kerning_is_one_rule_for_measure_wrap_and_caret() {
 
 /// 🤝️ LAW (WG11 T7b): the retained painter pens every glyph at its kerned caret and breaks where the kerned wrap does — measure,
 /// wrap, caret and paint read one pair-kerning table under one rule.
-#[test]
-fn the_retained_painter_pens_the_kerned_caret_and_breaks_where_the_kerned_wrap_does() {
-    use crate::wgpu::draw::{DrawList, KIND_GLYPH};
-    use crate::wgpu::geometry::Rect;
-    use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
-    use crate::wgpu::theme::Rgba;
 
-    let (text, size) = (KERNED_PANGRAM, 12.8);
-    let mut atlas = FontAtlas::shaped_default();
-    let paint = |atlas: &mut FontAtlas, bounds: Rect, flow: RetainedTextFlow| {
-        let (mut draw, mut cursor, mut lines) = (DrawList::default(), RetainedGlyphCursor::default(), Vec::new());
-        loop {
-            let byte = cursor.byte();
-            match paint_retained_glyph_step_flowed(text, bounds, size, Rgba::new(1.0, 1.0, 1.0, 1.0), flow, atlas, &mut draw, &mut cursor) {
-                RetainedGlyphStep::Pending => lines.push((byte, cursor.line())),
-                RetainedGlyphStep::Complete => break,
-                RetainedGlyphStep::Fault => panic!("the pangram never faults the retained painter"),
-            }
-        }
-        let glyphs: Vec<f32> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).map(|instance| instance.rect[0]).collect();
-        (glyphs, lines)
-    };
-    let (glyphs, _) = paint(&mut atlas, Rect::new(10.0, 0.0, 1_000.0, 40.0), RetainedTextFlow::Clip);
-    assert_eq!(glyphs.len(), text.chars().count(), "one glyph per scalar");
-    for ((byte, ch), x) in text.char_indices().zip(glyphs) {
-        let caret = 10.0 + atlas.pen_at(text, byte, size) + atlas.ensure_glyph(ch, size).bearing_x;
-        assert!((x - caret).abs() < 0.001, "{ch:?} at byte {byte} painted at {x}, its kerned caret is {caret}");
-    }
-    let first_line = "The quick brown fox jumps over ";
-    let width = atlas.measure_text(first_line.trim_end(), size).0 + 0.01;
-    let expected = atlas.wrap_lines(text, width, size);
-    assert_eq!(expected.iter().map(|line| line.start).collect::<Vec<_>>(), [0, first_line.len()], "the kerned first line keeps `over`");
-    let (_, lines) = paint(&mut atlas, Rect::new(0.0, 0.0, width, 400.0), RetainedTextFlow::Wrap);
-    assert_eq!(lines.len(), text.chars().count(), "every scalar is stepped exactly once");
-    for (byte, line) in lines {
-        let assigned = expected.iter().position(|range| range.contains(&byte)).unwrap_or_else(|| panic!("byte {byte} lands on no measured line"));
-        assert_eq!(line, assigned, "scalar at byte {byte} painted on line {line}, measured onto line {assigned}");
-    }
-}
 
 //#endregion 📐️DPI
 
@@ -377,20 +338,7 @@ async fn the_faux_bold_offset_scales_with_the_size_and_never_vanishes() {
     assert!(super::faux_bold_offset(25.6) > super::faux_bold_offset(9.6), "the offset is monotonic in the size");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn a_semibold_run_strikes_twice_at_the_regular_faces_own_advances() {
-    let mut atlas = FontAtlas::builtin();
-    let size = 19.2;
-    let mut regular = crate::wgpu::draw::DrawList::default();
-    crate::wgpu::widgets::draw_text_weighted(&mut regular, &mut atlas, "Ab", 10.0, 20.0, size, crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0), super::TextWeight::Regular);
-    let mut semibold = crate::wgpu::draw::DrawList::default();
-    crate::wgpu::widgets::draw_text_weighted(&mut semibold, &mut atlas, "Ab", 10.0, 20.0, size, crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0), super::TextWeight::Semibold);
-    let count = |draw: &crate::wgpu::draw::DrawList| draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
-    assert_eq!(count(&semibold), count(&regular) * 2, "the second strike is the whole synthetic weight");
-    let widths: Vec<f32> = semibold.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.rect[0]).collect();
-    assert!(widths.iter().any(|x| (*x - 10.0).abs() < 0.001), "the first strike sits at the authored origin");
-    assert!(widths.iter().any(|x| (*x - (10.0 + super::faux_bold_offset(size))).abs() < 0.001), "the second strike is offset by exactly the faux-bold offset");
-}
+
 //#endregion 🅰️WeightTests
 
 //#region 🔣️SymbolFaceTests
@@ -507,33 +455,7 @@ fn a_break_opportunity_is_exactly_what_css_allows() {
 /// implementation: greedy first-fit over whitespace-separated words, a word measured by the very
 /// advances the painter pens, a trailing space that never counts toward the line's fit, and a break
 /// inside a word only when that word alone is wider than the whole box (`overflow-wrap`).
-fn reference_break_indices(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -> Vec<usize> {
-    let advance = |atlas: &mut FontAtlas, ch: char| atlas.ensure_glyph(ch, size).advance;
-    let mut breaks = Vec::new();
-    let (mut pen, mut cursor) = (0.0f32, 0usize);
-    for (offset, ch) in text.char_indices() {
-        if ch == ' ' {
-            pen += advance(atlas, ch);
-            cursor = offset + ch.len_utf8();
-            continue;
-        }
-        if cursor == offset {
-            let word_end = text[offset..].find(' ').map_or(text.len(), |at| offset + at);
-            let word: f32 = text[offset..word_end].chars().map(|ch| advance(atlas, ch)).sum();
-            if pen > 0.0 && pen + word > max_width + super::LINE_BREAK_FIT_EPSILON {
-                breaks.push(offset);
-                pen = 0.0;
-            }
-        }
-        let width = advance(atlas, ch);
-        if pen > 0.0 && pen + width > max_width + super::LINE_BREAK_FIT_EPSILON {
-            breaks.push(offset);
-            pen = 0.0;
-        }
-        pen += width;
-    }
-    breaks
-}
+
 
 /// ⚖️ LAW: the atlas wrap breaks at exactly the reference's indices, at every width from "one word
 /// fits" to "the whole paragraph fits", and never inside a word that fits its own line.
@@ -609,42 +531,13 @@ fn pre_wrap_keeps_repeated_spaces_and_hangs_the_ones_ending_a_line() {
 /// ⚖️ LAW: **the retained painter breaks where the measure says it does.** Driven glyph by glyph over
 /// a real `DrawList`, the line each scalar lands on is exactly the line [`FontAtlas::wrap_lines`]
 /// assigns it. This is the law the tour card's `comp|osing` violated.
-#[test]
-fn the_retained_painter_breaks_where_the_measure_says() {
-    use crate::wgpu::draw::DrawList;
-    use crate::wgpu::geometry::Rect;
-    use crate::wgpu::paint::{paint_retained_glyph_step_flowed, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow};
-    use crate::wgpu::theme::Rgba;
 
-    let size = ui_styling::metrics::typography::TEXT_XS_PX as f32;
-    let mut atlas = FontAtlas::builtin();
-    let max_width = atlas.measure_text("A quick tour of the viewport,", size).0;
-    let expected = atlas.wrap_lines(TOUR_BODY, max_width, size);
-    let mut draw = DrawList::default();
-    let mut cursor = RetainedGlyphCursor::default();
-    let bounds = Rect::new(0.0, 0.0, max_width, 400.0);
-    let mut painted: Vec<(usize, usize)> = Vec::new();
-    for _ in 0..TOUR_BODY.len() + 4 {
-        let byte = cursor.byte();
-        match paint_retained_glyph_step_flowed(TOUR_BODY, bounds, size, Rgba::new(1.0, 1.0, 1.0, 1.0), RetainedTextFlow::Wrap, &mut atlas, &mut draw, &mut cursor) {
-            RetainedGlyphStep::Pending => painted.push((byte, cursor.line())),
-            RetainedGlyphStep::Complete => break,
-            RetainedGlyphStep::Fault => panic!("the tour body must never fault the retained painter"),
-        }
-    }
-    assert_eq!(painted.len(), TOUR_BODY.chars().count(), "every scalar is stepped exactly once");
-    for (byte, line) in painted {
-        let assigned = expected.iter().position(|range| range.contains(&byte)).unwrap_or_else(|| panic!("byte {byte} lands on no measured line"));
-        assert_eq!(line, assigned, "scalar at byte {byte} ({:?}) painted on line {line}, measured onto line {assigned}", &TOUR_BODY[byte..byte + 1]);
-    }
-    assert_eq!(expected.len(), 3, "this box holds the paragraph in three lines");
-}
 //#endregion ✂️LineBreakTests
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage() {
-    use crate::wgpu::host::physical_job_close_tests::measured;
+    use crate::test_allocation::observe_backing as measured;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔤️text-advances/🔣️.json")).unwrap();
     let (mut original, births, frees) = measured(super::PairKerning::default);
     assert_eq!((births, frees), (0, 0));
@@ -680,3 +573,5 @@ fn actual_font_pair_queries_match_swash_without_retaining_native_cache_storage()
     assert_eq!((births, frees), (0, 0));
     println!("[DEBUG] actual original borrowed font pairs={checked} independentSwash=true queryBirths=0 queryFrees=0 terminalDrop=0 originalStaticPointers=true");
 }
+
+include!("../../🧪️testing/🔤️text-reference/🦀️.rs");

@@ -279,10 +279,9 @@ struct Transaction {
     matched: Option<(u64, u64, String, String)>,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
     use semio_s_artifact_gis_gismap::{GisMapSnapshot, mutations::GisMapMutation};
-    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
+    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot};
 
     let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|error| {
         eprintln!("[WARN] inference wal: committed event is not an admissible durable decision — {error:?}");
@@ -491,7 +490,6 @@ async fn scan(
                     }
                     if let WalRecord::Event(bytes) = &record {
                         transaction.events = transaction.events.checked_add(1).ok_or(InferenceErrorV1::Bounds)?;
-                        #[cfg(feature = "native-artifact-execution")]
                         {
                             if bytes.len() > directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES || (transaction.id == target.receipt.transaction_id && transaction.matched.is_some()) {
                                 return Err(InferenceErrorV1::Invalid);

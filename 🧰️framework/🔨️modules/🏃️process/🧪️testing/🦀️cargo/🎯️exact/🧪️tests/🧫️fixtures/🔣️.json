@@ -1,5 +1,6 @@
 {
   "schema": "semio.process.exact-cargo-laws/v1",
+  "buildOrdering": ["prepare", "inputs-open", "plan", "compile", "inputs-close"],
   "stageEnvironment": {
     "buildStack": "8388608",
     "nativeStack": "268435456",
@@ -18,6 +19,7 @@
   "executableSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   "nativeArguments": [
     "--exact",
+    "--include-ignored",
     "--test-threads=1",
     "--show-output"
   ],

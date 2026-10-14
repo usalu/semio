@@ -1,0 +1,57 @@
+{
+ "order": [
+  "arena",
+  "contract",
+  "curve",
+  "error",
+  "polynomial",
+  "surface",
+  "tolerance",
+  "topology",
+  "vector",
+  "root"
+ ],
+ "allow": {},
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "^🏟️arena/",
+   "arena"
+  ],
+  [
+   "^🔖️contract/",
+   "contract"
+  ],
+  [
+   "^➰️curve/",
+   "curve"
+  ],
+  [
+   "^🚨️error/",
+   "error"
+  ],
+  [
+   "^〰️polynomial/",
+   "polynomial"
+  ],
+  [
+   "^🏄️surface/",
+   "surface"
+  ],
+  [
+   "^📏️tolerance/",
+   "tolerance"
+  ],
+  [
+   "^🕸️topology/",
+   "topology"
+  ],
+  [
+   "^➡️vector/",
+   "vector"
+  ]
+ ]
+}

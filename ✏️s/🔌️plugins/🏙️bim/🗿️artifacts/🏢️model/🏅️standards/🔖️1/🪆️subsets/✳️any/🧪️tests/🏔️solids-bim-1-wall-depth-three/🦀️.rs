@@ -12,7 +12,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-    use semio_s_artifact_bim_model::ModelInference;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::ModelInference;
 
     fn row(solid: &ElementSolid) -> String {
         let (min, max) = (solid.bounds.min, solid.bounds.max);

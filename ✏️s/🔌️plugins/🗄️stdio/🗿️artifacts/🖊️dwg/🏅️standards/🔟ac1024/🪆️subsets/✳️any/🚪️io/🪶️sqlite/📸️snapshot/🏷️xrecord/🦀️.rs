@@ -1,12 +1,12 @@
 //! 🏷️ Typed DWG XRecord primitives, point coordinates, unsigned handles and ordered binary octets.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
 use super::reader::{boolean,byte,full_unsigned,high,low,ordinal,real,signed_integer,signed_word,Reader};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 use super::number::{Projection,Row};
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 
-pub(super) fn project_values(projection:&mut Projection<'_,'_>,extended:Option<i64>,xrecord:Option<i64>,values:&[DwgXRecordValue])->Result<(),ValueError>{
+pub fn project_values(projection:&mut Projection<'_,'_>,extended:Option<i64>,xrecord:Option<i64>,values:&[DwgXRecordValue])->Result<(),ValueError>{
     if extended.is_some()==xrecord.is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRecord values require exactly one typed owner"));}
     for(index,value)in values.iter().enumerate(){
         let (kind,code,text,real,integer,x,y,z,hi,lo)=match value{
@@ -27,7 +27,7 @@ pub(super) fn project_values(projection:&mut Projection<'_,'_>,extended:Option<i
     }
     Ok(())
 }
-pub(super) fn reconstruct_values(reader:&mut Reader<'_,'_,'_>,extended:Option<i64>,xrecord:Option<i64>)->Result<Vec<DwgXRecordValue>,ValueError>{
+pub fn reconstruct_values(reader:&mut Reader<'_,'_,'_>,extended:Option<i64>,xrecord:Option<i64>)->Result<Vec<DwgXRecordValue>,ValueError>{
     let(owner_column,owner,unused_column)=match (extended,xrecord){(Some(id),None)=>(1,id,2),(None,Some(id))=>(2,id,1),_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG XRecord values require exactly one typed owner"))};
     let mut result=Vec::new();
     for r in reader.list("dwg_xrecord_value",owner_column,owner,3)?{
@@ -53,4 +53,4 @@ pub(super) fn reconstruct_values(reader:&mut Reader<'_,'_,'_>,extended:Option<i6
     }
     Ok(result)
 }
-pub(super) fn require_null(row:Row<'_>,columns:&[usize])->Result<(),ValueError>{for column in columns{if !matches!(row.value(*column)?,Cell::Null){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed variant has a non-NULL unrelated field"));}}Ok(())}
+pub fn require_null(row:Row<'_>,columns:&[usize])->Result<(),ValueError>{for column in columns{if !matches!(row.value(*column)?,Cell::Null){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG typed variant has a non-NULL unrelated field"));}}Ok(())}

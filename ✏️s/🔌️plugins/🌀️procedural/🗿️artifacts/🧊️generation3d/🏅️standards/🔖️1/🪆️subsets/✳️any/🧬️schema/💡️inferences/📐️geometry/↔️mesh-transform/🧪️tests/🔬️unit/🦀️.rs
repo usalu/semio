@@ -1,5 +1,6 @@
 use super::*;
-use super::super::mesh_support::harness as h;
+#[path = "../../../🧱️mesh-support/🧪️tests/🧰️mesh-harness/🦀️.rs"]
+mod h;
 
 const FIXTURE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/📐️geometry/↔️mesh-transform/🔣️.json");
 

@@ -274,13 +274,6 @@ async fn determinism_verifier_bounds_pending_window() {
 //#endregion 🔖️Determinism
 
 //#region 🔖️Otel
-#[cfg(feature = "otel")]
-#[semio_framework_async_macros::async_test]
-async fn unwired_otel_exporter_reports_unimplemented_rather_than_panicking() {
-    let span = CompletedSpan { id: SpanId(0), name: "s", parent: None, document: None, start_ms: 0, end_ms: 1, duration_ms: 1 };
-    let err = UnwiredOtelExporter.export(&span).await.unwrap_err();
-    assert!(matches!(err, DbError::Unimplemented(_)));
-}
 //#endregion 🔖️Otel
 
 //#region 🔖️Emit

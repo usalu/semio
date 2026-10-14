@@ -2,8 +2,8 @@
 //! does not yet drive the `motion` topic file from `advance()` (its `motion_enabled` flag is accepted
 //! but unused), so this stays empty today — a documented gap, not a UI bug.
 
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -29,13 +29,13 @@ pub fn definition() -> PanelTabDefinition {
 /// 🪟️ The status lines are a closed set, the track list is not — two sections, the second windowed.
 pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let status = if scene.results.tracks.is_empty() {
-        crate::editor::remodeling::ui_node_list([tree_item("remodeling-tracks.none", labels.tracks_none.as_str()), tree_item("remodeling-tracks.gap", labels.motion_not_implemented.as_str())])?
+        semio_framework_plugin::ui_node_list([tree_item("remodeling-tracks.none", labels.tracks_none.as_str()), tree_item("remodeling-tracks.gap", labels.motion_not_implemented.as_str())])?
     } else {
-        crate::editor::remodeling::ui_node_list([tree_item("remodeling-tracks.count", format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len()))])?
+        semio_framework_plugin::ui_node_list([tree_item("remodeling-tracks.count", format!("{}: {}", labels.tracks.as_str(), scene.results.tracks.len()))])?
     };
     PanelTreeBuilder::new("remodeling-tracks")?
-        .section("remodeling-tracks.motion", Some(crate::editor::remodeling::ui_label(labels.panel_tracks.as_str())?), true, status)?
-        .window_section(windows, "remodeling-tracks.tracks", Some(crate::editor::remodeling::ui_label(labels.tracks.as_str())?), true, &scene.results.tracks, |track| {
+        .section("remodeling-tracks.motion", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.panel_tracks.as_str())?), true, status)?
+        .window_section(windows, "remodeling-tracks.tracks", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.tracks.as_str())?), true, &scene.results.tracks, |track| {
             tree_item(format!("remodeling-tracks.track.{}", track.id), format!("{} ({:?}): {} frames, {:.2} m/s", track.id, track.class, track.length, track.mean_speed_m_s))
         })?
         .build()
@@ -43,7 +43,4 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

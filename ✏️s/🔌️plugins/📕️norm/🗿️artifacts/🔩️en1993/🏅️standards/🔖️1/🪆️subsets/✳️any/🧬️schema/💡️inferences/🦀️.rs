@@ -4,7 +4,15 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧾outline/`).
 
-use crate::En1993Snapshot;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Inference
@@ -62,8 +70,8 @@ mod tests;
 
 //#region 🔖️ComplianceReport
 /// 📋️ Full EN 1993 compliance-report conformance law — hierarchical steel structure.
-use crate::document::CheckReport;
-use crate::standards::v1::subsets::any::schema::check_full_steel_structure;
+use semio_s_plugin_norm_compliance::CheckReport;
+use semio_s_artifact_norm_en1993_checks::check_full_steel_structure;
 
 /// 📋️ `En1993Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
 pub fn evaluate(document: &En1993Snapshot) -> CheckReport {
@@ -79,5 +87,10 @@ mod compliance_report_tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::outline::En1993Outline;
+pub use crate::outline::En1993Outline;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️Mounts
+#[path = "🧾outline/🦀️.rs"]
+pub mod outline;
+//#endregion 🪢️Mounts

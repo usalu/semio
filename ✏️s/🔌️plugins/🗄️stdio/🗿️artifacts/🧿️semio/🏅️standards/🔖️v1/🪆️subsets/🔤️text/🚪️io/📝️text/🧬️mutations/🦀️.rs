@@ -7,9 +7,12 @@
 
 use crate::schema::mutations::SemioTextMutation;
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use {crate::schema::mutations::add_mark::AddMark, crate::schema::mutations::change_run_language::ChangeRunLanguage, crate::schema::mutations::edit_run::EditRun, crate::schema::mutations::insert_run::InsertRun, crate::schema::mutations::remove_mark::RemoveMark, crate::schema::mutations::remove_run::RemoveRun, crate::schema::mutations::reorder_runs::ReorderRuns};
-use crate::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -173,8 +176,8 @@ mod tests;
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTextSnapshot, SemioTextMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. This
 /// plugin crate reaches the derive through the `dsl` extern-crate alias `🦀️.rs` declares

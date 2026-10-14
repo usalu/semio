@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::entities::components::tests::furnished;
 use crate::editor::bim::entities::{kind_holding, kind_of};
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 fn model() -> ModelSnapshot {

@@ -9,13 +9,15 @@ import {nxToolingInstallManifestV1, nxToolingInstallIdentityV1} from "../../🚀
 import {verifyNxAdmissionDirectoriesV1,resolveNxInvocation} from "../../🚀️bootstrap/📜️script.ts";
 import { resolveNxBuildMode } from "../../🚀️bootstrap/🎚️mode/🟦️.ts";
 import {devToolingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
-import { sourceClosureDigest } from "../../../🔌️nx-plugin/📥️inputs/🧮️digest/📜️script.ts";
-import { cargoLockClosure, cargoLockIdentity } from "../../../🔌️nx-plugin/📥️inputs/🔒️lock/🟨️.mjs";
-import { selectedCargoLockDigest } from "../../../🔌️nx-plugin/📥️inputs/🔒️lock/📥️read/🟨️.mjs";
-import { sourceClosureTaskEnvironments, sourceClosureReceiptHolds } from "../../../🔌️nx-plugin/📥️inputs/🧮️digest/🟨️.mjs";
-import { sourceOutputOverlaps, internProjectInputGroups, compactSourceInputs, deduplicateProjectInputs } from "../../../🔌️nx-plugin/📥️inputs/🟨️.mjs";
-import { cacheInternals } from "../../../🟨️.mjs";
-import { targetBuildModes } from "../../../🔌️nx-plugin/🎚️mode/🟨️.mjs";
+import { sourceClosureDigest } from "../../../🏗️build/📥️inputs/🧮️digest/📜️script.ts";
+import {repositoryBuildGraphDataDirectoryV1} from "../../../🏗️build/📥️inputs/💾️storage/🟨️.mjs";
+import {buildGraphPathV1} from "../../../🏗️build/🕸️graph/🟦️.ts";
+import { cargoLockClosure, cargoLockIdentity } from "../../../🏗️build/📥️inputs/🔒️lock/🟨️.mjs";
+import { selectedCargoLockDigest } from "../../../🏗️build/📥️inputs/🔒️lock/📥️read/🟨️.mjs";
+import { sourceClosureTaskEnvironments, sourceClosureReceiptHolds } from "../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
+import { sourceOutputOverlaps, internProjectInputGroups, compactSourceInputs, deduplicateProjectInputs } from "../../../🏗️build/📥️inputs/🟨️.mjs";
+import { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
+import { targetBuildModes } from "../../../🏗️build/🎚️mode/🟨️.mjs";
 import { internals as testOwnerInternals } from "../../../../🧪️test/🟨️.mjs";
 import { compactTaskPlans } from "../../🕸️graph/📤️export/🟨️.mjs";
 import {nxCacheBudgetV1} from "../../🚀️bootstrap/💾️budget/🟦️.ts";
@@ -52,7 +54,7 @@ export async function testNxBuildModes(workspace: string, output?: string): Prom
   const cacheSource=readFileSync(createRequire(resolve(workspace,".nx/installation/package.json")).resolve("nx/src/tasks-runner/cache.js"),"utf8"),cacheParser=cacheSource.slice(cacheSource.indexOf("function parseMaxCacheSize("),cacheSource.indexOf("function formatCacheSize(")),cacheOracle=new Function(cacheParser+";return parseMaxCacheSize;")();
   for(const row of cacheBudgets){const input={availableBytes:row.availableBytes,...(row.override===undefined?{}:{override:row.override})};assert.ok(cacheBudgetValid(input));const selected=nxCacheBudgetV1(row.availableBytes,row.override);assert.equal(selected,row.expected);assert.equal(cacheOracle(selected),cacheOracle(row.expected));}
   assert.throws(()=>nxCacheBudgetV1(-1));assert.throws(()=>nxCacheBudgetV1(1,""));
-  const sourceSchema = JSON.parse(readFileSync(new URL("../../../🔌️nx-plugin/📥️inputs/🧮️digest/🔣️schema.json", import.meta.url), "utf8")), lockSchema = JSON.parse(readFileSync(new URL("../../../🔌️nx-plugin/📥️inputs/🔒️lock/🔣️schema.json", import.meta.url), "utf8"));
+  const sourceSchema = JSON.parse(readFileSync(new URL("../../../🏗️build/📥️inputs/🧮️digest/🔣️schema.json", import.meta.url), "utf8")), lockSchema = JSON.parse(readFileSync(new URL("../../../🏗️build/📥️inputs/🔒️lock/🔣️schema.json", import.meta.url), "utf8"));
   const sourceValid = ajv.compile(sourceSchema), lockValid = ajv.compile(lockSchema.$defs.CargoLockInventory);
   assert.ok(sourceValid({ version: 1, files: ["owner/source.ts"] }));
   assert.ok(lockValid({ version: 1, manifest: "owner/Cargo.toml" }));
@@ -66,7 +68,7 @@ export async function testNxBuildModes(workspace: string, output?: string): Prom
   assert.ok(!sourceInputs.some(input => typeof input === "string" && sourceInputCase.inputs.includes(input) && !input.startsWith("!")), "Excluded exact paths must leave the native plan together with compacted paths");
   assert.equal(sourceInputs.filter(input => typeof input === "string" && input.startsWith("!")).length, sourceInputCase.expectedNegations, "An exact digest must not retain negations after their entire positive source scope was consumed");
   const sourceInputEnv = sourceInputs.find(input => input.env?.startsWith("SEMIO_SOURCE_CLOSURE_"));
-  const sourceInputInventory = JSON.parse(readFileSync(resolve(workspace, ".🧬semio/🦑️repo/⚡️cache/nx-input-closures", sourceInputEnv.env.slice("SEMIO_SOURCE_CLOSURE_".length) + ".json"), "utf8"));
+  const sourceInputInventory = JSON.parse(readFileSync(join(repositoryBuildGraphDataDirectoryV1(workspace,"build-input-closures"), sourceInputEnv.env.slice("SEMIO_SOURCE_CLOSURE_".length) + ".json"), "utf8"));
   const sourceInputOracle = sourceInputCase.inputs.filter(input => !input.startsWith("!")).map(input => input.replace("{workspaceRoot}/", "")).filter(path => !sourceInputCase.inputs.filter(input => input.startsWith("!")).some(input => minimatch(path, input.slice(1).replace("{projectRoot}", sourceInputCase.root))));
   assert.deepEqual(sourceInputOracle, sourceInputCase.expected);
   assert.deepEqual(sourceInputInventory.files.filter(path => path.startsWith(sourceInputCase.root + "/")), sourceInputOracle);
@@ -171,11 +173,11 @@ export async function testNxBuildModes(workspace: string, output?: string): Prom
     }finally{rmSync(patchRoot,{recursive:true,force:true});}
     await testNxSourceCacheCustody(workspace, output);
     const manifestInputs = JSON.parse(readFileSync(new URL("../🧫️fixtures/nx-contract/🔣️.json", import.meta.url), "utf8")).manifestInputOwnership;
-    const admitted = JSON.parse(readFileSync(resolve(workspace, ".nx/workspace-data/project-graph.json"), "utf8"));
+    const portable=JSON.parse(readFileSync(buildGraphPathV1(workspace),"utf8")),projection=(await import("../../../🟨️.mjs")).projectBuildGraphForNxV1(portable),admitted={nodes:Object.fromEntries(Object.entries(projection.projects).map(([name,data])=>[name,{name,type:"lib",data}])),dependencies:Object.fromEntries(Object.keys(portable.projects).map(name=>[name,portable.dependencies.filter(edge=>edge.source===name)]))};
     const goOwnership=JSON.parse(readFileSync(new URL("../🧫️fixtures/nx-contract/🔣️.json",import.meta.url),"utf8")).goSourceOwnership,goOwner=admitted.nodes[goOwnership.project].data,goDependency=admitted.nodes[goOwnership.dependency].data;
     assert.ok(admitted.dependencies[goOwnership.project].some(edge=>edge.target===goOwnership.dependency),"Selected Go local replacement must have a genuine Nx source owner edge");
     const goOracle=Bun.spawnSync(["go","list","-m","-json",goOwnership.module],{cwd:resolve(workspace,goOwner.root)});assert.equal(goOracle.exitCode,0);assert.equal(JSON.parse(new TextDecoder().decode(goOracle.stdout)).Dir,resolve(workspace,goDependency.root));
-    const goInputs=nxHasher.expandNamedInput("default",goDependency.namedInputs),goInventory=new Set<string>();for(const input of goInputs)if(input.env?.startsWith("SEMIO_SOURCE_CLOSURE_")){const inventory=JSON.parse(readFileSync(resolve(workspace,".🧬semio/🦑️repo/⚡️cache/nx-input-closures",input.env.slice("SEMIO_SOURCE_CLOSURE_".length)+".json"),"utf8"));for(const file of inventory.files)goInventory.add(file);}
+    const goInputs=nxHasher.expandNamedInput("default",goDependency.namedInputs),goInventory=new Set<string>();for(const input of goInputs)if(input.env?.startsWith("SEMIO_SOURCE_CLOSURE_")){const inventory=JSON.parse(readFileSync(join(repositoryBuildGraphDataDirectoryV1(workspace,"build-input-closures"),input.env.slice("SEMIO_SOURCE_CLOSURE_".length)+".json"),"utf8"));for(const file of inventory.files)goInventory.add(file);}
     const goPatterns=goInputs.map(input=>typeof input==="string"?input:input.fileset).filter(input=>typeof input==="string").map(input=>input.replaceAll("{projectRoot}",goDependency.root).replaceAll("{workspaceRoot}/",""));
     for(const file of goOwnership.files){const path=goDependency.root+"/"+file,covered=goInventory.has(path)||goPatterns.some(pattern=>!pattern.startsWith("!")&&minimatch(path,pattern))&&!goPatterns.some(pattern=>pattern.startsWith("!")&&minimatch(path,pattern.slice(1)));assert.ok(covered,"Go dependency source inventory and native glob inputs must retain both platform implementations and module identity");}
     assert.ok(goOwner.targets.build.inputs.some(input=>typeof input==="string"&&input.startsWith("^")||input.projects!==undefined),"Go build must hash genuine dependency source inputs");
@@ -183,7 +185,7 @@ export async function testNxBuildModes(workspace: string, output?: string): Prom
     const nativeOwnership = JSON.parse(readFileSync(new URL("../🧫️fixtures/nx-contract/🔣️.json", import.meta.url), "utf8")).nativeSourceOwnership;
     const nativeInputs = nxHasher.expandNamedInput("nativeSources", admitted.nodes[nativeOwnership.project].data.namedInputs), nativeInventory = new Set<string>();
     for (const input of nativeInputs) if (input.env?.startsWith("SEMIO_SOURCE_CLOSURE_")) {
-      const inventory = JSON.parse(readFileSync(resolve(workspace, ".🧬semio/🦑️repo/⚡️cache/nx-input-closures", input.env.slice("SEMIO_SOURCE_CLOSURE_".length) + ".json"), "utf8"));
+      const inventory = JSON.parse(readFileSync(join(repositoryBuildGraphDataDirectoryV1(workspace,"build-input-closures"), input.env.slice("SEMIO_SOURCE_CLOSURE_".length) + ".json"), "utf8"));
       for (const file of inventory.files) nativeInventory.add(file);
     }
     for (const file of nativeOwnership.files) assert.ok(nativeInventory.has(file), "Native source inventories must retain each selected compiler entry and manifest");

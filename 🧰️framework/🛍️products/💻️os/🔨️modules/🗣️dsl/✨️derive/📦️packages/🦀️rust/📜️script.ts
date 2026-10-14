@@ -186,7 +186,7 @@ class CheckGeneratedScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-framework-os-kernel-dsl-derive"], this.repoRoot, this.invocation, rest);
   }
 }
 

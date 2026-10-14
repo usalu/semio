@@ -10,9 +10,9 @@ use super::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge
 use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
-use crate::mutations::placement::{placement_issue, width_of};
+use crate::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
-use crate::{Axis, ModelInference, ModelMutation, ModelSnapshot, Vertex};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Vertex}, inferences::ModelInference, mutations::ModelMutation};
 use std::collections::BTreeMap;
 
 /// 📏️ The flattening tolerance of a dragged arc, in metres.
@@ -82,9 +82,9 @@ fn dragged_route(snapshot: &ModelSnapshot, id: &str, index: usize, to: P) -> Opt
     let element = snapshot.mep_elements.get(id)?;
     let vertex = element.path.get(index)?;
     let mut path = element.path.clone();
-    path[index] = crate::Point3 { x: to[0], y: to[1], z: vertex.z };
-    let apart = |a: &crate::Point3, b: &crate::Point3| (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z) > 1e-6;
-    (path != element.path && path.windows(2).all(|pair| apart(&pair[0], &pair[1]))).then(|| ModelMutation::SetMepElement(crate::mutations::set_mep_element::SetMepElement { id: id.into(), storey: None, system: None, shape: None, path: Some(path), name: None }))
+    path[index] = crate::standards::v1::subsets::any::schema::snapshot::Point3 { x: to[0], y: to[1], z: vertex.z };
+    let apart = |a: &crate::standards::v1::subsets::any::schema::snapshot::Point3, b: &crate::standards::v1::subsets::any::schema::snapshot::Point3| (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z) > 1e-6;
+    (path != element.path && path.windows(2).all(|pair| apart(&pair[0], &pair[1]))).then(|| ModelMutation::SetMepElement(crate::standards::v1::subsets::any::schema::mutations::set_mep_element::SetMepElement { id: id.into(), storey: None, system: None, shape: None, path: Some(path), name: None }))
 }
 
 /// 🔧️ The marks of the live handles in a plan: a handle dot on both ends and on the midpoint of the one selected wall, on every corner of the one selected slab or roof and on every vertex of the one selected MEP element.
@@ -119,11 +119,11 @@ fn dragged_outline(snapshot: &ModelSnapshot, id: &str, roof: bool, index: usize,
     if roof {
         let footprint = &snapshot.roofs.get(id)?.footprint;
         let moved = moved_corner(footprint, index, to).filter(|moved| moved != footprint)?;
-        Some(ModelMutation::SetRoofFootprint(crate::mutations::set_roof_footprint::SetRoofFootprint { id: id.into(), footprint: moved }))
+        Some(ModelMutation::SetRoofFootprint(crate::standards::v1::subsets::any::schema::mutations::set_roof_footprint::SetRoofFootprint { id: id.into(), footprint: moved }))
     } else {
         let slab = snapshot.slabs.get(id)?;
         let moved = moved_corner(&slab.boundary, index, to).filter(|moved| moved != &slab.boundary)?;
-        Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: moved, holes: slab.holes.clone() }))
+        Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: moved, holes: slab.holes.clone() }))
     }
 }
 
@@ -230,7 +230,7 @@ impl Select {
         let host = nearest_host(ctx.snapshot, ctx.storey()?, at, reach)?;
         let width = width_of(ctx.snapshot, opening)?;
         let offset = fitted_offset(host.length, width, host.offset)?;
-        let mutation = ModelMutation::MoveOpening(crate::mutations::move_opening::MoveOpening { id: id.to_string(), offset, host: (host.host != opening.host).then(|| host.host.clone()) });
+        let mutation = ModelMutation::MoveOpening(crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.to_string(), offset, host: (host.host != opening.host).then(|| host.host.clone()) });
         let moved = host.host != from.0 || (offset - from.1).abs() > 1e-9;
         let fits = placement_issue(ctx.snapshot, Some(id), &host.host, host.length, offset, width).is_none();
         Some((host, offset, mutation, moved && fits))
@@ -251,7 +251,7 @@ impl Select {
                 let anchor = ctx.snapshot.walls.get(&wall).map(|row| axis_ends(&row.axis)).map(|(start, end)| if kind == HandleKind::Start { end } else { start });
                 let to = if kind == HandleKind::Curve { pointer.at } else { ctx.snapped(pointer, anchor, std::slice::from_ref(&wall), &[]).point };
                 match dragged_axis(ctx.snapshot, &wall, kind, to) {
-                    Some(axis) if ctx.snapshot.walls.get(&wall).is_some_and(|row| row.axis != axis) => Step::write(ctx, ModelMutation::SetWallAxis(crate::mutations::set_wall_axis::SetWallAxis { id: wall, axis })),
+                    Some(axis) if ctx.snapshot.walls.get(&wall).is_some_and(|row| row.axis != axis) => Step::write(ctx, ModelMutation::SetWallAxis(crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis { id: wall, axis })),
                     _ => Step::default(),
                 }
             }
@@ -273,7 +273,7 @@ impl Select {
                 if (height - row.height).abs() < 1e-9 {
                     return Step::default();
                 }
-                Step::write(ctx, ModelMutation::SetStoreyHeight(crate::mutations::set_storey_height::SetStoreyHeight { id: storey, height }))
+                Step::write(ctx, ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: storey, height }))
             }
         }
     }

@@ -39,7 +39,7 @@
     "scale-fixture",
     "semio"
   ],
-  "nxSerialTargets": [
+  "serialTargets": [
     "deps-cargo",
     "deps-wasm",
     "deps-trunk",
@@ -490,6 +490,20 @@
     },
     "tests": {
       "unusedAgeMs": 604800000
+    },
+    "strictStorage": {
+      "version": 1,
+      "directory": "rust/fixed",
+      "capacityBytes": 17179869184,
+      "filesystemBytes": 17178820608,
+      "maximumWorkspaceBytes": 4294967296,
+      "maximumArtifactBytes": 1073741824
+    },
+    "sourceBoundary": {
+      "version": 1,
+      "maxSourceBytes": 262144,
+      "maxSourceFiles": 32,
+      "maxActiveLines": 4000
     }
   },
   "manifestBasenames": [

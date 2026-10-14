@@ -1,8 +1,4 @@
 //! 📐️ Genuine CAD parent native baselines before semantic provider opt-in.
-#[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
-mod original_owners;
-#[path="../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
-pub(crate) mod backing_observer;
 fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
  assert_eq!(actual.schema,expected.schema);assert_eq!(actual.id,expected.id);
  assert_eq!(actual.shape_model,expected.shape_model);assert_eq!(actual.building_model,expected.building_model);assert_eq!(actual.energy_model,expected.energy_model);assert_eq!(actual.structure_classic_model,expected.structure_classic_model);
@@ -29,13 +25,13 @@ fn sqlite_snapshot_cad_parent_all_fields_raw_words_and_cumulative_exact_backing(
  for hex in neutral["binary64Words"].as_array().unwrap(){let mut expected=fixture();fill(&mut expected,f64::from_bits(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap()));let source=database(&expected);complete_literal_cad(&restore(&source),&expected);backing_observer::verify_snapshot_backing_by(&expected,&source,complete_literal_cad);}
 }
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::io::sqlite::snapshot::CadSnapshot;
-fn laws()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+use semio_s_artifact_cad_cad_io_sqlite::snapshot::CadSnapshot;
+fn laws()->serde_json::Value{serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).expect("../../📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json").leak()).unwrap()}
 fn fixture()->CadSnapshot{semio_framework_pack_json::from_json_str(&laws()["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn canonical_children(snapshot:&mut CadSnapshot){for child in[&mut snapshot.shape_model,&mut snapshot.building_model,&mut snapshot.energy_model,&mut snapshot.structure_classic_model].into_iter().flatten(){child.child_id=child.target.artifact_id.clone()}for child in &mut snapshot.drawings{child.child_id=child.target.artifact_id.clone()}for child in &mut snapshot.breps{child.child_id=child.target.artifact_id.clone()}}
 #[test]
 fn sqlite_snapshot_cad_parent_actual_native_factory_exposes_owned_relational_capability(){
- let codec=store::bare_artifact_codec::<CadSnapshot,crate::CadMutation>(crate::CAD_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),"CAD parent native factory lacks semantic SQLite capability");
+ let codec=store::bare_artifact_codec::<CadSnapshot,semio_s_artifact_cad_cad_mutations::CadMutation>(semio_s_artifact_cad_cad_model::snapshot::CAD_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),"CAD parent native factory lacks semantic SQLite capability");
 }
 #[test]
 fn sqlite_snapshot_cad_parent_independent_literal_child_aliases_survive_both_native_formats(){
@@ -67,7 +63,7 @@ fn sqlite_snapshot_cad_parent_complete_and_empty_owned_domains_retain_queryable_
 }
 #[test]
 fn sqlite_snapshot_cad_parent_every_numeric_word_survives_both_erased_directions(){
- let codec=store::bare_artifact_codec::<CadSnapshot,crate::CadMutation>(crate::CAD_DOCUMENT_SCHEMA);let owner=codec.snapshot_sqlite.unwrap();
+ let codec=store::bare_artifact_codec::<CadSnapshot,semio_s_artifact_cad_cad_mutations::CadMutation>(semio_s_artifact_cad_cad_model::snapshot::CAD_DOCUMENT_SCHEMA);let owner=codec.snapshot_sqlite.unwrap();
  for hex in laws()["binary64Words"].as_array().unwrap(){let bits=u64::from_str_radix(hex.as_str().unwrap(),16).unwrap();let mut expected=fixture();fill(&mut expected,f64::from_bits(bits));assert_eq!(words(&expected),vec![Some(bits);40]);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let d=original_owners::with_decoding(|native_owner|(owner.export)(&codec.schema,&dialect(),&payload(&expected,encoding),&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(words(&restore(&d)),vec![Some(bits);40]);let output=original_owners::with_encoding(|native_owner|(owner.import)(&codec.schema,&dialect(), &mut Some(d),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;let actual=original_owners::with_decoding(|native_owner|CadSnapshot::decode_sqlite_snapshot_native(&output,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();assert_eq!(words(&actual),vec![Some(bits);40]);assert_eq!(actual.nodes,expected.nodes);assert_eq!(actual.drawings,expected.drawings);assert_eq!(actual.breps,expected.breps);}}
 }
@@ -96,19 +92,19 @@ use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semi
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 📐️ The actual CAD editor and viewer app roster.
  enum SqliteApps:PluginApp{
-  Editor(VcsArtifactApp<EditorApp<crate::editor::cad::CadPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),
-  Viewer(VcsArtifactApp<ViewerApp<crate::viewer::cad::CadViewer>,semio_s_artifact_stdio_semio::SemioMembers>),
+  Editor(VcsArtifactApp<EditorApp<semio_s_artifact_cad_cad_editor::CadPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>),
+  Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_cad_cad_viewer::CadViewer>,semio_s_artifact_stdio_semio::SemioMembers>),
  }
 }
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_cad_parent_actual_native_declaration_routes_queryable_files(){
- semio_framework_plugin::Plugin::<SqliteApps>::builder("cad").label("CAD owned SQLite").version("0.0.1").package_id("semio:cad").artifact(crate::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(crate::CAD_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=fixture();
+ semio_framework_plugin::Plugin::<SqliteApps>::builder("cad").label("CAD owned SQLite").version("0.0.1").package_id("semio:cad").artifact(semio_s_artifact_cad_cad::declaration().unwrap()).try_build().unwrap();let codec=store::os_store::codec_registry::document_codec(semio_s_artifact_cad_cad_model::snapshot::CAD_DOCUMENT_SCHEMA).await.unwrap().unwrap();assert!(codec.snapshot_sqlite.is_some());let expected=fixture();
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=async{let original_file_dialect=&dialect();let original_file_input=&expected;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_decoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let actual=async{let original_file_dialect=&dialect();let original_file_input=&bytes;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(store::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |_|true;store::io::testing::with_snapshot_file_encoding(store::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|store::io::io_mechanism::io_import_sqlite_snapshot::<CadSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap().value;assert_eq!(actual,expected);}
 }
 
 #[test]
 fn sqlite_snapshot_cad_paged_text_census_uses_complete_utf8_bytes() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🧵️paged-text.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json")).expect("../../📸️snapshot/🧪️tests/🧫️fixtures/🧵️paged-text.json").leak()).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let text = case["segments"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<String>().repeat(case["repeat"].as_u64().unwrap() as usize);
         let paged = semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str(&text).unwrap();
@@ -116,11 +112,11 @@ fn sqlite_snapshot_cad_paged_text_census_uses_complete_utf8_bytes() {
         let bytes = corpus["rowIdentityBytes"].as_u64().unwrap() as usize + payload;
         assert_eq!(text.len(), payload, "{}", case["id"]);
         if case["repeat"].as_u64().unwrap() > 1 { assert!(paged.chunks().len() > 1); }
-        for cell in [super::Cell::Text(&text), super::Cell::PagedText(&paged)] {
+        for cell in [semio_s_artifact_cad_cad_io_sqlite::snapshot::Cell::Text(&text), semio_s_artifact_cad_cad_io_sqlite::snapshot::Cell::PagedText(&paged)] {
             for maximum in [bytes, bytes - 1] {
                 let mut callback = |_| true;
                 let mut control = SqliteSnapshotControl::new(&mut callback, SqliteDatabaseLimits { max_value_bytes: maximum, ..SqliteDatabaseLimits::default() });
-                let mut census = super::Census { control: &mut control, count: 0, bytes: 0, phase: SqliteSnapshotPhase::EncodeNative };
+                let mut census = semio_s_artifact_cad_cad_io_sqlite::snapshot::Census { control: &mut control, count: 0, bytes: 0, phase: SqliteSnapshotPhase::EncodeNative };
                 let result = census.row(&[cell], &[]);
                 assert_eq!(result.is_ok(), maximum == bytes, "{}", case["id"]);
                 assert_eq!(census.bytes, if maximum == bytes { bytes } else { 0 });

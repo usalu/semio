@@ -1,8 +1,7 @@
 //! ⚡️ Puzzle3d artifact — OpText/OpBinary codecs + grammar for `Puzzle3dMutation`.
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
-#[cfg(test)] use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-
+#[cfg(test)] 
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -37,7 +36,6 @@ impl protocol::OpText for Puzzle3dMutation {
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
@@ -83,31 +81,6 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_object::mutatio
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::mutation::{scale_selection, ScaleSelection};
 use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::mutation::{scale_target_volume, ScaleTargetVolume};
 
-impl pack::snapshot::ArtifactDsl for Puzzle3dPlaySnapshot {
-    const EXTENSION: &'static str = "puzzle3d-play";
-
-    fn envelope_id() -> &'static str { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::envelope_id() }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map(Self::from_typed) }
-    fn print_dsl(&self) -> String { <Puzzle3dSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(self.typed()) }
-}
 }
 #[cfg(test)] pub use mutations_codec::*;
 
-mod semantic_cache_codec {
-#[cfg(test)] use crate::editor::puzzle3d::snapshot::Puzzle3dPlaySnapshot;
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::*;
-#[cfg(test)] use crate::Puzzle3dSnapshot;
-#[cfg(test)] use serde::{Deserialize, Serialize};
-#[cfg(test)]
-impl Serialize for Puzzle3dPlaySnapshot {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.typed().serialize(serializer)
-    }
-}
-#[cfg(test)]
-impl<'de> Deserialize<'de> for Puzzle3dPlaySnapshot {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        crate::Puzzle3dSnapshot::deserialize(deserializer).map(Self::new)
-    }
-}
-}

@@ -18,16 +18,6 @@ name = "db"
 path = "🦀️.rs"
 
 [features]
-default = ["fs", "deflate"]
-fs = []
-deflate = []
-cluster = []
-otel = []
-# 🔌️ Each backend feature pulls in its own driver dep — mirrors `🌎️hub/📦️packages/🦀️rust/Cargo.toml`'s
-# same-named features one level up, which forward into these.
-sqlite = ["dep:rusqlite"]
-postgres = ["dep:sqlx", "dep:tokio"]
-neo4j = ["dep:neo4rs", "dep:tokio"]
 # 🗝️ The claimed-shared-server test support (`db_storage::claimed_backend`) for OTHER crates' live laws (the hub's
 # directory lanes): never in a runtime build, only in their `[dev-dependencies]`.
 claimed-backend-laws = []
@@ -54,7 +44,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rusqlite = { version = "0.38.0", features = ["blob", "bundled"], optional = true }
+rusqlite = { version = "0.38.0", features = ["blob", "bundled"] }
 # 🔌️ Same `sqlx-core`/`sqlx-postgres` major version `🌎️hub/📦️packages/🦀️rust/Cargo.toml` pins for its
 # own directory backend, so the workspace resolves one `sqlx` line, not two. `runtime-tokio`
 # selects sqlx's internal executor binding at ITS compile time — it does not require this crate to
@@ -62,13 +52,13 @@ rusqlite = { version = "0.38.0", features = ["blob", "bundled"], optional = true
 # thread-local context at poll time, and `db_storage`'s async-native drivers are dispatched from
 # `Lane::Io` of the tokio-free `WorkerPool`, so the futures are polled on the bounded runtime
 # `db_storage_driver_runtime` owns and never on a pool worker (measured abort: ticket 26/09/18 D4).
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres"], optional = true }
-neo4rs = { version = "0.8", optional = true }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres"] }
+neo4rs = { version = "0.8" }
 # 🧵️ ONLY for `db_storage_driver_runtime` — the bounded, never-shut-down runtime the `sqlx`/`neo4rs`
 # drivers above are polled on, behind `db_storage::DbIoAsyncDriverRuntime`. Enabled exactly by the
 # `postgres`/`neo4j` features, i.e. only when a driver that requires one is actually linked. `rt`
 # + `rt-multi-thread` build it, `net`/`time` give the drivers their reactor and timers.
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"], optional = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"] }
 
 [dev-dependencies]
 semio-framework-schema-composition = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

@@ -36,17 +36,17 @@ use crate::offset::exact_pcurve;
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_queries::mass_properties::edge_length;
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
-use semio_framework_3d_brep_representation::curve::curve_ops::{interpolate_curve, ParamMethod};
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_curve::bspline::KnotVector;
+use semio_framework_3d_brep_curve::curve_ops::{interpolate_curve, ParamMethod};
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
-use semio_framework_3d_brep_representation::surface::{IsoDirection, Surface};
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_surface::{IsoDirection, Surface};
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 /// 🎨️ Positional agreement two exactly-derived quantities must reach (a trim endpoint against the
 /// curve it is meant to lie on, a closed-form p-curve against its own 3D curve). Three orders of

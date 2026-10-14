@@ -1,13 +1,24 @@
 //! 🗃️ DWG table styles expose four typed cell roles and six optional border edges.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::number::Projection;
-use super::color;
-use super::drawing::optional_words;
-use super::reader::{optional_unsigned,ordinal,signed_integer,unsigned,Reader};
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorders;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellContentFormat;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellMargins;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgTableStyle;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::color;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
-pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgTableStyle)->Result<(),ValueError>{
+pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgTableStyle)->Result<(),ValueError>{
  let template=optional_words(v.template_style_handle);p.insert_key("dwg_table_style",id,&[T(&v.description),I(i64::from(v.bit_flags)),template[0],template[1]])?;
  for(index,(role,v))in [("table",&v.table),("title",&v.title),("header",&v.header),("data",&v.data)].into_iter().enumerate(){
  let style=p.insert("dwg_cell_style",&[I(id),I(ordinal(index)?),T(role),I(i64::from(v.property_override_flags)),I(i64::from(v.merge_flags)),I(i64::from(v.content_layout))])?;
@@ -28,7 +39,7 @@ fn reconstruct_cell(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>,role:&str
  }
  Ok(DwgCellStyle{property_override_flags:unsigned(row,4)?,merge_flags:unsigned(row,5)?,background_color:color::reconstruct(r,"dwg_cell_background_color",id)?,content_layout:unsigned(row,6)?,content_format:DwgCellContentFormat{property_override_flags:unsigned(c,1)?,property_flags:unsigned(c,2)?,value_data_type:unsigned(c,3)?,value_unit_type:unsigned(c,4)?,value_format_string:c.text(5)?.into(),rotation:c.real(6)?,block_scale:c.real(7)?,alignment:unsigned(c,8)?,content_color:color::reconstruct(r,"dwg_cell_content_color",id)?,text_style_handle:optional_unsigned(c,9,10)?,text_height:c.real(11)?},margins:DwgCellMargins{vertical:m.real(1)?,horizontal:m.real(2)?,bottom:m.real(3)?,right:m.real(4)?,horizontal_spacing:m.real(5)?,vertical_spacing:m.real(6)?},borders})
 }
-pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableStyle,ValueError>{
+pub fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgTableStyle,ValueError>{
  let row=r.component("dwg_table_style",id)?;let cells=r.list("dwg_cell_style",1,id,2)?;if cells.len()!=4{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG table style requires four cell roles"));}
  Ok(DwgTableStyle{description:row.text(1)?.into(),bit_flags:unsigned(row,2)?,template_style_handle:optional_unsigned(row,3,4)?,table:reconstruct_cell(r,cells[0],"table")?,title:reconstruct_cell(r,cells[1],"title")?,header:reconstruct_cell(r,cells[2],"header")?,data:reconstruct_cell(r,cells[3],"data")?})
 }

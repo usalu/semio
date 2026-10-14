@@ -10,6 +10,11 @@ description = "Strict RFC 4648 standard-alphabet, padded base64 codec with no ru
 role = "framework"
 id = "io-base64"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 32768
+maxSourceFiles = 4
+maxActiveLines = 1024
+
 [lints]
 workspace = true
 

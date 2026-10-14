@@ -493,7 +493,21 @@ diff --git a/dist/src/daemon/server/project-graph-incremental-recomputation.js b
 diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/task-orchestrator.js
 --- a/dist/src/tasks-runner/task-orchestrator.js
 +++ b/dist/src/tasks-runner/task-orchestrator.js
-@@ -1061,7 +1061,8 @@
+@@ -324,1 +324,6 @@
+     async applyCachedResults(tasks) {
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return this.applyCachedResultsWithCustodyV1(tasks);
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [], 'shared', () => this.applyCachedResultsWithCustodyV1(tasks));
++    }
++    async applyCachedResultsWithCustodyV1(tasks) {
+@@ -810,1 +815,6 @@
+     async resolveCachedTasks(doNotSkipCache, tasks, groupId) {
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return this.resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId);
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [], 'shared', () => this.resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId));
++    }
++    async resolveCachedTasksWithCustodyV1(doNotSkipCache, tasks, groupId) {
+@@ -1061,7 +1071,8 @@
          }
      }
      async startContinuousTask(task, groupId) {
@@ -503,7 +517,7 @@ diff --git a/dist/src/tasks-runner/task-orchestrator.js b/dist/src/tasks-runner/
              this.runningTasksService.getRunningTasks([task.id]).length) {
              await this.preRunSteps([task], { groupId });
              if (this.tuiEnabled) {
-@@ -1097,15 +1098,15 @@
+@@ -1097,15 +1108,15 @@
              : (0, task_env_1.getEnvVariablesForTask)(task, taskSpecificEnv, undefined, this.options.skipNxCache, this.options.captureStderr, temporaryOutputPath, streamOutput);
          this.detectTaskInvocationLoop(task);
          const childProcess = await this.runTask(task, streamOutput, env, temporaryOutputPath, pipeOutput);
@@ -1035,7 +1049,7 @@ diff --git a/dist/src/hasher/task-hasher.js b/dist/src/hasher/task-hasher.js
 diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 --- a/dist/src/tasks-runner/cache.js
 +++ b/dist/src/tasks-runner/cache.js
-@@ -152,6 +152,9 @@
+@@ -152,6 +152,10 @@
          return this.cache.applyRemoteCacheResults(hash, res, outputs);
      }
      async put(task, terminalOutput, outputs, code) {
@@ -1043,9 +1057,20 @@ diff --git a/dist/src/tasks-runner/cache.js b/dist/src/tasks-runner/cache.js
 +        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1(); if (!frozen || typeof frozen.authorizers.sourceClosureReceiptHolds !== 'function') throw Error('Immutable sourceClosureReceiptHolds authority required'); const { sourceClosureReceiptHolds } = frozen.authorizers;
 +        if (!sourceClosureReceiptHolds(workspace_root_1.workspaceRoot, task.hashDetails?.semioSourceInputs)) { console.log(`[nx] Source changed during ${task.id}; cache promotion withheld`); return; }
          return tryAndRetry(async () => {
-             const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
++            const publish = () => this.cache.put(task.hash, terminalOutput, outputs, code);
++            const expandedOutputs = process.env.SEMIO_NX_FIXED_STORAGE === undefined ? publish() : await frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'exclusive', async () => publish());
+-            const expandedOutputs = this.cache.put(task.hash, terminalOutput, outputs, code);
              // Notify TaskIOService of actual output files
-@@ -369,6 +372,9 @@
+@@ -164,2 +168,6 @@
+-    copyFilesFromCache(_, cachedResult, outputs) {
+-        return tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
++    async copyFilesFromCache(_, cachedResult, outputs) {
++        const copy = () => tryAndRetry(async () => this.cache.copyFilesFromCache(cachedResult, outputs));
++        if (process.env.SEMIO_NX_FIXED_STORAGE === undefined) return copy();
++        const frozen = await require('../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!frozen || typeof frozen.authorizers.withOriginalNxFixedCacheV1 !== 'function') throw Error('Immutable fixed cache custody required');
++        return frozen.authorizers.withOriginalNxFixedCacheV1(workspace_root_1.workspaceRoot, frozen.toolingIdentity, process.env, [cache_directory_1.cacheDir, cache_directory_1.workspaceDataDirectory, cachedResult.outputsPath, ...outputs.map(output => (0, path_1.resolve)(workspace_root_1.workspaceRoot, output))], 'shared', copy);
+@@ -369,6 +377,9 @@
          return results;
      }
      async put(task, terminalOutput, outputs, code) {
@@ -1436,3 +1461,24 @@ diff --git a/dist/bin/run-executor.js b/dist/bin/run-executor.js
      }
      catch (e) {
          console.error(e);
+diff --git a/dist/src/project-graph/plugins/get-plugins.js b/dist/src/project-graph/plugins/get-plugins.js
+--- a/dist/src/project-graph/plugins/get-plugins.js
++++ b/dist/src/project-graph/plugins/get-plugins.js
+@@ -392,4 +392,5 @@
+ function getDefaultPlugins(root) {
++    if (process.env.SEMIO_BUILD_GRAPH_PATH) return [];
+     return [
+         (0, node_path_1.join)(__dirname, '../../plugins/js'),
+         ...((0, angular_json_1.shouldMergeAngularProjects)(root, false)
+diff --git a/dist/src/project-graph/plugins/resolve-plugin.js b/dist/src/project-graph/plugins/resolve-plugin.js
+--- a/dist/src/project-graph/plugins/resolve-plugin.js
++++ b/dist/src/project-graph/plugins/resolve-plugin.js
+@@ -25,7 +25,7 @@
+     // never workspace-local. Skip the project load entirely for them to avoid
+     // recursing through `retrieveProjectConfigurationsWithoutPluginInference`,
+     // which itself triggers default-plugin loading.
+-    if (!path.isAbsolute(moduleName)) {
++    if (!path.isAbsolute(moduleName) && !/^\.\.?[\\/]/.test(moduleName)) {
+         let resolvedFromNode;
+         try {
+             resolvedFromNode = require.resolve(moduleName, { paths });

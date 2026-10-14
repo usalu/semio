@@ -2,9 +2,9 @@
 //! placeholder/imported) mesh. Boxed: `RemodelingMesh` is far larger than any sibling payload, and
 //! `clippy::large_enum_variant` flags the resulting size disparity across `RemodelingMutation` otherwise.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{RemodelingMesh, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
@@ -20,17 +20,20 @@ pub struct ReplaceMeshResult {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_mesh_result(mesh: Box<RemodelingMesh>) -> RemodelingMutation {
-    RemodelingMutation::ReplaceMeshResult(ReplaceMeshResult { mesh })
+pub fn replace_mesh_result<Op: From<ReplaceMeshResult>>(mesh: Box<RemodelingMesh>) -> Op {
+    Op::from(ReplaceMeshResult { mesh })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceMeshResult {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ReplaceMeshResult
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ReplaceMeshResult>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "mesh-result", kind: "replace-mesh-result", record: "ReplacedMeshResult" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

@@ -85,7 +85,9 @@ pub struct PathRef {
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 pub use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::STDIO_SEMIOTEXT_DOCUMENT_SCHEMA;
 
 pub type ProcedureFlowChild = store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>;
 pub type ProcedureTextChild = store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>;

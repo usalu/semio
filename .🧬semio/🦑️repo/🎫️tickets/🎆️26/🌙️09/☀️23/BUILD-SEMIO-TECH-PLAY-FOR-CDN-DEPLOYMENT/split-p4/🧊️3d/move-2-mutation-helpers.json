@@ -1,0 +1,16 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "from_module": "standards::v1::subsets::any::schema::mutations",
+   "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to_module": "standards::v1::subsets::any::schema",
+   "select": ["quat_mul", "quat_from_axis_angle", "puzzle3d_scaled", "PUZZLE3D_IDENTITY_QUATERNION", "PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE", "Puzzle3dPose", "puzzle3d_vortex_full_id", "vec3_sub", "vec3_add", "vec3_scale", "vec3_cross", "vec3_dot", "vec3_len", "vec3_normalize", "deg_to_rad", "rad_to_deg", "quat_conjugate", "quat_normalize", "quat_rotate_vector", "puzzle3d_quaternion_from_unit_vectors", "puzzle3d_attraction_align_quat", "puzzle3d_attraction_child_pose", "derive_attraction_params"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "from_module": "standards::v1::subsets::any::schema::mutations",
+   "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🦀️.rs",
+   "to_module": "standards::v1::subsets::any::schema::mutations::selection",
+   "doc": "//! ✋️ Puzzle3d selection mutations — the three parametric selection transforms (`drag-`, `rotate-`, `scale-selection`)\n//! and the selection, outcome and attraction-follow helpers they share.",
+   "mount_in": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "mount": "#[path = \"✋️selection/🦀️.rs\"]\npub mod selection;",
+   "select": ["Puzzle3dSelection", "puzzle3d_selection", "puzzle3d_selection_outcome", "puzzle3d_targets_invariant", "puzzle3d_selection_number", "puzzle3d_selection_triple", "puzzle3d_selection_items", "Puzzle3dSelectionFollow", "puzzle3d_selection_follow"]}
+ ]}

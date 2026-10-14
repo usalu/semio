@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::SetElementStorey;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetElementStorey, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match elements::storey_of(base, &payload.id) {

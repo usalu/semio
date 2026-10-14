@@ -1,7 +1,7 @@
 use super::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{self, close};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use serde_json::{json, Value};
@@ -89,7 +89,7 @@ async fn a_sweep_on_a_sloped_base_follows_it_with_the_volume_of_the_straight_one
     let slab = json!({ "sl": { "storey": "st", "slab_type": "slt", "boundary": [{ "point": { "x": 0.0, "y": -5.0 }, "bulge": 0.0 }, { "point": { "x": 10.0, "y": -5.0 }, "bulge": 0.0 }, { "point": { "x": 10.0, "y": 5.0 }, "bulge": 0.0 }, { "point": { "x": 0.0, "y": 5.0 }, "bulge": 0.0 }], "holes": [], "offset": 0.0, "slope": { "direction": 0.0, "angle": 0.1 }, "phase": "New", "name": "" } });
     let mut snapshot = model(json!({ "ws": baseboard(json!({})) }), json!({ "slabs": slab }));
     snapshot.walls.get_mut("w").expect("the wall").base_slab = Some("sl".to_string());
-    snapshot.walls.get_mut("w").expect("the wall").axis = crate::Axis::Line { start: crate::Point2 { x: 1.0, y: 0.0 }, end: crate::Point2 { x: 9.0, y: 0.0 } };
+    snapshot.walls.get_mut("w").expect("the wall").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 9.0, y: 0.0 } };
     let solid = &compute_element_solids(&snapshot)["ws"];
     let fall = 0.1f64.tan();
     assert!(close(solid.bounds.min.z, -9.0 * fall) && close(solid.bounds.max.z, -fall + 0.1), "{:?}", solid.bounds);

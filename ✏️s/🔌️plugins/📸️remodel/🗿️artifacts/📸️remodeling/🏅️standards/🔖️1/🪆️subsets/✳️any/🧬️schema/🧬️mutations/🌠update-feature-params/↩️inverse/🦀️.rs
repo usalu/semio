@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `UpdateFeatureParams` — the OLD `FeatureParams` looked up from BASE.
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::update_feature_params::UpdateFeatureParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::UpdateFeatureParams, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<UpdateFeatureParams>>(_payload: &super::UpdateFeatureParams, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![super::update_feature_params(base.params.feature.clone())]
 

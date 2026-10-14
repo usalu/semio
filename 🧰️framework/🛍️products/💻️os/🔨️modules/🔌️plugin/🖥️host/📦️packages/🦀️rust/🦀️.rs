@@ -14,8 +14,8 @@ mod component;
 pub use component::*;
 /// 🌿️ Exposes the canonical first-party authority named by host operation signatures.
 pub use semio_framework_os_kernel::os_vcs;
-use semio_framework_plugin_interpreter::operation_authority;
-pub use semio_framework_plugin_interpreter::original_actor_context;
+use semio_framework_plugin_guest_contract::operation_authority;
+pub use semio_framework_plugin_guest_contract::original_actor_context;
 
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️.rs` (other packets are live

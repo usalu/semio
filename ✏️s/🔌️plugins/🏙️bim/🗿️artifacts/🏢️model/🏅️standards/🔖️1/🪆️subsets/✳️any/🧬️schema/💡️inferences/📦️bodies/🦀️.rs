@@ -11,7 +11,7 @@ use super::super::element_solids::plan_kit::{bulged, depth_of, extents_of, place
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{target_of, vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
-use crate::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
 use semio_framework_2d::regions::Region;
 use semio_framework_geometry::loops::{self, Vertex as Corner};
 use semio_framework_geometry::Point;

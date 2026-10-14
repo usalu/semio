@@ -200,7 +200,7 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
-    let base = crate::standards::v2x3::engine::demo_ifc2x3_snapshot();
+    let base = crate::standards::v2x3::subsets::base::schema::demo_ifc2x3_snapshot();
     let mut header = base.document.header.clone();
     header.file_name = vec![Part21Value::Str("changed.ifc".into())];
     let storey = Part21Instance {

@@ -10,7 +10,7 @@ use super::snap::SnapHit;
 use crate::editor::bim::entities::notations::standard_style;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reference};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{dimensions, Inputs};
-use crate::{AnchorEnd, AnnotationAnchor, Dimension, Leader, ModelMutation, ModelSnapshot, Point2, Tag, TagCategory, TextNote, WallSide};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, Dimension, Leader, ModelSnapshot, Point2, Tag, TagCategory, TextNote, WallSide}, mutations::ModelMutation};
 use std::f64::consts::{FRAC_PI_2, PI};
 
 /// 📏️ The grid every offset snaps to, in metres.
@@ -61,7 +61,7 @@ pub fn pick_anchor(ctx: &ToolContext<'_>, pointer: &Pointer) -> Picked {
         let snapshot = ctx.snapshot;
         for (id, wall) in snapshot.walls.iter().filter(|(_, wall)| wall.storey == storey) {
             let (start, end) = match &wall.axis {
-                crate::Axis::Line { start, end } | crate::Axis::Arc { start, end, .. } => (p2(*start), p2(*end)),
+                crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. } => (p2(*start), p2(*end)),
             };
             offer(0, dist(at, start), AnnotationAnchor::WallEnd { wall: id.clone(), end: AnchorEnd::Start }, start);
             offer(0, dist(at, end), AnnotationAnchor::WallEnd { wall: id.clone(), end: AnchorEnd::End }, end);
@@ -79,7 +79,7 @@ pub fn pick_anchor(ctx: &ToolContext<'_>, pointer: &Pointer) -> Picked {
         for (id, wall) in snapshot.walls.iter().filter(|(_, wall)| wall.storey == storey) {
             let Some(layout) = ctx.inference.wall_layout.get(id).filter(|layout| !layout.footprint.is_empty()) else { continue };
             for (side, face) in [(WallSide::Left, layout.left_face), (WallSide::Right, layout.right_face)] {
-                if face.bulge == 0.0 && !matches!(wall.axis, crate::Axis::Arc { .. }) {
+                if face.bulge == 0.0 && !matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { .. }) {
                     offer(4, segment_distance(p2(face.start), p2(face.end), at), AnnotationAnchor::WallFace { wall: id.clone(), side }, at);
                 }
             }
@@ -140,7 +140,7 @@ pub fn offset_for(ctx: &ToolContext<'_>, anchors: &[AnnotationAnchor], turn: f64
 }
 
 /// 🎨️ The style an annotation uses: the selected library entry or the first of the model, else the standard style, created in the same row.
-fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, crate::AnnotationStyle)>, String) {
+fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, crate::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, String) {
     match ctx.library_type(&ctx.snapshot.annotation_styles) {
         Some(id) => (None, id),
         None => {
@@ -152,12 +152,12 @@ fn style_for(ctx: &mut ToolContext<'_>) -> (Option<(String, crate::AnnotationSty
 }
 
 /// 🛡️ The step writing `created` after the style it may need: the model must accept the style, and the annotation on top of it.
-fn write(ctx: &ToolContext<'_>, style: Option<(String, crate::AnnotationStyle)>, created: ModelMutation) -> Step {
+fn write(ctx: &ToolContext<'_>, style: Option<(String, crate::standards::v1::subsets::any::schema::snapshot::AnnotationStyle)>, created: ModelMutation) -> Step {
     use protocol::Mutation;
     let mut base: ModelSnapshot = ctx.snapshot.clone();
     let mut mutations = Vec::new();
     if let Some((id, annotation_style)) = style {
-        let make = ModelMutation::CreateAnnotationStyle(crate::mutations::create_annotation_style::CreateAnnotationStyle { id: id.clone(), annotation_style: annotation_style.clone() });
+        let make = ModelMutation::CreateAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle { id: id.clone(), annotation_style: annotation_style.clone() });
         if !ctx.accepts(&make) {
             return Step::refuse(REJECTED);
         }
@@ -200,7 +200,7 @@ impl Annotate {
         let name = ctx.name_of(|labels| labels.kind_dimension, count);
         let id = ctx.mint("dimension");
         let dimension = Dimension { storey, anchors: self.picks.clone(), angle: turn, offset, style: style_id, lock: None, name };
-        let step = write(ctx, style, ModelMutation::CreateDimension(crate::mutations::create_dimension::CreateDimension { id, dimension }));
+        let step = write(ctx, style, ModelMutation::CreateDimension(crate::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension { id, dimension }));
         if step.refused.is_none() {
             self.reset();
         }
@@ -223,7 +223,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("tag");
         let tag = Tag { storey, element, category, offset, style: style_id };
-        write(ctx, style, ModelMutation::CreateTag(crate::mutations::create_tag::CreateTag { id, tag }))
+        write(ctx, style, ModelMutation::CreateTag(crate::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag { id, tag }))
     }
 
     fn note(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -234,7 +234,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("text-note");
         let note = TextNote { storey, position: point2(at), text, rotation: 0.0, style: style_id };
-        write(ctx, style, ModelMutation::CreateTextNote(crate::mutations::create_text_note::CreateTextNote { id, text_note: note }))
+        write(ctx, style, ModelMutation::CreateTextNote(crate::standards::v1::subsets::any::schema::mutations::create_text_note::CreateTextNote { id, text_note: note }))
     }
 
     fn leader(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
@@ -255,7 +255,7 @@ impl Annotate {
         let (style, style_id) = style_for(ctx);
         let id = ctx.mint("leader");
         let leader = Leader { storey, anchor, offset, text, style: style_id };
-        let step = write(ctx, style, ModelMutation::CreateLeader(crate::mutations::create_leader::CreateLeader { id, leader }));
+        let step = write(ctx, style, ModelMutation::CreateLeader(crate::standards::v1::subsets::any::schema::mutations::create_leader::CreateLeader { id, leader }));
         if step.refused.is_none() {
             self.reset();
         }

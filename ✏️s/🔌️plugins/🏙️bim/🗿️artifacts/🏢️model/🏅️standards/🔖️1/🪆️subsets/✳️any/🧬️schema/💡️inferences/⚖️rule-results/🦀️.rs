@@ -19,7 +19,7 @@ use super::super::ramp_runs::RampRun;
 use super::super::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
 use super::super::stair_runs::StairRun;
 use super::super::zones::ZoneTotals;
-use crate::{ModelSnapshot, OpeningKind, Rule, RuleKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, Rule, RuleKind};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
@@ -92,7 +92,7 @@ pub fn members(snapshot: &ModelSnapshot, rule: &Rule) -> Vec<Member> {
         }
         RuleKind::MinDoorWidth => {
             rows.extend(snapshot.openings.iter().filter(|(_, row)| matches!(row.kind, OpeningKind::Door { .. })).filter_map(|(id, _)| {
-                let storey = crate::storey_of(snapshot, id)?;
+                let storey = crate::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, id)?;
                 scope.covers(snapshot, id, Some(storey)).then(|| Member { id: id.clone(), storey: Some(storey.clone()) })
             }));
         }
@@ -175,7 +175,7 @@ pub fn table_json(results: &BTreeMap<String, RuleResult>) -> String {
 
 /// 📏️ The measures the rules read, `{ stairs, frames, ramps, zones, rooms }`: the committed input of the rules oracle, written by the blessing test from the inferred runs, door frames, ramp runs, zone totals and rooms
 /// (the outlines of the rooms are what the oracle measures with shapely).
-pub fn measures_json(snapshot: &ModelSnapshot, inferred: &crate::ModelInference) -> String {
+pub fn measures_json(snapshot: &ModelSnapshot, inferred: &crate::standards::v1::subsets::any::schema::inferences::ModelInference) -> String {
     let by_id = |rows: Vec<(String, DslValue)>| DslValue::object(rows);
     let stairs = by_id(
         inferred
@@ -187,7 +187,7 @@ pub fn measures_json(snapshot: &ModelSnapshot, inferred: &crate::ModelInference)
     let frames = by_id(snapshot.openings.iter().filter(|(_, opening)| matches!(opening.kind, OpeningKind::Door { .. })).filter_map(|(id, _)| inferred.opening_frames.get(id).map(|frame| (id.clone(), number(frame.width)))).collect());
     let ramps = by_id(inferred.ramp_runs.iter().map(|(id, run)| (id.clone(), DslValue::object([("slope".to_string(), number(run.slope)), ("length".to_string(), number(run.length))]))).collect());
     let zones = by_id(inferred.zone_totals.iter().map(|(id, zone)| (id.clone(), DslValue::object([("net_area".to_string(), number(zone.net_area)), ("resolved".to_string(), DslValue::int(i64::from(zone.resolved)))]))).collect());
-    let loop_value = |vertices: &[crate::Vertex]| DslValue::Array(vertices.iter().map(|vertex| semio_framework_value::ToValue::to_value(vertex)).collect());
+    let loop_value = |vertices: &[crate::standards::v1::subsets::any::schema::snapshot::Vertex]| DslValue::Array(vertices.iter().map(|vertex| semio_framework_value::ToValue::to_value(vertex)).collect());
     let rooms = by_id(
         inferred
             .spaces

@@ -17,7 +17,7 @@ use super::super::super::wall_layout::attach::ElevationPoint;
 use super::super::super::wall_layout::{face_ends, fraction, WallLayout};
 use super::super::plan_kit::{point, seg};
 use super::super::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
-use crate::{ModelSnapshot, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace, TriMesh};
 use semio_framework_geometry::Point;

@@ -7,7 +7,8 @@
 //! own curve (not just a straight-line control polygon) and every face its own surface (not just
 //! `PLANE`), matching AP214's real vocabulary of surface/curve kinds.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 
 
 use framework_schema::ArtifactSchema;

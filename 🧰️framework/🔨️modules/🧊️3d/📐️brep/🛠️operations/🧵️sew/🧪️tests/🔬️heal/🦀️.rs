@@ -1,6 +1,6 @@
 use super::*;
 use crate::primitives::make_box;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 
 #[semio_framework_async_macros::async_test]
 async fn heal_solid_noop_on_valid_box() {

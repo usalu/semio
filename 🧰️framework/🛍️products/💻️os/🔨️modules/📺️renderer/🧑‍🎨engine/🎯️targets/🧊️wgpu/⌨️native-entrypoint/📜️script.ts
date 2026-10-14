@@ -10,7 +10,8 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, runTool } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts";
+import {runTool} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 import { nativeRendererBinary } from "../🏗️compiler/🦀️native/📜️script.ts";
@@ -84,7 +85,7 @@ class RunScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { variant, profile, axes } = selection(args, true), repo = this.repoRoot, runtime = nativeRuntimeDirectory(join(repo, ownerPath), variant, profile);
     const manifest = JSON.parse(readFileSync(join(runtime, "🔣️runtime.json"), "utf8"));
-    if (manifest.version !== 1 || manifest.variant !== variant || manifest.profile !== profile || !existsSync(join(runtime, ".nx-artifact.json"))) throw new Error("Missing or mismatched Nx native runtime artifact");
+    if (manifest.version !== 1 || manifest.variant !== variant || manifest.profile !== profile || !existsSync(join(runtime, ".semio-artifact.json"))) throw new Error("Missing or mismatched native runtime artifact");
     const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).playgrounds;
     const row = catalog.find((entry: { variant: string }) => entry.variant === variant);
     if (!row) throw new Error(`Unknown native playground: ${variant}`);

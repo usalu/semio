@@ -196,18 +196,7 @@ where
     }
 }
 
-/// 🎯️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
-/// [`protocol::apply_diff`] and retires the diff cold. Every store lane, replay, merge and backbone fold routes through
-/// here; the apply refusal stays structured for callers that must fail instead of record.
-pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (crate::os_spr::MutationApplyResult<P>, Vec<crate::os_spr::MutationMessage>)
-where
-    Mutation: self::Mutation<P>,
-{
-    let (diff, messages) = operation.diff(state).stamp_op_index(op_index).into_parts();
-    let applied = crate::os_spr::apply_diff(&diff, state);
-    <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
-    (applied, messages)
-}
+pub use protocol::apply_operation;
 
 /// 🛡️ Applies an already computed outcome through [`protocol::apply_diff`]: the next projection with the outcome intact, or —
 /// on an apply refusal — the unchanged `base`, an empty diff and one `Fatal` message. The builder-side twin of the fatal
@@ -287,16 +276,7 @@ where
     Ok((running, recorded))
 }
 
-/// 🧊️ Releases one alias of a scratch projection: the last owner retires it ([`retire_replayed_projection`]), any
-/// other only drops its count — the owner that outlives it retires it.
-pub(crate) fn retire_shared_projection<P, Mutation>(projection: Arc<P>)
-where
-    Mutation: self::Mutation<P>,
-{
-    if let Ok(projection) = Arc::try_unwrap(projection) {
-        retire_replayed_projection::<P, Mutation>(projection);
-    }
-}
+pub use semio_framework_os_store_projection::retire_shared_projection;
 
 /// 🔏️ Content digest of one effective supersession: which transition installed it and what it replaces the input with.
 pub(crate) fn supersession_digest(mutation_id: &MutationId, supersession: &protocol::EffectiveSupersession) -> [u8; 32] {
@@ -1209,3 +1189,11 @@ pub(crate) const PREFIX_SNAPSHOT_RING_FLOOR: usize = 8;
 /// snapshot and its id, `current`, the applied, redo and checkpoint owners, the supersessions, the revision bump and a
 /// full prefix-ring prune.
 pub(crate) const REPROJECTION_OWNER_SLOTS: usize = 10 + PREFIX_SNAPSHOT_RING_CAPACITY;
+
+#[path="⏳pending/🦀️.rs"]
+pub(crate) mod pending;
+pub(crate) use pending::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailStep};
+
+#[path="⏱️budget/🦀️.rs"]
+mod budget;
+pub use budget::ReplayTurnBudget;

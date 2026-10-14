@@ -1,7 +1,6 @@
 //! 🔧️ CAD artifact — OpText/OpBinary codecs + grammar for serializing `CadMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`; this facet only handcrafts the op wire forms.
 
-pub use crate::mutations::{CadMutation, CadNodePatch, CadReferencePatch};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

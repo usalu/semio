@@ -1,8 +1,28 @@
 //! 🧬️ Drawing artifact schema — every field of the artifact with its state class.
 
-use crate::{
-    default_drawing_trace_params, default_drawing_transform,  DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingMutation, DrawingPathBody, DrawingPolygon,
-    DrawingRect, DrawingShapeBody, DrawingSnapshot, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+use ::semio_framework_os_kernel as dsl;
+use crate::stroke::StrokeCap;
+use crate::stroke::StrokeJoin;
+use crate::fill_rule::FillRule;
+use crate::font_family::DrawingFontFamily;
+use semio_s_artifact_draw_drawing::schema;
+use semio_s_artifact_draw_drawing_geometry::filter_path_segments_by_contour_area;
+use semio_s_artifact_draw_drawing_geometry::flatten_segments_to_lines;
+use semio_s_artifact_draw_drawing_geometry::from_kernel_segments;
+use semio_s_artifact_draw_drawing_geometry::layer_to_path_segments;
+use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
+use semio_s_artifact_draw_drawing_geometry::scale_path_segments;
+use semio_s_artifact_draw_drawing_geometry::to_kernel_segments;
+use semio_s_artifact_draw_drawing_geometry::transform_path_segments;
+use crate::{default_drawing_trace_params, default_drawing_transform, DrawingAttributes, DrawingBooleanBody, DrawingEllipse, DrawingGroupBody, DrawingImageBody, DrawingLayerBase, DrawingLine, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingTextBody, DrawingTraceBody, DrawingTransform, FillStyle, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
+use crate::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 #[path="🪪️identity/🦀️.rs"]
@@ -126,13 +146,6 @@ pub fn drawing_artifact_schema_descriptor() -> semio_framework_schema_registry::
 }
 //#endregion 🔖️Descriptor
 //#region 🏗️Construction
-/// 🏗️ `DrawingSnapshot`/`DrawingMutation`'s `ArtifactBuilder` is the ordinary `Mutation`/`MutationDiff`
-/// algebra with no custom build logic beyond that — the old hand-rolled `DrawingBuilderConstruction`
-/// (`empty`/`from_snapshot`/`from_text`/`from_binary`/`mutate`/`absorb`/`build`) matched
-/// `SnapshotBuilder<S, M>`'s own documented "apply `outcome.diff()` once, fold a rejection into a
-/// Fatal message" idiom exactly, so this subset writes zero builder boilerplate (ticket
-/// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE task 3).
-pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DrawingSnapshot, DrawingMutation>;
 //#endregion 🏗️Construction
 
 // 🧬️ The old hand-rolled `derived_construction`/`derived_analysis` modules and the
@@ -186,7 +199,7 @@ pub struct DrawingSceneGroup {
 pub struct DrawingSceneText {
     pub content: String,
     pub size: f64,
-    pub font_family: crate::DrawingFontFamily,
+    pub font_family: crate::font_family::DrawingFontFamily,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
@@ -217,20 +230,14 @@ pub struct DrawingCanvasLayerRecord {
 //#region 🔖️Tree
 
 
-
-
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
 /// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
 /// surfaces, so `SEMIO_DRAW_EXAMPLE_TEXT` stays the single source of truth for the fixture.
 
 
-
-
-
 pub fn default_layer_base(identity: DrawingIdentity, name: &str) -> DrawingLayerBase {
     DrawingLayerBase { id: identity.into_key(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_drawing_transform(), attributes: DrawingAttributes::default() }
 }
-
 
 
 pub fn create_drawing_group_layer(identity: DrawingIdentity, name: &str) -> DrawingLayerNode {
@@ -315,7 +322,7 @@ pub fn create_drawing_text_layer(identity: DrawingIdentity, name: &str) -> Drawi
             opacity: 1.0,
             blend_mode: "normal".into(),
             transform: default_drawing_transform(),
-            attributes: DrawingAttributes { fill_rule: crate::FillRule::Evenodd, fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
+            attributes: DrawingAttributes { fill_rule: crate::fill_rule::FillRule::Evenodd, fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
         },
         x: 0.0,
         y: 0.0,
@@ -342,9 +349,6 @@ pub fn create_drawing_image_layer(identity: DrawingIdentity, name: &str, image_k
         height: 256.0,
     })
 }
-
-
-
 
 
 pub fn layer_id(layer: &DrawingLayerNode) -> &semio_framework_value::paged::PagedUtf8<{usize::MAX}> {
@@ -439,7 +443,7 @@ pub fn flatten_drawing_layers(layers: &semio_framework_value::list::PagedList<Dr
     out
 }
 
-pub use geometry::affine::{drawing_transform_to_matrix,drawing_matrix_to_transform};
+pub use crate::affine::{drawing_transform_to_matrix, drawing_matrix_to_transform};
 
 pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
     let segment = match layer {
@@ -469,194 +473,6 @@ pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
     Some(id.to_string())
 }
 
-pub fn layer_to_path_segments(layer: &DrawingLayerNode) -> Vec<PathSegment> {
-    match layer {
-        DrawingLayerNode::Path(path) => path.segments.iter().cloned().collect(),
-        DrawingLayerNode::Shape(shape) => shape_to_path_segments(shape),
-        _ => Vec::new(),
-    }
-}
-
-fn ellipse_path_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> [PathSegment;6] {
-    let arc=|to|PathSegment::Arc {rx:rx.abs(),ry:ry.abs(),rotation:0.0,large_arc:false,sweep:(rx>=0.0)==(ry>=0.0),to};
-    [PathSegment::Move {to:[cx,cy-ry]},arc([cx+rx,cy]),arc([cx,cy+ry]),arc([cx-rx,cy]),arc([cx,cy-ry]),PathSegment::Close]
-}
-
-/// 🔷️ Reads one primitive contour segment without cloning a polygon.
-pub fn shape_path_segment(shape:&DrawingShapeBody,index:usize)->Option<PathSegment> {
-    match () {
-        () if shape.shape_kind.eq_str("rect")=>shape.rect.as_ref().and_then(|r|[
-            PathSegment::Move {to:[r.x,r.y]},PathSegment::Line {to:[r.x+r.width,r.y]},
-            PathSegment::Line {to:[r.x+r.width,r.y+r.height]},PathSegment::Line {to:[r.x,r.y+r.height]},PathSegment::Close,
-        ].get(index).cloned()),
-        () if shape.shape_kind.eq_str("line")=>shape.line.as_ref().and_then(|l|[PathSegment::Move {to:[l.x1,l.y1]},PathSegment::Line {to:[l.x2,l.y2]}].get(index).cloned()),
-        () if shape.shape_kind.eq_str("polygon")=>shape.polygon.as_ref().and_then(|p|p.points.get(index).map(|to|if index==0 {PathSegment::Move {to:*to}}else{PathSegment::Line {to:*to}}).or_else(||(!p.points.is_empty()&&index==p.points.len()).then_some(PathSegment::Close))),
-        () if shape.shape_kind.eq_str("ellipse")=>shape.ellipse.as_ref().and_then(|e|ellipse_path_segments(e.cx,e.cy,e.rx,e.ry).get(index).cloned()),
-        () if shape.shape_kind.eq_str("circle")=>shape.circle.as_ref().and_then(|c|ellipse_path_segments(c.cx,c.cy,c.r,c.r).get(index).cloned()),
-        _=>None,
-    }
-}
-
-fn shape_to_path_segments(shape:&DrawingShapeBody)->Vec<PathSegment> {
-    let mut index=0;
-    std::iter::from_fn(||{let segment=shape_path_segment(shape,index);index+=1;segment}).collect()
-}
-
-pub fn drawing_layer_world_bounds(layer: &DrawingLayerNode) -> Option<(f64, f64, f64, f64)> {
-    drawing_layer_bounds_with_parent(layer,[1.0,0.0,0.0,1.0,0.0,0.0])
-}
-
-/// 🌍️ Measures complete geometry in the coordinate system of its ancestor matrix.
-pub fn drawing_layer_bounds_with_parent(layer: &DrawingLayerNode, parent: [f64;6]) -> Option<(f64,f64,f64,f64)> {
-    let matrix = geometry::multiply(parent, drawing_transform_to_matrix(&layer_base(layer).transform));
-    if let DrawingLayerNode::Group(group) = layer {
-        return group.children.iter().filter_map(|child| drawing_layer_bounds_with_parent(child, matrix)).reduce(|a, b| {
-            let x = a.0.min(b.0);
-            let y = a.1.min(b.1);
-            (x, y, (a.0+a.2).max(b.0+b.2)-x, (a.1+a.3).max(b.1+b.3)-y)
-        });
-    }
-    let rectangle = match layer {
-        DrawingLayerNode::Text(text) => {
-            let [width, height] = semio_framework_2d::text::drawing_text_fallback_extent(&text.content, text.size);
-            Some((text.x, text.y, width.max(8.0), height.max(8.0)))
-        },
-        DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
-        _ => None,
-    };
-    let segments = if let Some((x, y, w, h)) = rectangle {
-        vec![PathSegment::Move { to: [x,y] }, PathSegment::Line { to: [x+w,y] }, PathSegment::Line { to: [x+w,y+h] }, PathSegment::Line { to: [x,y+h] }, PathSegment::Close]
-    } else { layer_to_path_segments(layer) };
-    path_segments_bounds_with_matrix(&segments, matrix)
-}
-
-fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
-    match segment {
-        PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => Some(*to),
-        PathSegment::Close => None,
-    }
-}
-
-fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> DrawingSceneNode {
-    DrawingSceneNode {
-        id: base.id.to_string_owner(),
-        groups:Vec::new(),
-        transform: drawing_transform_to_matrix(&base.transform),
-        segments,
-        fill: base.attributes.fill.clone(),
-        stroke: base.attributes.stroke.clone(),
-        opacity: base.opacity,
-        blend_mode: base.blend_mode.to_string_owner(),
-        visible: base.visible,
-        fill_rule: Some(base.attributes.fill_rule.as_str().into()),
-        text: None,
-        image: None,
-    }
-}
-
-pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<DrawingSceneNode> {
-    flatten_drawing_document_with_transformation(doc,None)
-}
-
-/// ↔️ Preview world-space transforms through the same group traversal as the committed scene.
-pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, transformation: Option<&(Vec<String>,[f64;6])>) -> Vec<DrawingSceneNode> {
-    let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>, parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, groups:&mut Vec<DrawingSceneGroup>, out: &mut Vec<DrawingSceneNode>) {
-        for layer in layers {
-            let base = layer_base(layer);
-            if !base.visible {
-                continue;
-            }
-            let mut parent=parent;
-            if let Some((ids,matrix))=transformation {
-                if ids.iter().any(|id| base.id.eq_str(id)) { parent=geometry::multiply(*matrix,parent); }
-            }
-            let first = out.len();
-            match layer {
-                DrawingLayerNode::Group(group) => {
-                    let isolated=group.isolation || base.opacity!=1.0 || base.blend_mode!="normal";
-                    if isolated {groups.push(DrawingSceneGroup {id:base.id.to_string_owner(),opacity:base.opacity,blend_mode:base.blend_mode.to_string_owner()});}
-                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), transformation, groups, out);
-                    if isolated {groups.pop();}
-                    continue;
-                }
-                DrawingLayerNode::Boolean(boolean) => {
-                    let segments = resolve_boolean_layer_segments(doc, boolean);
-                    if segments.is_empty() {
-                        continue;
-                    }
-                    out.push(scene_node_for_path(&boolean.base, segments));
-                }
-                DrawingLayerNode::Trace(trace) => {
-                    let segments = resolve_trace_layer_segments(doc, trace);
-                    if segments.is_empty() {
-                        continue;
-                    }
-                    let mut node = scene_node_for_path(&trace.base, segments);
-                    if node.fill.is_none() {
-                        if let Some(stroke) = node.stroke.take() {
-                            node.fill = Some(FillStyle::Solid { color: stroke.color });
-                        }
-                    }
-                    out.push(node);
-                }
-                DrawingLayerNode::Text(text) => out.push(DrawingSceneNode {
-                    id: text.base.id.to_string_owner(),
-                    groups:Vec::new(),
-                    transform: geometry::multiply(drawing_transform_to_matrix(&text.base.transform), [1.0, 0.0, 0.0, 1.0, text.x, text.y]),
-                    segments: Default::default(),
-                    fill: text.base.attributes.fill.clone(),
-                    stroke: text.base.attributes.stroke.clone(),
-                    opacity: text.base.opacity,
-                    blend_mode: text.base.blend_mode.to_string_owner(),
-                    visible: text.base.visible,
-                    fill_rule: None,
-                    text: Some(DrawingSceneText { content: text.content.to_string_owner(), size: text.size,font_family:text.font_family }),
-                    image: None,
-                }),
-                DrawingLayerNode::Image(image) => {
-                    let asset_id = image.image_key.to_string_owner();
-                    out.push(DrawingSceneNode {
-                        id: image.base.id.to_string_owner(),
-                        groups:Vec::new(),
-                        transform: drawing_transform_to_matrix(&image.base.transform),
-                        segments: Default::default(),
-                        fill: image.base.attributes.fill.clone(),
-                        stroke: image.base.attributes.stroke.clone(),
-                        opacity: image.base.opacity,
-                        blend_mode: image.base.blend_mode.to_string_owner(),
-                        visible: image.base.visible,
-                        fill_rule: None,
-                        text: None,
-                        image: Some(DrawingSceneImage { asset_id, width: image.width, height: image.height }),
-                    });
-                }
-                _ => {
-                    let segments = layer_to_path_segments(layer);
-                    if segments.is_empty() {
-                        continue;
-                    }
-                    out.push(scene_node_for_path(base, segments));
-                }
-            }
-            for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); node.groups=groups.clone(); }
-        }
-    }
-    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], transformation, &mut Vec::new(), &mut out);
-    out
-}
-
-pub fn canvas_layer_records(doc: &DrawingSnapshot) -> Vec<DrawingCanvasLayerRecord> {
-    flatten_drawing_layers(&doc.layers)
-        .into_iter()
-        .filter(|layer| !matches!(layer, DrawingLayerNode::Group(_)))
-        .map(|layer| {
-            let base = layer_base(layer);
-            let bounds = drawing_layer_world_bounds(layer);
-            DrawingCanvasLayerRecord { id: base.id.to_string_owner(), kind: layer_kind_label(layer), name: base.name.to_string_owner(), x: bounds.map(|b| b.0), y: bounds.map(|b| b.1), width: bounds.map(|b| b.2), height: bounds.map(|b| b.3) }
-        })
-        .collect()
-}
 
 pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>) -> Result<DrawingLayerNode,semio_framework_value::ValueError> {
     fn identify(node: &mut DrawingLayerNode, identities: &semio_framework_value::list::PagedList<DrawingIdentityAssignment,{usize::MAX}>, ids: &mut BTreeMap<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, semio_framework_value::paged::PagedUtf8<{usize::MAX}>>) -> Result<(),semio_framework_value::ValueError> {
@@ -831,174 +647,7 @@ pub fn create_layer_by_kind(identity: DrawingIdentity, kind: &str) -> DrawingLay
 //#endregion 🔖️Tree
 
 //#region 🔖️SegmentGeometry
-fn drawing_map_point_by_matrix(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
-    let [a, b, c, d, e, f] = matrix;
-    [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
-}
 
-pub fn transform_path_segments(segments: &[PathSegment], transform: &DrawingTransform) -> Vec<PathSegment> {
-    transform_path_by_matrix(segments, drawing_transform_to_matrix(transform))
-}
-
-pub fn transform_path_by_matrix(segments: &[PathSegment], matrix: [f64; 6]) -> Vec<PathSegment> {
-    flatten_curve_segments(segments)
-        .iter()
-        .map(|segment| match segment {
-            PathSegment::Move { to } => PathSegment::Move { to: drawing_map_point_by_matrix(matrix, *to) },
-            PathSegment::Line { to } => PathSegment::Line { to: drawing_map_point_by_matrix(matrix, *to) },
-            PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: drawing_map_point_by_matrix(matrix, *ctrl), to: drawing_map_point_by_matrix(matrix, *to) },
-            PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: drawing_map_point_by_matrix(matrix, *ctrl1), ctrl2: drawing_map_point_by_matrix(matrix, *ctrl2), to: drawing_map_point_by_matrix(matrix, *to) },
-            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: drawing_map_point_by_matrix(matrix, *to) },
-            PathSegment::Close => PathSegment::Close,
-        })
-        .collect()
-}
-
-pub fn scale_path_segments(segments: &[PathSegment], scale_x: f64, scale_y: f64) -> Vec<PathSegment> {
-    if scale_x == 1.0 && scale_y == 1.0 {
-        return segments.to_vec();
-    }
-    transform_path_segments(segments, &DrawingTransform { x: 0.0, y: 0.0, scale_x, scale_y, rotation: 0.0, shear: 0.0 })
-}
-
-pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathSegment>> {
-    let mut contours = Vec::new();
-    let mut current: Vec<PathSegment> = Vec::new();
-    for segment in segments {
-        if matches!(segment, PathSegment::Move { .. }) && !current.is_empty() {
-            contours.push(std::mem::take(&mut current));
-        }
-        current.push(segment.clone());
-    }
-    if !current.is_empty() {
-        contours.push(current);
-    }
-    if contours.is_empty() {
-        contours.push(Vec::new());
-    }
-    contours
-}
-
-#[path = "🧮️geometry/🦀️.rs"]
-pub mod geometry;
-#[path = "🎬️scene/📷️raster/🦀️.rs"]
-pub mod scene_raster;
-#[path = "🎬️scene/📋️prepare/🦀️.rs"]
-pub mod scene_preparation;
-#[path = "🎬️scene/🔤️text/🦀️.rs"]
-pub mod scene_text;
-#[path = "🎬️scene/🔀️booleans/🦀️.rs"]
-pub mod scene_booleans;
-#[path = "🎬️scene/🔍️trace/🦀️.rs"]
-pub mod scene_trace;
-#[path = "🎬️scene/🧹️retire/🦀️.rs"]
-pub mod scene_retirement;
-#[path = "🎬️scene/🎨️paint/🦀️.rs"]
-pub mod scene_paint;
-#[path = "🎬️scene/📍️placement/🦀️.rs"]
-pub mod scene_placement;
-
-pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
-    path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])
-}
-
-pub(crate) fn path_segments_bounds_with_matrix(segments: &[PathSegment], matrix: [f64;6]) -> Option<(f64, f64, f64, f64)> {
-    let mut min = [f64::INFINITY; 2];
-    let mut max = [f64::NEG_INFINITY; 2];
-    let mut current = [0.0; 2];
-    let mut start = current;
-    for segment in segments {
-        if matches!(segment, PathSegment::Close) && !min[0].is_finite() { continue; }
-        let bounds = geometry::segment_bounds(segment,current,start,matrix);
-        match segment {
-            PathSegment::Move { to } => { current=*to; start=*to; }
-            PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => current=*to,
-            PathSegment::Close => current=start,
-        }
-        for axis in 0..2 { min[axis] = min[axis].min(bounds[axis]); max[axis] = max[axis].max(bounds[axis]+bounds[axis+2]); }
-    }
-    min.iter().all(|n| n.is_finite()).then_some((min[0], min[1], max[0]-min[0], max[1]-min[1]))
-}
-
-pub fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_area: f64) -> Vec<PathSegment> {
-    if min_area <= 0.0 {
-        return segments.to_vec();
-    }
-    let mut kept = Vec::new();
-    for contour in split_path_segments_by_contour(segments) {
-        let Some((_, _, width, height)) = path_segments_bounds(&contour) else { continue };
-        if width * height < min_area {
-            continue;
-        }
-        kept.extend(contour);
-    }
-    kept
-}
-
-fn arc_ellipse_point(unit: [f64; 2], rx: f64, ry: f64, cos_phi: f64, sin_phi: f64, cx: f64, cy: f64) -> [f64; 2] {
-    let x = unit[0] * rx;
-    let y = unit[1] * ry;
-    [cos_phi * x - sin_phi * y + cx, sin_phi * x + cos_phi * y + cy]
-}
-
-fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
-    let a = (4.0 / 3.0) * ((ang2 - ang1) / 4.0).tan();
-    let (sin1, cos1) = ang1.sin_cos();
-    let (sin2, cos2) = ang2.sin_cos();
-    ([cos1 - sin1 * a, sin1 + cos1 * a], [cos2 + sin2 * a, sin2 - cos2 * a], [cos2, sin2])
-}
-
-/// 🌙️ Converts one SVG endpoint-parameterized arc into cubic Bézier control triples (SVG spec F.6.5).
-fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, large_arc: bool, sweep: bool, to: [f64; 2]) -> Vec<([f64; 2], [f64; 2], [f64; 2])> {
-    let Some(arc) = geometry::arc_geometry(from, [rx.abs(),ry.abs()], rotation_deg, large_arc, sweep, to) else { return Vec::new() };
-    let [rx, ry] = arc.radii;
-    let [cx, cy] = arc.center;
-    let (sin_phi, cos_phi) = arc.rotation.sin_cos();
-    let ang1 = arc.start;
-    let ang2 = arc.sweep;
-    let mut ratio = ang2.abs() / std::f64::consts::FRAC_PI_2;
-    if (1.0 - ratio).abs() < 1e-7 {
-        ratio = 1.0;
-    }
-    let segment_count = ratio.ceil().max(1.0) as usize;
-    let delta = ang2 / segment_count as f64;
-    let mut cubics = Vec::with_capacity(segment_count);
-    let mut angle = ang1;
-    for _ in 0..segment_count {
-        let (unit_ctrl1, unit_ctrl2, unit_to) = arc_approx_unit_arc(angle, angle + delta);
-        cubics.push((arc_ellipse_point(unit_ctrl1, rx, ry, cos_phi, sin_phi, cx, cy), arc_ellipse_point(unit_ctrl2, rx, ry, cos_phi, sin_phi, cx, cy), arc_ellipse_point(unit_to, rx, ry, cos_phi, sin_phi, cx, cy)));
-        angle += delta;
-    }
-    cubics
-}
-
-/// 🌙️ Flattens `Arc` segments into `Cubic` runs so downstream consumers (booleans, canvas hosts) never see SVG endpoint arcs.
-pub fn flatten_curve_segments(segments: &[PathSegment]) -> Vec<PathSegment> {
-    let mut out = Vec::with_capacity(segments.len());
-    let mut cursor = [0.0, 0.0];
-    for segment in segments {
-        match segment {
-            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
-                let cubics = arc_segment_to_cubics(cursor, *rx, *ry, *rotation, *large_arc, *sweep, *to);
-                if cubics.is_empty() {
-                    out.push(PathSegment::Line { to: *to });
-                } else {
-                    for (ctrl1, ctrl2, point) in cubics {
-                        out.push(PathSegment::Cubic { ctrl1, ctrl2, to: point });
-                    }
-                }
-                cursor = *to;
-            }
-            other => {
-                if let Some(to) = segment_to_point(other) {
-                    cursor = to;
-                }
-                out.push(other.clone());
-            }
-        }
-    }
-    out
-}
 
 pub fn drawing_layer_descendant_leaf_ids(layer: &DrawingLayerNode) -> Vec<String> {
     match layer {
@@ -1007,112 +656,11 @@ pub fn drawing_layer_descendant_leaf_ids(layer: &DrawingLayerNode) -> Vec<String
     }
 }
 
-const CURVE_LINE_SAMPLE_STEPS: usize = 16;
 
-fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
-    (1..=steps)
-        .map(|step| {
-            let t = step as f64 / steps as f64;
-            let mt = 1.0 - t;
-            [mt * mt * from[0] + 2.0 * mt * t * ctrl[0] + t * t * to[0], mt * mt * from[1] + 2.0 * mt * t * ctrl[1] + t * t * to[1]]
-        })
-        .collect()
-}
-
-fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2], steps: usize) -> Vec<[f64; 2]> {
-    (1..=steps)
-        .map(|step| {
-            let t = step as f64 / steps as f64;
-            let mt = 1.0 - t;
-            [mt * mt * mt * from[0] + 3.0 * mt * mt * t * ctrl1[0] + 3.0 * mt * t * t * ctrl2[0] + t * t * t * to[0], mt * mt * mt * from[1] + 3.0 * mt * mt * t * ctrl1[1] + 3.0 * mt * t * t * ctrl2[1] + t * t * t * to[1]]
-        })
-        .collect()
-}
-
-/// 📏️ Flattens `Quad`/`Cubic`/`Arc` segments into `Line` segments — the planar boolean kernel only understands polygons.
-pub fn flatten_segments_to_lines(segments: &[PathSegment]) -> Vec<PathSegment> {
-    let curved = flatten_curve_segments(segments);
-    let mut out = Vec::with_capacity(curved.len());
-    let mut cursor = [0.0, 0.0];
-    for segment in &curved {
-        match segment {
-            PathSegment::Quad { ctrl, to } => {
-                for point in sample_quad_points(cursor, *ctrl, *to, CURVE_LINE_SAMPLE_STEPS) {
-                    out.push(PathSegment::Line { to: point });
-                }
-                cursor = *to;
-            }
-            PathSegment::Cubic { ctrl1, ctrl2, to } => {
-                for point in sample_cubic_points(cursor, *ctrl1, *ctrl2, *to, CURVE_LINE_SAMPLE_STEPS) {
-                    out.push(PathSegment::Line { to: point });
-                }
-                cursor = *to;
-            }
-            other => {
-                if let Some(to) = segment_to_point(other) {
-                    cursor = to;
-                }
-                out.push(other.clone());
-            }
-        }
-    }
-    out
-}
 //#endregion 🔖️SegmentGeometry
 
 //#region 🔖️KernelResolve
-pub(crate) fn to_kernel_segment(segment: &PathSegment) -> semio_framework_2d::PathSegment {
-    use semio_framework_2d::PathSegment as KernelSegment;
-    match segment {
-        PathSegment::Move { to } => KernelSegment::Move { to: *to },
-        PathSegment::Line { to } => KernelSegment::Line { to: *to },
-        PathSegment::Quad { ctrl, to } => KernelSegment::Quad { ctrl: *ctrl, to: *to },
-        PathSegment::Cubic { ctrl1, ctrl2, to } => KernelSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => KernelSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
-        PathSegment::Close => KernelSegment::Close,
-    }
-}
 
-pub(crate) fn from_kernel_segment(segment: &semio_framework_2d::PathSegment) -> PathSegment {
-    use semio_framework_2d::PathSegment as KernelSegment;
-    match segment {
-        KernelSegment::Move { to } => PathSegment::Move { to: *to },
-        KernelSegment::Line { to } => PathSegment::Line { to: *to },
-        KernelSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
-        KernelSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        KernelSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
-        KernelSegment::Close => PathSegment::Close,
-    }
-}
-
-fn to_kernel_segments(segments: &[PathSegment]) -> Vec<semio_framework_2d::PathSegment> {
-    segments.iter().map(to_kernel_segment).collect()
-}
-
-fn from_kernel_segments(segments: &[semio_framework_2d::PathSegment]) -> Vec<PathSegment> {
-    segments.iter().map(from_kernel_segment).collect()
-}
-
-/// 🪢️ Resolves a boolean layer's children (each transformed by its own local transform) through the planar kernel.
-fn resolve_boolean_layer_segments(doc: &DrawingSnapshot, boolean: &DrawingBooleanBody) -> Vec<PathSegment> {
-    let child_segments: Vec<Vec<PathSegment>> = boolean
-        .children
-        .iter()
-        .filter_map(|child_id| find_drawing_layer(doc, child_id))
-        .map(|child| transform_path_segments(&flatten_segments_to_lines(&layer_to_path_segments(child)), &layer_base(child).transform))
-        .filter(|segments| !segments.is_empty())
-        .collect();
-    if child_segments.is_empty() {
-        return Vec::new();
-    }
-    let kernel_inputs: Vec<Vec<semio_framework_2d::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
-    let operation = crate::DRAWING_BOOLEAN_OPERATIONS.iter().copied().find(|operation| boolean.operation.eq_str(operation));
-    let Some(operation) = operation else { return Vec::new(); };
-    match semio_framework_2d::booleans::boolean_paths_many(&kernel_inputs, operation) {
-        Ok(result) => from_kernel_segments(&result),
-        Err(_) => Vec::new(),
-    }
-}
 
 /// 🖼️ Project intrinsic ordered RGBA samples into the first-party raster vocabulary.
 pub fn drawing_image_samples(asset: &DrawingImageAsset) -> Option<semio_framework_pixels::RasterImage> {
@@ -1122,56 +670,7 @@ pub fn drawing_image_samples(asset: &DrawingImageAsset) -> Option<semio_framewor
     Some(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels})
 }
 
-/// 🌗️ Alpha-weighted luminance is pure sample algebra independent of physical admission.
-fn drawing_image_asset_luma(asset: &DrawingImageAsset) -> Option<(u32,u32,Vec<u8>)> {
-    let count=(asset.width as usize).checked_mul(asset.height as usize)?;
-    if count==0||count>16_777_216||asset.samples.len()!=count{return None;}
-    let luma=asset.samples.iter().map(|[r,g,b,a]|((299.0*(*r as f64)+587.0*(*g as f64)+114.0*(*b as f64))*(*a as f64)/255000.0).round()as u8).collect();
-    Some((asset.width,asset.height,luma))
-}
 
-/// 📐️ Premigration artboard resolution: explicit artboard wins, else layer bounds excluding group/boolean/trace kinds.
-pub fn resolve_drawing_artboard(doc: &DrawingSnapshot) -> Option<DrawingArtboard> {
-    if let Some(artboard) = &doc.artboard {
-        if artboard.width > 0.0 && artboard.height > 0.0 {
-            return Some(artboard.clone());
-        }
-    }
-    let mut max_x = 0.0_f64;
-    let mut max_y = 0.0_f64;
-    for layer in flatten_drawing_layers(&doc.layers) {
-        if matches!(layer, DrawingLayerNode::Trace(_) | DrawingLayerNode::Boolean(_) | DrawingLayerNode::Group(_)) {
-            continue;
-        }
-        if let Some((x, y, width, height)) = drawing_layer_world_bounds(layer) {
-            max_x = max_x.max(x + width);
-            max_y = max_y.max(y + height);
-        }
-    }
-    if max_x <= 0.0 || max_y <= 0.0 {
-        return None;
-    }
-    Some(DrawingArtboard { width: max_x, height: max_y })
-}
-
-/// 🔍️ Resolves a trace layer's bitmap source into simplified, artboard-scaled contour segments.
-fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody) -> Vec<PathSegment> {
-    let assets = &doc.assets;
-    if assets.is_empty() {
-        return Vec::new();
-    };
-    let Some(asset) = assets.get(&trace.source_key) else { return Vec::new() };
-    let Some((width, height, luma)) = drawing_image_asset_luma(asset) else { return Vec::new() };
-    let traced = match semio_framework_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {
-        Ok(segments) => from_kernel_segments(&segments),
-        Err(_) => return Vec::new(),
-    };
-    let scaled = match resolve_drawing_artboard(doc) {
-        Some(artboard) if width > 0 && height > 0 => scale_path_segments(&traced, artboard.width / width as f64, artboard.height / height as f64),
-        _ => traced,
-    };
-    filter_path_segments_by_contour_area(&scaled, 6.0)
-}
 //#endregion 🔖️KernelResolve
 
 /// 🔎 Returns whether `s.draw.drawing` is present in the process-local schema registry. Relocated from
@@ -1217,11 +716,548 @@ pub mod fill;
 #[path = "🎨️fill/🌀️rule/🦀️.rs"]
 pub mod fill_rule;
 
-#[path="🎬️scene/🪪️identity/🦀️.rs"]
-pub mod scene_identity;
-
-#[path="🎬️scene/👁️view/🦀️.rs"]
-pub mod scene_view;
 
 #[path="📝️text/🔤️family/🦀️.rs"]
 pub mod font_family;
+
+pub const DRAWING_DOCUMENT_SCHEMA: &str = "drawing.document";
+
+pub const DRAWING_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
+
+pub const DRAWING_BOOLEAN_OPERATIONS: &[&str] = &["union", "difference", "intersection", "xor"];
+
+pub const DRAWING_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "polygon"];
+
+pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
+
+// No `#[dsl(keyword = ...)]` on `DrawingTransform`/`DrawingTraceParams`/`DrawingArtboard`: every field of
+// these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
+// FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
+// same reasoning as `note`'s `NoteImageAsset`.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingTransform {
+    pub x: f64,
+    pub y: f64,
+    pub scale_x: f64,
+    pub scale_y: f64,
+    pub shear: f64,
+    /// 📐️ Radians — `engine`'s compose/decompose matrix helpers call `.cos()`/`.sin()`
+    /// directly on this field with no `to_radians()` conversion.
+    #[dsl(angle = "rad")]
+    pub rotation: f64,
+}
+
+// No keyword either: reached only through `semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>` (a plain, un-tagged list) —
+// `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
+// verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct GradientStop {
+    pub offset: f64,
+    pub color: [f64; 4],
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+pub enum FillStyle {
+    Solid {
+        color: [f64; 4],
+    },
+    LinearGradient {
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+        #[dsl(table)]
+        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
+    },
+    RadialGradient {
+        cx: f64,
+        cy: f64,
+        r: f64,
+        #[dsl(table)]
+        stops: semio_framework_value::list::PagedList<GradientStop, {usize::MAX}>,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct StrokeStyle {
+    pub color: [f64; 4],
+    pub width: f64,
+    pub cap: StrokeCap,
+    pub join: StrokeJoin,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub dash: Option<semio_framework_value::list::PagedList<f64, {usize::MAX}>>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingAttributes {
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    pub fill_rule: FillRule,
+    // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
+    // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
+    // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(statements, block)]
+    pub fill: Option<FillStyle>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub stroke: Option<StrokeStyle>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingTraceParams {
+    pub threshold: f64,
+    pub simplify_epsilon: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingImageAsset {
+    pub width: u32,
+    pub height: u32,
+    pub samples: semio_framework_value::list::PagedList<[u8; 4], {usize::MAX}>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingLayerBase {
+    pub id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub visible: bool,
+    pub locked: bool,
+    pub opacity: f64,
+    pub blend_mode: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    #[dsl(block)]
+    pub transform: DrawingTransform,
+    #[value(default)]
+    #[cfg_attr(test, serde(default))]
+    #[dsl(block)]
+    pub attributes: DrawingAttributes,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingRect {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingEllipse {
+    pub cx: f64,
+    pub cy: f64,
+    pub rx: f64,
+    pub ry: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingCircle {
+    pub cx: f64,
+    pub cy: f64,
+    pub r: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingLine {
+    pub x1: f64,
+    pub y1: f64,
+    pub x2: f64,
+    pub y2: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingPolygon {
+    pub points: semio_framework_value::list::PagedList<[f64; 2], {usize::MAX}>,
+}
+
+// Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
+// ("newtype") variants of `DrawingLayerNode` below, which delegate their entire `RecordSpec` to the
+// inner body's own spec (see `dsl::__rt::newtype_variant_spec`) rather than wrapping it in one more
+// layer. `base: DrawingLayerBase` carries BOTH `#[value(flatten)]` (splices into the JSON-shaped
+// `ToValue`/`FromValue` tree) and `#[dsl(block)]` (the text/binary DSL grammar has no
+// flatten-splice primitive; a bare nested `base { ... }` line is its declarative equivalent).
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "shape")]
+pub struct DrawingShapeBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    pub shape_kind: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub rect: Option<DrawingRect>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub ellipse: Option<DrawingEllipse>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub circle: Option<DrawingCircle>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub line: Option<DrawingLine>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[dsl(block)]
+    pub polygon: Option<DrawingPolygon>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "path")]
+pub struct DrawingPathBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    #[dsl(statements, block)]
+    pub segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "text")]
+pub struct DrawingTextBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    pub x: f64,
+    pub y: f64,
+    pub content: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub size: f64,
+    pub font_family: DrawingFontFamily,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "image")]
+pub struct DrawingImageBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    pub image_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub width: f64,
+    pub height: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "group")]
+pub struct DrawingGroupBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    #[value(default,skip_serializing_if="group_isolation_disabled")]
+    #[cfg_attr(test,serde(default,skip_serializing_if="group_isolation_disabled"))]
+    pub isolation:bool,
+    #[dsl(statements, block)]
+    pub children: semio_framework_value::list::PagedList<DrawingLayerNode, {usize::MAX}>,
+}
+
+fn group_isolation_disabled(value:&bool)->bool {!*value}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "boolean")]
+pub struct DrawingBooleanBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    pub operation: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    pub children: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[dsl(keyword = "trace")]
+pub struct DrawingTraceBody {
+    #[value(flatten)]
+    #[cfg_attr(test, serde(flatten))]
+    #[dsl(block)]
+    pub base: DrawingLayerBase,
+    pub source_key: semio_framework_value::paged::PagedUtf8<{usize::MAX}>,
+    #[dsl(block)]
+    pub params: DrawingTraceParams,
+}
+
+/// 🌿️ Projects a layer body whose `base` is flattened into the body object, in the exact field order of the `ToValue` wire (base fields first, then the own fields that are present).
+macro_rules! flattened_layer_body_tree {
+    (@present $body:ident) => { true };
+    (@present $body:ident, $present:expr) => { ($present)($body) };
+    ($body:ty { $($field:ident: $key:literal $(if $present:expr)?),* $(,)? }) => {
+        impl semio_framework_pack_json::ArtifactCanonicalJsonTree for $body {
+            fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base $(+ usize::from(flattened_layer_body_tree!(@present self $(, $present)?)))*))
+            }
+            fn canonical_tree_child(&self, mut ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                if ordinal < base { return semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_child(&self.base, ordinal); }
+                ordinal -= base;
+                $(if flattened_layer_body_tree!(@present self $(, $present)?) { if ordinal == 0 { return Ok(&self.$field); } ordinal -= 1; })*
+                Err(flattened_layer_body_absent())
+            }
+            fn canonical_tree_key(&self, mut ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+                let semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(base) = semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_node(&self.base)? else { return Err(flattened_layer_body_absent()); };
+                if ordinal < base { return semio_framework_pack_json::ArtifactCanonicalJsonTree::canonical_tree_key(&self.base, ordinal); }
+                ordinal -= base;
+                $(if flattened_layer_body_tree!(@present self $(, $present)?) { if ordinal == 0 { return Ok($key.into()); } ordinal -= 1; })*
+                Err(flattened_layer_body_absent())
+            }
+        }
+    };
+}
+
+fn flattened_layer_body_absent() -> semio_framework_value::ValueError { semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical layer body ordinal is absent") }
+
+flattened_layer_body_tree!(DrawingShapeBody { shape_kind: "shapeKind", rect: "rect" if |body: &DrawingShapeBody| body.rect.is_some(), ellipse: "ellipse" if |body: &DrawingShapeBody| body.ellipse.is_some(), circle: "circle" if |body: &DrawingShapeBody| body.circle.is_some(), line: "line" if |body: &DrawingShapeBody| body.line.is_some(), polygon: "polygon" if |body: &DrawingShapeBody| body.polygon.is_some() });
+
+flattened_layer_body_tree!(DrawingPathBody { segments: "segments" });
+
+flattened_layer_body_tree!(DrawingTextBody { x: "x", y: "y", content: "content", size: "size", font_family: "fontFamily" });
+
+flattened_layer_body_tree!(DrawingImageBody { image_key: "imageKey", width: "width", height: "height" });
+
+flattened_layer_body_tree!(DrawingGroupBody { isolation: "isolation" if |body: &DrawingGroupBody| !group_isolation_disabled(&body.isolation), children: "children" });
+
+flattened_layer_body_tree!(DrawingBooleanBody { operation: "operation", children: "children" });
+
+flattened_layer_body_tree!(DrawingTraceBody { source_key: "sourceKey", params: "params" });
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind")]
+#[cfg_attr(test, serde(tag = "kind"))]
+pub enum DrawingLayerNode {
+    #[value(rename = "shape")]
+    #[cfg_attr(test, serde(rename = "shape"))]
+    Shape(DrawingShapeBody),
+    #[value(rename = "path")]
+    #[cfg_attr(test, serde(rename = "path"))]
+    Path(DrawingPathBody),
+    #[value(rename = "text")]
+    #[cfg_attr(test, serde(rename = "text"))]
+    Text(DrawingTextBody),
+    #[value(rename = "image")]
+    #[cfg_attr(test, serde(rename = "image"))]
+    Image(DrawingImageBody),
+    #[value(rename = "group")]
+    #[cfg_attr(test, serde(rename = "group"))]
+    Group(DrawingGroupBody),
+    #[value(rename = "boolean")]
+    #[cfg_attr(test, serde(rename = "boolean"))]
+    Boolean(DrawingBooleanBody),
+    #[value(rename = "trace")]
+    #[cfg_attr(test, serde(rename = "trace"))]
+    Trace(DrawingTraceBody),
+}
+
+// 🖊️ Keywords/field order are a genuine SUBSET of SVG path data's absolute commands
+// (`M`/`L`/`Q`/`C`/`A`/`Z`), each field `#[dsl(positional)]` so a segment prints as compact
+// command-then-args tokens — `M 1.25,196.933 L 36.25,161.125 ... Z` — instead of `move to=1.25,196.933`.
+// Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
+// large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
+// comma/space-mixed-delimited between commands.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(tag = "kind", rename_all = "camelCase")]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+pub enum PathSegment {
+    #[dsl(key = "M")]
+    Move {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "L")]
+    Line {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Q")]
+    Quad {
+        #[dsl(positional)]
+        ctrl: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "C")]
+    Cubic {
+        #[dsl(positional)]
+        ctrl1: [f64; 2],
+        #[dsl(positional)]
+        ctrl2: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "A")]
+    Arc {
+        #[dsl(positional)]
+        rx: f64,
+        #[dsl(positional)]
+        ry: f64,
+        /// 📐️ Degrees — `arc_segment_to_cubics`'s `rotation_deg` parameter calls `.to_radians()`
+        /// on this value, matching SVG path data's `A rx ry x-axis-rotation ...` convention.
+        #[dsl(positional)]
+        #[dsl(angle = "deg")]
+        rotation: f64,
+        #[dsl(positional)]
+        #[value(rename = "largeArc")]
+        #[cfg_attr(test, serde(rename = "largeArc"))]
+        large_arc: bool,
+        #[dsl(positional)]
+        sweep: bool,
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Z")]
+    Close,
+}
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+pub struct DrawingArtboard {
+    pub width: f64,
+    pub height: f64,
+}
+
+pub fn default_drawing_transform() -> DrawingTransform {
+    DrawingTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0, shear: 0.0 }
+}
+
+pub fn default_drawing_trace_params() -> DrawingTraceParams {
+    DrawingTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
+}
+
+/// 🏷️ The `2d.drawing` artifact kind declaration — lifted out of the old bundle manifest's
+/// `.artifact_kind(...)` call so the app's manifest stitch can reuse it verbatim.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "2d.drawing".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("2D Drawing", "2D-Zeichnung"),
+        source_format: "drawing.document".into(),
+        component_kind: "drawing".into(),
+        dimension: "2d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::TwoD, form: semio_framework_plugin::MediaForm::Vector },
+        schema: "drawing.document".into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+        import_stdio_kinds: vec![],
+    }
+}
+
+/// 🎯️ The `s.draw.drawing@1/*` surface dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// contract §2.1) — lives at the ARTIFACT level, not under `editor`/`viewer`, specifically so a
+/// viewer file can read it without ever importing through the sibling editor module. `artifact_kind`
+/// matches this file's own `definition()` capability row `"s.draw.schema.artifact"` → descriptor
+/// `"s.draw.drawing"`; `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location.
+pub const DRAWING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.draw.drawing", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+
+/// 🔢️ A selection label's number, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
+pub fn drawing_label_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let text = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded });
+    let en = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
+}
+
+/// 🔠️ A selection label's counted noun, `(en, de)`: "1 layer" / "1 Ebene", "3 layers" / "3 Ebenen".
+pub fn drawing_label_layers(count: usize) -> (String, String) {
+    match count {
+        1 => ("1 layer".to_string(), "1 Ebene".to_string()),
+        count => (format!("{count} layers"), format!("{count} Ebenen")),
+    }
+}
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧮️geometry/↗️affine/🦀️.rs"]
+pub mod affine;
+#[path = "💡️inferences/🦀️.rs"]
+pub mod inferences;
+#[path = "📸️snapshot/🦀️.rs"]
+pub mod snapshot;
+//#endregion 🪢️TaxonomyMounts

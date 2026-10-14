@@ -7,10 +7,10 @@
 //! 🎯️ Mirrors `protocol_wire`'s W5 hand-rolled binary layout exactly: `tag: u8` (assigned
 //! sequentially in match-arm declaration order below, NOT the enum's own discriminant) followed by
 //! its fields in declaration order, no per-field tags, no body-length prefix — one frame per
-//! channel message. `crate::os_spr::wire::🔖️WireCodec` supplies the primitive codec
+//! channel message. `protocol::wire::🔖️WireCodec` supplies the primitive codec
 //! (`write_varint_u64`/`write_str`/`write_bytes`/`write_bool` and their `read_*` twins); this crate
 //! adds only the option/vec combinators and the two enums' tag dispatch below. Unlike
-//! `crate::os_spr::wire::ClientFrame`/`ServerFrame`, `AppCommand`/`AppFrame` carry no `Lane` byte —
+//! `protocol::wire::ClientFrame`/`ServerFrame`, `AppCommand`/`AppFrame` carry no `Lane` byte —
 //! the app-engine channel is a single logical stream, not split into causally-ordered vs.
 //! best-effort lanes.
 
@@ -86,7 +86,7 @@ impl MediaExportStateWire {
         }
     }
 
-    fn from_wire(value: u8) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn from_wire(value: u8) -> Result<Self, protocol::ProtocolError> {
         match value {
             0 => Ok(Self::Running),
             1 => Ok(Self::Complete),
@@ -160,7 +160,7 @@ impl DocumentArchiveLoadState {
         }
     }
 
-    fn from_wire(value: u8) -> Result<Self, crate::os_spr::ProtocolError> {
+    fn from_wire(value: u8) -> Result<Self, protocol::ProtocolError> {
         match value {
             0 => Ok(Self::Pending),
             1 => Ok(Self::Running),
@@ -287,14 +287,14 @@ impl PresenceCommandCursor {
         Self { page: Some(page), remaining: 0, seq, own_color: None, next_page: 1 }
     }
 
-    pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage) -> Result<Self, (crate::os_spr::ProtocolError, FixedCommandPage)> {
+    pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: FixedCommandPage) -> Result<Self, (protocol::ProtocolError, FixedCommandPage)> {
         if item_count as usize > PRESENCE_ROSTER_MAXIMUM_ITEMS || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES || (item_count != 0 && page.is_empty()) || (item_count == 0 && !page.is_empty()) {
             return Err((malformed("channel presence page", 0, "Presence page violates its exact item or 4096-byte authority"), page));
         }
         Ok(Self { page: Some(page), remaining: item_count as usize, seq, own_color, next_page: 1 })
     }
 
-    pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage) -> Result<(), (crate::os_spr::ProtocolError, FixedCommandPage)> {
+    pub fn push_page(&mut self, page_index: u32, page: FixedCommandPage) -> Result<(), (protocol::ProtocolError, FixedCommandPage)> {
         if self.page.is_some() || self.remaining == 0 || page_index != self.next_page || page.is_empty() || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES {
             return Err((malformed("channel presence page", page_index as u64, "page is out of order, saturated, empty, or oversized"), page));
         }
@@ -311,7 +311,7 @@ impl PresenceCommandCursor {
         self.own_color
     }
 
-    pub fn take_next(&mut self) -> Result<Option<FixedCommandPage>, crate::os_spr::ProtocolError> {
+    pub fn take_next(&mut self) -> Result<Option<FixedCommandPage>, protocol::ProtocolError> {
         if self.remaining == 0 {
             return Ok(None);
         }
@@ -320,7 +320,7 @@ impl PresenceCommandCursor {
         Ok(Some(entry))
     }
 
-    pub fn next_len(&self) -> Result<Option<usize>, crate::os_spr::ProtocolError> {
+    pub fn next_len(&self) -> Result<Option<usize>, protocol::ProtocolError> {
         if self.remaining == 0 {
             return Ok(None);
         }
@@ -1486,7 +1486,7 @@ pub enum AppCommand {
     },
     ApplyEnvelopes {
         seq: u64,
-        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
+        envelopes: Vec<protocol::causal::MutationEnvelope>,
     },
     ReadDocument {
         seq: u64,
@@ -1731,7 +1731,7 @@ pub enum AppFrame {
         inverse_group: Vec<u8>,
     },
     DocumentChanged {
-        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
+        envelopes: Vec<protocol::causal::MutationEnvelope>,
         origin: String,
     },
     Document {
@@ -1752,7 +1752,7 @@ pub enum AppFrame {
         entries: Vec<WindowConfigPackEntry>,
     },
     ConfigChanged {
-        envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
+        envelopes: Vec<protocol::causal::MutationEnvelope>,
         origin: String,
     },
     ContextMenu {
@@ -2111,34 +2111,34 @@ impl DocumentArchiveLoadHost {
 
 //#region 🔖️Codec
 // Hand-rolled binary frame encode/decode: `tag: u8 | fields...` — see the module-level docstring.
-// `crate::os_spr::wire::🔖️WireCodec` supplies the primitives; this crate adds only the option/vec
+// `protocol::wire::🔖️WireCodec` supplies the primitives; this crate adds only the option/vec
 // combinators the frame shapes need plus the tag-dispatch match arms below.
 
 // 🚫️async: R9 pure accessor — most call sites are inside `.ok_or_else`'s sync closure
 // (Option::ok_or_else requires sync FnOnce); no suspension point exists in the body either.
-fn malformed(what: &'static str, offset: u64, detail: &str) -> crate::os_spr::ProtocolError {
-    crate::os_spr::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
+fn malformed(what: &'static str, offset: u64, detail: &str) -> protocol::ProtocolError {
+    protocol::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
 }
 
 //#region 🔖️Combinators
 async fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
-    crate::os_spr::write_bool(out, value.is_some());
+    protocol::write_bool(out, value.is_some());
     if let Some(v) = value {
-        crate::os_spr::write_varint_u64(out, *v);
+        protocol::write_varint_u64(out, *v);
     }
 }
 
-async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
+async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, protocol::ProtocolError> {
+    if protocol::read_bool(bytes, pos)? {
+        Ok(Some(protocol::read_varint_u64(bytes, pos)?))
     } else {
         Ok(None)
     }
 }
 
-fn read_invocation_result_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+fn read_invocation_result_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, protocol::ProtocolError> {
     let start = *pos;
-    let length = usize::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("channel invocation result pack", start as u64, "packed mutations or inverse group length does not fit this host"))?;
+    let length = usize::try_from(protocol::read_varint_u64(bytes, pos)?).map_err(|_| malformed("channel invocation result pack", start as u64, "packed mutations or inverse group length does not fit this host"))?;
     if length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES {
         return Err(malformed("channel invocation result pack", start as u64, "packed mutations or inverse group exceed command transport authority"));
     }
@@ -2151,14 +2151,14 @@ fn read_invocation_result_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>,
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
 /// presence-byte convention as {@link write_opt_u64} above.
 async fn write_opt_u8(out: &mut Vec<u8>, value: &Option<u8>) {
-    crate::os_spr::write_bool(out, value.is_some());
+    protocol::write_bool(out, value.is_some());
     if let Some(v) = value {
         out.push(*v);
     }
 }
 
-async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos)? {
+async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, protocol::ProtocolError> {
+    if protocol::read_bool(bytes, pos)? {
         let byte = *bytes.get(*pos).ok_or_else(|| malformed("channel app-command opt-u8", *pos as u64, "truncated"))?;
         *pos += 1;
         Ok(Some(byte))
@@ -2168,44 +2168,44 @@ async fn read_opt_u8(bytes: &[u8], pos: &mut usize) -> Result<Option<u8>, crate:
 }
 
 async fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64);
+    protocol::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::write_bytes(out, value);
+        protocol::write_bytes(out, value);
     }
 }
 
-async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, protocol::ProtocolError> {
+    let count = protocol::read_varint_u64(bytes, pos)?;
     // 🚫️async: R10 shape 2 — `read_bytes` is async but `Iterator::map`'s closure is sync; hoisted
     // into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::os_spr::read_bytes(bytes, pos)?);
+        out.push(protocol::read_bytes(bytes, pos)?);
     }
     Ok(out)
 }
 
 async fn write_presence_roster(out: &mut Vec<u8>, roster: &PresenceRosterWire) {
-    crate::os_spr::write_varint_u64(out, roster.len() as u64);
+    protocol::write_varint_u64(out, roster.len() as u64);
     for entry in roster.iter() {
-        crate::os_spr::write_bytes(out, entry);
+        protocol::write_bytes(out, entry);
     }
 }
 
-async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
-    crate::os_spr::write_varint_u64(out, values.len() as u64);
+async fn write_vec_envelope(out: &mut Vec<u8>, values: &[protocol::causal::MutationEnvelope]) {
+    protocol::write_varint_u64(out, values.len() as u64);
     for value in values {
-        crate::os_spr::io::binary::causal::encode_envelope(value, out);
+        protocol::io::binary::causal::encode_envelope(value, out);
     }
 }
 
-async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::os_spr::causal::MutationEnvelope>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<protocol::causal::MutationEnvelope>, protocol::ProtocolError> {
+    let count = protocol::read_varint_u64(bytes, pos)?;
     // 🚫️async: R10 shape 2 — `decode_envelope` is async but `Iterator::map`'s closure is sync;
     // hoisted into a plain loop so each element can be awaited.
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(crate::os_spr::io::binary::causal::decode_envelope(bytes, pos)?);
+        out.push(protocol::io::binary::causal::decode_envelope(bytes, pos)?);
     }
     Ok(out)
 }
@@ -2276,7 +2276,7 @@ impl CommandPageWriter {
         self.bytes(value.as_bytes())
     }
 
-    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), semio_framework_diagnostic::Fault> {
+    fn envelope(&mut self, value: &protocol::causal::MutationEnvelope) -> Result<(), semio_framework_diagnostic::Fault> {
         self.string(&value.mutation_id.0)?;
         self.string(&value.document_id.0)?;
         self.string(&value.actor.0)?;
@@ -2329,21 +2329,21 @@ fn write_media_export_handle_paged(out: &mut CommandPageWriter, handle: &MediaEx
 }
 
 fn write_media_export_handle(out: &mut Vec<u8>, handle: &MediaExportHandleWire) {
-    crate::os_spr::write_varint_u64(out, u64::from(handle.app_instance_id));
-    crate::os_spr::write_str(out, &handle.parent_document_id);
-    crate::os_spr::write_varint_u64(out, handle.operation_id);
-    crate::os_spr::write_varint_u64(out, handle.base_revision);
-    crate::os_spr::write_varint_u64(out, handle.generation);
+    protocol::write_varint_u64(out, u64::from(handle.app_instance_id));
+    protocol::write_str(out, &handle.parent_document_id);
+    protocol::write_varint_u64(out, handle.operation_id);
+    protocol::write_varint_u64(out, handle.base_revision);
+    protocol::write_varint_u64(out, handle.generation);
 }
 
-fn read_media_export_handle(bytes: &[u8], pos: &mut usize) -> Result<MediaExportHandleWire, crate::os_spr::ProtocolError> {
-    let app_instance_id = u32::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("media export app instance", *pos as u64, "app instance exceeds u32"))?;
+fn read_media_export_handle(bytes: &[u8], pos: &mut usize) -> Result<MediaExportHandleWire, protocol::ProtocolError> {
+    let app_instance_id = u32::try_from(protocol::read_varint_u64(bytes, pos)?).map_err(|_| malformed("media export app instance", *pos as u64, "app instance exceeds u32"))?;
     Ok(MediaExportHandleWire {
         app_instance_id,
-        parent_document_id: crate::os_spr::read_str(bytes, pos)?,
-        operation_id: crate::os_spr::read_varint_u64(bytes, pos)?,
-        base_revision: crate::os_spr::read_varint_u64(bytes, pos)?,
-        generation: crate::os_spr::read_varint_u64(bytes, pos)?,
+        parent_document_id: protocol::read_str(bytes, pos)?,
+        operation_id: protocol::read_varint_u64(bytes, pos)?,
+        base_revision: protocol::read_varint_u64(bytes, pos)?,
+        generation: protocol::read_varint_u64(bytes, pos)?,
     })
 }
 
@@ -2623,73 +2623,73 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, se
 /// 🧸️ `count varint | (slot, child_id, dialect, envelope_pack, owner)*` — the shared list codec for
 /// both `AppCommand::LoadChildren` and `AppFrame::Children`.
 async fn write_vec_child_pack(out: &mut Vec<u8>, entries: &[ChildPackEntry]) {
-    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    protocol::write_varint_u64(out, entries.len() as u64);
     for entry in entries {
-        crate::os_spr::write_str(out, &entry.slot);
-        crate::os_spr::write_str(out, &entry.child_id);
-        crate::os_spr::write_str(out, &entry.dialect);
-        crate::os_spr::write_bytes(out, &entry.envelope_pack);
-        crate::os_spr::write_str(out, &entry.owner);
+        protocol::write_str(out, &entry.slot);
+        protocol::write_str(out, &entry.child_id);
+        protocol::write_str(out, &entry.dialect);
+        protocol::write_bytes(out, &entry.envelope_pack);
+        protocol::write_str(out, &entry.owner);
     }
 }
 
 /// 🪆️ `count varint | (slot, child_id, dialect, head_pack, owner)*` — `AppFrame::ChildHeads`' list codec.
 fn write_vec_child_head(out: &mut Vec<u8>, entries: &[ChildHeadPackEntry]) {
-    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    protocol::write_varint_u64(out, entries.len() as u64);
     for entry in entries {
-        crate::os_spr::write_str(out, &entry.slot);
-        crate::os_spr::write_str(out, &entry.child_id);
-        crate::os_spr::write_str(out, &entry.dialect);
-        crate::os_spr::write_bytes(out, &entry.head_pack);
-        crate::os_spr::write_str(out, &entry.owner);
+        protocol::write_str(out, &entry.slot);
+        protocol::write_str(out, &entry.child_id);
+        protocol::write_str(out, &entry.dialect);
+        protocol::write_bytes(out, &entry.head_pack);
+        protocol::write_str(out, &entry.owner);
     }
 }
 
 /// 🪆️ Inverse of [`write_vec_child_head`]; the declared count never reserves past the archive's member authority.
-fn read_vec_child_head(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildHeadPackEntry>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+fn read_vec_child_head(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildHeadPackEntry>, protocol::ProtocolError> {
+    let count = protocol::read_varint_u64(bytes, pos)?;
     if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 {
         return Err(malformed("channel child heads", *pos as u64, "child head count exceeds the member authority"));
     }
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(ChildHeadPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, head_pack: crate::os_spr::read_bytes(bytes, pos)?, owner: crate::os_spr::read_str(bytes, pos)? });
+        entries.push(ChildHeadPackEntry { slot: protocol::read_str(bytes, pos)?, child_id: protocol::read_str(bytes, pos)?, dialect: protocol::read_str(bytes, pos)?, head_pack: protocol::read_bytes(bytes, pos)?, owner: protocol::read_str(bytes, pos)? });
     }
     Ok(entries)
 }
 
 /// 🧸️ Inverse of [`write_vec_child_pack`].
-async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildPackEntry>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildPackEntry>, protocol::ProtocolError> {
+    let count = protocol::read_varint_u64(bytes, pos)?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        entries.push(ChildPackEntry { slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)?, dialect: crate::os_spr::read_str(bytes, pos)?, envelope_pack: crate::os_spr::read_bytes(bytes, pos)?, owner: crate::os_spr::read_str(bytes, pos)? });
+        entries.push(ChildPackEntry { slot: protocol::read_str(bytes, pos)?, child_id: protocol::read_str(bytes, pos)?, dialect: protocol::read_str(bytes, pos)?, envelope_pack: protocol::read_bytes(bytes, pos)?, owner: protocol::read_str(bytes, pos)? });
     }
     Ok(entries)
 }
 
 fn write_document_archive(out: &mut Vec<u8>, archive: &DocumentArchivePack) {
-    crate::os_spr::write_bytes(out, &archive.parent_pack);
-    crate::os_spr::write_bytes(out, &archive.parent_spr);
-    crate::os_spr::write_varint_u64(out, archive.members.len() as u64);
+    protocol::write_bytes(out, &archive.parent_pack);
+    protocol::write_bytes(out, &archive.parent_spr);
+    protocol::write_varint_u64(out, archive.members.len() as u64);
     for entry in &archive.members {
-        crate::os_spr::write_varint_u64(out, u64::from(entry.ordinal));
-        crate::os_spr::write_str(out, &entry.reference.artifact_id);
-        crate::os_spr::write_str(out, &entry.reference.artifact_kind);
-        crate::os_spr::write_str(out, &entry.reference.standard);
-        crate::os_spr::write_str(out, &entry.reference.subset);
-        crate::os_spr::write_str(out, &entry.owner.parent.artifact_id);
-        crate::os_spr::write_str(out, &entry.owner.parent.artifact_kind);
-        crate::os_spr::write_str(out, &entry.owner.parent.standard);
-        crate::os_spr::write_str(out, &entry.owner.parent.subset);
-        crate::os_spr::write_str(out, &entry.owner.slot);
-        crate::os_spr::write_str(out, &entry.owner.child_id);
-        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+        protocol::write_varint_u64(out, u64::from(entry.ordinal));
+        protocol::write_str(out, &entry.reference.artifact_id);
+        protocol::write_str(out, &entry.reference.artifact_kind);
+        protocol::write_str(out, &entry.reference.standard);
+        protocol::write_str(out, &entry.reference.subset);
+        protocol::write_str(out, &entry.owner.parent.artifact_id);
+        protocol::write_str(out, &entry.owner.parent.artifact_kind);
+        protocol::write_str(out, &entry.owner.parent.standard);
+        protocol::write_str(out, &entry.owner.parent.subset);
+        protocol::write_str(out, &entry.owner.slot);
+        protocol::write_str(out, &entry.owner.child_id);
+        protocol::write_bytes(out, &entry.envelope_pack);
     }
 }
 
 /// 🗃️ Encodes one exact persisted recursive-document archive with an explicit version owner.
-pub fn encode_document_archive_bytes(archive: &DocumentArchivePack) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+pub fn encode_document_archive_bytes(archive: &DocumentArchivePack) -> Result<Vec<u8>, protocol::ProtocolError> {
     if archive.members.len() > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
         return Err(malformed("document archive member count", 0, "member count exceeds 1024"));
     }
@@ -2721,38 +2721,38 @@ fn document_archive_into_fields(mut archive: DocumentArchivePack) -> Vec<Vec<u8>
     fields
 }
 
-async fn read_document_archive(bytes: &[u8], pos: &mut usize) -> Result<DocumentArchivePack, crate::os_spr::ProtocolError> {
-    let parent_pack = crate::os_spr::read_bytes(bytes, pos)?;
-    let parent_spr = crate::os_spr::read_bytes(bytes, pos)?;
-    let count = usize::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member count", *pos as u64, "member count is not representable"))?;
+async fn read_document_archive(bytes: &[u8], pos: &mut usize) -> Result<DocumentArchivePack, protocol::ProtocolError> {
+    let parent_pack = protocol::read_bytes(bytes, pos)?;
+    let parent_spr = protocol::read_bytes(bytes, pos)?;
+    let count = usize::try_from(protocol::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member count", *pos as u64, "member count is not representable"))?;
     if count > DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
         return Err(malformed("document archive member count", *pos as u64, "member count exceeds 1024"));
     }
     let mut members = Vec::new();
     members.try_reserve_exact(count).map_err(|_| malformed("document archive member count", *pos as u64, "member roster allocation failed"))?;
     for _ in 0..count {
-        let ordinal = u32::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member ordinal", *pos as u64, "ordinal exceeds u32"))?;
+        let ordinal = u32::try_from(protocol::read_varint_u64(bytes, pos)?).map_err(|_| malformed("document archive member ordinal", *pos as u64, "ordinal exceeds u32"))?;
         let reference = DocumentArchiveArtifactRef {
-            artifact_id: crate::os_spr::read_str(bytes, pos)?,
-            artifact_kind: crate::os_spr::read_str(bytes, pos)?,
-            standard: crate::os_spr::read_str(bytes, pos)?,
-            subset: crate::os_spr::read_str(bytes, pos)?,
+            artifact_id: protocol::read_str(bytes, pos)?,
+            artifact_kind: protocol::read_str(bytes, pos)?,
+            standard: protocol::read_str(bytes, pos)?,
+            subset: protocol::read_str(bytes, pos)?,
         };
         let parent = DocumentArchiveArtifactRef {
-            artifact_id: crate::os_spr::read_str(bytes, pos)?,
-            artifact_kind: crate::os_spr::read_str(bytes, pos)?,
-            standard: crate::os_spr::read_str(bytes, pos)?,
-            subset: crate::os_spr::read_str(bytes, pos)?,
+            artifact_id: protocol::read_str(bytes, pos)?,
+            artifact_kind: protocol::read_str(bytes, pos)?,
+            standard: protocol::read_str(bytes, pos)?,
+            subset: protocol::read_str(bytes, pos)?,
         };
-        let owner = DocumentArchiveOwnerRef { parent, slot: crate::os_spr::read_str(bytes, pos)?, child_id: crate::os_spr::read_str(bytes, pos)? };
-        let envelope_pack = crate::os_spr::read_bytes(bytes, pos)?;
+        let owner = DocumentArchiveOwnerRef { parent, slot: protocol::read_str(bytes, pos)?, child_id: protocol::read_str(bytes, pos)? };
+        let envelope_pack = protocol::read_bytes(bytes, pos)?;
         members.push(OwnedDocumentMemberPackEntry { ordinal, reference, owner, envelope_pack });
     }
     Ok(DocumentArchivePack { parent_pack, parent_spr, members })
 }
 
 /// 🗃️ Decodes one exact persisted recursive-document archive and rejects trailing ownership.
-pub async fn decode_document_archive_bytes(bytes: &[u8]) -> Result<DocumentArchivePack, crate::os_spr::ProtocolError> {
+pub async fn decode_document_archive_bytes(bytes: &[u8]) -> Result<DocumentArchivePack, protocol::ProtocolError> {
     if bytes.is_empty() || bytes.len() > DOCUMENT_ARCHIVE_MAXIMUM_BYTES {
         return Err(malformed("document archive bytes", 0, "archive exceeds its fixed byte authority"));
     }
@@ -2769,106 +2769,106 @@ pub async fn decode_document_archive_bytes(bytes: &[u8]) -> Result<DocumentArchi
 
 /// 🪟️ Writes the exact concrete-window config pack roster.
 async fn write_vec_window_config_pack(out: &mut Vec<u8>, entries: &[WindowConfigPackEntry]) {
-    crate::os_spr::write_varint_u64(out, entries.len() as u64);
+    protocol::write_varint_u64(out, entries.len() as u64);
     for entry in entries {
-        crate::os_spr::write_str(out, &entry.window_id);
-        crate::os_spr::write_str(out, &entry.window_kind_id);
-        crate::os_spr::write_bytes(out, &entry.envelope_pack);
+        protocol::write_str(out, &entry.window_id);
+        protocol::write_str(out, &entry.window_kind_id);
+        protocol::write_bytes(out, &entry.envelope_pack);
     }
 }
 
 /// 🪟️ Reads the exact concrete-window config pack roster.
-async fn read_vec_window_config_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<WindowConfigPackEntry>, crate::os_spr::ProtocolError> {
-    let count = crate::os_spr::read_varint_u64(bytes, pos)?;
+async fn read_vec_window_config_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<WindowConfigPackEntry>, protocol::ProtocolError> {
+    let count = protocol::read_varint_u64(bytes, pos)?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
         entries.push(WindowConfigPackEntry {
-            window_id: crate::os_spr::read_str(bytes, pos)?,
-            window_kind_id: crate::os_spr::read_str(bytes, pos)?,
-            envelope_pack: crate::os_spr::read_bytes(bytes, pos)?,
+            window_id: protocol::read_str(bytes, pos)?,
+            window_kind_id: protocol::read_str(bytes, pos)?,
+            envelope_pack: protocol::read_bytes(bytes, pos)?,
         });
     }
     Ok(entries)
 }
 
 /// 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
-pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
+pub async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let command = match tag {
-        0 => AppCommand::ConfigCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        1 => AppCommand::Command { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)?, view_state: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        2 => AppCommand::CommandText { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, line: crate::os_spr::read_str(bytes, &mut pos)? },
-        3 => AppCommand::ContextMenu { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        4 => AppCommand::ArtifactCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        5 => AppCommand::ApplyEnvelopes { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
-        7 => AppCommand::ReadDocument { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        8 => AppCommand::LoadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        9 => AppCommand::ReadConfig { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        10 => AppCommand::MediaIn { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        11 => AppCommand::MediaOut { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, request: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        12 => AppCommand::MediaFingerprint { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)? },
-        13 => AppCommand::PureCommand { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, command: crate::os_spr::read_bytes(bytes, &mut pos)?, head: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        14 => AppCommand::LoadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
-        15 => AppCommand::ReadChildren { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        16 => AppCommand::ReadHistory { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        0 => AppCommand::ConfigCommand { seq: protocol::read_varint_u64(bytes, &mut pos)?, command: protocol::read_bytes(bytes, &mut pos)? },
+        1 => AppCommand::Command { seq: protocol::read_varint_u64(bytes, &mut pos)?, command: protocol::read_bytes(bytes, &mut pos)?, view_state: protocol::read_bytes(bytes, &mut pos)? },
+        2 => AppCommand::CommandText { seq: protocol::read_varint_u64(bytes, &mut pos)?, line: protocol::read_str(bytes, &mut pos)? },
+        3 => AppCommand::ContextMenu { seq: protocol::read_varint_u64(bytes, &mut pos)?, request: protocol::read_bytes(bytes, &mut pos)? },
+        4 => AppCommand::ArtifactCommand { seq: protocol::read_varint_u64(bytes, &mut pos)?, command: protocol::read_bytes(bytes, &mut pos)? },
+        5 => AppCommand::ApplyEnvelopes { seq: protocol::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos).await? },
+        7 => AppCommand::ReadDocument { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        8 => AppCommand::LoadConfig { seq: protocol::read_varint_u64(bytes, &mut pos)?, pack: protocol::read_bytes(bytes, &mut pos)?, spr: protocol::read_bytes(bytes, &mut pos)? },
+        9 => AppCommand::ReadConfig { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        10 => AppCommand::MediaIn { seq: protocol::read_varint_u64(bytes, &mut pos)?, port: protocol::read_str(bytes, &mut pos)?, descriptor: protocol::read_bytes(bytes, &mut pos)?, data: protocol::read_bytes(bytes, &mut pos)? },
+        11 => AppCommand::MediaOut { seq: protocol::read_varint_u64(bytes, &mut pos)?, port: protocol::read_str(bytes, &mut pos)?, request: protocol::read_bytes(bytes, &mut pos)? },
+        12 => AppCommand::MediaFingerprint { seq: protocol::read_varint_u64(bytes, &mut pos)?, port: protocol::read_str(bytes, &mut pos)? },
+        13 => AppCommand::PureCommand { seq: protocol::read_varint_u64(bytes, &mut pos)?, command: protocol::read_bytes(bytes, &mut pos)?, head: protocol::read_bytes(bytes, &mut pos)? },
+        14 => AppCommand::LoadChildren { seq: protocol::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
+        15 => AppCommand::ReadChildren { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        16 => AppCommand::ReadHistory { seq: protocol::read_varint_u64(bytes, &mut pos)? },
         17 => AppCommand::TransactionPrepare {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            txn_id: crate::os_spr::read_str(bytes, &mut pos)?,
-            mutation_id: crate::os_spr::read_str(bytes, &mut pos)?,
-            payload: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            seq: protocol::read_varint_u64(bytes, &mut pos)?,
+            txn_id: protocol::read_str(bytes, &mut pos)?,
+            mutation_id: protocol::read_str(bytes, &mut pos)?,
+            payload: protocol::read_bytes(bytes, &mut pos)?,
             prepared_ops: read_vec_bytes(bytes, &mut pos).await?,
-            origin: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            prepared_child_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            origin: protocol::read_bytes(bytes, &mut pos)?,
+            prepared_child_ops: protocol::read_bytes(bytes, &mut pos)?,
         },
-        18 => AppCommand::TransactionCommit { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
-        19 => AppCommand::TransactionRollback { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
-        20 => AppCommand::TransactionUndo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
-        21 => AppCommand::TransactionRedo { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, group_id: crate::os_spr::read_str(bytes, &mut pos)? },
+        18 => AppCommand::TransactionCommit { seq: protocol::read_varint_u64(bytes, &mut pos)?, txn_id: protocol::read_str(bytes, &mut pos)? },
+        19 => AppCommand::TransactionRollback { seq: protocol::read_varint_u64(bytes, &mut pos)?, txn_id: protocol::read_str(bytes, &mut pos)? },
+        20 => AppCommand::TransactionUndo { seq: protocol::read_varint_u64(bytes, &mut pos)?, group_id: protocol::read_str(bytes, &mut pos)? },
+        21 => AppCommand::TransactionRedo { seq: protocol::read_varint_u64(bytes, &mut pos)?, group_id: protocol::read_str(bytes, &mut pos)? },
         22 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let artifact_ref = crate::os_spr::read_str(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
+            let artifact_ref = protocol::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command OpenArtifact.role", pos as u64, "truncated"))?;
             pos += 1;
-            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
-            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let plugin_id = protocol::read_str(bytes, &mut pos)?;
+            let app_id = protocol::read_str(bytes, &mut pos)?;
             AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id }
         }
         23 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
-            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
-            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = protocol::read_str(bytes, &mut pos)?;
+            let standard = protocol::read_str(bytes, &mut pos)?;
+            let subset = protocol::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetDefaultApp.role", pos as u64, "truncated"))?;
             pos += 1;
-            let plugin_id = crate::os_spr::read_str(bytes, &mut pos)?;
-            let app_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let plugin_id = protocol::read_str(bytes, &mut pos)?;
+            let app_id = protocol::read_str(bytes, &mut pos)?;
             AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id }
         }
         24 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let artifact_kind = crate::os_spr::read_str(bytes, &mut pos)?;
-            let standard = crate::os_spr::read_str(bytes, &mut pos)?;
-            let subset = crate::os_spr::read_str(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
+            let artifact_kind = protocol::read_str(bytes, &mut pos)?;
+            let standard = protocol::read_str(bytes, &mut pos)?;
+            let subset = protocol::read_str(bytes, &mut pos)?;
             let role = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ClearDefaultApp.role", pos as u64, "truncated"))?;
             AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role }
         }
         25 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
             let policy = *bytes.get(pos).ok_or_else(|| malformed("channel app-command SetMergePolicy.policy", pos as u64, "truncated"))?;
             AppCommand::SetMergePolicy { seq, policy }
         }
         26 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let conflict_id = crate::os_spr::read_str(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
+            let conflict_id = protocol::read_str(bytes, &mut pos)?;
             let resolution = *bytes.get(pos).ok_or_else(|| malformed("channel app-command ResolveConflict.resolution", pos as u64, "truncated"))?;
             AppCommand::ResolveConflict { seq, conflict_id, resolution }
         }
-        27 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        27 => AppCommand::ReadConflicts { seq: protocol::read_varint_u64(bytes, &mut pos)? },
         28 => return Err(malformed("channel presence command", pos as u64, "Presence requires reserve-before-decode PresenceCommandCursor admission")),
         29 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let length = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
+            let length = protocol::read_varint_u64(bytes, &mut pos)?;
             if length > 142 || length as usize != bytes.len().saturating_sub(pos) {
                 return Err(malformed("local interaction command", pos as u64, "invalid exact bounded envelope"));
             }
@@ -2876,27 +2876,27 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
             AppCommand::LocalInteractionQuery { seq, command }
         }
         30 => AppCommand::LoadWindowConfig {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            seq: protocol::read_varint_u64(bytes, &mut pos)?,
             entry: WindowConfigPackEntry {
-                window_id: crate::os_spr::read_str(bytes, &mut pos)?,
-                window_kind_id: crate::os_spr::read_str(bytes, &mut pos)?,
-                envelope_pack: crate::os_spr::read_bytes(bytes, &mut pos)?,
+                window_id: protocol::read_str(bytes, &mut pos)?,
+                window_kind_id: protocol::read_str(bytes, &mut pos)?,
+                envelope_pack: protocol::read_bytes(bytes, &mut pos)?,
             },
         },
-        31 => AppCommand::ReadWindowConfigs { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        32 => AppCommand::LoadDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
-        33 => AppCommand::ReadDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        34 => AppCommand::PollDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        35 => AppCommand::CancelDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        36 => AppCommand::AcknowledgeDocumentArchiveLoad { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, operation: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        31 => AppCommand::ReadWindowConfigs { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        32 => AppCommand::LoadDocumentArchive { seq: protocol::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
+        33 => AppCommand::ReadDocumentArchive { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        34 => AppCommand::PollDocumentArchiveLoad { seq: protocol::read_varint_u64(bytes, &mut pos)?, operation: protocol::read_varint_u64(bytes, &mut pos)? },
+        35 => AppCommand::CancelDocumentArchiveLoad { seq: protocol::read_varint_u64(bytes, &mut pos)?, operation: protocol::read_varint_u64(bytes, &mut pos)? },
+        36 => AppCommand::AcknowledgeDocumentArchiveLoad { seq: protocol::read_varint_u64(bytes, &mut pos)?, operation: protocol::read_varint_u64(bytes, &mut pos)? },
         37 => AppCommand::SubmitMediaExport {
-            seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            port: crate::os_spr::read_str(bytes, &mut pos)?,
-            expected_parent_document_id: crate::os_spr::read_str(bytes, &mut pos)?,
-            expected_base_revision: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            seq: protocol::read_varint_u64(bytes, &mut pos)?,
+            port: protocol::read_str(bytes, &mut pos)?,
+            expected_parent_document_id: protocol::read_str(bytes, &mut pos)?,
+            expected_base_revision: protocol::read_varint_u64(bytes, &mut pos)?,
         },
         38..=40 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let seq = protocol::read_varint_u64(bytes, &mut pos)?;
             let handle = read_media_export_handle(bytes, &mut pos)?;
             match tag {
                 38 => AppCommand::PollMediaExport { seq, handle },
@@ -2905,9 +2905,9 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
                 _ => unreachable!(),
             }
         }
-        41 => AppCommand::ReadDocumentIdentity { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        42 => AppCommand::ReadChildHeads { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        43 => AppCommand::MergeDocumentArchive { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
+        41 => AppCommand::ReadDocumentIdentity { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        42 => AppCommand::ReadChildHeads { seq: protocol::read_varint_u64(bytes, &mut pos)? },
+        43 => AppCommand::MergeDocumentArchive { seq: protocol::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -2915,7 +2915,7 @@ pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate
 
 /// 🪪 Reads only the fixed Presence tag and sequence so the app can reserve its exact
 /// item/byte owner before the roster decoder allocates or copies any entry.
-pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
+pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, protocol::ProtocolError> {
     let Some(tag) = bytes.first().copied() else {
         return Err(malformed("channel app-command tag", 0, "empty frame"));
     };
@@ -2923,7 +2923,7 @@ pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, crate::os_
         return Ok(None);
     }
     let mut pos = 1usize;
-    crate::os_spr::read_varint_u64(bytes, &mut pos).map(Some)
+    Ok(Some(protocol::read_varint_u64(bytes, &mut pos)?))
 }
 
 /// 📤️ Encodes one `AppFrame`: `tag u8 | fields`.
@@ -2936,212 +2936,212 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
         }
         AppFrame::Done { in_reply_to } => {
             out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
         }
         AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages, mutations, inverse_group } => {
             assert!(mutations.len() <= INVOCATION_RESULT_PACK_MAXIMUM_BYTES && inverse_group.len() <= INVOCATION_RESULT_PACK_MAXIMUM_BYTES, "invocation result pack exceeds command transport authority");
             out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, output);
-            crate::os_spr::write_bytes(&mut out, diagnostics);
-            crate::os_spr::write_bytes(&mut out, ui_scope);
-            crate::os_spr::write_bytes(&mut out, history_patch);
-            crate::os_spr::write_bytes(&mut out, messages);
-            crate::os_spr::write_bytes(&mut out, mutations);
-            crate::os_spr::write_bytes(&mut out, inverse_group);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, output);
+            protocol::write_bytes(&mut out, diagnostics);
+            protocol::write_bytes(&mut out, ui_scope);
+            protocol::write_bytes(&mut out, history_patch);
+            protocol::write_bytes(&mut out, messages);
+            protocol::write_bytes(&mut out, mutations);
+            protocol::write_bytes(&mut out, inverse_group);
         }
         AppFrame::DocumentChanged { envelopes, origin } => {
             out.push(2);
             write_vec_envelope(&mut out, envelopes).await;
-            crate::os_spr::write_str(&mut out, origin);
+            protocol::write_str(&mut out, origin);
         }
         AppFrame::Document { in_reply_to, pack, spr, ops } => {
             out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, pack);
+            protocol::write_bytes(&mut out, spr);
+            protocol::write_str(&mut out, ops);
         }
         AppFrame::Config { in_reply_to, pack, spr, ops } => {
             out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, pack);
+            protocol::write_bytes(&mut out, spr);
+            protocol::write_str(&mut out, ops);
         }
         AppFrame::WindowConfigs { in_reply_to, entries } => {
             out.push(24);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_vec_window_config_pack(&mut out, entries).await;
         }
         AppFrame::ConfigChanged { envelopes, origin } => {
             out.push(5);
             write_vec_envelope(&mut out, envelopes).await;
-            crate::os_spr::write_str(&mut out, origin);
+            protocol::write_str(&mut out, origin);
         }
         AppFrame::ContextMenu { in_reply_to, items } => {
             out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, items);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, items);
         }
         AppFrame::Media { in_reply_to, port, descriptor, data } => {
             out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, descriptor);
-            crate::os_spr::write_bytes(&mut out, data);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_str(&mut out, port);
+            protocol::write_bytes(&mut out, descriptor);
+            protocol::write_bytes(&mut out, data);
         }
         AppFrame::MediaFingerprint { in_reply_to, port, fingerprint } => {
             out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, fingerprint);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_str(&mut out, port);
+            protocol::write_bytes(&mut out, fingerprint);
         }
         AppFrame::Error { in_reply_to, fault, report } => {
             out.push(9);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, fault);
-            crate::os_spr::write_bytes(&mut out, report);
+            protocol::write_bytes(&mut out, fault);
+            protocol::write_bytes(&mut out, report);
         }
         AppFrame::Emit { in_reply_to, document_ops, config_ops, draft_ops, output, diagnostics, child_ops } => {
             out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, document_ops);
-            crate::os_spr::write_bytes(&mut out, config_ops);
-            crate::os_spr::write_bytes(&mut out, draft_ops);
-            crate::os_spr::write_bytes(&mut out, output);
-            crate::os_spr::write_bytes(&mut out, diagnostics);
-            crate::os_spr::write_bytes(&mut out, child_ops);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, document_ops);
+            protocol::write_bytes(&mut out, config_ops);
+            protocol::write_bytes(&mut out, draft_ops);
+            protocol::write_bytes(&mut out, output);
+            protocol::write_bytes(&mut out, diagnostics);
+            protocol::write_bytes(&mut out, child_ops);
         }
         AppFrame::Draft { in_reply_to, pack, spr, ops } => {
             out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-            crate::os_spr::write_str(&mut out, ops);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, pack);
+            protocol::write_bytes(&mut out, spr);
+            protocol::write_str(&mut out, ops);
         }
         AppFrame::Children { in_reply_to, entries } => {
             out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_pack(&mut out, entries).await;
         }
         AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction, tool_run, history_edit } => {
             out.push(13);
-            crate::os_spr::write_bytes(&mut out, presence);
-            crate::os_spr::write_varint_u64(&mut out, *presence_generation);
-            crate::os_spr::write_varint_u64(&mut out, *transient_generation);
-            crate::os_spr::write_bytes(&mut out, interaction);
-            crate::os_spr::write_bytes(&mut out, tool_run);
-            crate::os_spr::write_bytes(&mut out, history_edit);
+            protocol::write_bytes(&mut out, presence);
+            protocol::write_varint_u64(&mut out, *presence_generation);
+            protocol::write_varint_u64(&mut out, *transient_generation);
+            protocol::write_bytes(&mut out, interaction);
+            protocol::write_bytes(&mut out, tool_run);
+            protocol::write_bytes(&mut out, history_edit);
         }
         AppFrame::HistorySnapshot { in_reply_to, history_patch } => {
             out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_bytes(&mut out, history_patch);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_bytes(&mut out, history_patch);
         }
         AppFrame::TransactionProposal { in_reply_to, proposal_id, local_ops, foreign } => {
             out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_str(&mut out, proposal_id);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_str(&mut out, proposal_id);
             write_vec_bytes(&mut out, local_ops).await;
             write_vec_bytes(&mut out, foreign).await;
         }
         AppFrame::TransactionPrepared { txn_id, foreign, rejection } => {
             out.push(16);
-            crate::os_spr::write_str(&mut out, txn_id);
+            protocol::write_str(&mut out, txn_id);
             write_vec_bytes(&mut out, foreign).await;
-            crate::os_spr::write_bytes(&mut out, rejection);
+            protocol::write_bytes(&mut out, rejection);
         }
         AppFrame::TransactionCommitted { txn_id, edit_id } => {
             out.push(17);
-            crate::os_spr::write_str(&mut out, txn_id);
-            crate::os_spr::write_str(&mut out, edit_id);
+            protocol::write_str(&mut out, txn_id);
+            protocol::write_str(&mut out, edit_id);
         }
         AppFrame::TransactionRolledBack { txn_id } => {
             out.push(18);
-            crate::os_spr::write_str(&mut out, txn_id);
+            protocol::write_str(&mut out, txn_id);
         }
         AppFrame::MergeReport { in_reply_to, report } => {
             out.push(19);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, report);
+            protocol::write_bytes(&mut out, report);
         }
         AppFrame::Conflicts { in_reply_to, conflicts } => {
             out.push(20);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_bytes(&mut out, conflicts);
+            protocol::write_bytes(&mut out, conflicts);
         }
         AppFrame::UiPatch { in_reply_to, surface, kind, revision, base_revision, ops } => {
             out.push(21);
             write_opt_u64(&mut out, in_reply_to).await;
-            crate::os_spr::write_str(&mut out, surface);
-            crate::os_spr::write_str(&mut out, kind);
-            crate::os_spr::write_varint_u64(&mut out, *revision);
-            crate::os_spr::write_varint_u64(&mut out, *base_revision);
-            crate::os_spr::write_bytes(&mut out, ops);
+            protocol::write_str(&mut out, surface);
+            protocol::write_str(&mut out, kind);
+            protocol::write_varint_u64(&mut out, *revision);
+            protocol::write_varint_u64(&mut out, *base_revision);
+            protocol::write_bytes(&mut out, ops);
         }
         AppFrame::UiSnapshotEnd { revision } => {
             out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *revision);
+            protocol::write_varint_u64(&mut out, *revision);
         }
         AppFrame::OperationCompleted { operation, revision, ui_scope, history_patch } => {
             out.push(25);
-            crate::os_spr::write_varint_u64(&mut out, *operation);
-            crate::os_spr::write_varint_u64(&mut out, *revision);
-            crate::os_spr::write_bytes(&mut out, ui_scope);
-            crate::os_spr::write_bytes(&mut out, history_patch);
+            protocol::write_varint_u64(&mut out, *operation);
+            protocol::write_varint_u64(&mut out, *revision);
+            protocol::write_bytes(&mut out, ui_scope);
+            protocol::write_bytes(&mut out, history_patch);
         }
         AppFrame::DocumentArchive { in_reply_to, archive } => {
             assert!(archive.members.len() <= DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS, "document archive exceeds its fixed 1024-member authority");
             out.push(26);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_document_archive(&mut out, archive);
         }
         AppFrame::DocumentArchiveLoad { in_reply_to, status } => {
             out.push(27);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_varint_u64(&mut out, status.operation);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, status.operation);
             out.push(status.state.wire());
-            crate::os_spr::write_varint_u64(&mut out, status.completed);
-            crate::os_spr::write_varint_u64(&mut out, status.total);
-            crate::os_spr::write_varint_u64(&mut out, status.ahead);
-            crate::os_spr::write_bytes(&mut out, &status.fault);
+            protocol::write_varint_u64(&mut out, status.completed);
+            protocol::write_varint_u64(&mut out, status.total);
+            protocol::write_varint_u64(&mut out, status.ahead);
+            protocol::write_bytes(&mut out, &status.fault);
         }
         AppFrame::MediaExportSubmitted { in_reply_to, handle } => {
             out.push(28);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_media_export_handle(&mut out, handle);
         }
         AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail } => {
             out.push(29);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_media_export_handle(&mut out, handle);
             out.push(state.wire());
-            crate::os_spr::write_varint_u64(&mut out, *applied_progress);
-            crate::os_spr::write_bool(&mut out, *checkpoint_available);
-            crate::os_spr::write_str(&mut out, mime_type);
-            crate::os_spr::write_varint_u64(&mut out, *total_bytes);
-            crate::os_spr::write_str(&mut out, detail);
+            protocol::write_varint_u64(&mut out, *applied_progress);
+            protocol::write_bool(&mut out, *checkpoint_available);
+            protocol::write_str(&mut out, mime_type);
+            protocol::write_varint_u64(&mut out, *total_bytes);
+            protocol::write_str(&mut out, detail);
         }
         AppFrame::MediaExportChunk { in_reply_to, handle, data, terminal } => {
             out.push(30);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_media_export_handle(&mut out, handle);
-            crate::os_spr::write_bytes(&mut out, data);
-            crate::os_spr::write_bool(&mut out, *terminal);
+            protocol::write_bytes(&mut out, data);
+            protocol::write_bool(&mut out, *terminal);
         }
         AppFrame::DocumentIdentity { in_reply_to, identity } => {
             out.push(31);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
-            crate::os_spr::write_varint_u64(&mut out, u64::from(identity.app_instance_id));
-            crate::os_spr::write_bool(&mut out, identity.parent_document_id.is_some());
+            protocol::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, u64::from(identity.app_instance_id));
+            protocol::write_bool(&mut out, identity.parent_document_id.is_some());
             if let Some(id) = &identity.parent_document_id {
-                crate::os_spr::write_str(&mut out, id);
+                protocol::write_str(&mut out, id);
             }
         }
         AppFrame::ChildHeads { in_reply_to, entries } => {
             out.push(32);
-            crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
+            protocol::write_varint_u64(&mut out, *in_reply_to);
             write_vec_child_head(&mut out, entries);
         }
     }
@@ -3149,74 +3149,74 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
 }
 
 /// 📥️ Decodes one `AppFrame`, the inverse of [`encode_app_frame`].
-pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::ProtocolError> {
+pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-frame tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let frame = match tag {
-        0 => AppFrame::Done { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        0 => AppFrame::Done { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)? },
         1 => AppFrame::Invocation {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            messages: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
+            output: protocol::read_bytes(bytes, &mut pos)?,
+            diagnostics: protocol::read_bytes(bytes, &mut pos)?,
+            ui_scope: protocol::read_bytes(bytes, &mut pos)?,
+            history_patch: protocol::read_bytes(bytes, &mut pos)?,
+            messages: protocol::read_bytes(bytes, &mut pos)?,
             mutations: read_invocation_result_pack(bytes, &mut pos)?,
             inverse_group: read_invocation_result_pack(bytes, &mut pos)?,
         },
-        2 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
-        3 => AppFrame::Document { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
-        4 => AppFrame::Config { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
-        5 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
-        6 => AppFrame::ContextMenu { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, items: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        2 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: protocol::read_str(bytes, &mut pos)? },
+        3 => AppFrame::Document { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, pack: protocol::read_bytes(bytes, &mut pos)?, spr: protocol::read_bytes(bytes, &mut pos)?, ops: protocol::read_str(bytes, &mut pos)? },
+        4 => AppFrame::Config { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, pack: protocol::read_bytes(bytes, &mut pos)?, spr: protocol::read_bytes(bytes, &mut pos)?, ops: protocol::read_str(bytes, &mut pos)? },
+        5 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: protocol::read_str(bytes, &mut pos)? },
+        6 => AppFrame::ContextMenu { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, items: protocol::read_bytes(bytes, &mut pos)? },
         7 => {
-            AppFrame::Media { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, descriptor: crate::os_spr::read_bytes(bytes, &mut pos)?, data: crate::os_spr::read_bytes(bytes, &mut pos)? }
+            AppFrame::Media { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, port: protocol::read_str(bytes, &mut pos)?, descriptor: protocol::read_bytes(bytes, &mut pos)?, data: protocol::read_bytes(bytes, &mut pos)? }
         }
-        8 => AppFrame::MediaFingerprint { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, port: crate::os_spr::read_str(bytes, &mut pos)?, fingerprint: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        9 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos).await?, fault: crate::os_spr::read_bytes(bytes, &mut pos)?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        8 => AppFrame::MediaFingerprint { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, port: protocol::read_str(bytes, &mut pos)?, fingerprint: protocol::read_bytes(bytes, &mut pos)? },
+        9 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos).await?, fault: protocol::read_bytes(bytes, &mut pos)?, report: protocol::read_bytes(bytes, &mut pos)? },
         10 => AppFrame::Emit {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            document_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            config_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            draft_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            output: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            diagnostics: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            child_ops: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
+            document_ops: protocol::read_bytes(bytes, &mut pos)?,
+            config_ops: protocol::read_bytes(bytes, &mut pos)?,
+            draft_ops: protocol::read_bytes(bytes, &mut pos)?,
+            output: protocol::read_bytes(bytes, &mut pos)?,
+            diagnostics: protocol::read_bytes(bytes, &mut pos)?,
+            child_ops: protocol::read_bytes(bytes, &mut pos)?,
         },
-        11 => AppFrame::Draft { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
-        12 => AppFrame::Children { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
+        11 => AppFrame::Draft { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, pack: protocol::read_bytes(bytes, &mut pos)?, spr: protocol::read_bytes(bytes, &mut pos)?, ops: protocol::read_str(bytes, &mut pos)? },
+        12 => AppFrame::Children { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_pack(bytes, &mut pos).await? },
         13 => AppFrame::Ephemeral {
-            presence: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            presence_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            transient_generation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            interaction: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            tool_run: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            history_edit: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            presence: protocol::read_bytes(bytes, &mut pos)?,
+            presence_generation: protocol::read_varint_u64(bytes, &mut pos)?,
+            transient_generation: protocol::read_varint_u64(bytes, &mut pos)?,
+            interaction: protocol::read_bytes(bytes, &mut pos)?,
+            tool_run: protocol::read_bytes(bytes, &mut pos)?,
+            history_edit: protocol::read_bytes(bytes, &mut pos)?,
         },
-        14 => AppFrame::HistorySnapshot { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, history_patch: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        14 => AppFrame::HistorySnapshot { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, history_patch: protocol::read_bytes(bytes, &mut pos)? },
         15 => AppFrame::TransactionProposal {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            proposal_id: crate::os_spr::read_str(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
+            proposal_id: protocol::read_str(bytes, &mut pos)?,
             local_ops: read_vec_bytes(bytes, &mut pos).await?,
             foreign: read_vec_bytes(bytes, &mut pos).await?,
         },
-        16 => AppFrame::TransactionPrepared { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, foreign: read_vec_bytes(bytes, &mut pos).await?, rejection: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        17 => AppFrame::TransactionCommitted { txn_id: crate::os_spr::read_str(bytes, &mut pos)?, edit_id: crate::os_spr::read_str(bytes, &mut pos)? },
-        18 => AppFrame::TransactionRolledBack { txn_id: crate::os_spr::read_str(bytes, &mut pos)? },
-        19 => AppFrame::MergeReport { in_reply_to: read_opt_u64(bytes, &mut pos).await?, report: crate::os_spr::read_bytes(bytes, &mut pos)? },
-        20 => AppFrame::Conflicts { in_reply_to: read_opt_u64(bytes, &mut pos).await?, conflicts: crate::os_spr::read_bytes(bytes, &mut pos)? },
+        16 => AppFrame::TransactionPrepared { txn_id: protocol::read_str(bytes, &mut pos)?, foreign: read_vec_bytes(bytes, &mut pos).await?, rejection: protocol::read_bytes(bytes, &mut pos)? },
+        17 => AppFrame::TransactionCommitted { txn_id: protocol::read_str(bytes, &mut pos)?, edit_id: protocol::read_str(bytes, &mut pos)? },
+        18 => AppFrame::TransactionRolledBack { txn_id: protocol::read_str(bytes, &mut pos)? },
+        19 => AppFrame::MergeReport { in_reply_to: read_opt_u64(bytes, &mut pos).await?, report: protocol::read_bytes(bytes, &mut pos)? },
+        20 => AppFrame::Conflicts { in_reply_to: read_opt_u64(bytes, &mut pos).await?, conflicts: protocol::read_bytes(bytes, &mut pos)? },
         21 => {
             let in_reply_to = read_opt_u64(bytes, &mut pos).await?;
-            let surface = crate::os_spr::read_str(bytes, &mut pos)?;
-            let kind = crate::os_spr::read_str(bytes, &mut pos)?;
-            let revision = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let base_revision = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let ops = crate::os_spr::read_bytes(bytes, &mut pos)?;
+            let surface = protocol::read_str(bytes, &mut pos)?;
+            let kind = protocol::read_str(bytes, &mut pos)?;
+            let revision = protocol::read_varint_u64(bytes, &mut pos)?;
+            let base_revision = protocol::read_varint_u64(bytes, &mut pos)?;
+            let ops = protocol::read_bytes(bytes, &mut pos)?;
             AppFrame::UiPatch { in_reply_to, surface, kind, revision, base_revision, ops }
         }
-        22 => AppFrame::UiSnapshotEnd { revision: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
+        22 => AppFrame::UiSnapshotEnd { revision: protocol::read_varint_u64(bytes, &mut pos)? },
         23 => {
-            let length = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let length = protocol::read_varint_u64(bytes, &mut pos)?;
             if length > 4256 || length as usize != bytes.len().saturating_sub(pos) {
                 return Err(malformed("local interaction reply", pos as u64, "invalid exact bounded envelope"));
             }
@@ -3225,62 +3225,62 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             AppFrame::LocalInteractionQuery { reply }
         }
         24 => AppFrame::WindowConfigs {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
             entries: read_vec_window_config_pack(bytes, &mut pos).await?,
         },
         25 => AppFrame::OperationCompleted {
-            operation: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            revision: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
-            ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            operation: protocol::read_varint_u64(bytes, &mut pos)?,
+            revision: protocol::read_varint_u64(bytes, &mut pos)?,
+            ui_scope: protocol::read_bytes(bytes, &mut pos)?,
+            history_patch: protocol::read_bytes(bytes, &mut pos)?,
         },
-        26 => AppFrame::DocumentArchive { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
+        26 => AppFrame::DocumentArchive { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, archive: read_document_archive(bytes, &mut pos).await? },
         27 => {
-            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let operation = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let in_reply_to = protocol::read_varint_u64(bytes, &mut pos)?;
+            let operation = protocol::read_varint_u64(bytes, &mut pos)?;
             let state = DocumentArchiveLoadState::from_wire(*bytes.get(pos).ok_or_else(|| malformed("document archive load state", pos as u64, "truncated"))?)?;
             pos += 1;
-            let completed = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let total = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let ahead = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let fault = crate::os_spr::read_bytes(bytes, &mut pos)?;
+            let completed = protocol::read_varint_u64(bytes, &mut pos)?;
+            let total = protocol::read_varint_u64(bytes, &mut pos)?;
+            let ahead = protocol::read_varint_u64(bytes, &mut pos)?;
+            let fault = protocol::read_bytes(bytes, &mut pos)?;
             AppFrame::DocumentArchiveLoad { in_reply_to, status: DocumentArchiveLoadStatus { operation, state, completed, total, ahead, fault } }
         }
         28 => AppFrame::MediaExportSubmitted {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
             handle: read_media_export_handle(bytes, &mut pos)?,
         },
         29 => {
-            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
+            let in_reply_to = protocol::read_varint_u64(bytes, &mut pos)?;
             let handle = read_media_export_handle(bytes, &mut pos)?;
             let state = MediaExportStateWire::from_wire(*bytes.get(pos).ok_or_else(|| malformed("media export state", pos as u64, "truncated"))?)?;
             pos += 1;
-            let applied_progress = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let checkpoint_available = crate::os_spr::read_bool(bytes, &mut pos)?;
-            let mime_type = crate::os_spr::read_str(bytes, &mut pos)?;
-            let total_bytes = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let detail = crate::os_spr::read_str(bytes, &mut pos)?;
+            let applied_progress = protocol::read_varint_u64(bytes, &mut pos)?;
+            let checkpoint_available = protocol::read_bool(bytes, &mut pos)?;
+            let mime_type = protocol::read_str(bytes, &mut pos)?;
+            let total_bytes = protocol::read_varint_u64(bytes, &mut pos)?;
+            let detail = protocol::read_str(bytes, &mut pos)?;
             AppFrame::MediaExportStatus { in_reply_to, handle, state, applied_progress, checkpoint_available, mime_type, total_bytes, detail }
         }
         30 => AppFrame::MediaExportChunk {
-            in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?,
+            in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?,
             handle: read_media_export_handle(bytes, &mut pos)?,
-            data: crate::os_spr::read_bytes(bytes, &mut pos)?,
-            terminal: crate::os_spr::read_bool(bytes, &mut pos)?,
+            data: protocol::read_bytes(bytes, &mut pos)?,
+            terminal: protocol::read_bool(bytes, &mut pos)?,
         },
         31 => {
             if bytes.len() > 2_070 {
                 return Err(malformed("channel document identity", pos as u64, "identity frame byte budget exceeded"));
             }
-            let in_reply_to = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let app_instance_id = u32::try_from(crate::os_spr::read_varint_u64(bytes, &mut pos)?).map_err(|_| malformed("channel document identity", pos as u64, "app instance exceeds u32"))?;
+            let in_reply_to = protocol::read_varint_u64(bytes, &mut pos)?;
+            let app_instance_id = u32::try_from(protocol::read_varint_u64(bytes, &mut pos)?).map_err(|_| malformed("channel document identity", pos as u64, "app instance exceeds u32"))?;
             let presence = *bytes.get(pos).ok_or_else(|| malformed("channel document identity", pos as u64, "truncated document presence"))?;
             pos += 1;
             if presence > 1 {
                 return Err(malformed("channel document identity", pos as u64, "document presence must be zero or one"));
             }
             let parent_document_id = if presence == 1 {
-                let id = crate::os_spr::read_str(bytes, &mut pos)?;
+                let id = protocol::read_str(bytes, &mut pos)?;
                 if !(1..=512).contains(&id.chars().count()) {
                     return Err(malformed("channel document identity", pos as u64, "document id length refused"));
                 }
@@ -3288,7 +3288,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             } else { None };
             AppFrame::DocumentIdentity { in_reply_to, identity: AppDocumentIdentity { app_instance_id, parent_document_id } }
         }
-        32 => AppFrame::ChildHeads { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_head(bytes, &mut pos)? },
+        32 => AppFrame::ChildHeads { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_head(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     if pos != bytes.len() {
@@ -3306,7 +3306,7 @@ pub fn encode_local_interaction_query_frame_into(reply: &protocol::LocalInteract
         return Err("local-interaction.frame-not-admitted");
     }
     out.push(23);
-    crate::os_spr::write_varint_u64(out, length as u64);
+    protocol::write_varint_u64(out, length as u64);
     protocol::encode_local_interaction_query_reply_into(reply, out)
 }
 
@@ -3316,6 +3316,11 @@ pub fn encode_local_interaction_query_frame_into(reply: &protocol::LocalInteract
 mod tests;
 //#endregion 🧪️Tests
 
+
+
 #[cfg(test)]
-#[path = "🧪️tests/📤️return-content/🦀️.rs"]
-mod return_content_tests;
+#[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;

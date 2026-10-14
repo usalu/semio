@@ -1,5 +1,5 @@
 //! 📎️ Literal reference ownership shared by the persistent CAD document and snapshot.
-use crate::CadReferenceList;
+use crate::snapshot::CadReferenceList;
 use semio_framework_dsl_record::{DslField, FieldValue, NativeSchemaControl, Shape};
 use semio_framework_value::{DslValue, FromValue, NativeDecodeControl, NativeEncodeControl, ToValue, ValueEdit, ValueError, ValueRefusalKind, ValueShape};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
@@ -223,4 +223,4 @@ impl FromValue for CadReferenceIndex {
     }
 }
 
-semio_framework_value::artifact_retire_struct!(crate::CadReference { id, source_url, media_kind, origin, orientation, scale, width_world, hidden, locked, opacity });
+semio_framework_value::artifact_retire_struct!(crate::snapshot::CadReference { id, source_url, media_kind, origin, orientation, scale, width_world, hidden, locked, opacity });

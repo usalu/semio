@@ -1,8 +1,8 @@
 use super::*;
-use crate::{Axis, LocationLine, Point2, SpaceBoundary, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, LocationLine, Point2, SpaceBoundary, TopConstraint};
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, model_to_part21};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{house, psets};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance};
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 
 /// 🔁️ The part of the house that the import understands: no roof, stair, railing, curtain wall, sloped slab or inferred space.
@@ -99,7 +99,7 @@ fn slabs_columns_beams_spaces_and_grids_keep_their_geometry_and_types() {
     assert_eq!(back.column_types, model.column_types);
     let beam = &back.beams["b-1"];
     assert_eq!(beam.beam_type, "bt-i");
-    assert!(matches!(beam.axis, crate::Axis::Line { start, end } if (start.x - 4.0).abs() < 1e-9 && (end.x - 6.0).abs() < 1e-9) && beam.top_offset.abs() < 1e-9 && beam.end_top_offset.is_none());
+    assert!(matches!(beam.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } if (start.x - 4.0).abs() < 1e-9 && (end.x - 6.0).abs() < 1e-9) && beam.top_offset.abs() < 1e-9 && beam.end_top_offset.is_none());
     assert!((back.beams["b-2"].top_offset + 0.1).abs() < 1e-9);
     assert_eq!(back.beam_types, model.beam_types);
     assert!(matches!(&back.spaces["sp-2"].boundary, SpaceBoundary::Explicit { outline } if outline.len() == 4));
@@ -219,7 +219,7 @@ fn a_foreign_file_without_semio_identity_is_imported_with_derived_levels_types_a
 
 #[test]
 fn the_phase_of_every_importable_element_survives_the_round_trip() {
-    use crate::Phase;
+    use crate::standards::v1::subsets::any::schema::snapshot::Phase;
     let mut model = importable();
     macro_rules! cycle {
         ($($collection:ident),+) => { $( for (index, row) in model.$collection.values_mut().enumerate() { row.phase = Phase::ALL[(index + 1) % 4]; } )+ };

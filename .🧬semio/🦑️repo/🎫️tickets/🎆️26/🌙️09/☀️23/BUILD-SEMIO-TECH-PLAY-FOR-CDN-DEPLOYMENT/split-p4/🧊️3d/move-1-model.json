@@ -1,0 +1,47 @@
+{
+ "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+ "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {
+   "from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to_module": "standards::v1::subsets::any::schema",
+   "select": [
+    "Puzzle3dError",
+    "PUZZLE_3D_SCHEMA",
+    "PUZZLE3D_DIALECT",
+    "Puzzle3dScale",
+    "Puzzle3dObjectAnchor",
+    "Puzzle3dVortex",
+    "Puzzle3dObject",
+    "Puzzle3dAttraction",
+    "Puzzle3dTargetVolume",
+    "Puzzle3dReferenceSource",
+    "Puzzle3dReference",
+    "Puzzle3dCompatSpecificity",
+    "Puzzle3dKindCompatibility",
+    "Puzzle3dAttribute",
+    "Puzzle3dAuthor",
+    "Puzzle3dRepresentation",
+    "Puzzle3dCatalogVortexTemplate",
+    "puzzle3d_default_direction",
+    "Puzzle3dCatalogObjectKind",
+    "Puzzle3dCatalogVortexKind",
+    "Puzzle3dCatalogCableKind",
+    "Puzzle3dCatalogAttractionKind",
+    "Puzzle3dKindCatalogs",
+    "Puzzle3dMeta"
+   ],
+   "from_module": ""
+  },
+  {
+   "from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+   "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "to_module": "standards::v1::subsets::any::schema::mutations",
+   "select": [
+    "apply_puzzle3d_mutation"
+   ],
+   "from_module": ""
+  }
+ ]
+}

@@ -4,8 +4,8 @@
 //! reflect a toggle the user just flipped).
 
 use crate::editor::remodeling::modes::model::windows::model::config::RemodelingLayerVisibility;
-use crate::editor::remodeling::remodeling_window_action;
-use crate::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::remodeling_window_action;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
 use semio_framework_ui_locale::LabelText;
 use semio_framework_plugin::WindowMeasure;
 

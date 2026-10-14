@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
-use crate::{AnnotationStylePatch, Axis, ColumnPatch, Entry, ModelDiff, ModelInference, StoreyPatch, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, StoreyPatch, WallPatch}, Entry, ModelDiff}, snapshot::Axis, inferences::ModelInference};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

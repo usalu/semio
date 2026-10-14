@@ -31,6 +31,15 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.semio-s-artifact-cad-cad]
 path = "../../🗿️artifacts/📐️cad/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-cad-cad-model]
+path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-cad-cad-mut-nodes]
+path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️nodes/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-cad-cad-mutations]
+path = "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 [workspace.dependencies.serde]
 version = "1.0.228"
 features = [ "derive" ]

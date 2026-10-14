@@ -2,7 +2,7 @@
 //! resulting conditions must be writable (see `conditions_problem`); providing only equal values is a no-op.
 
 use super::SetSpaceConditions;
-use crate::{conditions_problem, Entry, ModelDiff, ModelSnapshot, Patch, SpaceConditions};
+use crate::standards::v1::subsets::any::schema::{snapshot::{conditions_problem, ModelSnapshot, SpaceConditions}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSpaceConditions, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -35,8 +35,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "hub/modules/admin/packages/typescript"
   },
-  "bundleKind": "application",
-  "nx": {
-    "includedScripts": []
-  }
+  "bundleKind": "application"
 }

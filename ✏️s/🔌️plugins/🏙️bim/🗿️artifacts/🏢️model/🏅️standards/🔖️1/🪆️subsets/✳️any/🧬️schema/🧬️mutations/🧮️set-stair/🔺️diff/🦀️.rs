@@ -3,7 +3,7 @@
 
 use super::super::placement::{refuse_stair, stair_issue};
 use super::SetStair;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch, StairPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch, patches::StairPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetStair, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

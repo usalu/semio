@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ErasedSnapshotRetirement,retirement::controlled::ControlledRetirement};
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,OriginalOperationReceipt};
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_interpreter::{operation::input::encode_json_input_into,OwnedSnapshotInput,OwnedSnapshotOperation};
+use semio_framework_plugin_interpreter_runtime::{operation::input::encode_json_input_into,OwnedSnapshotInput,OwnedSnapshotOperation};
 #[path="📨️metadata/🦀️.rs"]
 mod metadata;
 type Progress=semio_framework_value::native_encoding::NativeEncodeProgress;

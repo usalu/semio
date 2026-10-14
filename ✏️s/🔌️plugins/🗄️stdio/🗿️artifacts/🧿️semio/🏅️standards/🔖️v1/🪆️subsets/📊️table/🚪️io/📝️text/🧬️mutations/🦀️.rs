@@ -11,12 +11,12 @@ use crate::schema::mutations::SemioTableMutation;
 
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use {crate::schema::mutations::create_column::CreateColumn, crate::schema::mutations::delete_column::DeleteColumn, crate::schema::mutations::edit_cell::EditCell, crate::schema::mutations::insert_row::InsertRow, crate::schema::mutations::remove_row::RemoveRow, crate::schema::mutations::rename_column::RenameColumn, crate::schema::mutations::reorder_columns::ReorderColumns, crate::schema::mutations::reorder_rows::ReorderRows};
-use crate::io::text::snapshot::dec_row;
-use crate::io::text::snapshot::enc_row;
-use crate::io::text::snapshot::dec_cell_kind;
-use crate::io::text::snapshot::enc_cell_kind;
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::dec_row;
+use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::enc_row;
+use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::dec_cell_kind;
+use semio_s_artifact_stdio_semio_table_model::io::text::snapshot::enc_cell_kind;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 
@@ -124,8 +124,9 @@ impl protocol::OpText for SemioTableMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
-    use crate::schema::snapshot::{SemioTableCellKind, SemioTableRow};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     vec![
         SemioTableMutation::CreateColumn(CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "extra".into(), kind: SemioTableCellKind::Int, index: None }),
@@ -150,8 +151,8 @@ mod tests;
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use crate::schema::mutations::create_column;
 use crate::schema::mutations::delete_column;
 use crate::schema::mutations::edit_cell;

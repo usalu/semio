@@ -40,7 +40,7 @@ export function stagedComponentFacts(moduleRoot: string, pluginId: string): Prep
     directoryPresent: true,
     descriptorPluginId,
     bridgePresent: existsSync(join(directory, MODULE_BRIDGE_FILE)),
-    artifactMarkerPresent: existsSync(join(directory, ".nx-artifact.json")),
+    artifactMarkerPresent: existsSync(join(directory, ".semio-artifact.json")),
   };
 }
 

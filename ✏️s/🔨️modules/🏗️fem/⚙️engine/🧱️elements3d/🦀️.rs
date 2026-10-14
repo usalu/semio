@@ -2,11 +2,9 @@
 //! torsion and member-UDL support), the `Tet4`/`Hex8` solid continuum elements, and `ShellFacet3`
 //! (flat facet shell: CST membrane + DKT bending + drilling stabilization).
 
-use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
-use crate::formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
-#[cfg(test)]
-use crate::model::Elements;
-use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
+use semio_s_fem_algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
+use semio_s_fem_formulation::{b_matrix_plane, d_matrix_plane_stress, gauss_tri, jacobian_2d, shape_tri3};
+use semio_s_fem_model::{BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, ShellState, SolidStress};
 
 #[derive(Clone, Copy)]
 struct Line3Geometry {
@@ -48,11 +46,11 @@ pub struct Bar3 {
 
 impl Element for Bar3 {
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
+        semio_s_fem_model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
+        semio_s_fem_model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -179,7 +177,7 @@ pub struct Frame3 {
 }
 
 /// ↕️ `θy = −∂w/∂x` sign flip of the odd (`L`-carrying) rows/columns in the y-bending block.
-const Y_PLANE_SIGN: [f64; 4] = [1.0, -1.0, 1.0, -1.0];
+pub const Y_PLANE_SIGN: [f64; 4] = [1.0, -1.0, 1.0, -1.0];
 
 #[derive(Clone, Copy)]
 struct Frame3Geometry {
@@ -287,7 +285,7 @@ impl Frame3 {
     /// `S·M·S` with `S = diag(1, −1, 1, −1)` (`Y_PLANE_SIGN`) — without it self-weight fixed-end
     /// moments and the y-bending modal family come out with the wrong sign (ticket
     /// 26/09/06/FEM-PLUGIN-END-TO-END, W6 PyNite/scipy oracle: −66.7 % on a one-element cantilever).
-    fn local_mass(&self, l: f64) -> MatD {
+    pub fn local_mass(&self, l: f64) -> MatD {
         let mut m = MatD::zeros(12, 12);
         let axial = self.density * self.a * l / 6.0;
         m.set(0, 0, 2.0 * axial);
@@ -320,7 +318,7 @@ impl Frame3 {
     /// 🌀️ Local 12x12 geometric stiffness under axial force `n` (tension-positive, matches `recover`'s
     /// convention), applied independently to both bending planes via the same `Kg_bend` beam-column
     /// formula `beam_local_geometric_stiffness` in `elements2d` uses.
-    fn local_geometric_stiffness(&self, l: f64, n: f64) -> MatD {
+    pub fn local_geometric_stiffness(&self, l: f64, n: f64) -> MatD {
         let mut kg = MatD::zeros(12, 12);
         let l2 = l * l;
         let coeff = n / l;
@@ -372,11 +370,11 @@ fn local_udl(l: f64, t: &MatD, udl: &MemberUdl) -> VecD {
 
 impl Element for Frame3 {
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
+        semio_s_fem_model::close_mounted_strings([&mut self.id, &mut self.node_a, &mut self.node_b])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
+        semio_s_fem_model::mounted_string_bytes([&self.id, &self.node_a, &self.node_b])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -467,7 +465,7 @@ impl Element for Frame3 {
 
 // #region 🔖️Solid
 /// 🧮️ Isotropic 3D solid-mechanics constitutive matrix (6x6), strain order `[εxx,εyy,εzz,γxy,γyz,γxz]`.
-fn d_matrix_solid(e: f64, nu: f64) -> MatD {
+pub fn d_matrix_solid(e: f64, nu: f64) -> MatD {
     let s = e / ((1.0 + nu) * (1.0 - 2.0 * nu));
     let mut d = MatD::zeros(6, 6);
     d.set(0, 0, s * (1.0 - nu));
@@ -533,7 +531,7 @@ fn solid_constitutive_bilinear(e: f64, nu: f64, left: [f64; 6], right: [f64; 6])
 }
 
 /// 🧮️ Von Mises equivalent stress from the full 3D stress state.
-fn von_mises_solid(sxx: f64, syy: f64, szz: f64, sxy: f64, syz: f64, sxz: f64) -> f64 {
+pub fn von_mises_solid(sxx: f64, syy: f64, szz: f64, sxy: f64, syz: f64, sxz: f64) -> f64 {
     (0.5 * ((sxx - syy).powi(2) + (syy - szz).powi(2) + (szz - sxx).powi(2) + 6.0 * (sxy * sxy + syz * syz + sxz * sxz))).sqrt()
 }
 // #endregion 🔖️Solid
@@ -603,11 +601,11 @@ impl Tet4 {
 
 impl Element for Tet4 {
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
+        semio_s_fem_model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
+        semio_s_fem_model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -962,10 +960,10 @@ impl ShellFacet3 {
         }
 
         let (_, det_j, _) = jacobian_2d(coords, &shape_tri3(0.0, 0.0).1);
-        let d_bend = crate::elements2d::d_matrix_plate(self.e, self.nu, self.thickness);
+        let d_bend = semio_s_fem_elements2d::d_matrix_plate(self.e, self.nu, self.thickness);
         let mut k_bend = MatD::zeros(9, 9);
         for (xi, eta, w) in gauss_tri(3) {
-            let b = crate::elements2d::dkt_b_matrix(coords, xi, eta);
+            let b = semio_s_fem_elements2d::dkt_b_matrix(coords, xi, eta);
             k_bend.add_triple_product(&b, &d_bend, w * det_j);
         }
         let bend_idx = [2usize, 3, 4, 8, 9, 10, 14, 15, 16];
@@ -1023,8 +1021,8 @@ impl Element for ShellFacet3 {
 
         let bend_idx = [2usize, 3, 4, 8, 9, 10, 14, 15, 16];
         let u_bend = VecD::from_vec(bend_idx.iter().map(|&i| u_loc.get(i)).collect());
-        let d_bend = crate::elements2d::d_matrix_plate(self.e, self.nu, self.thickness);
-        let b_bend = crate::elements2d::dkt_b_matrix(&coords, 1.0 / 3.0, 1.0 / 3.0);
+        let d_bend = semio_s_fem_elements2d::d_matrix_plate(self.e, self.nu, self.thickness);
+        let b_bend = semio_s_fem_elements2d::dkt_b_matrix(&coords, 1.0 / 3.0, 1.0 / 3.0);
         let kappa = b_bend.mul_vec(&u_bend);
         let m = d_bend.mul_vec(&kappa);
         let (mxx, myy, mxy) = (m.get(0), m.get(1), m.get(2));
@@ -1094,21 +1092,3 @@ impl Element for ShellFacet3 {
     }
 }
 // #endregion 🔖️ShellFacet3
-
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🔖️Tests
-
-// #region 🔖️SolidTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️solid/🦀️.rs"]
-mod solid_tests;
-// #endregion 🔖️SolidTests
-
-// #region 🔖️ShellTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️shell/🦀️.rs"]
-mod shell_tests;
-// #endregion 🔖️ShellTests

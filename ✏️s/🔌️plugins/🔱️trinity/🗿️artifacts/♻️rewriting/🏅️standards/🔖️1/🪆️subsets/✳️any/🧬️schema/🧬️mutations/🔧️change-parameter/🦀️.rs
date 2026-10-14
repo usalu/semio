@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::diff::RewritingDiff;
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 //#region 🔖️Mutation
 /// 🔧️ `change-parameter-binding` payload.

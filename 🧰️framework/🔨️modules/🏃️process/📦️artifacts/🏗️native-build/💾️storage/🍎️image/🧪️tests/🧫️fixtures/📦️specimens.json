@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "specimens": [
+    {
+      "name": "semio_framework_ui_arena",
+      "test": true,
+      "inputs": [
+        "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🏟️arena/🦀️.rs",
+        "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-arena-unit/🦀️.rs"
+      ]
+    },
+    {
+      "name": "semio_framework_font_anta_latin_regular",
+      "test": false,
+      "inputs": [
+        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🦀️.rs",
+        "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf"
+      ]
+    },
+    {
+      "name": "semio_framework_os_history_identity",
+      "test": false,
+      "inputs": [
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/🪪️id/🦀️.rs"
+      ]
+    },
+    {
+      "name": "semio_framework_ui_surface_identity",
+      "test": true,
+      "inputs": [
+        "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🦀️.rs",
+        "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🧪️tests/🦀️.rs",
+        "🧰️framework/🔨️modules/🖱️ui/🪟️surface/🪪️identity/🧪️tests/🧫️fixtures/📐️identity.csv"
+      ]
+    }
+  ]
+}

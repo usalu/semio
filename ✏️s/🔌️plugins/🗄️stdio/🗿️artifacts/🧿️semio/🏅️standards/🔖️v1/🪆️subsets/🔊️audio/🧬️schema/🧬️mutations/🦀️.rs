@@ -10,7 +10,8 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::schema::diff::{SemioAudioChannelDiff, SemioAudioDiff};
+use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioChannelDiff;
+use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
 
 
 
@@ -25,8 +26,13 @@ use crate::schema::diff::{SemioAudioChannelDiff, SemioAudioDiff};
 
 
 
-use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation};

@@ -13,7 +13,7 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
-    use semio_s_artifact_bim_model::{ModelInference, ModelSnapshot, TopConstraint, Wall};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, TopConstraint, Wall}};
 
     fn number(value: f64) -> String {
         format!("{value:?}")
@@ -25,7 +25,7 @@ mod subject {
 
     fn free(snapshot: &ModelSnapshot, id: &str, wall: &Wall) -> bool {
         let ends = |wall: &Wall| match &wall.axis {
-            semio_s_artifact_bim_model::Axis::Line { start, end } | semio_s_artifact_bim_model::Axis::Arc { start, end, .. } => [(start.x, start.y), (end.x, end.y)],
+            semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. } => [(start.x, start.y), (end.x, end.y)],
         };
         let mine = ends(wall);
         let alone = snapshot.walls.iter().filter(|(other, row)| other.as_str() != id && row.storey == wall.storey).all(|(_, row)| ends(row).iter().all(|a| mine.iter().all(|b| (a.0 - b.0).hypot(a.1 - b.1) > 1e-6)));

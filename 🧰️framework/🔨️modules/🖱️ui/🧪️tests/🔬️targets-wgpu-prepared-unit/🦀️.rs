@@ -1,104 +1,8 @@
 use super::*;
 
-fn close_packet_step(packet: &mut PreparedRenderPacket) -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = semio_framework_job::RetainedCloneGrant { maximum_copy_bytes: 16 * 1024, ..packet.next_close_demands(16 * 1024).unwrap() };
-    match packet.close_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(packet.retirement_is_empty()); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original packet refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-fn close_abandoned_packet_step() -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = PreparedRenderPacket::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderPacket::close_abandoned_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned packet refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-fn close_abandoned_mailbox_step() -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = PreparedRenderReceiver::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderReceiver::close_abandoned_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned mailbox refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
+use semio_framework_ui_prepared::testing::*;
 
-
-fn close_job_step(job: &mut PreparedRenderJob) -> bool {
-    use semio_framework_job::{InteractiveJobCloseStep as Close, RetainedCloneGrant};
-    InteractiveJob::begin_close(job);
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: InteractiveJob::next_close_copy_byte_demand(job).unwrap(), maximum_capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(job, 1).unwrap(), maximum_release_bytes: InteractiveJob::next_close_release_byte_demand(job).unwrap(), maximum_depth: InteractiveJob::next_close_depth_demand(job).unwrap() };
-    match InteractiveJob::close_step(job, grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(job.terminal_is_empty()); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original prepared owner refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-fn close_abandoned_job_step() -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = PreparedRenderJob::next_abandoned_close_demands(1).unwrap();
-    match PreparedRenderJob::close_abandoned_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned owner refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-
-fn close_abandoned_input_step() -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = PreparedRenderInput::next_abandoned_close_demands(16 * 1024).unwrap();
-    match PreparedRenderInput::close_abandoned_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned input refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-
-pub(super) fn atlas_fixture_authority() -> PreparedAtlasAuthority {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 65536, maximum_release_bytes: 16777216, maximum_depth: 64 };
-    PreparedAtlasAuthority { normal: grant, retirement: grant }
-}
-
-pub(super) fn atlas_fixture_owner(width: u32, height: u32, channels: u8, bytes: usize) -> Result<PreparedAtlasPages, ValueError> {
-    let authority = atlas_fixture_authority();
-    let (mut owner, progress) = PreparedAtlasPages::try_new(width, height, channels, bytes, authority)?;
-    assert!(progress.fits(authority.normal));
-    let progress = owner.admit_original_slots(authority.normal)?;
-    assert!(progress.fits(authority.normal));
-    Ok(owner)
-}
-
-pub(super) fn atlas_fixture_page(owner: &mut PreparedAtlasPages, source: &[u8], row: u32) -> Result<bool, ValueError> {
-    let grant = atlas_fixture_authority().normal;
-    let (complete, progress) = owner.push_page(source, row, grant)?;
-    assert!(progress.fits(grant));
-    Ok(complete)
-}
-
-fn close_abandoned_atlas_step() -> bool {
-    use semio_framework_job::InteractiveJobCloseStep as Close;
-    let grant = atlas_fixture_authority().retirement;
-    match PreparedAtlasPages::close_abandoned_step(grant) {
-        Close::Complete { progress } => { assert!(progress.fits(grant)); true },
-        Close::Pending { progress } => { assert!(progress.fits(grant)); false },
-        Close::Blocked => false,
-        Close::Refused { kind, progress } => panic!("original abandoned atlas refused admitted close: {kind:?}, progress: {progress:?}"),
-    }
-}
-
-
-#[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[path = "../♻️physical-job-close/🎟️prepared/🦀️.rs"]
 mod physical_job_close_laws;
 use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOutcomeBorrow, JobOutcomeKind, OperationId, StepBudget};
@@ -113,7 +17,7 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
             let mut overlay = DrawList::default();
             for (list, field) in [(&mut draw, "draw"), (&mut overlay, "overlay")] {
                 for kind in row[field].as_array().unwrap() {
-                    let mut instance = crate::wgpu::draw_types::UiInstance::solid([0.0, 0.0, 24.0, 24.0], crate::wgpu::theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
+                    let mut instance = semio_framework_ui_draw_contract::UiInstance::solid([0.0, 0.0, 24.0, 24.0], semio_framework_ui_theme::Rgba::new(1.0, 1.0, 1.0, 1.0));
                     instance.params[2] = kind.as_f64().unwrap() as f32;
                     if overlay_route {
                         list.layers[0].overlay_ui_instances.push(instance);
@@ -130,96 +34,6 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
             while !close_job_step(&mut job) {}
         }
     }
-}
-
-static PREPARED_PROCESS_TEST_LOCK: Mutex<()> = Mutex::new(());
-
-/// 🔒️ EVERY law in this case takes this guard, first statement, no exceptions.
-///
-/// The prepared ladder's credits are PROCESS-wide by design — `PREPARED_RENDER_PROCESS_PERMITS`, the
-/// atlas page pool and the four abandonment rings `drain_abandoned_preparations` drains are one
-/// budget for the whole binary, because that is the budget a real process has. A law that reads a
-/// process counter (`PREPARED_RENDER_PROCESS_PERMITS.load(..) == 0`) or counts retirement grants
-/// therefore measures every other law that is running at the same time, and under `cargo test` with
-/// more than one test thread it flakes: `packet_drop_retires_nested_backings_and_permit_scalars_separately`
-/// and `pending_presenter_witness_rejects_superseding_packet_with_exact_owner` were the two that
-/// showed it (`📓️w9a`), but only eleven of this case's thirty-nine laws took the lock, so ANY of the
-/// other twenty-eight could have been the perturber. Serialising the whole case is what makes the
-/// measurements mean what they say, and it costs nothing: none of these laws blocks.
-///
-/// Holding the lock is only half of it. An owner a law drops lands in an ABANDONMENT ring and keeps
-/// its permits until something grants it a close step, so a law that ends with owners still queued
-/// hands the next one an already-spent budget (`prepared render process permits exhausted (held items
-/// 4/64 …)`). The guard therefore drains both rings before it hands the lock back: every law starts
-/// from a quiescent process, whatever the law before it left behind and whatever order the runner
-/// picked.
-pub(super) fn prepared_process_guard() -> std::sync::MutexGuard<'static, ()> {
-    let guard = match PREPARED_PROCESS_TEST_LOCK.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
-    };
-    drain_abandoned_preparations();
-    drain_abandoned_atlases();
-    guard
-}
-
-fn drain_abandoned_atlases() {
-    while !close_abandoned_atlas_step() {}
-}
-
-fn drain_abandoned_preparations() {
-    loop {
-        let inputs = close_abandoned_input_step();
-        let jobs = close_abandoned_job_step();
-        let mailboxes = close_abandoned_mailbox_step();
-        let packets = close_abandoned_packet_step();
-        if inputs && jobs && mailboxes && packets {
-            break;
-        }
-    }
-}
-
-fn now_ms() -> Option<u64> {
-    Some(1)
-}
-
-
-fn observe_prepared_step(job: &mut PreparedRenderJob, operation: OperationId, generation: Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, now: fn() -> Option<u64>, preview: &mut u64, acknowledgement: RetainedCloneGrant) -> (Option<JobOutcomeKind>, RetainedCloneProgress) {
-    let mut receipt = RetainedCloneProgress::default();
-    let descriptor = {
-        let mut cx = StepContext::new(operation, generation, budget, cancel, now, preview, &mut receipt);
-        semio_framework_job::drive_step(job, &mut cx, "ui-wgpu.prepare", InteractiveStage::BackgroundStep, &mut None).unwrap().map(JobOutcomeBorrow::into_descriptor)
-    };
-    assert!(receipt.fits(budget.retained));
-    let kind = descriptor.map(|mut descriptor| {
-        let kind = descriptor.kind();
-        assert_eq!(job.borrow_outcome(&descriptor).unwrap().is_terminal(), descriptor.is_terminal());
-        let progress = descriptor.acknowledge(acknowledgement).progress();
-        assert!(progress.fits(acknowledgement));
-        assert!(descriptor.is_acknowledged());
-        kind
-    });
-    (kind, receipt)
-}
-
-fn observe_prepared_terminal(job: &mut PreparedRenderJob, operation: OperationId, generation: Generation, budget: StepBudget, cancel: semio_framework_job::CancelToken, now: fn() -> Option<u64>, preview: &mut u64, acknowledgement: RetainedCloneGrant) -> (Option<JobOutcomeKind>, RetainedCloneProgress) {
-    for _ in 0..4_096 {
-        let result = observe_prepared_step(job, operation, generation, budget, cancel.clone(), now, preview, acknowledgement);
-        if result.0.is_some_and(|kind| matches!(kind, JobOutcomeKind::Complete | JobOutcomeKind::Cancelled | JobOutcomeKind::Fault)) { return result; }
-    }
-    panic!("prepared render job did not reach a terminal outcome within fixed test credits");
-}
-
-fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> Option<JobOutcomeKind> {
-    let mut preview = 0;
-    for _ in 0..4_096 {
-        let (outcome,original_retained_receipt) = observe_prepared_step(job, OperationId(1), Generation(3), StepBudget::new(100, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
-        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-        if !matches!(outcome, None | Some(JobOutcomeKind::Yield)) {
-            return outcome;
-        }
-    }
-    panic!("prepared render job did not reach a terminal outcome within fixed test credits");
 }
 
 fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
@@ -250,304 +64,32 @@ fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
     }
 }
 
-fn retire_raster_upload(mut upload: PreparedRenderUpload) {
-    let PreparedRenderUpload::RasterPages { key, pixels } = &mut upload else { panic!("paged raster upload") };
-    while !pixels.retire_with_key_step(key) {}
-    assert!(pixels.terminal_is_empty());
-}
 
-#[test]
-fn paged_raster_producer_advances_one_page_and_moves_page_identity() {
-    let _guard = prepared_process_guard();
-    let source = vec![7; PREPARED_RASTER_PAGE_BYTES * 2];
-    let source_pointer = source.as_ptr();
-    let (mut producer, published_key) = PreparedRasterProducer::try_admit("two-pages".into(), source, 4_096, 2).expect("exact two-page admission");
-    assert_eq!(published_key, "two-pages");
-    assert!(producer.bind_frame_generation(9));
-    assert!(matches!(producer.step(9), PreparedRasterProducerStep::Pending));
-    assert_eq!(producer.pages.as_ref().expect("retained pages").slots.len(), 1);
-    assert!(matches!(producer.step(9), PreparedRasterProducerStep::Pending));
-    assert_eq!(producer.pages.as_ref().expect("retained pages").slots.len(), 2);
-    assert!(matches!(producer.step(9), PreparedRasterProducerStep::Pending), "source backing retires on its own grant");
-    let first = producer.pages.as_ref().and_then(|pages| pages.page_pointer(0)).expect("first page identity");
-    let upload = match producer.step(9) {
-        PreparedRasterProducerStep::Complete(upload) => upload,
-        _ => panic!("completed page handoff"),
-    };
-    assert_eq!(first, source_pointer, "page view borrows the exact decoder backing");
-    assert!(matches!(&upload, PreparedRenderUpload::RasterPages { pixels, .. } if pixels.page_pointer(0) == Some(first) && pixels.frame_generation() == 9));
-    retire_raster_upload(upload);
-}
 
-#[test]
-fn paged_raster_content_identity_is_stable_and_changes_with_one_pixel_byte() {
-    fn complete(mut producer: PreparedRasterProducer, generation: u64) -> PreparedRenderUpload {
-        assert!(producer.bind_frame_generation(generation));
-        for _ in 0..8 {
-            if let PreparedRasterProducerStep::Complete(upload) = producer.step(generation) {
-                return upload;
-            }
-        }
-        panic!("bounded two-page producer did not complete");
-    }
 
-    let _guard = prepared_process_guard();
-    let first = vec![7; PREPARED_RASTER_PAGE_BYTES * 2];
-    let same = first.clone();
-    let mut changed = first.clone();
-    *changed.last_mut().expect("changed byte") = 8;
-    let (first, _) = PreparedRasterProducer::try_admit("first".into(), first, 4_096, 2).expect("first producer");
-    let (same, _) = PreparedRasterProducer::try_admit("same".into(), same, 4_096, 2).expect("same producer");
-    let (changed, _) = PreparedRasterProducer::try_admit("changed".into(), changed, 4_096, 2).expect("changed producer");
-    let first = complete(first, 31);
-    let same = complete(same, 32);
-    let changed = complete(changed, 33);
-    let PreparedRenderUpload::RasterPages { pixels: first_pixels, .. } = &first else { panic!("first pages") };
-    let PreparedRenderUpload::RasterPages { pixels: same_pixels, .. } = &same else { panic!("same pages") };
-    let PreparedRenderUpload::RasterPages { pixels: changed_pixels, .. } = &changed else { panic!("changed pages") };
-    assert_eq!(first_pixels.content_identity(), same_pixels.content_identity());
-    assert_ne!(first_pixels.content_identity(), changed_pixels.content_identity());
-    retire_raster_upload(first);
-    retire_raster_upload(same);
-    retire_raster_upload(changed);
-}
 
-#[test]
-fn stale_generation_does_not_consume_a_prepared_raster_page() {
-    let _guard = prepared_process_guard();
-    let (mut producer, _) = PreparedRasterProducer::try_admit("stale".into(), vec![3; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page admission");
-    assert!(producer.bind_frame_generation(11));
-    let retained = producer.source.len();
-    assert!(matches!(producer.step(12), PreparedRasterProducerStep::Fault(_)));
-    assert_eq!(producer.source.len(), retained);
-    assert!(producer.pages.as_ref().expect("retained pages").slots.is_empty());
-    producer.begin_close();
-    while !producer.close_step() {}
-    assert!(producer.terminal_is_empty());
-}
 
-#[test]
-fn raster_cap_plus_one_rejects_the_exact_source_before_page_allocation() {
-    let _guard = prepared_process_guard();
-    let source = vec![5; PREPARED_RASTER_PAGE_BYTES + 4];
-    let pointer = source.as_ptr();
-    let mut rejected = PreparedRasterProducer::try_admit("wide".into(), source, 4_097, 1).expect_err("row cap plus one");
-    assert_eq!(rejected.source.as_ptr(), pointer);
-    assert!(rejected.fault().contains("fixed item or byte credits"));
-    assert!(!rejected.close_step(), "one rejection grant retires one source page only");
-    while !rejected.close_step() {}
-}
 
-#[test]
-fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let height = 33_554_433_u32;
-    let byte_len = 33_554_433_usize;
-    assert!(matches!(atlas_fixture_owner(1, height, 1, byte_len), Err(ref error) if error.message.as_ref() == "atlas page or byte credits exceeded"));
-    let mut admitted = match atlas_fixture_owner(4, 2, 4, 32) {
-        Ok(admitted) => admitted,
-        Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
-    };
-    let mut turns = 0;
-    while !matches!(admitted.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
-        turns += 1;
-    }
-    assert!(turns >= 6, "fixed backing and four permit scalars close independently");
-    assert!(admitted.terminal_is_empty());
-}
 
-#[test]
-fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let source = [9_u8; 32];
-    let mut pages = match atlas_fixture_owner(4, 2, 4, source.len()) {
-        Ok(pages) => pages,
-        Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
-    };
-    assert!(matches!(atlas_fixture_page(&mut pages, &source, 0), Ok(true)));
-    assert_eq!(pages.page(0), Some((&source[..], 0, 2)));
-    assert!(!matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
-    assert_eq!(pages.len(), 0);
-    assert!(!pages.terminal_is_empty());
-    let mut turns = 0;
-    while !matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
-        turns += 1;
-    }
-    assert!(turns >= 6, "slot backing and permit fields each consume a distinct grant");
-    assert!(pages.terminal_is_empty());
-}
 
-#[test]
-fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let mut owners: [Option<PreparedAtlasPages>; PREPARED_ATLAS_PROCESS_ITEMS] = std::array::from_fn(|_| None);
-    for owner in &mut owners {
-        *owner = Some(match atlas_fixture_owner(1, 1, 1, 1) {
-            Ok(owner) => owner,
-            Err(fault) => panic!("one exact process item: {fault}"),
-        });
-    }
-    assert!(matches!(atlas_fixture_owner(1, 1, 1, 1), Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted"));
-    for owner in owners.iter_mut().filter_map(Option::as_mut) {
-        while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
-        assert!(owner.terminal_is_empty());
-    }
-    assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
-}
 
-#[test]
-fn abandoned_atlas_schedules_the_same_incremental_close_authority() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let mut owner = match atlas_fixture_owner(4, 2, 4, 32) {
-        Ok(owner) => owner,
-        Err(fault) => panic!("abandonment owner: {fault}"),
-    };
-    assert!(atlas_fixture_page(&mut owner, &[7; 32], 0).is_ok());
-    drop(owner);
-    let mut turns = 0;
-    while !close_abandoned_atlas_step() {
-        turns += 1;
-        assert!(turns < 16, "one page, backing owner, and four permit fields must converge");
-    }
-    assert!(turns >= 7);
-    assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
-}
 
-#[test]
-fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let source = vec![3_u8; PREPARED_ATLAS_PAGE_BYTES + 1];
-    let mut owner = match atlas_fixture_owner(1, u32::try_from(source.len()).unwrap_or(u32::MAX), 1, source.len()) {
-        Ok(owner) => owner,
-        Err(fault) => panic!("two-page abandonment owner: {fault}"),
-    };
-    assert!(matches!(atlas_fixture_page(&mut owner, &source, 0), Ok(false)));
-    assert!(matches!({ let row = owner.next_row(); atlas_fixture_page(&mut owner, &source, row) }, Ok(true)));
-    assert!(!matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
-    assert_eq!(owner.len(), 1);
-    drop(owner);
-    let mut turns = 0;
-    while !close_abandoned_atlas_step() {
-        turns += 1;
-        assert!(turns < 16);
-    }
-    assert!(turns >= 7);
-    assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
-}
 
-#[test]
-fn atlas_allocation_refusal_preserves_the_packed_permit_ledger() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let before = PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire);
-    assert!(matches!(atlas_fixture_owner(0, 1, 4, 4), Err(ref error) if error.message.as_ref() == "atlas dimensions do not fit fixed page credits"));
-    assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), before);
-}
 
-#[test]
-fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
-    let _guard = prepared_process_guard();
-    drain_abandoned_atlases();
-    let handles = std::array::from_fn::<_, 8, _>(|_| {
-        std::thread::spawn(|| match atlas_fixture_owner(1, 1, 1, 1) {
-            Ok(mut owner) => {
-                while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
-                owner.terminal_is_empty()
-            }
-            Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted" => true,
-            Err(_) => false,
-        })
-    });
-    for handle in handles {
-        assert!(match handle.join() {
-            Ok(closed_or_refused) => closed_or_refused,
-            Err(_) => false,
-        });
-    }
-    assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
-}
 
-#[test]
-fn raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization() {
-    let _guard = prepared_process_guard();
-    let reservation = PreparedRasterReservation::try_reserve("item-exact".into()).expect("initial exact reservation");
-    let reservation = reservation.claim(4_096, 1_024).expect("sixteen MiB operation claim");
-    let mut rejected = reservation.reject("test retirement", Vec::new());
-    while !rejected.close_step() {}
-    assert!(rejected.terminal_is_empty());
 
-    let reservation = PreparedRasterReservation::try_reserve("item-plus-one".into()).expect("initial plus-one reservation");
-    let mut rejected = reservation.claim(4_096, 1_025).expect_err("sixteen MiB plus one row");
-    assert_eq!(rejected.fault(), "raster producer exceeded fixed item or byte credits");
-    while !rejected.close_step() {}
-    assert!(rejected.terminal_is_empty());
-}
-
-#[test]
-fn raster_simultaneous_source_decode_peak_exact_and_plus_one() {
-    let _guard = prepared_process_guard();
-    let height = 1_023usize;
-    let decoded_bytes = PREPARED_RASTER_PAGE_BYTES * height;
-    let page_slot_bytes = size_of::<PreparedRasterPage>() * height;
-    let source_peak_bytes = PREPARED_RASTER_PRODUCER_BYTES - decoded_bytes - page_slot_bytes;
-    assert_eq!(source_peak_bytes % 2, 0, "exact source workspace boundary");
-    let source_bytes = source_peak_bytes / 2;
-
-    let reservation = PreparedRasterReservation::try_reserve_source(String::new(), source_bytes).expect("exact simultaneous source reservation");
-    let reservation = reservation.claim(4_096, height as u32).expect("source plus retained parse plus decoded backing and page slots exactly fit");
-    assert_eq!(reservation.credit.as_ref().unwrap().bytes, PREPARED_RASTER_PRODUCER_BYTES);
-    let mut rejected = reservation.reject("exact peak retirement", Vec::new());
-    while !rejected.close_step() {}
-
-    let reservation = PreparedRasterReservation::try_reserve_source(String::new(), source_bytes + 1).expect("plus one source is initially retained");
-    let mut rejected = reservation.claim(4_096, height as u32).expect_err("simultaneous source and decoded peak plus one must fail before decode");
-    assert_eq!(rejected.fault(), "raster producer exact credit resize failed");
-    while !rejected.close_step() {}
-}
-
-#[test]
-fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
-    let _guard = prepared_process_guard();
-    let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
-    let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
-    let retained_pointer = retained_source.as_ptr();
-    let reservation = PreparedRasterReservation::try_reserve_source("retained-source".into(), retained_source.capacity()).expect("source workspace admitted before decode");
-    let reservation = reservation.claim(4_096, 1).expect("decoded owner credited in addition to retained source");
-    let (mut producer, _) = reservation.finalize(decoded, retained_source, 4_096, 1).expect("exact retained source owner");
-    assert_eq!(producer.retained_source.as_ptr(), retained_pointer);
-    assert!(producer.bind_frame_generation(3));
-
-    let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
-    assert!(input.try_push_raster_producer(producer).is_ok());
-    let mut job = PreparedRenderJob::new(input, 1);
-    let mut preview = 0;
-    for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
-        let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(11), Generation(3), StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
-        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
-        assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
-        assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.len(), expected);
-    }
-    assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().retained_source.as_ptr(), retained_pointer);
-    while !close_job_step(&mut job) {}
-    assert!(job.terminal_is_empty());
-}
 
 /// 🌑️ LAW: the bounded caster prepass completes before every receiver, then the color pass
 /// keeps React's textured underlay → opaque → lines → translucent order.
 #[test]
 fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
+    use semio_framework_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     draw.push_scene_pass(ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
-        shadow: crate::wgpu::kernel_3d_scene::SceneShadow3d { enabled: true, ..Default::default() },
+        shadow: semio_framework_ui_scene::math::SceneShadow3d { enabled: true, ..Default::default() },
         shadow_draws: vec![SceneDraw3d { mesh_key: "caster".into(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: SceneShadowRole3d { casts: true, receives: true } }],
         draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
         translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
@@ -612,7 +154,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
 #[test]
 fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
+    use semio_framework_ui_scene::math::{Instance3d, LineDraw3d, LineVertex3d, ProceduralGrid3d, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d};
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let grid = ProceduralGrid3d { plane_z: 0.001, camera_plane_projection: [2.0, -3.0, 0.001], cell_size: 1.0, fade_distance: 8.0, cell_color: [0.2, 0.3, 0.4] };
     let mut draw = DrawList::default();
@@ -646,7 +188,7 @@ fn a_procedural_grid_is_one_prepared_scalar_between_textures_and_opaque_geometry
 
 #[test]
 fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
-    use crate::wgpu::kernel_3d_scene::{ScenePass3d, SceneViewportMask3d};
+    use semio_framework_ui_scene::math::{ScenePass3d, SceneViewportMask3d};
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d { viewport_mask: SceneViewportMask3d::Ellipse, clear_color: Some([0.1, 0.2, 0.3, 0.7]), ..Default::default() });
     let mut cursor = DrawMeasureCursor::PassHeader(0);
@@ -678,7 +220,7 @@ fn ellipse_scene_pass_snapshots_backdrop_clears_inside_then_composites_last() {
 #[test]
 fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
+    use semio_framework_ui_scene::math::{Instance3d, SceneDraw3d, ScenePass3d};
     let instance = Instance3d { component_source: None, id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
     let mut draw = DrawList::default();
     draw.push_scene_pass(ScenePass3d { draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }], ..Default::default() });
@@ -721,55 +263,14 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     while !close_job_step(&mut job) {}
 }
 
-#[test]
-fn raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one() {
-    let _guard = prepared_process_guard();
-    let mut ledger = PreparedRasterLedger::default();
-    let item = ledger.reserve(PREPARED_RASTER_PRODUCER_ITEMS, 1).expect("exact aggregate items");
-    assert!(ledger.reserve(1, 0).is_none(), "aggregate item cap plus one");
-    assert!(ledger.release(&item));
 
-    let bytes = ledger.reserve(1, PREPARED_RASTER_PRODUCER_BYTES).expect("exact aggregate bytes");
-    assert!(ledger.reserve(0, 1).is_none(), "aggregate byte cap plus one");
-    assert!(ledger.release(&bytes));
-
-    let mut credits = Vec::with_capacity(PREPARED_RASTER_PRODUCER_CAPACITY);
-    for _ in 0..PREPARED_RASTER_PRODUCER_CAPACITY {
-        credits.push(ledger.reserve(1, 1).expect("exact fixed generation slot"));
-    }
-    assert!(ledger.reserve(1, 1).is_none(), "generation slot cap plus one");
-    for credit in credits {
-        assert!(ledger.release(&credit));
-    }
-    assert_eq!((ledger.items, ledger.bytes), (0, 0));
-}
-
-#[test]
-fn raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant() {
-    let _guard = prepared_process_guard();
-    let (mut first, _) = PreparedRasterProducer::try_admit("first".into(), vec![1; PREPARED_RASTER_PAGE_BYTES * 2], 4_096, 2).expect("first admission");
-    let first_epoch = first.pages.as_ref().expect("first pages").source_generation();
-    assert!(first.bind_frame_generation(3));
-    assert!(matches!(first.step(3), PreparedRasterProducerStep::Pending));
-    first.begin_close();
-    assert!(!first.close_step());
-    assert!(first.pages.as_ref().expect("closing pages").slots.is_empty(), "first close grant retires only the built page");
-    assert_eq!(first.source.len(), PREPARED_RASTER_PAGE_BYTES * 2, "source remains fully owned after the page grant");
-    while !first.close_step() {}
-    let (mut second, _) = PreparedRasterProducer::try_admit("second".into(), vec![2; 4], 1, 1).expect("reused slot admission");
-    let second_epoch = second.pages.as_ref().expect("second pages").source_generation();
-    assert_eq!(second_epoch.slot(), first_epoch.slot(), "released fixed slot is reused");
-    assert!(second_epoch.epoch() > first_epoch.epoch(), "reused fixed slot advances its generation");
-    second.begin_close();
-    while !second.close_step() {}
-}
 
 #[test]
 fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     let _guard = prepared_process_guard();
     let (mut producer, _) = PreparedRasterProducer::try_admit("governed".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(producer.bind_frame_generation(3));
-    let source_pointer = producer.source.as_ptr();
+    let source_pointer = producer.original_source().as_ptr();
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(producer).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
@@ -780,16 +281,16 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(zero, None | Some(JobOutcomeKind::Yield)));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
-    assert_eq!(retained.source.as_ptr(), source_pointer);
-    assert!(retained.pages.as_ref().unwrap().slots.is_empty());
+    assert_eq!(retained.original_source().as_ptr(), source_pointer);
+    assert_eq!(retained.original_page_count(), 0);
 
     let (expired,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(1), Generation(3), StepBudget::new(1, 1,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
 
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(expired, None | Some(JobOutcomeKind::Yield)));
     let retained = job.input.as_ref().unwrap().raster_producers.get(0).unwrap();
-    assert_eq!(retained.source.as_ptr(), source_pointer);
-    assert!(retained.pages.as_ref().unwrap().slots.is_empty());
+    assert_eq!(retained.original_source().as_ptr(), source_pointer);
+    assert_eq!(retained.original_page_count(), 0);
 
     while !close_job_step(&mut job) {}
     assert!(job.terminal_is_empty());
@@ -1051,7 +552,7 @@ fn eviction_byte_cap_faults_before_packet_publication() {
 fn draw_item_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
     let mut draw = DrawList::default();
-    draw.layers[0].ui_instances.push(crate::wgpu::draw_types::UiInstance::solid([0.0; 4], crate::wgpu::theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
+    draw.layers[0].ui_instances.push(semio_framework_ui_draw_contract::UiInstance::solid([0.0; 4], semio_framework_ui_theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
     let mut input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
     input.limits.max_draw_items = 0;
     let mut job = PreparedRenderJob::new(input, 64);
@@ -1104,7 +605,7 @@ fn packet_drop_retires_nested_backings_and_permit_scalars_separately() {
     let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let mut owner = packet(7, 3);
-    owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], crate::wgpu::theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
+    owner.draw.push_solid([0.0, 0.0, 8.0, 8.0], semio_framework_ui_theme::Rgba::new(1.0, 0.0, 0.0, 1.0));
     drop(owner);
     let mut turns = 0;
     while !close_abandoned_packet_step() {
@@ -1142,7 +643,7 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     let _guard = prepared_process_guard();
     drain_abandoned_preparations();
     let mut draw = DrawList::default();
-    draw.push_solid([0.0, 0.0, 4.0, 4.0], crate::wgpu::theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
+    draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_framework_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
     let mut preview = 0;
     let mut steps = 0;
@@ -1233,9 +734,6 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
 
 
 
-#[cfg(feature = "wgpu-engine")]
-#[path = "../🔬️targets-wgpu-prepared-engine-unit/🦀️.rs"]
-mod engine_tests;
 
 #[test]
 fn prepared_render_common_close_funds_declared_frontiers_without_losing_original_owners() {
@@ -1275,4 +773,31 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         assert_eq!(InteractiveJob::close_step(&mut job, grant), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
         println!("[DEBUG] prepared close {} declared=true originalInput=true fullGrantCleanup=true", row["name"].as_str().unwrap());
     }
+}
+
+#[test]
+fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
+    let _guard = prepared_process_guard();
+    let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
+    let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
+    let retained_pointer = retained_source.as_ptr();
+    let reservation = PreparedRasterReservation::try_reserve_source("retained-source".into(), retained_source.capacity()).expect("source workspace admitted before decode");
+    let reservation = reservation.claim(4_096, 1).expect("decoded owner credited in addition to retained source");
+    let (mut producer, _) = reservation.finalize(decoded, retained_source, 4_096, 1).expect("exact retained source owner");
+    assert_eq!(producer.original_retained_source().as_ptr(), retained_pointer);
+    assert!(producer.bind_frame_generation(3));
+
+    let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+    assert!(input.try_push_raster_producer(producer).is_ok());
+    let mut job = PreparedRenderJob::new(input, 1);
+    let mut preview = 0;
+    for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
+        let (outcome,original_retained_receipt) = observe_prepared_step(&mut job, OperationId(11), Generation(3), StepBudget::new(1, 10,ui_contract::UI_WORKER_RETIREMENT_POLICY), root_cancel_token(), now_ms, &mut preview, ui_contract::UI_WORKER_RETIREMENT_POLICY);
+        assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
+        assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
+        assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().original_retained_source().len(), expected);
+    }
+    assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().original_retained_source().as_ptr(), retained_pointer);
+    while !close_job_step(&mut job) {}
+    assert!(job.terminal_is_empty());
 }

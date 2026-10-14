@@ -43,7 +43,7 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
-semio-s-artifact-stdio-pdf-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust", features = ["oracles"] }
+semio-s-artifact-stdio-pdf-test-oracle = { path = "../../🔮️oracles/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

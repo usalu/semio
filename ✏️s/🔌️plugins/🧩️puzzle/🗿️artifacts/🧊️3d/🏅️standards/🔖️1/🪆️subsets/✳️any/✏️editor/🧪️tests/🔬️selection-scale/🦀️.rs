@@ -26,7 +26,7 @@ async fn a_pick_by_id_on_the_flagship_document_persists_and_reaches_inspection()
     let objects = object_count(&app);
     assert!(objects >= 100, "the law needs the large document; got {objects} objects");
     let victim = first_object_id(&app);
-    select_id(&mut app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("a pick by id dispatches");
+    select_id(&mut app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("a pick by id dispatches");
 
     let world = render_body(&mut app, main::BODY_KEY).await;
     let selected = selection_of(&world);
@@ -59,7 +59,7 @@ async fn a_pick_reaches_the_world_body_of_every_window_instance_the_host_refresh
         }
         let objects = object_count(&app);
         let victim = first_object_id(&app);
-        select_id(&mut app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("a pick by id dispatches");
+        select_id(&mut app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("a pick by id dispatches");
         for window in WINDOW_INSTANCES {
             let world = render_window_refresh(&mut app, main::BODY_KEY, window).await;
             let selected = selection_of(&world);
@@ -86,14 +86,14 @@ async fn one_pick_builds_the_interaction_topology_once_whatever_the_document_siz
     let small_objects = object_count(&app);
     let small_victim = first_object_id(&app);
     let before_small = builds();
-    select_id(&mut app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &small_victim).await.expect("a pick on the small document dispatches");
+    select_id(&mut app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &small_victim).await.expect("a pick on the small document dispatches");
     let small_builds = builds() - before_small;
 
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin switch");
     let large_objects = object_count(&app);
     let large_victim = first_object_id(&app);
     let before_large = builds();
-    select_id(&mut app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &large_victim).await.expect("a pick on the large document dispatches");
+    select_id(&mut app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &large_victim).await.expect("a pick on the large document dispatches");
     let large_builds = builds() - before_large;
 
     assert!(large_objects > small_objects, "the two measurements must differ in document size");

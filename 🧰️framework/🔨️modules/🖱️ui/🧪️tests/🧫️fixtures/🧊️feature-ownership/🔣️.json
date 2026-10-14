@@ -104,67 +104,80 @@
         {
           "name": "paged_raster_producer_advances_one_page_and_moves_page_identity",
           "sha256": "f1a6392cbb585d2e9ca54e34de91e93e523fd7c32e15269486d8883eaea9ba35",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "paged_raster_content_identity_is_stable_and_changes_with_one_pixel_byte",
           "sha256": "1a911145cbfed450044e1b1bbb80fe079ccb897ec4e78feab70ab1d2a2577d20",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "stale_generation_does_not_consume_a_prepared_raster_page",
           "sha256": "ec4fc059781fa3cf8fb621b62a1d63824e558000f1e5e7a08316f9f08ccf410f",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "raster_cap_plus_one_rejects_the_exact_source_before_page_allocation",
           "sha256": "b28109340c37edb4dc1d89a26a9c993ce40c15bf5d31bf3c47d2717cb134863a",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "atlas_page_cap_plus_one_faults_before_process_credit_transfer",
           "sha256": "27ff892b985cd9a1f08dee4069ccf1d49b1fa208099083c61790ecd501ee4324",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "atlas_close_releases_one_fixed_page_then_its_exact_credit",
           "sha256": "225238e92d531990a47852d29263438a751fbd1444126346ce0308a27dac7fa9",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit",
           "sha256": "056707c651285cc171257e601e091c7c630673dbce9eaa88bfdb1ffed70a3e62",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "abandoned_atlas_schedules_the_same_incremental_close_authority",
           "sha256": "b58995e8f7f8e9189d85c61e4a4542a385e459344b4f2b6997abac392620accd",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "interrupted_atlas_close_rejoins_the_same_abandonment_authority",
           "sha256": "a32aac75a8c44baefbf6206eaec2ee1ceebb95c6f2db1584d6bdd71f0d7a9769",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "atlas_allocation_refusal_preserves_the_packed_permit_ledger",
           "sha256": "bcd104e0af17a4fc82b1fa309ea06391f4dcc8617715d18e2a5fb3a6b17bbda6",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "atlas_contended_permit_attempts_are_nonblocking_and_poison_free",
           "sha256": "a0442931e9eb20c7612343ddefd1f10f6ac39a9331008fc47fbc44243406ddc8",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization",
           "sha256": "15af68d5e9ec8bd11e2300199e45d914ba7672fb0bd20032500f9aa8bf032f67",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "raster_simultaneous_source_decode_peak_exact_and_plus_one",
           "sha256": "5a969b2aa7c5697f7235ed0fa813ac50cbad3953a3a4078addd22c595dc46a4b",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "retained_codec_source_moves_once_and_retires_one_page_per_governed_step",
@@ -204,12 +217,14 @@
         {
           "name": "raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one",
           "sha256": "217dd24fcec97b44527e131efc423bdb108502af362de7d46b0b0cb556ad07f5",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant",
           "sha256": "b3d6bb9b082ba19cba9481f4a977d7cef2c2220926689c5fc88a67f566f71712",
-          "owner": "portable"
+          "owner": "portable",
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation",
@@ -351,27 +366,27 @@
         {
           "name": "prepared_process_guard",
           "sha256": "ac4f4975327edc9be8954c55e3ffeeb37698a1cfe3b1f8a0721f7c29ebce3368",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs"
         },
         {
           "name": "drain_abandoned_atlases",
           "sha256": "98ec13b92e73a75cd372d0eef22eee57e55e5eedc34e0a471867934c5f2de49a",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs"
         },
         {
           "name": "drain_abandoned_preparations",
           "sha256": "15040c2386db024a064a217922d1a0ec65493c0ca72ad49dac4b71cc3485fc59",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs"
         },
         {
           "name": "now_ms",
           "sha256": "f4100e09d7c1b495f6ec07be98cb0fa670b8b9c9e455e70cef68a069f5e88237",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs"
         },
         {
           "name": "drive_preparation_until_terminal",
           "sha256": "e3a7b7d9b9964c73a8b03fba68df1b034b4e36abb98b216f9456ea65e7be862a",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs"
         },
         {
           "name": "packet",
@@ -381,7 +396,7 @@
         {
           "name": "retire_raster_upload",
           "sha256": "8256e53f5fce6abed8db6d551f3bc464bf7abc6ea617afc0eeed6fce5d2ce58d",
-          "source": "🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"
+          "source": "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🧪️tests/🦀️.rs"
         },
         {
           "name": "assert_send",
@@ -492,7 +507,7 @@
           "source": "🧪️tests/🔬️targets-wgpu-theme-token-parity/🦀️.rs"
         }
       ],
-      "productionSource": "🎯️targets/🧊️wgpu/🎨️theme/🦀️.rs",
+      "productionSource": "🎨️styling/🎭️theme/🧩️component/🦀️.rs",
       "sharedDeclarations": []
     }
   ],

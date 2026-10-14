@@ -6,12 +6,12 @@
 #[artifact(id = "fem.2d.resultswindowconfig")]
 pub struct Fem2dResultsWindowConfig {
     #[dsl(block)]
-    pub camera: crate::Viewport2d,
+    pub camera: semio_framework_os_kernel::Viewport2d,
     pub result_source_id: Option<String>,
-    pub result_mode: crate::app_surface::ResultMode,
+    pub result_mode: semio_s_fem_app_surface::ResultMode,
     pub result_mode_index: u32,
     #[dsl(block)]
-    pub animation: crate::app_surface::FemResultsAnimation,
+    pub animation: semio_s_fem_app_surface::FemResultsAnimation,
 }
 
 /// 🩹 Owned-field patch of [`Fem2dResultsWindowConfig`]: exactly the fields an update sets. It is both the update payload and the sparse diff.
@@ -20,13 +20,13 @@ pub struct Fem2dResultsWindowConfig {
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Fem2dResultsWindowConfigPatch {
     #[dsl(block)]
-    pub camera: Option<crate::Viewport2d>,
+    pub camera: Option<semio_framework_os_kernel::Viewport2d>,
     #[dsl(block)]
     pub result_source_id: Option<FemResultSourceChange>,
-    pub result_mode: Option<crate::app_surface::ResultMode>,
+    pub result_mode: Option<semio_s_fem_app_surface::ResultMode>,
     pub result_mode_index: Option<u32>,
     #[dsl(block)]
-    pub animation: Option<crate::app_surface::FemResultsAnimation>,
+    pub animation: Option<semio_s_fem_app_surface::FemResultsAnimation>,
 }
 
 /// 🔺️ One change of the nullable result source: the inner `None` clears the source.

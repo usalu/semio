@@ -1,8 +1,8 @@
 //! ➖️ `remove-load-case` diff — removes the row at the index.
 
-use super::RemoveLoadCase;
-use crate::diff::{En1993Diff, En1993LoadCaseDelta};
-use crate::En1993Snapshot;
+use crate::remove_load_case::RemoveLoadCase;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993LoadCaseDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveLoadCase, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.load_cases.len() {

@@ -4,7 +4,7 @@
 
 use super::{PlanKind, PlanStyle, PlanText, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{AnchorLayout, DimensionLayout, LeaderLayout, StoreyAnnotations, StyleMarks, TextAnchor};
-use crate::{Point2, Terminator};
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Terminator};
 use semio_framework_geometry::Point;
 
 fn point(p: Point2) -> Point {

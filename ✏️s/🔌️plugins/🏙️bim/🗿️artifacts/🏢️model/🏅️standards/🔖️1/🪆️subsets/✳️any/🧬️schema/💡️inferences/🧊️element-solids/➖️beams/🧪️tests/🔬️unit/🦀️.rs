@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, parts, SolidFamily};
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json");
@@ -75,8 +75,8 @@ fn arc_length(chord: f64, bulge: f64) -> f64 {
 #[semio_framework_async_macros::async_test]
 async fn an_arc_beam_sweeps_its_profile_along_the_arc() {
     let mut snapshot = case(CASE).snapshot;
-    let (start, end) = (crate::Point2 { x: 0.0, y: 0.0 }, crate::Point2 { x: 6.0, y: 0.0 });
-    snapshot.beams.get_mut("b-along-x").expect("beam").axis = crate::Axis::Arc { start, end, bulge: 0.4 };
+    let (start, end) = (crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 0.0 }, crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 6.0, y: 0.0 });
+    snapshot.beams.get_mut("b-along-x").expect("beam").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, bulge: 0.4 };
     let solid = &compute_element_solids(&snapshot)["b-along-x"];
     let wanted = 0.2 * 0.4 * arc_length(6.0, 0.4);
     assert!(((solid.volume - wanted) / wanted).abs() < 5e-3, "{} against {wanted}", solid.volume);
@@ -96,9 +96,9 @@ async fn an_inclined_beam_climbs_linearly_and_keeps_its_section_perpendicular() 
 }
 
 fn joined(snapshot: &mut ModelSnapshot, at: [(f64, f64); 2], side: f64) {
-    snapshot.column_types.insert("ct-join".into(), crate::ColumnType { name: "Join".into(), profile: Profile::Rectangle { width: side, depth: side }, material: "m-concrete".into() });
+    snapshot.column_types.insert("ct-join".into(), crate::standards::v1::subsets::any::schema::snapshot::ColumnType { name: "Join".into(), profile: Profile::Rectangle { width: side, depth: side }, material: "m-concrete".into() });
     for (index, (x, y)) in at.into_iter().enumerate() {
-        snapshot.columns.insert(format!("c-{index}"), crate::Column { storey: "st-ground".into(), column_type: "ct-join".into(), position: crate::Point2 { x, y }, rotation: 0.0, tilt: None, base_offset: 0.0, top: crate::TopConstraint::StoreyTop { offset: 0.0 }, phase: crate::Phase::New, name: String::new() });
+        snapshot.columns.insert(format!("c-{index}"), crate::standards::v1::subsets::any::schema::snapshot::Column { storey: "st-ground".into(), column_type: "ct-join".into(), position: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, rotation: 0.0, tilt: None, base_offset: 0.0, top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { offset: 0.0 }, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() });
     }
 }
 
@@ -129,7 +129,7 @@ async fn a_column_that_does_not_reach_the_beam_does_not_join_and_a_swallowing_jo
 async fn a_beam_depends_on_the_storeys_of_the_columns_it_can_join() {
     let mut snapshot = case(CASE).snapshot;
     joined(&mut snapshot, [(0.0, 0.0), (6.0, 0.0)], 0.4);
-    snapshot.columns.get_mut("c-1").expect("column").top = crate::TopConstraint::Storey { storey: "st-first".into(), offset: 0.0 };
+    snapshot.columns.get_mut("c-1").expect("column").top = crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Storey { storey: "st-first".into(), offset: 0.0 };
     let plan = solid_steps(&snapshot, SolidFamily::Beam);
     let parents = plan.iter().find(|step| step.key == ModelNode::Solid(SolidKey::of(SolidFamily::Beam, "b-along-x"))).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents, vec![ModelNode::Storey("st-ground".into()), ModelNode::Storey("st-first".into())]);

@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
 import Ajv from "ajv";
-import executionSchema from "../../../🔌️nx-plugin/🏃️execution/🧬️schema/🔣️.json";
+import executionSchema from "../../../🏗️build/🏃️execution/🧬️schema/🔣️.json";
 import vectors from "../../🧫️fixtures/🐹️executable-ownership/🔣️.json";
 
 test("repository Go executable integration has one Specific owner and leaves the General process independent", () => {

@@ -1,5 +1,5 @@
 //! 🧭️ Accessible workset management and per-window option switcher; authored changes reuse entity commands.
-use crate::{ModelSnapshot, ModelInference};
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, inferences::ModelInference};
 use crate::editor::bim::{kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text, ui_capacity_error}, terminology::BimLabels};
 use semio_framework_plugin::{BuiltNode, PanelTreeBuilder, PanelTabDefinition, PanelTabKind, PanelGroup, TreeWindows, UiAssemblyResult, Buildable, HasChildren};
 use semio_framework_ui_locale::Label;

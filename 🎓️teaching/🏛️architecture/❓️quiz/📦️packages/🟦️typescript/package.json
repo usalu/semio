@@ -47,8 +47,5 @@
         "env": "TEACHING_ARCHITECTURE_QUIZ_PORT"
       }
     }
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

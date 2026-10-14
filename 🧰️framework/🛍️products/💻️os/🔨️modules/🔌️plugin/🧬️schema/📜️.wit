@@ -940,7 +940,7 @@ interface pure {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
   /// ⏱️ Reads the actual original caller clock during a checked job loan.
-  operation-clock-us: func() -> option<u64>;
+  operation-clock-us: func(clock-binding: u64) -> option<u64>;
   trace-span: func(name: string);
   /// 🎟️ Begins only a receiving operation already owned by the caller's original authority.
   operation-begin: async func() -> result<u64, u32>;
@@ -1138,16 +1138,24 @@ interface reactor {
     retained-capacity-bytes: u64,
     released-bytes: u64,
   }
+  record original-actor-turn-work {
+    clock-binding: u64,
+    absolute-deadline-us: u64,
+    fuel: u64,
+  }
   record retained-turn-input {
     operation: u64,
     generation: u64,
     epoch: u64,
+    work: original-actor-turn-work,
     grant: retained-grant,
   }
   record retained-turn-receipt {
     input: retained-turn-input,
     spent: retained-progress,
+    work-units-spent: u64,
     remaining: retained-grant,
+    remaining-fuel: u64,
   }
   enum actor-authority-refusal {
     invalid-value,
@@ -1162,6 +1170,7 @@ interface reactor {
   record actor-admission-call {
     input: retained-turn-input,
     spent: retained-progress,
+    work-units-spent: u64,
     ready: bool,
     refusal: option<actor-authority-refusal>,
   }
@@ -1178,12 +1187,15 @@ interface reactor {
   record actor-context-close-call {
     input: retained-turn-input,
     spent: retained-progress,
+    work-units-spent: u64,
     complete: bool,
     blocked: bool,
     refusal: option<actor-authority-refusal>,
   }
   record budget {
     retained: retained-turn-input,
+    retained-policy: retained-grant,
+    work-fuel: u64,
     fuel: u64,
     deadline-us: u64,
     max-effects: u32,
@@ -1337,8 +1349,8 @@ interface reactor {
   /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
   /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
   /// thousands of times per session — allocates nothing in guest memory that outlives it.
-  admit-actor-context: async func(input: retained-turn-input) -> actor-admission-call;
-  close-actor-context: async func(input: retained-turn-input) -> actor-context-close-call;
+  admit-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-admission-call;
+  close-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-context-close-call;
   /// 📥️ Scalar preflight reserves the existing resident Entry before any dynamic input lifting.
   reserve-poll-input: async func(extent: u64, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
   /// 📄️ Fixed scalar words initialize at most sixty-four bytes of the same reserved source.
@@ -1458,10 +1470,11 @@ interface host-async {
 /// `describe.wit`'s `describe()` payload instead of a callable export.
 interface jobs {
   use types.{plugin-error};
-  use reactor.{retained-turn-input, retained-progress, actor-call-failure};
+  use reactor.{retained-turn-input, retained-grant, retained-progress, actor-call-failure};
 
   record job-budget {
     input: retained-turn-input,
+    retained-policy: retained-grant,
     fuel: u64,
     deadline-us: u64,
     cancelled: bool,

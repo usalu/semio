@@ -11,7 +11,10 @@ use super::*;
 use acadrust::entities::EntityType;
 use acadrust::types::{DxfVersion, Vector2, Vector3};
 
-const ARCHITECTURAL: &[u8] = include_bytes!("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+/// 📂️ Reads one committed fixture by its path relative to this crate's manifest directory.
+fn fixture(relative: &str) -> Vec<u8> {
+    std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative)).unwrap_or_else(|error| panic!("{relative}: {error}"))
+}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn round(value: f64) -> i64 {
@@ -129,7 +132,8 @@ pub(super) fn every_entity_kind() -> DwgDrawing {
 
 #[test]
 fn both_readers_agree_on_the_committed_autocad_drawing() {
-    let (a, b) = (ours(&dwg_from_bytes(ARCHITECTURAL).expect("this subset reads the DWG")), theirs(&acadrust_read(ARCHITECTURAL)));
+    let architectural = fixture("../../../../🖼️assets/🏛️architectural/🏛️architectural.dwg");
+    let (a, b) = (ours(&dwg_from_bytes(&architectural).expect("this subset reads the DWG")), theirs(&acadrust_read(&architectural)));
     assert_eq!(a.len(), 68, "the AutoCAD drawing's model space: lines, lwpolylines, arcs");
     assert_eq!(a, b);
 }
@@ -202,7 +206,7 @@ fn a_written_document_reads_back_entity_for_entity_and_re_encodes_byte_for_byte(
     let bytes = dwg_to_bytes(&drawing).expect("this subset writes the DWG");
     assert_eq!(ours(&dwg_from_bytes(&bytes).expect("drawing reader")), ours(&drawing));
     let snapshot = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&bytes).expect("lossless AC1024 decoder");
-    let written = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot::from_drawing(&drawing).expect("new document");
+    let written = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot::from_drawing(&drawing).expect("new document");
     for (read, expected) in snapshot.drawing.objects.iter().zip(&written.drawing.objects) {
         assert_eq!(read, expected);
     }
@@ -214,6 +218,6 @@ fn a_written_document_reads_back_entity_for_entity_and_re_encodes_byte_for_byte(
     assert_eq!(snapshot.auxiliary_header, written.auxiliary_header);
     assert_eq!(snapshot.preview, written.preview);
     assert_eq!(snapshot.application_history, written.application_history);
-    assert_eq!(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot { drawing: written.drawing.clone(), ..snapshot.clone() }, written);
+    assert_eq!(semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot { drawing: written.drawing.clone(), ..snapshot.clone() }, written);
     assert_eq!(crate::standards::v_ac1024::subsets::any::io::export::encode_dwg(&snapshot).expect("re-encode"), bytes);
 }

@@ -3,13 +3,15 @@ import { spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { CARGO_CONTRACT_NAME, JsonMap, NX_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
+import { CARGO_CONTRACT_NAME, JsonMap, BUILD_CONTRACT_NAME, StdioArtifactPackageRecord, canonicalStdioArtifactNames, stdioArtifactPackageContract, slashStdioPath } from "../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/🟦️.ts";
+import { cargoWorkspaceForManifest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
+import { resolveBuildInputsV1, type BuildGraphV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🟦️.ts";
 
 import { CARGO_COMPOSITION_NAME, COMPOSITION_RUST_NAME, COMPOSITION_TYPESCRIPT_NAME } from "../🪪️identity/🟦️.ts";
 
 async function runCaptured(command: string, args: string[], cwd: string, timeoutMs: number): Promise<string> {
   console.log(`[stdio-package-contract] running ${command} ${args.join(" ")}`);
-  const child = spawn(command, args, { cwd, env: { ...process.env, NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false" }, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+  const child = spawn(command, args, { cwd, env: process.env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   let stdout = "";
   let stderr = "";
   let cancelled = "";
@@ -87,7 +89,10 @@ function assertActualCargoDag(metadata: JsonMap, artifactCargoNames: ReadonlySet
 
 /** 🦀️ Reads Cargo's own package graph without compiling Stdio. */
 export async function stdioCargoMetadata(repoRoot: string): Promise<JsonMap> {
-  return JSON.parse(await runCaptured("cargo", ["metadata", "--locked", "--no-deps", "--format-version", "1"], repoRoot, 120_000)) as JsonMap;
+  const manifests=[...new Set(stdioArtifactPackageContract(repoRoot).packages.map(entry=>cargoWorkspaceForManifest(repoRoot,entry.rust.manifest).manifest))];
+  const packages:JsonMap[]=[];
+  for(const manifest of manifests){const metadata=JSON.parse(await runCaptured("cargo",["metadata","--locked","--no-deps","--format-version","1","--manifest-path",join(repoRoot,manifest)],repoRoot,120000)) as JsonMap;packages.push(...metadata.packages);}
+  return {packages:[...new Map(packages.map(entry=>[entry.id,entry])).values()]};
 }
 
 /** 🕸️ Compares the admitted artifact contract with Cargo's actual native metadata graph. */
@@ -105,41 +110,44 @@ export function assertStdioArtifactCargoMetadata(repoRoot: string, contract: { p
   console.log(`[stdio-package-contract] Cargo metadata packages=${contract.packages.length}`);
 }
 
-/** 🔬️ Compares the admitted artifact dependency projection with Nx's current project graph. */
-export async function assertStdioArtifactNxGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap): Promise<void> {
+/** 🔬️ Compares the admitted artifact dependency projection with the current portable build graph. */
+export async function assertStdioArtifactBuildGraph(repoRoot: string, contract: { packages: StdioArtifactPackageRecord[] }, metadata: JsonMap): Promise<void> {
   assertActualCargoDag(metadata, new Set(contract.packages.map((entry) => entry.rust.cargoName)));
-  const scratch = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "stdio-nx-graph-"));
+  const scratch = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "stdio-build-graph-"));
   const graphPath = join(scratch, "graph.json");
-  let graph: JsonMap;
+  let graph: BuildGraphV1;
   try {
-    await runCaptured(process.execPath, ["run", "nx", "graph", `--file=${graphPath}`], repoRoot, 180_000);
-    graph = JSON.parse(readFileSync(graphPath, "utf8")) as JsonMap;
+    await runCaptured(process.execPath, ["repo", "graph", `--file=${graphPath}`], repoRoot, 180_000);
+    graph = JSON.parse(readFileSync(graphPath, "utf8")) as BuildGraphV1;
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
-  const dependencies = graph.graph?.dependencies ?? graph.dependencies;
-  const nodes = graph.graph?.nodes ?? graph.nodes;
+  assert.equal(graph.version, 1, "Portable build graph version required");
+  assert(graph.projects && typeof graph.projects === "object", "Portable build projects required");
+  assert(Array.isArray(graph.dependencies), "Portable build dependency array required");
+  const dependencies = graph.dependencies;
+  const projects = graph.projects;
   const cargoPackages = new Map((metadata.packages as JsonMap[]).map((entry) => [String(entry.name), entry]));
   for (const entry of contract.packages) {
-    assert(nodes?.[entry.rust.nxName], `Nx graph misses ${entry.rust.nxName}`);
-    assert(nodes?.[entry.typescript.nxName], `Nx graph misses ${entry.typescript.nxName}`);
-    const rustEdges = new Set((dependencies?.[entry.rust.nxName] ?? []).map((edge: JsonMap) => edge.target));
-    const typescriptEdges = new Set((dependencies?.[entry.typescript.nxName] ?? []).map((edge: JsonMap) => edge.target));
-    assert(!rustEdges.has(COMPOSITION_RUST_NAME), `${entry.rust.nxName} has a composition back-edge`);
-    assert(rustEdges.has(NX_CONTRACT_NAME), `${entry.rust.nxName} misses Nx edge ${NX_CONTRACT_NAME}`);
+    assert(projects[entry.rust.projectName], `Build graph misses ${entry.rust.projectName}`);
+    assert(projects[entry.typescript.projectName], `Build graph misses ${entry.typescript.projectName}`);
+    const rustEdges = new Set(dependencies.filter((edge) => edge.source === entry.rust.projectName).map((edge) => edge.target));
+    const typescriptEdges = new Set(dependencies.filter((edge) => edge.source === entry.typescript.projectName).map((edge) => edge.target));
+    assert(!rustEdges.has(COMPOSITION_RUST_NAME), `${entry.rust.projectName} has a composition back-edge`);
+    assert(rustEdges.has(BUILD_CONTRACT_NAME), `${entry.rust.projectName} misses build edge ${BUILD_CONTRACT_NAME}`);
     const cargo = cargoPackages.get(entry.rust.cargoName);
     assert(cargo, `Cargo metadata misses ${entry.rust.cargoName}`);
-    const expectedRustEdges = (cargo.dependencies as JsonMap[]).map((dependency) => String(dependency.name)).filter((name) => name.startsWith("semio-s-artifact-stdio-") && name !== CARGO_CONTRACT_NAME).map((name) => canonicalStdioArtifactNames(name.slice("semio-s-artifact-stdio-".length)).rustNx);
-    for (const target of expectedRustEdges) assert(rustEdges.has(target), `${entry.rust.nxName} misses Nx edge ${target}`);
+    const expectedRustEdges = (cargo.dependencies as JsonMap[]).map((dependency) => String(dependency.name)).filter((name) => name.startsWith("semio-s-artifact-stdio-") && name !== CARGO_CONTRACT_NAME).map((name) => canonicalStdioArtifactNames(name.slice("semio-s-artifact-stdio-".length)).rustProject);
+    for (const target of expectedRustEdges) assert(rustEdges.has(target), `${entry.rust.projectName} misses build edge ${target}`);
     const typescript = JSON.parse(await Bun.file(join(repoRoot, entry.typescript.manifest)).text()) as JsonMap;
-    for (const target of Object.keys(typescript.dependencies ?? {})) assert(typescriptEdges.has(target), `${entry.typescript.nxName} misses Nx edge ${target}`);
+    for (const target of Object.keys(typescript.dependencies ?? {})) assert(typescriptEdges.has(target), `${entry.typescript.projectName} misses build edge ${target}`);
     const ownerRoot = slashStdioPath(dirname(entry.source));
-    for (const node of [nodes[entry.rust.nxName], nodes[entry.typescript.nxName]]) {
-      const defaultInputs = node.data?.namedInputs?.default ?? [];
+    for (const node of [projects[entry.rust.projectName], projects[entry.typescript.projectName]]) {
+      const defaultInputs = resolveBuildInputsV1(graph, node, node.namedInputs?.default ?? []);
       assert(defaultInputs.some((input: unknown) => typeof input === "string" && input.startsWith(`{workspaceRoot}/${ownerRoot}/`)), `${node.name} does not hash ${ownerRoot}`);
     }
   }
-  assert(nodes?.[NX_CONTRACT_NAME], `Nx graph misses ${NX_CONTRACT_NAME}`);
-  assert(nodes?.[COMPOSITION_TYPESCRIPT_NAME], `Nx graph misses ${COMPOSITION_TYPESCRIPT_NAME}`);
-  console.log(`[stdio-package-contract] Nx graph rust=${contract.packages.length} typescript=${contract.packages.length}`);
+  assert(projects[BUILD_CONTRACT_NAME], `Build graph misses ${BUILD_CONTRACT_NAME}`);
+  assert(projects[COMPOSITION_TYPESCRIPT_NAME], `Build graph misses ${COMPOSITION_TYPESCRIPT_NAME}`);
+  console.log(`[stdio-package-contract] Build graph rust=${contract.packages.length} typescript=${contract.packages.length}`);
 }

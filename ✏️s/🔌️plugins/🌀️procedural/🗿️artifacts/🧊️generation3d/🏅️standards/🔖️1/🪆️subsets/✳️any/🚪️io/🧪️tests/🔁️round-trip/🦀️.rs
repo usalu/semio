@@ -44,7 +44,7 @@ pub fn unit_cube_mesh_data() -> semio_framework_plugin::MeshData {
 
 /// 🔺️ The fixture as this repo's own typed mesh document — the export leaves' actual input.
 pub fn unit_cube_semio_mesh() -> SemioMeshSnapshot {
-    semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&unit_cube_mesh_data()).expect("the committed unit cube converts to a semio mesh")
+    semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&unit_cube_mesh_data()).expect("the committed unit cube converts to a semio mesh")
 }
 //#endregion 🧊️Fixture
 
@@ -136,7 +136,7 @@ pub fn retire_document(document: semio_s_artifact_procedural_generation3d::Gener
 
 /// 🧊️ Checks the editable polygon payload planted by a surface import against the independent cube oracle.
 pub fn assert_imported_polygon_is_unit_cube(format: &str, document: semio_s_artifact_procedural_generation3d::Generation3dSnapshot) {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge;
+    use semio_s_artifact_procedural_3d_mesh_bridge;
     let (kind, payload) = mesh_bridge::imported_source(&document).expect("import plants a source and constructor");
     let kind = kind.to_owned();
     let payload = payload.to_owned();
@@ -193,7 +193,7 @@ pub fn assert_oracle_agrees_on_unit_cube(format: &str, mesh: &SemioMeshSnapshot)
 /// IMPORTED one (long base64 note, real neuron kind, two synapses, three layout entries) exercises
 /// far more of the grammar than the default fixture does.
 pub fn stl_bytes_for_txt_case() -> Vec<u8> {
-    semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as stl")
+    semio_s_artifact_procedural_3d_io_export::serializers::artifacts::stl::v_ascii::any::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as stl")
 }
 //#endregion 🔮️Oracle
 
@@ -236,7 +236,7 @@ fn committed_unit_cube_fixture_is_a_closed_unit_cube() {
 /// export — the whole point of the ticket.
 #[test]
 fn empty_preview_mesh_is_a_typed_error_not_an_empty_export() {
-    let error = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&semio_framework_plugin::MeshData::default()).expect_err("an empty preview must not convert");
+    let error = semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&semio_framework_plugin::MeshData::default()).expect_err("an empty preview must not convert");
     assert!(error.to_string().contains("prepared geometry has no positions"), "the error names the cause, got {error}");
 }
 //#endregion 🧪️FixtureLaws
@@ -259,21 +259,21 @@ fn assert_second_implementation_file(label: &str, recovered: SemioMeshSnapshot) 
 
 #[test]
 fn stl_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any as leaf;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::stl::v_ascii::any as leaf;
     let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🔺️second-implementation.stl");
     assert_second_implementation_file("stl (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's stl imports"));
 }
 
 #[test]
 fn obj_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::obj::v3_0::any as leaf;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::obj::v3_0::any as leaf;
     let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🗿️second-implementation.obj");
     assert_second_implementation_file("obj (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's obj imports"));
 }
 
 #[test]
 fn ply_written_by_the_python_second_implementation_reads_back_as_the_unit_cube() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::ply::v1_0::any as leaf;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::ply::v1_0::any as leaf;
     let bytes = include_bytes!("../../../🧪️tests/🧫️fixtures/🚪️io/🧊️unit-cube/🧱️second-implementation.ply");
     assert_second_implementation_file("ply (second implementation)", leaf::mesh_from_bytes(bytes).expect("the second implementation's ply imports"));
 }

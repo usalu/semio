@@ -118,7 +118,11 @@ assert!(retained>=6);println!("[DEBUG] Original presentation four shape variants
 
 #[test]
 fn native_prefix_original_value_relational_forest_and_cancelled_variants(){
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValueSnapshot, SemioValue, SemioValueEntry, SemioValueNode, ValueId};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🌳️forest.json")).unwrap();
 let repetitions=f["labelRepetitions"].as_u64().unwrap()as usize;let text=neutral["text"].as_str().unwrap().repeat(repetitions);let text_bytes=text.len();let octets=neutral["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>().repeat(repetitions*2);let octet_bytes=octets.len();let node=neutral["nodeId"].as_str().unwrap();let key=neutral["key"].as_str().unwrap();
 let expected=SemioValueSnapshot{schema:neutral["schema"].as_str().unwrap().into(),root:SemioValue::Map{entries:vec![
@@ -138,7 +142,10 @@ assert!(retained>=7);println!("[DEBUG] Original value forest preserves nine vari
 }
 #[test]
 fn native_prefix_original_projection_text_rows_and_cancelled_fields(){
-use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextSnapshot, SemioTextRun, SemioTextMark, SemioTextMarkKind};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🫙️prefix/🧮️projection.json")).unwrap();let content=neutral["content"].as_str().unwrap().repeat(f["labelRepetitions"].as_u64().unwrap()as usize);let length=content.len();
 let expected=SemioTextSnapshot{schema:neutral["schema"].as_str().unwrap().into(),runs:vec![SemioTextRun{language:neutral["language"].as_str().unwrap().into(),content,marks:vec![SemioTextMark{kind:SemioTextMarkKind::Link,href:neutral["href"].as_str().unwrap().into()}]}]};let original=expected.runs[0].content.as_ptr();
 for stop in [0,1,7,31,89,233,usize::MAX-1,usize::MAX]{

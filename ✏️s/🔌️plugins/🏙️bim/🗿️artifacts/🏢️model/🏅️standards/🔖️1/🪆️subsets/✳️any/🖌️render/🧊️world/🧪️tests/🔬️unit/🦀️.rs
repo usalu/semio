@@ -108,7 +108,7 @@ fn the_overview_camera_looks_at_the_centre_of_the_drawn_solids() {
 fn world_bounds_follow_the_building_placement() {
     let mut model = demo();
     let plain = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
-    model.buildings.get_mut("bldg-1").expect("the building").origin = crate::Point2 { x: 100.0, y: -50.0 };
+    model.buildings.get_mut("bldg-1").expect("the building").origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 100.0, y: -50.0 };
     let moved = world_bounds(crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, &model, |inference| inference.element_solids.clone()).values()).expect("bounds");
     assert!((moved.0[0] - plain.0[0] - 100.0).abs() < 1e-9 && (moved.0[1] - plain.0[1] + 50.0).abs() < 1e-9);
 }
@@ -126,7 +126,7 @@ fn case_model(name: &str) -> ModelSnapshot {
     let mut model = demo();
     if name == "placed-demo" {
         let building = model.buildings.get_mut("bldg-1").expect("the building");
-        building.origin = crate::Point2 { x: 100.0, y: -50.0 };
+        building.origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 100.0, y: -50.0 };
         building.rotation = 0.5;
     }
     model

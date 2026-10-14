@@ -7,7 +7,7 @@
 //! buildingSMART Coordination View 2.0-era Part-21 entity keyword IFC4 uses, since 2x3 rides the
 //! identical ISO 10303-21 syntax with an older EXPRESS schema).
 
-use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use framework_schema::ArtifactSchema;
 
 use super::bounds::compute_ifc2x3_bounds;

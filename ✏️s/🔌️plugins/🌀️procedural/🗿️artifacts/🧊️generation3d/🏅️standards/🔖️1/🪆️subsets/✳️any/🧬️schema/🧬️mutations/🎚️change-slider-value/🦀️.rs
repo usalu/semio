@@ -2,10 +2,11 @@
 //! continuous control's intent IS the value (design §13.1), so a scrub commits exactly this leaf and editing it in
 //! history replays the value on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_number,Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::generation3d_label_number;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️ChangeSliderValue
 /// 🎚️ Sets slider `id` to `value`; a value outside the slider's range widens the range the way the canvas knob does.
@@ -25,12 +26,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "slider-value", kind: "change-slider-value", record: "ChangedSliderValue" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_slider_value::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_slider_value::inverse::inverse(self, base)?
     
     })
 }

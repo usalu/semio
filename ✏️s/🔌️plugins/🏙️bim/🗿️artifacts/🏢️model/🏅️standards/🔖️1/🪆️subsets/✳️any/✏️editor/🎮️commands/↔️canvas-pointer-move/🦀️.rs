@@ -4,7 +4,7 @@
 use crate::editor::bim::gestures::session::ToolEvent;
 use crate::editor::bim::gestures::{canvas_pointer, run};
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 canvas_pointer! {

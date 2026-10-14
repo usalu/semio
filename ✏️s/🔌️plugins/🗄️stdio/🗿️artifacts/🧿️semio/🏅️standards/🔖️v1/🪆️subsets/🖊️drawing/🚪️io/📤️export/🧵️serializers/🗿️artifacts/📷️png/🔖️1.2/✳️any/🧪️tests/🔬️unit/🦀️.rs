@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use crate::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 

@@ -10,7 +10,12 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_norm_contract::{app_surface, document, impl_norm_artifact_record, norm_owned_tool_job_factory, norm_results_window_config_owner, results_window_config};
+pub use semio_s_plugin_norm_app_surface as app_surface;
+pub use semio_s_plugin_norm_compliance as document;
+pub use semio_s_plugin_norm_results_config as results_window_config;
+pub use semio_s_plugin_norm_compliance::impl_norm_artifact_record;
+pub use semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory;
+pub use semio_s_plugin_norm_results_config::norm_results_window_config_owner;
 
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -137,7 +142,6 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 }
 //#endregion 🪪️Declaration
 
-
 // #region 🔖️Types
 
 /// 🌩 DE seismic zone per DIN EN 1998-1/NA (zones 0–3 only; schema-restricted).
@@ -223,7 +227,6 @@ impl DeGroundCombo {
         }
     }
 }
-
 
 /// 🌚️ Seismic site parameters (DE zones 0–3 + DE-NA ground/subsoil, or EN A–E spectrum).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -531,7 +534,6 @@ pub struct En1998Tower {
     pub variables: Vec<En1998VariableAction>,
 }
 // #endregion 🔖️Types
-
 
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🏷️field-meta/🦀️.rs"]
 pub mod field_meta;
@@ -886,16 +888,11 @@ pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-
-
-
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-
-
 
 }
 pub mod mutations {
@@ -904,16 +901,12 @@ pub mod mutations {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
 
-
-
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-
-
 
 }
 pub use crate::standards::v1::subsets::any::schema::diff::En1998Diff;

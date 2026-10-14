@@ -1,5 +1,5 @@
 //! 📊️ Native JSON inference table projection.
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::is_curved;
 

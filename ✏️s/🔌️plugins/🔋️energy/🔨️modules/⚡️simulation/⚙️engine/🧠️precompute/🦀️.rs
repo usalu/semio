@@ -7,6 +7,16 @@
 //! list of receivers each can shade, the approximate view factors and gray-body exchange factors of
 //! every zone enclosure, and the sky-diffuse shading ratios of every sunlit receiver.
 
+extern crate semio_s_plugin_energy_engine_envelope as envelope;
+extern crate semio_s_plugin_energy_engine_fenestration as fenestration;
+extern crate semio_s_plugin_energy_engine_geometry as geometry;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_num as num;
+extern crate semio_s_plugin_energy_engine_solar as solar;
+extern crate semio_s_plugin_energy_engine_units as units;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+
 use crate::envelope::{ConductionLayer, NodeChain};
 use crate::fenestration::{rated_coefficient_adjustment, Gap, GlazingSystem, Pane};
 use crate::geometry::{polygon_normal, surface_area_m2, surface_tilt_azimuth};
@@ -126,32 +136,32 @@ pub struct ResolvedSetpoints {
 /// 🧮️ All precomputed data for a simulation run.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct PrecomputedModel {
-    pub(crate) zone_geometry: FixedTable<EntityId, ZoneGeometry>,
-    pub(crate) surfaces: FixedTable<EntityId, SurfacePrecompute>,
-    pub(crate) windows: FixedTable<EntityId, WindowPrecompute>,
-    pub(crate) enclosures: FixedTable<EntityId, EnclosurePrecompute>,
-    pub(crate) default_setpoints: FixedTable<EntityId, ResolvedSetpoints>,
-    pub(crate) zone_order: Vec<EntityId>,
+    pub zone_geometry: FixedTable<EntityId, ZoneGeometry>,
+    pub surfaces: FixedTable<EntityId, SurfacePrecompute>,
+    pub windows: FixedTable<EntityId, WindowPrecompute>,
+    pub enclosures: FixedTable<EntityId, EnclosurePrecompute>,
+    pub default_setpoints: FixedTable<EntityId, ResolvedSetpoints>,
+    pub zone_order: Vec<EntityId>,
     pub(crate) surface_order: Vec<EntityId>,
     pub(crate) window_order: Vec<EntityId>,
-    pub(crate) casters: Vec<Vec<[f64; 3]>>,
-    pub(crate) zone_indices: FixedTable<EntityId, usize>,
-    pub(crate) surface_indices: FixedTable<EntityId, usize>,
+    pub casters: Vec<Vec<[f64; 3]>>,
+    pub zone_indices: FixedTable<EntityId, usize>,
+    pub surface_indices: FixedTable<EntityId, usize>,
     pub(crate) material_indices: FixedTable<EntityId, usize>,
     pub(crate) glazing_indices: FixedTable<EntityId, usize>,
     pub(crate) gas_indices: FixedTable<EntityId, usize>,
     pub(crate) construction_indices: FixedTable<EntityId, usize>,
-    pub(crate) fault_severity: FixedTable<EntityId, f64>,
-    pub(crate) zone_timestep_s: f64,
+    pub fault_severity: FixedTable<EntityId, f64>,
+    pub zone_timestep_s: f64,
     pub(crate) system_timestep_s: f64,
-    pub(crate) maximum_enclosure_faces: usize,
-    pub(crate) maximum_nodes: usize,
+    pub maximum_enclosure_faces: usize,
+    pub maximum_nodes: usize,
 }
 
 impl PrecomputedModel {
-    /// 🧮️ Build precomputed data from model and timestep settings.
-    #[cfg(test)]
-    pub(crate) fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
+    /// 🧮️ Builds precomputed data from model and timestep settings in one blocking call — the incremental
+    /// [`PrecomputeBuilder`] driven to completion, for laws and offline tools that need the whole result at once.
+    pub fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
         let mut builder = PrecomputeBuilder::new(zone_timestep_minutes, system_timestep_minutes);
         while !builder.is_complete() {
             builder.step(model);
@@ -160,11 +170,11 @@ impl PrecomputedModel {
     }
 
     /// ⏱️ Length of one coupled heat-balance step [s].
-    pub(crate) fn balance_step_s(&self) -> f64 {
+    pub fn balance_step_s(&self) -> f64 {
         self.system_timestep_s.min(self.zone_timestep_s).max(1.0)
     }
 
-    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 {
             return false;
         }
@@ -198,7 +208,7 @@ impl PrecomputedModel {
 // #region 🔖️PrecomputeBuilder
 /// 🧮️ Persistent one-record-at-a-time precomputation stage.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum PrecomputeStage {
+pub enum PrecomputeStage {
     ReserveBacking,
     IndexMaterials,
     IndexGlazingMaterials,
@@ -218,8 +228,7 @@ pub(crate) enum PrecomputeStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(crate) const P7C1_PRECOMPUTE_STAGES: [PrecomputeStage; 17] = [
+pub const P7C1_PRECOMPUTE_STAGES: [PrecomputeStage; 17] = [
     PrecomputeStage::ReserveBacking,
     PrecomputeStage::IndexMaterials,
     PrecomputeStage::IndexGlazingMaterials,
@@ -241,7 +250,7 @@ pub(crate) const P7C1_PRECOMPUTE_STAGES: [PrecomputeStage; 17] = [
 
 /// 🧮️ Cursor state for deterministic, resumable model precomputation.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) struct PrecomputeBuilder {
+pub struct PrecomputeBuilder {
     output: PrecomputedModel,
     stage: PrecomputeStage,
     cursor: usize,
@@ -251,7 +260,7 @@ pub(crate) struct PrecomputeBuilder {
 }
 
 impl PrecomputeBuilder {
-    pub(crate) fn retained_wire_signature(&self) -> [u64; 8] {
+    pub fn retained_wire_signature(&self) -> [u64; 8] {
         [
             self.stage as u64,
             self.cursor as u64,
@@ -264,7 +273,7 @@ impl PrecomputeBuilder {
         ]
     }
 
-    pub(crate) fn new(zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
+    pub fn new(zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
         Self {
             output: PrecomputedModel { zone_timestep_s: zone_timestep_minutes.max(1) as f64 * 60.0, system_timestep_s: system_timestep_minutes.max(1) as f64 * 60.0, ..PrecomputedModel::default() },
             stage: PrecomputeStage::ReserveBacking,
@@ -275,21 +284,19 @@ impl PrecomputeBuilder {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn stage(&self) -> PrecomputeStage {
+    pub fn stage(&self) -> PrecomputeStage {
         self.stage
     }
 
-    #[cfg(test)]
-    pub(crate) fn set_stage_for_gate(&mut self, stage: PrecomputeStage) {
+    pub fn set_stage_for_gate(&mut self, stage: PrecomputeStage) {
         self.stage = stage;
     }
 
-    pub(crate) fn is_complete(&self) -> bool {
+    pub fn is_complete(&self) -> bool {
         self.stage == PrecomputeStage::Complete
     }
 
-    pub(crate) fn backing_rejected(&self) -> bool {
+    pub fn backing_rejected(&self) -> bool {
         let tables = [
             self.output.zone_geometry.faulted(),
             self.output.surfaces.faulted(),
@@ -307,12 +314,12 @@ impl PrecomputeBuilder {
         self.backing_rejected || tables.into_iter().any(|faulted| faulted)
     }
 
-    pub(crate) fn finish(self) -> PrecomputedModel {
+    pub fn finish(self) -> PrecomputedModel {
         debug_assert!(self.is_complete());
         self.output
     }
 
-    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         self.output.close_step(maximum_items)
     }
 
@@ -327,7 +334,7 @@ impl PrecomputeBuilder {
         self.stage = PrecomputeStage::Complete;
     }
 
-    pub(crate) fn step(&mut self, model: &Model) {
+    pub fn step(&mut self, model: &Model) {
         match self.stage {
             PrecomputeStage::ReserveBacking => self.step_reserve(model),
             PrecomputeStage::IndexMaterials => self.step_index(model.materials.get(self.cursor).map(|m| m.id), PrecomputeStage::IndexGlazingMaterials, |output| &mut output.material_indices),
@@ -465,7 +472,7 @@ impl PrecomputeBuilder {
         let normal = polygon_normal(&polygon);
         let orientation = surface_tilt_azimuth(normal, 0.0);
         let gross = surface_area_m2(&polygon);
-        let layers: Vec<&crate::model::Material> = self
+        let layers: Vec<&model::Material> = self
             .output
             .construction_indices
             .get(&surface.construction_id)
@@ -531,7 +538,7 @@ impl PrecomputeBuilder {
         let fenestration = &model.fenestrations[self.cursor];
         self.cursor += 1;
         let Some(host) = self.output.surfaces.get(&fenestration.surface_id) else { return };
-        let siblings: Vec<&crate::model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == fenestration.surface_id).collect();
+        let siblings: Vec<&model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == fenestration.surface_id).collect();
         let position = siblings.iter().position(|other| other.id == fenestration.id).unwrap_or(0);
         // 🔶️ `host.polygon` is already turned into world coordinates by the site's north axis, so
         // an aperture's OWN polygon — stated in the same model frame as its host's vertices — has
@@ -824,7 +831,7 @@ pub fn place_aperture(host: &[[f64; 3]], own_vertices: &[[f64; 3]], area_m2: f64
 
 /// 🔶️ The aperture polygon of `window` on its host `surface`, in model coordinates, placed in bay
 /// `index` of `count` when the window carries no polygon of its own. See [`place_aperture`].
-pub fn fenestration_polygon_in_bay(surface: &crate::model::Surface, window: &crate::model::Fenestration, index: usize, count: usize) -> Vec<[f64; 3]> {
+pub fn fenestration_polygon_in_bay(surface: &model::Surface, window: &model::Fenestration, index: usize, count: usize) -> Vec<[f64; 3]> {
     place_aperture(&surface.vertices_m, &window.vertices_m, window.area_m2, window.height_m, window.sill_height_m, index, count)
 }
 
@@ -835,18 +842,18 @@ pub fn fenestration_polygon_in_bay(surface: &crate::model::Surface, window: &cra
 /// with several windows splits into bays, so render those through
 /// [`model_fenestration_polygon`] (which finds the siblings for you) or
 /// [`fenestration_polygon_in_bay`].
-pub fn fenestration_polygon(surface: &crate::model::Surface, window: &crate::model::Fenestration) -> Vec<[f64; 3]> {
+pub fn fenestration_polygon(surface: &model::Surface, window: &model::Fenestration) -> Vec<[f64; 3]> {
     fenestration_polygon_in_bay(surface, window, 0, 1)
 }
 
 /// 🔶️ The aperture polygon of `window` inside `model` — finds the host surface and the window's
 /// bay among its siblings the same way the engine does, so a viewer draws exactly what the
 /// simulation shades. Answers an empty polygon when the host surface is missing.
-pub fn model_fenestration_polygon(model: &Model, window: &crate::model::Fenestration) -> Vec<[f64; 3]> {
+pub fn model_fenestration_polygon(model: &Model, window: &model::Fenestration) -> Vec<[f64; 3]> {
     let Some(host) = model.surfaces.iter().find(|surface| surface.id == window.surface_id) else {
         return Vec::new();
     };
-    let siblings: Vec<&crate::model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == window.surface_id).collect();
+    let siblings: Vec<&model::Fenestration> = model.fenestrations.iter().filter(|other| other.surface_id == window.surface_id).collect();
     let index = siblings.iter().position(|other| other.id == window.id).unwrap_or(0);
     fenestration_polygon_in_bay(host, window, index, siblings.len().max(1))
 }
@@ -955,7 +962,7 @@ pub fn enclosure_factors(areas: &[f64], emissivities: &[f64], descriptors: &[(f6
         }
         matrix[i * n + i] -= areas[i] / (1.0 - emissivity(i));
     }
-    if !crate::num::invert_dense(&matrix, &mut inverse, &mut work, n) {
+    if !num::invert_dense(&matrix, &mut inverse, &mut work, n) {
         return None;
     }
     for receiver in 0..n {
@@ -996,7 +1003,7 @@ pub fn mean_radiant_participation(areas: &[f64], emissivities: &[f64]) -> Option
     }
     for i in 0..n {
         let emissivity = emissivities[i];
-        factors[i] = crate::units::STEFAN_BOLTZMANN * emissivity / (emissivity / factors[i] + 1.0 - emissivity);
+        factors[i] = units::STEFAN_BOLTZMANN * emissivity / (emissivity / factors[i] + 1.0 - emissivity);
     }
     Some(factors)
 }

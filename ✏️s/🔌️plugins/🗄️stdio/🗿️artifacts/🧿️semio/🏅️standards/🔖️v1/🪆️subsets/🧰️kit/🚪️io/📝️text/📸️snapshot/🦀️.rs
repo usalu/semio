@@ -9,11 +9,12 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
@@ -38,7 +39,12 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_ref, dec_ref, enc_child, dec_child, enc_child_opt, dec_child_opt};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_ref;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_ref;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_child_list<S>(list: &[store::os_store::artifact_child::ArtifactChild<S>]) -> String {
@@ -106,7 +112,8 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
     let f = semio_s_artifact_stdio_semio_base::schema::geometry::native::parse;
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
 
@@ -294,7 +301,7 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

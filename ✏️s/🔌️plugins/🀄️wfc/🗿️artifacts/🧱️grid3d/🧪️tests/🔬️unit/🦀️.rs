@@ -148,7 +148,7 @@ fn every_committed_vector_applies_to_the_base_and_inverts_back() {
 }
 
 /// 🛠️ Generator for the committed fixture quintets this lane asserts over. Run with
-/// `cargo test -p semio-s-artifact-wfc-grid3d --features component-app-assembly --lib -- --ignored debug_emit_mutation_fixtures`.
+/// `cargo test -p semio-s-artifact-wfc-grid3d --lib -- --ignored debug_emit_mutation_fixtures`.
 #[test]
 #[ignore]
 fn debug_emit_mutation_fixtures() {

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::PropertyValue;
+use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue;
 
 fn set(snapshot: &ModelSnapshot, ids: &[&str], pset: &str, property: &str, value: &str, selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let mut ctx = ctx(selected);

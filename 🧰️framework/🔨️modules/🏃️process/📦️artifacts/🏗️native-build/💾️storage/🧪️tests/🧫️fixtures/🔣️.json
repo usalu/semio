@@ -1,0 +1,11 @@
+{
+ "capacity":100,
+ "cases":[
+  {"name":"equal ceiling admitted","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"compiler-workspace","bytes":100,"phase":"reserved"}}],"used":100,"refused":false},
+  {"name":"ceiling plus one refused","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"compiler-workspace","bytes":101,"phase":"reserved"}}],"used":0,"refused":true},
+  {"name":"concurrent reservation refused","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"compiler-workspace","bytes":70,"phase":"reserved"}},{"type":"reserved","allocation":{"id":"22222222222222222222222222222222","owner":"second","kind":"artifact-publication","bytes":31,"phase":"reserved"}}],"used":70,"refused":true},
+  {"name":"commit retains charge","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"artifact-publication","bytes":80,"phase":"reserved"}},{"type":"committed","id":"11111111111111111111111111111111"}],"used":80,"refused":false},
+  {"name":"retirement holds charge until physical completion","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"artifact-restore","bytes":80,"phase":"reserved"}},{"type":"retiring","id":"11111111111111111111111111111111"}],"used":80,"refused":false},
+  {"name":"physical retirement frees charge","events":[{"type":"reserved","allocation":{"id":"11111111111111111111111111111111","owner":"first","kind":"compiler-workspace","bytes":80,"phase":"reserved"}},{"type":"retiring","id":"11111111111111111111111111111111"},{"type":"retired","id":"11111111111111111111111111111111"},{"type":"reserved","allocation":{"id":"22222222222222222222222222222222","owner":"second","kind":"compiler-workspace","bytes":100,"phase":"reserved"}}],"used":100,"refused":false}
+ ]
+}

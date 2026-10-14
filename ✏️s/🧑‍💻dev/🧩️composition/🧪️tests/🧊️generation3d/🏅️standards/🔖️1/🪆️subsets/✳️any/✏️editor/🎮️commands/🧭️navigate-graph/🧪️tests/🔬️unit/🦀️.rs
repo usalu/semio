@@ -2,7 +2,8 @@ use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, dispatch};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
 use crate::SnapshotRead;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{example_snapshot, PROCEDURAL_EXAMPLE_HEX_COLUMN};
+use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
 
 /// 🧫️ The ONE language-agnostic statement of graph keyboard traversal, answered here by the Rust
 /// implementation and independently by `🧪️tests/🔬️unit/🟦️.ts`.
@@ -47,8 +48,8 @@ fn the_shared_fixture_restates_the_bundled_hex_column_graph() {
     assert_eq!(declared.len(), graph.widgets.len(), "the fixture states every widget of the example and no other");
     for node in declared {
         let id = node["id"].as_str().expect("node id");
-        let widget = graph.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == id).unwrap_or_else(|| panic!("{id} is not a widget of the example"));
-        let layout = graph.layout.get(semio_s_artifact_procedural_generation3d::widget_id(widget)).unwrap_or_else(|| panic!("{id} carries no layout"));
+        let widget = graph.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id).unwrap_or_else(|| panic!("{id} is not a widget of the example"));
+        let layout = graph.layout.get(semio_s_artifact_procedural_3d_model::widget_id(widget)).unwrap_or_else(|| panic!("{id} carries no layout"));
         assert_eq!(layout.x, node["x"].as_f64().expect("x"), "{id}: layout x");
         assert_eq!(layout.y, node["y"].as_f64().expect("y"), "{id}: layout y");
     }
@@ -111,7 +112,7 @@ fn every_step_the_fixture_names_is_a_declared_arg_free_verb() {
 async fn an_arrow_verb_moves_the_framework_owned_graph_selection() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    assert!(context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == "height"), "the fixture app opens the hex column");
+    assert!(context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == "height"), "the fixture app opens the hex column");
     context::select_graph(&mut app, "node", &["height"]).await;
     dispatch(&mut app, Generation3dCommand::SelectDownstreamNode(select_downstream_node::SelectDownstreamNode {})).await;
     assert_eq!(

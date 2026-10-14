@@ -18,7 +18,7 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
-    ("RemodelingMutation", descriptors::<semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot, semio_s_artifact_remodel_remodeling::standards::v1::subsets::any::schema::mutations::RemodelingMutation>),
+    ("RemodelingMutation", descriptors::<semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot, semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation>),
 ];
 
 /// 🗺️ Manifest coordinate (artifact, standard, subset, state-lane surface or `""` for the document) → the owner

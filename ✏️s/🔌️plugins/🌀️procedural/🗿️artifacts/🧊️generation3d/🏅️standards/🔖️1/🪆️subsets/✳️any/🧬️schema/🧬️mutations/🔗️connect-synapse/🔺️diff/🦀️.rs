@@ -1,11 +1,12 @@
 //! 🔺️ `connect-synapse` sparse diff construction.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dSynapsesDelta};
-use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::{synapse_index,widget_index};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSynapsesDelta;
+use crate::connect_synapse::ConnectSynapse;
+use crate::synapse_index;
+use crate::widget_index;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta for one new synapse edge.
 pub fn diff(payload: &ConnectSynapse, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {

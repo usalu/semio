@@ -16,7 +16,7 @@ use crate::editor::bim::terminology::BimLabels;
 use crate::render::world::{mesh_data, overview_orbit, world_bounds};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;

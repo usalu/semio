@@ -10,7 +10,8 @@
 //! conflating the two would let a dangling/self reference fabricate a fake cycle in what is
 //! otherwise a real tree invariant.
 
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use crate::DrawingLayerNode;
+use crate::snapshot::DrawingSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Topology

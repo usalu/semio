@@ -1,10 +1,12 @@
 //! 📥️ 📥️ Remodeling play app commands command — `add-stream`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::create_stream;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::schema::mint_remodeling_id;
-use crate::{MediaKind, MediaStream, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::mint_remodeling_id;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -33,7 +35,4 @@ pub fn handle(payload: &AddStream, doc: &ArtifactView<'_, RemodelingSnapshot>, _
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-spatial"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling spatial internals: k-d trees and spatial grids."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }

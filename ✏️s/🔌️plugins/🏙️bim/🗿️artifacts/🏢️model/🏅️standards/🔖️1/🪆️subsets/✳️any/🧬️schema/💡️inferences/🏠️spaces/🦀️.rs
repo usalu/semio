@@ -16,7 +16,7 @@ use super::super::element_solids::plan_kit::{depth_of, seg};
 use super::super::element_solids::{dep_object, dep_value, Anonymous};
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
-use crate::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{offset_regions, region_boolean, OffsetJoin, Region};
 use semio_framework_2d::Vec2;
@@ -297,7 +297,7 @@ fn finish(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, shape: Sh
 
 /// 🏠️ The rooms of every space on a storey from the storey's level and the plan obstacles of its walls and curtain walls.
 pub fn rooms_from(snapshot: &ModelSnapshot, storey: &str, level: &StoreyLevel, obstacles: &[Obstacle]) -> StoreyRooms {
-    let spaces: Vec<(&String, &crate::Space)> = snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).collect();
+    let spaces: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Space)> = snapshot.spaces.iter().filter(|(_, space)| space.storey == storey).collect();
     let seeds: Vec<Vec2> = spaces.iter().filter_map(|(_, space)| if let SpaceBoundary::Bounded { seed } = &space.boundary { Some([seed.x, seed.y]) } else { None }).collect();
     let extent = bounds_of(obstacles.iter().flat_map(|obstacle| obstacle.ring.iter()).chain(seeds.iter())).map(|[x0, y0, x1, y1]| [x0 - OPEN_MARGIN, y0 - OPEN_MARGIN, x1 + OPEN_MARGIN, y1 + OPEN_MARGIN]);
     let faces = extent.filter(|_| !seeds.is_empty()).map(|[x0, y0, x1, y1]| run(&mut |_| true, BooleanOperation::Difference, &[Region::new(&[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], &[])], &regions_of(obstacles))).unwrap_or_default();

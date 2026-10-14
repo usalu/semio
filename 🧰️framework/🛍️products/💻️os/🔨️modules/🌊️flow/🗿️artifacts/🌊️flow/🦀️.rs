@@ -32,15 +32,6 @@ pub fn widget_id_for(widget: &Widget) -> &str {
     }
 }
 
-#[path = "🧩️extensions/🦀️.rs"]
-pub mod extensions;
-#[path = "📔️registry/🦀️.rs"]
-pub mod registry;
-pub use registry::*;
-#[path = "🗂️catalogue/🦀️.rs"]
-pub mod catalogue;
-pub use catalogue::*;
-
 #[cfg(test)]
 #[path = "🧪️tests/🌊️flow/🦀️.rs"]
 mod package_tests;

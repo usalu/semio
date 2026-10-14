@@ -1,7 +1,7 @@
 //! 🧬️ Ifc2x3Snapshot schema (2x3/🧮️sav) — reuses the ✳️base subset's `Ifc2x3Snapshot` verbatim.
 //! Structural Analysis View is a validation-gated dialect STAMP, not a new snapshot type.
 
-pub use crate::standards::v2x3::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per Structural Analysis View conformance rule, not a copy of

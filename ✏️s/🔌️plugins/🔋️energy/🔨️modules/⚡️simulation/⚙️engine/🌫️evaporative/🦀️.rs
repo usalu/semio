@@ -1,5 +1,8 @@
 //! 💧️ Evaporative cooling: direct and indirect with effectiveness and water use.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::{humidity_ratio_from_rh, latent_heat_vaporization, saturation_pressure_pa, wet_bulb_c};
 use crate::units::{CP_DRY_AIR, H_FG_0C};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

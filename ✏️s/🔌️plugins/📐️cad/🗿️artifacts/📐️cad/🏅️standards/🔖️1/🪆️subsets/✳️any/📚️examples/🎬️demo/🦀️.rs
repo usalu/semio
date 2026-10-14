@@ -1,5 +1,14 @@
 //! 📚️ Example `demo`.
 
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[cfg(test)]
+#[path = "🧪️tests/🧩️example/🦀️.rs"]
+mod art_cad_demo_tests;
+//#endregion 🧩️Modules
+
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

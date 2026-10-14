@@ -7,7 +7,7 @@ use super::config::BimWorldWindowConfig;
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::envelope::{self, Mode, Part};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::{DslValue, World3dAnnotation, World3dAnnotationLayer, World3dColorRamp, World3dScalarDomain, World3dScalarField, World3dScalarRange, World3dText, WORLD3D_ANNOTATIONS_MAX};
 
 /// 🏷️ The id of the mesh and the instance of the overlay group `index`.

@@ -13,7 +13,7 @@ use std::collections::HashSet;
 
 #[path = "🛠️modeling/🦀️.rs"]
 mod modeling;
-pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshTranslationInput};
+pub use modeling::{MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshTranslationInput, MeshPlaneProduction,MeshTranslationProduction};
 
 #[path = "🔎️quality/🦀️.rs"]
 mod quality;
@@ -184,7 +184,7 @@ impl std::error::Error for MeshKernelError {}
 pub type MeshResult<T> = Result<T, MeshKernelError>;
 
 // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct MeshVertex {
@@ -199,7 +199,7 @@ fn default_uv() -> [f32; 2] {
     [0.0, 0.0]
 }
 
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct HalfEdge {
@@ -212,7 +212,7 @@ pub struct HalfEdge {
     pub uv: [f32; 2],
 }
 
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct MeshFace {
@@ -267,7 +267,7 @@ pub struct MeshTransfer {
 
 //#region HalfedgeMesh
 
-#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::protocol::value")]
 pub struct HalfedgeMesh {

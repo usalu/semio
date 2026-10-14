@@ -8,8 +8,8 @@ mod diff_codec {
 use super::*;
 use crate::standards::v4::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
-use crate::IfcSnapshot;
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
+use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -346,8 +346,8 @@ mod diff_wire_codec {
 use super::*;
 use crate::standards::v4::subsets::any::schema::diff::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
-use crate::IfcSnapshot;
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity, IfcTypedValue, IfcValue};
+use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};

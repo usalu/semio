@@ -4,8 +4,17 @@
 //! `mutation.target-mismatch`; a bound asset content id ⇒ otherwise
 //! `mutation.target-mismatch`. Inline buffers and constant meshes are plain values. A payload
 //! equal to the stored lanes and bindings ⇒ Warning `mutation.no-op`.
-use crate::diff::{RemodelingAssetEntry, RemodelingAssigned, RemodelingDiff, RemodelingResultsDiff, RemodelingRow, RemodelingRows};
-use crate::{committed_remodeling_asset_handle, remodeling_content_is_complete, remodeling_mesh_content_handle_parts, RemodelingContentKind, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingAssetEntry;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingAssigned;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingResultsDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRows;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::committed_remodeling_asset_handle;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_content_is_complete;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_content_handle_parts;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use std::collections::BTreeMap;
 
 //#region 🔖️Diff

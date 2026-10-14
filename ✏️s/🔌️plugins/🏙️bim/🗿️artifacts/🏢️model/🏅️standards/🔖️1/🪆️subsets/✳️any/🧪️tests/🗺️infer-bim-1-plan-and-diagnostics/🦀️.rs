@@ -33,7 +33,7 @@ mod subject {
         infer(ctx, "diagnostics")
     }
 
-    fn snapshot_of(ctx: &Context) -> Result<semio_s_artifact_bim_model::ModelSnapshot, String> {
+    fn snapshot_of(ctx: &Context) -> Result<semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;
         decode_model_snapshot_json(&String::from_utf8(ctx.input_bytes(&uri)?).map_err(|error| format!("the committed snapshot is not UTF-8: {error}"))?)
     }

@@ -299,6 +299,34 @@
       "tool": "bazel",
       "mode": "release"
     },
-    "mode": "release"
+    "mode": "release",
+    "authoring": {
+      "policy": {
+        "version": 1,
+        "owner": "dashboard:authored-fast-path",
+        "maximumElapsedMilliseconds": 30000
+      },
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/repo-dashboard-rs:daemon",
+        "--",
+        "status"
+      ],
+      "native": {
+        "artifactDirectory": "n",
+        "transport": {
+          "maximumBytes": 65537,
+          "maximumLines": 321
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 7000
+        },
+        "network": {
+          "offline": true
+        }
+      },
+      "receivingDelayMilliseconds": 40
+    }
   }
 }

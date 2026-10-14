@@ -1,6 +1,6 @@
 //! ⚖️ `create-rule` payload. Brings a new numeric code check into the model: the measure and direction (minimum clear height, maximum riser, minimum tread, minimum stair width, minimum door width, maximum ramp slope, minimum corridor width, maximum compartment area), the limit, the severity and the scope. Its findings are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Rule};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Rule}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

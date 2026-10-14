@@ -17,7 +17,7 @@ export function coverageDir(repoRoot:string,kind:CoverageKind):string{const dire
 export function coverageSlug(owner:string):string{return owner.replace(/[^a-zA-Z0-9_-]+/g,"_");}
 
 /** 📋️ Supplies genuine repository storage to the explicitly selected process owner. */
-export function repositoryProcessOwnerContextV1(cwd:string):ProcessOwnerContextV1{const repository=findWorkspaceRoot(cwd);return {version:1,cwd:resolve(cwd),cacheRoot:repoCacheDirectory(repository),leaseDirectory:join(repository,".cache","framework","leases")};}
+export function repositoryProcessOwnerContextV1(cwd:string):ProcessOwnerContextV1{const repository=findWorkspaceRoot(cwd);return {version:1,cwd:resolve(cwd),cacheRoot:repoCacheDirectory(repository),leaseDirectory:join(repository,".cache","b","l","m","data")};}
 
 /** 🧪️ Supplies the selected test owner's closed process and coverage policy. */
 export function repositoryVitestPolicyV1(cwd:string,environment:Readonly<Record<string,string|undefined>>=process.env):VitestPolicyV1{const repository=findWorkspaceRoot(cwd);return {version:1,cwd:resolve(cwd),toolPath:join(repository,"node_modules","vitest","vitest.mjs"),runtime:"node",coverageRuntime:"node",cacheRoot:repoCacheDirectory(repository,"vite"),coverageDirectory:join(coverageDir(repository,"js"),coverageSlug(cwd)),budgetMs:Number(environment.SEMIO_TEST_BUDGET_MS??TEST_LEVEL_BUDGET_MS[isTestLevel(environment.SEMIO_TEST_LEVEL)?environment.SEMIO_TEST_LEVEL:"fundamental"])};}

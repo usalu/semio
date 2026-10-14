@@ -126,4 +126,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageFrame
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageMetadataEntry { key, value });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioImageSnapshot { schema, width, height, colorspace, bit_depth, frames, icc, metadata });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioImageSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioImageSnapshot, schema::mutations::SemioImageMutation);

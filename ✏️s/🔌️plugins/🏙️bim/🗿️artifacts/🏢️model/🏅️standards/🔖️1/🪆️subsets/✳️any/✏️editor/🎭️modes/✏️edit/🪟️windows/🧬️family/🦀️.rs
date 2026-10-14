@@ -14,7 +14,7 @@ use crate::render::world::{mesh_data, overview_orbit, world_bounds};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
 use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
 use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyIssue, FamilySolidMesh, FamilyValue, IssueOwner};
-use crate::{ModelInference, ModelSnapshot, SolidShape};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, SolidShape}};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::TableCell;
@@ -132,7 +132,7 @@ fn family_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, labels: 
 
 fn parameter_rows(snapshot: &ModelSnapshot, id: &str, value: &FamilyValue, labels: &BimLabels) -> Vec<DslValue> {
     let mut rows: Vec<DslValue> = Vec::new();
-    for parameter in crate::mutations::family_rules::parameters_in_order(snapshot, id) {
+    for parameter in crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order(snapshot, id) {
         let resolved = value.parameters.get(&parameter.name);
         let shown = resolved.and_then(|row| row.value.as_ref()).map_or_else(String::new, |found| vocabulary::value_text(labels, found));
         let next = edit::KINDS[(edit::KINDS.iter().position(|kind| *kind == parameter.kind).unwrap_or(0) + 1) % edit::KINDS.len()];

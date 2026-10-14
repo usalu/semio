@@ -1,8 +1,8 @@
-use super::*;
-use crate::app_surface::CatalogueCell;
-use crate::editor::en1993::unit_tests::context;
-use crate::standards::v1::subsets::any::schema::{check_full_steel_structure, AnnexParams, GAMMA_M0_DE, GAMMA_M1_DE};
-use crate::En1993Snapshot;
+use crate::panels::catalogue::*;
+use semio_s_plugin_norm_app_surface::CatalogueCell;
+use crate::unit_tests::context;
+use semio_s_artifact_norm_en1993_checks::{check_full_steel_structure, AnnexParams, GAMMA_M0_DE, GAMMA_M1_DE};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {

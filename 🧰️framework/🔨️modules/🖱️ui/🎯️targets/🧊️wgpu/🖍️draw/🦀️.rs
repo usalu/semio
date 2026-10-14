@@ -545,7 +545,10 @@ pub struct GpuMeshBuffers {
     pub vertex_buffer: wgpu::Buffer,
     pub index_buffer: wgpu::Buffer,
     pub index_count: u32,
+    source: crate::wgpu::kernel_3d_scene::Mesh3dLease,
 }
+
+impl GpuMeshBuffers{pub fn original_source_lease(&self)->crate::wgpu::kernel_3d_scene::Mesh3dLease{self.source}}
 
 pub const MESH_GPU_TABLE_CAPACITY: usize = 256;
 const MESH_GPU_KEY_BYTES: usize = 256;
@@ -627,6 +630,10 @@ pub struct MeshGpuTable {
     closing: bool,
 }
 
+/// 🧾️ Only the actual upload/cache owner can issue the exact native source handback.
+pub struct MeshGpuSourceReturn{key:MeshGpuKey,identity:ui_scene::math::Mesh3dResourceIdentity,source:crate::wgpu::kernel_3d_scene::Mesh3dLease}
+impl MeshGpuSourceReturn{pub fn validates(&self,key:&str,source:&ui_scene::math::Mesh3dResourceLoan)->Result<bool,&'static str>{Ok(self.key==MeshGpuKey::new(key)?&&self.identity==source.identity()&&source.lease()==Some(self.source))}}
+
 struct MeshGpuUploadCursor {
     key: MeshGpuKey,
     version: u64,
@@ -681,8 +688,8 @@ impl MeshGpuTable {
         if self.closing {
             return Err("mesh GPU table is closing");
         }
-        if self.meshes.get(key, version).is_some() {
-            return Ok(true);
+        if let Some(cached)=self.meshes.get(key, version) {
+            return if cached.source==lease{Ok(true)}else{Err("mesh GPU cache differs from its original source")};
         }
         if self.upload.is_none() {
             if self.meshes.is_full() {
@@ -722,7 +729,7 @@ impl MeshGpuTable {
         let entry = MeshGpuEntry {
             key: cursor.key,
             version: cursor.version,
-            value: GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices },
+            value: GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices, source:cursor.lease },
         };
         match self.meshes.insert(entry) {
             Ok(()) => Ok(true),
@@ -801,6 +808,15 @@ impl MeshGpuTable {
     pub fn retire_exact_step(&mut self, key: &str, version: u64) -> Result<bool, &'static str> {
         self.begin_retirement(MeshGpuRetirementSelector::Exact { key: MeshGpuKey::new(key)?, version })?;
         Ok(self.retirement_step())
+    }
+
+    /// 🏁️ Original pages remain borrowed until their real upload and exact GPU buffers close.
+    pub fn retire_original_source_step(&mut self,key:&str,source:&ui_scene::math::Mesh3dResourceLoan)->Result<Option<MeshGpuSourceReturn>,&'static str>{
+        let identity=source.identity();let lease=source.lease().ok_or("original native mesh source has returned")?;let original_key=MeshGpuKey::new(key)?;
+        if let Some(upload)=self.upload.as_ref(){if upload.key==original_key&&upload.version==identity.cache_epoch{if upload.lease!=lease{return Err("native GPU upload differs from its original source")};self.close_upload_step();return Ok(None)}}
+        if self.meshes.get(key,identity.cache_epoch).is_some_and(|cached|cached.source!=lease){return Err("native GPU cache differs from its original source")}
+        if !self.retire_exact_step(key,identity.cache_epoch)?{return Ok(None)}
+        Ok(Some(MeshGpuSourceReturn{key:original_key,identity,source:lease}))
     }
 
     pub fn evict_mesh_step(&mut self, key: &str) -> Result<bool, &'static str> {

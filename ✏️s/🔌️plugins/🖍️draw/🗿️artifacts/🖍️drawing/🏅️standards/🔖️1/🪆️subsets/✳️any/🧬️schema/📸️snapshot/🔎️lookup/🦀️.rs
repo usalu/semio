@@ -3,7 +3,8 @@
 #[path = "🔗️owned/🦀️.rs"]
 pub mod owned;
 
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use crate::DrawingLayerNode;
+use crate::snapshot::DrawingSnapshot;
 use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 use std::mem::size_of;
@@ -78,7 +79,7 @@ impl<'a> DrawingLayerLookupCursor<'a> {
             return Ok(DrawingLayerLookupStep::Pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<RetainedCloneRef<'a, DrawingLayerNode>>(), ..Default::default() }));
         }
         let current = self.current.expect("selected Drawing lookup candidate");
-        let step = self.comparison.compare(current.project(1, crate::schema::layer_id), self.target.expect("retained Drawing lookup target"), BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+        let step = self.comparison.compare(current.project(1, crate::layer_id), self.target.expect("retained Drawing lookup target"), BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
         let (ordering, progress) = match step {
             BoundedOrdStep::Authority(progress) => return Ok(DrawingLayerLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => (None, progress),

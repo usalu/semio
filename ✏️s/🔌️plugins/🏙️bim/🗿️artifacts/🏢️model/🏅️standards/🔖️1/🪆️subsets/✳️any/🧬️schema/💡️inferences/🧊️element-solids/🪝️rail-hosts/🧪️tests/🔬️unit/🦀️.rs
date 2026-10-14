@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of as ramp_run_of;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of as stair_run_of;
-use crate::{Infill, Point2, Stair, StairFlight, TopConstraint, Turn, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Infill, Point2, Stair, StairFlight, TopConstraint, Turn, Vertex};
 
 const EPS: f64 = 1e-9;
 
@@ -19,12 +19,12 @@ fn stair(flight: StairFlight) -> Stair {
         top: TopConstraint::Unconnected { height: 2.8 },
         max_riser: 0.18,
         min_tread: 0.25,
-        stringer: crate::STANDARD_STRINGER,
+        stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER,
         nosing: 0.0,
         tread_thickness: 0.04,
-        riser: crate::STANDARD_RISER,
+        riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER,
         landing_depth: 1.0,
-        phase: crate::Phase::New,
+        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
         name: String::new(),
     }
 }
@@ -35,14 +35,14 @@ fn railing(host: Option<RailingHost>) -> Railing {
         path: Vec::new(),
         height: 1.0,
         post_spacing: 1.2,
-        profile: crate::standard_rail_profile(),
-        post_profile: crate::standard_post_profile(),
+        profile: crate::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(),
+        post_profile: crate::standards::v1::subsets::any::schema::snapshot::standard_post_profile(),
         baluster: None,
         infill: Infill::None,
         material: "m".into(),
         base_offset: 0.0,
         host,
-        phase: crate::Phase::New,
+        phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
         name: String::new(),
     }
 }
@@ -170,7 +170,7 @@ fn a_rail_on_a_ramp_follows_the_walking_surface_inside_its_edge() {
 
 fn slab() -> Slab {
     let corner = |x: f64, y: f64| Vertex { point: Point2 { x, y }, bulge: 0.0 };
-    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, phase: crate::Phase::New, name: String::new() }
+    Slab { storey: "st".into(), slab_type: "t".into(), boundary: vec![corner(0.0, 0.0), corner(4.0, 0.0), corner(4.0, 3.0), corner(0.0, 3.0)], holes: Vec::new(), offset: 0.1, slope: None, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: String::new() }
 }
 
 #[test]
@@ -191,7 +191,7 @@ fn a_rail_on_a_slab_edge_stands_inside_or_outside_on_the_top_plane() {
 
 #[test]
 fn a_sloped_slab_lifts_the_rail_with_its_plane() {
-    let slab = Slab { slope: Some(crate::Slope { direction: 0.0, angle: 0.1 }), ..slab() };
+    let slab = Slab { slope: Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.1 }), ..slab() };
     let level = level();
     let mut host = on("sl", HostSide::Left, 0.0);
     host.edge = 0;
@@ -208,7 +208,7 @@ fn a_missing_or_curved_slab_edge_cannot_be_followed() {
     far.edge = 9;
     assert_eq!(host_paths(&railing(Some(far.clone())), &far, &Host::Slab { slab: &slab, own: &level }), Err(HostFault::Edge));
     assert!(unresolved(&railing(Some(far)), Some(&slab)));
-    let mut curved = crate::Slab { boundary: slab.boundary.clone(), ..slab.clone() };
+    let mut curved = crate::standards::v1::subsets::any::schema::snapshot::Slab { boundary: slab.boundary.clone(), ..slab.clone() };
     curved.boundary[0].bulge = 0.4;
     let edge = on("sl", HostSide::Left, 0.0);
     assert_eq!(host_paths(&railing(Some(edge.clone())), &edge, &Host::Slab { slab: &curved, own: &level }), Err(HostFault::Edge));
@@ -224,7 +224,7 @@ fn a_hosted_railing_is_a_solid_of_its_authored_sections_and_absent_without_a_hos
     assert_eq!(solid.family, SolidFamily::Railing);
     assert!(solid.volume > 0.0 && solid.groups.iter().any(|group| group.part == parts::POST) && solid.groups.iter().any(|group| group.part == parts::RAIL));
     assert!(hosted_solid(&hosted, None).is_empty());
-    let thick = Railing { profile: crate::Profile::Rectangle { width: 0.12, depth: 0.08 }, ..hosted.clone() };
+    let thick = Railing { profile: crate::standards::v1::subsets::any::schema::snapshot::Profile::Rectangle { width: 0.12, depth: 0.08 }, ..hosted.clone() };
     assert!(hosted_solid(&thick, Some(&Host::Stair(&run))).volume > solid.volume);
 }
 

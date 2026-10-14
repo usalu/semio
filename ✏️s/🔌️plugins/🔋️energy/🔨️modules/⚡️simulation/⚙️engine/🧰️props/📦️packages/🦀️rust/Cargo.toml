@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-props"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `props`: Physical property functions"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-energy-engine-units = { workspace = true }

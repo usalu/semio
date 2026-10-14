@@ -1,6 +1,6 @@
 //! 📇️ `set-project-info` payload. Patches the project metadata (name, description, author, organization, phase names): exactly the provided fields change, an empty patch is a no-op.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, ProjectPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ProjectPatch}, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

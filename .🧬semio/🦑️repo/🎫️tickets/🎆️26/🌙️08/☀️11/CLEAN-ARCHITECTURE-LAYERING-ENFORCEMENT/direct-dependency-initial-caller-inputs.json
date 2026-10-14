@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts",
+      "sha256": "ec0c62489edfcdf886e5047f370235a20ddfd64c54ab5160c9a63f007ae2068a",
+      "bytes": 22134
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧭️invocation/🟦️.ts",
+      "sha256": "007a109b52df50baba8e779a6272acefce4c19ab87e6a2338ebbacc577bb3ebe",
+      "bytes": 14241
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📥️dependencies.json",
+      "sha256": "369ac8bb576e56237f39de693638c1be1168cf628393d3766b5cb8b415cb96c8",
+      "bytes": 1066
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "sha256": "399e7c9c8d5cf5402711cd6448d03740dfeb3e32f97bb29ca5ec2661773433ca",
+      "bytes": 90586
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+      "sha256": "9e54ce57fe92e2d3c02d48f09536fd11c36b2009a8e73f42d75152dd7d906a97",
+      "bytes": 34526
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "a41ce426d2818169ccb1838498415c38face1302dc5876e17598ea32e7c2abf6",
+      "bytes": 5440731
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "3999aacd243b94bfee8a7ac4281c269ac16ebfae3a1690528665d4e50a113354",
+      "bytes": 4042951
+    }
+  ],
+  "launches": [
+    {
+      "file": ".vscode/launch.json",
+      "launch": {
+        "name": "📥️deps javascript",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo dependencies sync --scope .",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "3_dev",
+          "order": -46
+        },
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:sync\",\"maximumElapsedMilliseconds\":600000}"
+        }
+      }
+    },
+    {
+      "file": ".vscode/launch.json",
+      "launch": {
+        "name": "📥️deps javascript lock",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo dependencies lock --all",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "3_dev",
+          "order": -43.8
+        },
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock\",\"maximumElapsedMilliseconds\":600000}"
+        }
+      }
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "launch": {
+        "name": "📥️deps javascript",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo dependencies sync --scope .",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "3_dev",
+          "order": -46
+        },
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:sync\",\"maximumElapsedMilliseconds\":600000}"
+        }
+      }
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "launch": {
+        "name": "📥️deps javascript lock",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo dependencies lock --all",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "3_dev",
+          "order": -43.8
+        },
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock\",\"maximumElapsedMilliseconds\":600000}"
+        }
+      }
+    }
+  ],
+  "testsCollected": 0,
+  "actualInitializerStartedByThisOwner": false
+}

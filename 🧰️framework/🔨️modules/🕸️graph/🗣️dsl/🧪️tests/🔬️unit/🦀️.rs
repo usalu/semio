@@ -408,7 +408,7 @@ fn board_graph_node_property_id_kind_all_and_missing() {
 #[test]
 fn manifest_helpers_merge_graph_and_manifest_kinds() {
     block_on_test(async {
-        let manifest = <crate::manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"schema":"manifest","id":"future.neutral.geometry","nodeKinds":[{"id":"Declared"}]}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
+        let manifest = <semio_framework_graph_manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"schema":"manifest","id":"future.neutral.geometry","nodeKinds":[{"id":"Declared"}]}"#,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())).unwrap();
         let graph = BoardQueryableGraph::from_host_snapshot_json(split_endpoint_fixture(), Some(manifest)).unwrap();
         assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("future.neutral.geometry"));
         let node_kinds = manifest_node_kinds(&graph);
@@ -470,7 +470,7 @@ fn from_object_snapshot_json_passes_through_existing_nodes() {
 fn explicit_manifest_consumption_follows_portable_owner_corpus() {
     let corpus = semio_framework_pack_json::parse(include_str!("../../../🛂️manifest/🧪️tests/🧫️fixtures/🧩️consumption/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in corpus["cases"].as_array().unwrap() {
-        let manifest = if row["manifest"].is_null() { None } else { Some(<crate::manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&row["manifest"])).unwrap()) };
+        let manifest = if row["manifest"].is_null() { None } else { Some(<semio_framework_graph_manifest::Manifest as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&row["manifest"])).unwrap()) };
         let actual = BoardQueryableGraph::from_host_snapshot_json(&semio_framework_pack_json::to_string(&row["snapshot"]), manifest);
         assert_eq!(actual.is_ok(), row["expected"]["accepted"].as_bool().unwrap(), "{}", row["id"]);
         if let Ok(graph) = actual {

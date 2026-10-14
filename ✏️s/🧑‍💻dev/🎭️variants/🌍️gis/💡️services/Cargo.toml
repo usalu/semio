@@ -36,6 +36,9 @@ path = "../../../💡️services/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-gis-gismap]
 path = "../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-gis-gismap-mcp]
+path = "../../../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🌉️mcp/📦️packages/🦀️rust"
+
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]

@@ -1,9 +1,17 @@
 //! ⚙️ The compute contract: a widget compute starts a job; the job is stepped with fuel and may be cancelled.
+#![allow(clippy::result_large_err)]
 
-use super::inputs::WidgetInputs;
-use super::value::{kernel_fault, Outputs, WidgetEvaluation, WidgetFault};
-use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle, ImportedShape, ShapeValue};
+
+#[path="🎟️original/🦀️.rs"]
+pub mod original;
 
 //#region 🔖️Job
 /// 🪜️ One slice of a widget job: it needs more calls (`Working`, with a 0..=1 progress) or it is finished.
@@ -95,6 +103,8 @@ pub type StartFn = fn(&Kind, WidgetInputs) -> Box<dyn WidgetJob>;
 /// 🧩️ Explicit compute capabilities admitted by the host of an inference run.
 pub trait GeometryComputeContext: Send+Sync {
     fn lookup(&self,kind_id:&str)->Option<StartFn>;
+    fn start_original(&self,_kind:&Kind,_inputs:&mut Option<WidgetInputs>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<original::OriginalFixedOutputJob>,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"host has no admitted original geometry producer").into())}
+    fn start_original_widget(&self,_widget:&semio_framework_artifact_flow_flow::Widget,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<original::OriginalFixedOutputJob>,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"host has no admitted original source widget producer").into())}
     fn start(&self,kind:&Kind,inputs:WidgetInputs)->Box<dyn WidgetJob> {
         match self.lookup(&kind.id) {Some(start)=>start(kind,inputs),None=>failed(WidgetFault::new("generation3d.geometry.compute-missing",format!("The widget kind {} has no admitted compute.",kind.label.en),format!("Der Widget-Typ {} hat keine zugelassene Berechnung.",kind.label.de)),kind.quality)}
     }
@@ -141,3 +151,7 @@ impl KernelSession {
     }
 }
 //#endregion 🔖️Kernel
+
+#[cfg(test)]
+#[path = "../💎️value/🧪️tests/🦀️.rs"]
+mod original_output_tests;

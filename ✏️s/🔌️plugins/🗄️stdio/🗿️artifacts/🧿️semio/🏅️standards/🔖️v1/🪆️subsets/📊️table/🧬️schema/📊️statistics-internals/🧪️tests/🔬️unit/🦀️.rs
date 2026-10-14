@@ -13,10 +13,10 @@ fn statistics_error_contract_preserves_transparent_sources_and_conversions() {
         assert_eq!(error.to_string(), message);
         assert!(std::error::Error::source(&error).is_none());
     }
-    let tabular: StatisticsError = crate::schema::tabular_internals::TabularError::UnknownColumn("x".into()).into();
+    let tabular: StatisticsError = semio_s_artifact_stdio_semio_table_tabular::schema::tabular_internals::TabularError::UnknownColumn("x".into()).into();
     assert_eq!(tabular.to_string(), "no column named `x`");
     assert!(std::error::Error::source(&tabular).is_some());
-    let probability: StatisticsError = crate::schema::probability_internals::ProbabilityError::NoConvergence { what: "cdf" }.into();
+    let probability: StatisticsError = semio_s_artifact_stdio_semio_table_probability::schema::probability_internals::ProbabilityError::NoConvergence { what: "cdf" }.into();
     assert_eq!(probability.to_string(), "no convergence in cdf");
     assert!(std::error::Error::source(&probability).is_some());
 }

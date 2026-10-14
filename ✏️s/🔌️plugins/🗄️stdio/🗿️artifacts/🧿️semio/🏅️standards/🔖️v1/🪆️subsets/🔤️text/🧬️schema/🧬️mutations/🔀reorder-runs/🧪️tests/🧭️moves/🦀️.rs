@@ -6,9 +6,9 @@
 //! `from: 0, to: 2` over a three-run sequence lands the run last rather than second-to-last — the
 //! whole point of this case.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/⬅️before/🔣️.json");
@@ -46,7 +46,7 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let mutation = reorder_runs();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(crate::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
+    assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(semio_s_artifact_stdio_semio_text_mutations::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-runs applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-runs applies to the reordered state");

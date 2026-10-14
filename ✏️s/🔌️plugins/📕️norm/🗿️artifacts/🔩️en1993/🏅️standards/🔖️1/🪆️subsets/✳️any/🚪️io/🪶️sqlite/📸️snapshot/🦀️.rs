@@ -1,7 +1,8 @@
 //! 🔩️ Explicit steel design entities, typed forces and exact binary64 words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v1::subsets::any::schema::snapshot::En1993Snapshot;
-use crate::{SteelMaterial,SteelSection,SteelMember,LoadCase,MemberAction,DesignAction,SteelJoint,JointForceAction,FatigueDetail,FatigueBand,FireExposure,ColdFormedMember,PlatedPanel,SiloShell,TensionComponent,BridgeFatigue,TowerLeg,SteelPile,CraneRunway,ForceAction,document::AnnexChoice};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+use semio_s_artifact_norm_en1993_model::{SteelMaterial, SteelSection, SteelMember, LoadCase, MemberAction, DesignAction, SteelJoint, JointForceAction, FatigueDetail, FatigueBand, FireExposure, ColdFormedMember, PlatedPanel, SiloShell, TensionComponent, BridgeFatigue, TowerLeg, SteelPile, CraneRunway, ForceAction};
+use semio_s_plugin_norm_compliance::AnnexChoice;
 use std::collections::BTreeMap;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -116,8 +117,5 @@ fn admit_strings(b:&mut NativeEncodingBound<'_,'_>,values:&[&String],bytes:usize
 fn admit_forces(b:&mut NativeEncodingBound<'_,'_>,rows:&mut usize,values:&[ForceAction])->Result<(), ValueError>{admit_rows(b,rows,values.len())?;for a in values{admit_strings(b,&[&a.id,&a.load_case_id],8192)?;}Ok(())}
 
 #[path="🛂️admission/🦀️.rs"]
-pub(in crate::standards::v1::subsets::any)mod admission;
+pub(crate)mod admission;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

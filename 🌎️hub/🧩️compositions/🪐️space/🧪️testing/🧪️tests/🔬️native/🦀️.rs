@@ -3,12 +3,12 @@ use super::*;
 #[test]
 fn original_unique_demo_dsl_materializes_through_owned_codecs_and_independent_json_oracle() {
     let original = sources();
-    assert_eq!(original[0].text, semio_s_artifact_draw_drawing::examples::demo::source().document_json());
+    assert_eq!(original[0].text, semio_s_artifact_draw_drawing_examples::demo::source().document_json());
     assert_eq!(original[1].text, semio_s_artifact_writer_writer::examples::demo::source().document_json());
     assert!(original.iter().all(|source| source.format == SpaceDocumentFormat::Dsl));
     let drawing_json = document_for_app("draw", "draw").unwrap();
-    let drawing: semio_s_artifact_draw_drawing::DrawingSnapshot = semio_framework_pack_json::from_json_str(&drawing_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let drawing_dsl = <semio_s_artifact_draw_drawing::DrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&original[0].text).unwrap();
+    let drawing: semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot = semio_framework_pack_json::from_json_str(&drawing_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let drawing_dsl = <semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&original[0].text).unwrap();
     assert_eq!(drawing, drawing_dsl);
     assert!(!drawing.layers.is_empty());
     let drawing_oracle: serde_json::Value = serde_json::from_str(&drawing_json).unwrap();

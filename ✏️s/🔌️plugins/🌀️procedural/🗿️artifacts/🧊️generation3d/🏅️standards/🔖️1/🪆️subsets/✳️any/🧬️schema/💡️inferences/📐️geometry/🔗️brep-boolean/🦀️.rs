@@ -1,10 +1,20 @@
 //! 🔗️ `brep.boolean` computes: union, difference, intersection and the compound cut as stepped kernel jobs over a fresh session.
 //!
 //! An operand is a solid or a compound. A compound is the union of its members, so it is fused into one solid first (a chain of boolean jobs of its own); the tools of a compound cut are the members of every tool operand, cut away in one operation. Every kernel job is advanced with the fuel of the grant, so cancelling a widget between two steps drops the session with the job half-way.
+#![allow(clippy::result_large_err)]
 
-use super::brep_curve::{guarded, refusal};
-use super::phased_job::{cancelled_fault, Flow, Pipeline, Work};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_brep_curve::refusal;
+use semio_s_artifact_procedural_3d_phased_job::cancelled_fault;
+use semio_s_artifact_procedural_3d_phased_job::Flow;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepError, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind};
 use semio_framework_3d_brep_operations::boolean::BooleanOp;
 use std::collections::VecDeque;
@@ -226,6 +236,8 @@ fn compound_cut(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-boolean", include_str!("../../../🗂️catalogue/🔣️brep-boolean.json"));
 /// 🗃️ The `brep.boolean` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.boolean.fuse", start: fuse },

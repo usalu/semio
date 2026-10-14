@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-geo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine geo: georeferencing and geo products."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-camera = { workspace = true }
+semio-s-artifact-remodel-remodeling-dense = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-lie = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh-repair = { workspace = true }
+semio-s-artifact-remodel-remodeling-optimize = { workspace = true }
+semio-s-artifact-remodel-remodeling-sfm = { workspace = true }
+semio-s-artifact-remodel-remodeling-spatial = { workspace = true }
+
+[dev-dependencies]
+geometry = { workspace = true }

@@ -9,7 +9,7 @@ use crate::editor_domain::editor_laws::context;
 const OVERLAPPED: (f64, f64) = (-900.0, -900.0);
 
 async fn overlap_every_widget(app: &mut crate::editor_domain::editor_laws::context::Generation3dApp) -> Vec<String> {
-    let widget_ids: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
+    let widget_ids: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert!(widget_ids.len() >= 2, "the reorganize fixture needs at least two widgets to be meaningfully overlapped");
     for id in &widget_ids {
         dispatch(app, Generation3dCommand::NodeGraphEdit(NodeGraphEdit { operations_json: crate::editor_domain::editor_laws::node_move_operations_json(id, OVERLAPPED.0, OVERLAPPED.1) })).await;

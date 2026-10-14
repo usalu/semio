@@ -47,7 +47,7 @@ pub(crate) struct LocalInteractionLiveQuery<D, C, Q: LocalInteractionQueryCaptur
     request_id: u64,
     started: bool,
     page_sent: bool,
-    closing: bool,
+    pub(crate) closing: bool,
     cancelled: bool,
     failed: bool,
     terminal_sent: bool,

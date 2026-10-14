@@ -5,7 +5,7 @@
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::authored::storeys::elevation;
-use crate::{ramp_construction_problem, stair_construction_problem, ModelDiff, ModelSnapshot, Opening, OpeningKind, Railing, Ramp, Stair, StairFlight, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ramp_construction_problem, stair_construction_problem, ModelSnapshot, Opening, OpeningKind, Railing, Ramp, Stair, StairFlight, TopConstraint}, diff::ModelDiff};
 use protocol::{MutationOutcome, OutcomeCode};
 
 const TOLERANCE: f64 = 1e-9;

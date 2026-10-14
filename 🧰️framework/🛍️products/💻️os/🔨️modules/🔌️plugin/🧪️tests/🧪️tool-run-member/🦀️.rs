@@ -29,7 +29,7 @@ pub(super) struct ToyMemberJob {
     done: u32,
     phase: u8,
     progress_source: Option<ToolRunProgress>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 /// 🏭️ The member job a request describes, continuing after the member ops the run already holds.

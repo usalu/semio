@@ -88,7 +88,8 @@ import {
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../🔌️plugin/📡️backbone/🔗️binding/🟦️.ts";
-import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCodecAnswer, type ShardCodecRequest, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { ShardCodecAnswer, ShardCodecRequest, ShardCodecSuccess } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
@@ -1252,7 +1253,7 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   /** 🧬️ Calls this program's component `codec` interface on a live instance's actor, serialized with
    * its turns: the browser twin of the native `OwnedComponentDocumentCodec`. A guest fault rejects
    * with the fault's display message; a program with no live instance refuses. */
-  readonly codec: (request: ShardCodecRequest) => Promise<unknown>;
+  readonly codec: (request: ShardCodecRequest) => Promise<ShardCodecSuccess>;
   /** 👥️ The last `AppFrame::Ephemeral` this instance's guest appended to an answer (`AppChannelClient.ephemeral`),
    * or `null` — what the shell's presence heartbeat carries as the peer's app presence pack and interaction. */
   readonly ephemeralSnapshot: (instanceId: number) => WgpuEphemeralSnapshot | null;

@@ -1359,7 +1359,6 @@ pub struct DbIoPlatformClose {
 }
 
 /// 🪡 One retained prepared-platform slice fragment per poll.
-#[cfg(feature = "neo4j")]
 pub(crate) struct DbIoPlatformSlicesCopy<'a> {
     first: &'a [u8],
     second: &'a [u8],
@@ -1399,7 +1398,6 @@ impl DbIoPlatformBuffer {
         unsafe { &(&*DB_IO_PLATFORM_BACKINGS[self.slot as usize].0.get())[..self.len] }
     }
 
-    #[cfg(feature = "neo4j")]
     pub(crate) fn as_static_driver_slice(&self) -> &'static [u8] {
         unsafe { &(&*DB_IO_PLATFORM_BACKINGS[self.slot as usize].0.get())[..self.len] }
     }
@@ -1441,7 +1439,6 @@ impl Future for DbIoPlatformClose {
     }
 }
 
-#[cfg(feature = "neo4j")]
 fn db_io_reserve_platform_buffer(operation: u64, total: usize) -> Result<DbIoPlatformBuffer, DbError> {
     if total > DB_IO_PLATFORM_BUFFER_BYTES {
         return Err(DbError::LimitExceeded("db_io prepared platform slices"));
@@ -1465,7 +1462,6 @@ fn db_io_reserve_platform_buffer(operation: u64, total: usize) -> Result<DbIoPla
     Ok(DbIoPlatformBuffer { slot, generation, len: total, copied: 0, credit, returned: false })
 }
 
-#[cfg(feature = "neo4j")]
 pub(crate) fn db_io_prepare_platform_slices<'a>(operation: u64, first: &'a [u8], second: &'a [u8]) -> DbIoPlatformSlicesCopy<'a> {
     let reserved = first.len().checked_add(second.len()).ok_or(DbError::LimitExceeded("db_io prepared platform slices")).and_then(|total| db_io_reserve_platform_buffer(operation, total));
     match reserved {
@@ -1474,7 +1470,6 @@ pub(crate) fn db_io_prepare_platform_slices<'a>(operation: u64, first: &'a [u8],
     }
 }
 
-#[cfg(feature = "neo4j")]
 impl Future for DbIoPlatformSlicesCopy<'_> {
     type Output = Result<DbIoPlatformBuffer, DbError>;
 
@@ -5904,13 +5899,10 @@ pub trait LeaseStorage: Send + Sync {
 /// strong process `Arc<WorkerPool>` field.
 pub enum DbBackend {
     Memory(MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(Box<db_fault_testing::FaultStorage>),
@@ -5921,13 +5913,10 @@ impl DbBackend {
     pub async fn wal(&self) -> WalRef<'_> {
         match self {
             Self::Memory(s) => WalRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => WalRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => WalRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => WalRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => WalRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => WalRef::Fault(&**s),
@@ -5939,13 +5928,10 @@ impl DbBackend {
     pub fn publication_scope(&self) -> usize {
         match self {
             Self::Memory(s) => s.publication_scope(),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.publication_scope(),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.publication_scope(),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.publication_scope(),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.publication_scope(),
             #[cfg(test)]
             Self::Fault(s) => s.publication_scope(),
@@ -5955,13 +5941,10 @@ impl DbBackend {
     pub async fn snapshot(&self) -> SnapshotRef<'_> {
         match self {
             Self::Memory(s) => SnapshotRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => SnapshotRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => SnapshotRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => SnapshotRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => SnapshotRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => SnapshotRef::Fault(&**s),
@@ -5972,13 +5955,10 @@ impl DbBackend {
     pub async fn payload(&self) -> PayloadRef<'_> {
         match self {
             Self::Memory(s) => PayloadRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => PayloadRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => PayloadRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => PayloadRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => PayloadRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => PayloadRef::Fault(&**s),
@@ -5989,13 +5969,10 @@ impl DbBackend {
     pub async fn catalog(&self) -> CatalogRef<'_> {
         match self {
             Self::Memory(s) => CatalogRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => CatalogRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => CatalogRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => CatalogRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => CatalogRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => CatalogRef::Fault(&**s),
@@ -6006,13 +5983,10 @@ impl DbBackend {
     pub async fn index(&self) -> IndexRef<'_> {
         match self {
             Self::Memory(s) => IndexRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => IndexRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => IndexRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => IndexRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => IndexRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => IndexRef::Fault(&**s),
@@ -6023,13 +5997,10 @@ impl DbBackend {
     pub async fn lease(&self) -> LeaseRef<'_> {
         match self {
             Self::Memory(s) => LeaseRef::Memory(s),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => LeaseRef::Fs(s),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => LeaseRef::Sqlite(s),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => LeaseRef::Postgres(s),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => LeaseRef::Neo4j(s),
             #[cfg(test)]
             Self::Fault(s) => LeaseRef::Fault(&**s),
@@ -6040,13 +6011,10 @@ impl DbBackend {
     pub async fn capabilities(&self) -> StorageCapabilities {
         match self {
             Self::Memory(s) => s.capabilities().await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.capabilities().await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.capabilities().await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.capabilities().await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.capabilities().await,
             // 🔀️ `FaultStorage::capabilities` calls back through `self.inner: DbBackend`
             // (fault-storage tests), so this arm is mutually recursive with this very fn — `Box::pin`
@@ -6063,13 +6031,10 @@ impl DbBackend {
     pub async fn close(&self) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.close().await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.close().await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.close().await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.close().await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.close().await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.close()).await,
@@ -6083,13 +6048,10 @@ impl DbBackend {
 /// `&dyn WalStorage` per ruling **O1**.
 pub enum WalRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6099,13 +6061,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn acquire_writer(&self, document: &ArtifactId) -> Result<WalWriterPermit, DbError> {
         match self {
             Self::Memory(s) => s.acquire_writer(document).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.acquire_writer(document).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.acquire_writer(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.acquire_writer(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.acquire_writer(document).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.acquire_writer(document)).await,
@@ -6115,13 +6074,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn create_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.create_segment(writer, index).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.create_segment(writer, index).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.create_segment(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.create_segment(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.create_segment(writer, index).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.create_segment(writer, index)).await,
@@ -6131,13 +6087,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn append(&self, writer: &WalWriterPermit, index: u64, bytes: DbIoPages) -> Result<u64, DbError> {
         match self {
             Self::Memory(s) => s.append(writer, index, bytes).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.append(writer, index, bytes).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.append(writer, index, bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.append(writer, index, bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.append(writer, index, bytes).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.append(writer, index, bytes)).await,
@@ -6147,13 +6100,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn sync(&self, writer: &WalWriterPermit, index: u64, class: DurabilityClass) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.sync(writer, index, class).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.sync(writer, index, class).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.sync(writer, index, class).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.sync(writer, index, class).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.sync(writer, index, class).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.sync(writer, index, class)).await,
@@ -6163,13 +6113,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn seal(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.seal(writer, index).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.seal(writer, index).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.seal(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.seal(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.seal(writer, index).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.seal(writer, index)).await,
@@ -6179,13 +6126,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn read(&self, document: &ArtifactId, index: u64, range: ByteRange) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read(document, index, range).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.read(document, index, range).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.read(document, index, range).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.read(document, index, range).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read(document, index, range).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read(document, index, range)).await,
@@ -6195,13 +6139,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn segment_len(&self, document: &ArtifactId, index: u64) -> Result<u64, DbError> {
         match self {
             Self::Memory(s) => s.segment_len(document, index).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.segment_len(document, index).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.segment_len(document, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.segment_len(document, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_len(document, index).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.segment_len(document, index)).await,
@@ -6211,13 +6152,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError> {
         match self {
             Self::Memory(s) => s.segment_state(document, index).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.segment_state(document, index).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.segment_state(document, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.segment_state(document, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.segment_state(document, index).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.segment_state(document, index)).await,
@@ -6227,13 +6165,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn list_segments(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_segments(document).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.list_segments(document).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.list_segments(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.list_segments(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_segments(document).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_segments(document)).await,
@@ -6243,13 +6178,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn truncate_tail(&self, writer: &WalWriterPermit, index: u64, new_len: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.truncate_tail(writer, index, new_len).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.truncate_tail(writer, index, new_len).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.truncate_tail(writer, index, new_len).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.truncate_tail(writer, index, new_len).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.truncate_tail(writer, index, new_len).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.truncate_tail(writer, index, new_len)).await,
@@ -6259,13 +6191,10 @@ impl<'a> WalStorage for WalRef<'a> {
     async fn delete_segment(&self, writer: &WalWriterPermit, index: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.delete_segment(writer, index).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.delete_segment(writer, index).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.delete_segment(writer, index).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.delete_segment(writer, index).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_segment(writer, index).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_segment(writer, index)).await,
@@ -6279,13 +6208,10 @@ impl<'a> WalStorage for WalRef<'a> {
 /// `&dyn SnapshotStorage` per ruling **O1**.
 pub enum SnapshotRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6295,13 +6221,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     fn publication_scope(&self) -> usize {
         match self {
             Self::Memory(s) => s.publication_scope(),
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.publication_scope(),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.publication_scope(),
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.publication_scope(),
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.publication_scope(),
             #[cfg(test)]
             Self::Fault(s) => s.publication_scope(),
@@ -6311,13 +6234,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn write_generation(&self, document: &ArtifactId, generation: u64, bytes: DbIoPages) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.write_generation(document, generation, bytes).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.write_generation(document, generation, bytes).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.write_generation(document, generation, bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.write_generation(document, generation, bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_generation(document, generation, bytes).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.write_generation(document, generation, bytes)).await,
@@ -6327,13 +6247,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn read_generation(&self, document: &ArtifactId, generation: u64) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read_generation(document, generation).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.read_generation(document, generation).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.read_generation(document, generation).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.read_generation(document, generation).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_generation(document, generation).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_generation(document, generation)).await,
@@ -6343,13 +6260,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn latest_generation(&self, document: &ArtifactId) -> Result<Option<u64>, DbError> {
         match self {
             Self::Memory(s) => s.latest_generation(document).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.latest_generation(document).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.latest_generation(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.latest_generation(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.latest_generation(document).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.latest_generation(document)).await,
@@ -6359,13 +6273,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn list_generations(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_generations(document).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.list_generations(document).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.list_generations(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.list_generations(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_generations(document).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_generations(document)).await,
@@ -6375,13 +6286,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
     async fn delete_generation(&self, document: &ArtifactId, generation: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.delete_generation(document, generation).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.delete_generation(document, generation).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.delete_generation(document, generation).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.delete_generation(document, generation).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_generation(document, generation).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_generation(document, generation)).await,
@@ -6395,13 +6303,10 @@ impl<'a> SnapshotStorage for SnapshotRef<'a> {
 /// `&dyn PayloadStorage` per ruling **O1**.
 pub enum PayloadRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6411,13 +6316,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn put(&self, bytes: DbIoPages) -> Result<ContentHash, DbError> {
         match self {
             Self::Memory(s) => s.put(bytes).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.put(bytes).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.put(bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.put(bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.put(bytes).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.put(bytes)).await,
@@ -6427,13 +6329,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn get(&self, hash: &ContentHash) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.get(hash).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.get(hash).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.get(hash).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.get(hash).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.get(hash).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.get(hash)).await,
@@ -6443,13 +6342,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
         match self {
             Self::Memory(s) => s.contains(hash).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.contains(hash).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.contains(hash).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.contains(hash).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.contains(hash).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.contains(hash)).await,
@@ -6459,13 +6355,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.delete(hash).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.delete(hash).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.delete(hash).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.delete(hash).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete(hash).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete(hash)).await,
@@ -6475,13 +6368,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
     async fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
         match self {
             Self::Memory(s) => s.len(hash).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.len(hash).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.len(hash).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.len(hash).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.len(hash).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.len(hash)).await,
@@ -6495,13 +6385,10 @@ impl<'a> PayloadStorage for PayloadRef<'a> {
 /// `&dyn CatalogStorage` per ruling **O1**.
 pub enum CatalogRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6511,13 +6398,10 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
     async fn read_root(&self) -> Result<Option<(DbIoPages, EpochFence)>, DbError> {
         match self {
             Self::Memory(s) => s.read_root().await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.read_root().await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.read_root().await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.read_root().await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_root().await,
             // 🔀️ `FaultStorage::read_root` calls back through `self.inner: DbBackend`, so this
             // arm is mutually recursive with this very fn — `Box::pin` breaks the otherwise-
@@ -6530,13 +6414,10 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
     async fn cas_root(&self, expected: EpochFence, new_bytes: DbIoPages) -> Result<EpochFence, DbError> {
         match self {
             Self::Memory(s) => s.cas_root(expected, new_bytes).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.cas_root(expected, new_bytes).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.cas_root(expected, new_bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.cas_root(expected, new_bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.cas_root(expected, new_bytes).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.cas_root(expected, new_bytes)).await,
@@ -6550,13 +6431,10 @@ impl<'a> CatalogStorage for CatalogRef<'a> {
 /// `&dyn IndexStorage` per ruling **O1**.
 pub enum IndexRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6566,13 +6444,10 @@ impl<'a> IndexStorage for IndexRef<'a> {
     async fn write_run(&self, document: &ArtifactId, run_id: u64, bytes: DbIoPages) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.write_run(document, run_id, bytes).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.write_run(document, run_id, bytes).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.write_run(document, run_id, bytes).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.write_run(document, run_id, bytes).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.write_run(document, run_id, bytes).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.write_run(document, run_id, bytes)).await,
@@ -6582,13 +6457,10 @@ impl<'a> IndexStorage for IndexRef<'a> {
     async fn read_run(&self, document: &ArtifactId, run_id: u64) -> Result<DbIoPages, DbError> {
         match self {
             Self::Memory(s) => s.read_run(document, run_id).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.read_run(document, run_id).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.read_run(document, run_id).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.read_run(document, run_id).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.read_run(document, run_id).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.read_run(document, run_id)).await,
@@ -6598,13 +6470,10 @@ impl<'a> IndexStorage for IndexRef<'a> {
     async fn list_runs(&self, document: &ArtifactId) -> Result<DbIoU64List, DbError> {
         match self {
             Self::Memory(s) => s.list_runs(document).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.list_runs(document).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.list_runs(document).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.list_runs(document).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.list_runs(document).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.list_runs(document)).await,
@@ -6614,13 +6483,10 @@ impl<'a> IndexStorage for IndexRef<'a> {
     async fn delete_run(&self, document: &ArtifactId, run_id: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.delete_run(document, run_id).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.delete_run(document, run_id).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.delete_run(document, run_id).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.delete_run(document, run_id).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.delete_run(document, run_id).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.delete_run(document, run_id)).await,
@@ -6634,13 +6500,10 @@ impl<'a> IndexStorage for IndexRef<'a> {
 /// `&dyn LeaseStorage` per ruling **O1**.
 pub enum LeaseRef<'a> {
     Memory(&'a MemoryStorage),
-    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+    #[cfg(not(target_arch = "wasm32"))]
     Fs(&'a FsStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(&'a db_storage_sqlite::SqliteStorage),
-    #[cfg(feature = "postgres")]
     Postgres(&'a crate::db_storage_postgres::PostgresStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(&'a crate::db_storage_neo4j::Neo4jStorage),
     #[cfg(test)]
     Fault(&'a db_fault_testing::FaultStorage),
@@ -6650,13 +6513,10 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
     async fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
         match self {
             Self::Memory(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.acquire(resource, holder, ttl_ms, now_ms).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.acquire(resource, holder, ttl_ms, now_ms)).await,
@@ -6666,13 +6526,10 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
     async fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.renew(resource, holder, fence, ttl_ms, now_ms).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.renew(resource, holder, fence, ttl_ms, now_ms)).await,
@@ -6682,13 +6539,10 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
     async fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
         match self {
             Self::Memory(s) => s.release(resource, holder, fence).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.release(resource, holder, fence).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.release(resource, holder, fence).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.release(resource, holder, fence).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.release(resource, holder, fence).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.release(resource, holder, fence)).await,
@@ -6698,13 +6552,10 @@ impl<'a> LeaseStorage for LeaseRef<'a> {
     async fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
         match self {
             Self::Memory(s) => s.current(resource, now_ms).await,
-            #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Fs(s) => s.current(resource, now_ms).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(s) => s.current(resource, now_ms).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(s) => s.current(resource, now_ms).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(s) => s.current(resource, now_ms).await,
             #[cfg(test)]
             Self::Fault(s) => Box::pin(s.current(resource, now_ms)).await,
@@ -7853,7 +7704,7 @@ impl LeaseStorage for MemoryStorage {
 /// Every multi-step write (`cas_root`, lease grants, snapshot/index/payload writes) goes through
 /// `pack::write_atomic` (temp file + `fsync` + `rename`) so a reader never observes a torn file.
 /// Every blocking filesystem step runs as one typed task grant on the process I/O lane.
-#[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 mod fs_storage {
     use super::check_len;
     use super::writer::{WalFileWriterGuard, WalWriterTable};
@@ -9105,7 +8956,7 @@ mod fs_storage {
     }
 }
 
-#[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 pub use fs_storage::FsStorage;
 //#endregion 🔖️Fs
 

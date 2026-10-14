@@ -22,7 +22,7 @@ fn terms(snapshot: &Fem2dSnapshot) -> Vec<(String, f64)> {
 #[semio_framework_async_macros::async_test]
 async fn patch_combination_reweights_a_term_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchCombination(PatchCombination { id: "uls".into(), field: format!("{TERM_FIELD_PREFIX}live"), value: "1.6".into() })).await;
     assert_eq!(terms(&app.snapshot().expect("snapshot")), vec![("dead".to_string(), 1.35), ("live".to_string(), 1.6)]);
 }

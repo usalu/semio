@@ -25,7 +25,7 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-model = { workspace = true }
 # 🧩️ Capability Dependencies
 semio-s-artifact-stdio-bcf = { workspace = true }
-semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]

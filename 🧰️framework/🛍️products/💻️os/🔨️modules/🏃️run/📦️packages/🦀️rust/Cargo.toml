@@ -49,7 +49,8 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
-semio-framework-plugin-interpreter = { workspace = true }
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

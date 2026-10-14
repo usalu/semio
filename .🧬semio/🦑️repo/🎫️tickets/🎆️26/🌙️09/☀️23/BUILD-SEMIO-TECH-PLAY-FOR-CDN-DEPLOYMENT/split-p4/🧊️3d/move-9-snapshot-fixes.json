@@ -1,0 +1,13 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "from_module": "editor::puzzle3d::snapshot", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs", "to_module": "editor::puzzle3d::dispatch",
+   "select": ["puzzle3d_fill_options_scope", "puzzle3d_window_option_scope", "puzzle3d_selection_panel_bodies", "puzzle3d_artifact_panel_bodies", "puzzle3d_selection_scope", "puzzle3d_interaction_chrome_scope", "Puzzle3dScopeClass", "puzzle3d_scope", "puzzle3d_command_scope_class"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "from_module": "editor::puzzle3d::snapshot", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs", "to_module": "editor::puzzle3d::modes::edit::windows::main",
+   "select": ["puzzle3d_viewport_scope"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "from_module": "editor::puzzle3d::snapshot", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "to_module": "editor::puzzle3d",
+   "select": ["puzzle3d_cut_operations", "puzzle3d_cut_operations_from"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs", "from_module": "editor::puzzle3d::panels::catalogue", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "to_module": "editor::puzzle3d::snapshot",
+   "select": ["catalog_entry_label"]},
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️.rs", "from_module": "editor::puzzle3d::modes::edit::tools::fill", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs", "to_module": "editor::puzzle3d::snapshot",
+   "select": ["TOOL_ID"]}
+ ]}

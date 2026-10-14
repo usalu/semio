@@ -19,7 +19,7 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const { rest } = resolveTestLevel(args);
-    await runRepositoryCargoTests(["semio-repo-test-host"], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests(["semio-repo-test-host"], this.repoRoot, this.invocation, rest);
   }
 }
 

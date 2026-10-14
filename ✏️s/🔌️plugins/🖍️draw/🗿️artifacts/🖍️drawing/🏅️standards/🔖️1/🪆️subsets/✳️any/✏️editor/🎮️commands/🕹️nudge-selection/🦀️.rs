@@ -1,17 +1,22 @@
 //! 🕹️ Document-axis keyboard movement for layers and path points — each nudge is ONE canvas tool transaction of the
 //! relative leaf the drag gesture yields too (`drag-layers`, or `drag-path-points` under `editNodes`).
-use crate::editor::drawing::commands::canvas_pointer_down::{canvas_tool, drawing_rebound_points, drawing_tool_emit, point_selection_effect, DrawingSession, DrawingTool};
-use crate::editor::drawing::interaction::points;
-use crate::mutations::{drag_layers, drag_path_points, DrawingMutation, DrawingPathPointTarget};
-use crate::schema::geometry::{multiply,editing::{PathPointRef,translate_world_path_points}};
-use crate::{DrawingLayerNode,DrawingSnapshot};
+use crate::editor::drawing::commands::canvas_pointer_down::canvas_tool;
+use crate::commands::canvas_pointer_down::{drawing_rebound_points, drawing_tool_emit, point_selection_effect, DrawingSession, DrawingTool};
+use crate::interaction::points;
+use semio_s_artifact_draw_drawing_transform::drag_layers::mutation::drag_layers;
+use semio_s_artifact_draw_drawing_transform::drag_path_points::mutation::{drag_path_points, DrawingPathPointTarget};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_geometry::multiply;
+use semio_s_artifact_draw_drawing_geometry::editing::{PathPointRef, translate_world_path_points};
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::{list::PagedList,paged::PagedUtf8};
 
 /// 🎯️ What a selection transform addresses once validated against `document`: the selected layers without the ones a
 /// selected ancestor already moves, or the selected points of the selected paths — `None` when nothing moves.
-pub(crate) enum DrawingSelectionTargets {
+pub enum DrawingSelectionTargets {
     Layers(PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>),
     Points(Vec<DrawingPathPointTarget>),
 }
@@ -19,7 +24,7 @@ pub(crate) enum DrawingSelectionTargets {
 /// 🔎️ Validates the selection a transform by `delta` addresses — every selected layer exists, is visible and unlocked
 /// through its whole ancestry and moves through a regular transform; every selected point belongs to a selected path at
 /// its current geometry — and answers its targets in document order. A refusal changes nothing.
-pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingSelectionTargets>,Fault> {
+pub fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingSelectionTargets>,Fault> {
     if ids.is_empty() || (nodes && point_ids.is_empty()) {return Ok(None);}
     if ids.len()>4_096 || point_ids.len()>4_096 {return Err(Fault::from("Selection exceeds keyboard movement capacity"));}
     let selected: BTreeSet<_>=ids.iter().map(|id|PagedUtf8::<{usize::MAX}>::from(id.as_str())).collect();
@@ -38,12 +43,12 @@ pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids
         let Some(layer)=children.get(*index) else {stack.pop();continue;};
         *index+=1;
         remaining=remaining.checked_sub(1).ok_or_else(||Fault::from("Drawing exceeds keyboard movement capacity"))?;
-        let base=crate::schema::layer_base(layer);
+        let base=semio_s_artifact_draw_drawing_model::layer_base(layer);
         let editable=*editable && base.visible && !base.locked;
         let chosen=wanted.contains(&base.id);
         let ancestor_selected=*ancestor_selected;
         let parent=*parent;
-        let matrix=multiply(parent,crate::schema::drawing_transform_to_matrix(&base.transform));
+        let matrix=multiply(parent,semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&base.transform));
         if chosen {
             found.insert(base.id.clone());
             if !editable {return Err(Fault::from("Unlock and show selected layers before moving"));}
@@ -58,7 +63,7 @@ pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids
                 targets.extend(chosen_points.iter().map(|point|DrawingPathPointTarget {layer_id:base.id.clone(),index:point.index,point:point.point}));
             } else if !ancestor_selected {
                 let source=&base.transform;
-                crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],parent,delta).ok_or_else(||Fault::from("Cannot move through a singular or nonfinite transform"))?;
+                semio_s_artifact_draw_drawing_geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],parent,delta).ok_or_else(||Fault::from("Cannot move through a singular or nonfinite transform"))?;
                 layers.push(base.id.clone());
             }
         }
@@ -69,7 +74,7 @@ pub(crate) fn drawing_selection_targets(document:&DrawingSnapshot,nodes:bool,ids
 }
 
 /// 🎯️ The dragged path points `point_ids` name on the selected paths `ids`, validated as a node drag validates them.
-pub(crate) fn drawing_point_targets(document:&DrawingSnapshot,ids:&[String],point_ids:&[String])->Result<Vec<DrawingPathPointTarget>,Fault> {
+pub fn drawing_point_targets(document:&DrawingSnapshot,ids:&[String],point_ids:&[String])->Result<Vec<DrawingPathPointTarget>,Fault> {
     match drawing_selection_targets(document,true,ids,point_ids,[0.0,0.0])? {
         Some(DrawingSelectionTargets::Points(targets))=>Ok(targets),
         _=>Err(Fault::from("Select path points to move")),
@@ -78,7 +83,7 @@ pub(crate) fn drawing_point_targets(document:&DrawingSnapshot,ids:&[String],poin
 
 /// 🧮️ The one parametric leaf a nudge of the current selection by `delta` yields — `drag-path-points` under `editNodes`,
 /// `drag-layers` under a select utility — `None` when the utility does not move or nothing is selected.
-pub(crate) fn plan_selection(document:&DrawingSnapshot,utility:&str,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingMutation>,Fault> {
+pub fn plan_selection(document:&DrawingSnapshot,utility:&str,ids:&[String],point_ids:&[String],delta:[f64;2])->Result<Option<DrawingMutation>,Fault> {
     let nodes=utility=="editNodes";
     if !nodes && !matches!(utility,"selectDirect"|"selectMarquee"|"selectLasso"|"transformMove") {return Ok(None);}
     Ok(match drawing_selection_targets(document,nodes,ids,point_ids,delta)? {
@@ -89,7 +94,7 @@ pub(crate) fn plan_selection(document:&DrawingSnapshot,utility:&str,ids:&[String
 }
 
 /// ⌨️ One keyboard nudge as ONE canvas tool transaction under the verb's tool id; a node nudge re-binds the point selection.
-pub(crate) fn nudge(doc:&ArtifactView<'_,DrawingSnapshot>,session:&DrawingSession,verb:&str,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
+pub fn nudge(doc:&ArtifactView<'_,DrawingSnapshot>,session:&DrawingSession,verb:&str,delta:[f64;2])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
     let Some(leaf)=plan_selection(doc.snapshot,&session.active_utility_id,&session.interaction.ids,&session.interaction.points,delta)? else {return Ok(Emit::default());};
     let mut tool=DrawingTool::start(verb,doc.operation_optional().map_or("",|operation|operation.authoring_seed.as_str()));
     let mut emit=drawing_tool_emit(tool.send(canvas_tool::Event::Once(leaf.clone())))?;

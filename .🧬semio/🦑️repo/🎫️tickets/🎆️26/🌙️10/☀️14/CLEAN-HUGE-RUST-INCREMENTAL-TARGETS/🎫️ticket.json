@@ -1,0 +1,14 @@
+{
+  "title": "Clean Huge Rust Incremental Targets",
+  "emoji": "🧹",
+  "status": "closed",
+  "description": "Workspace clean must remove huge rustc incremental compilation directories. They currently survive because they live under the protected cargo cache: cargo/build/*/incremental and cargo/canonical-architecture/**/incremental. Deps and uplifted artifacts stay. In-progress -working sessions stay. Threshold is larger than 1 GiB per incremental directory.",
+  "summary": "Workspace clean now removes rustc incremental directories larger than 1 GiB under the shared cargo cache, including canonical-architecture. In-progress -working sessions stay. Dependency units and uplifted artifacts stay. A clean run removed 1010 incremental crate caches, about 49 GiB.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2772"
+  },
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "⚪7f70b95bf6c541f1aa8e00a2a1d1c9b6"
+  ]
+}

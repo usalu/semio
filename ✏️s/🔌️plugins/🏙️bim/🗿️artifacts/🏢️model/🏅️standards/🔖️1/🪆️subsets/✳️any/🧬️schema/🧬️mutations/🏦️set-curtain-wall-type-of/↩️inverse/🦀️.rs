@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetCurtainWallTypeOf`: an absolute `SetCurtainWallTypeOf` back to the base curtain wall type, none when the curtain wall is absent.
 
 use super::SetCurtainWallTypeOf;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetCurtainWallTypeOf, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.curtain_walls.get(&payload.id) {

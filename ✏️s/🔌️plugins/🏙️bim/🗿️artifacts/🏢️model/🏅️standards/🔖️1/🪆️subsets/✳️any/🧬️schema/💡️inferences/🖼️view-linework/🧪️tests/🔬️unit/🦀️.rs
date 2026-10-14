@@ -2,8 +2,8 @@ use super::frame::Frame;
 use super::hidden_lines::{bodies, faces, feature_edges, pieces};
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily};
-use crate::{Building, Layer, LayerFunction, Material, MaterialCategory, Phase, Point2, Rgb, Site, Storey, ViewCategory, ViewCrop, ViewPlane, Wall, WallType};
-use crate::{Axis, LocationLine, ModelInference, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{Building, Layer, LayerFunction, Material, MaterialCategory, Phase, Point2, Rgb, Site, Storey, ViewCategory, ViewCrop, ViewPlane, Wall, WallType};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, LocationLine, TopConstraint}, inferences::ModelInference};
 use protocol::Inference;
 use semio_framework_geometry::mesh::TriMesh;
 
@@ -158,7 +158,7 @@ async fn a_plan_view_hides_categories_filters_phases_and_crops() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_camera_view_and_a_view_of_a_missing_storey_draw_nothing() {
-    let camera = View { camera: Some(crate::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }), ..View::standard("b", "Iso", ViewKind::Orthographic) };
+    let camera = View { camera: Some(crate::standards::v1::subsets::any::schema::snapshot::ViewCamera { target: Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }), ..View::standard("b", "Iso", ViewKind::Orthographic) };
     let view = drawn(&with(room(), "v", camera), "v");
     assert!(view.lines.regions.is_empty() && view.lines.polylines.is_empty() && view.lines.texts.is_empty());
     let lost = drawn(&with(room(), "v", View::of_storey("b", "Lost", ViewKind::Plan, "nowhere")), "v");
@@ -194,7 +194,7 @@ async fn editing_one_view_computes_that_view_only() {
     assert_eq!(session.inference().view_linework.len(), 2);
     let mut changed = second.clone();
     changed.views.get_mut("v-south").expect("the view").scale = 50;
-    let diff = crate::ModelDiff::views("v-south", crate::Entry::Patched(crate::ViewPatch { scale: Some(50), ..Default::default() }));
+    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::ViewPatch { scale: Some(50), ..Default::default() }));
     session.update(&changed, &diff);
     let report = session.report();
     assert!(!report.gated, "a view edit touches the graph");
@@ -212,12 +212,12 @@ async fn renaming_a_view_recomputes_nothing_and_moving_a_wall_redraws_the_views_
     session.refresh(&first);
     let mut renamed = first.clone();
     renamed.views.get_mut("v-south").expect("the view").name = "Front".into();
-    let diff = crate::ModelDiff::views("v-south", crate::Entry::Patched(crate::ViewPatch { name: Some("Front".into()), ..Default::default() }));
+    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::views("v-south", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::ViewPatch { name: Some("Front".into()), ..Default::default() }));
     session.update(&renamed, &diff);
     assert_eq!(session.report().computed_by_kind.values().sum::<usize>(), 0, "a name is never read by the drawing: {:?}", session.report().computed_by_kind);
     let mut moved = renamed.clone();
     moved.storeys.get_mut("g").expect("the storey").height = 3.5;
-    let diff = crate::ModelDiff::storeys("g", crate::Entry::Patched(crate::StoreyPatch { height: Some(3.5), ..Default::default() }));
+    let diff = crate::standards::v1::subsets::any::schema::diff::ModelDiff::storeys("g", crate::standards::v1::subsets::any::schema::diff::Entry::Patched(crate::standards::v1::subsets::any::schema::diff::patches::StoreyPatch { height: Some(3.5), ..Default::default() }));
     session.update(&moved, &diff);
     assert_eq!(session.report().computed_by_kind.get("view").copied(), Some(1), "{:?}", session.report().computed_by_kind);
     assert!(close(session.inference().view_linework["v-south"].union_area_of(PlanKind::Silhouette), 6.3 * 3.5));

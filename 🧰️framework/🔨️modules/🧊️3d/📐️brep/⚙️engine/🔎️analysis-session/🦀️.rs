@@ -3,8 +3,8 @@
 //! consumer holding only a [`Body`] calls them directly with a scope it builds itself.
 
 use super::{entity_roots, map_err, Brep, BrepError, Entity, GeometryHandle};
-use semio_framework_3d_brep_queries::analysis::{self, ClosestPair, ManifoldReport, PointDistance, ShapeAnalysis, ShapeBounds, ShapeKind, ShapeMassProperties, ShapeScope, SurfaceDifferential, TopologyCounts, ValidityReport};
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_analysis::{self as analysis, ClosestPair, ManifoldReport, PointDistance, ShapeAnalysis, ShapeBounds, ShapeKind, ShapeMassProperties, ShapeScope, SurfaceDifferential, TopologyCounts, ValidityReport};
+use semio_framework_3d_brep_vector::Pnt3;
 
 impl Brep {
     /// 🪝 The analysis scope a handle names; curves and surfaces have no topology and are refused.

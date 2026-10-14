@@ -35,7 +35,7 @@ async fn rewrite_rule_labels_core() {
         lhs: Lhs { pattern: Pattern { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
         rhs: Rhs { create: vec![], delete: vec![], set: vec![Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
-    apply_rule(&mut g, &rule, &semio_framework_graph::manifest::PropertyBag::new()).unwrap();
+    apply_rule(&mut g, &rule, &semio_framework_graph_manifest::PropertyBag::new()).unwrap();
     let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 }
@@ -54,12 +54,12 @@ async fn rewrite_rule_parameter_substitution() {
             parameters: vec![ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("nakagin-core".into()) }],
         },
     };
-    apply_rule(&mut g, &rule, &semio_framework_graph::manifest::PropertyBag::new()).unwrap();
+    apply_rule(&mut g, &rule, &semio_framework_graph_manifest::PropertyBag::new()).unwrap();
     let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
     assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 
     let mut g2 = nakagin_graph();
-    let mut bindings = semio_framework_graph::manifest::PropertyBag::new();
+    let mut bindings = semio_framework_graph_manifest::PropertyBag::new();
     bindings.insert("label".into(), PropertyValue::String("override-core".into()));
     apply_rule(&mut g2, &rule, &bindings).unwrap();
     let core2 = g2.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
@@ -77,7 +77,7 @@ async fn rewriting_labeled_fixture_reloads() {
         lhs: Lhs { pattern: Pattern { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
         rhs: Rhs { create: vec![], delete: vec![], set: vec![Assignment { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
     };
-    apply_rule(&mut g, &rule, &semio_framework_graph::manifest::PropertyBag::new()).unwrap();
+    apply_rule(&mut g, &rule, &semio_framework_graph_manifest::PropertyBag::new()).unwrap();
     let snapshot_json = g.host_snapshot_json().unwrap();
     let reloaded = Graph::load_json(&snapshot_json).unwrap();
     let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
@@ -116,7 +116,7 @@ async fn build_rule_query_edge_pattern_and_all_clauses() {
             parameters: vec![],
         },
     };
-    let query = build_rule_query(&rule, &semio_framework_graph::manifest::PropertyBag::new());
+    let query = build_rule_query(&rule, &semio_framework_graph_manifest::PropertyBag::new());
     assert!(query.starts_with("MATCH (a:Piece)-[e:Connection]->(b:Piece) WHERE a.name = 'b'"));
     assert!(query.contains("DELETE e"));
     assert!(query.contains("SET a.label = \"x\""));
@@ -128,21 +128,21 @@ async fn build_rule_query_edge_pattern_and_all_clauses() {
 async fn resolve_parameter_value_variants() {
     let mut rule = empty_rule();
     rule.rhs.parameters.push(ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("default-label".into()) });
-    let mut bindings = semio_framework_graph::manifest::PropertyBag::new();
+    let mut bindings = semio_framework_graph_manifest::PropertyBag::new();
     bindings.insert("label".to_string(), PropertyValue::String("bound-label".into()));
 
     assert_eq!(resolve_parameter_value(&rule, &bindings, &PropertyValue::String("$label".into())), PropertyValue::String("bound-label".into()));
-    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph::manifest::PropertyBag::new(), &PropertyValue::String("$label".into())), PropertyValue::String("default-label".into()));
-    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph::manifest::PropertyBag::new(), &PropertyValue::String("$unknown".into())), PropertyValue::String("$unknown".into()));
-    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph::manifest::PropertyBag::new(), &PropertyValue::String("plain".into())), PropertyValue::String("plain".into()));
-    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph::manifest::PropertyBag::new(), &PropertyValue::Number(5.0)), PropertyValue::Number(5.0));
-    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph::manifest::PropertyBag::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
+    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph_manifest::PropertyBag::new(), &PropertyValue::String("$label".into())), PropertyValue::String("default-label".into()));
+    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph_manifest::PropertyBag::new(), &PropertyValue::String("$unknown".into())), PropertyValue::String("$unknown".into()));
+    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph_manifest::PropertyBag::new(), &PropertyValue::String("plain".into())), PropertyValue::String("plain".into()));
+    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph_manifest::PropertyBag::new(), &PropertyValue::Number(5.0)), PropertyValue::Number(5.0));
+    assert_eq!(resolve_parameter_value(&rule, &semio_framework_graph_manifest::PropertyBag::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn assignment_value_jack_formats_each_property_variant() {
     let rule = empty_rule();
-    let bindings = semio_framework_graph::manifest::PropertyBag::new();
+    let bindings = semio_framework_graph_manifest::PropertyBag::new();
     assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Null), "null");
     assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Bool(true)), "true");
     assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Number(4.5)), "4.5");
@@ -153,10 +153,10 @@ async fn assignment_value_jack_formats_each_property_variant() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_bindings_json_handles_empty_and_invalid() {
-    assert_eq!(parse_bindings_json("").unwrap(), semio_framework_graph::manifest::PropertyBag::new());
-    assert_eq!(parse_bindings_json("   ").unwrap(), semio_framework_graph::manifest::PropertyBag::new());
+    assert_eq!(parse_bindings_json("").unwrap(), semio_framework_graph_manifest::PropertyBag::new());
+    assert_eq!(parse_bindings_json("   ").unwrap(), semio_framework_graph_manifest::PropertyBag::new());
     assert!(parse_bindings_json("{not json").is_err());
-    let mut expected = semio_framework_graph::manifest::PropertyBag::new();
+    let mut expected = semio_framework_graph_manifest::PropertyBag::new();
     expected.insert("x".to_string(), PropertyValue::Number(1.0));
     assert_eq!(parse_bindings_json("{\"x\":1}").unwrap(), expected);
 }

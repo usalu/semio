@@ -394,7 +394,7 @@ const RUNTIME_CLEANUP_UNMEASURED_US: u64 = u64::MAX;
 const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;
 struct RuntimeCloseWorkerState<PA: PluginApp> {
     instance_id: u32,
-    generation: semio_framework_job::Generation,
+    pub(crate) generation: semio_framework_job::Generation,
     mounted_policy: MountedOwnerPolicyV1,
     cell: std::sync::Mutex<std::mem::ManuallyDrop<Option<std::sync::Arc<RuntimeAppCell<PA>>>>>,
     pump: std::sync::Mutex<RuntimeCloseCleanupPump<PA>>,
@@ -451,7 +451,7 @@ impl std::fmt::Display for RuntimeActorAuthority {
 struct RuntimeInstanceRegistry<T> {
     slots: Box<[std::mem::MaybeUninit<(u32, T)>]>,
     occupied: [u64; PLUGIN_RUNTIME_INSTANCE_WORDS],
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 impl<T> RuntimeInstanceRegistry<T> {
     /// 🈳️ Constructs the registry EMPTY — no slot backing at all. Allocator success is
@@ -460,7 +460,7 @@ impl<T> RuntimeInstanceRegistry<T> {
     /// never opens an instance would otherwise reserve contiguously up front — the exact shape
     /// a guest's `dlmalloc` never gives back. Backing is taken by {@link admit_backing}, on the
     /// first admission that actually needs a slot.
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: Vec::new().into_boxed_slice(), occupied: [0; PLUGIN_RUNTIME_INSTANCE_WORDS], allocation_admitted: false }
     }
     /// 🛂️ Takes the one fixed slot allocation, once, and reports whether this registry
@@ -572,7 +572,7 @@ impl<T> RuntimeInstanceRegistry<T> {
         None
     }
     #[cfg(test)]
-    fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.occupied.iter().all(|word| *word == 0)
     }
 }
@@ -580,7 +580,7 @@ impl<T> Drop for RuntimeInstanceRegistry<T> {
     fn drop(&mut self) {}
 }
 struct RuntimeDocumentBackboneBindingV1 {
-    generation: u64,
+    pub(crate) generation: u64,
     uri: Option<String>,
     channel: Option<store::os_store::backbone::ActorBackboneChannelOwner>,
 }
@@ -1033,15 +1033,15 @@ const RUNTIME_CLOSE_STALL_CREDIT_US: u64 = semio_framework_trace::INTERACTIVE_ST
 struct RuntimeLiveCleanupPump<PA: PluginApp> {
     session: Option<semio_framework_job::BatchJobSession<RuntimeLiveCleanupJob<PA>>>,
     rejected: Option<crate::reserved_job_session::RefusedWorkerSource<RuntimeLiveCleanupJob<PA>>>,
-    outcome_pending: bool,
+    pub(crate) outcome_pending: bool,
     terminal: bool,
     pending_status: RuntimeMaintenanceStatus,
-    closing: bool,
+    pub(crate) closing: bool,
     faulted: bool,
-    resume_pending: bool,
+    pub(crate) resume_pending: bool,
 }
 impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { session: None, rejected: None, outcome_pending: false, terminal: false, pending_status: RuntimeMaintenanceStatus::Ready, closing: false, faulted: false, resume_pending: false }
     }
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,semio_framework_value::ValueError>{
@@ -1071,35 +1071,35 @@ impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
         }
         Ok(Step::Complete{progress:Default::default()})
     }
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.closing && self.session.is_none() && self.rejected.is_none() && !self.outcome_pending
     }
 }
 struct RuntimeCloseCleanupPump<PA: PluginApp> {
     session: Option<semio_framework_job::BatchJobSession<RuntimeCloseCleanupJob<PA>>>,
     rejected: Option<crate::reserved_job_session::RefusedWorkerSource<RuntimeCloseCleanupJob<PA>>>,
-    outcome_pending: bool,
+    pub(crate) outcome_pending: bool,
     terminal: bool,
     complete: bool,
     blocked: bool,
     pending_status: RuntimeCloseStatus,
     faulted: bool,
-    resume_pending: bool,
+    pub(crate) resume_pending: bool,
 }
 impl<PA: PluginApp> RuntimeCloseCleanupPump<PA> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { session: None, rejected: None, outcome_pending: false, terminal: false, complete: false, blocked: false, pending_status: RuntimeCloseStatus::Ready, faulted: false, resume_pending: false }
     }
 }
 use crate::reserved_job_outcomes::CleanupTurn;
 struct RuntimeLiveCleanupJob<PA: PluginApp> {
     instance_id: u32,
-    generation: semio_framework_job::Generation,
+    pub(crate) generation: semio_framework_job::Generation,
     cell: Option<std::sync::Weak<RuntimeAppCell<PA>>>,
     progress: Option<PluginLifecycleStep>,
     contended: bool,
     publication: crate::reserved_job_outcomes::CleanupPublication,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 impl<PA: PluginApp> crate::reserved_job_outcomes::CleanupJob for RuntimeLiveCleanupJob<PA> {
     fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> CleanupTurn {
@@ -1315,7 +1315,7 @@ struct RuntimeCloseCleanupJob<PA: PluginApp> {
     progress: Option<PluginLifecycleStep>,
     contended: bool,
     publication: crate::reserved_job_outcomes::CleanupPublication,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 impl<PA: PluginApp> crate::reserved_job_outcomes::CleanupJob for RuntimeCloseCleanupJob<PA> {
     fn advance(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> CleanupTurn {
@@ -2507,10 +2507,10 @@ pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
     .await
 }
 /// 🎬️ Interactive workflow entry: submits without waiting for the exporter to finish.
-pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportHandle>, semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let cell = runtime_instance_cell(runtime, instance_id)?;
     let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault("media export original instance is busy or poisoned"))?;
-    instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,cx).await
+    instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,receiver,cx).await
 }
 /// 📡️ Interactive workflow entry receives the actual initiating context and its complete failure.
 pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: crate::media_contract::ArtifactMediaExportHandleLoan<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<ArtifactMediaExportPoll>, semio_framework_job::OriginalTurnFailure> {
@@ -2875,7 +2875,7 @@ pub async fn plugin_refresh_ui<PA: PluginApp>(runtime: &PluginRuntime<PA>, insta
 #[value(rename_all = "camelCase")]
 struct ContextMenuWireRequest {
     menu: UiMenuRef,
-    view_state: ViewModel,
+    pub(crate) view_state: ViewModel,
     #[serde(default)]
     #[value(default)]
     surface: Option<ContextMenuSurfaceTarget>,
@@ -4044,7 +4044,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                             }
                         }
         }else{
-        let mut original_media_submission=None;
+        let mut original_media_submission_ready=false;
         let mut original_media_poll=None;
         let mut original_media_failure:Option<semio_framework_job::OriginalTurnFailure>=None;
         let mut original_media_domain=None;
@@ -4056,9 +4056,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;::semio_framework_async::poll::resolve_ready(instance.app.prepare_media_import(cx)).map_err(Into::into)}).await;
                 match result{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure.into());true}}
             },
-            Some(protocol::AppCommand::SubmitMediaExport{port,expected_parent_document_id,expected_base_revision,..})=>{
-                match plugin_submit_media_export(runtime,instance_id,port,expected_parent_document_id,*expected_base_revision,cx).await{Ok(result)=>original_media_submission=result,Err(failure)=>original_media_failure=Some(failure.into())};
-                original_media_submission.is_none()
+            Some(protocol::AppCommand::SubmitMediaExport{..})=>{
+                let(port,parent,revision,receiver)=owner.media_submission_parts()?;
+                match plugin_submit_media_export(runtime,instance_id,port,parent,revision,receiver,cx).await{Ok(ready)=>original_media_submission_ready=ready,Err(failure)=>original_media_failure=Some(failure.into())};
+                !original_media_submission_ready
             },
             Some(protocol::AppCommand::PollMediaExport{handle,..})=>{
                 let loan=crate::media_contract::ArtifactMediaExportHandleLoan{app_instance_id:handle.app_instance_id,parent_document_id:&handle.parent_document_id,operation_id:semio_framework_job::OperationId(handle.operation_id),base_revision:semio_framework_job::RevisionId(handle.base_revision),generation:semio_framework_job::Generation(handle.generation)};
@@ -4350,7 +4351,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             protocol::AppCommand::MediaOut{seq,port,..}=>{let artifact=original_media_artifact.take().expect("original media encoding completes before command donation");frames.push(protocol::AppFrame::Media{in_reply_to:seq,port,descriptor:encode_wire_serialized(&artifact.descriptor),data:artifact.data});},
             protocol::AppCommand::SubmitMediaExport { seq, .. } => {
-                let handle=original_media_submission.take().expect("original media submission is complete before command donation");
+                let handle=owner.take_media_submission().expect("original media submission is complete before command donation");
                 frames.push(protocol::AppFrame::MediaExportSubmitted{in_reply_to:seq,handle:media_export_handle_into_wire(handle)});
             },
             protocol::AppCommand::PollMediaExport { seq, handle } => {
@@ -4678,12 +4679,12 @@ macro_rules! __semio_actor_exports {
                 $ensure();
                 $crate::__async::poll::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))
             }
-            async fn admit_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
+            async fn admit_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput,retained_policy:$crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorAdmissionCall {
                 $ensure();
-                $crate::reactor::original_actor_context::exports::admit_wit(input)
+                $crate::reactor::original_actor_context::exports::admit_wit(input,retained_policy)
             }
-            async fn close_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
-                $crate::reactor::original_actor_context::exports::close_wit(input)
+            async fn close_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput,retained_policy:$crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
+                $crate::reactor::original_actor_context::exports::close_wit(input,retained_policy)
             }
             async fn reserve_poll_input(extent:u64,budget:$crate::component::wasip2::exports::semio::framework::reactor::Budget)->Result<$crate::component::wasip2::exports::semio::framework::reactor::ActorPollInputCall,$crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal>{
                 $ensure();
@@ -4913,7 +4914,7 @@ macro_rules! __semio_owned_core_exports {
             let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
             $ensure();
             match input {
-                Ok(input) => $crate::reactor::original_actor_context::exports::admit_owned(input),
+                Ok((input,policy)) => $crate::reactor::original_actor_context::exports::admit_owned(input,policy),
                 Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
             }
         }
@@ -4922,7 +4923,7 @@ macro_rules! __semio_owned_core_exports {
         pub unsafe extern "C" fn semio_owned_close_actor_context_v1(pointer: u32, length: u32) -> u64 {
             let input = unsafe { $crate::owned_abi::take_actor_admission_input(pointer, length) };
             match input {
-                Ok(input) => $crate::reactor::original_actor_context::exports::close_owned(input),
+                Ok((input,policy)) => $crate::reactor::original_actor_context::exports::close_owned(input,policy),
                 Err(kind) => $crate::operation_authority::owned_result::encode_refusal(kind),
             }
         }
@@ -4949,35 +4950,35 @@ macro_rules! __semio_owned_core_exports {
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_step_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
-            match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::step_job_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        pub extern "C" fn semio_owned_step_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::step_job_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_read_job_output_v1(job:u64,operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
-            match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::read_job_output_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        pub extern "C" fn semio_owned_read_job_output_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::read_job_output_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_acknowledge_job_output_v1(job:u64,operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
-            match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_job_output_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        pub extern "C" fn semio_owned_acknowledge_job_output_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_job_output_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_cancel_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
-            match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::cancel_job_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        pub extern "C" fn semio_owned_cancel_job_v1(job:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::cancel_job_owned(job,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_close_jobs_v1(operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
-            match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::close_jobs_owned(budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
+        pub extern "C" fn semio_owned_close_jobs_v1(operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {
+            match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::close_jobs_owned(budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}
         }
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub extern "C" fn semio_owned_borrow_job_output_v1(job:u64,operation:u64,generation:u64,offset:u64,length:u64) -> u64 {$crate::reactor::original_actor_context::exports::borrow_job_output_owned(job,operation,generation,offset,length)}
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
-        pub extern "C" fn semio_owned_acknowledge_job_output_chunk_v1(job:u64,offset:u64,length:u64,operation:u64,generation:u64,epoch:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {match $crate::owned_abi::original_job_budget([operation,generation,epoch,items,copy,capacity,release,depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_job_output_chunk_owned(job,offset,length,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
+        pub extern "C" fn semio_owned_acknowledge_job_output_chunk_v1(job:u64,offset:u64,length:u64,operation:u64,generation:u64,epoch:u64,clock_binding:u64,absolute_deadline_us:u64,total_fuel:u64,items:u64,copy:u64,capacity:u64,release:u64,depth:u64,policy_items:u64,policy_copy:u64,policy_capacity:u64,policy_release:u64,policy_depth:u64,fuel:u64,deadline_us:u64,cancelled:u64) -> u64 {match $crate::owned_abi::original_job_budget([operation,generation,epoch,clock_binding,absolute_deadline_us,total_fuel,items,copy,capacity,release,depth,policy_items,policy_copy,policy_capacity,policy_release,policy_depth,fuel,deadline_us,cancelled]){Ok(budget)=>$crate::reactor::original_actor_context::exports::acknowledge_job_output_chunk_owned(job,offset,length,budget),Err(kind)=>$crate::operation_authority::owned_result::encode_refusal(kind)}}
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
         #[unsafe(no_mangle)]
         pub extern "C" fn semio_owned_checkpoint_v1() -> u64 {
@@ -5215,7 +5216,7 @@ pub struct ExtensionBundle {
     pub manifest: std::mem::ManuallyDrop<ExtensionManifest>,
     handlers: std::mem::ManuallyDrop<Vec<(String, ExtensionRequestHandler)>>,
     resource_owner: std::mem::ManuallyDrop<Option<Box<dyn ExtensionResourceOwner>>>,
-    closing: bool,
+    pub(crate) closing: bool,
     close_cancelled: bool,
     manifest_retired: bool,
     metadata_retirement: std::mem::ManuallyDrop<MetadataRetirement>,

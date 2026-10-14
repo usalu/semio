@@ -5,7 +5,7 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

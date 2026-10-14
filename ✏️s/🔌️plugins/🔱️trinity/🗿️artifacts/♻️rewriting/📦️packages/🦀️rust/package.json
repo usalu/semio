@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-rewriting-document-contract": "bun repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-document-contract",
     "verify-rewriting-map-ownership": "bun repo run @semio-tech/trinity-rewriting-rs:verify-rewriting-map-ownership",

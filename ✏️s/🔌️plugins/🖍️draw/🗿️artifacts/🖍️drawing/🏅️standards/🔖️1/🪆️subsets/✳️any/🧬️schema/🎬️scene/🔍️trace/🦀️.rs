@@ -1,14 +1,14 @@
 //! 🔍️ Admitted intrinsic samples become private native-coordinate trace paths under grants.
-use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneContent,DocumentSceneError};
-use crate::standards::v1::subsets::any::schema::component::from_kernel_segment;
-use crate::PathSegment as DrawingSegment;
+use crate::preparation::{DocumentScenePlan, DocumentSceneContent, DocumentSceneError};
+use semio_s_artifact_draw_drawing_geometry::from_kernel_segment;
+use semio_s_artifact_draw_drawing_model::PathSegment as DrawingSegment;
 use semio_framework_2d::{PathSegment,trace::{BitmapTraceInput,BitmapTraceJob,BitmapTraceProgress,BitmapTraceRetirement}};
 #[cfg(test)] use semio_framework_pixels::RasterImage;
-#[cfg(test)] use crate::schema::scene_retirement::ScenePlanCloseJob;
+
 use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentTraceRetirementProgress=WorkRetirementProgress;
 use std::sync::Arc;
-use crate::schema::scene_preparation::{OwnedTable,OwnedSet};
+
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
 use semio_framework_pixels::retirement::RasterLease;
 #[derive(Clone,Copy,Debug)]
@@ -43,7 +43,7 @@ impl DocumentTraceJob{
   match self.phase{
    "assets"=>{let Some(a)=self.input.plan.assets.get(self.assets)else{self.phase="indexing";return Ok(());};identity(&a.id)?;semio_framework_pixels::editing::validate_image(&a.image).map_err(|error|invalid(error.to_string()))?;if self.catalog.contains_key(&a.id){return Err(invalid("Invalid or duplicate document trace asset"));}self.catalog.insert(a.id.clone(),self.assets);self.assets+=1;},
    "indexing"=>{
-    let Some(n)=self.input.plan.nodes.get(self.nodes)else{self.phase="nodes";return Ok(());};crate::schema::scene_preparation::validate_scene_source_address(&n.source_path,n.locked_ancestors)?;identity(&n.id)?;if !self.ids.insert(n.id.clone())||!n.transform.into_iter().all(|v|v.is_finite()&&v.abs()<=1e9){return Err(invalid("Invalid or duplicate document trace node"));}
+    let Some(n)=self.input.plan.nodes.get(self.nodes)else{self.phase="nodes";return Ok(());};crate::preparation::validate_scene_source_address(&n.source_path,n.locked_ancestors)?;identity(&n.id)?;if !self.ids.insert(n.id.clone())||!n.transform.into_iter().all(|v|v.is_finite()&&v.abs()<=1e9){return Err(invalid("Invalid or duplicate document trace node"));}
     if let DocumentSceneContent::Path{segments,..}=&n.content{if segments.len()>self.input.limits.max_retained_segments-self.segments{return Err(invalid("Document trace retained segment limit exceeded"));}self.segments+=segments.len();}
     if let DocumentSceneContent::Trace{source,threshold,simplify_epsilon,..}=&n.content{identity(source)?;if !self.catalog.contains_key(source){return Err(invalid(format!("Missing document trace source: {} -> {source}",n.id)));}if !threshold.is_finite()||!(0.0..=1.0).contains(threshold)||!simplify_epsilon.is_finite()||!(0.0..=8192.0).contains(simplify_epsilon){return Err(invalid(format!("Invalid document trace parameters: {}",n.id)));}}self.nodes+=1;
    },

@@ -1,14 +1,8 @@
+//! 🖍️ Original CPU draw records, accumulation and bounded retained ownership.
 // #region draw_types
-//! 🧩 Target-neutral draw-list and value types split out of `draw.rs` — CPU-side accumulation
-//! buffers, geometry math, and fault/id types with zero reference to the `wgpu` GPU crate, so
-//! they compile under the light `wgpu` feature (no `wgpu-engine`) for `wasm32-wasip2` program
-//! components. See `.🧬semio/🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`.
-//! `draw.rs` (the real `wgpu`-crate-touching GPU pipeline, still `wgpu-engine`-gated) re-exports
-//! this module wholesale so every pre-existing `crate::wgpu::draw::{DrawList, ...}` import path
-//! keeps resolving unchanged.
 
-use super::kernel_3d_scene::ScenePass3d;
-use crate::wgpu::theme::{GlassStyle, Rgba, Theme};
+use semio_framework_ui_scene::math::ScenePass3d;
+use semio_framework_ui_theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 
 pub const KIND_SOLID: f32 = 3.0;
@@ -132,7 +126,7 @@ pub struct ScissorRect {
 }
 
 impl ScissorRect {
-    pub fn from_rect(rect: crate::wgpu::geometry::Rect, _screen_h: f32) -> Self {
+    pub fn from_rect(rect: semio_framework_ui_theme::geometry::Rect, _screen_h: f32) -> Self {
         let x = rect.x.max(0.0).floor() as u32;
         let y = rect.y.max(0.0).floor() as u32;
         let x2 = (rect.x + rect.w.max(0.0)).max(0.0).ceil() as u32;
@@ -173,12 +167,12 @@ pub struct ClipRegion {
 
 impl ClipRegion {
     /// 🪟️ Builds a bounded orthogonal clip union; callers provide non-overlapping pieces.
-    pub fn from_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
+    pub fn from_rects(rects: &[semio_framework_ui_theme::geometry::Rect], screen_h: f32) -> Self {
         let scissors = rects.iter().map(|rect| ScissorRect::from_rect(*rect, screen_h)).filter(|rect| rect.w > 0 && rect.h > 0).collect();
         Self { scissors }
     }
 
-    fn from_disjoint_rects(rects: &[crate::wgpu::geometry::Rect], screen_h: f32) -> Self {
+    fn from_disjoint_rects(rects: &[semio_framework_ui_theme::geometry::Rect], screen_h: f32) -> Self {
         let mut scissors = Vec::new();
         for rect in rects {
             let candidate = ScissorRect::from_rect(*rect, screen_h);
@@ -194,7 +188,7 @@ impl ClipRegion {
         Self { scissors }
     }
 
-    fn source_pieces_overlap(rects: &[crate::wgpu::geometry::Rect]) -> bool {
+    fn source_pieces_overlap(rects: &[semio_framework_ui_theme::geometry::Rect]) -> bool {
         (0..rects.len()).any(|left| {
             (left + 1..rects.len()).any(|right| {
                 let left = rects[left];
@@ -212,8 +206,8 @@ impl ClipRegion {
     // 🧩️ `pub(crate)`, not private: `draw.rs`'s retained GPU pipeline (a sibling module now that
     // `ClipRegion` moved here — ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS)
     // calls this directly to resolve a node's effective scissor rect against its GPU render pass.
-    #[cfg(test)]
-    pub(crate) fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn effective_scissors(&self, scissor: Option<ScissorRect>, width: f32, height: f32) -> Vec<ScissorRect> {
         let viewport = ScissorRect { x: 0, y: 0, w: width.max(0.0) as u32, h: height.max(0.0) as u32 };
         self.scissors.iter().map(|clip| clip.intersect(&viewport)).map(|clip| scissor.map_or(clip, |parent| clip.intersect(&parent))).filter(|clip| clip.w > 0 && clip.h > 0).collect()
     }
@@ -372,39 +366,39 @@ fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
         bytes = bytes.checked_add(next_bytes)?;
         Some(())
     };
-    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
-    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
-    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
+    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
+    include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
+    include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneDraw3d>())?)?;
     for draw in pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()) {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d>())?)?;
+    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::SceneMaterialDraw3d>())?)?;
     for draw in &pass.material_draws {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
         let texture_key = match &draw.material {
-            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
-            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
-            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Standard | crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration {..} => None,
+            semio_framework_ui_scene::math::SceneMaterialKind3d::Painted {texture_key} => Some(texture_key),
+            semio_framework_ui_scene::math::SceneMaterialKind3d::Authored(material) => material.base_color_texture.as_ref(),
+            semio_framework_ui_scene::math::SceneMaterialKind3d::Standard | semio_framework_ui_scene::math::SceneMaterialKind3d::Celebration {..} => None,
         };
         if let Some(texture_key) = texture_key {
             include(texture_key.len(), texture_key.capacity())?;
         }
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
         }
     }
-    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::LineDraw3d>())?)?;
+    include(pass.line_draws.len(), pass.line_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::LineDraw3d>())?)?;
     for draw in &pass.line_draws {
-        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::LineVertex3d>())?)?;
+        include(draw.vertices.len(), draw.vertices.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::LineVertex3d>())?)?;
     }
-    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::TexturedDraw3d>())?)?;
+    include(pass.textured_draws.len(), pass.textured_draws.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::TexturedDraw3d>())?)?;
     for draw in &pass.textured_draws {
-        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::TexturedInstance3d>())?)?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<semio_framework_ui_scene::math::TexturedInstance3d>())?)?;
         for instance in &draw.instances {
             include(instance.texture_key.len(), instance.texture_key.capacity())?;
         }
@@ -458,7 +452,7 @@ impl DrawList {
     /// 🧾️ Publishes one balanced retained candidate after its producer reaches the accepted frame
     /// boundary. Indices are rebased onto the caller's existing frame and the caller's active clip
     /// and glass context continues across the appended layers.
-    pub(crate) fn append_retained_candidate(&mut self, candidate: &mut Self) -> Result<(), RetainedOutputError> {
+    pub fn append_retained_candidate(&mut self, candidate: &mut Self) -> Result<(), RetainedOutputError> {
         if !candidate.scissor_stack.is_empty() || !candidate.clip_stack.is_empty() || !candidate.glass_content_stack.is_empty() || candidate.retained_output.is_some() || candidate.overlay_route != 0 {
             return Err(RetainedOutputError::Capacity);
         }
@@ -575,7 +569,7 @@ impl DrawList {
     }
 
     /// 📊 Returns the cumulative pre-transfer draw claim maintained at every producer push.
-    pub(crate) fn prepared_output_usage(&self) -> (usize, usize) {
+    pub fn prepared_output_usage(&self) -> (usize, usize) {
         (self.prepared_items, self.prepared_bytes)
     }
 
@@ -589,7 +583,7 @@ impl DrawList {
             if let Some(draw)=pass.textured_draws.last(){if let Some(instance)=draw.instances.last(){return Ok(text(&instance.texture_key))}return if draw.instances.capacity()!=0{bytes(&draw.instances)}else{Ok(0)}}
             if let Some(draw)=pass.material_draws.last(){
                 if let Some(instance)=draw.instances.last(){return Ok(text(&instance.id))}if draw.instances.capacity()!=0{return bytes(&draw.instances)}
-                use crate::wgpu::kernel_3d_scene::SceneMaterialKind3d;
+                use semio_framework_ui_scene::math::SceneMaterialKind3d;
                 let key=match &draw.material{SceneMaterialKind3d::Painted{texture_key}=>Some(texture_key),SceneMaterialKind3d::Authored(material)=>[&material.base_color_texture,&material.metallic_roughness_texture,&material.normal_texture,&material.occlusion_texture,&material.emissive_texture].into_iter().flatten().find(|key|!key.is_empty()||key.capacity()!=0),_=>None};
                 if let Some(key)=key{if !key.is_empty()||key.capacity()!=0{return Ok(text(key))}}
                 return Ok(text(&draw.mesh_key))
@@ -907,7 +901,7 @@ impl DrawList {
         true
     }
 
-    pub(crate) fn retirement_is_empty(&self) -> bool {
+    pub fn retirement_is_empty(&self) -> bool {
         self.scene_passes.is_empty()
             && self.scene_passes.capacity() == 0
             && self.layers.is_empty()
@@ -1024,7 +1018,7 @@ impl DrawList {
         self.retained_output = None;
     }
 
-    pub fn push_scissor(&mut self, rect: crate::wgpu::geometry::Rect) {
+    pub fn push_scissor(&mut self, rect: semio_framework_ui_theme::geometry::Rect) {
         if !self.claim_retained_output(1, size_of::<DrawLayer>()) {
             return;
         }
@@ -1046,7 +1040,7 @@ impl DrawList {
     }
 
     /// 🪟️ Clips subsequent draw content to an exact union of non-overlapping rectangles.
-    pub fn begin_silhouette_clip(&mut self, rects: &[crate::wgpu::geometry::Rect]) {
+    pub fn begin_silhouette_clip(&mut self, rects: &[semio_framework_ui_theme::geometry::Rect]) {
         if ClipRegion::source_pieces_overlap(rects) {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
@@ -1476,7 +1470,8 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 /// (`paint_orbit_view_gizmo`, which needs the GPU-adjacent `WidgetContext`) stays in
 /// `widgets.rs`'s own `gizmo` module, still `wgpu-engine`-gated.
 pub mod gizmo {
-    use crate::wgpu::{Camera3d, Rect, Rgba, Vec3, Vec3Math};
+    use semio_framework_ui_scene::math::{Camera3d, Vec3, Vec3Math};
+    use semio_framework_ui_theme::{Rgba, geometry::Rect};
 
     /// 🧭️ Permanent X/Y/Z paints — the generated `primary`/`secondary`/`tertiary` palette tokens,
     /// the exact triple React's `SPATIAL_AXIS_COLOR_REFS`/`resolveSpatialAxisColors` resolves. The

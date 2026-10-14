@@ -9,7 +9,9 @@
 //! `FILE_SCHEMA(('AUTOMOTIVE_DESIGN'))`). Reuses `semio_s_artifact_stdio_contract::part21`'s tokenizer/writer
 //! functions directly — PARSING-CODE reuse; what's NOT reused is `Part21Document`'s type IDENTITY
 //! as this standard's snapshot type.
-use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot, STDIO_IFC2X3_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3EdmPreamble;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
 use std::fmt::Write as _;
 
@@ -100,7 +102,7 @@ impl Part21Preamble for Ifc2x3EdmPreamble {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::base::io::Ifc2x3Analyzer;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -139,18 +141,12 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
     use crate::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3RawAnyComposer;
-    use crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieComposer;
-    use crate::standards::v2x3::subsets::cv20::io::Ifc2x3Cv20Composer;
-    use crate::standards::v2x3::subsets::sav::io::Ifc2x3SavComposer;
     use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
@@ -158,24 +154,18 @@ pub mod io_registry {
 
     // 🚫️async: E1 pure table accessor consumed by OnceLock::get_or_init's sync closure — see R9
     pub fn entries() -> &'static [ComposerEntry] {
-        ENTRIES.get_or_init(|| vec![composer_entry_of::<Ifc2x3RawAnyComposer>(), composer_entry_of::<Ifc2x3Cv20Composer>(), composer_entry_of::<Ifc2x3SavComposer>(), composer_entry_of::<Ifc2x3CobieComposer>()]).as_slice()
+        ENTRIES.get_or_init(|| vec![composer_entry_of::<Ifc2x3RawAnyComposer>()]).as_slice()
     }
 }
 //#endregion 🚪️DerivedIoRegistry
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::standards::v2x3::subsets::base::schema::mutations::{Ifc2x3Mutation};
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -223,7 +213,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
@@ -283,7 +273,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
-                        crate::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
+                        crate::standards::v2x3::subsets::base::io::decode_ifc2x3(text.as_bytes()).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
                     } else {
                         <Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
                     } {
@@ -293,7 +283,7 @@ pub mod derived_analysis {
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::subsets::base::io::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
@@ -309,7 +299,7 @@ pub mod derived_analysis {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;
@@ -325,14 +315,15 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: Ifc2x3Composer,
 );
 
-use crate::standards::v2x3::subsets::base::schema::*;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::*;
+use semio_s_artifact_stdio_ifc_2x3_base_descriptor::standards::v2x3::subsets::base::schema::descriptor::ifc2x3_artifact_schema_descriptor;
 //#region 🔖️Register
 /// 🗂️ **Deliberately left imperative and callable** (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-
 /// APP-STATE-MACHINES, per the ticket's own explicit instruction: "leave ifc's registration
 /// alone" — `ArtifactDeclaration` has exactly one `.schema()`/`.document_codec()` slot and
 /// cannot hold both `4`'s and `2x3`'s independent descriptors/codecs at once, see the artifact
 /// root `🦀️.rs`'s own doc comment). Only physically dissolved out of `⚙️engine`; reached
-/// as `crate::standards::v2x3::engine::register()` through the `engine` barrel
+/// as `crate::standards::v2x3::subsets::base::io::register()` through the `engine` barrel
 /// shim, which is exactly the path `🦀️.rs`'s root `ifc::engine::register()` override calls
 /// explicitly (alongside `v4::engine::register()`).
 ///
@@ -349,12 +340,6 @@ pub fn register() {
     register_pilot_languages();
     semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
-    // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
-    // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`
-    // is registered separately via this standard's own `composer::entries()` aggregation.
-    crate::standards::v2x3::subsets::cv20::io::register();
-    crate::standards::v2x3::subsets::sav::io::register();
-    crate::standards::v2x3::subsets::cobie::io::register();
 }
 
 /// 💡️ Registers `s.stdio.ifc.2x3.inference`'s facet leaves into the OS-wide inference catalog —
@@ -375,7 +360,7 @@ pub fn register_artifact_inferences() {
 /// `register_pilot_languages` established.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
-    #[cfg(test)] use crate::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
+    #[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::{diff, mutations, snapshot};
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),

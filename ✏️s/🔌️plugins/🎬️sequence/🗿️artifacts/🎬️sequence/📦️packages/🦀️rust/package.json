@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-sequence-window-ownership": "bun repo run @semio-tech/sequence-sequence-rs:verify-sequence-window-ownership"
   },

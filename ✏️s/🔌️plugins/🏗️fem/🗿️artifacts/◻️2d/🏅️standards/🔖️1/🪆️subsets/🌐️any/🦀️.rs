@@ -14,16 +14,17 @@
 //! fidelity table.
 
 use crate::editor::fem2d as editor;
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::viewer::fem2d as viewer;
-use crate::FEM2D_DIALECT;
+use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema;
+use semio_s_artifact_fem_2d_viewer::viewer::fem2d as viewer;
+use semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::FEM2D_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
 fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
+    EXAMPLES.get_or_init(|| vec![semio_s_artifact_fem_2d_io::examples::demo::source()]).as_slice()
 }
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {

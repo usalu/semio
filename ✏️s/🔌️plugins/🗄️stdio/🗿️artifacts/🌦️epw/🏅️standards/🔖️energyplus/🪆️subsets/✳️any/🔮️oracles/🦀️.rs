@@ -38,7 +38,6 @@ use semio_repo_test_host::Json;
 /// independently of the subject crate's own `io::split_lines` — this is generic text mechanics, not
 /// EPW-specific grammar, so duplicating it costs nothing and keeps the oracle role from linking the
 /// subject.
-#[cfg(feature = "oracles")]
 fn split_lines(text: &str) -> Vec<&str> {
     let mut lines: Vec<&str> = if text.contains("\r\n") { text.split("\r\n").collect() } else { text.split('\n').collect() };
     if lines.last() == Some(&"") {
@@ -52,7 +51,6 @@ fn split_lines(text: &str) -> Vec<&str> {
 /// 📥️ Independent read of the RECORD half only (everything after the 8 fixed header lines): every
 /// row as a flat string grid via `csv`, `flexible(true)` because EPW's 35-column width is real
 /// per-record information this crate is trusted for, not an assumption it bakes in.
-#[cfg(feature = "oracles")]
 pub fn read_record_grid(record_text: &str) -> Result<Vec<Vec<String>>, String> {
     let mut reader = csv::ReaderBuilder::new().has_headers(false).flexible(true).from_reader(record_text.as_bytes());
     reader.records().map(|result| result.map(|record| record.iter().map(|cell| cell.to_string()).collect())).collect::<Result<Vec<_>, _>>().map_err(|error| format!("independent reader could not read an EPW record: {error}"))
@@ -65,7 +63,6 @@ pub fn read_record_grid(record_text: &str) -> Result<Vec<Vec<String>>, String> {
 /// the format the header half above is written in. Caught by the `identity-round-trip` scenario's
 /// carrier-law assertion, which reported a 6100-byte output against a 6124-byte input — exactly one
 /// lost byte per data record.
-#[cfg(feature = "oracles")]
 pub fn write_record_grid(grid: &[Vec<String>]) -> Result<String, String> {
     let mut writer = csv::WriterBuilder::new().flexible(true).terminator(csv::Terminator::CRLF).from_writer(Vec::new());
     for record in grid {
@@ -79,13 +76,11 @@ pub fn write_record_grid(grid: &[Vec<String>]) -> Result<String, String> {
 //#region 🔖️Document
 /// 🧬️ One EPW document split at the fixed 8-header-line boundary. The 8 header lines are kept RAW
 /// (no CSV involvement — see module doc) and the records are the `csv`-read grid.
-#[cfg(feature = "oracles")]
 struct EpwDoc {
     header: [String; 8],
     records: Vec<Vec<String>>,
 }
 
-#[cfg(feature = "oracles")]
 fn parse_doc(input: &[u8]) -> Result<EpwDoc, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("epw input is not UTF-8: {error}"))?;
     let lines = split_lines(text);
@@ -98,7 +93,6 @@ fn parse_doc(input: &[u8]) -> Result<EpwDoc, String> {
     Ok(EpwDoc { header, records })
 }
 
-#[cfg(feature = "oracles")]
 fn encode_doc(doc: &EpwDoc) -> Result<Vec<u8>, String> {
     let mut out = String::new();
     for line in &doc.header {
@@ -112,28 +106,21 @@ fn encode_doc(doc: &EpwDoc) -> Result<Vec<u8>, String> {
 /// 🔁️ Independent decode/re-encode: the 8 header lines copied raw, the record grid genuinely
 /// round-tripped through `csv`'s reader then writer. Used by the case's own `identity-round-trip`
 /// oracle role.
-#[cfg(feature = "oracles")]
 pub fn round_trip_epw(bytes: &[u8]) -> Result<Vec<u8>, String> {
     encode_doc(&parse_doc(bytes)?)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn round_trip_epw(_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Document
 
 //#region 🔖️Header
 /// 📍️ LOCATION line: `LOCATION,City,StateProvince,Country,Source,WMO,Latitude,Longitude,TimeZone,
 /// Elevation` — plain comma join, no third-party involvement (see module doc: `csv` gives no more
 /// assurance here than a hand join would, since it carries no knowledge of the 10-field shape).
-#[cfg(feature = "oracles")]
 fn location_line(location: &Json) -> String {
     let f = |key: &str| location.str(key);
     format!("LOCATION,{},{},{},{},{},{},{},{},{}", f("city"), f("stateProvince"), f("country"), f("source"), f("wmo"), f("latitude"), f("longitude"), f("timeZone"), f("elevation"))
 }
 
-#[cfg(feature = "oracles")]
 fn parse_location_line(line: &str) -> Result<Json, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() != 10 || fields[0] != "LOCATION" {
@@ -153,7 +140,6 @@ fn parse_location_line(line: &str) -> Result<Json, String> {
 }
 
 /// 📅️ DATA PERIODS line: `DATA PERIODS,N,RecordsPerHour,(Name,StartDayOfWeek,StartDate,EndDate)×N`.
-#[cfg(feature = "oracles")]
 fn data_periods_line(data_periods: &Json) -> String {
     let records_per_hour = data_periods.get("recordsPerHour").and_then(|v| if let Json::Number(n) = v { Some(*n as i64) } else { None }).unwrap_or(1);
     let periods = data_periods.array("periods");
@@ -164,7 +150,6 @@ fn data_periods_line(data_periods: &Json) -> String {
     out
 }
 
-#[cfg(feature = "oracles")]
 fn parse_data_periods_line(line: &str) -> Result<Json, String> {
     let fields: Vec<&str> = line.split(',').collect();
     if fields.len() < 3 || fields[0] != "DATA PERIODS" {
@@ -183,15 +168,12 @@ fn parse_data_periods_line(line: &str) -> Result<Json, String> {
 //#endregion 🔖️Header
 
 //#region 🔖️JsonHelpers
-#[cfg(feature = "oracles")]
 fn json_object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
@@ -242,20 +224,17 @@ pub const EPW_RECORD_COLUMNS: [&str; 35] = [
 ];
 
 /// 📋️ One `EpwRecord` wire object as its 35 csv cells, in column order.
-#[cfg(feature = "oracles")]
 fn record_cells(record: &Json) -> Vec<String> {
     EPW_RECORD_COLUMNS.iter().map(|column| record.str(column)).collect()
 }
 
 /// 🧾️ One csv record grid row as the `EpwRecord` wire object.
-#[cfg(feature = "oracles")]
 fn record_wire(cells: &[String]) -> Json {
     json_object(EPW_RECORD_COLUMNS.iter().enumerate().map(|(index, column)| (*column, Json::String(cells.get(index).cloned().unwrap_or_default()))).collect())
 }
 
 /// 📸️ The `EpwSnapshot` wire of EPW bytes, read independently of the subject codec: `schema` is
 /// the `stdio.epw` document schema id, the header lines as [`project_epw`] reads them, every record as [`record_wire`].
-#[cfg(feature = "oracles")]
 pub fn epw_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
     let doc = parse_doc(bytes)?;
     Ok(json_object(vec![
@@ -272,17 +251,12 @@ pub fn epw_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn epw_snapshot_wire(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️RecordWire
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -360,18 +334,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
 /// 👁️ Projects EPW bytes onto the `semantic-epw-v1` shape this case's oracle and subject are both
 /// compared through: `location`/`dataPeriods` typed, the four retained-verbatim header blocks plus
 /// both comment lines as plain strings, and the full ordered record grid.
-#[cfg(feature = "oracles")]
 pub fn project_epw(bytes: &[u8]) -> Result<Json, String> {
     let doc = parse_doc(bytes)?;
     let location = parse_location_line(&doc.header[0])?;
@@ -392,14 +360,10 @@ pub fn project_epw(bytes: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_epw(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

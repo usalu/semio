@@ -12,14 +12,17 @@
 //! app-owned bounded reducer, publishing on the CONFIG lane only. That publication contract is the
 //! runtime half of the read-only guarantee whose compile-time half is `ViewEmit`.
 
-use crate::preview_eval;
+use semio_s_artifact_procedural_3d_preview_eval;
 use crate::viewer::generation3d::commands::{export_document, flow_eval_release, flow_eval_resolve, flow_eval_tick, flow_tessellate_cancel_resolve, flow_tessellate_resolve, set_active_example, set_camera, set_contributions, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
 use crate::viewer::generation3d::modes::view;
 use crate::viewer::generation3d::modes::view::windows::preview;
 use crate::viewer::generation3d::presence::{Generation3dViewPresence, Generation3dViewPresenceMutation};
 use crate::viewer::generation3d::transient::{Generation3dViewTransient, Generation3dViewTransientMutation};
-use crate::{Generation3dMutation, Generation3dSnapshot, GENERATION3D_DIALECT, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -114,9 +117,9 @@ impl<'a> Generation3dViewedDocument<'a> {
     fn resolve(snapshot: &'a Generation3dSnapshot, config: &Generation3dViewConfig) -> Self {
         let Some(example_id) = config.active_example_id.as_deref() else { return Self::Opened(snapshot) };
         if example_id.is_empty() {
-            return Self::Empty(crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot());
+            return Self::Empty(semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot());
         }
-        match crate::standards::v1::subsets::any::io::text::snapshot::example_snapshot(example_id) {
+        match semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(example_id) {
             Some(example) => Self::Example(example),
             None => Self::Opened(snapshot),
         }
@@ -1359,7 +1362,7 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -1371,7 +1374,7 @@ pub struct Generation3dViewer;
 impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
-        crate::generation3d_document_fault_notices()
+        semio_s_artifact_procedural_3d_model::generation3d_document_fault_notices()
     }
 
     /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
@@ -1379,7 +1382,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(crate::GENERATION3D_CHILD_PROJECTION), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_CHILD_PROJECTION), error.to_string()))
     }
 
     type Snapshot = Generation3dSnapshot;
@@ -1649,7 +1652,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+        semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: `dispatch` returns `ViewEmit`, so this signature cannot widen into
@@ -1684,7 +1687,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         let mut ordered = Vec::new();
         let ports_by_node = generation3d_view_port_ids_by_node(host_snapshot);
         for widget in &host_snapshot.widgets {
-            let id = crate::widget_id(widget).to_string();
+            let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
             for port in ports_by_node.get(&id).into_iter().flatten() {
                 ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
@@ -1710,7 +1713,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
-        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), crate::editor::generation3d::terminology::generation3d_labels(view_state));
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state));
         viewed.retire();
         tree
     }
@@ -1738,7 +1741,7 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             .and_then(|state| state.preview_eval_text.as_deref())
             .or(transient.snapshot.preview_eval_text.as_deref());
         let marks = preview::Generation3dViewMarks::from_interaction(interaction);
-        let labels = crate::editor::generation3d::terminology::generation3d_labels(view_state);
+        let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels)));
         viewed.retire();
@@ -1763,7 +1766,7 @@ fn generation3d_view_render_body(
     session: Option<&FlowEvalSession>,
     run: Option<&semio_framework_plugin::ToolRunView>,
     marks: &preview::Generation3dViewMarks,
-    labels: &crate::editor::generation3d::terminology::Generation3dLabels,
+    labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let node = match body_key {
         preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels),
@@ -1790,7 +1793,7 @@ fn generation3d_view_runtime_command(id: &str, label: LocalizedLabel, args: &[&s
 /// surface-neutral `🧬️schema` constants so this read-only surface never reaches into `::editor::`
 /// (`policyViewerPurityBreaches`).
 fn generation3d_view_example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
-    use crate::standards::v1::subsets::any::schema as generation3d_schema;
+    use semio_s_artifact_procedural_3d_model as generation3d_schema;
     use semio_framework_plugin::ActionArgOption;
     vec![
         ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
@@ -1843,7 +1846,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
         .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
         .action_destructive("exportDocument")
-        .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl")])
+        .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl")])
         .keybinding("mod+shift+e", "exportDocument")
         // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
         // injects its reserved actions, referenced by no mode because the preview surface starts it.

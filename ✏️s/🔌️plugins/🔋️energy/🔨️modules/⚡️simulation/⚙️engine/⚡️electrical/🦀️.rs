@@ -1,5 +1,7 @@
 //! ⚡️ Electrical systems: loads, PV, wind, generators, inverters, batteries, transformers, grid.
 
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::units::deg_to_rad;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

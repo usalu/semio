@@ -98,9 +98,9 @@ pub(crate) struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send
     pub(crate) cancel: semio_framework_job::CancelToken,
     session: ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
     session_rejected: ManuallyDrop<Option<crate::reserved_job_session::RefusedWorkerSource<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>>>>,
-    outcome_pending: bool,
+    pub(crate) outcome_pending: bool,
     terminal_state: Option<ActiveArtifactEnvelopeDecodeState>,
-    resume_pending: bool,
+    pub(crate) resume_pending: bool,
     rejected: ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     pub(crate) completion: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion>,
     completed_close_requested: bool,
@@ -642,10 +642,10 @@ where
     cancel_retirement: ManuallyDrop<Option<semio_framework_async::CancelTokenRetirement>>,
     session: ManuallyDrop<Option<semio_framework_job::MountedWorkerJobSession<ArtifactStoreInitializationJob<P, Mutation>>>>,
     session_rejected: ManuallyDrop<Option<crate::reserved_job_session::RefusedWorkerSource<ArtifactStoreInitializationJob<P, Mutation>>>>,
-    outcome_pending: bool,
+    pub(crate) outcome_pending: bool,
     outcome_terminal: Option<(u8, ArtifactStoreRefusalCode)>,
     terminal_target: Option<ActiveArtifactStoreReplacementState>,
-    resume_pending: bool,
+    pub(crate) resume_pending: bool,
     pub(crate) retained_store: ManuallyDrop<Option<Box<ArtifactStore<P, Mutation>>>>,
     pub(crate) retained_disposer: ManuallyDrop<ArtifactDisposal<ArtifactStore<P, Mutation>>>,
     pub(crate) member_ingress: ManuallyDrop<Option<OwnedDocumentMemberIngressRegistry>>,
@@ -1537,7 +1537,7 @@ impl PendingDocumentArchiveMember {
     }
 
     /// 📏️ Borrows original member and whole page-directory demands before any transfer.
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(pages)=self.pages.as_ref() {
             return Ok(if let Some(bytes)=pages.close_page_bytes() { RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()} }
                 else { RetirementDemand{release_bytes:pages.allocation_byte_demand(),depth:1,..Default::default()} });
@@ -1551,7 +1551,7 @@ impl PendingDocumentArchiveMember {
     }
 
     /// 🧹️ Pays inline payload work and releases each original physical allocation separately.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;

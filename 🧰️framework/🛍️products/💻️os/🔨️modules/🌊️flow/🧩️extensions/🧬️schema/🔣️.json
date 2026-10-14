@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/flow/extensions/schema.json",
+  "title": "Flow Extension Manifest",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "version",
+    "activationEvents",
+    "contributes"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "activationEvents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contributes": {
+      "type": "object",
+      "required": [
+        "schemas",
+        "operators"
+      ],
+      "properties": {
+        "schemas": {
+          "type": "array"
+        },
+        "operators": {
+          "type": "array"
+        },
+        "widgets": {
+          "type": "array"
+        },
+        "commands": {
+          "type": "array"
+        },
+        "settings": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

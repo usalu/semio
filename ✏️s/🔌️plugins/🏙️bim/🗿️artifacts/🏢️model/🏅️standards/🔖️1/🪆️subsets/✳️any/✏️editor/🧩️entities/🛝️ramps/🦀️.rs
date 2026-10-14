@@ -3,8 +3,8 @@
 
 use super::{container, first, loop_text, number, parse_flag, parse_number, parse_point, parse_text, parse_top, partial, rename_element, zoning, Created, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::set_railing::SetRailing;
-use crate::{Assigned, HostSide, ModelMutation, ModelSnapshot, Point2, RailingHost, RailingPatch, Vertex};
+use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::RailingPatch}, snapshot::{HostSide, ModelSnapshot, Point2, RailingHost, Vertex}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 /// 📏️ How far a new ramp stands from the previous ones of its storey, in metres.
@@ -124,20 +124,20 @@ pub fn create_ramp(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str)
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     let row = snapshot.ramps.values().filter(|ramp| ramp.storey == storey).count() as f64 * ROW_PITCH;
     let vertex = |x: f64| Vertex { point: Point2 { x, y: row }, bulge: 0.0 };
-    Ok(ModelMutation::CreateRamp(crate::mutations::create_ramp::CreateRamp {
+    Ok(ModelMutation::CreateRamp(crate::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp {
         id: id.into(),
-        ramp: crate::Ramp {
+        ramp: crate::standards::v1::subsets::any::schema::snapshot::Ramp {
             storey,
             path: vec![vertex(0.0), vertex(LENGTH)],
-            width: crate::STANDARD_RAMP_WIDTH,
-            landing_start: crate::STANDARD_RAMP_LANDING,
-            landing_end: crate::STANDARD_RAMP_LANDING,
-            landing_turn: crate::STANDARD_RAMP_LANDING,
-            max_slope: crate::STANDARD_RAMP_MAX_SLOPE,
-            thickness: crate::STANDARD_RAMP_THICKNESS,
+            width: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_WIDTH,
+            landing_start: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_end: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_turn: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            max_slope: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_MAX_SLOPE,
+            thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_THICKNESS,
             material,
             base_offset: 0.0,
-            top: crate::TopConstraint::Unconnected { height: RISE },
+            top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Unconnected { height: RISE },
             railing_left: false,
             railing_right: false,
             name: name.into(),

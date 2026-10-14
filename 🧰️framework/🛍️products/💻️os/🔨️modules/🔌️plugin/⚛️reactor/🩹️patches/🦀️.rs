@@ -17,7 +17,7 @@ struct SurfaceSlot {
     key: NativeCloseKey,
     output_index: Option<usize>,
     surface: ui_contract::SurfaceId,
-    generation: u64,
+    pub(crate) generation: u64,
     acknowledged_revision: ui_contract::UiRevision,
     cancelled: bool,
     pending_render: bool,
@@ -66,7 +66,7 @@ impl MountedTreeTerminal {
         Ok(true)
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.authority.is_none() && self.reservation.is_none() && self.reconciler.is_none()
     }
 }
@@ -85,12 +85,12 @@ struct RejectedSlot {
 }
 
 struct ReadySlot {
-    generation: u64,
+    pub(crate) generation: u64,
     key: NativeCloseKey,
     outputs: SurfaceReconcileOutputs,
     reservation: Option<SurfaceReconcileOutputReservation>,
     published: bool,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl ReadySlot {
@@ -108,7 +108,7 @@ impl ReadySlot {
 
 struct UnadmittedSlot {
     key: NativeCloseKey,
-    generation: u64,
+    pub(crate) generation: u64,
 }
 
 /// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
@@ -116,10 +116,10 @@ pub struct MountedReconcileGrant {
     key: NativeCloseKey,
     output_index: usize,
     state: std::rc::Rc<RefCell<PatchTrackerState>>,
-    index: usize,
+    pub(crate) index: usize,
     surface_index: usize,
     rejected_index: usize,
-    generation: u64,
+    pub(crate) generation: u64,
     owner: MountedReconcileOwner,
     active: bool,
 }

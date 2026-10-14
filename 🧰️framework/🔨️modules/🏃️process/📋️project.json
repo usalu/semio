@@ -450,6 +450,21 @@
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test workspace"
       }
+    },
+    "test-exact-cargo-storage": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/🧪️testing/🦀️cargo/🎯️exact/**/*",
+        "{projectRoot}/📦️artifacts/🏗️native-build/**/*",
+        "{projectRoot}/🏗️build/🎟️capacity/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test exact-cargo-storage"
+      }
     }
   },
   "tags": [

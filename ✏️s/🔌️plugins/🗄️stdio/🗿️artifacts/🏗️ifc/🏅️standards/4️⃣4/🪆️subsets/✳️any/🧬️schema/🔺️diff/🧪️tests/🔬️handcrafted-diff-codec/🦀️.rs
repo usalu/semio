@@ -10,7 +10,7 @@ fn entity(id: u64, name: &str, args: Vec<IfcValue>) -> IfcEntity {
 fn base() -> IfcSnapshot {
     IfcSnapshot {
         schema: "stdio.ifc".into(),
-        header: crate::schema::snapshot::IfcHeader { file_description: vec![IfcValue::String("d".into())], file_name: vec![IfcValue::String("n".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
+        header: crate::standards::v4::subsets::any::schema::snapshot::IfcHeader { file_description: vec![IfcValue::String("d".into())], file_name: vec![IfcValue::String("n".into())], file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] },
         entities: vec![
             entity(1, "IFCPROJECT", vec![IfcValue::String("gid".into()), IfcValue::Reference(2), IfcValue::Unset, IfcValue::Derived]),
             IfcEntity {

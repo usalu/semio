@@ -7,7 +7,8 @@
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
     use crate::io::SemioVideoAnalyzer;
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
@@ -114,9 +115,9 @@ pub mod derived_composition {
     /// Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_video_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") }, store::artifact_codec::<SemioVideoSnapshot, crate::schema::mutations::SemioVideoMutation>(
-            crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(semio_s_artifact_stdio_semio_video_descriptor::schema::descriptor::semio_video_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") }, store::artifact_codec::<SemioVideoSnapshot, semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation>(
+            semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -128,10 +129,10 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::schema::semio_video_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioVideoSnapshot, crate::schema::mutations::SemioVideoMutation>(crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") })
+            .schemas([semio_s_artifact_stdio_semio_video_descriptor::schema::descriptor::semio_video_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioVideoSnapshot, semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation>(semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::schema::inferences::semio_video_artifact_inference_descriptor()]);
+            .inferences([semio_s_artifact_stdio_semio_video_inferences::schema::inferences::semio_video_artifact_inference_descriptor()]);
         builder
     }
 
@@ -140,7 +141,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_video_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(semio_s_artifact_stdio_semio_video_inferences::schema::inferences::semio_video_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
     //#endregion 🔖️Register
@@ -153,19 +154,13 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::SemioVideoDiff;
-    use crate::schema::mutations::SemioVideoMutation;
-    use crate::schema::snapshot::SemioVideoSnapshot;
+    use semio_s_artifact_stdio_semio_video_model::schema::diff::SemioVideoDiff;
+    use semio_s_artifact_stdio_semio_video_mutations::schema::mutations::SemioVideoMutation;
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -208,7 +203,8 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::schema::snapshot::{SemioVideoSnapshot, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

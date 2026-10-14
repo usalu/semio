@@ -4,7 +4,7 @@
 use super::super::elements;
 use super::super::wall_depth::attach_flaw;
 use super::CreateWall;
-use crate::{Axis, Entry, ModelDiff, ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, TopConstraint}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn degenerate(axis: &Axis) -> bool {

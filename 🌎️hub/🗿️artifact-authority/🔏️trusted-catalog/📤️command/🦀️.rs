@@ -38,7 +38,6 @@ fn open_targets() -> Result<(), HubError> {
     Ok(())
 }
 
-#[cfg(any(test, feature = "native-artifact-execution"))]
 fn read_command(input: impl std::io::Read) -> Result<Vec<u8>, HubError> {
     use std::io::Read;
     let mut bytes = Vec::with_capacity(4097);
@@ -49,7 +48,6 @@ fn read_command(input: impl std::io::Read) -> Result<Vec<u8>, HubError> {
     Ok(bytes)
 }
 
-#[cfg(feature = "native-artifact-execution")]
 async fn publish() -> Result<(), HubError> {
     use super::{AuthorityError, AuthorityLimits, NativeCodecProviderSetV1, OperationContext, StartupCancellationV1, StartupCatalogControl, StartupProgressCellV1, Tracer, TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS};
     use semio_hub::artifact_authority::trusted_catalog::{TrustedCatalogPublicationOutcome, TrustedCatalogPublisher};
@@ -86,10 +84,6 @@ async fn publish() -> Result<(), HubError> {
     Ok(())
 }
 
-#[cfg(not(feature = "native-artifact-execution"))]
-async fn publish() -> Result<(), HubError> {
-    Err(HubError::UnsafeAuthConfiguration("publication requires the compiled native-artifact-execution provider".into()))
-}
 
 /// 🚪️ Handles only the exact trusted-catalog verbs and leaves ordinary no-argument startup untouched.
 pub(super) async fn dispatch(arguments: &[OsString]) -> Result<bool, HubError> {

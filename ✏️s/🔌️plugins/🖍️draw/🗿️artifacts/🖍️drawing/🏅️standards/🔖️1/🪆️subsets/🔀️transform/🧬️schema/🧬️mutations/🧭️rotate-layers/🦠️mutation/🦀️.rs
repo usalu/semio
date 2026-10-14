@@ -1,7 +1,7 @@
 //! 🧭️ Drawing mutation — `RotateLayers`: a relative, parametric rotation of a set of layers by one angle about one
 //! world-space pivot — the rotate handle's gesture, replayable on any base.
-use crate::mutations::{drawing_label_layers, drawing_label_number, DrawingMutation};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{drawing_label_layers, drawing_label_number};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🧭️ `rotate-layers` payload — the rotated layer ids, the world-space pivot and the angle in radians.
@@ -20,17 +20,17 @@ pub struct RotateLayers {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rotate_layers(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, angle: f64) -> DrawingMutation {
-    DrawingMutation::RotateLayers(RotateLayers { targets, pivot_x, pivot_y, angle })
+pub fn rotate_layers<Op: From<RotateLayers>>(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, angle: f64) -> Op {
+    Op::from(RotateLayers { targets, pivot_x, pivot_y, angle })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RotateLayers {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for RotateLayers where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_layer_transform::mutation::UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rotate", entity: "layers", kind: "rotate-layers", record: "RotatedLayers" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

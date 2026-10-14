@@ -23,7 +23,7 @@ fn selection_action_uses_live_selection_when_ids_are_omitted() {
 
 #[test]
 fn path_coordinate_input_overrides_the_rendered_value() {
-    use crate::schema::geometry::editing::{PathEdit, PathPoint, PathAxis};
+    use semio_s_artifact_draw_drawing_geometry::editing::{PathEdit, PathPoint, PathAxis};
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"coordinate","index":1,"point":"anchor","axis":"x","value":0},"value":"42.5"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     assert_eq!(command_from_action("editPath", Some(&args)).unwrap(), DrawingCommand::EditPath(edit_path::EditPath { layer_id: "path".into(), edit: Box::new(PathEdit::Coordinate { index: 1, point: PathPoint::Anchor, axis: PathAxis::X, value: 42.5 }) }));
     let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":"{\"kind\":\"reverse\"}"}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -32,7 +32,7 @@ fn path_coordinate_input_overrides_the_rendered_value() {
 
 #[test]
 fn path_conversion_actions_round_trip_the_typed_command() {
-    use crate::schema::geometry::editing::{PathEdit,SegmentType};
+    use semio_s_artifact_draw_drawing_geometry::editing::{PathEdit, SegmentType};
     for (name,target) in [("line",SegmentType::Line),("cubic",SegmentType::Cubic)] {
         let value = format!(r#"{{"layerId":"path","edit":{{"kind":"convert","index":1,"target":"{name}"}}}}"#);
         let args = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&value, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
@@ -45,7 +45,7 @@ fn path_conversion_actions_round_trip_the_typed_command() {
 
 #[test]
 fn path_join_action_round_trips_the_typed_command() {
-    use crate::schema::geometry::editing::PathEdit;
+    use semio_s_artifact_draw_drawing_geometry::editing::PathEdit;
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"join","index":1,"other":2}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath { layer_id:"path".into(),edit:Box::new(PathEdit::Join { index:1,other:2 }) }));
@@ -55,7 +55,7 @@ fn path_join_action_round_trips_the_typed_command() {
 
 #[test]
 fn fill_inputs_override_the_rendered_edit_with_their_typed_value() {
-    use crate::schema::fill::{FillEdit,FillType,FillAxis};
+    use semio_s_artifact_draw_drawing_model::fill::FillEdit;
     for (json,edit) in [
         (r#"{"layerId":"a","edit":{"kind":"type","value":"solid"},"value":"radialGradient"}"#,FillEdit::Type { value:FillType::RadialGradient }),
         (r##"{"layerId":"a","edit":{"kind":"color","index":1,"value":[0,0,0,1]},"value":"#abc"}"##,FillEdit::Color { index:Some(1),value:[170.0/255.0,187.0/255.0,204.0/255.0,1.0] }),
@@ -68,7 +68,7 @@ fn fill_inputs_override_the_rendered_edit_with_their_typed_value() {
 
 #[test]
 fn path_position_action_round_trips_one_two_axis_edit() {
-    use crate::schema::geometry::editing::{PathEdit,PathPoint};
+    use semio_s_artifact_draw_drawing_geometry::editing::{PathEdit, PathPoint};
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"position","index":1,"point":"anchor","to":[15,5]}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]})}));
@@ -78,7 +78,7 @@ fn path_position_action_round_trips_one_two_axis_edit() {
 
 #[test]
 fn path_translation_action_round_trips_the_typed_point_set() {
-    use crate::schema::geometry::editing::{PathEdit,PathPoint,PathPointRef};
+    use semio_s_artifact_draw_drawing_geometry::editing::{PathEdit, PathPoint, PathPointRef};
     let args=semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(r#"{"layerId":"path","edit":{"kind":"translate","points":[{"index":0,"point":"anchor"},{"index":1,"point":"control2"}],"delta":[3,-2]}}"#, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let command=command_from_action("editPath",Some(&args)).unwrap();
     assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Translate {points:vec![PathPointRef {index:0,point:PathPoint::Anchor},PathPointRef {index:1,point:PathPoint::Control2}],delta:[3.0,-2.0]})}));

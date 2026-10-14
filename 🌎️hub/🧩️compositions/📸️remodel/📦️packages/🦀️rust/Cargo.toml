@@ -18,6 +18,9 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-remodel-remodeling = { workspace = true }
+semio-s-artifact-remodel-remodeling-editor = { workspace = true }
+semio-s-artifact-remodel-remodeling-schema = { workspace = true }
+semio-s-artifact-remodel-remodeling-viewer = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
@@ -38,7 +41,6 @@ semio-s-artifact-stdio-stl = { workspace = true }
 # `➕️algebra-internals`'s own `lll_reduce`, now built on `number::VecG`/`number::Rational` directly.
 number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework = { workspace = true }

@@ -57,7 +57,7 @@ impl Dispatcher {
 
     /// 🎛️ Distribute load across equipment per dispatch scheme.
     #[cfg(test)]
-    pub(crate) fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
+    pub fn dispatch(&self, request: &DispatchRequest) -> Vec<DispatchResult> {
         let mut builder = DispatchBuilder::new(request.clone());
         while !builder.is_complete() {
             builder.step(self);
@@ -99,16 +99,16 @@ pub(crate) enum DispatchStage {
 
 #[cfg(test)]
 impl DispatchBuilder {
-    pub(crate) fn new(request: DispatchRequest) -> Self {
+    pub fn new(request: DispatchRequest) -> Self {
         let remaining_w = request.total_load_w;
         Self { request, stage: DispatchStage::Reserve, cursor: 0, previous_priority: None, total_capacity_w: 0.0, remaining_w, results: Vec::new(), fault: None }
     }
 
-    pub(crate) fn is_complete(&self) -> bool {
+    pub fn is_complete(&self) -> bool {
         self.stage == DispatchStage::Complete
     }
 
-    pub(crate) fn step(&mut self, dispatcher: &Dispatcher) {
+    pub fn step(&mut self, dispatcher: &Dispatcher) {
         match self.stage {
             DispatchStage::Reserve => {
                 if self.results.try_reserve_exact(dispatcher.equipment.len()).is_err() {
@@ -170,7 +170,7 @@ impl DispatchBuilder {
     }
 
     #[cfg(test)]
-    pub(crate) fn finish(self) -> Result<Vec<DispatchResult>, DispatchFault> {
+    pub fn finish(self) -> Result<Vec<DispatchResult>, DispatchFault> {
         self.fault.map_or(Ok(self.results), Err)
     }
 }

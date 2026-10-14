@@ -8,9 +8,11 @@
 // 🏃️ `motion` is deliberately absent: the pipeline accepts `EngineParams::motion_enabled` but does not
 // yet drive the motion topic file from `advance()` — a documented gap carried over verbatim from the
 // pre-merge crate, which declared the same dependency without ever using it.
-use crate::editor::remodeling::engine::{
-    camera as remodeling_camera, dense as remodeling_dense, feature as remodeling_feature, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, sfm as remodeling_sfm, video as remodeling_video,
-};
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+use semio_s_artifact_remodel_remodeling_feature::editor::remodeling::engine::feature as remodeling_feature;
+use semio_s_artifact_remodel_remodeling_geo::editor::remodeling::engine::geo as remodeling_geo;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 
 // #region 🔖️Input
 const MAX_INTERACTIVE_IMAGE_PIXELS: usize = 262_144;
@@ -19,7 +21,7 @@ const MAX_INTERACTIVE_IMAGE_BYTES: usize = MAX_INTERACTIVE_IMAGE_PIXELS * 4;
 /// 🎚️ Frame-ingestion policy shared by [`FrameSource::push_frame`] and [`FrameSource::push_video`]:
 /// `stride` keeps every `stride`-th *offered* frame (applied only to the direct [`FrameSource::push_frame`]
 /// entry point — [`FrameSource::push_video`] instead relies on the container-level stride already applied
-/// by `remodeling_video::extract_frames`, so it isn't double-applied), `max_frames` caps the total accepted
+/// by `crate::editor::remodeling::engine::video::extract_frames`, so it isn't double-applied), `max_frames` caps the total accepted
 /// count (`0` = unbounded), and `min_sharpness`/`rolling_window` drive the relative blur gate: a frame is
 /// rejected when its gradient-based sharpness score falls below `min_sharpness * median(last
 /// rolling_window accepted scores)`, once at least 3 accepted frames exist to form a baseline.
@@ -60,11 +62,11 @@ pub struct AcceptedFrame {
 }
 
 /// ⚠️ Errors from this crate's own fallible entry points — currently just video ingestion, re-exporting
-/// `remodeling_video::VideoError` so callers get the precise failure (truncated container, unsupported
+/// `crate::editor::remodeling::engine::video::VideoError` so callers get the precise failure (truncated container, unsupported
 /// codec, malformed box, …) rather than a lossy wrapper.
 #[derive(Clone, Debug, PartialEq)]
 pub enum EngineError {
-    Video(remodeling_video::VideoError),
+    Video(semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoError),
 }
 
 impl std::fmt::Display for EngineError {
@@ -77,8 +79,8 @@ impl std::fmt::Display for EngineError {
 
 impl std::error::Error for EngineError {}
 
-impl From<remodeling_video::VideoError> for EngineError {
-    fn from(e: remodeling_video::VideoError) -> Self {
+impl From<semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoError> for EngineError {
+    fn from(e: semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoError) -> Self {
         Self::Video(e)
     }
 }
@@ -135,7 +137,7 @@ pub fn blur_gate_admits(rolling: &mut Vec<f32>, window: usize, score: f32, min_s
 
 /// 🏷️ Codec, dimensions and duration from the owned provider record.
 #[cfg(test)]
-fn describe_probe(probe: &remodeling_video::VideoProbe) -> (String, u32, u32, f64) {
+fn describe_probe(probe: &semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoProbe) -> (String, u32, u32, f64) {
     (format!("{:?}", probe.codec), probe.width, probe.height, probe.duration_ms)
 }
 
@@ -175,14 +177,14 @@ impl FrameSource {
     }
 
     /// 🎞️ Probes `bytes` as a video container, lazily decodes sampled frames via
-    /// `remodeling_video::extract_frames` (container-level stride/max-frames/downscale already applied per
+    /// `crate::editor::remodeling::engine::video::extract_frames` (container-level stride/max-frames/downscale already applied per
     /// `opts`), and offers each decoded frame through the same blur gate as [`push_frame`](Self::push_frame)
     /// (without re-applying this source's own stride counter, since the container already sampled).
     #[cfg(test)]
-    pub fn push_video(&mut self, bytes: &[u8], opts: &remodeling_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
-        let probe = remodeling_video::probe(bytes)?;
+    pub fn push_video(&mut self, bytes: &[u8], opts: &semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+        let probe = semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::probe(bytes)?;
         let (codec, width, height, duration_ms) = describe_probe(&probe);
-        let iter = remodeling_video::extract_frames(bytes, opts)?;
+        let iter = semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::extract_frames(bytes, opts)?;
         let mut report = PushVideoReport { frames_extracted: 0, frames_accepted: 0, frames_rejected_blur: 0, frames_rejected_sampling: 0, codec, width, height, duration_ms };
         for extracted in iter {
             let extracted = extracted?;
@@ -254,14 +256,14 @@ pub struct EngineParams {
     pub match_ratio: f32,
     pub match_mutual: bool,
     pub sequential_window: usize,
-    pub sfm: remodeling_sfm::SfmConfig,
+    pub sfm: semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::SfmConfig,
     pub dense: remodeling_dense::PatchMatchConfig,
     pub dense_source_views: usize,
     pub max_registered_cameras: usize,
     pub max_dense_cameras: usize,
     pub tsdf_voxel_size: f64,
     pub tsdf_truncation: f64,
-    pub mesh: remodeling_mesh::MeshParams,
+    pub mesh: semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshParams,
     pub texture_enabled: bool,
     pub motion_enabled: bool,
     pub geo_enabled: bool,
@@ -280,14 +282,14 @@ impl Default for EngineParams {
             match_ratio: 0.8,
             match_mutual: true,
             sequential_window: 2,
-            sfm: remodeling_sfm::SfmConfig::default(),
+            sfm: semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::SfmConfig::default(),
             dense: remodeling_dense::PatchMatchConfig::default(),
             dense_source_views: 4,
             max_registered_cameras: 0,
             max_dense_cameras: 12,
             tsdf_voxel_size: 0.05,
             tsdf_truncation: 0.15,
-            mesh: remodeling_mesh::MeshParams::default(),
+            mesh: semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshParams::default(),
             texture_enabled: true,
             motion_enabled: false,
             geo_enabled: false,
@@ -376,9 +378,9 @@ fn stage_ordinal(stage: EngineStage) -> usize {
     }
 }
 
-/// 🗺️ Maps `remodeling_mesh::mesh_pipeline_step`'s internal stage name to the engine-level stage it falls
+/// 🗺️ Maps `crate::editor::remodeling::engine::mesh::mesh_pipeline_step`'s internal stage name to the engine-level stage it falls
 /// under, so driving the mesh pipeline (Amendment: engine delegates meshing directly to
-/// `remodeling_mesh::mesh_pipeline_step`) still reports through the coarser [`EngineStage`] vocabulary.
+/// `crate::editor::remodeling::engine::mesh::mesh_pipeline_step`) still reports through the coarser [`EngineStage`] vocabulary.
 fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
     match name {
         "marching_cubes" => EngineStage::ExtractingSurface,
@@ -388,7 +390,7 @@ fn mesh_stage_to_engine_stage(name: &str) -> EngineStage {
 }
 
 /// 🏘️ Up to `k` other camera slot indices nearest to `ci` (by registration-order distance, which tracks
-/// frame order for an [`remodeling_sfm::IncrementalSfm`] reconstruction), sorted ascending for determinism —
+/// frame order for an [`crate::editor::remodeling::engine::sfm::IncrementalSfm`] reconstruction), sorted ascending for determinism —
 /// the source-view selection for [`remodeling_dense::patchmatch_mvs`]/TSDF fusion.
 fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
     let mut idxs = Vec::with_capacity(k.min(n.saturating_sub(1)));
@@ -444,7 +446,7 @@ fn sparse_depth_range(points: &[[f64; 3]], pose: &remodeling_camera::CameraPose,
 /// cells that covered a third of the object, and the result mesh sat far outside the view the
 /// placeholder occupied. Cameras follow the same similarity: `t' = s (R c + t)`, so depths scale
 /// with the points and the dense stage's sparse-derived depth ranges stay consistent.
-fn normalize_reconstruction_frame(reconstruction: &mut remodeling_sfm::Reconstruction) {
+fn normalize_reconstruction_frame(reconstruction: &mut semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::Reconstruction) {
     const MIN_POINTS: usize = 4;
     if reconstruction.points.len() < MIN_POINTS {
         return;
@@ -511,21 +513,21 @@ pub struct ReconstructionEngine {
     pair_match_preparation: Option<PairMatchPreparation>,
     pairwise_matches: Vec<(usize, usize, Vec<remodeling_feature::Match>)>,
     track_preparation: Option<TrackPreparation>,
-    tracks: Option<remodeling_sfm::FeatureTracks>,
+    tracks: Option<semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::FeatureTracks>,
 
-    sfm: Option<remodeling_sfm::IncrementalSfm>,
-    seed_pair_preparation: Option<remodeling_sfm::SeedPairPreparation>,
-    registration_preparation: Option<remodeling_sfm::RegistrationPreparation>,
-    bundle_preparation: Option<remodeling_sfm::BundlePreparation>,
+    sfm: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm>,
+    seed_pair_preparation: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::SeedPairPreparation>,
+    registration_preparation: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::RegistrationPreparation>,
+    bundle_preparation: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::BundlePreparation>,
     /// 🎯️ A bundle adjustment in flight, [`BUNDLE_TERMS_PER_STEP`] terms per step: the local one
     /// after each registration and the global passes of the bundle stage.
-    bundle_iterations: Option<remodeling_sfm::BundleAdjustment>,
+    bundle_iterations: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::BundleAdjustment>,
     finalization_preparation: Option<FinalizationPreparation>,
     pose_cursor: usize,
     /// 🧭️ Frames to register after the seed pair, in registration order (outwards from the seed).
     registration_order: Vec<usize>,
     ba_substep: usize,
-    reconstruction: Option<remodeling_sfm::Reconstruction>,
+    reconstruction: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::Reconstruction>,
     observations: Vec<(usize, usize, [f64; 2])>,
     dense_camera_indices: Vec<usize>,
 
@@ -543,10 +545,10 @@ pub struct ReconstructionEngine {
     /// those pixels, so a single view's PatchMatch outliers never reach the volume.
     consistency_masks: Vec<Vec<u64>>,
 
-    mesh_pipeline: Option<remodeling_mesh::MeshPipeline>,
+    mesh_pipeline: Option<semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline>,
     meshing_preparation: Option<MeshingPreparation>,
     mesh_data: Option<semio_framework::MeshData>,
-    watertight_report: Option<remodeling_mesh::WatertightReport>,
+    watertight_report: Option<semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::WatertightReport>,
 
     failure: Option<String>,
     recorded: Option<Vec<EngineObservation>>,
@@ -643,7 +645,7 @@ struct PairVerification {
     correspondences: Vec<([f64; 2], [f64; 2])>,
     attempts: usize,
     /// The best polished model so far, by explained correspondences.
-    best: Option<remodeling_sfm::TwoViewResult>,
+    best: Option<semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::TwoViewResult>,
 }
 
 /// 🧭️ Hypotheses one verification call draws (each a five-point solve — a 10×10 elimination and a
@@ -705,7 +707,7 @@ struct MeshingPreparation {
     bounds_max: [f64; 3],
     view_cursor: usize,
     active_view: Option<TextureViewPreparation>,
-    views: Vec<remodeling_mesh::TextureView>,
+    views: Vec<semio_s_artifact_remodel_remodeling_mesh_atlas::editor::remodeling::engine::mesh::atlas::TextureView>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
@@ -720,7 +722,7 @@ enum FinalizationPhase {
 #[derive(semio_framework_value::RetireOwned)]
 struct FinalizationPreparation {
     phase: FinalizationPhase,
-    snapshot: Option<remodeling_sfm::ReconstructionSnapshotPreparation>,
+    snapshot: Option<semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::ReconstructionSnapshotPreparation>,
     camera_cursor: usize,
     camera_index: std::collections::BTreeMap<usize, usize>,
     point_cursor: usize,
@@ -979,7 +981,7 @@ impl ReconstructionEngine {
 
     /// 🎞️ Delegates to the internal [`FrameSource::push_video`].
     #[cfg(test)]
-    pub fn push_video(&mut self, bytes: &[u8], opts: &remodeling_video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
+    pub fn push_video(&mut self, bytes: &[u8], opts: &semio_s_artifact_remodel_remodeling_video::editor::remodeling::engine::video::VideoIngestOptions) -> Result<PushVideoReport, EngineError> {
         self.frame_source.push_video(bytes, opts)
     }
 
@@ -994,7 +996,7 @@ impl ReconstructionEngine {
     }
 
     /// 📸️ Snapshots [`FrameSource::frames`] into the engine's own working set; fails if fewer than 2
-    /// frames were accepted (the minimum an [`remodeling_sfm::IncrementalSfm`] two-view init needs).
+    /// frames were accepted (the minimum an [`crate::editor::remodeling::engine::sfm::IncrementalSfm`] two-view init needs).
     fn start(&mut self) -> Result<(), String> {
         self.frames = std::mem::take(&mut self.frame_source.frames);
         if self.frames.len() < 2 {
@@ -1278,7 +1280,7 @@ impl ReconstructionEngine {
             let seed = ((frame_a as u64) << 32 | frame_b as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) ^ verification.attempts as u64;
             let threshold = PAIR_VERIFICATION_THRESHOLD_PX / intrinsics.fx.max(intrinsics.fy).max(1.0);
             if verification.attempts < PAIR_VERIFICATION_STEPS {
-                if let Some(candidate) = remodeling_sfm::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
+                if let Some(candidate) = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::estimate_essential_five_point_bounded(&verification.correspondences, &intrinsics, &intrinsics, threshold, seed, PAIR_VERIFICATION_HYPOTHESES_PER_STEP, 0) {
                     // A raw five-point fit through five integer-pixel keypoints explains only a
                     // handful of correspondences at a pixel's tolerance, and its raw MSAC score
                     // does not rank the true model above a wrong one reliably enough to polish only
@@ -1287,7 +1289,7 @@ impl ReconstructionEngine {
                     // every unit polishes its batch's best (the unit's one costlier part) and the
                     // comparison is between refined models, by explained correspondences; the
                     // survivor set at the end is the refined one.
-                    let polished = remodeling_sfm::polish_essential(candidate, &verification.correspondences, &intrinsics, threshold);
+                    let polished = semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::polish_essential(candidate, &verification.correspondences, &intrinsics, threshold);
                     if verification.best.as_ref().is_none_or(|best| polished.inliers.len() > best.inliers.len()) {
                         verification.best = Some(polished);
                     }
@@ -1322,7 +1324,7 @@ impl ReconstructionEngine {
     }
 
     /// 🧵️ Consumes at most 4,096 union/group observations or 64 finalized groups.
-    fn step_build_tracks(&mut self) -> Option<remodeling_sfm::FeatureTracks> {
+    fn step_build_tracks(&mut self) -> Option<semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::FeatureTracks> {
         // ⏱️ A union is two hashed node lookups; a thousand per step keeps a debug-profile step
         // inside the worker law with room for the host's scheduling jitter.
         const OBSERVATIONS_PER_STEP: usize = 1_024;
@@ -1377,14 +1379,14 @@ impl ReconstructionEngine {
                 }
                 if preparation.groups.is_empty() {
                     let complete = self.track_preparation.take().expect("completed tracks");
-                    return Some(remodeling_sfm::FeatureTracks { tracks: complete.tracks });
+                    return Some(semio_s_artifact_remodel_remodeling_sfm_geometry::editor::remodeling::engine::sfm::geometry::FeatureTracks { tracks: complete.tracks });
                 }
             }
         }
         None
     }
 
-    /// 🏗️ Seeds [`remodeling_sfm::IncrementalSfm`] on the adjacent pair with the most verified
+    /// 🏗️ Seeds [`crate::editor::remodeling::engine::sfm::IncrementalSfm`] on the adjacent pair with the most verified
     /// matches (first calls), then registers + triangulates one frame per bounded unit, walking
     /// outwards from the seed — forwards to the last frame, then backwards to the first — so every
     /// frame is registered against already-registered neighbours; each registration is followed by
@@ -1397,11 +1399,11 @@ impl ReconstructionEngine {
             let intr = default_intrinsics(self.frames[0].image.width, self.frames[0].image.height, self.params.assumed_focal_ratio, self.params.distortion);
             let tracks = self.tracks.clone().expect("tracks built before EstimatingPoses");
             let keypoints = self.keypoints_per_frame.clone();
-            let mut sfm = remodeling_sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
+            let mut sfm = semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm::new(intr, tracks, keypoints, self.params.sfm.clone());
             if self.recorded.is_some() {
                 sfm.observe_points();
             }
-            let seed = self.pairwise_matches.iter().filter(|&&(a, b, _)| b == a + 1).max_by_key(|&&(a, _, ref matches)| (matches.len(), std::cmp::Reverse(a))).map(|(a, b, matches)| (*a, *b, remodeling_sfm::SeedPairPreparation::new(*a, *b, matches)));
+            let seed = self.pairwise_matches.iter().filter(|&&(a, b, _)| b == a + 1).max_by_key(|&&(a, _, ref matches)| (matches.len(), std::cmp::Reverse(a))).map(|(a, b, matches)| (*a, *b, semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::SeedPairPreparation::new(*a, *b, matches)));
             sfm.set_pairwise_matches(std::mem::take(&mut self.pairwise_matches));
             self.sfm = Some(sfm);
             match seed {
@@ -1463,7 +1465,7 @@ impl ReconstructionEngine {
             return Ok(false);
         }
         if self.registration_preparation.is_none() {
-            self.registration_preparation = Some(remodeling_sfm::RegistrationPreparation::new(self.registration_order[self.pose_cursor]));
+            self.registration_preparation = Some(semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::RegistrationPreparation::new(self.registration_order[self.pose_cursor]));
         }
         let result = sfm.advance_registration(self.registration_preparation.as_mut().expect("registration preparation"), 1);
         let frame = self.registration_order[self.pose_cursor];
@@ -1521,7 +1523,7 @@ impl ReconstructionEngine {
             BundleStagePhase::Adjust { huber_factor } => {
                 if self.bundle_iterations.is_none() {
                     let loss = match huber_factor {
-                        Some(factor) => remodeling_sfm::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
+                        Some(factor) => semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::RobustLoss::Huber(self.params.sfm.ransac_threshold_px * factor),
                         None => sfm.robust_loss(),
                     };
                     // 📌️ Only the first camera is held: holding the seed pair's second camera too
@@ -1549,7 +1551,7 @@ impl ReconstructionEngine {
     fn step_finalize_reconstruction(&mut self) -> bool {
         const ITEMS_PER_STEP: usize = 64;
         if self.finalization_preparation.is_none() {
-            let snapshot = self.sfm.as_ref().map(remodeling_sfm::IncrementalSfm::begin_reconstruction_snapshot);
+            let snapshot = self.sfm.as_ref().map(semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm::begin_reconstruction_snapshot);
             self.finalization_preparation = Some(FinalizationPreparation { phase: FinalizationPhase::Snapshot, snapshot, camera_cursor: 0, camera_index: std::collections::BTreeMap::new(), point_cursor: 0, observation_cursor: 0, dense_cursor: 0 });
         }
         let preparation = self.finalization_preparation.as_mut().expect("finalization preparation");
@@ -1562,7 +1564,7 @@ impl ReconstructionEngine {
                 let sfm = self.sfm.as_ref().expect("snapshot SfM");
                 if sfm.advance_reconstruction_snapshot(snapshot, ITEMS_PER_STEP) {
                     let snapshot = preparation.snapshot.take().expect("completed snapshot");
-                    let mut reconstruction = remodeling_sfm::IncrementalSfm::finish_reconstruction_snapshot(snapshot);
+                    let mut reconstruction = semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::IncrementalSfm::finish_reconstruction_snapshot(snapshot);
                     normalize_reconstruction_frame(&mut reconstruction);
                     self.reconstruction = Some(reconstruction);
                     preparation.phase = FinalizationPhase::CameraIndex;
@@ -1870,7 +1872,7 @@ impl ReconstructionEngine {
                     active.cursor = end;
                     if end == source.len() {
                         let complete = preparation.active_view.take().expect("completed texture view");
-                        preparation.views.push(remodeling_mesh::TextureView { pose: complete.pose, intrinsics: complete.intrinsics, image: complete.image });
+                        preparation.views.push(semio_s_artifact_remodel_remodeling_mesh_atlas::editor::remodeling::engine::mesh::atlas::TextureView { pose: complete.pose, intrinsics: complete.intrinsics, image: complete.image });
                         preparation.view_cursor += 1;
                     }
                     return false;
@@ -1880,7 +1882,7 @@ impl ReconstructionEngine {
         let preparation = self.meshing_preparation.take().expect("completed meshing preparation");
         let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.meshing_voxel().0);
         let volume = self.tsdf.take().expect("meshing volume");
-        self.mesh_pipeline = Some(remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_observed_only_surface().with_views(preparation.views));
+        self.mesh_pipeline = Some(semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_observed_only_surface().with_views(preparation.views));
         // 🧹️ Input pixels are dead here: the texture views above hold their own copies and the mesh
         // stages read only the volume and those views. Ten 320x240 frames are 3 MiB, the admitted
         // envelope (64 frames of 512x512) is 64 MiB — all of it retained through meshing otherwise.
@@ -1902,10 +1904,10 @@ impl ReconstructionEngine {
         let Some(pipeline) = self.mesh_pipeline.as_mut() else {
             return MeshStepOutcome::Failed("mesh pipeline not initialized".to_string());
         };
-        match remodeling_mesh::mesh_pipeline_step(pipeline, 1) {
-            remodeling_mesh::MeshPipelineStatus::Working { stage, .. } => MeshStepOutcome::Working(mesh_stage_to_engine_stage(stage)),
-            remodeling_mesh::MeshPipelineStatus::Done => MeshStepOutcome::Done,
-            remodeling_mesh::MeshPipelineStatus::Failed(msg) => MeshStepOutcome::Failed(msg),
+        match semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::mesh_pipeline_step(pipeline, 1) {
+            semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipelineStatus::Working { stage, .. } => MeshStepOutcome::Working(mesh_stage_to_engine_stage(stage)),
+            semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipelineStatus::Done => MeshStepOutcome::Done,
+            semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipelineStatus::Failed(msg) => MeshStepOutcome::Failed(msg),
         }
     }
 
@@ -1917,7 +1919,7 @@ impl ReconstructionEngine {
 
     /// ⚙️ Advances the pipeline through at most `step_budget` bounded units of work (never fewer than 1),
     /// crossing stage boundaries within the same call whenever a stage finishes with budget still left —
-    /// the same style `remodeling_mesh::mesh_pipeline_step` uses internally. Genuinely resumable: calling
+    /// the same style `crate::editor::remodeling::engine::mesh::mesh_pipeline_step` uses internally. Genuinely resumable: calling
     /// this repeatedly with a small budget or once with `usize::MAX` reaches the same terminal
     /// [`EngineStatus`], only the call count differs.
     pub fn advance(&mut self, step_budget: usize) -> EngineStatus {
@@ -1978,8 +1980,8 @@ impl ReconstructionEngine {
                 EngineStage::ExtractingSurface | EngineStage::CleaningMesh | EngineStage::Texturing => match self.step_meshing() {
                     MeshStepOutcome::Working(stage) => self.stage = stage,
                     MeshStepOutcome::Done => {
-                        self.mesh_data = self.mesh_pipeline.as_ref().and_then(remodeling_mesh::MeshPipeline::result).cloned();
-                        self.watertight_report = self.mesh_pipeline.as_ref().and_then(remodeling_mesh::MeshPipeline::report).cloned();
+                        self.mesh_data = self.mesh_pipeline.as_ref().and_then(semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline::result).cloned();
+                        self.watertight_report = self.mesh_pipeline.as_ref().and_then(semio_s_artifact_remodel_remodeling_mesh::editor::remodeling::engine::mesh::MeshPipeline::report).cloned();
                         let (vertices, triangles) = self.mesh_data.as_ref().map_or((0, 0), |mesh| (mesh.positions.len() / 3, mesh.indices.len() / 3));
                         self.record(EngineObservation::MeshExtracted { vertices, triangles });
                         self.stage = EngineStage::Done;
@@ -2135,7 +2137,7 @@ impl ReconstructionEngine {
     }
 
     /// 📊️ Returns the already-computed mesh watertight report without rebuilding full QC.
-    pub fn terminal_watertight_report(&self) -> Option<remodeling_mesh::WatertightReport> {
+    pub fn terminal_watertight_report(&self) -> Option<semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::WatertightReport> {
         self.watertight_report.clone()
     }
 
@@ -2207,12 +2209,12 @@ mod terminal_sparse_chunk_tests;
 
 /// 📦️ Packs a `Reconstruction`'s camera poses and points into a [`ScenePreview`].
 #[cfg(test)]
-fn pack_reconstruction(r: &remodeling_sfm::Reconstruction) -> ScenePreview {
+fn pack_reconstruction(r: &semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::Reconstruction) -> ScenePreview {
     ScenePreview { camera_poses: r.cameras.iter().map(|&(_, p)| p).collect(), packed_points: r.points.iter().flat_map(|p| p.iter().map(|&c| c as f32)).collect() }
 }
 
 /// 📦️ Packs finite camera and point prefixes for per-continuation previews.
-fn pack_reconstruction_bounded(r: &remodeling_sfm::Reconstruction, max_cameras: usize, max_points: usize) -> ScenePreview {
+fn pack_reconstruction_bounded(r: &semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::Reconstruction, max_cameras: usize, max_points: usize) -> ScenePreview {
     ScenePreview { camera_poses: r.cameras.iter().take(max_cameras).map(|&(_, pose)| pose).collect(), packed_points: r.points.iter().take(max_points).flat_map(|point| point.iter().map(|&coordinate| coordinate as f32)).collect() }
 }
 // #endregion 🔖️Preview
@@ -2245,7 +2247,7 @@ fn point_cloud_bbox(cloud: &remodeling_dense::PointCloud) -> Option<([f64; 3], [
 
 impl ReconstructionEngine {
     /// 🕸️ The finished, watertight-guaranteed `MeshData`, once [`EngineStatus::Done`] — consumes it (a
-    /// second call returns `None`), mirroring `remodeling_mesh::MeshPipeline::result`'s own take-once shape
+    /// second call returns `None`), mirroring `crate::editor::remodeling::engine::mesh::MeshPipeline::result`'s own take-once shape
     /// at the product-extraction boundary.
     pub fn take_mesh(&mut self) -> Option<semio_framework::MeshData> {
         self.mesh_data.take()
@@ -2285,11 +2287,5 @@ impl ReconstructionEngine {
 // #endregion 🔖️Products
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retention/🦀️.rs"]
-mod retention;
 // #endregion 🔖️Tests

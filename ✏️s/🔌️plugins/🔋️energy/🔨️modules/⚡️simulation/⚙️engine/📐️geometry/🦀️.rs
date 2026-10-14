@@ -1,5 +1,7 @@
 //! 📐️ Surface geometry: area, orientation, zone volume, and coordinate transforms.
 
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::units::rad_to_deg;
 use geometry::Vec3;
 

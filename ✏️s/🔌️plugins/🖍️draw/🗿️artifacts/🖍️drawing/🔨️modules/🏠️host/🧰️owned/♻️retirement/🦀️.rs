@@ -3,7 +3,7 @@
 use super::*;
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) enum DrawingRetirementOwner {
+pub enum DrawingRetirementOwner {
     Snapshot(DrawingSnapshot),
     Asset(DrawingImageAsset),
     Mutation(DrawingMutation),

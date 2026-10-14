@@ -24,7 +24,6 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 # 🚚 Wave MATHEND (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): `crate::number`
 # relocated out of `🧮️math` into its own framework module (domain-neutral exact-numeric vocabulary, exempt
 # under the binding user ruling) — `🌱roots`/`📈️polynomial-internals`/`🌿️cas-internals`/the artifact snapshot

@@ -1,12 +1,12 @@
 //! 📚️ 📚️ Fem2d play app commands command — `set-active-example`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️SetActiveExample
 //#endregion 🔖️SetActiveExample
@@ -27,10 +27,10 @@ pub struct SetActiveExample {
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem2d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let document = if payload.example_id == crate::examples::demo::ID {
-        Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot())
+    let document = if payload.example_id == semio_s_artifact_fem_2d_io::examples::demo::ID {
+        Fem2dSnapshot::parse_dsl(crate::editor::fem2d::FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot())
     } else {
-        crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()
+        semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()
     };
     Ok(Emit { effects: vec![crate::editor::fem2d::reset_document_effect(&document)], ..Default::default() })
 }

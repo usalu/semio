@@ -287,7 +287,7 @@ pub trait SemanticMutation<P>: Mutation<P> {
 
 //#region 🔖️Collection
 /// 🧬️ Collection identity/patch/diff — single source of truth in VCS (`crate::os_vcs`).
-pub use crate::os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
+pub use semio_framework_os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
 
 //#endregion 🔖️Collection
 
@@ -301,7 +301,7 @@ pub use crate::os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
 // 🎞️ Was declined in an earlier pass (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
 // RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️directory-spr-serde-
 // removal.md`, decline #3): `modified: Vec<ItemPatch<K, Patch>>` needed `ItemPatch<K, Patch>:
-// ToValue + FromValue`, which `crate::os_vcs::ItemPatch` did not yet have. It does now — converted.
+// ToValue + FromValue`, which `semio_framework_os_vcs::ItemPatch` did not yet have. It does now — converted.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, V, Patch> {
@@ -453,8 +453,8 @@ where
 #[derive(Clone, Debug, PartialEq, Eq, ToValue)]
 #[value(rename_all = "camelCase")]
 pub struct MutationDescriptor {
-    id: crate::os_spr::ids::SchemaId,
-    schema_version: crate::os_spr::ids::SchemaVersion,
+    id: protocol::ids::SchemaId,
+    schema_version: protocol::ids::SchemaVersion,
     state_class: semio_framework_schema_state::StateClass,
     leaf: MutationLeafDescriptor,
     semantics: SemanticDescriptor,
@@ -463,7 +463,7 @@ pub struct MutationDescriptor {
 
 impl MutationDescriptor {
     /// 🏗️ Validates all required metadata and fingerprints the complete immutable identity.
-    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
+    pub fn new(id: protocol::ids::SchemaId, schema_version: protocol::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
         if id.0.trim().is_empty() {
             return Err(MutationDescriptorError::InvalidField { field: "id", requirement: "must be nonblank" });
         }
@@ -484,10 +484,10 @@ impl MutationDescriptor {
         Ok(Self { id, schema_version, state_class, leaf, semantics, fingerprint })
     }
 
-    pub fn id(&self) -> &crate::os_spr::ids::SchemaId {
+    pub fn id(&self) -> &protocol::ids::SchemaId {
         &self.id
     }
-    pub fn schema_version(&self) -> crate::os_spr::ids::SchemaVersion {
+    pub fn schema_version(&self) -> protocol::ids::SchemaVersion {
         self.schema_version
     }
     pub fn state_class(&self) -> semio_framework_schema_state::StateClass {
@@ -504,7 +504,7 @@ impl MutationDescriptor {
     }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: &MutationLeafDescriptor, semantics: &SemanticDescriptor) -> [u8; 32] {
+fn descriptor_fingerprint(id: &protocol::ids::SchemaId, schema_version: protocol::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: &MutationLeafDescriptor, semantics: &SemanticDescriptor) -> [u8; 32] {
     #[derive(ToValue)]
     #[value(rename_all = "camelCase")]
     struct Canonical<'a> {
@@ -607,7 +607,7 @@ pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
 /// ⬆️ Rewrites an operation authored at an older schema version into today's shape.
 /// LAW: `upcast(upcast(x)) == upcast(x)` — idempotence at the target version.
 pub trait MutationUpcaster<Op> {
-    fn upcast(&self, from_version: crate::os_spr::ids::SchemaVersion, op: Op) -> Op;
+    fn upcast(&self, from_version: protocol::ids::SchemaVersion, op: Op) -> Op;
 }
 //#endregion 🔖️Upcast
 
@@ -615,7 +615,7 @@ pub trait MutationUpcaster<Op> {
 /// 📡️ One side-effect-channel event emitted alongside a persistent/UI diff.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub struct MutationEvent {
-    pub mutation_id: crate::os_spr::ids::MutationId,
+    pub mutation_id: protocol::ids::MutationId,
     pub state_class: semio_framework_schema_state::StateClass,
     pub payload: protocol::value::DslValue,
 }
@@ -744,7 +744,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
     /// post-state, matching what sequential application of the resulting plan would do. A `Fatal`
     /// message stops the plan outright (`Err(PlanError::StepRejected)`) without advancing `base`;
     /// a merely `Error`/`Warning`/`Info` message still advances `base` and continues planning — only
-    /// [`crate::os_spr::fold::fold_plan_diff`]'s all-or-nothing fold treats those as poisoning the composite's own diff.
+    /// [`crate::fold::fold_plan_diff`]'s all-or-nothing fold treats those as poisoning the composite's own diff.
     pub fn call(&mut self, op: Op) -> Result<(), PlanError> {
         let step_index = self.steps.len();
         let (diff, messages) = op.diff(&self.base).into_parts();
@@ -791,7 +791,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         (self.steps, self.pre_states)
     }
 
-    /// ➡️ Consumes `self` into its raw `(steps, messages)` parts — [`crate::os_spr::fold::fold_plan_diff`]'s primitive.
+    /// ➡️ Consumes `self` into its raw `(steps, messages)` parts — [`crate::fold::fold_plan_diff`]'s primitive.
     pub fn into_parts(self) -> (Vec<PlanStep<Op>>, Vec<MutationMessage>) {
         (self.steps, self.messages)
     }
@@ -856,12 +856,12 @@ pub fn mutation_payload_round_trip_failures<P, M: Mutation<P>>(ops: Vec<M>) -> V
         if op.input_schema().is_some() {
             let payload = op.payload_value();
             let kind = op.descriptor().semantic_kind;
-            let expected = crate::ToValue::to_value(&op);
+            let expected = semio_framework_value::ToValue::to_value(&op);
             let breaches: Vec<String> = [("with_payload_value", op.with_payload_value(payload.clone())), ("from_payload_value", M::from_payload_value(kind, payload.clone()))]
                 .into_iter()
                 .filter_map(|(law, rebuilt)| match rebuilt {
                     Ok(rebuilt) => {
-                        let value = crate::ToValue::to_value(&rebuilt);
+                        let value = semio_framework_value::ToValue::to_value(&rebuilt);
                         Mutation::<P>::retire_cold(rebuilt);
                         (value != expected).then(|| format!("op {index} ({kind}): {law} of {payload:?} gives {value:?}, not {expected:?}"))
                     }
@@ -904,9 +904,9 @@ pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<Stri
         .enumerate()
         .filter_map(|(index, op)| {
             let label = op.label();
-            let cells: Vec<String> = crate::Terminology::ALL
+            let cells: Vec<String> = semio_framework_ui_locale::Terminology::ALL
                 .into_iter()
-                .flat_map(|terminology| crate::Locale::ALL.into_iter().map(move |locale| (terminology, locale)))
+                .flat_map(|terminology| semio_framework_ui_locale::Locale::ALL.into_iter().map(move |locale| (terminology, locale)))
                 .filter(|(terminology, locale)| label.resolve(*terminology, *locale).trim().is_empty())
                 .map(|(terminology, locale)| format!("{}/{}", terminology.as_str(), locale.as_str()))
                 .collect();
@@ -919,7 +919,7 @@ pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<Stri
 /// `mutation` member of a `{mutation, before, after}` case record — and the number of fixture files read. A fixture of a
 /// sibling aggregate under the same root does not decode and is left out. Build output and hidden directories are skipped.
 #[cfg(any(test, feature = "mutation-testing"))]
-pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec<M>, usize) {
+pub fn mutation_fixture_ops<M: semio_framework_value::FromValue>(root: &std::path::Path) -> (Vec<M>, usize) {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
         for entry in entries.flatten() {
@@ -970,3 +970,7 @@ mod tests;
 #[path = "🧪️tests/🧪️mutation-payload/🦀️.rs"]
 mod mutation_payload_tests;
 //#endregion 🧪️Tests
+
+#[path = "../🧮️fold/🦀️.rs"]
+pub mod fold;
+pub use semio_framework_ui_locale::LocalizedLabel;

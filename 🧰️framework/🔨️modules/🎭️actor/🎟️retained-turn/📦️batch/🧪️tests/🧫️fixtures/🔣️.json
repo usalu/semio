@@ -10,6 +10,11 @@
       "maximumCapacityBytes": 65536,
       "maximumReleaseBytes": 262144,
       "maximumDepth": 64
+    },
+    "work": {
+      "clockBinding": 1271,
+      "absoluteDeadlineUs": 1000000,
+      "fuel": 64
     }
   },
   "envelopes": 3,
@@ -79,5 +84,16 @@
       0,
       0
     ]
-  }
+  },
+  "workSpent": [
+    1,
+    1,
+    1
+  ],
+  "activeRemainingFuel": [
+    63,
+    62,
+    61
+  ],
+  "remainingFuel": 61
 }

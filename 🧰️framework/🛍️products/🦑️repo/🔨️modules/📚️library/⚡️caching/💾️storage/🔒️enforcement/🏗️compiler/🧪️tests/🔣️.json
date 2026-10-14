@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "mode": "prototype",
+      "repeat": 3,
+      "loseReceipt": true,
+      "reservations": 1
+    },
+    {
+      "mode": "release",
+      "repeat": 2,
+      "loseReceipt": false,
+      "reservations": 1
+    }
+  ],
+  "rejectedModes": [
+    "dev",
+    "custom"
+  ]
+}

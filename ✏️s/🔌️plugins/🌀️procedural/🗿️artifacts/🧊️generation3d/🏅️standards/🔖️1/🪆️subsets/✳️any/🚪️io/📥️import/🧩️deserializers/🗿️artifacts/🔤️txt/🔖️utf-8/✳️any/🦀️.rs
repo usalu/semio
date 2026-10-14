@@ -8,7 +8,7 @@
 //! `Generation3dBuilder::from_text` use — one parser, never a second reader for the same grammar.
 //! This is the only FULL-FIDELITY import in this artifact's IO surface: the whole flow graph and
 //! generation history come back, not just evaluated geometry.
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
 
 pub fn register() {}
@@ -18,6 +18,6 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<Generation3dSnapshot, semio_fra
 }
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
-    let text = std::str::from_utf8(bytes).map_err(|error| crate::standards::v1::subsets::any::io::mesh_bridge::io_error(format!("generation3d←txt: not valid utf-8: {error}")))?;
+    let text = std::str::from_utf8(bytes).map_err(|error| semio_s_artifact_procedural_3d_mesh_bridge::io_error(format!("generation3d←txt: not valid utf-8: {error}")))?;
     deserialize(&TxtSnapshot::from_body(text))
 }

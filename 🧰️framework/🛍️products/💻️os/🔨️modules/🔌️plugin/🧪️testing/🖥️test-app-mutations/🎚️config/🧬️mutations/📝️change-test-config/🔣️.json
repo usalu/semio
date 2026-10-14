@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeTestConfigSelection",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-test-config-selection",
-  "binaryTag": 115,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

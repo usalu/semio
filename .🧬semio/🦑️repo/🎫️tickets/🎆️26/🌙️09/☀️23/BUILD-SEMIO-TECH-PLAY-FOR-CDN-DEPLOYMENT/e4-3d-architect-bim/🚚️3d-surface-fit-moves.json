@@ -1,0 +1,32 @@
+[
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation"
+  ],
+  "moves": [
+   {
+    "from": "crate::curve::curve_ops",
+    "to": "crate::surface::surface_ops",
+    "names": [
+     "interpolate_surface_grid",
+     "coons_patch_nurbs"
+    ]
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "semio_framework_3d_brep_representation::curve::curve_ops",
+    "to": "semio_framework_3d_brep_representation::surface::surface_ops",
+    "names": [
+     "interpolate_surface_grid",
+     "coons_patch_nurbs"
+    ]
+   }
+  ]
+ }
+]

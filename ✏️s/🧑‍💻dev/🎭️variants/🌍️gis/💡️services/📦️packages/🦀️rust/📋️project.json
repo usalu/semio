@@ -63,7 +63,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native --features native-renderer",
+        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-native",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
@@ -106,7 +106,7 @@
       "executor": "repo:script",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp --features mcp-service",
+        "command": "bun ./📜️script.ts native cargo check --manifest ✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/Cargo.toml --bin semio-s-gis-services-mcp",
         "cwd": "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }

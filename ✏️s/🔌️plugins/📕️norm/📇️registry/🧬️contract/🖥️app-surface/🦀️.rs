@@ -12,11 +12,20 @@
 //! or generic over the artifact's `Document`/`NormFamily`, so `🫀️core` stays a leaf of the dependency
 //! graph exactly as the artifacts require.
 
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+
 /// 🧵️ Retained norm command output with empty application config and draft lanes.
 pub type NormRetainedCommandResult<M> = Result<Emit<M, NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
-use crate::document::{cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormHost, Quantity, QuantityKind, RemedyBound};
-#[cfg(test)] use crate::document::{LocalizedCopy, Remedy};
+use semio_s_plugin_norm_compliance::{cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, NormFamily, NormHost, Quantity, QuantityKind, RemedyBound};
+#[cfg(test)] use semio_s_plugin_norm_compliance::{LocalizedCopy, Remedy};
 use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_ui_contract as ui;
@@ -1062,11 +1071,11 @@ fn report_flat_rows<'a>(report: &'a CheckReport) -> Vec<ReportListRow<'a>> {
 }
 
 enum ReportListRow<'a> {
-    Part { part_index: usize, part: &'a str, verdict: Option<&'a crate::document::PartVerdict> },
+    Part { part_index: usize, part: &'a str, verdict: Option<&'a semio_s_plugin_norm_compliance::PartVerdict> },
     Check { check_index: usize, check: &'a CheckResult },
 }
 
-fn part_verdict_label(part: &str, verdict: Option<&crate::document::PartVerdict>, locale: Locale) -> String {
+fn part_verdict_label(part: &str, verdict: Option<&semio_s_plugin_norm_compliance::PartVerdict>, locale: Locale) -> String {
     let Some(verdict) = verdict else {
         return part.to_string();
     };
@@ -1815,7 +1824,6 @@ where
     handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, resolve)
 }
 
-
 /// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the eight
 /// verbs all fifteen declare (`evaluate`/`setSelectedCheckIndex`/`setField`/`insertItem`/`removeItem`/`applyRemedy`). A whole-document
 /// replacement (`setSnapshot`) and an example load (`setActiveExample`) are not mutations: the shell's document load path and the
@@ -1853,26 +1861,26 @@ macro_rules! norm_command_from_action {
             let args = args.as_ref();
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
-                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::selected_check_index_arg(args) })),
                 "setField" => Ok($command::SetField(set_field::SetField {
-                    path: $crate::app_surface::path_arg(args),
-                    value_json: $crate::app_surface::value_arg_json(args),
+                    path: $crate::path_arg(args),
+                    value_json: $crate::value_arg_json(args),
                 })),
                 "insertItem" => Ok($command::InsertItem(insert_item::InsertItem {
-                    path: $crate::app_surface::path_arg(args),
-                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    path: $crate::path_arg(args),
+                    index: $crate::index_arg(args, "index") as u32,
                     value_json: {
-                        let raw = $crate::app_surface::value_arg_json(args);
+                        let raw = $crate::value_arg_json(args);
                         if raw == "null" { None } else { Some(raw) }
                     },
                 })),
                 "removeItem" => Ok($command::RemoveItem(remove_item::RemoveItem {
-                    path: $crate::app_surface::path_arg(args),
-                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    path: $crate::path_arg(args),
+                    index: $crate::index_arg(args, "index") as u32,
                 })),
                 "applyRemedy" => Ok($command::ApplyRemedy(apply_remedy::ApplyRemedy {
-                    check_id: $crate::app_surface::check_id_arg(args),
-                    remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
+                    check_id: $crate::check_id_arg(args),
+                    remedy_index: $crate::index_arg(args, "remedyIndex") as u32,
                 })),
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
@@ -1891,26 +1899,26 @@ macro_rules! norm_command_from_action {
             let args = args.as_ref();
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
-                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
+                "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::selected_check_index_arg(args) })),
                 "setField" => Ok($command::SetField(set_field::SetField {
-                    path: $crate::app_surface::path_arg(args),
-                    value_json: $crate::app_surface::value_arg_json(args),
+                    path: $crate::path_arg(args),
+                    value_json: $crate::value_arg_json(args),
                 })),
                 "insertItem" => Ok($command::InsertItem(insert_item::InsertItem {
-                    path: $crate::app_surface::path_arg(args),
-                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    path: $crate::path_arg(args),
+                    index: $crate::index_arg(args, "index") as u32,
                     value_json: {
-                        let raw = $crate::app_surface::value_arg_json(args);
+                        let raw = $crate::value_arg_json(args);
                         if raw == "null" { None } else { Some(raw) }
                     },
                 })),
                 "removeItem" => Ok($command::RemoveItem(remove_item::RemoveItem {
-                    path: $crate::app_surface::path_arg(args),
-                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    path: $crate::path_arg(args),
+                    index: $crate::index_arg(args, "index") as u32,
                 })),
                 "applyRemedy" => Ok($command::ApplyRemedy(apply_remedy::ApplyRemedy {
-                    check_id: $crate::app_surface::check_id_arg(args),
-                    remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
+                    check_id: $crate::check_id_arg(args),
+                    remedy_index: $crate::index_arg(args, "remedyIndex") as u32,
                 })),
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
@@ -1979,9 +1987,9 @@ pub fn norm_bounded_contract() -> ToolExecutionContract {
 /// authority for what a norm command does.
 pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = NoConfig, ConfigMutation = NoConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
     type Family: NormFamily<Document = Self::Snapshot, Mutation = Self::Mutation>;
-    type ResultsWindowConfigOwner: WindowConfigOwner<State = crate::results_window_config::NormResultsWindowConfig, Mutation = crate::results_window_config::NormResultsWindowConfigMutation>;
+    type ResultsWindowConfigOwner: WindowConfigOwner<State = semio_s_plugin_norm_results_config::schema::NormResultsWindowConfig, Mutation = semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
-    fn selected_check_window_mutation(command: &Self::Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation>;
+    fn selected_check_window_mutation(command: &Self::Command) -> Option<semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation>;
 
     fn dispatch_retained(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> NormRetainedCommandResult<Self::Mutation>;
 }
@@ -2101,7 +2109,6 @@ impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCo
     }
 }
 
-
 /// 🎯️ Routes ordinary and retained commands through the same exact Results-window address.
 pub fn dispatch_norm_command<A: NormRetainedEditor>(
     command: &A::Command,
@@ -2114,7 +2121,7 @@ pub fn dispatch_norm_command<A: NormRetainedEditor>(
     };
     let view = view.ok_or_else(|| Fault::from("norm-results-window-view-required"))?;
     Ok(Emit {
-        window_config_mutations: vec![crate::results_window_config::addressed::<A::ResultsWindowConfigOwner>(view, mutation)?],
+        window_config_mutations: vec![semio_s_plugin_norm_results_config::addressed::<A::ResultsWindowConfigOwner>(view, mutation)?],
         ..Default::default()
     })
 }
@@ -2237,11 +2244,11 @@ where
 #[macro_export]
 macro_rules! norm_owned_tool_job_factory {
     ($factory:ident, $app:ty) => {
-        pub struct $factory($crate::app_surface::NormBoundedCommandJobFactory<$app>);
+        pub struct $factory($crate::NormBoundedCommandJobFactory<$app>);
 
         impl $factory {
             pub fn new(controller_id: &str) -> Self {
-                Self($crate::app_surface::NormBoundedCommandJobFactory::<$app>::new(controller_id))
+                Self($crate::NormBoundedCommandJobFactory::<$app>::new(controller_id))
             }
 
             pub fn register(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<$app>>) -> Result<(), semio_framework_plugin::Fault> {
@@ -2251,8 +2258,8 @@ macro_rules! norm_owned_tool_job_factory {
         }
 
         impl semio_framework::ToolJobFactory for $factory {
-            type Payload = <$crate::app_surface::NormBoundedCommandJobFactory<$app> as semio_framework::ToolJobFactory>::Payload;
-            type Job = <$crate::app_surface::NormBoundedCommandJobFactory<$app> as semio_framework::ToolJobFactory>::Job;
+            type Payload = <$crate::NormBoundedCommandJobFactory<$app> as semio_framework::ToolJobFactory>::Payload;
+            type Job = <$crate::NormBoundedCommandJobFactory<$app> as semio_framework::ToolJobFactory>::Job;
 
             fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
                 semio_framework::ToolJobFactory::keys(&self.0)
@@ -2287,9 +2294,9 @@ macro_rules! norm_owned_tool_job_factory {
 
         impl semio_framework_plugin::ArtifactOwnedToolJobFactory for $factory {
             type Owner = semio_framework_plugin::EditorApp<$app>;
-            const TOOL_IDS: &'static [&'static str] = $crate::app_surface::NORM_RETAINED_TOOL_IDS;
+            const TOOL_IDS: &'static [&'static str] = $crate::NORM_RETAINED_TOOL_IDS;
             const DOCUMENT_SCHEMA: &'static str = <$app as semio_framework_plugin::ArtifactEditor>::DOCUMENT_SCHEMA;
-            const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = $crate::app_surface::NORM_PUBLICATION_CONTRACTS;
+            const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = $crate::NORM_PUBLICATION_CONTRACTS;
         }
     };
 }

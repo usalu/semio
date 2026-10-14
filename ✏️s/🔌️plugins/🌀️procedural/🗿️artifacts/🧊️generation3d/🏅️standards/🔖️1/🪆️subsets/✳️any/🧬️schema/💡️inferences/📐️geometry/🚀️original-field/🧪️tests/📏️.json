@@ -1,0 +1,12 @@
+{
+ "version":1,
+ "widgets":[
+  {"id":"plane Ä","kind":"mesh.primitive.plane","params":{"width":4,"depth":6}},
+  {"id":"edge Ö","kind":"mesh.inspect.edge","params":{"edge":[0]}}
+ ],
+ "wires":[{"from":"plane Ä","fromPort":"mesh","to":"edge Ö","toPort":"mesh"}],
+ "expected":{"start":[-2,0,-3],"end":[2,0,-3],"length":4},
+ "orderedOutputs":["start","end","length"],
+ "allOutputOwnersClosed":true,
+ "monotonicProgress":true
+}

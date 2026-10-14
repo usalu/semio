@@ -2,7 +2,7 @@
 
 use super::super::delete_dimension::DeleteDimension;
 use super::CreateDimension;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateDimension, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.dimensions.contains_key(&payload.id) {

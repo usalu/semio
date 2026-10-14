@@ -192,7 +192,7 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
 /// leaving two bodies free to drift, so the law also refuses any second definition of them.
 #[semio_framework_async_macros::async_test]
 async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
-    let mut required: Vec<String> = interpreter::OwnedSemioExport::ALL.iter().map(|export| export.core_name().to_string()).collect();
+    let mut required: Vec<String> = OwnedSemioExport::ALL.iter().map(|export| export.core_name().to_string()).collect();
     required.sort();
     assert!(required.windows(2).all(|pair| pair[0] != pair[1]), "`OwnedSemioExport::ALL` names one core export twice");
 

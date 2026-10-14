@@ -27,7 +27,7 @@ pub struct RewritingArtifact {
     #[state(artifact)]
     pub rhs: Rhs,
     #[state(artifact)]
-    pub parameter_bindings: semio_framework_graph::manifest::PropertyBag,
+    pub parameter_bindings: semio_framework_graph_manifest::PropertyBag,
     #[state(artifact)]
     pub rule_layout: RuleLayout,
 }
@@ -126,7 +126,7 @@ impl Pattern {
 
 
 /// ♻️ Apply a rewrite rule to a graph.
-pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_graph::manifest::PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
+pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &semio_framework_graph_manifest::PropertyBag) -> Result<QueryResult, TrinityRewritingError> {
     let query = crate::standards::v1::subsets::any::io::text::snapshot::build_rule_query(rule, bindings);
     let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
     let (result, effects) = execute(graph, &parsed).map_err(TrinityRewritingError::Jack)?;
@@ -205,6 +205,6 @@ mod rule_application_tests;
 //#region 🔁️Re-exports
 pub use crate::LayoutPoint;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use semio_framework_graph::manifest::PropertyValue;
+pub use semio_framework_graph_manifest::PropertyValue;
 pub use semio_s_artifact_trinity_jack::Camera;
 //#endregion 🔁️Re-exports

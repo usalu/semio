@@ -30,9 +30,6 @@
     "directory": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
   }

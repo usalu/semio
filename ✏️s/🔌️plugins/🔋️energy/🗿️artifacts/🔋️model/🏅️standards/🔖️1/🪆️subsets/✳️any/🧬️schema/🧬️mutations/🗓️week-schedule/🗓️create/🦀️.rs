@@ -1,0 +1,48 @@
+//! 🗓️ Energy model mutation — `CreateWeeklySchedule`: Defines one week as seven daily profiles, Sunday first (slot 0) through Saturday (slot 6) — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
+
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+
+//#region 🔖️Mutation
+/// 🗓️ `create-weekly-schedule` payload. Defines one week as seven daily profiles, Sunday first (slot 0) through Saturday (slot 6) — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "create-weekly-schedule")]
+pub struct CreateWeeklySchedule {
+    pub index: u32,
+    pub id: crate::schedule::ScheduleId,
+    pub daily_schedule_ids: Vec<crate::schedule::ScheduleId>,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn create_weekly_schedule(index: u32, id: crate::schedule::ScheduleId, daily_schedule_ids: Vec<crate::schedule::ScheduleId>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateWeeklySchedule(CreateWeeklySchedule { index, id, daily_schedule_ids })
+}
+
+impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateWeeklySchedule {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "weekly-schedule", kind: "create-weekly-schedule", record: "CreatedWeeklySchedule" };
+
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Weekly Schedule {} at index {}", self.id.0, self.index), &format!("Wochenzeitplan {} an Index {} erstellen", self.id.0, self.index))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.to_string()]
+    }
+}
+//#endregion 🔖️Mutation

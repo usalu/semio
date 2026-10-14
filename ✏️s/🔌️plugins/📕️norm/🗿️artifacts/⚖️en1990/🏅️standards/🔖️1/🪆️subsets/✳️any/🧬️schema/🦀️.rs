@@ -110,8 +110,6 @@ impl En1990Artifact {
 }
 //#endregion 🔖️Conversions
 
-
-
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1990` — twenty handcrafted schema leaves.
 pub fn en1990_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
@@ -142,17 +140,6 @@ pub fn en1990_artifact_schema_descriptor() -> semio_framework_schema_registry::A
     }
 }
 //#endregion 🔖️Descriptor
-//#region 🏗️DerivedConstruction
-
-//#endregion 🏗️DerivedConstruction
-
-//#region 🧐️DerivedAnalysis
-
-//#endregion 🧐️DerivedAnalysis
-
-//#region 🧬️DerivedArtifactFacets
-
-//#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
 /// 📐️ Pure EN 1990 compliance helpers — combinations, partial-factor tables and national-annex
@@ -343,7 +330,7 @@ impl NationalAnnex for NaEn {
 
 // #region 🔖️NationalAnnexes
 use semio_framework_dispatch_macros::dyn_enum_close;
-use semio_s_artifact_norm_contract::__semio_dispatch_NationalAnnex;
+use semio_s_plugin_norm_compliance::__semio_dispatch_NationalAnnex;
 dyn_enum_close! {
     pub enum NationalAnnexes: NationalAnnex {
         De(NaDe),

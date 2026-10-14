@@ -1,8 +1,8 @@
 //! 👁️ Drawing mutation — `SetLayerVisible`: flips one layer's `visible` flag (addressed, single-field
 //! setter — the taxonomy's own canonical `set` example).
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 👁️ `set-layer-visible` payload.
@@ -19,17 +19,17 @@ pub struct SetLayerVisible {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn set_layer_visible(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, visible: bool) -> DrawingMutation {
-    DrawingMutation::SetLayerVisible(SetLayerVisible { layer_id, visible })
+pub fn set_layer_visible<Op: From<SetLayerVisible>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, visible: bool) -> Op {
+    Op::from(SetLayerVisible { layer_id, visible })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for SetLayerVisible {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for SetLayerVisible where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<SetLayerVisible> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer-visible", record: "SetLayerVisible" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

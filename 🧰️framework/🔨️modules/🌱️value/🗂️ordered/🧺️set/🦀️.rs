@@ -86,7 +86,6 @@ impl FromValue for OrderedSet {
 /// though it's never called at runtime (`ToValue`/`FromValue` is). So this also honors the
 /// `ordered-set-serde` feature (see this crate's `Cargo.toml`), which `os-flow` enables on its
 /// `semio-framework-replication` dependency for exactly that cross-crate derive to type-check.
-#[cfg(any(test, feature = "ordered-set-serde"))]
 impl serde::Serialize for OrderedSet {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
@@ -95,7 +94,6 @@ impl serde::Serialize for OrderedSet {
         sequence.end()
     }
 }
-#[cfg(any(test, feature = "ordered-set-serde"))]
 impl<'de> serde::Deserialize<'de> for OrderedSet {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor;

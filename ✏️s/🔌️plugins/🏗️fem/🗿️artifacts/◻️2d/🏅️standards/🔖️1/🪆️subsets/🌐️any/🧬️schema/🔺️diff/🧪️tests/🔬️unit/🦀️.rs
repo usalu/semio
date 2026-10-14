@@ -1,7 +1,7 @@
 //! 🧪️ Unit laws of the fem2d diff algebra: `absorb` coalesces same-key rows, `inverse` is the negative delta, and the absorbed diff applies exactly like its parts in sequence.
 
 use super::*;
-use crate::{FemDof, FemLoad, FemLoadCase};
+use crate::standards::v1::subsets::any::schema::structure::{FemDof, FemLoad, FemLoadCase};
 
 fn node(id: &str, x: f64) -> FemNode {
     FemNode { id: id.into(), x, y: 0.0 }

@@ -41,19 +41,19 @@ use crate::surface_contract::EditorApp;
 
 /// 🧭️ One immutable plugin runtime catalogue assembled before any shared registry commit.
 pub(crate) struct ArtifactRegistrationPlan {
-    schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    inference_services: Vec<ArtifactInferenceService>,
+    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub(crate) inference_services: Vec<ArtifactInferenceService>,
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
-    formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
-    subset_validators: Vec<&'static SubsetValidatorEntry>,
-    composers: Vec<&'static ComposerEntry>,
+    pub(crate) formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
+    pub(crate) subset_validators: Vec<&'static SubsetValidatorEntry>,
+    pub(crate) composers: Vec<&'static ComposerEntry>,
     languages: Vec<semio_framework_dsl::LanguageSpec>,
     document_codecs: Vec<store::os_store::serialization::ArtifactCodec>,
     document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
     native_snapshots: Vec<semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration>,
-    migrations: Vec<store::os_store::codec_registry::DialectMigration>,
-    schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub(crate) migrations: Vec<store::os_store::codec_registry::DialectMigration>,
+    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
     owner: String,
     host_media_handlers: Vec<HostMediaHandlerDeclaration>,
@@ -196,9 +196,9 @@ mod original_codec_binding_laws {
 pub(crate) struct PluginRuntimeRegistry {
     definitions: ArtifactDefinitionRegistry,
     document_bindings: Vec<semio_framework_os_kernel::io::ArtifactCodecBinding>,
-    schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
-    inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
-    schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
+    pub(crate) schemas: Vec<::semio_framework_schema_registry::ArtifactSchemaDescriptor>,
+    pub(crate) inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
+    pub(crate) schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
     inference_services: ArtifactInferenceServiceRegistry,
     routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
     /// 🕳️ Collected at `into_runtime` time and never consumed. Languages: plugin inits also register grammars one by one
@@ -359,7 +359,7 @@ pub(crate) fn commit_artifact_registration_plan(assembly: &semio_framework_schem
 pub struct ArtifactContribution {
     artifact_kind: String,
     mutations: Vec<ContributedMutationSpec>,
-    inference_services: Vec<ArtifactInferenceService>,
+    pub(crate) inference_services: Vec<ArtifactInferenceService>,
     inference_depends_on: BTreeMap<String, Vec<String>>,
 }
 

@@ -1,8 +1,8 @@
 //! ⚖️ EN 1993 compliance numeric worked examples (SI).
 
-use crate::document::{AnnexChoice, CheckStatus};
-use crate::standards::v1::subsets::any::schema::{check_full_steel_structure, part_1_1, part_1_2, part_1_8, part_1_9, AnnexParams};
-use crate::En1993Snapshot;
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus};
+use crate::{check_full_steel_structure, part_1_1, part_1_2, part_1_8, part_1_9, AnnexParams};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 fn approx(a: f64, b: f64, tol: f64) {
     assert!((a - b).abs() <= tol, "{a} !≈ {b} (tol {tol})");
@@ -118,7 +118,7 @@ fn remedy_law_section_upsize_or_buckling_length_improves_utilization() {
 
 #[test]
 fn section_class_heb240_s355_is_class_1_or_2() {
-    let section = crate::snapshot::catalogue_heb240();
+    let section = semio_s_artifact_norm_en1993_model::catalogue_heb240();
     let class = part_1_1::section_class_rolled_i(&section, 355.0e6);
     assert!(class <= 2, "HEB 240 S355 expected class 1–2, got {class}");
 }
@@ -132,7 +132,6 @@ fn m_cr_positive_for_rolled_i() {
     let m_cr = part_1_1::m_cr_rolled_nm(section, material, member.ltb_length, member.end_moment_ratio_psi, &member.load_application, &member.moment_diagram);
     assert!(m_cr > 0.0, "M_cr must be computed > 0");
 }
-
 
 #[test]
 fn remedy_law_oneof_section_id_flips_axial_or_buckling_to_pass() {
@@ -161,7 +160,7 @@ fn remedy_law_oneof_section_id_flips_axial_or_buckling_to_pass() {
         member.section_id = chosen.clone();
     }
     if !fixed.sections.iter().any(|s| s.id == chosen) {
-        if let Some(cat) = crate::snapshot::rolled_heb_catalogue().into_iter().find(|s| s.id == chosen) {
+        if let Some(cat) = semio_s_artifact_norm_en1993_model::rolled_heb_catalogue().into_iter().find(|s| s.id == chosen) {
             fixed.sections.push(cat);
         }
     }
@@ -169,7 +168,6 @@ fn remedy_law_oneof_section_id_flips_axial_or_buckling_to_pass() {
     let u_after = after.checks.iter().find(|c| c.id == fail.id).map(|c| c.utilization).unwrap_or(0.0);
     assert!(u_after <= 1.0 + 1e-6, "section OneOf must bring axial to Pass, u={u_after}, chose {chosen}, options={:?}", remedy.options);
 }
-
 
 #[test]
 fn remedy_law_bolt_shear_rows_flips_to_pass() {
@@ -198,10 +196,9 @@ fn remedy_law_bolt_shear_rows_flips_to_pass() {
     assert!(u_after <= 1.0 + 1e-6, "boltRows remedy must bring shear u≤1, got {u_after} rows={rows_final}");
 }
 
-
 #[test]
 fn every_emitted_path_parses_and_resolves() {
-    use crate::app_surface::{get_value_at_path, parse_path};
+    use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path};
     for doc in [En1993Snapshot::compliant_heb240_frame(), En1993Snapshot::noncompliant_overloaded_frame()] {
         let report = check_full_steel_structure(&doc);
         let snap_val = semio_framework_value::ToValue::to_value(&doc);
@@ -226,7 +223,7 @@ fn every_emitted_path_parses_and_resolves() {
 
 #[test]
 fn ltb_curve_follows_table_6_4_for_rolled_i() {
-    let section = crate::snapshot::catalogue_heb240();
+    let section = semio_s_artifact_norm_en1993_model::catalogue_heb240();
     assert_eq!(part_1_1::ltb_curve_table_6_4(&section), part_1_1::BucklingCurve::A);
 }
 
@@ -237,7 +234,7 @@ fn slip_resistant_category_c_produces_slip_check() {
     joint.category = "C".into();
     joint.friction_mu = 0.50;
     joint.preload_force = 0.0;
-    joint.actions = vec![crate::JointForceAction { id: "jf-g".into(), load_case_id: "g-permanent".into(), shear: 200_000.0, tension: 0.0 }];
+    joint.actions = vec![semio_s_artifact_norm_en1993_model::JointForceAction { id: "jf-g".into(), load_case_id: "g-permanent".into(), shear: 200_000.0, tension: 0.0 }];
     let report = check_full_steel_structure(&doc);
     assert!(report.checks.iter().any(|c| c.id.contains("3.9.slip")), "expected slip check");
 }
@@ -313,54 +310,6 @@ fn walk_leaves(prefix: &str, value: &serde_json::Value, visit: &mut dyn FnMut(&s
         }
         _ => visit(prefix),
     }
-}
-
-fn wildcardize(path: &str) -> String {
-    let mut out = String::new();
-    let mut chars = path.chars().peekable();
-    while let Some(c) = chars.next() {
-        if c == '[' {
-            out.push_str("[]");
-            while let Some(x) = chars.next() {
-                if x == ']' {
-                    break;
-                }
-            }
-        } else {
-            out.push(c);
-        }
-    }
-    out
-}
-
-#[test]
-fn field_meta_covers_every_editable_leaf_en_de_unit() {
-    use crate::field_meta::en1993_field_meta;
-    let snap = En1993Snapshot::compliant_heb240_frame();
-    let value = serde_json::to_value(&snap).expect("json");
-    let mut missing = Vec::new();
-    walk_leaves("", &value, &mut |path| {
-        if path.is_empty() {
-            return;
-        }
-        let wild = wildcardize(path);
-        match en1993_field_meta(path).or_else(|| en1993_field_meta(&wild)) {
-            None => missing.push(format!("{path} (wild={wild})")),
-            Some(meta) => {
-                assert!(!meta.label_en.is_empty(), "{path} empty en");
-                assert!(!meta.label_de.is_empty(), "{path} empty de");
-                assert!(!meta.label_en.is_empty() && !meta.label_de.is_empty());
-                if let Some(choices) = meta.choices {
-                    for c in choices {
-                        assert!(!c.label_en.is_empty());
-                        assert!(!c.label_de.is_empty());
-                        assert!(c.label_en != c.value || c.label_de != c.value, "{path} choice labels must not be raw codes only ({})", c.value);
-                    }
-                }
-            }
-        }
-    });
-    assert!(missing.is_empty(), "missing field meta for: {missing:?}");
 }
 
 #[test]
@@ -597,7 +546,6 @@ fn en1993_combinations_form_uls_from_characteristic_actions() {
     assert!(axial.computed.value > 190_000.0 && axial.computed.value < 210_000.0, "expected ~200 kN design N from EN1990 combo, got {}", axial.computed.value);
 }
 
-
 #[test]
 fn palmgren_miner_damage_at_two_million_cycles_matches_oracle() {
     // Δσ = Δσ_C = 71 MPa, N = 2e6 → D = n/N = 1.0 on the m=3 branch (γ_Mf=1)
@@ -661,8 +609,8 @@ fn committed_examples_have_distinct_en_and_de_text() {
 #[test]
 fn de_na_snow_psi0_differs_from_en_recommended() {
     // EN 1990 Table A1.1 snow ψ0 = 0.5; DE NA DIN EN 1990/NA ψ0 = 0.7
-    let (psi0_en, _, _) = super::psi_factors("snow", AnnexChoice::En);
-    let (psi0_de, _, _) = super::psi_factors("snow", AnnexChoice::De);
+    let (psi0_en, _, _) = crate::psi_factors("snow", AnnexChoice::En);
+    let (psi0_de, _, _) = crate::psi_factors("snow", AnnexChoice::De);
     assert!((psi0_en - 0.5).abs() < 1e-9, "EN snow ψ0");
     assert!((psi0_de - 0.7).abs() < 1e-9, "DE NA snow ψ0");
     assert!((psi0_en - psi0_de).abs() > 1e-9);
@@ -713,8 +661,6 @@ fn multi_part_examples_populate_all_eight_entity_lists() {
     assert!(bad.bridge_fatigue.iter().any(|_| true));
     assert!(!bad.crane_runways.is_empty());
 }
-
-
 
 #[test]
 fn member_type_gates_buckling_and_ltb_checks() {

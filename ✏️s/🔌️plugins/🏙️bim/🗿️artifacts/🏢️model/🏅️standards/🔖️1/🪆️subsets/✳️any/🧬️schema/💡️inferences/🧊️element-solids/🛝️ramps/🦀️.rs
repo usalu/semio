@@ -10,7 +10,7 @@
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, rectangle};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun, RampStrip};
-use crate::{standard_post_profile, standard_rail_profile, Ramp};
+use crate::standards::v1::subsets::any::schema::snapshot::{standard_post_profile, standard_rail_profile, Ramp};
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::vector::Xyz;

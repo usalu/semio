@@ -1,5 +1,5 @@
-use crate::editor::remodeling::engine::step_ceiling;
-use super::*;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::step_ceiling;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::*;
 
 // #region 🔖️TestFixtures
 /// 🎨️ Flat mid-gray `w x h` frame with zero gradient energy — a stand-in for a heavily blurred/
@@ -66,7 +66,6 @@ fn push_frame_stride_and_max_frames_sample() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn push_video_blur_gate_reports_counts() {
     let frames: Vec<Vec<u8>> = (0..9u32)
         .map(|i| {
@@ -118,9 +117,9 @@ fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodeling_camera::CameraPos
     let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
     let right = normalize3(cross3(forward, world_up));
     let up = cross3(right, forward);
-    let rotation = crate::algebra::Mat3d::from_axes(right, up, forward).transpose();
+    let rotation = semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d::from_axes(right, up, forward).transpose();
     let translation = scale3(rotation.mul_vec3(eye), -1.0);
-    remodeling_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(rotation), t: translation })
+    remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3(rotation), t: translation })
 }
 
 /// 📦️ Ray/axis-aligned-box slab intersection: nearest `t >= 0` hit point plus which axis (0=x, 1=y,
@@ -385,7 +384,6 @@ fn orbit_sfm_registers_enough_cameras_for_gauge() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn orbit_sfm_survives_jpeg_video_ingest() {
     // 🎞️ The capture `orbit_sfm_registers_enough_cameras_for_gauge` registers from lossless frames
     // (24 views 15° apart at 128 px), so what this test measures is the JPEG/MP4 path alone. At 16
@@ -451,7 +449,7 @@ mod long {
     /// MP4/MJPEG mux), `push_video` the raw bytes, drive `advance` to `Done` with zero host and zero
     /// file fixtures, then assert the extracted mesh is non-empty, its bounding box — after
     /// Sim3-aligning the reconstruction's arbitrary monocular-SfM gauge onto the synthetic scene's
-    /// own known world frame via [`crate::lie::umeyama`] over true-vs-recovered camera centers
+    /// own known world frame via [`crate::standards::v1::subsets::any::schema::lie_internals::umeyama`] over true-vs-recovered camera centers
     /// (camera 0 is pinned to `Se3::identity` and two-view translation is only unit-baseline-
     /// normalized, so raw reconstruction-vs-world-frame bbox comparison is meaningless without this)
     /// — roughly matches the cube's known extent, and — the literal "watertight" half of the
@@ -459,7 +457,6 @@ mod long {
     /// before `Unwrap`/texturing legitimately duplicates vertices at UV chart seams, reports
     /// `is_watertight == true`.
     #[test]
-    #[cfg(feature = "video-mp4")]
     fn video_in_yields_watertight_mesh_out() {
         const N_FRAMES: usize = 24;
         const SIZE: u32 = 128;
@@ -534,7 +531,7 @@ mod long {
         println!("[long] registered frames {:?}, {} sparse points", recon_cameras.iter().map(|(frame, _)| *frame).collect::<Vec<_>>(), engine.reconstruction.as_ref().map_or(0, |r| r.points.len()));
         assert!(recon_cameras.len() >= 3, "need >= 3 registered cameras to fit a Sim3 gauge alignment, got {}", recon_cameras.len());
         let (recovered_centers, true_centers): (Vec<[f64; 3]>, Vec<[f64; 3]>) = recon_cameras.iter().map(|&(frame_idx, pose)| (pose.0.inverse().act([0.0, 0.0, 0.0]), true_eyes[frame_idx])).unzip();
-        let gauge = crate::lie::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
+        let gauge = semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama(&recovered_centers, &true_centers, true).expect("Sim3 alignment between recovered and true camera centers must be solvable");
         println!("[long] gauge-fixing Sim3 from {} registered camera(s): scale={:.4}", recovered_centers.len(), gauge.s);
         for (slot, &(frame_idx, _)) in recon_cameras.iter().enumerate() {
             let aligned = gauge.act(recovered_centers[slot]);
@@ -663,11 +660,11 @@ fn adversarial_feature_match_and_track_worker_steps_stay_fuel_bounded() {
 #[test]
 #[ignore = "diagnostic stage trace: minutes of dense stereo, run explicitly"]
 fn debug_probe_synthetic_orbit() {
-    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut engine = ReconstructionEngine::new(&params);
-    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
-        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+    for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
+        let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
         engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
     }
     let mut last = engine.stage();
@@ -732,8 +729,10 @@ fn debug_probe_synthetic_orbit() {
 #[test]
 #[ignore = "diagnostic geometry audit against the fixture's ground truth, run explicitly"]
 fn diagnose_synthetic_orbit_geometry() {
-    use crate::lie::{Quatd, Se3, So3};
-    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Quatd;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
+    let truth: serde_json::Value = serde_json::from_str(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
     let number = |node: &serde_json::Value| node.as_f64().expect("number");
     let world_to_camera: Vec<Se3> = truth["extrinsics"]
         .as_array()
@@ -747,12 +746,12 @@ fn diagnose_synthetic_orbit_geometry() {
             Se3 { r: rotation, t: scale3(rotation.act(centre), -1.0) }
         })
         .collect();
-    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut engine = ReconstructionEngine::new(&params);
     let mut intrinsics = None;
-    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
-        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+    for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
+        let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
         intrinsics.get_or_insert_with(|| default_intrinsics(image.width, image.height, params.assumed_focal_ratio, params.distortion));
         engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
     }
@@ -787,7 +786,7 @@ fn diagnose_synthetic_orbit_geometry() {
         }
         e
     };
-    fn mat3d_to_array_local(m: &crate::algebra::Mat3d) -> [[f64; 3]; 3] {
+    fn mat3d_to_array_local(m: &semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d) -> [[f64; 3]; 3] {
         std::array::from_fn(|r| std::array::from_fn(|c| m.cols[c][r]))
     }
     let sampson = |e: &[[f64; 3]; 3], a: [f64; 3], b: [f64; 3]| {
@@ -969,8 +968,10 @@ fn diagnose_synthetic_orbit_geometry() {
 #[test]
 #[ignore = "diagnostic dense audit against the fixture's ground truth, run explicitly"]
 fn diagnose_synthetic_orbit_dense_against_truth() {
-    use crate::lie::{Quatd, Se3, So3};
-    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Quatd;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
+    let truth: serde_json::Value = serde_json::from_str(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
     let number = |node: &serde_json::Value| node.as_f64().expect("number");
     let half = number(&truth["scene"]["halfExtentM"]);
     let truth_world_to_camera: Vec<Se3> = truth["extrinsics"]
@@ -1016,12 +1017,12 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
         format!("n={} p10 {:.3} median {:.3} p90 {:.3}", values.len(), q(0.1), q(0.5), q(0.9))
     };
 
-    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     eprintln!("[DENSE] params dense={:?} voxel={} trunc={} dense_source_views={} max_dense_cameras={}", params.dense, params.tsdf_voxel_size, params.tsdf_truncation, params.dense_source_views, params.max_dense_cameras);
     let mut engine = ReconstructionEngine::new(&params);
-    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
-        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+    for (index, (_, bytes)) in semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames().enumerate() {
+        let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image("image/png", bytes).expect("decodes");
         engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
     }
     let mut captured: Option<(remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>)> = None;
@@ -1070,7 +1071,7 @@ fn diagnose_synthetic_orbit_dense_against_truth() {
     }
     let recovered: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(_, pose)| pose.0.inverse().t).collect();
     let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_world_to_camera[*frame].inverse().t).collect();
-    let sim = crate::lie::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
+    let sim = semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
     let centre_errors: Vec<f64> = recovered.iter().zip(&targets).map(|(r, t)| norm3(sub3(sim.act(*r), *t))).collect();
     eprintln!("[DENSE] {} cameras, sim scale {:.4}, centre error {}", recovered.len(), sim.s, quantiles(centre_errors));
     eprintln!("[DENSE] sparse surface distance {}", quantiles(reconstruction.points.iter().map(|p| surface(sim.act(*p))).collect()));
@@ -1306,7 +1307,7 @@ mod dense_dump {
                 let frame = r.u64();
                 let cols: [[f64; 3]; 3] = std::array::from_fn(|_| std::array::from_fn(|_| r.f64()));
                 let t = [r.f64(), r.f64(), r.f64()];
-                (frame, remodeling_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d { cols }), t }))
+                (frame, remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3(semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d { cols }), t }))
             })
             .collect();
         let points = (0..r.u64()).map(|_| [r.f64(), r.f64(), r.f64()]).collect::<Vec<_>>();
@@ -1335,10 +1336,12 @@ mod dense_dump {
 #[test]
 #[ignore = "diagnostic replay of a dumped dense stage, run explicitly"]
 fn diagnose_dense_replay() {
-    use crate::lie::{Quatd, Se3, So3};
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Quatd;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3;
+    use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3;
     let path = std::env::var("DENSE_DUMP").expect("DENSE_DUMP names the dump");
     let (reconstruction, dense_indices, depth_maps) = dense_dump::decode(&std::fs::read(path).expect("read dump"));
-    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    let truth: serde_json::Value = serde_json::from_str(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
     let number = |node: &serde_json::Value| node.as_f64().expect("number");
     let half = number(&truth["scene"]["halfExtentM"]);
     let truth_centres: Vec<[f64; 3]> = truth["extrinsics"]
@@ -1369,8 +1372,8 @@ fn diagnose_dense_replay() {
     };
     let recovered: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(_, pose)| pose.0.inverse().t).collect();
     let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_centres[*frame]).collect();
-    let sim = crate::lie::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
-    let scene = <crate::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let sim = semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
+    let scene = <semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     let mut extrema_min = [f64::INFINITY; 3];
     let mut extrema_max = [f64::NEG_INFINITY; 3];

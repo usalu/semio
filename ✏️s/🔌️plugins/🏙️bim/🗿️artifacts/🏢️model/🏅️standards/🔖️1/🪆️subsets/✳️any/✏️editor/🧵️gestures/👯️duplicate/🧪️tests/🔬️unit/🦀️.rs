@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::gestures::session::{Modifiers, Shape, ToolEvent};
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
-use crate::{Axis, ModelMutation, Point2};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2}, mutations::ModelMutation};
 
 fn only(mutations: &[ModelMutation]) -> &ModelMutation {
     match mutations {
@@ -46,7 +46,7 @@ async fn clicking_the_base_and_the_target_writes_one_copy_and_selects_it() {
     let step = rig.click(1.0, 4.0);
     let ModelMutation::CopyElements(copy) = only(&step.mutations) else { panic!("a copy-elements") };
     assert_eq!((copy.ids.clone(), copy.vector.x, copy.vector.y), (vec!["w-south".to_string()], 0.0, 3.0));
-    let minted = crate::mutations::modify::mint(&copy.prefix, 1, 0);
+    let minted = crate::standards::v1::subsets::any::schema::mutations::modify::mint(&copy.prefix, 1, 0);
     assert_eq!(rig.snapshot.walls[&minted].axis, line((0.0, 3.0), (8.0, 3.0)));
     assert!(rig.snapshot.walls.contains_key("w-south"), "the original stays");
     assert_eq!(step.pick.map(|pick| pick.targets), Some(vec![("wall".to_string(), minted)]), "the copy ends up selected");
@@ -97,7 +97,7 @@ async fn the_mirror_line_of_two_clicks_mirrors_in_place_and_control_makes_copies
     rig.click(10.0, -1.0);
     let step = rig.send(ToolEvent::Down(rig.pointer(10.0, 7.0, Modifiers { shift: false, ctrl: true, meta: false })));
     let ModelMutation::MirrorElements(mirror) = only(&step.mutations) else { panic!("a mirror-elements") };
-    let minted = crate::mutations::modify::mint(mirror.prefix.as_deref().expect("control makes copies"), 1, 0);
+    let minted = crate::standards::v1::subsets::any::schema::mutations::modify::mint(mirror.prefix.as_deref().expect("control makes copies"), 1, 0);
     assert_eq!(rig.snapshot.walls[&minted].axis, line((12.0, 0.0), (20.0, 0.0)));
     assert_eq!(rig.snapshot.walls["w-south"].axis, line((0.0, 0.0), (8.0, 0.0)), "the original stays");
 }
@@ -114,7 +114,7 @@ async fn the_array_takes_a_base_a_spacing_and_the_count_the_pointer_reaches() {
     let ModelMutation::ArrayElements(array) = only(&step.mutations) else { panic!("an array-elements") };
     assert_eq!(array.pattern, ArrayPattern::Linear { count: 3, spacing: Point2 { x: 0.0, y: 1.0 } });
     for copy in 1..=3 {
-        let minted = crate::mutations::modify::mint(&array.prefix, copy, 0);
+        let minted = crate::standards::v1::subsets::any::schema::mutations::modify::mint(&array.prefix, copy, 0);
         let shift = f64::from(copy);
         assert_eq!(rig.snapshot.walls[&minted].axis, line((0.0, shift), (8.0, shift)));
     }

@@ -1443,14 +1443,12 @@ impl ArtifactEditor for RasterPlayApp {
     }
 
     /// 📤️ Captures image output in a retained operation with framework-owned cancellation and disposal.
-    fn build_media_export_job(request:semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>)->Result<Option<ArtifactReservedToolJob>,Fault> {
-        if request.port!="image:out"||request.tool_id!=media_export::TOOL_ID {return Ok(None);}
-        Ok(Some(ArtifactReservedToolJob::new(media_export::RasterImageExportJob::new(request))))
+    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if request.as_ref().is_some_and(|request|request.port!="image:out"||request.tool_id!=media_export::TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"raster media producer requires its exact registered output port").into())}
+        media_export::RasterImageExportJob::admit_original(request,body,cx)
     }
 
-    fn build_snapshot_disposer()->Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        Some(Box::new(media_export::RasterExportSnapshotDisposer::default()))
-    }
+
 
     fn interaction_topology(doc:&ArtifactView<'_,RasterSnapshot>,_cfg:&ConfigView<'_,RasterConfig>)->Result<semio_framework_plugin::InteractionTopology, semio_framework_value::ValueError> {
         Ok(semio_framework_plugin::InteractionTopology {domains:std::collections::BTreeMap::from([(RASTER_INTERACTION_DOMAIN.into(),layer_selection::layer_topology(&doc.snapshot.layers))])})

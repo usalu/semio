@@ -5,7 +5,7 @@ import {lstat,readFile,writeFile,rename,rm,realpath,mkdir} from "node:fs/promise
 import {isAbsolute,join,relative} from "node:path";
 import {createSelectedGraphSourceReceiptV1,selectedGraphSourceReceiptHoldsV1,isGlobalGraphIdentityPathV1,validateSelectedGraphValueV1,type SelectedGraphJournalWitnessV1,type SelectedGraphScopeV1,type SelectedGraphSourcePortsV1,type SelectedGraphSourceReceiptV1} from "../🟦️.ts";
 import {graphEnvironmentIdentityV1} from "../../../../../🔌️nx-plugin/🌍️environment/🟦️.ts";
-import {observationsHold} from "../../../../../🔌️nx-plugin/👁️observation/🟨️.mjs";
+import {observationsHold} from "../../../../../🏗️build/👁️observation/🟨️.mjs";
 
 /** 🔏️ The graph producer binds its native file map and inference authorities to the live observer. */
 export interface SelectedGraphPublisherReceiptV1 {readonly version:1;readonly root:string;readonly rootDirectory:Readonly<{device:string;inode:string}>;readonly pid:number;readonly startedAt:number;readonly toolingIdentity:string;readonly environmentIdentity:string;readonly journal:SelectedGraphJournalWitnessV1;readonly graph:Readonly<Record<string,readonly string[]>>;readonly receipts:Readonly<Record<string,string>>;}

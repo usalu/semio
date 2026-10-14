@@ -3,12 +3,67 @@
   "title": "Original Actor Source Epoch",
   "type": "object",
   "additionalProperties": false,
-  "required": ["operation", "generation", "epochs", "refusedEpoch", "heapBytes"],
+  "required": [
+    "operation",
+    "generation",
+    "totalGrant",
+    "callPolicy",
+    "epochs",
+    "refusedEpoch",
+    "heapBytes",
+    "work"
+  ],
   "properties": {
-    "operation": {"type": "integer", "minimum": 1},
-    "generation": {"type": "integer", "minimum": 1},
-    "epochs": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
-    "refusedEpoch": {"const": 0},
-    "heapBytes": {"const": 0}
+    "totalGrant": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
+    "callPolicy": {"type":"array","minItems":5,"maxItems":5,"items":{"type":"integer","minimum":0}},
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "epochs": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "refusedEpoch": {
+      "const": 0
+    },
+    "heapBytes": {
+      "const": 0
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "clockBinding",
+        "absoluteDeadlineUs",
+        "fuel"
+      ],
+      "properties": {
+        "clockBinding": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "absoluteDeadlineUs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    }
   }
 }

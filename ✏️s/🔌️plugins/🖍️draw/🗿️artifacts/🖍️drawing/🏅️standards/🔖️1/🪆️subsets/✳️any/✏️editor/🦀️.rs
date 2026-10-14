@@ -7,22 +7,27 @@
 //! This file is a routing table: `handle` → `DrawingCommand::dispatch`, `render` → body-key → node, and a
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
-use crate::editor::drawing::commands::nudge_selection::{nudge_selection_left,nudge_selection_left_fast,nudge_selection_right,nudge_selection_right_fast,nudge_selection_up,nudge_selection_up_fast,nudge_selection_down,nudge_selection_down_fast};
-use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
-use crate::editor::drawing::commands::{
-    import_image, add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
-};
-use crate::editor::drawing::modes::edit;
-use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
-use crate::editor::drawing::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
-use crate::editor::drawing::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
-use crate::editor::drawing::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
-use crate::editor::drawing::presence::{DrawingPresence, DrawingPresenceMutation};
-use crate::editor::drawing::terminology::DrawingPlayLabels;
-use crate::op::DrawingMutation;
-use crate::schema::scene_identity::SceneIdentity;
-use crate::{DrawingSnapshot, DRAWING_DOCUMENT_SCHEMA};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+use crate::commands::nudge_selection::{nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast, nudge_selection_down, nudge_selection_down_fast};
+use crate::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
+use crate::commands::{import_image, add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible};
+use crate::modes::edit;
+use crate::modes::edit::windows::canvas as canvas_window;
+use crate::modes::edit::windows::canvas::config::DrawingCanvasWindowConfig;
+use crate::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient;
+use crate::panels::{catalogue as catalogue_panel, layers as layers_panel, properties as properties_panel};
+use crate::presence::{DrawingPresence, DrawingPresenceMutation};
+use crate::terminology::DrawingPlayLabels;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 use semio_framework_job::FixedOperationOwner;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionDescriptor;
@@ -66,13 +71,13 @@ use pack::snapshot::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 use std::collections::HashMap;
 
-pub use canvas_window::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
-pub use catalogue_panel::DRAWING_PLAY_BODY_CATALOGUE;
-pub use layers_panel::{DRAWING_LAYER_KIND_DRAG_MIME, DRAWING_PLAY_BODY_LAYERS};
-pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
+pub use crate::modes::edit::windows::canvas::{DRAWING_PLAY_BODY_COMPOSITE, DRAWING_PLAY_WINDOW_CANVAS};
+pub use crate::panels::catalogue::DRAWING_PLAY_BODY_CATALOGUE;
+pub use crate::panels::layers::{DRAWING_LAYER_KIND_DRAG_MIME, DRAWING_PLAY_BODY_LAYERS};
+pub use crate::panels::properties::DRAWING_PLAY_BODY_PROPERTIES;
 
 #[path = "🕹️interaction/🦀️.rs"]
-pub(crate) mod interaction;
+pub mod interaction;
 #[path = "🧮️status/🦀️.rs"]
 mod status;
 #[path="📋️clipboard/🦀️.rs"]
@@ -102,8 +107,8 @@ fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
 /// 🕹️ Framework-owned layer selection and snapshot-bound path point selection.
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
 pub const DRAWING_INTERACTION_GRANULARITY: &str = "stroke";
-pub(crate) const DRAWING_POINT_DOMAIN: &str = "points";
-pub(crate) const DRAWING_POINT_GRANULARITY: &str = "point";
+pub const DRAWING_POINT_DOMAIN: &str = "points";
+pub const DRAWING_POINT_GRANULARITY: &str = "point";
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
@@ -455,7 +460,7 @@ mod args_bridge {
                         let input = if kind=="color" {
                             let alpha=fields.iter().find(|(key,_)|key=="value").and_then(|(_,value)|value.as_array()).and_then(|parts|parts.get(3)).and_then(|value|value.as_f64()).unwrap_or(1.0);
                             let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);
-                            semio_framework_value::ToValue::to_value(&crate::standards::v1::subsets::any::io::text::color::decode_color_text(input.as_str().ok_or_else(||Fault::from("Choose a color"))?,alpha,&mut control).map_err(|error|Fault::from(error.to_string()))?)
+                            semio_framework_value::ToValue::to_value(&semio_s_artifact_draw_drawing_io::text::color::decode_color_text(input.as_str().ok_or_else(||Fault::from("Choose a color"))?,alpha,&mut control).map_err(|error|Fault::from(error.to_string()))?)
                         } else if kind=="type" {
                             semio_framework_value::DslValue::String(input.as_str().ok_or_else(|| Fault::from("Choose a fill value"))?.into())
                         } else {
@@ -676,8 +681,8 @@ impl DrawingInstanceOperationOwner {
             }
             geometry_session::prepare_query(source_identity,snapshot);
             let admitted=geometry_session::with_query(source_identity,|status,borrowed|match status {
-                crate::schema::scene_identity::admission::SceneAdmissionStatus::Pending=>Ok(None),
-                crate::schema::scene_identity::admission::SceneAdmissionStatus::Ready=>{
+                semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Pending=>Ok(None),
+                semio_s_artifact_draw_drawing_scene::identity::admission::SceneAdmissionStatus::Ready=>{
                     let borrowed=borrowed.unwrap();
                     if query.traversal_complete{query.cursor.validate_cache(&borrowed)?;Ok(Some(true))}
                     else{Ok(Some(query.cursor.advance(snapshot,&borrowed)))}
@@ -943,12 +948,12 @@ struct DrawingGestureOperationJob {
     raw_validated: bool,
     completed: bool,
     closing: bool,
-    outcomes: crate::host::outcome::DrawingJobOutcomes,
+    outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes,
 }
 
 impl DrawingGestureOperationJob {
-    fn turn(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> crate::host::outcome::DrawingJobTurn {
-        use crate::host::outcome::DrawingJobTurn;
+    fn turn(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn {
+        use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
         if self.outcomes.faulted() {
             return DrawingJobTurn::Fault;
         }
@@ -1155,7 +1160,7 @@ impl semio_framework::ToolJobFactory for DrawingGestureOperationJobFactory {
     }
 
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
-        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: crate::host::outcome::DrawingJobOutcomes::new() })
+        Ok(DrawingGestureOperationJob { payload: Some(payload), pending_completion_rejection: None, raw_input: None, raw_page_cursor: 0, raw_byte_cursor: 0, decoder: None, raw_validated: true, completed: false, closing: false, outcomes: semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes::new() })
     }
 
     fn create_job_from_wire_pages_with_payload(
@@ -1773,7 +1778,7 @@ impl DrawingBoundedProofs {
 //#endregion 🧾️ProofCatalogs
 
 //#region 🔖️DrawingPlayApp
-pub(crate) fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>) -> String {
+pub fn drawing_document_revision(doc: &ArtifactView<'_, DrawingSnapshot>) -> String {
     doc.operation_optional().map_or_else(|| "0".repeat(64), |operation| operation.canonical_base_revision_hex())
 }
 
@@ -1785,7 +1790,7 @@ pub struct DrawingPlayApp {
 
 impl DrawingPlayApp {
     pub fn arena_boot_fault(&self) -> Option<&'static str> {
-        self.arena_boot_fault.or_else(crate::spr::drawing_mutation_arena_pool_fault)
+        self.arena_boot_fault.or_else(semio_s_artifact_draw_drawing_host::owned::drawing_mutation_arena_pool_fault)
     }
 }
 
@@ -1816,9 +1821,9 @@ fn render_drawing_body(
 
 impl Default for DrawingPlayApp {
     fn default() -> Self {
-        let arena_boot_fault = match crate::spr::request_drawing_mutation_arena_pool() {
-            crate::spr::DrawingMutationArenaPoolAvailability::Fault(error) => Some(error),
-            crate::spr::DrawingMutationArenaPoolAvailability::Ready | crate::spr::DrawingMutationArenaPoolAvailability::NotReady | crate::spr::DrawingMutationArenaPoolAvailability::Contended => None,
+        let arena_boot_fault = match semio_s_artifact_draw_drawing_host::owned::request_drawing_mutation_arena_pool() {
+            semio_s_artifact_draw_drawing_host::owned::DrawingMutationArenaPoolAvailability::Fault(error) => Some(error),
+            semio_s_artifact_draw_drawing_host::owned::DrawingMutationArenaPoolAvailability::Ready | semio_s_artifact_draw_drawing_host::owned::DrawingMutationArenaPoolAvailability::NotReady | semio_s_artifact_draw_drawing_host::owned::DrawingMutationArenaPoolAvailability::Contended => None,
         };
         Self { arena_boot_fault }
     }
@@ -1845,7 +1850,7 @@ impl ArtifactEditor for DrawingPlayApp {
 
     type Command = DrawingCommand;
 
-    const DIALECT: semio_framework_artifact_reference::Dialect = crate::DRAWING_DIALECT;
+    const DIALECT: semio_framework_artifact_reference::Dialect = semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> Result<protocol::InteractionTopology, semio_framework_value::ValueError> {
@@ -1864,7 +1869,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::drawing_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_draw_drawing_host::owned::drawing_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
@@ -1873,7 +1878,7 @@ impl ArtifactEditor for DrawingPlayApp {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation, actor))
+        Ok(semio_s_artifact_draw_drawing_host::owned::drawing_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1890,11 +1895,11 @@ impl ArtifactEditor for DrawingPlayApp {
 
     /// 👥️ Returned local reads retain the actual Draw presence fields and original Arc backing.
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::drawing::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(crate::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(crate::editor::drawing::presence::DrawingPresenceRetirementFactory))
+        Some(std::sync::Arc::new(crate::presence::DrawingPresenceRetirementFactory))
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
@@ -1990,11 +1995,11 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
-        Some(crate::editor::drawing::config::app_schema_descriptor())
+        Some(crate::config::app_schema_descriptor())
     }
 
     fn initial_snapshot() -> DrawingSnapshot {
-        crate::standards::v1::subsets::any::schema::default_drawing_document("empty", None)
+        semio_s_artifact_draw_drawing_model::default_drawing_document("empty", None)
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -2140,7 +2145,7 @@ impl ArtifactEditor for DrawingPlayApp {
 /// envelope terminal shell reached Drop before its app-owned bounded retirement authority detached
 /// every nested owner`) the moment the react shell dispatched its boot `setActiveExample`
 /// (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-16).
-pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
+pub fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <DrawingSnapshot as ArtifactPack>::encode_pack(scene);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(&scene.id.to_string_owner(), DRAWING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
@@ -2185,7 +2190,7 @@ pub fn drawing_vector_out_port() -> semio_framework::MediaPortSpec {
 /// reuses `crate::standards::v1::subsets::any::io::drawing_document_to_svg` (the same semio/drawing↔svg bridge the
 /// export-svg shell path uses), so there is exactly one SVG renderer.
 pub fn drawing_vector_media(doc: &DrawingSnapshot) -> Result<Media, MediaError> {
-    let (svg, _width, _height) = crate::standards::v1::subsets::any::io::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
+    let (svg, _width, _height) = semio_s_artifact_draw_drawing_write::drawing_document_to_svg(doc).map_err(|error| MediaError::Payload("vector:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "2d.drawing".into(), json: svg } })
 }
 //#endregion 🔖️Io
@@ -2210,8 +2215,8 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
         status: Some(vec![WindowEngagementStatus { id: "drawing-layer-count".into(), text: "0 layers · 0 selected".into() }]),
         possible_engagements: None,
     };
-    Editor::builder(crate::DRAWING_DIALECT).document(["semio", "drawing"])
-            .artifact_kind(crate::artifact_kind())
+    Editor::builder(semio_s_artifact_draw_drawing_model::DRAWING_DIALECT).document(["semio", "drawing"])
+            .artifact_kind(semio_s_artifact_draw_drawing_model::artifact_kind())
             .icon_id("drawing")
             .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id("edit")
@@ -2558,7 +2563,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region.
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
+pub mod unit_tests;
 /// 🚪️ Host document-archive door law for the example load (`setActiveExample` → `LoadDocument`).
 #[cfg(test)]
 #[path = "🧪️tests/🔬️archive-load/🦀️.rs"]
@@ -2602,4 +2607,92 @@ pub fn drawing_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
 
 #[cfg(test)]
 #[path="🧪️tests/🪪️identity/🦀️.rs"]
-pub(crate) mod identity_test;
+pub mod identity_test;
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod commands {
+    #[path = "🎮️commands/➕️add-layer/🦀️.rs"]
+    pub mod add_layer;
+    #[path = "🎮️commands/✅️canvas-commit-draft/🦀️.rs"]
+    pub mod canvas_commit_draft;
+    #[path = "🎮️commands/🖱️canvas-double-click/🦀️.rs"]
+    pub mod canvas_double_click;
+    #[path = "🎮️commands/🚪️canvas-escape/🦀️.rs"]
+    pub mod canvas_escape;
+    #[path = "../../../../../✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"]
+    pub mod canvas_pointer_down;
+    #[path = "🎮️commands/↔️canvas-pointer-move/🦀️.rs"]
+    pub mod canvas_pointer_move;
+    #[path = "🎮️commands/⬆️canvas-pointer-up/🦀️.rs"]
+    pub mod canvas_pointer_up;
+    #[path = "🎮️commands/🔀️combine-boolean/🦀️.rs"]
+    pub mod combine_boolean;
+    #[path = "🎮️commands/📃️commit-document/🦀️.rs"]
+    pub mod commit_document;
+    #[path = "🎮️commands/🗑️delete-layer/🦀️.rs"]
+    pub mod delete_layer;
+    #[path = "🎮️commands/⌫️delete-selection/🦀️.rs"]
+    pub mod delete_selection;
+    #[path = "🎮️commands/📥️drop-layer-kind/🦀️.rs"]
+    pub mod drop_layer_kind;
+    #[path = "🎮️commands/📋️duplicate-layer/🦀️.rs"]
+    pub mod duplicate_layer;
+    #[path = "🎮️commands/🎨️edit-fill/🦀️.rs"]
+    pub mod edit_fill;
+    #[path = "🎮️commands/✏️edit-path/🦀️.rs"]
+    pub mod edit_path;
+    #[path = "🎮️commands/🎛️edit-selection/🦀️.rs"]
+    pub mod edit_selection;
+    #[path = "🎮️commands/🧭️engagement-input/🦀️.rs"]
+    pub mod engagement_input;
+    #[path = "🎮️commands/📤️engagement-submit/🦀️.rs"]
+    pub mod engagement_submit;
+    #[path = "🎮️commands/📤️export-document/🦀️.rs"]
+    pub mod export_document;
+    #[path = "🎮️commands/📥️import-image/🦀️.rs"]
+    pub mod import_image;
+    #[path = "🎮️commands/📄️load-document-json/🦀️.rs"]
+    pub mod load_document_json;
+    #[path = "🎮️commands/🚚️move-layer/🦀️.rs"]
+    pub mod move_layer;
+    #[path = "🎮️commands/🕹️nudge-selection/🦀️.rs"]
+    pub mod nudge_selection;
+    #[path = "🎮️commands/🩹️patch-layer/🦀️.rs"]
+    pub mod patch_layer;
+    #[path = "🎮️commands/🧵️patch-layers/🦀️.rs"]
+    pub mod patch_layers;
+    #[path = "🎮️commands/🖼️set-active-example/🦀️.rs"]
+    pub mod set_active_example;
+    #[path = "🎮️commands/📷️set-camera/🦀️.rs"]
+    pub mod set_camera;
+    #[path = "🎮️commands/🔭️set-camera-zoom/🦀️.rs"]
+    pub mod set_camera_zoom;
+    #[path = "🎮️commands/🌫️set-selected-opacity/🦀️.rs"]
+    pub mod set_selected_opacity;
+    #[path = "🎮️commands/📸️set-snapshot/🦀️.rs"]
+    pub mod set_snapshot;
+    #[path = "🎮️commands/👁️toggle-layer-visible/🦀️.rs"]
+    pub mod toggle_layer_visible;
+}
+#[path = "🎚️config/🦀️.rs"]
+pub mod config;
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/✏️edit/🦀️.rs"]
+    pub mod edit;
+}
+#[path = "."]
+pub mod panels {
+    #[path = "📌️panels/🛍️catalogue/🦀️.rs"]
+    pub mod catalogue;
+    #[path = "📌️panels/🗂️layers/🦀️.rs"]
+    pub mod layers;
+    #[path = "📌️panels/🔍️properties/🦀️.rs"]
+    pub mod properties;
+}
+#[path = "👥️presence/🦀️.rs"]
+pub mod presence;
+#[path = "🗣️terminology/🦀️.rs"]
+pub mod terminology;
+//#endregion 🪢️TaxonomyMounts

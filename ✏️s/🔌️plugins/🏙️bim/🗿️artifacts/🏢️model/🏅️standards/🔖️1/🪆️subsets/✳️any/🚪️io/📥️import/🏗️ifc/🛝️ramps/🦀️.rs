@@ -6,7 +6,7 @@ use super::data::label;
 use super::reader::{text, Doc};
 use super::spatial::authoring_of;
 use super::Import;
-use crate::Ramp;
+use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 🛝️ Reads the ramps of the file into the model.

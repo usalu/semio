@@ -2,11 +2,11 @@
 
 pub use semio_framework_canvas as canvas;
 pub use geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
-pub use graph::drawing::routing::{
+pub use semio_framework_graph_drawing::routing::{
     circle_handle_angle_toward, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path,
     handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, rectangle_handle_angle_toward,
 };
-pub use graph::manifest::{PropertyBag, PropertyValue};
+pub use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 pub use graph::{
     self as graph, orient_endpoints, property_bag_from_value, property_bag_to_value, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
 };

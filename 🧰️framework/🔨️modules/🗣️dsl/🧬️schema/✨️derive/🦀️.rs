@@ -22,7 +22,7 @@ pub fn derive_enum(input: TokenStream) -> TokenStream { emit_enum(parse_macro_in
 pub fn derive_receiving(input:TokenStream)->TokenStream{emit_receiving(parse_macro_input!(input as DeriveInput)).into()}
 
 fn receiving_fields(fields:&Fields,construct:proc_macro2::TokenStream,frame:syn::Ident)->proc_macro2::TokenStream{
- let plans=plan_fields(fields);let declared=plans.iter().filter(|plan|!plan.skip).map(|plan|plan.id);let required=plans.iter().filter(|plan|!plan.skip&&!plan.optional).map(|plan|plan.id);let members=plans.iter().map(|plan|{let ident=&plan.ident;let ty=&plan.field_ty;quote!{#ident:Option<#ty>}});let empty=plans.iter().map(|plan|{let ident=&plan.ident;quote!{#ident:None}});
+ let plans=plan_fields(fields);let declared=plans.iter().filter(|plan|!plan.skip).map(|plan|plan.id);let required=plans.iter().filter(|plan|!plan.skip).map(|plan|!plan.optional);let members=plans.iter().map(|plan|{let ident=&plan.ident;let ty=&plan.field_ty;quote!{#ident:Option<#ty>}});let empty=plans.iter().map(|plan|{let ident=&plan.ident;quote!{#ident:None}});
  let bindings=plans.iter().map(|plan|{
   let FieldPlan{ident,id,kind,field_ty,block,..}=plan;
   if plan.skip{return quote!{slot.as_mut().unwrap().#ident=Some(None);}}
@@ -35,7 +35,7 @@ fn receiving_fields(fields:&Fields,construct:proc_macro2::TokenStream,frame:syn:
  });
  let inits=plans.iter().map(|plan|{let ident=&plan.ident;quote!{#ident:slot.as_mut().unwrap().#ident.take().unwrap()}});
  let output=if matches!(fields,Fields::Unit){construct}else{quote!{#construct{#(#inits),*}}};
- quote!{::semio_framework_dsl_record::receiving::work(owner,0,1)?;::semio_framework_dsl_record::receiving::owned::declared_record(record,&[#(#declared),*],&[#(#required),*])?;#[derive(::semio_framework_value::RetireOwned)]struct #frame{#(#members),*}owner.receive_nested::<#frame,Self>(|slot,original|{*slot=Some(#frame{#(#empty),*});#(#bindings)*::semio_framework_dsl_record::receiving::work(original,::std::mem::size_of::<Self>(),1)?;Ok(#output)})}
+ quote!{::semio_framework_dsl_record::receiving::owned::declared_record(record,&[#((#declared,#required)),*],owner)?;#[derive(::semio_framework_value::RetireOwned)]struct #frame{#(#members),*}owner.receive_nested::<#frame,Self>(|slot,original|{*slot=Some(#frame{#(#empty),*});#(#bindings)*::semio_framework_dsl_record::receiving::work(original,::std::mem::size_of::<Self>(),1)?;Ok(#output)})}
 }
 
 fn emit_receiving(input:DeriveInput)->proc_macro2::TokenStream{

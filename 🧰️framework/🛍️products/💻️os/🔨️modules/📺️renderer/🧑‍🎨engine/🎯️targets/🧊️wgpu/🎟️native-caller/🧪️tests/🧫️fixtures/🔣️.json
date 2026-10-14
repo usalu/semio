@@ -11,6 +11,16 @@
       "maximumCapacityBytes": 1048576,
       "maximumReleaseBytes": 1048576,
       "maximumDepth": 256
+    },
+    "retirementReserve": {
+      "fuel": 16,
+      "grant": {
+        "maximumItems": 32,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 256
+      }
     }
   },
   "presentationGenerations": [
@@ -61,5 +71,55 @@
     "replacementWhileBorrowed": false,
     "policyDurationChanged": false,
     "sameStockRefill": false
+  },
+  "productionPolicy": {
+    "fuel": 67108864,
+    "maximumElapsedMicroseconds": 30000000,
+    "grant": {
+      "maximumItems": 33554432,
+      "maximumCopyBytes": 536870912,
+      "maximumCapacityBytes": 268435456,
+      "maximumReleaseBytes": 536870912,
+      "maximumDepth": 256
+    },
+    "retirementReserve": {
+      "fuel": 8388608,
+      "grant": {
+        "maximumItems": 4194304,
+        "maximumCopyBytes": 8388608,
+        "maximumCapacityBytes": 4194304,
+        "maximumReleaseBytes": 268435456,
+        "maximumDepth": 256
+      }
+    }
+  },
+  "expiry": {
+    "semanticDenied": true,
+    "sourceAdmissionDenied": true,
+    "clockUnchanged": true,
+    "deadlineUnchanged": true,
+    "sourceLoanReturnPaid": true,
+    "rootClosePaid": true,
+    "stockRefill": false
+  },
+  "productionReceivingBound": {
+    "geometryBytes": 16777216,
+    "minimumFieldItemBytes": 4,
+    "geometryStepsPerItem": 2,
+    "componentDomains": 3,
+    "maximumComponentsPerDomain": 600000,
+    "labelStepsPerComponent": 4,
+    "metadataSteps": 65536
+  },
+  "clockAuthority": {
+    "mintOnlyOnActualSource": true,
+    "opaqueBinding": true,
+    "functionAddressSerialized": false,
+    "mismatchReturnsNoClock": true,
+    "continuationKeepsBinding": true,
+    "sourceReturnDisarmsClock": true,
+    "totalFuelSurvivesBusinessView": true,
+    "absoluteDeadlineSurvivesBusinessView": true,
+    "cleanupUsesInitialReserve": true
   }
 }

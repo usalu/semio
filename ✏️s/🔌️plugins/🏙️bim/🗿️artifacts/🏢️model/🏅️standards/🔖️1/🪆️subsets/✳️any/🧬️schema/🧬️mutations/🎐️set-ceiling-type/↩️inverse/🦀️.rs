@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetCeilingType`: an absolute `SetCeilingType` restoring the base value of exactly the fields the forward really changes, none when the ceiling type is absent or nothing changes.
 
 use super::SetCeilingType;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetCeilingType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.ceiling_types.get(&payload.id) else {

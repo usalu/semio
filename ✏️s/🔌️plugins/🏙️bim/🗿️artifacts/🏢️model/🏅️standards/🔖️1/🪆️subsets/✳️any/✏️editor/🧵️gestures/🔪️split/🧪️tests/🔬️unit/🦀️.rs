@@ -1,6 +1,6 @@
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
 use crate::editor::bim::gestures::session::Shape;
-use crate::{Axis, ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::Axis, mutations::ModelMutation};
 
 fn ends(rig: &Rig, wall: &str) -> ([f64; 2], [f64; 2]) {
     let (Axis::Line { start, end } | Axis::Arc { start, end, .. }) = &rig.snapshot.walls[wall].axis;

@@ -1,7 +1,7 @@
 //! 🧬️ Ifc2x3Snapshot schema (2x3/🏢️cobie) — reuses the ✳️base subset's `Ifc2x3Snapshot` verbatim.
 //! Basic FM Handover (carries COBie 2.4) is a validation-gated dialect STAMP, not a new type.
 
-pub use crate::standards::v2x3::subsets::base::schema::*;
+pub use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::*;
 
 //#region 🧬️Mutations
 /// 🧬️ This subset's OWN mutation vocabulary — one kind per Basic FM Handover conformance rule, not a copy of

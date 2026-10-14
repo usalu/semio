@@ -12,7 +12,10 @@ pub use crate::schema::snapshot::GisMapSnapshot;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
 //#region 🔹Constants
 
@@ -859,7 +862,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -954,7 +956,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]
@@ -1000,11 +1001,6 @@ pub mod inference_schema;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "💡️inference/👷️worker/🦀️.rs"]
 pub mod inference_worker;
-
-
-#[cfg(all(feature="mcp-service",not(target_arch="wasm32")))]
-#[path="💡️inference/🌉️mcp/🦀️.rs"]
-pub mod inference_mcp;
 
 #[path = "🗺️tiles/🦀️.rs"]
 pub mod tile_coordinates;

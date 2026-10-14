@@ -18,6 +18,7 @@ name = "semio_framework_os_flow"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-os-infinite-directed-presentation = { path = "../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
@@ -25,7 +26,6 @@ semio-framework-dsl-record = { path = "../../../../../../🔨️modules/🗣️d
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -39,8 +39,8 @@ semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀�
 semio-framework-async = { workspace = true }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
-math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
-graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-graph-manifest = { path = "../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+semio-framework-graph-dsl = { path = "../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
@@ -62,7 +62,7 @@ semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-l
 # `--tests`/`cargo test` builds of THIS crate — see `protocol`'s
 # `🌱️value/🗂️ordered/🧺️set/🦀️.rs` `ArrayWire` docstring for why plain `#[cfg(test)]` there,
 # alone, is not enough for a cross-crate consumer's own test-gated derive.
-semio-framework-replication = { workspace = true, features = ["ordered-set-serde"] }
+semio-framework-replication = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🛡️ Test-only: the fixed per-surface admission constant and `SurfaceKind` the node-graph surface bound
 # law (`a_node_graph_surface_stays_under_the_fixed_admission_with_five_hundred_operators`) measures

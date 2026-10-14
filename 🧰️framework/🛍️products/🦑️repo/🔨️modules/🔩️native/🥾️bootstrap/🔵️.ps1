@@ -39,19 +39,31 @@ function Write-Step {
 }
 
 function Get-RepoRoot {
-    if ($env:COMPOSE_REPO_ROOT) {
-        return (Resolve-Path $env:COMPOSE_REPO_ROOT).Path
-    }
-    $dir = $PSScriptRoot
+    param([string]$Start = $PSScriptRoot)
+    $explicit = [bool]$env:SEMIO_WORKSPACE_ROOT
+    $dir = (Resolve-Path -LiteralPath $(if ($explicit) { $env:SEMIO_WORKSPACE_ROOT } else { $Start })).Path
     for ($i = 0; $i -lt 32; $i++) {
-        if (Test-Path -LiteralPath (Join-Path $dir "nx.json")) {
-            return (Resolve-Path $dir).Path
+        $project = Join-Path $dir "📋️project.json"
+        $package = Join-Path $dir "package.json"
+        if ((Test-Path -LiteralPath $project -PathType Leaf) -and (Test-Path -LiteralPath $package -PathType Leaf) -and
+            -not ((Get-Item -LiteralPath $project).Attributes -band [IO.FileAttributes]::ReparsePoint) -and
+            -not ((Get-Item -LiteralPath $package).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            $json = Get-Content -LiteralPath $package -Raw
+            if ([string]::IsNullOrWhiteSpace($json)) { throw "Invalid workspace package: $package" }
+            $manifest = $json | ConvertFrom-Json -ErrorAction Stop
+            if ($null -ne $manifest) {
+                $property = $manifest.PSObject.Properties | Where-Object { $_.Name -ceq "workspaces" }
+                if ($null -ne $property -and ($property.Value -is [Array] -or $property.Value -is [PSCustomObject])) {
+                    return $dir
+                }
+            }
         }
+        if ($explicit) { break }
         $parent = Split-Path $dir -Parent
-        if ($parent -eq $dir) { break }
+        if (-not $parent -or $parent -eq $dir) { break }
         $dir = $parent
     }
-    return (Resolve-Path $PSScriptRoot).Path
+    throw "Workspace root requires paired package.json workspaces and 📋️project.json"
 }
 
 function Join-HomePath {
@@ -235,8 +247,8 @@ function Install-EditorExtensions {
     $vsixPath = Join-Path $RepoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🧩️vscode\📦️packages\🟦️typescript\🧩️repo.vsix"
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "@semio-tech/repo-vscode:build") -WorkingDirectory $RepoRoot
-    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "@semio-tech/repo-vscode:build-vsix") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("repo", "run", "@semio-tech/repo-vscode:build") -WorkingDirectory $RepoRoot
+    Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("repo", "run", "@semio-tech/repo-vscode:build-vsix") -WorkingDirectory $RepoRoot
 
     foreach ($editorCli in $EditorCliPaths) {
         foreach ($extension in $recommendations) {
@@ -342,9 +354,7 @@ function Stop-RepoPythonProcesses {
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
 Write-WindowsLongPathsGuidance
-$nxWorkspaceData = Join-Path $repoRoot ".nx\workspace-data"
-Ensure-Directory -Path $nxWorkspaceData
-$env:NX_WORKSPACE_DATA_DIRECTORY = $nxWorkspaceData
+$env:SEMIO_WORKSPACE_ROOT = $repoRoot
 Refresh-CurrentProcessPath
 
 #region 🧰️MachineInstall
@@ -438,9 +448,9 @@ if (-not $SkipRepoBootstrap) {
     $bunPath = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
 
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Write-Step "Building repo client binary…"
-    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "@semio-tech/repo-client:build") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("repo", "run", "@semio-tech/repo-client:build") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱️RepoBootstrap

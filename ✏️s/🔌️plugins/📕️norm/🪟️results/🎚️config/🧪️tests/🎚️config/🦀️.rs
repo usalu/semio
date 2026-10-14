@@ -1,7 +1,8 @@
 //! 🧪️ Public config protocol laws checked against the language-neutral fixture and serde.
 
 use semio_framework_os_kernel::{apply_diff, Mutation, OpBinary, OpText};
-use semio_s_artifact_norm_contract::results_window_config::{NormResultsWindowConfig, NormResultsWindowConfigMutation};
+use semio_s_plugin_norm_results_config::schema::NormResultsWindowConfig;
+use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
 
 #[derive(serde::Deserialize)]
 #[serde(deny_unknown_fields)]

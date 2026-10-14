@@ -1,5 +1,7 @@
 //! 🔺️ Controlled native geometry buffers, complete PBR material fields and texture octets.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioUv, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use crate::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioPrimitive, SemioTopology, SemioMaterial, SemioTexture, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;

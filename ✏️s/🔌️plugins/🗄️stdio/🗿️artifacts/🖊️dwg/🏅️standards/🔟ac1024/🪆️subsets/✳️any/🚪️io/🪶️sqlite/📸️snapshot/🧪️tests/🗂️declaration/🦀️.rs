@@ -1,6 +1,6 @@
 //! 🗂️ DWG's declared SQLite snapshot routes: the aggregator's declaration publishes the AC1018 and AC1024 owners.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl},os_store::serialization::ArtifactSqliteSnapshotHost};
 
 #[semio_framework_async_macros::async_test]

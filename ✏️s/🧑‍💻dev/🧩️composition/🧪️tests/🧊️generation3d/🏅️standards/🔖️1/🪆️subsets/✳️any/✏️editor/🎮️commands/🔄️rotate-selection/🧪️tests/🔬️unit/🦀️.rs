@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app, app_with_registry, dispatch};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
-use semio_s_artifact_procedural_generation3d::widget_id;
+use semio_s_artifact_procedural_3d_model::widget_id;
 use semio_framework_artifact_flow_flow::Widget;
 
 const ROTATE_ID: &str = "extrude__gumball_rotate";

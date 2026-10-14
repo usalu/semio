@@ -37,12 +37,12 @@ fn animate_presentation_document_json_to_svg_falls_back_to_app_label_without_tit
 #[test]
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn from_dwg_builds_single_slide_deck_from_entity() {
-    let drawing = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing {
-        layers: vec![semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer::default()],
-        entities: vec![semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity {
+    let drawing = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing {
+        layers: vec![semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer::default()],
+        entities: vec![semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity {
             layer: 0,
-            color: semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
-            geometry: semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
+            color: semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
+            geometry: semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
         }],
         extmin: [0.0, 0.0, 0.0],
         extmax: [10.0, 10.0, 0.0],
@@ -59,7 +59,7 @@ fn from_dwg_builds_single_slide_deck_from_entity() {
 #[test]
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn from_dwg_never_errors_on_empty_drawing() {
-    let drawing = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default();
+    let drawing = semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default();
     let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
     let deck: crate::PresentationSnapshot = semio_framework_value::FromValue::from_value(document).expect("deck");
     let (_, tiles) = crate::presentation_working_scene(&deck);

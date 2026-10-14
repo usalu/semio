@@ -2,9 +2,6 @@
   "name": "@semio-tech/stdio-pdf-rs",
   "private": true,
   "type": "module",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test-recursive-retirement": "bun repo run @semio-tech/stdio-pdf-rs:test-recursive-retirement"
   },

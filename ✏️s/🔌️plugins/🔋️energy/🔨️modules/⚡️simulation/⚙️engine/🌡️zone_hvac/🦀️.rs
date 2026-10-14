@@ -1,5 +1,12 @@
 //! 🏠️ Zone equipment catalog: baseboards, radiant, fan coils, PTAC, VRF, ERV.
 
+extern crate semio_s_plugin_energy_engine_coils as coils;
+extern crate semio_s_plugin_energy_engine_fans as fans;
+extern crate semio_s_plugin_energy_engine_heat_recovery as heat_recovery;
+extern crate semio_s_plugin_energy_engine_units as units;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_curves as curves;
+
 use crate::coils::{cooling_coil_output_w, heating_coil_output_w, CoilAirState, CoolingCoil, HeatingCoil};
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::heat_recovery::{heat_recovery_exchange_w, HeatRecoveryUnit, HxAirstream};
@@ -73,7 +80,7 @@ impl ZoneEquipment {
                 let q_rad_factor = surface_area_m2 / 10.0;
                 let inlet = CoilAirState { temperature_c: request.zone_temperature_c, humidity_ratio: request.zone_humidity_ratio, mass_flow_kg_s: 0.05, pressure_pa: request.outdoor_pressure_pa };
                 let heat = heating_coil_output_w(heating, &inlet, request.heating_load_w);
-                let cool = cooling.as_ref().map_or(crate::coils::CoolingCoilOutput { outlet: inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 }, |c| {
+                let cool = cooling.as_ref().map_or(coils::CoolingCoilOutput { outlet: inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 }, |c| {
                     cooling_coil_output_w(c, &inlet, request.cooling_load_w, 0.05)
                 });
                 ZoneEquipmentOutput {
@@ -91,9 +98,9 @@ impl ZoneEquipment {
                 let flow = max_flow_m3_s.min(request.supply_mass_flow_kg_s / RHO_AIR_REF.max(0.5));
                 let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
                 let inlet = CoilAirState { temperature_c: request.supply_air_temp_c, humidity_ratio: request.supply_air_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.outdoor_pressure_pa };
-                let heat = heating.as_ref().map_or(crate::coils::HeatingCoilOutput { outlet: inlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }, |h| heating_coil_output_w(h, &inlet, request.heating_load_w));
+                let heat = heating.as_ref().map_or(coils::HeatingCoilOutput { outlet: inlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }, |h| heating_coil_output_w(h, &inlet, request.heating_load_w));
                 let cool_inlet = heat.outlet;
-                let cool = cooling.as_ref().map_or(crate::coils::CoolingCoilOutput { outlet: cool_inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 }, |c| {
+                let cool = cooling.as_ref().map_or(coils::CoolingCoilOutput { outlet: cool_inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 }, |c| {
                     cooling_coil_output_w(c, &cool_inlet, request.cooling_load_w, 0.08)
                 });
                 let operating_point = fan_operating_point(fan, flow, 300.0);

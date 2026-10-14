@@ -1,7 +1,12 @@
 //! 🌀️ Lie groups for rigid motion: quaternions, SO(3)/SE(3)/Sim(3) exp-log maps, Jacobians, Umeyama alignment and pose interpolation.
 //! Moved wholesale from `🧮️math/🔷️lie` — 📸️remodeling is its sole repo-wide consumer (verified: symbol-level grep of every exported type/fn across the whole tree outside math and remodeling returned zero hits), per `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS` wave M3d.
 
-use crate::algebra::{vec3d_cross, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD};
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_cross;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_length;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_normalize;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_sub;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::MatD;
 
 // #region 🔖️Quat
 /// 🧭️ Unit quaternion `w + xi + yj + zk` in Hamilton convention for chaining and interpolating 3D rotations.
@@ -34,7 +39,7 @@ impl Quatd {
     }
 
     /// ✖️ Hamilton product `self ⊗ other`, applying `other` first and `self` second.
-    #[allow(clippy::should_implement_trait, reason = "value-semantics mul mirrors crate::algebra::Mat3d::mul; operator overloading is intentionally avoided in this workspace")]
+    #[allow(clippy::should_implement_trait, reason = "value-semantics mul mirrors crate::standards::v1::subsets::any::schema::algebra_internals::Mat3d::mul; operator overloading is intentionally avoided in this workspace")]
     pub fn mul(self, other: Self) -> Self {
         Self {
             w: self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z,

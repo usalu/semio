@@ -8,9 +8,6 @@
     "test-ownership": "bun repo run @semio-tech/framework-dsl-record-rs:test-ownership",
     "test-native": "bun repo run @semio-tech/framework-dsl-record-rs:test-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

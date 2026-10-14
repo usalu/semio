@@ -1,5 +1,5 @@
 //! ✅️ Semio document referential-integrity inference over canonical collection dependencies.
-//! Pure computational geometry validation belongs to `semio_framework_3d_brep_queries::validation`.
+//! Pure computational geometry validation belongs to `semio_framework_3d_brep_validation`.
 
 use crate::schema::check_brep_referential_integrity;
 use crate::schema::snapshot::SemioBrepSnapshot;

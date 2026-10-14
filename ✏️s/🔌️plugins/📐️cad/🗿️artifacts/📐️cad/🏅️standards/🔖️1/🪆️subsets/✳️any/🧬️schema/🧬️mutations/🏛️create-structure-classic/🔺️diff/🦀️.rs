@@ -1,12 +1,12 @@
 //! 🔺️ `️create-structure-classic-model ` — sparse diff construction from an exact composed model child handle.
 
 use super::CreateStructureClassicModel;
-use crate::diff::{CadDiff, CadModelSlot};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadModelSlot};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateStructureClassicModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
-    let candidate = match crate::cad_model_child(&payload.child_id, &payload.target) {
+    let candidate = match semio_s_artifact_cad_cad_model::snapshot::cad_model_child(&payload.child_id, &payload.target) {
         Ok(candidate) => candidate,
         Err(reason) => return protocol::MutationOutcome::fatal("mutation.invariant", reason, [payload.child_id.clone()]),
     };

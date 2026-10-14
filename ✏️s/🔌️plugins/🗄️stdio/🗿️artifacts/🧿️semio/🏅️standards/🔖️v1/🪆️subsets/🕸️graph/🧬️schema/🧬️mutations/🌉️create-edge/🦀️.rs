@@ -20,7 +20,7 @@ pub struct CreateEdge {
     pub label: String,
     pub source_port: Option<String>,
     pub target_port: Option<String>,
-    pub properties: Vec<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry>,
+    pub properties: Vec<semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub at: Option<usize>,
 }

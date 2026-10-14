@@ -5,8 +5,10 @@
 //! selection, no gesture overlay, no engagement: a viewer has no utilities that edit and emits no
 //! mutations by construction (`ViewEmit`).
 
-use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard};
-use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
+use semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes;
+use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, PathSegment};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -77,7 +79,7 @@ pub fn render_with_camera(document: &DrawingSnapshot,config: &config::DrawingVie
     for node in &scene_nodes {
         records.push(semio_framework_value::ToValue::to_value(node));
     }
-    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: crate::schema::geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { framing: (!config.framed).then(|| semio_framework_plugin::Canvas2dFraming { revision: 0,bounds: semio_s_artifact_draw_drawing_geometry::framing::drawing_scene_bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Read-only twin of the editor's `edit::artboard_scene_records` frame-only half (no dimension

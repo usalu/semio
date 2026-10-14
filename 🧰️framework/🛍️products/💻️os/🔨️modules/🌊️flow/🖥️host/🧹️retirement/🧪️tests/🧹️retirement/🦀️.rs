@@ -4,7 +4,9 @@ use super::*;
 use crate::dag::DagHostRetirement;
 // 🧬️ `DagCamera`/`IoPortSpec` are the dag ARTIFACT crate's own records; `crate::dag` glob-imports them
 // privately, so they are named at their source rather than through that re-export.
-use semio_framework_artifact_infinite_dag::{DagCamera, IoPortSpec};
+use semio_framework_os_infinite_directed_presentation::{DagCamera};
+
+use semio_framework_os_infinite_directed_presentation::{IoPortSpec};
 
 //#region 🧪️SessionRetirement
 #[test]

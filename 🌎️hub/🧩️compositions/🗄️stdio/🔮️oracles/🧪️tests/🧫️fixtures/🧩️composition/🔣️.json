@@ -5,10 +5,7 @@
     "implementation": "rust",
     "package": "semio-hub-stdio-test-oracle",
     "path": "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-    "library": "semio_hub_stdio_test_oracle",
-    "features": [
-      "oracles"
-    ]
+    "library": "semio_hub_stdio_test_oracle"
   },
   "retired": {
     "owner": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles",
@@ -31,10 +28,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-archive-test-oracle",
         "library": "semio_s_plugin_stdio_archive_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🎒️archive/🦀️.rs"
@@ -53,10 +47,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-document-test-oracle",
         "library": "semio_s_plugin_stdio_document_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📃️document/🦀️.rs"
@@ -77,10 +68,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-tabular-test-oracle",
         "library": "semio_s_plugin_stdio_tabular_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📊️tabular/🦀️.rs"
@@ -98,10 +86,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-markup-test-oracle",
         "library": "semio_s_plugin_stdio_markup_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📰markup/🦀️.rs"
@@ -119,10 +104,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-audio-test-oracle",
         "library": "semio_s_plugin_stdio_audio_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔊️audio/🦀️.rs",
@@ -140,10 +122,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-raster-test-oracle",
         "library": "semio_s_plugin_stdio_raster_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/🦀️.rs",
@@ -164,10 +143,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-mesh-test-oracle",
         "library": "semio_s_plugin_stdio_mesh_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🧊️mesh/🦀️.rs"
@@ -186,10 +162,7 @@
         "implementation": "rust",
         "package": "semio-s-plugin-stdio-drawing-test-oracle",
         "library": "semio_s_plugin_stdio_drawing_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/📦️packages/🦀️rust"
       },
       "sources": [
         "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖊️drawing/🦀️.rs",
@@ -211,10 +184,7 @@
       "implementation": "rust",
       "package": "semio-s-plugin-stdio-part21-test-oracle",
       "library": "semio_s_plugin_stdio_part21_test_oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🔤️part21/📦️packages/🦀️rust"
     },
     "bodySha256": "8646c3b5923f0cd35658055fddd79a5b4522ca3e8f8acd5936a1655b5fee93bb"
   },
@@ -227,10 +197,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-las-test-oracle",
         "library": "semio_s_artifact_stdio_las_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -252,10 +219,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-html-test-oracle",
         "library": "semio_s_artifact_stdio_html_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -278,10 +242,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-epw-test-oracle",
         "library": "semio_s_artifact_stdio_epw_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -303,10 +264,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-zip-test-oracle",
         "library": "semio_s_artifact_stdio_zip_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -333,10 +291,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-gif-test-oracle",
         "library": "semio_s_artifact_stdio_gif_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -364,10 +319,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-mp4-test-oracle",
         "library": "semio_s_artifact_stdio_mp4_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -389,10 +341,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-svg-test-oracle",
         "library": "semio_s_artifact_stdio_svg_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -425,10 +374,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-mp3-test-oracle",
         "library": "semio_s_artifact_stdio_mp3_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -450,10 +396,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-ifc-test-oracle",
         "library": "semio_s_artifact_stdio_ifc_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -501,10 +444,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-bcf-test-oracle",
         "library": "semio_s_artifact_stdio_bcf_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -527,10 +467,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-binary-test-oracle",
         "library": "semio_s_artifact_stdio_binary_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -551,10 +488,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-csv-test-oracle",
         "library": "semio_s_artifact_stdio_csv_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -576,10 +510,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-step-test-oracle",
         "library": "semio_s_artifact_stdio_step_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -637,10 +568,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-tsv-test-oracle",
         "library": "semio_s_artifact_stdio_tsv_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -662,10 +590,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-xlsx-test-oracle",
         "library": "semio_s_artifact_stdio_xlsx_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -700,10 +625,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-pdf-test-oracle",
         "library": "semio_s_artifact_stdio_pdf_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -771,10 +693,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-docx-test-oracle",
         "library": "semio_s_artifact_stdio_docx_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -808,10 +727,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-md-test-oracle",
         "library": "semio_s_artifact_stdio_md_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -833,10 +749,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-xml-test-oracle",
         "library": "semio_s_artifact_stdio_xml_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -864,10 +777,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-png-test-oracle",
         "library": "semio_s_artifact_stdio_png_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -889,10 +799,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-jpg-test-oracle",
         "library": "semio_s_artifact_stdio_jpg_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -919,10 +826,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-avi-test-oracle",
         "library": "semio_s_artifact_stdio_avi_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -944,10 +848,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-pptx-test-oracle",
         "library": "semio_s_artifact_stdio_pptx_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -981,10 +882,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-wav-test-oracle",
         "library": "semio_s_artifact_stdio_wav_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1007,10 +905,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-txt-test-oracle",
         "library": "semio_s_artifact_stdio_txt_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1033,10 +928,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-stl-test-oracle",
         "library": "semio_s_artifact_stdio_stl_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1058,10 +950,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-dwg-test-oracle",
         "library": "semio_s_artifact_stdio_dwg_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1087,10 +976,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-dxf-test-oracle",
         "library": "semio_s_artifact_stdio_dxf_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1113,10 +999,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-tiff-test-oracle",
         "library": "semio_s_artifact_stdio_tiff_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1143,10 +1026,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-deflate-test-oracle",
         "library": "semio_s_artifact_stdio_deflate_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1169,10 +1049,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-obj-test-oracle",
         "library": "semio_s_artifact_stdio_obj_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1193,10 +1070,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-gltf-test-oracle",
         "library": "semio_s_artifact_stdio_gltf_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1218,10 +1092,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-ply-test-oracle",
         "library": "semio_s_artifact_stdio_ply_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1243,10 +1114,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-json-test-oracle",
         "library": "semio_s_artifact_stdio_json_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1268,10 +1136,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-semio-test-oracle",
         "library": "semio_s_artifact_stdio_semio_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1293,10 +1158,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-stdio-bmp-test-oracle",
         "library": "semio_s_artifact_stdio_bmp_test_oracle",
-        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -1319,10 +1181,7 @@
         "implementation": "rust",
         "package": "semio-s-artifact-note-note-test-oracle",
         "library": "semio_s_artifact_note_note_test_oracle",
-        "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust",
-        "features": [
-          "oracles"
-        ]
+        "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust"
       },
       "mounts": [
         {
@@ -6678,52 +6537,42 @@
       "path": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust"
     },
     "pdf-writer": {
-      "version": "0.15",
-      "optional": true
+      "version": "0.15"
     },
     "lopdf": {
-      "version": "0.44",
-      "optional": true
+      "version": "0.44"
     },
     "png": {
-      "version": "0.18",
-      "optional": true
+      "version": "0.18"
     },
     "gif": {
-      "version": "0.13",
-      "optional": true
+      "version": "0.13"
     },
     "zip": {
       "version": "6",
-      "optional": true,
       "default-features": false,
       "features": [
         "deflate"
       ]
     },
     "flate2": {
-      "version": "1",
-      "optional": true
+      "version": "1"
     },
     "csv": {
-      "version": "1",
-      "optional": true
+      "version": "1"
     },
     "bstr": {
       "version": "1.13",
-      "optional": true,
       "default-features": false,
       "features": [
         "std"
       ]
     },
     "tiff": {
-      "version": "0.11",
-      "optional": true
+      "version": "0.11"
     },
     "image": {
       "version": "0.25",
-      "optional": true,
       "default-features": false,
       "features": [
         "bmp",
@@ -6732,99 +6581,53 @@
       ]
     },
     "tobj": {
-      "version": "4",
-      "optional": true
+      "version": "4"
     },
     "stl_io": {
-      "version": "0.8",
-      "optional": true
+      "version": "0.8"
     },
     "quick-xml": {
-      "version": "0.42",
-      "optional": true
+      "version": "0.42"
     },
     "json": {
-      "version": "0.12",
-      "optional": true
+      "version": "0.12"
     },
     "html5ever": {
-      "version": "0.39",
-      "optional": true
+      "version": "0.39"
     },
     "markup5ever_rcdom": {
-      "version": "0.39",
-      "optional": true
+      "version": "0.39"
     },
     "comrak": {
-      "version": "0.54",
-      "optional": true
+      "version": "0.54"
     },
     "dxf": {
-      "version": "0.6",
-      "optional": true
+      "version": "0.6"
     },
     "las": {
-      "version": "0.11",
-      "optional": true
+      "version": "0.11"
     },
     "mp4": {
-      "version": "0.14",
-      "optional": true
+      "version": "0.14"
     },
     "ruststep": {
-      "version": "0.4",
-      "optional": true
+      "version": "0.4"
     },
     "ply-rs": {
-      "version": "0.1",
-      "optional": true
+      "version": "0.1"
     },
     "calamine": {
-      "version": "0.36",
-      "optional": true
+      "version": "0.36"
     },
     "rust_xlsxwriter": {
-      "version": "0.96",
-      "optional": true
+      "version": "0.96"
     },
     "riff": {
-      "version": "2.0",
-      "optional": true
+      "version": "2.0"
     },
     "id3": {
-      "version": "1.17",
-      "optional": true
+      "version": "1.17"
     }
-  },
-  "features": {
-    "oracles": [
-      "dep:pdf-writer",
-      "dep:lopdf",
-      "dep:png",
-      "dep:gif",
-      "dep:zip",
-      "dep:flate2",
-      "dep:csv",
-      "dep:image",
-      "dep:tobj",
-      "dep:stl_io",
-      "dep:quick-xml",
-      "dep:json",
-      "dep:html5ever",
-      "dep:markup5ever_rcdom",
-      "dep:comrak",
-      "dep:dxf",
-      "dep:las",
-      "dep:mp4",
-      "dep:ruststep",
-      "dep:calamine",
-      "dep:rust_xlsxwriter",
-      "dep:ply-rs",
-      "dep:riff",
-      "dep:id3",
-      "dep:bstr",
-      "dep:tiff"
-    ]
   },
   "contributions": [
     {
@@ -6909,8 +6712,7 @@
         "oracles": "3dfacd0a93c0b756111f0887d6bf1942df5a7a3fb20091c8cd2270a1f5d00118",
         "mutationCatalogs": "57ae70ab2bd1597072a208316bd642e71d7e9f48729049ce1a7f8d48da6dde25",
         "mutationManifests": "8669c80ee488cd67a83ab2604bcc3101ba4a5d32b428df6cc66782002ab3d537",
-        "noOracleDecisions": "6927192d6b9f6c145174220860fc20e373ad135904bb94cc17ee7b1fc3f8a89f",
-        "subjectFeatures": "684664b649675764a985056dbdbc1e6914b469fd3e8f8222bd4dbc2678d5b5b1"
+        "noOracleDecisions": "6927192d6b9f6c145174220860fc20e373ad135904bb94cc17ee7b1fc3f8a89f"
       },
       "hosts": [
         {
@@ -7138,10 +6940,7 @@
         {
           "implementation": "rust",
           "package": "semio-s-plugin-stdio-test-oracle",
-          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-          "features": [
-            "oracles"
-          ]
+          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
         }
       ]
     },
@@ -7159,10 +6958,7 @@
         {
           "implementation": "rust",
           "package": "semio-s-plugin-stdio-test-oracle",
-          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-          "features": [
-            "oracles"
-          ]
+          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
         }
       ]
     },
@@ -7440,10 +7236,7 @@
         {
           "implementation": "rust",
           "package": "semio-s-plugin-stdio-test-oracle",
-          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-          "features": [
-            "oracles"
-          ]
+          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
         },
         {
           "implementation": "python",
@@ -7960,10 +7753,7 @@
         {
           "implementation": "rust",
           "package": "semio-s-plugin-stdio-test-oracle",
-          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
-          "features": [
-            "oracles"
-          ]
+          "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/📦️packages/🦀️rust"
         }
       ]
     },

@@ -1,10 +1,11 @@
 //! 📄️ 📄️ Drawing play app commands command — `set-active-example`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::DrawingMutation;
-use crate::standards::v1::subsets::any::schema::default_drawing_document;
-use crate::standards::v1::subsets::any::examples;
-use crate::{ArtifactDsl, DrawingSnapshot};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::default_drawing_document;
+use semio_s_artifact_draw_drawing_examples::examples;
+use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -22,7 +23,7 @@ pub fn handle(
     payload: &SetActiveExample,
     _doc: &ArtifactView<'_, DrawingSnapshot>,
     _cfg: &ConfigView<'_, NoConfig>,
-    _session: &mut crate::editor::drawing::commands::canvas_pointer_down::DrawingSession,
+    _session: &mut crate::commands::canvas_pointer_down::DrawingSession,
 ) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let next = if payload.example_id.is_empty() {
         default_drawing_document("empty", None)
@@ -30,5 +31,5 @@ pub fn handle(
         let source = examples().iter().find(|source| source.id() == payload.example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.unknown"), format!("Drawing declares no example '{}'", payload.example_id)))?;
         DrawingSnapshot::parse_dsl(&source.document_json()).map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("drawing.example.parse"), format!("Drawing example '{}' does not parse as a drawing document", payload.example_id)))?
     };
-    Ok(Emit { effects: vec![crate::editor::drawing::drawing_reset_document_effect(&next)], ..Default::default() })
+    Ok(Emit { effects: vec![crate::drawing_reset_document_effect(&next)], ..Default::default() })
 }

@@ -1,9 +1,8 @@
-use super::*;
+use crate::*;
 use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
-
-fn demo_check(section: impl Into<String>) -> crate::document::CheckResult {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
+fn demo_check(section: impl Into<String>) -> semio_s_plugin_norm_compliance::CheckResult {
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
     let section = section.into();
     CheckResult::assess(
         format!("demo.{section}"),
@@ -243,15 +242,15 @@ fn path_set_insert_remove_round_trip() {
 
 #[test]
 fn format_quantity_uses_natural_units() {
-    assert!(format_quantity(&crate::document::Quantity::force_kn(12.0)).contains("kN"));
-    assert!(format_quantity(&crate::document::Quantity::stress_mpa(30.0)).contains("MPa"));
-    assert!(format_quantity(&crate::document::Quantity::length_m(0.08)).contains("mm"));
-    assert!(format_quantity(&crate::document::Quantity::u_value_w_m2k(0.24)).contains("W/(m²K)"));
+    assert!(format_quantity(&semio_s_plugin_norm_compliance::Quantity::force_kn(12.0)).contains("kN"));
+    assert!(format_quantity(&semio_s_plugin_norm_compliance::Quantity::stress_mpa(30.0)).contains("MPa"));
+    assert!(format_quantity(&semio_s_plugin_norm_compliance::Quantity::length_m(0.08)).contains("mm"));
+    assert!(format_quantity(&semio_s_plugin_norm_compliance::Quantity::u_value_w_m2k(0.24)).contains("W/(m²K)"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn failing_check_renders_remedy_rows() {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
     let subject = SubjectRef::new("m1", "resistanceKn", LocalizedCopy::new("Member", "Bauteil"));
     let mut report = CheckReport::default();
     report.push(
@@ -268,7 +267,6 @@ async fn failing_check_renders_remedy_rows() {
     assert!(json.contains("Member") || json.contains("Bauteil") || json.contains("resistanceKn"), "subject in row: {json}");
 }
 
-
 #[derive(Clone, Debug, Default, PartialEq)]
 struct MockDoc {
     resistance_kn: f64,
@@ -276,7 +274,7 @@ struct MockDoc {
 }
 
 fn mock_evaluate(document: &MockDoc) -> CheckReport {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
     let demand = 150_000.0;
     let mut report = CheckReport::default();
     let subject = SubjectRef::new("m1", "resistanceKn", LocalizedCopy::new("Member", "Bauteil"));
@@ -314,8 +312,8 @@ fn dispatch_apply_remedy_at_least_flips_failing_check_to_pass() {
 fn one_of_remedy_application_writes_selected_option() {
     let doc = MockDoc { resistance_kn: 120_000.0, class_name: "C20".into() };
     let report = mock_evaluate(&doc);
-    assert!(report.checks[0].remedies.iter().any(|r| matches!(r.bound, crate::document::RemedyBound::OneOf) && r.applicable));
-    let one_of_index = report.checks[0].remedies.iter().position(|r| matches!(r.bound, crate::document::RemedyBound::OneOf)).expect("one_of");
+    assert!(report.checks[0].remedies.iter().any(|r| matches!(r.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf) && r.applicable));
+    let one_of_index = report.checks[0].remedies.iter().position(|r| matches!(r.bound, semio_s_plugin_norm_compliance::RemedyBound::OneOf)).expect("one_of");
     let mut tree = semio_framework_value::DslValue::object([
         ("resistanceKn".into(), semio_framework_value::DslValue::float(doc.resistance_kn)),
         ("className".into(), semio_framework_value::DslValue::String(doc.class_name.clone())),
@@ -349,7 +347,7 @@ async fn render_document_editor_emits_set_field_and_list_verbs() {
 
 #[semio_framework_async_macros::async_test]
 async fn locale_switch_en_to_de_changes_chrome_and_check_copy() {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, SubjectRef};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, SubjectRef};
     let mut report = CheckReport::default();
     report.push(
         CheckResult::assess("x", "demo", ClauseId::new("demo", "§1", "1"), SubjectRef::whole(LocalizedCopy::new("Subject", "Gegenstand")), LocalizedCopy::new("demo check", "Demo-Prüfung"))
@@ -449,7 +447,7 @@ fn set_value_at_path_resolves_id_selectors() {
 
 #[test]
 fn apply_remedy_with_id_path_target_flips_failing_check() {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, SubjectRef};
     let demand = 150_000.0;
     let mut report = CheckReport::default();
     let subject = SubjectRef::new("B1", "members[id=B1].resistanceKn", LocalizedCopy::new("Member B1", "Bauteil B1"));
@@ -496,7 +494,7 @@ fn list_element_path_prefers_id_when_present() {
 
 #[semio_framework_async_macros::async_test]
 async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
-    use crate::document::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, SubjectRef};
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, SubjectRef};
 
     const ANNEX_CHOICES: &[NormFieldChoice] = &[
         NormFieldChoice { value: "en", label_en: "EN annex", label_de: "EN-Anhang" },
@@ -566,7 +564,6 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
     }
     assert!(!io.ports.iter().any(|port| port.label == "Model" || port.label == "Report"), "{io:?}");
 }
-
 
 #[test]
 fn collapsed_deep_document_stays_within_retire_slots() {

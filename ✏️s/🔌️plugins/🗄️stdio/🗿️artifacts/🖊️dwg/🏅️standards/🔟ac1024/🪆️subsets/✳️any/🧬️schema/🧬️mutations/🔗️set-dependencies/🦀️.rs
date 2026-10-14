@@ -1,7 +1,8 @@
 //! 🔗️ `set-dependencies` — replaces the dependencies block of the container. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgDependency;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

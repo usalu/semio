@@ -8,8 +8,8 @@ use crate::editor::bim::kit::{fault, select_effect, IdMint};
 use crate::editor::bim::modes::edit::windows::{plan, section};
 use crate::editor::bim::terminology::BimLabels;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{Axis, Point2, View, ViewCamera, ViewKind, ViewPlane};
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, View, ViewCamera, ViewKind, ViewPlane};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -179,7 +179,7 @@ pub fn handle(payload: &CreateView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg:
         let id = mint.mint("view", |id| crate::editor::bim::entities::id_taken(snapshot, id));
         taken.views.insert(id.clone(), view.clone());
         made.push((view.kind, id.clone()));
-        mutations.push(ModelMutation::CreateView(crate::mutations::create_view::CreateView { id, view }));
+        mutations.push(ModelMutation::CreateView(crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id, view }));
     }
     let mut emit = Emit::mutations(mutations);
     if let Some((kind, id)) = made.first() {

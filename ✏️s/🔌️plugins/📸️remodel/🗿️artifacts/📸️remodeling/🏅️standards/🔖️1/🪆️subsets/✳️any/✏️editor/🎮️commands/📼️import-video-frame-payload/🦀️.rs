@@ -8,16 +8,24 @@
 #[cfg(test)]
 use crate::editor::remodeling::commands::import_frame_payload;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::remodeling::engine::images as remodeling_image;
-use crate::editor::remodeling::engine::reconstruction::{blur_gate_admits, sharpness_score, BLUR_GATE_ROLLING_WINDOW};
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::blur_gate_admits;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::sharpness_score;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::BLUR_GATE_ROLLING_WINDOW;
 #[cfg(test)]
-use crate::editor::remodeling::engine::video as remodeling_video;
-use crate::editor::remodeling::payload_from_data_url;
-use crate::editor::remodeling::transient::{RemodelingImport, RemodelingWindowTransient};
-use crate::mutations::{add_stream_frame, create_asset, create_stream};
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::schema::mint_remodeling_id;
-use crate::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::payload_from_data_url;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingImport;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::mint_remodeling_id;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,59 +40,6 @@ pub fn import_transaction(stream_id: &str) -> protocol::TransactionRef {
 }
 //#endregion 🧾️ImportTransaction
 
-//#region 🧪️UnitTests
-/// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
-/// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
-/// `🎮️commands/🏗️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
-#[cfg(test)]
-pub(crate) async fn verify_import_checker_stream(app: &mut crate::editor::remodeling::unit_tests::context::RemodelingApp, n: u32) {
-    use crate::editor::remodeling::unit_tests::context::dispatch;
-    use crate::editor::remodeling::RemodelingCommand;
-    for index in 0..n {
-        dispatch(app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index, total: n })).await;
-    }
-}
-
-/// 🏁️ High-contrast `cell`-pixel checkerboard, PNG-encoded and base64-wrapped as a `requestFileOpen`
-/// `dataUrl` payload — so the real decode path is exercised, not a stub.
-#[cfg(test)]
-pub(crate) async fn checker_data_url(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/png;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_png(&checker_image(w, h, cell)).expect("encode checker png")))
-}
-
-/// 🏁️ The same checkerboard, real-JPEG-encoded — mirrors what a `RequestMediaFrames` host actually
-/// dispatches to `frame_action` (`payload: dataUrl(image/jpeg)`).
-#[cfg(test)]
-pub(crate) async fn checker_data_url_jpeg(w: u32, h: u32, cell: u32) -> String {
-    format!("data:image/jpeg;base64,{}", base64_codec::base64_standard_encode(remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90)))
-}
-
-/// 🎞️ A tiny synthesized MJPEG-in-MP4 video (n frames of the same checker pattern) as a
-/// `RequestMediaFrames`-fallback-style raw base64 data URL payload.
-#[cfg(all(test, feature = "video-mp4"))]
-pub(crate) async fn checker_video_data_url(n: u32, w: u32, h: u32, cell: u32) -> String {
-    let jpeg = remodeling_image::encode_jpeg(&checker_image(w, h, cell), 90);
-    let frames: Vec<Vec<u8>> = (0..n).map(|_| jpeg.clone()).collect();
-    format!("data:video/mp4;base64,{}", base64_codec::base64_standard_encode(remodeling_video::container_providers::mp4::write_mjpeg(&frames, 10.0)))
-}
-
-#[cfg(test)]
-fn checker_image(w: u32, h: u32, cell: u32) -> remodeling_image::ImageRgba8 {
-    let mut image = remodeling_image::ImageRgba8::new(w, h);
-    for y in 0..h {
-        for x in 0..w {
-            let on = ((x / cell.max(1)) + (y / cell.max(1))).is_multiple_of(2);
-            let v = if on { 235u8 } else { 20u8 };
-            let idx = ((y * w + x) * 4) as usize;
-            image.data[idx] = v;
-            image.data[idx + 1] = v;
-            image.data[idx + 2] = v;
-            image.data[idx + 3] = 255;
-        }
-    }
-    image
-}
-//#endregion 🧪️UnitTests
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "import-video-frame-payload")]
@@ -158,7 +113,4 @@ pub(crate) fn refuse_while_streaming(scene: &RemodelingSnapshot, window: &Remode
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

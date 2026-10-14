@@ -1,7 +1,8 @@
 //! 📖️ Genuine scene owners emit paged PDF objects, transparency resources and exact xref entries.
-use crate::schema::{scene_preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent},geometry::{ArcGeometry,arc_geometry}};
-use crate::{FillStyle,GradientStop,StrokeStyle,PathSegment};
-use crate::standards::v1::subsets::any::io::byte_writer::{Fragment,PAGE,reserve};
+use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneNode, DocumentSceneContent};
+use semio_s_artifact_draw_drawing_geometry::{ArcGeometry, arc_geometry};
+use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, StrokeStyle, PathSegment};
+use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 use std::fmt::Write;
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;

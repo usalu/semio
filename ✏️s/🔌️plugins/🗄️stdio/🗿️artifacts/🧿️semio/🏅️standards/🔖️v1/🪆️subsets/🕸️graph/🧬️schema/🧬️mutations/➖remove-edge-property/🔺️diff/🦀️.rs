@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `RemoveEdgeProperty`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
 use crate::schema::snapshot::SemioGraphSnapshot;
 

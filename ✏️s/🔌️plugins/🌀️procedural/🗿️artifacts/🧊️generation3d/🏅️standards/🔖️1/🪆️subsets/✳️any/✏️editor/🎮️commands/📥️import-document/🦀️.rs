@@ -23,10 +23,10 @@
 
 use crate::editor::generation3d::commands::set_active_example::config_load_mutations;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::io::document_io;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_io::document_io;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -77,7 +77,7 @@ pub fn emit(payload: &ImportDocument, doc: &ArtifactView<'_, Generation3dSnapsho
         (Some(widget), Some(channel), Some(texture)) => {
             let (id, channel, text) = super::set_widget_input::mesh_source_text(&doc.snapshot.host_snapshot, widget, channel).map_err(Fault::from)?;
             let edited = super::set_widget_input::import_mesh_texture(&text, texture, &payload.payload).map_err(Fault::from)?;
-            let artifact_mutations = if edited == text { Vec::new() } else { vec![crate::standards::v1::subsets::any::schema::mutations::change_widget_input::change_widget_input(&id, &channel, crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::Text(edited))] };
+            let artifact_mutations = if edited == text { Vec::new() } else { vec![semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input(&id, &channel, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue::Text(edited))] };
             Ok(Emit { artifact_mutations, ..Default::default() })
         }
         _ => Err(Fault::from("Choose a complete texture target")),

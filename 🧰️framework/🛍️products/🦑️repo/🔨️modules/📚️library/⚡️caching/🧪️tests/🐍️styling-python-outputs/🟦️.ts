@@ -64,7 +64,7 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   await run(); assert.equal(runs(), 1); await check(fixture.values[0]);
   assert.equal((await execute([python, "-I", "-c", "from importlib.metadata import distributions; assert not any(d.metadata['Name'] == 'semio-framework-ui-styling' for d in distributions()); print('preparation contains no first-party editable build')"])).trim(), "preparation contains no first-party editable build");
   const bytes = new Map(readdirSync(published).map(name => [name, readFileSync(join(published, name))]));
-  assert.deepEqual([...bytes.keys()].sort(), [".nx-artifact.json", fixture.wheel].sort());
+  assert.deepEqual([...bytes.keys()].sort(), [".semio-artifact.json", fixture.wheel].sort());
   await run(); assert.equal(runs(), 1);
   rmSync(published, { recursive: true });
   await run(); assert.equal(runs(), 1);

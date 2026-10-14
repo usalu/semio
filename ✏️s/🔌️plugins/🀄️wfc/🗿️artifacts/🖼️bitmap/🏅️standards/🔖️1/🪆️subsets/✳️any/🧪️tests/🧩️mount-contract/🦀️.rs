@@ -2,10 +2,7 @@
 //!
 //! Measures what the subset really mounts — the editor and viewer definitions the plugin builder produces, the OS
 //! artifact kind, the inference tool id, the mutation roster and the bundled example builders — against the committed
-//! language-agnostic statement `shared://🧩️mount-contract/🔣️.json`, and answers with what it measured. The surfaces are
-//! gated behind `component-app-assembly`, which this subset's contribution declares as the subject host's feature.
-//!
-//! @see ../../🔮️oracles/🔣️.json — `subjectFeatures`
+//! language-agnostic statement `shared://🧩️mount-contract/🔣️.json`, and answers with what it measured.
 
 use semio_repo_test_host::Adapter;
 

@@ -13,7 +13,7 @@ import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃
 
 test("Cargo cache maintenance excludes every live compiler profile and preserves cancellation",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
- mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"m-")),build=join(root,"b"),leaseRoot=join(process.cwd(),".cache/framework/leases");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"m-")),controller=new AbortController(),held:Awaited<ReturnType<typeof leaseApi.acquireCargoBuildLeaseV1>>[]=[];
+ mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"m-")),build=join(root,"b"),leaseRoot=join(process.cwd(),".cache/b/l/m/data");mkdirSync(leaseRoot,{recursive:true});const leases=mkdtempSync(join(leaseRoot,"m-")),controller=new AbortController(),held:Awaited<ReturnType<typeof leaseApi.acquireCargoBuildLeaseV1>>[]=[];
  const control=(signal:AbortSignal)=>phaseCompilerAdmissionControlV1(signal,30000,()=>undefined,()=>new Promise(done=>setImmediate(done)));
  let operation:Promise<unknown>|undefined;
  try{

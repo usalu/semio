@@ -20,9 +20,6 @@ role = "test"
 name = "semio_s_artifact_stdio_json_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = ["dep:json"]
-
 [dependencies]
-"json" = { version = "0.12", optional = true }
+"json" = { version = "0.12" }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

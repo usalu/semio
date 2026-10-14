@@ -19,7 +19,7 @@ fn descriptors<S, M: Mutation<S>>() -> &'static [MutationLeafDescriptor] {
 /// 🧭️ Every mutation aggregate the artifact crates below mount, with its type name.
 const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[
     ("FemResultsWindowTransientMutation", descriptors::<semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient, semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientMutation>),
-    ("Fem2dMutation", descriptors::<semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_s_artifact_fem_2d::standards::v1::subsets::any::schema::mutations::Fem2dMutation>),
+    ("Fem2dMutation", descriptors::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation>),
     ("Fem3dMutation", descriptors::<semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, semio_s_artifact_fem_3d::standards::v1::subsets::any::schema::mutations::Fem3dMutation>),
 ];
 

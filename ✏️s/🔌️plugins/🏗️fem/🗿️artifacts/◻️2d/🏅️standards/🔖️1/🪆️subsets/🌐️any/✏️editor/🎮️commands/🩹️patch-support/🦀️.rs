@@ -1,12 +1,12 @@
 //! 🩹️ Fem2d play app command — `patch-support`: re-targets a support (`nodeId`) or toggles one restrained DOF (`tx`, `ty`, `rz`) → `ReplaceSupport`.
 
-use crate::standards::v1::subsets::any::schema::mutations::replace_support;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::FemDof;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️PatchSupport
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]

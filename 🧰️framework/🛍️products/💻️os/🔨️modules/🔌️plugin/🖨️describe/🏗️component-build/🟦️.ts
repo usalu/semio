@@ -1,3 +1,4 @@
+import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
@@ -18,14 +19,14 @@ export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
 export class DescriptorBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
+    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0) });
   }
 }
 
 export class DescriptorTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([CRATE_NAME], this.repoRoot, this.invocation, rest);
   }
 }
 

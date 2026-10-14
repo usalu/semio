@@ -1,0 +1,933 @@
+{
+ "family": {
+  "semio-s-artifact-cad-cad": {
+   "owner": "",
+   "root": "🦀️.rs",
+   "lib": [
+    "🦀️.rs"
+   ],
+   "test": [
+    "🧪️tests/🚀️activation/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "cad_editor_unit",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-model": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🚦️frontiers/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": [
+    {
+     "name": "cad_model_document_contract",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🦀️.rs"
+     ]
+    },
+    {
+     "name": "cad_model_diff",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-mutations": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/🧪️tests/🌱️appends-node-3/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes-node-2/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🧪️tests/🔤️relabels-the-root-node/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🧪️tests/🔓️unlocks/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🧪️tests/↔️widens/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🧪️tests/📍️moves/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🧪️tests/🖼️reattaches/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🧪️tests/🕳️vacates-the-shape-slot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🧪️tests/📐️appends-drawing-2/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🧪️tests/🚫️removes-drawing-1/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-mut-slots": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️slots",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️slots/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧨delete-shape-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-mut-documents": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️documents",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️documents/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-drawing/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-brep/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-brep/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-drawing/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-mut-nodes": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️nodes",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️nodes/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-node/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-node/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-mut-references": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️references",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️references/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/↩️inverse/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/↩️inverse/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-inferences": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦bounds/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-io": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️dwg-import/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-io-sqlite": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🚦️frontiers/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "cad_io_sqlite_snapshot",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs",
+      "../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-play": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-examples": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-interaction-spec": {
+   "owner": "🎬️interaction-spec",
+   "root": "🎬️interaction-spec/🦀️.rs",
+   "lib": [
+    "🎬️interaction-spec/🦀️.rs"
+   ],
+   "test": [
+    "🎬️interaction-spec/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-host": {
+   "owner": "🔨️modules/🏠️host/🧰️owned",
+   "root": "🔨️modules/🏠️host/🧰️owned/🦀️.rs",
+   "lib": [
+    "🔨️modules/🏠️host/🧰️owned/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-testing": {
+   "owner": "🧪️tests/🧩️sample-scene",
+   "root": "🧪️tests/🧩️sample-scene/🦀️.rs",
+   "lib": [
+    "🧪️tests/🧩️sample-scene/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-structure": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏛️structure",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏛️structure/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏛️structure/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-building": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏢️building",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏢️building/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏢️building/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-fem": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📏️fem",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📏️fem/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📏️fem/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-energy": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🔥️energy",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🔥️energy/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🔥️energy/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-shape": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📐️shape",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📐️shape/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📐️shape/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-shape-curves": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/〰️shape-curves",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/〰️shape-curves/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/〰️shape-curves/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-shape-surfaces": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🗺️shape-surfaces",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🗺️shape-surfaces/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🗺️shape-surfaces/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-shape-solids": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧊️shape-solids",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧊️shape-solids/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧊️shape-solids/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-catalog-shape-edits": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/✂️shape-edits",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/✂️shape-edits/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/✂️shape-edits/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-typology": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-interaction": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-picking": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-config": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-presence": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/♻️retirement/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-kit": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-transient": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-transform": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "cad_transform_tool",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-modes": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🕹️dislocate/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🎥️projection/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/☑️options/🌞️sun/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏢️building/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏢️building/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔥️energy/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔥️energy/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️shape/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️shape/🎚️config/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏛️structure-classic/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏛️structure-classic/🎚️config/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "cad_modes_window_config",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧪️tests/🔬️window/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧪️tests/🔬️window/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-commands": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️camera/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️contribution/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️engagement/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️io/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️model-definition/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕸️node/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️object/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️reference/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌞️sun/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️transform/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️.rs"
+   ],
+   "test": [],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-panels": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs"
+   ],
+   "test": [],
+   "targets": [
+    {
+     "name": "cad_panels_inspection",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "cad_panels_artifact",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    },
+    {
+     "name": "cad_panels_catalogue",
+     "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+     "files": [
+      "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs"
+     ]
+    }
+   ]
+  },
+  "semio-s-artifact-cad-cad-editor": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"
+   ],
+   "targets": []
+  },
+  "semio-s-artifact-cad-cad-viewer": {
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "root": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "lib": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📐️shape/🦀️.rs"
+   ],
+   "test": [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🧪️tests/🔬️unit/🦀️.rs",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/📐️shape/🧪️tests/🔬️unit/🦀️.rs"
+   ],
+   "targets": []
+  }
+ },
+ "consumers": {
+  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs": {
+   "semio-s-artifact-cad-cad-play": 1
+  },
+  "✏️s/🔌️plugins/📐️cad/🏭️bridge/🦀️.rs": {
+   "semio-s-artifact-cad-cad-model": 1,
+   "semio-s-artifact-cad-cad-mutations": 1
+  },
+  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/⚖️retirement-law/🦀️.rs": {
+   "semio-s-artifact-cad-cad-model": 2
+  },
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🦀️.rs": {
+   "semio-s-artifact-cad-cad-mutations": 1,
+   "semio-s-artifact-cad-cad-model": 2
+  },
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🔬️unit/🦀️.rs": {
+   "semio-s-artifact-cad-cad-mut-nodes": 1,
+   "semio-s-artifact-cad-cad-model": 3
+  },
+  "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧬️schema/🧬️mutations/🏢️create-building-storey/🦀️.rs": {
+   "semio-s-artifact-cad-cad-mut-nodes": 1,
+   "semio-s-artifact-cad-cad-mutations": 1,
+   "semio-s-artifact-cad-cad-model": 2
+  },
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep/🧪️tests/🔬️fleet-example-sweep/🦀️.rs": {
+   "semio-s-artifact-cad-cad-model": 1
+  },
+  "🌎️hub/🧩️compositions/🎪️demonstrator/🪪️manifest/🎪️demonstrator/🦀️.rs": {
+   "semio-s-artifact-cad-cad-editor": 2
+  },
+  "🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/🦀️.rs": {
+   "semio-s-artifact-cad-cad": 2,
+   "semio-s-artifact-cad-cad-viewer": 1
+  }
+ },
+ "dropped_reexports": [
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   [
+    [
+     "crate::standards::v1::subsets::any::schema::diff::CadNodePatch",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::CadOpacitySet",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::CadOrientationSet",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::CadReferencePatch",
+     null
+    ],
+    [
+     "crate::standards::v1::subsets::any::schema::diff::CadScaleSet",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/🦀️.rs",
+   [
+    [
+     "crate::mutations::CadMutation",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🦀️.rs",
+   [
+    [
+     "crate::mutations::CadMutation",
+     null
+    ],
+    [
+     "crate::mutations::CadNodePatch",
+     null
+    ],
+    [
+     "crate::mutations::CadReferencePatch",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   [
+    [
+     "crate::editor::cad::kit::CAD_DISLOCATE_UTILITY_ID",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_DUPLICATE_OFFSET",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_FALLBACK_MESH_KIND",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_INTERACTION_DOMAIN",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_PLAY_APP_ID",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_PLAY_CONTROLLER_ID",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CAD_TRANSFORMATION_SPECS",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadDispatchCtx",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadInteractionSnapshot",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadPlayRuntime",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadPlayView",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadTransformationSpec",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::CadTypologyEntry",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::TYPOLOGY_CATALOG",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::TransformationMode",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::apply_transformation_entries",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::axis3_index",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::axis4_index",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_action",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_io",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_camera_runtime",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_camera_runtime_mut",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_from_view",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_id_from_suffix",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_id_from_surface_id",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_pane_suffix",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_reference_flag_action",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_runtime_from",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_solid_export_effect",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_spatial_export_effect",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_transient_from_runtime",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_tree_item",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_tree_item_static",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_window_action",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::cad_window_id_for_pane",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::camera_json",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::collect_modelspace_solids",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::collect_pane_solids",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::command_value_json",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::create_object_entry",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::delete_object_leaves",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::duplicate_object_entries",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::engagement_submit_entries",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::export_solid_for_pane",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::export_solid_modelspace",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::export_spatial_json",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ids_or_selection",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::make_object_for_typology",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::patch_objects_leaves",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::publish_engagement",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::quat_normalize",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::reset_document_effect",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::resolve_number_edit",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::runtime_of",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::snapshot_of",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::start_interaction_session",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::try_commit_session_entries",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ui_label",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ui_value_bool",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ui_value_list",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ui_value_map",
+     null
+    ],
+    [
+     "crate::editor::cad::kit::ui_value_text",
+     null
+    ]
+   ]
+  ],
+  [
+   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs",
+   [
+    [
+     "crate::editor::cad::modes::edit::windows::config::cad_pane_from_view",
+     null
+    ],
+    [
+     "crate::editor::cad::modes::edit::windows::config::cad_window_id_for_pane",
+     null
+    ],
+    [
+     "crate::editor::cad::modes::edit::windows::config::runtime_of",
+     null
+    ]
+   ]
+  ]
+ ]
+}

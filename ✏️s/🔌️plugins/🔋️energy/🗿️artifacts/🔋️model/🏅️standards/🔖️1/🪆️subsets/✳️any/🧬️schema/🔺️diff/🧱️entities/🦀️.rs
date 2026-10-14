@@ -222,8 +222,8 @@ row_patch! {
     PeopleGainPatch for crate::model::PeopleGain {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set schedule_id: crate::model::ScheduleId,
-        Set activity_schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
+        Set activity_schedule_id: crate::schedule::ScheduleId,
         Set people_per_area: f64,
         Set sensible_fraction: f64,
         Set latent_fraction: f64,
@@ -236,7 +236,7 @@ row_patch! {
     LightingGainPatch for crate::model::LightingGain {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
         Set watts_per_area: f64,
         Set radiant_fraction: f64,
         Set visible_fraction: f64,
@@ -249,7 +249,7 @@ row_patch! {
     EquipmentGainPatch for crate::model::EquipmentGain {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
         Set watts_per_area: f64,
         Set radiant_fraction: f64,
         Set latent_fraction: f64,
@@ -261,8 +261,8 @@ row_patch! {
     ThermostatPatch for crate::model::Thermostat {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set heating_setpoint_schedule_id: crate::model::ScheduleId,
-        Set cooling_setpoint_schedule_id: crate::model::ScheduleId,
+        Set heating_setpoint_schedule_id: crate::schedule::ScheduleId,
+        Set cooling_setpoint_schedule_id: crate::schedule::ScheduleId,
         Set heating_throttle_range_k: f64,
         Set cooling_throttle_range_k: f64,
     }
@@ -273,8 +273,8 @@ row_patch! {
     HumidistatPatch for crate::model::Humidistat {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set humidifying_setpoint_schedule_id: crate::model::ScheduleId,
-        Set dehumidifying_setpoint_schedule_id: crate::model::ScheduleId,
+        Set humidifying_setpoint_schedule_id: crate::schedule::ScheduleId,
+        Set dehumidifying_setpoint_schedule_id: crate::schedule::ScheduleId,
         Set humidifying_throttle_range: f64,
         Set dehumidifying_throttle_range: f64,
     }
@@ -286,7 +286,7 @@ row_patch! {
         key id: crate::model::EntityId;
         Set name: String,
         Set kind: crate::model::SetpointManagerKind,
-        Opt schedule_id: crate::model::ScheduleId,
+        Opt schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -356,7 +356,7 @@ row_patch! {
     InfiltrationPatch for crate::model::Infiltration {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
         Set method: crate::air_exchange::InfiltrationMethod,
         Set design_flow_ach: f64,
         Set flow_per_exterior_area_m3_s_m2: f64,
@@ -375,7 +375,7 @@ row_patch! {
     MechanicalVentilationPatch for crate::model::MechanicalVentilation {
         key id: crate::model::EntityId;
         Set zone_id: crate::model::EntityId,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
         Set design_flow_m3_s: f64,
         Set fan_total_efficiency: f64,
         Set fan_delta_pressure_pa: f64,
@@ -388,7 +388,7 @@ row_patch! {
         key id: crate::model::EntityId;
         Set name: String,
         Set vertices_m: Vec<[f64; 3]>,
-        Opt transmittance_schedule_id: crate::model::ScheduleId,
+        Opt transmittance_schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -452,7 +452,7 @@ row_patch! {
         Set heater_capacity_w: f64,
         Set storage_volume_m3: f64,
         Set setpoint_c: f64,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -474,7 +474,7 @@ row_patch! {
         key id: crate::model::EntityId;
         Set case_count: u32,
         Set design_load_w: f64,
-        Set defrost_schedule_id: crate::model::ScheduleId,
+        Set defrost_schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -484,7 +484,7 @@ row_patch! {
         key id: crate::model::EntityId;
         Set fixture_count: u32,
         Set peak_flow_l_s: f64,
-        Set schedule_id: crate::model::ScheduleId,
+        Set schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -495,7 +495,7 @@ row_patch! {
         Set target_equipment_id: crate::model::EntityId,
         Set fault_type: crate::model::FaultType,
         Set severity: f64,
-        Set start_schedule_id: crate::model::ScheduleId,
+        Set start_schedule_id: crate::schedule::ScheduleId,
     }
 }
 
@@ -531,7 +531,7 @@ row_patch! {
 row_patch! {
     /// 🩹 Sparse patch over one [`ConstantSchedule`] row.
     ConstantSchedulePatch for crate::schedule::ConstantSchedule {
-        key id: crate::model::ScheduleId;
+        key id: crate::schedule::ScheduleId;
         Set value: f64,
     }
 }
@@ -539,7 +539,7 @@ row_patch! {
 row_patch! {
     /// 🩹 Sparse patch over one [`DailySchedule`] row.
     DailySchedulePatch for crate::schedule::DailySchedule {
-        key id: crate::model::ScheduleId;
+        key id: crate::schedule::ScheduleId;
         Arr hourly_values: [f64; 24],
         Set interpolation: crate::schedule::ScheduleInterpolation,
         Opt limits: crate::schedule::ScheduleLimits,
@@ -549,18 +549,18 @@ row_patch! {
 row_patch! {
     /// 🩹 Sparse patch over one [`WeeklySchedule`] row.
     WeeklySchedulePatch for crate::schedule::WeeklySchedule {
-        key id: crate::model::ScheduleId;
-        Arr daily_schedule_ids: [crate::model::ScheduleId; 7],
+        key id: crate::schedule::ScheduleId;
+        Arr daily_schedule_ids: [crate::schedule::ScheduleId; 7],
     }
 }
 
 row_patch! {
     /// 🩹 Sparse patch over one [`AnnualSchedule`] row.
     AnnualSchedulePatch for crate::schedule::AnnualSchedule {
-        key id: crate::model::ScheduleId;
+        key id: crate::schedule::ScheduleId;
         List rules: crate::schedule::CompactScheduleRule,
-        Set default_daily_schedule_id: crate::model::ScheduleId,
-        Opt holiday_daily_schedule_id: crate::model::ScheduleId,
+        Set default_daily_schedule_id: crate::schedule::ScheduleId,
+        Opt holiday_daily_schedule_id: crate::schedule::ScheduleId,
         List holiday_dates: (u16, u8, u8),
     }
 }
@@ -568,7 +568,7 @@ row_patch! {
 row_patch! {
     /// 🩹 Sparse patch over one [`TimeSeriesSchedule`] row.
     TimeSeriesSchedulePatch for crate::schedule::TimeSeriesSchedule {
-        key id: crate::model::ScheduleId;
+        key id: crate::schedule::ScheduleId;
         Set values: Vec<f64>,
         Set timestep_seconds: u32,
     }

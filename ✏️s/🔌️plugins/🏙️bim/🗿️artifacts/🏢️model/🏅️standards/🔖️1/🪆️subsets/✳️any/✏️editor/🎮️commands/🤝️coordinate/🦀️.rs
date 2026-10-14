@@ -10,7 +10,7 @@ use crate::editor::bim::panels::coordination::name_of;
 use crate::editor::bim::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::{Assigned, ClashRef, Issue, IssuePatch, IssuePriority, IssueStatus, IssueViewpoint, ModelMutation, ModelSnapshot, Point2, Point3, SectionBox, ViewCamera};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::IssuePatch}, snapshot::{ClashRef, Issue, IssuePriority, IssueStatus, IssueViewpoint, ModelSnapshot, Point2, Point3, SectionBox, ViewCamera}, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -167,7 +167,7 @@ impl Coordinate for RaiseIssue {
             clash: Some(ClashRef { set: set.map_or_else(|| payload.set.clone(), |(id, _)| id.clone()), first: clash.first.clone(), second: clash.second.clone() }),
             viewpoint: Some(IssueViewpoint { camera: framing(&clash), section: Some(section_around(&clash)), isolate: vec![clash.first.clone(), clash.second.clone()] }),
         };
-        Ok(Emit::mutations(vec![ModelMutation::CreateIssue(crate::mutations::create_issue::CreateIssue { id, issue })]))
+        Ok(Emit::mutations(vec![ModelMutation::CreateIssue(crate::standards::v1::subsets::any::schema::mutations::create_issue::CreateIssue { id, issue })]))
     }
 }
 
@@ -178,12 +178,12 @@ impl Coordinate for CaptureViewpoint {
         world_window(ctx)?;
         let issue = doc.snapshot.issues.get(&payload.issue).ok_or_else(|| fault("bim.issue.missing", format!("no issue '{}'", payload.issue)))?;
         let camera = ViewCamera::from_eye_and_target(ctx.world.camera.position, ctx.world.camera.target);
-        let viewpoint = IssueViewpoint { camera, section: box_of(&ctx.world), isolate: ctx.world.isolated_elements.iter().filter(|id| crate::is_referable(doc.snapshot, id)).cloned().collect() };
+        let viewpoint = IssueViewpoint { camera, section: box_of(&ctx.world), isolate: ctx.world.isolated_elements.iter().filter(|id| crate::standards::v1::subsets::any::schema::snapshot::is_referable(doc.snapshot, id)).cloned().collect() };
         if issue.viewpoint.as_ref() == Some(&viewpoint) {
             return Ok(Emit::default());
         }
         let patch = IssuePatch { viewpoint: Some(Assigned::new(Some(viewpoint))), ..IssuePatch::default() };
-        Ok(Emit::mutations(vec![ModelMutation::SetIssue(crate::mutations::set_issue::SetIssue::from_patch(payload.issue.clone(), patch))]))
+        Ok(Emit::mutations(vec![ModelMutation::SetIssue(crate::standards::v1::subsets::any::schema::mutations::set_issue::SetIssue::from_patch(payload.issue.clone(), patch))]))
     }
 }
 

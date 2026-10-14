@@ -1,17 +1,17 @@
 use super::*;
-use crate::{Axis, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2};
 
 fn snapshot() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
-    snapshot.materials.insert("m-steel".into(), crate::Material { name: "Steel".into(), category: crate::MaterialCategory::Metal, color: crate::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
-    snapshot.sites.insert("site".into(), crate::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
-    snapshot.buildings.insert("bldg".into(), crate::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-    snapshot.storeys.insert("st".into(), crate::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
+    snapshot.materials.insert("m-steel".into(), crate::standards::v1::subsets::any::schema::snapshot::Material { name: "Steel".into(), category: crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Metal, color: crate::standards::v1::subsets::any::schema::snapshot::Rgb { r: 0.5, g: 0.5, b: 0.5 }, density: 7850.0, conductivity: 50.0, specific_heat: 470.0 });
+    snapshot.sites.insert("site".into(), crate::standards::v1::subsets::any::schema::snapshot::Site { name: "Plot".into(), latitude: 47.0, longitude: 8.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() });
+    snapshot.buildings.insert("bldg".into(), crate::standards::v1::subsets::any::schema::snapshot::Building { site: "site".into(), name: "House".into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
+    snapshot.storeys.insert("st".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg".into(), name: "Ground".into(), level: 0, height: 3.0, cut_height: None });
     snapshot
 }
 
 fn applied(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
-    crate::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("refused: {refusal:?}"))
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("refused: {refusal:?}"))
 }
 
 #[test]
@@ -59,9 +59,9 @@ fn a_new_curtain_wall_type_is_created_in_the_first_material_and_a_missing_materi
 fn with_wall() -> ModelSnapshot {
     let base = snapshot();
     let base = applied(&base, &create_curtain_wall_type(&base, "cwt", "", "Facade").expect("a type"));
-    applied(&base, &ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall {
+    applied(&base, &ModelMutation::CreateCurtainWall(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall {
         id: "cw".into(),
-        curtain_wall: crate::CurtainWall { storey: "st".into(), curtain_wall_type: "cwt".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 6.0, y: 0.0 } }, base_offset: 0.0, top: crate::TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: crate::Phase::New, name: "Facade".into() },
+        curtain_wall: crate::standards::v1::subsets::any::schema::snapshot::CurtainWall { storey: "st".into(), curtain_wall_type: "cwt".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 0.0 }, end: Point2 { x: 6.0, y: 0.0 } }, base_offset: 0.0, top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, name: "Facade".into() },
     }))
 }
 
@@ -105,7 +105,7 @@ fn the_rows_of_a_curtain_wall_write_their_own_mutations() {
 fn the_tilt_and_the_beam_rows_write_their_own_mutations() {
     let base = with_wall();
     let Some(ModelMutation::SetColumnTilt(payload)) = write_tilt(&base, "c", "1.5, 0.2") else { panic!("tilt") };
-    assert_eq!(payload.tilt, Some(crate::Slope { direction: 1.5, angle: 0.2 }));
+    assert_eq!(payload.tilt, Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 1.5, angle: 0.2 }));
     let Some(ModelMutation::SetColumnTilt(plumb)) = write_tilt(&base, "c", "") else { panic!("tilt") };
     assert_eq!(plumb.tilt, None, "empty text makes the column plumb");
     assert!(write_tilt(&base, "c", "lean").is_none());
@@ -134,5 +134,5 @@ fn the_entity_rows_name_and_parent_their_records() {
     assert_eq!((CURTAIN_WALL_TYPE.name)(&created, "cwt").as_deref(), Some("Facade"));
     assert!(CURTAIN_WALL_TYPE.library && !CURTAIN_PANEL_OVERRIDE.library);
     let used = CURTAIN_WALL_TYPE.inferred.iter().find(|row| row.key == "used_by").expect("used by");
-    assert_eq!((used.read)(&created, &crate::ModelInference::default(), "cwt").as_deref(), Some("1"));
+    assert_eq!((used.read)(&created, &crate::standards::v1::subsets::any::schema::inferences::ModelInference::default(), "cwt").as_deref(), Some("1"));
 }

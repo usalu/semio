@@ -18,8 +18,7 @@ name = "semio_framework_value"
 path = "🦀️.rs"
 
 [features]
-default = []
-ordered-set-serde = []
+testkit = []
 
 [dependencies]
 semio-framework-value-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }

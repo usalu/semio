@@ -942,7 +942,7 @@ pub(crate) struct AgentLanePreview<A:ArtifactApp>{
     pub(crate) completion:Option<ArtifactToolCompletion<A>>,
     pub(crate) completion_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletion<A>>>,
     pub(crate) lease:Option<crate::tool_cancellation::ToolCancellationLease>,
-    pub(crate) lease_close:Option<Box<crate::typed_operation::ToolCancellationLeaseRetirement>>,
+    pub(crate) lease_close:Option<Box<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
     pub(crate) config:semio_framework_job::BatchDriveConfig,
     pub(crate) maximum_bytes:usize,
     pub(crate) steps:u64,
@@ -958,7 +958,7 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
         if self.completion.is_some()||self.completion_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
         if self.publication.is_some()||self.publication_close.is_some(){return crate::bounded_ownership::plugin_typed_owner_demand(&self.publication,&self.publication_close,body)}
         if let Some(owner)=self.lease_close.as_ref(){return if owner.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{release_bytes:std::mem::size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{owner.retirement_demands(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,body)}}
-        if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<crate::typed_operation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLease>(),depth:1,..Default::default()})}
+        if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<crate::tool_cancellation::ToolCancellationLease>(),depth:1,..Default::default()})}
         Ok(self.caller.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},|caller|caller.retirement_demands()))
     }
     pub(crate) fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
@@ -970,8 +970,8 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
         let grant=cx.retained_grant();
         let step=if self.completion.is_some()||self.completion_close.is_some(){crate::bounded_ownership::plugin_typed_owner_step(&mut self.completion,&mut self.completion_close,grant)?}
         else if self.publication.is_some()||self.publication_close.is_some(){crate::bounded_ownership::plugin_typed_owner_step(&mut self.publication,&mut self.publication_close,grant)?}
-        else if let Some(owner)=self.lease_close.as_mut(){if owner.terminal_is_empty(){crate::typed_operation::original_lease_cursor_release(&mut self.lease_close,grant).map(RetainedCloneStep::Progress)?}else{owner.close_step(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,grant)?}}
-        else if self.lease.is_some(){let(owner,progress)=crate::typed_operation::original_lease_cursor_admit(&mut self.lease,grant)?;self.lease_close=owner;RetainedCloneStep::Progress(progress)}else if self.key.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}self.key.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else if let Some(caller)=self.caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(crate::PluginLifecycleStep::Progress(step.progress()))}else{return Ok(crate::PluginLifecycleStep::Complete(Default::default()))};
+        else if let Some(owner)=self.lease_close.as_mut(){if owner.terminal_is_empty(){crate::tool_cancellation::original_lease_cursor_release(&mut self.lease_close,grant).map(RetainedCloneStep::Progress)?}else{owner.close_step(canonical.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"admitted preview lease lost its original cancellation handle"))?,grant)?}}
+        else if self.lease.is_some(){let(owner,progress)=crate::tool_cancellation::original_lease_cursor_admit(&mut self.lease,grant)?;self.lease_close=owner;RetainedCloneStep::Progress(progress)}else if self.key.is_some(){if grant.maximum_items==0||grant.maximum_depth==0{return Ok(crate::PluginLifecycleStep::Progress(Default::default()))}self.key.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else if let Some(caller)=self.caller.as_mut(){let step=caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(crate::PluginLifecycleStep::Progress(step.progress()))}else{return Ok(crate::PluginLifecycleStep::Complete(Default::default()))};
         cx.consume_retained(step.progress())?;Ok(crate::PluginLifecycleStep::Progress(step.progress()))
     }
 }
@@ -983,7 +983,7 @@ pub(crate) struct OriginalPreviewDrive<J:semio_framework_job::InteractiveJob+'st
     steps:u64,
     acknowledgement_pending:bool,
     resume_pending:bool,
-    closing:bool,
+    pub(crate) closing:bool,
     verdict:Option<Result<u64,semio_framework_job::OriginalTurnFailure>>,
     verdict_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Result<u64,semio_framework_job::OriginalTurnFailure>>>,
 }

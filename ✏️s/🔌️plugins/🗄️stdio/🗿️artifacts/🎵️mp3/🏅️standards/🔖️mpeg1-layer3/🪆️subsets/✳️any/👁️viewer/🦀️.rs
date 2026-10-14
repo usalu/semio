@@ -74,17 +74,13 @@ impl ArtifactViewer for Mp3Viewer {
         Some(crate::standards::mpeg1_layer3::subsets::any::io::playback::app_io())
     }
 
-    fn build_media_export_job(request: semio_framework_plugin::ArtifactMediaExportJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework_plugin::ArtifactReservedToolJob>, Fault> {
+    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use crate::standards::mpeg1_layer3::subsets::any::io::playback;
-        if request.port != playback::PORT_ID || request.tool_id != playback::TOOL_ID {
-            return Ok(None);
-        }
-        Ok(Some(semio_framework_plugin::ArtifactReservedToolJob::new(playback::Mp3PlaybackExportJob::new(request)?)))
+        if request.as_ref().is_some_and(|source|source.port!=playback::PORT_ID||source.tool_id!=playback::TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Stdio media source requires its exact published output port").into())}
+        playback::Mp3PlaybackExportJob::admit_original(request,body,cx)
     }
 
-    fn build_snapshot_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        Some(Box::new(crate::standards::mpeg1_layer3::subsets::any::io::playback::Mp3ExportSnapshotDisposer::default()))
-    }
+
 
     fn handle(
         _command: &Self::Command,

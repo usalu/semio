@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `remove-stream`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::delete_stream;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::delete_stream::delete_stream;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

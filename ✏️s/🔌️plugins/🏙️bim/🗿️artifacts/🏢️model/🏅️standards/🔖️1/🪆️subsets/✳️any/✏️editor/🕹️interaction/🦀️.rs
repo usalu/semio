@@ -3,7 +3,7 @@
 
 use crate::editor::bim::entities::{ordered_storeys, ENTITIES};
 use crate::editor::bim::terminology::BimLabels;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_plugin::DomainTopology;
 use semio_framework_plugin::GranularityDefinition;
 use semio_framework_plugin::HierarchyProvider;

@@ -4,9 +4,11 @@
 //! (`mutation.target-missing`, Error), then the shared `guards::region_geometry` meshability bounds
 //! (`mutation.invariant`, Fatal) — outline arity and area, thickness, mesh size, hole containment.
 use super::CreateRegion;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dRegionInsertion, Fem2dRegionsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionInsertion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &CreateRegion, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

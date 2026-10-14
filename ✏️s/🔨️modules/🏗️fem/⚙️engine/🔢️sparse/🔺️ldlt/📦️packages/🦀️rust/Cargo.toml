@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-fem-sparse-ldlt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Envelope sparse LDLT direct solver and its checkpointed job"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-fem-algebra = { workspace = true }
+semio-s-fem-sparse = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-test-support = { workspace = true }
+serde_json = { workspace = true }

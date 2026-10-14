@@ -1,8 +1,9 @@
 //! 🏢️ Building storey composite mutation source.
 
 use semio_framework_value::{FromValue, ToValue};
-use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
-use semio_s_artifact_cad_cad::{CadMutation, CadNode, CadSnapshot};
+use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::{snapshot::CadNode, snapshot::CadSnapshot};
 
 /// 🏢️ Composite mutation contributed onto cad's `s.cad.cad` artifact — a real building-domain
 /// workflow step cad itself has no notion of (a bare CAD tool has no concept of a "storey"), planned

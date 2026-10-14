@@ -5,7 +5,7 @@
 use super::ModelNode;
 use super::super::super::element_solids::{SolidFamily, SolidKey};
 use super::plan::element_storey;
-use crate::{ModelSnapshot, OpeningKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
 use protocol::TouchedPaths;
 
 struct Regions<'a>(&'a TouchedPaths);

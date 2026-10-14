@@ -96,8 +96,7 @@ impl ArtifactEditor for Din18599PlayApp {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 
-    semio_s_artifact_norm_contract::norm_exact_store_ownership!();
-
+    semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         Din18599BoundedCommandJobFactory::register(registry)
@@ -117,7 +116,6 @@ impl ArtifactEditor for Din18599PlayApp {
         contract: crate::app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
-
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -148,7 +146,7 @@ impl ArtifactEditor for Din18599PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(Din18599Command, text, crate::standards::v1::subsets::any::io::text::snapshot::decode_din18599_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(Din18599Command, text, crate::standards::v1::subsets::any::io::text::snapshot::decode_din18599_snapshot_json);
 
     fn handle(
         command: &Din18599Command,

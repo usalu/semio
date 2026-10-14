@@ -20,7 +20,7 @@ semio-framework-pack = { path = "../../../../../../🧰️framework/🔨️modul
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-geometry = { workspace = true }
-semio-framework-graph = { workspace = true }
+semio-framework-graph-engine = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

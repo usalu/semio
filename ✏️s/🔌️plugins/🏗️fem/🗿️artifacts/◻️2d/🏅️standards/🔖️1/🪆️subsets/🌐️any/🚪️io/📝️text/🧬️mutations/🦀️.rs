@@ -1,6 +1,6 @@
 //! ⚡️ Fem2d artifact — OpText/OpBinary codecs + grammar for `Fem2dMutation`.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 
 //#region 📖️SemioGrammar
@@ -34,45 +34,45 @@ mod mutation_grammar_conformance;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::*;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::os_store::store_schema::ArtifactEnvelope;
 /// 🌉️ Brings every triad leaf's `mutation` submodule into this file's own scope (declared as
 /// siblings back in `🦀️.rs`, not inside this file) — required for the dispatch enum's bare
 /// `create_node::CreateNode`-style variant field paths above to resolve.
-use crate::standards::v1::subsets::any::schema::mutations::add_load;
-use crate::standards::v1::subsets::any::schema::mutations::change_load_case_name;
-use crate::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
-use crate::standards::v1::subsets::any::schema::mutations::create_combination;
-use crate::standards::v1::subsets::any::schema::mutations::create_element;
-use crate::standards::v1::subsets::any::schema::mutations::create_load_case;
-use crate::standards::v1::subsets::any::schema::mutations::create_material;
-use crate::standards::v1::subsets::any::schema::mutations::create_node;
-use crate::standards::v1::subsets::any::schema::mutations::create_region;
-use crate::standards::v1::subsets::any::schema::mutations::create_section;
-use crate::standards::v1::subsets::any::schema::mutations::create_support;
-use crate::standards::v1::subsets::any::schema::mutations::delete_combination;
-use crate::standards::v1::subsets::any::schema::mutations::delete_element;
-use crate::standards::v1::subsets::any::schema::mutations::delete_load_case;
-use crate::standards::v1::subsets::any::schema::mutations::delete_material;
-use crate::standards::v1::subsets::any::schema::mutations::delete_node;
-use crate::standards::v1::subsets::any::schema::mutations::delete_region;
-use crate::standards::v1::subsets::any::schema::mutations::delete_section;
-use crate::standards::v1::subsets::any::schema::mutations::delete_support;
-use crate::standards::v1::subsets::any::schema::mutations::remove_load;
-use crate::standards::v1::subsets::any::schema::mutations::replace_combination;
-use crate::standards::v1::subsets::any::schema::mutations::replace_element;
-use crate::standards::v1::subsets::any::schema::mutations::replace_load;
-use crate::standards::v1::subsets::any::schema::mutations::replace_material;
-use crate::standards::v1::subsets::any::schema::mutations::replace_node;
-use crate::standards::v1::subsets::any::schema::mutations::move_selection;
-use crate::standards::v1::subsets::any::schema::mutations::replace_region;
-use crate::standards::v1::subsets::any::schema::mutations::replace_section;
-use crate::standards::v1::subsets::any::schema::mutations::replace_support;
-use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_combination;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
+use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::create_material;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_region;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::create_section;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::create_support;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_combination;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_element;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::delete_load_case;
+use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::delete_material;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_region;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::delete_section;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::delete_support;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::remove_load;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_element;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_load;
+use semio_s_artifact_fem_2d_material::standards::v1::subsets::any::schema::mutations::replace_material;
+use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_region;
+use semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::replace_section;
+use semio_s_artifact_fem_2d_boundary::standards::v1::subsets::any::schema::mutations::replace_support;
+use semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///
@@ -127,9 +127,9 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
 /// is not something a frame solver can express, and this subset's region geometry already has its own
 /// two third-party oracles.
 pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>, Vec<String>) {
-    let ends = |element: &crate::FemElement| match element {
-        crate::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
-        crate::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
+    let ends = |element: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement| match element {
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
     };
     let mut active: Vec<(String, [bool; 3])> = Vec::new();
     for element in &doc.elements {
@@ -154,24 +154,24 @@ pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String
             }
         }
     }
-    let members: Vec<String> = doc.elements.iter().map(crate::element_id).map(str::to_string).collect();
+    let members: Vec<String> = doc.elements.iter().map(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id).map(str::to_string).collect();
     (nodes, pairs, members)
 }
 
 /// 🔤️ A document degree of freedom as the wire spells it.
-pub(crate) fn fem2d_dof_name(dof: crate::FemDof) -> &'static str {
+pub(crate) fn fem2d_dof_name(dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof) -> &'static str {
     match dof {
-        crate::FemDof::Tx => "Tx",
-        crate::FemDof::Ty => "Ty",
-        crate::FemDof::Tz => "Tz",
-        crate::FemDof::Rx => "Rx",
-        crate::FemDof::Ry => "Ry",
-        crate::FemDof::Rz => "Rz",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tx => "Tx",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ty => "Ty",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz => "Tz",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rx => "Rx",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Ry => "Ry",
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Rz => "Rz",
     }
 }
 
 /// 📤️ One solved case, projected onto the three axes.
-pub(crate) fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[String], pairs: &[(String, String)], members: &[String]) -> semio_framework_value::DslValue {
+pub(crate) fn fem2d_case_value(result: &semio_s_fem_model::StaticResult, nodes: &[String], pairs: &[(String, String)], members: &[String]) -> semio_framework_value::DslValue {
     let displacements = nodes
         .iter()
         .map(|node| {
@@ -191,8 +191,8 @@ pub(crate) fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[Str
         .iter()
         .map(|member| {
             let six = match result.elements.iter().find(|(id, _)| id == member).map(|(_, value)| value) {
-                Some(crate::model::ElementResult::Bar { n }) => [*n, 0.0, 0.0, *n, 0.0, 0.0],
-                Some(crate::model::ElementResult::Beam { stations }) => match (stations.first(), stations.last()) {
+                Some(semio_s_fem_model::ElementResult::Bar { n }) => [*n, 0.0, 0.0, *n, 0.0, 0.0],
+                Some(semio_s_fem_model::ElementResult::Beam { stations }) => match (stations.first(), stations.last()) {
                     (Some(head), Some(tail)) => [head.n, head.v, head.m, tail.n, tail.v, tail.m],
                     _ => [0.0; 6],
                 },
@@ -205,14 +205,14 @@ pub(crate) fn fem2d_case_value(result: &crate::model::StaticResult, nodes: &[Str
 }
 
 /// 🔤️ A solver degree of freedom as the wire spells it.
-pub(crate) fn fem2d_dof_name_of(dof: crate::model::Dof) -> &'static str {
+pub(crate) fn fem2d_dof_name_of(dof: semio_s_fem_model::Dof) -> &'static str {
     match dof {
-        crate::model::Dof::Tx => "Tx",
-        crate::model::Dof::Ty => "Ty",
-        crate::model::Dof::Tz => "Tz",
-        crate::model::Dof::Rx => "Rx",
-        crate::model::Dof::Ry => "Ry",
-        crate::model::Dof::Rz => "Rz",
+        semio_s_fem_model::Dof::Tx => "Tx",
+        semio_s_fem_model::Dof::Ty => "Ty",
+        semio_s_fem_model::Dof::Tz => "Tz",
+        semio_s_fem_model::Dof::Rx => "Rx",
+        semio_s_fem_model::Dof::Ry => "Ry",
+        semio_s_fem_model::Dof::Rz => "Rz",
     }
 }
 
@@ -237,7 +237,7 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
             ("cases".to_string(), value),
         ])
     };
-    match crate::fem2d_engine::fem2d_solve_all(&doc) {
+    match semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve_all(&doc) {
         Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(results) => {
             let mut cases = Vec::new();
@@ -274,7 +274,7 @@ pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) 
 /// as many as the document's own `analysis.modalCount` asks for.
 pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
     let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    match crate::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
+    match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
         Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(result) => {
             Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("frequenciesHz".to_string(), semio_framework_value::DslValue::Array(result.frequencies_hz.iter().take(doc.analysis.modal_count as usize).map(|value| semio_framework_value::DslValue::float(*value)).collect()))])))
@@ -288,7 +288,7 @@ pub fn fem2d_buckling_report_json(snapshot_json: &str) -> Result<String, String>
     let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut factors = Vec::new();
     for case in &doc.load_cases {
-        match crate::fem2d_engine::modal_buckling::fem2d_buckling(&doc, &case.id) {
+        match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_buckling(&doc, &case.id) {
             Err(error) => return Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
             Ok(result) => match result.factors.first() {
                 Some(value) => factors.push((case.id.clone(), semio_framework_value::DslValue::float(*value))),

@@ -1,6 +1,6 @@
 //! 🏨️ `create-curtain-panel-override` payload. Overrides the panel of one cell of a curtain wall, named by its indices along the wall and up it; at most one override per cell. A door panel belongs in the base row.
 
-use crate::{CurtainPanelOverride, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanelOverride, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

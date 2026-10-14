@@ -42,13 +42,19 @@ path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦�
 [workspace.dependencies.semio-framework-ui-contract]
 path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-cad-cad]
-path = "../../../📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-cad-cad-play]
+path = "../../../📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/📦️packages/🦀️rust"
 
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-model]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
+path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
+path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-dwg-read]
 path = "../../../🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
 

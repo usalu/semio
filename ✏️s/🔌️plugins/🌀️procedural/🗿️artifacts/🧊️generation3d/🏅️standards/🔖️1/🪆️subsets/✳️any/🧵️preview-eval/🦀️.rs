@@ -23,9 +23,10 @@
 //! interaction marks, its payload assembly, its window chrome — stays on that surface; everything
 //! the chain itself is made of lives here exactly once (CLAUDE.md: repeated code MUST be close to
 //! each other). Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
+#![allow(clippy::result_large_err)]
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext};
-use crate::standards::v1::subsets::any::schema::host_with_session;
+use semio_s_artifact_procedural_3d_model::host_with_session;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin::Effect;
@@ -463,7 +464,7 @@ pub fn preview_channel_items_for_widget(eval: &semio_framework_pack_json::Value,
 
 /// 🪪️ Every preview-bearing widget id of a host_snapshot, in declaration order.
 pub fn preview_widget_ids(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> Vec<String> {
-    host_snapshot.widgets.iter().filter(|widget| crate::widget_previews(widget)).map(|widget| crate::widget_id(widget).to_string()).collect()
+    host_snapshot.widgets.iter().filter(|widget| semio_s_artifact_procedural_3d_model::widget_previews(widget)).map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect()
 }
 
 pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
@@ -553,7 +554,7 @@ pub fn preview_fit_revision(host_snapshot: &semio_framework_artifact_flow_flow::
     };
     eat(&host_snapshot.schema);
     for widget in &host_snapshot.widgets {
-        eat(crate::widget_id(widget));
+        eat(semio_s_artifact_procedural_3d_model::widget_id(widget));
         eat(widget_kind_tag(widget));
     }
     for synapse in &host_snapshot.synapses {
@@ -737,7 +738,7 @@ pub fn preview_mesh_pack_fingerprint(
 fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &semio_framework_pack_json::Value) -> u64 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    for (id, channel) in crate::standards::v1::subsets::any::io::mesh_bridge::retained_geometry_channels(host_snapshot) {
+    for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
         for item in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)) {
             if item.handle.is_empty() {
                 continue;
@@ -778,7 +779,7 @@ pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, h
     let mut live = HashSet::new();
     let mut channel_missing_pack = false;
     for widget in &host_snapshot.widgets {
-        let id = crate::widget_id(widget).to_string();
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
         for item in preview_channel_items_for_widget(eval, &id) {
             if item.handle.is_empty() {
                 continue;
@@ -810,7 +811,7 @@ pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, h
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
 pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
     let mut handles = Vec::new();
-    for (id, channel) in crate::standards::v1::subsets::any::io::mesh_bridge::retained_geometry_channels(host_snapshot) {
+    for (id, channel) in semio_s_artifact_procedural_3d_mesh_bridge::retained_geometry_channels(host_snapshot) {
         for handle in preview_channel_items_for_widget(eval, &id).into_iter().filter(|item| channel.as_ref().is_none_or(|channel| *channel == item.channel)).filter_map(|item| (!item.handle.is_empty()).then_some(item.handle)) {
             if session.preview_diagnostics(&handle).is_some() {
                 continue;
@@ -1169,7 +1170,7 @@ pub fn preview_status_json(eval_json: &str, host_snapshot: &semio_framework_arti
     }
     let mut errors = semio_framework_pack_json::Object::new();
     for widget in &host_snapshot.widgets {
-        let id = crate::widget_id(widget).to_string();
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
         let Some(entry) = eval.get(&id) else { continue };
         if let Some(error) = entry.get("error").and_then(semio_framework_pack_json::Value::as_str) {
             errors.insert(id, semio_framework_pack_json::Value::String(error.to_string()));
@@ -1452,3 +1453,35 @@ pub use tool_run::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+pub fn split_endpoint(endpoint: &str) -> (String, String) {
+    endpoint.split_once('@').map_or_else(|| (endpoint.to_string(), "out".into()), |(node, port)| (node.to_string(), port.to_string()))
+}
+
+pub fn dag_host_snapshot_to_workflow(host_snapshot: &semio_framework_os_infinite_directed_presentation::DagHostSnapshot) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
+    let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = host_snapshot
+        .nodes
+        .iter()
+        .map(|node| semio_framework_ui::wgpu::NodeGraphNodeRecord {
+            id: node.id.clone(),
+            label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
+            x: node.x,
+            y: node.y,
+            width: node.width,
+            height: node.height,
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| semio_framework_ui::wgpu::NodeGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()), value_type: port.value_type.clone(), ..Default::default() }).collect(),
+            ..Default::default()
+        })
+        .collect();
+    let edges: Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord> = host_snapshot
+        .edges
+        .iter()
+        .map(|edge| {
+            let (source_node_id, source_port_id) = split_endpoint(&edge.source);
+            let (target_node_id, target_port_id) = split_endpoint(&edge.target);
+            semio_framework_ui::wgpu::NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id, label: None }
+        })
+        .collect();
+    (nodes, edges)
+}

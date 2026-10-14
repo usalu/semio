@@ -27,7 +27,7 @@ mod tests;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::schema::mutations::RemodelingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 
 impl protocol::OpBinary for RemodelingMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

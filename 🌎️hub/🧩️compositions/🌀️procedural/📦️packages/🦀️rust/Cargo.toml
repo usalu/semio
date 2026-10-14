@@ -15,18 +15,14 @@ role = "hub"
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-# 🧮️ Installs `semio_framework_trace::HeapWitness` as this component's `#[global_allocator]` and
-# thereby arms the reactor's per-turn retention trace. Diagnostic builds only — see the static's doc.
-guest-heap-witness = ["dep:semio-framework-trace"]
-
 [dependencies]
+semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-generation2d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation2d = { workspace = true }
+semio-s-artifact-procedural-generation3d = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -34,9 +30,9 @@ semio-framework-plugin = { workspace = true }
 # impl HERE, so the domain-neutral tool-run types have to resolve in this crate too.
 semio-framework-tool-run = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-trace = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }

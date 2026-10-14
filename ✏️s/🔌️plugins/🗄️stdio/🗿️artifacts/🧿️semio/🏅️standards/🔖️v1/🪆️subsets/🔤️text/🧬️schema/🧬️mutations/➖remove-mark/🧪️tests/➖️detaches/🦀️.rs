@@ -6,9 +6,10 @@
 //! the run exists and carries two marks, and the italic one at nested index 1 is detached while
 //! the bold one at index 0 stays.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖remove-mark/➖️detaches/📸️snapshot/⬅️before/🔣️.json");

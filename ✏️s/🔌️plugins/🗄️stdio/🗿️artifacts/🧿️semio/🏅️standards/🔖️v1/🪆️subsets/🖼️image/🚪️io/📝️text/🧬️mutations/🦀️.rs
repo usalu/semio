@@ -21,8 +21,11 @@ pub(crate) const TEXT_KEYWORDS: [(&str, &str); 11] = [
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 use crate::io::text::snapshot::dec_metadata_entry;
 use crate::io::text::snapshot::enc_metadata_entry;

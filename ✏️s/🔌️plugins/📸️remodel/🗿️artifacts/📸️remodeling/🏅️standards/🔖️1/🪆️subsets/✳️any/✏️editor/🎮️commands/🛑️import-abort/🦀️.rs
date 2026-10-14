@@ -5,9 +5,9 @@
 //! window closing) ends that window's own import only.
 
 use crate::editor::remodeling::commands::import_video_frame_payload::import_transaction;
-use crate::editor::remodeling::transient::RemodelingWindowTransient;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 

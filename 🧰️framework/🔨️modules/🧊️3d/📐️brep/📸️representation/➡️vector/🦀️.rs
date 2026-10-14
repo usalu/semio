@@ -1,13 +1,33 @@
 //! 📐️ Plain-`f64` 2D/3D vectors and points — no external linear-algebra crate. Points and vectors
 //! are kept as distinct newtypes (a point minus a point is a vector; a vector has no fixed origin)
 //! so geometric code cannot silently add two points or translate a direction. Every operation here
-//! is exact IEEE-754 arithmetic; tolerance-aware comparison lives in [`crate::tolerance`].
+//! is exact IEEE-754 arithmetic; tolerance-aware comparison lives in [`semio_framework_3d_brep_tolerance`].
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/➡️vector` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, together with
 //! its `🔢️matrix`/`⚖️predicates` local children (no pre-mounted target existed for either, so both
 //! nest here rather than adding new entries to stdio's `🦀️.rs`, mirroring the `⚙️engine` →
 //! `🟫️step`/`📦️mesh-io` local-mount pattern from wave PEEL3).
+//!
+//! Crate cut of `semio-framework-3d-brep-representation` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
+
+extern crate semio_framework_value_derive as value_derive;
+
+/// ♻️ Implements `RetireOwned` for a geometry enum by retiring every field of its matching variant.
+#[macro_export]
+macro_rules! retire_geometry_variants {
+    ($type:ty {$($variant:ident {$($field:ident),+}),+ $(,)?}) => {
+        impl semio_framework_value::retirement::RetireOwned for $type {
+            fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {
+                match self {$ (Self::$variant {$($field),+}=>semio_framework_value::retirement::sequence(vec![$(semio_framework_value::retirement::deferred($field)),+])),+}
+            }
+            fn retirement_birth_bytes(&self)->Option<usize> {
+                match self {$ (Self::$variant {$($field),+}=>semio_framework_value::retirement::sequence_birth_bytes(&[$(semio_framework_value::retirement::deferred_birth_bytes_for($field)),+])),+}
+            }
+            fn controlled_retirement_supported()->bool {true}
+        }
+    };
+}
 
 // #region 🔖️Submodules
 

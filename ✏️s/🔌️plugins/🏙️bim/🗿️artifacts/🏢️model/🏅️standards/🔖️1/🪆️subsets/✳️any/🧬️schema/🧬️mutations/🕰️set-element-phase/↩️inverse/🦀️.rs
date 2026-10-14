@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::SetElementPhase;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetElementPhase, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match elements::phase_of(base, &payload.id) {

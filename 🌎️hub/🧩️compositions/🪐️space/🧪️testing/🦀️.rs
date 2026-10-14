@@ -12,7 +12,7 @@ fn decode<S: pack::snapshot::ArtifactDsl + semio_framework_value::ToValue + semi
 /// 📚️ Selects the unique original example declarations for this actual composition.
 pub(crate) fn sources() -> [SpaceDocumentSource; 2] {
     [
-        SpaceDocumentSource { slug: "🖍️semio.draw.json".into(), format: SpaceDocumentFormat::Dsl, codec: "draw.snapshot.v1".into(), text: semio_s_artifact_draw_drawing::examples::demo::source().document_json() },
+        SpaceDocumentSource { slug: "🖍️semio.draw.json".into(), format: SpaceDocumentFormat::Dsl, codec: "draw.snapshot.v1".into(), text: semio_s_artifact_draw_drawing_examples::demo::source().document_json() },
         SpaceDocumentSource { slug: "✒️jack.writer.json".into(), format: SpaceDocumentFormat::Dsl, codec: "writer.snapshot.v1".into(), text: semio_s_artifact_writer_writer::examples::demo::source().document_json() },
     ]
 }
@@ -20,7 +20,7 @@ pub(crate) fn sources() -> [SpaceDocumentSource; 2] {
 /// 🔑️ Binds source identities to the selected owners' real snapshot implementations.
 pub(crate) fn codecs() -> [SpaceDocumentCodec; 2] {
     [
-        SpaceDocumentCodec { id: "draw.snapshot.v1", decode: decode::<semio_s_artifact_draw_drawing::DrawingSnapshot> },
+        SpaceDocumentCodec { id: "draw.snapshot.v1", decode: decode::<semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot> },
         SpaceDocumentCodec { id: "writer.snapshot.v1", decode: decode::<semio_s_artifact_writer_writer::WriterSnapshot> },
     ]
 }

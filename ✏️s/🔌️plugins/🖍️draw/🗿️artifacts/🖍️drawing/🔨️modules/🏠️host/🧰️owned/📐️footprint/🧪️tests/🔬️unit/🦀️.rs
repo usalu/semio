@@ -135,7 +135,7 @@ fn paged_native_drawing_snapshot_sparse_path_patch_preserves_semantics_and_nativ
     const AFTER: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json");
     const DELTA: &str = include_str!("../../../../../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧪️tests/🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json");
     let before: DrawingSnapshot = serde_json::from_str(BEFORE).unwrap();
-    let mut delta: crate::diff::DrawingDiff = serde_json::from_str(DELTA).unwrap();
+    let mut delta: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DELTA).unwrap();
     let after = protocol::apply_diff(&delta, &before).unwrap();
     assert_eq!(serde_json::to_value(&after).unwrap(), serde_json::from_str::<serde_json::Value>(AFTER).unwrap());
     let segments = delta.layers.as_mut().unwrap().modified[0].patch.path_segments.take().unwrap();
@@ -214,7 +214,7 @@ fn paged_native_drawing_snapshot_identifier_equality_obeys_independent_unicode_l
 fn paged_native_drawing_snapshot_record_footprint_matches_actual_root_and_asset_heap() {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/📋️native-owner/🔣️.json")).unwrap();
     let long = law["text"].as_str().unwrap().repeat(law["repeat"].as_u64().unwrap() as usize) + "\0";
-    let (snapshot, allocation) = observe(|| crate::schema::default_drawing_document(&long, Some(&long)));
+    let (snapshot, allocation) = observe(|| semio_s_artifact_draw_drawing_model::default_drawing_document(&long, Some(&long)));
     assert!(!allocation.overflowed);
     let root_retained = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
     let ((key, asset), allocation) = observe(|| (PagedUtf8::try_from_str(&long).unwrap(), DrawingImageAsset { width: long.len() as u32, height: 1, samples: vec![[1,2,3,4];long.len()].into() }));
@@ -261,20 +261,20 @@ fn paged_native_drawing_snapshot_direct_layer_footprint_matches_actual_retained_
     for kind in 0..7 {
         let (source, allocation) = observe(|| {
             let mut source = match kind {
-                0 => crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
-                1 => crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, PagedList::default()),
-                2 => crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
-                3 => crate::schema::create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
-                4 => crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
-                5 => crate::schema::create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, "union", PagedList::try_from_iter([PagedUtf8::try_from_str(&long).unwrap(), PagedUtf8::default()]).unwrap()),
-                _ => crate::schema::create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
+                0 => semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                1 => semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, PagedList::default()),
+                2 => semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                3 => semio_s_artifact_draw_drawing_model::create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
+                4 => semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long),
+                5 => semio_s_artifact_draw_drawing_model::create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, "union", PagedList::try_from_iter([PagedUtf8::try_from_str(&long).unwrap(), PagedUtf8::default()]).unwrap()),
+                _ => semio_s_artifact_draw_drawing_model::create_drawing_trace_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((&long)).to_string().into()).expect("nonempty authored identity"), &long, &long),
             };
             if let DrawingLayerNode::Text(value) = &mut source { value.content = PagedUtf8::try_from_str(&long).unwrap(); }
             source
         });
         assert!(!allocation.overflowed);
         let retained = allocation.requested_bytes.checked_sub(allocation.released_bytes).unwrap();
-        let foreign = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("foreign")).to_string().into()).expect("nonempty authored identity"), "foreign");
+        let foreign = semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("foreign")).to_string().into()).expect("nonempty authored identity"), "foreign");
         let (mut cursor, allocation) = observe(DrawingLayerFootprintCursor::default);
         assert_eq!((allocation.requested_bytes, allocation.released_bytes), (0, 0));
         assert!(std::mem::size_of_val(&cursor) <= 4096);

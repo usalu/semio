@@ -1,5 +1,7 @@
 //! ☀️ Solar thermal collectors: flat-plate, ICS, unglazed transpired, PVT.
 
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::units::{CP_DRY_AIR, RHO_AIR_REF, STEFAN_BOLTZMANN};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

@@ -4,7 +4,7 @@ use semio_framework_pack_json::{JsonWriteNode,JsonWriteSource};
 use semio_framework_value::{ValueError,ValueRefusalKind,paged::PagedUtf8,list::PagedList};
 fn absent()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Drawing clipboard JSON ordinal is absent")}
 #[derive(Clone,Copy)]
-enum View<'a>{Packet(&'a DrawingClipboard),Layer(&'a DrawingLayerNode),Transform(&'a crate::DrawingTransform),Attributes(&'a crate::DrawingAttributes),Fill(&'a crate::FillStyle),Stroke(&'a crate::StrokeStyle),Stop(&'a crate::GradientStop),Segment(&'a crate::PathSegment),Rect(&'a crate::DrawingRect),Ellipse(&'a crate::DrawingEllipse),Circle(&'a crate::DrawingCircle),Line(&'a crate::DrawingLine),Polygon(&'a crate::DrawingPolygon),Trace(&'a crate::DrawingTraceParams),Asset(&'a DrawingImageAsset),Layers(&'a[DrawingLayerNode]),Children(&'a PagedList<DrawingLayerNode,{usize::MAX}>),Segments(&'a PagedList<crate::PathSegment,{usize::MAX}>),Points(&'a PagedList<[f64;2],{usize::MAX}>),Stops(&'a PagedList<crate::GradientStop,{usize::MAX}>),Numbers(&'a PagedList<f64,{usize::MAX}>),Identities(&'a PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>),Samples(&'a PagedList<[u8;4],{usize::MAX}>),Assets(&'a DrawingClipboardAssets),Strings(&'a[String]),Vector(&'a[f64]),Bytes(&'a[u8]),Native(&'a PagedUtf8<{usize::MAX}>),Text(&'a str),Number(f64),Unsigned(u64),Bool(bool)}
+enum View<'a>{Packet(&'a DrawingClipboard),Layer(&'a DrawingLayerNode),Transform(&'a semio_s_artifact_draw_drawing_model::DrawingTransform),Attributes(&'a semio_s_artifact_draw_drawing_model::DrawingAttributes),Fill(&'a semio_s_artifact_draw_drawing_model::FillStyle),Stroke(&'a semio_s_artifact_draw_drawing_model::StrokeStyle),Stop(&'a semio_s_artifact_draw_drawing_model::GradientStop),Segment(&'a semio_s_artifact_draw_drawing_model::PathSegment),Rect(&'a semio_s_artifact_draw_drawing_model::DrawingRect),Ellipse(&'a semio_s_artifact_draw_drawing_model::DrawingEllipse),Circle(&'a semio_s_artifact_draw_drawing_model::DrawingCircle),Line(&'a semio_s_artifact_draw_drawing_model::DrawingLine),Polygon(&'a semio_s_artifact_draw_drawing_model::DrawingPolygon),Trace(&'a semio_s_artifact_draw_drawing_model::DrawingTraceParams),Asset(&'a DrawingImageAsset),Layers(&'a[DrawingLayerNode]),Children(&'a PagedList<DrawingLayerNode,{usize::MAX}>),Segments(&'a PagedList<semio_s_artifact_draw_drawing_model::PathSegment,{usize::MAX}>),Points(&'a PagedList<[f64;2],{usize::MAX}>),Stops(&'a PagedList<semio_s_artifact_draw_drawing_model::GradientStop,{usize::MAX}>),Numbers(&'a PagedList<f64,{usize::MAX}>),Identities(&'a PagedList<PagedUtf8<{usize::MAX}>,{usize::MAX}>),Samples(&'a PagedList<[u8;4],{usize::MAX}>),Assets(&'a DrawingClipboardAssets),Strings(&'a[String]),Vector(&'a[f64]),Bytes(&'a[u8]),Native(&'a PagedUtf8<{usize::MAX}>),Text(&'a str),Number(f64),Unsigned(u64),Bool(bool)}
 struct Fields<'a>{items:[Option<(&'static str,View<'a>)>;20],len:usize}
 impl<'a> Fields<'a>{fn new()->Self{Self{items:[None;20],len:0}}fn push(&mut self,key:&'static str,value:View<'a>){self.items[self.len]=Some((key,value));self.len+=1;}fn at(&self,index:usize)->Result<(&'static str,View<'a>),ValueError>{self.items.get(index).copied().flatten().ok_or_else(absent)}}
 macro_rules! fields{($($key:literal=>$value:expr),*$(,)?)=>{{let mut fields=Fields::new();$(fields.push($key,$value);)*fields}}}
@@ -25,20 +25,20 @@ impl<'a> View<'a>{
             };fields
         },
         Transform(value)=>fields!["x"=>Number(value.x),"y"=>Number(value.y),"scaleX"=>Number(value.scale_x),"scaleY"=>Number(value.scale_y),"rotation"=>Number(value.rotation),"shear"=>Number(value.shear)],
-        Attributes(value)=>{let mut fields=fields!["fillRule"=>Text(match value.fill_rule{crate::FillRule::Nonzero=>"nonzero",crate::FillRule::Evenodd=>"evenodd"})];if let Some(value)=&value.fill{fields.push("fill",Fill(value));}if let Some(value)=&value.stroke{fields.push("stroke",Stroke(value));}fields},
+        Attributes(value)=>{let mut fields=fields!["fillRule"=>Text(match value.fill_rule{semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero=>"nonzero",semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Evenodd=>"evenodd"})];if let Some(value)=&value.fill{fields.push("fill",Fill(value));}if let Some(value)=&value.stroke{fields.push("stroke",Stroke(value));}fields},
         Fill(value)=>match value{
-            crate::FillStyle::Solid{color}=>fields!["kind"=>Text("solid"),"color"=>Vector(color)],
-            crate::FillStyle::LinearGradient{x1,y1,x2,y2,stops}=>fields!["kind"=>Text("linearGradient"),"x1"=>Number(*x1),"y1"=>Number(*y1),"x2"=>Number(*x2),"y2"=>Number(*y2),"stops"=>Stops(stops)],
-            crate::FillStyle::RadialGradient{cx,cy,r,stops}=>fields!["kind"=>Text("radialGradient"),"cx"=>Number(*cx),"cy"=>Number(*cy),"r"=>Number(*r),"stops"=>Stops(stops)]},
-        Stroke(value)=>{let mut fields=fields!["color"=>Vector(&value.color),"width"=>Number(value.width),"cap"=>Text(match value.cap{crate::StrokeCap::Butt=>"butt",crate::StrokeCap::Round=>"round",crate::StrokeCap::Square=>"square"}),"join"=>Text(match value.join{crate::StrokeJoin::Miter=>"miter",crate::StrokeJoin::Round=>"round",crate::StrokeJoin::Bevel=>"bevel"})];if let Some(value)=&value.dash{fields.push("dash",Numbers(value));}fields},
+            semio_s_artifact_draw_drawing_model::FillStyle::Solid{color}=>fields!["kind"=>Text("solid"),"color"=>Vector(color)],
+            semio_s_artifact_draw_drawing_model::FillStyle::LinearGradient{x1,y1,x2,y2,stops}=>fields!["kind"=>Text("linearGradient"),"x1"=>Number(*x1),"y1"=>Number(*y1),"x2"=>Number(*x2),"y2"=>Number(*y2),"stops"=>Stops(stops)],
+            semio_s_artifact_draw_drawing_model::FillStyle::RadialGradient{cx,cy,r,stops}=>fields!["kind"=>Text("radialGradient"),"cx"=>Number(*cx),"cy"=>Number(*cy),"r"=>Number(*r),"stops"=>Stops(stops)]},
+        Stroke(value)=>{let mut fields=fields!["color"=>Vector(&value.color),"width"=>Number(value.width),"cap"=>Text(match value.cap{semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Butt=>"butt",semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round=>"round",semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Square=>"square"}),"join"=>Text(match value.join{semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Miter=>"miter",semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Round=>"round",semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Bevel=>"bevel"})];if let Some(value)=&value.dash{fields.push("dash",Numbers(value));}fields},
         Stop(value)=>fields!["offset"=>Number(value.offset),"color"=>Vector(&value.color)],
         Segment(value)=>match value{
-            crate::PathSegment::Move{to}=>fields!["kind"=>Text("move"),"to"=>Vector(to)],
-            crate::PathSegment::Line{to}=>fields!["kind"=>Text("line"),"to"=>Vector(to)],
-            crate::PathSegment::Quad{ctrl,to}=>fields!["kind"=>Text("quad"),"ctrl"=>Vector(ctrl),"to"=>Vector(to)],
-            crate::PathSegment::Cubic{ctrl1,ctrl2,to}=>fields!["kind"=>Text("cubic"),"ctrl1"=>Vector(ctrl1),"ctrl2"=>Vector(ctrl2),"to"=>Vector(to)],
-            crate::PathSegment::Arc{rx,ry,rotation,large_arc,sweep,to}=>fields!["kind"=>Text("arc"),"rx"=>Number(*rx),"ry"=>Number(*ry),"rotation"=>Number(*rotation),"largeArc"=>Bool(*large_arc),"sweep"=>Bool(*sweep),"to"=>Vector(to)],
-            crate::PathSegment::Close=>fields!["kind"=>Text("close")]},
+            semio_s_artifact_draw_drawing_model::PathSegment::Move{to}=>fields!["kind"=>Text("move"),"to"=>Vector(to)],
+            semio_s_artifact_draw_drawing_model::PathSegment::Line{to}=>fields!["kind"=>Text("line"),"to"=>Vector(to)],
+            semio_s_artifact_draw_drawing_model::PathSegment::Quad{ctrl,to}=>fields!["kind"=>Text("quad"),"ctrl"=>Vector(ctrl),"to"=>Vector(to)],
+            semio_s_artifact_draw_drawing_model::PathSegment::Cubic{ctrl1,ctrl2,to}=>fields!["kind"=>Text("cubic"),"ctrl1"=>Vector(ctrl1),"ctrl2"=>Vector(ctrl2),"to"=>Vector(to)],
+            semio_s_artifact_draw_drawing_model::PathSegment::Arc{rx,ry,rotation,large_arc,sweep,to}=>fields!["kind"=>Text("arc"),"rx"=>Number(*rx),"ry"=>Number(*ry),"rotation"=>Number(*rotation),"largeArc"=>Bool(*large_arc),"sweep"=>Bool(*sweep),"to"=>Vector(to)],
+            semio_s_artifact_draw_drawing_model::PathSegment::Close=>fields!["kind"=>Text("close")]},
         Rect(value)=>fields!["x"=>Number(value.x),"y"=>Number(value.y),"width"=>Number(value.width),"height"=>Number(value.height)],
         Ellipse(value)=>fields!["cx"=>Number(value.cx),"cy"=>Number(value.cy),"rx"=>Number(value.rx),"ry"=>Number(value.ry)],
         Circle(value)=>fields!["cx"=>Number(value.cx),"cy"=>Number(value.cy),"r"=>Number(value.r)],
@@ -58,7 +58,7 @@ impl<'a> View<'a>{
     fn key(self,index:usize)->Result<&'a str,ValueError>{if let Self::Assets(value)=self{return value.entry_at(index).map(|(key,_)|key.as_str()).ok_or_else(absent);}Ok(self.fields().ok_or_else(absent)?.at(index)?.0)}
 }
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) struct ClipboardJsonSource{pub(super) packet:DrawingClipboard}
+pub struct ClipboardJsonSource{pub packet:DrawingClipboard}
 impl ClipboardJsonSource{fn at(&self,path:&[usize])->Result<View<'_>,ValueError>{let mut value=View::Packet(&self.packet);for index in path{value=value.child(*index)?;}Ok(value)}}
 impl JsonWriteSource for ClipboardJsonSource{
     fn node_at_path(&self,path:&[usize])->Result<JsonWriteNode<'_>,ValueError>{self.at(path)?.node()}

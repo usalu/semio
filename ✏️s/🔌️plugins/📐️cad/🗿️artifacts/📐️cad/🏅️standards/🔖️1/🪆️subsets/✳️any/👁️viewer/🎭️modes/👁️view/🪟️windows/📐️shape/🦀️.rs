@@ -5,8 +5,8 @@
 //! selection, no engagement, no gumball/dislocate: a viewer has no utilities that edit and emits no
 //! mutations by construction (`ViewEmit`).
 
-use crate::standards::v1::subsets::any::schema::inferences::cad_camera_projection_config;
-use crate::{CadCamera, CadPaneId, CadSnapshot};
+use semio_s_artifact_cad_cad_inferences::cad_camera_projection_config;
+use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId, snapshot::CadSnapshot};
 use semio_framework_plugin::app::WindowKit;
 use semio_framework_plugin::mesh_from_kind;
 use semio_framework_plugin::world3d_camera_projection_json;

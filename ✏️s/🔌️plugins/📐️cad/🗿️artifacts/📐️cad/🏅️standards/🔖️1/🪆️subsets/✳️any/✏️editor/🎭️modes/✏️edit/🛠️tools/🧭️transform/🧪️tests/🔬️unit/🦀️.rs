@@ -4,12 +4,13 @@
 //! literal targets and parameters, every member edit stamped with the gesture's `TransactionRef`, and zero trace when
 //! nothing moves. The leaves stay editable: a history edit of the drag's offset replays onto any base.
 
-use super::*;
-use crate::editor::cad::engine::interaction::apply_event;
-use crate::editor::cad::unit_tests::context::{close, member_rows, meta, new_app, pane_objects, settle, CadFixtureApp, TEST_INSTANCE};
-use crate::editor::cad::{start_interaction_session, try_commit_session_entries, CadCommand, CadPlayRuntime};
-use crate::sample_scene_fixture::sample_object;
-use crate::standards::v1::subsets::any::schema::geometry::{objects_from_model_snapshot, semio_model_snapshot_from_objects};
+use semio_s_artifact_cad_cad_transform::*;
+use semio_s_artifact_cad_cad_interaction::apply_event;
+use semio_s_artifact_cad_cad_editor::{unit_tests::context::close, unit_tests::context::member_rows, unit_tests::context::meta, unit_tests::context::new_app, unit_tests::context::pane_objects, unit_tests::context::settle, unit_tests::context::CadFixtureApp, unit_tests::context::TEST_INSTANCE};
+use semio_s_artifact_cad_cad_kit::{start_interaction_session, try_commit_session_entries, CadPlayRuntime};
+use semio_s_artifact_cad_cad_editor::CadCommand;
+use semio_s_artifact_cad_cad_testing::sample_object;
+use semio_s_artifact_cad_cad_model::{geometry::objects_from_model_snapshot, geometry::semio_model_snapshot_from_objects};
 use protocol::Mutation;
 use semio_framework_plugin::app::ChildEmitPreparationStep;
 use semio_framework_plugin::{AppOperationContext, HistoryView, PluginApp};
@@ -89,14 +90,14 @@ fn a_committed_gesture_is_one_child_edit_per_touched_pane_under_one_transaction(
 fn nothing_to_move_leaves_zero_trace() {
     let models = models();
     let history = HistoryView::empty();
-    let document = crate::empty_cad_snapshot();
+    let document = semio_s_artifact_cad_cad_model::snapshot::empty_cad_snapshot();
     let doc = ArtifactView::with_operation(&document, &history, AppOperationContext { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "seed-c".into() });
     for entries in [
         vec![CadToolEntry::Transform(CadTransformRecord::drag(ids(&["ghost"]), [1.0, 0.0, 0.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::drag(ids(&["object-a"]), [0.0, 0.0, 0.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::scale(ids(&["object-a"]), [1.0, 1.0, 1.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::rotate(ids(&["object-a"]), [0.0, 0.0, 0.0], 1.0))],
-        vec![CadToolEntry::Create { pane: CadPaneId::Energy, element: crate::standards::v1::subsets::any::schema::geometry::model_element_from_cad_object(&sample_object("object-e", [0.0; 3])) }],
+        vec![CadToolEntry::Create { pane: CadPaneId::Energy, element: semio_s_artifact_cad_cad_model::geometry::model_element_from_cad_object(&sample_object("object-e", [0.0; 3])) }],
         Vec::new(),
     ] {
         assert!(cad_transform_tool_commit("translateSelection", "seed-c", &models, entries.clone()).is_none(), "{entries:?} must commit nothing");
@@ -132,7 +133,7 @@ fn leaves_without_a_transaction_are_a_plain_child_edit() {
 #[test]
 fn created_elements_fold_onto_the_running_model() {
     let models = models();
-    let element = crate::standards::v1::subsets::any::schema::geometry::model_element_from_cad_object(&sample_object("object-new", [2.0, 2.0, 0.0]));
+    let element = semio_s_artifact_cad_cad_model::geometry::model_element_from_cad_object(&sample_object("object-new", [2.0, 2.0, 0.0]));
     let entries = vec![
         CadToolEntry::Create { pane: CadPaneId::Shape, element: element.clone() },
         CadToolEntry::Transform(CadTransformRecord::drag(ids(&["object-new"]), [1.0, 0.0, 0.0])),
@@ -186,7 +187,7 @@ fn a_move_interaction_commits_a_relative_drag() {
 
 /// 🧱️ Adds one box to the mounted app's shape pane and answers its id.
 async fn place_box(app: &mut CadFixtureApp) -> String {
-    use crate::editor::cad::commands::object::add_object::AddObject;
+    use semio_s_artifact_cad_cad_commands::object::add_object::AddObject;
     app.dispatch_typed(CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("addObject is admitted");
     settle(app).await;
     pane_objects(app, CadPaneId::Shape).await.last().expect("the box is placed").id.clone()
@@ -201,7 +202,7 @@ async fn placed_origin(app: &CadFixtureApp, id: &str) -> [f64; 3] {
 /// never one row per tick, never a parent edit.
 #[semio_framework_async_macros::async_test]
 async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
-    use crate::editor::cad::commands::transform::translate_selection::TranslateSelection;
+    use semio_s_artifact_cad_cad_commands::transform::translate_selection::TranslateSelection;
     let mut app = new_app().await;
     let parent = app.snapshot().expect("snapshot");
     let store = format!("{}/{}", cad_pane_model_slot(CadPaneId::Shape), cad_pane_model(&parent, CadPaneId::Shape).expect("shape child").child_id);

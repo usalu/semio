@@ -37,9 +37,9 @@
     "executionSpent": 73
   },
   "expected": {
-    "fuel": 58,
+    "fuel": 57,
     "grant": [
-      6,
+      5,
       4032,
       65536,
       262144,
@@ -61,10 +61,22 @@
   ],
   "startupDeadline": {
     "initiatingNow": 1000,
-    "initiatingDeadline": 1500,
-    "expiredNow": 1501,
-    "nextRootDeadline": 2001,
+    "initiatingDeadline": 1200,
+    "originalDeadline": 1500,
+    "expiredNow": 1201,
+    "nextRootDeadline": 1500,
     "expiredVmSpent": 0,
     "nextVmSpent": 2
+  },
+  "totalGrant": [
+    512,
+    1048576,
+    1048576,
+    1048576,
+    64
+  ],
+  "cancellationSpent": {
+    "items": 1,
+    "work": 1
   }
 }

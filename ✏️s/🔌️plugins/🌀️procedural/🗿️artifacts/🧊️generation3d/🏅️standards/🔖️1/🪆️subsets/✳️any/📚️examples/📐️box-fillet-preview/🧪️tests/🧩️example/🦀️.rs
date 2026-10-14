@@ -1,3 +1,8 @@
+/// 🧩️ Binds an example snapshot to the bundled catalogue and the native compute context.
+fn geometry_input(snapshot: &semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot) -> semio_s_artifact_procedural_3d_geometry::GeometryInput<'_> {
+    semio_s_artifact_procedural_3d_geometry::GeometryInput::new(snapshot, semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue(), &semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext)
+}
+
 #[test]
 fn primary_asset_is_nonempty() {
     let text = include_str!("../../🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
@@ -7,12 +12,12 @@ fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[test]
 fn inference_determinism_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::Generation3dInference;
+    use semio_s_artifact_procedural_3d_inferences::Generation3dInference;
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
-    assert_eq!(Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture"), Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture"));
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl(text).expect("example dsl parses");
+    assert_eq!(Generation3dInference::infer(&geometry_input(&snapshot)).expect("valid materialized inference fixture"), Generation3dInference::infer(&geometry_input(&snapshot)).expect("valid materialized inference fixture"));
     snapshot.retire_cold();
 }
 
@@ -20,12 +25,12 @@ fn inference_determinism_law() {
 /// the inference must see its nodes and edges rather than fall back on a zero value.
 #[test]
 fn inference_of_the_example_is_a_non_trivial_acyclic_topology() {
-    use crate::standards::v1::subsets::any::schema::inferences::Generation3dInference;
+    use semio_s_artifact_procedural_3d_inferences::Generation3dInference;
     use protocol::Inference;
 
     let text = include_str!("../../🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example dsl parses");
-    let inferred = Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture");
+    let snapshot = semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl(text).expect("example dsl parses");
+    let inferred = Generation3dInference::infer(&geometry_input(&snapshot)).expect("valid materialized inference fixture");
     assert_eq!(inferred.topology.node_count as usize, snapshot.host_snapshot.widgets.len());
     assert_eq!(inferred.topology.edge_count as usize, snapshot.host_snapshot.synapses.len());
     assert!(inferred.topology.cycle_free, "a bundled example must be an acyclic graph");

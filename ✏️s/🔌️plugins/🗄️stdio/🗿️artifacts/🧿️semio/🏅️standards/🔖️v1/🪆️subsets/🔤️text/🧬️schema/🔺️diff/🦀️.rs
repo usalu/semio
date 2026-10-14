@@ -5,7 +5,13 @@
 //! rebuilt list. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use semio_s_artifact_stdio_semio_base::schema::triples::absorb_indexed_slot;
+use semio_s_artifact_stdio_semio_base::schema::triples::apply_indexed_rows;
+use semio_s_artifact_stdio_semio_base::schema::triples::inverse_indexed_rows;
+use semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedRow;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
 use crate::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
@@ -135,7 +141,8 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
-    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     use crate::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
     let bold = SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() };
     vec![

@@ -3,7 +3,7 @@
 
 use super::super::elements;
 use super::CreateWallType;
-use crate::{Entry, Layer, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn fault(layers: &[Layer], base: &ModelSnapshot) -> Option<(OutcomeCode, String, Option<&'static str>)> {

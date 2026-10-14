@@ -1,5 +1,5 @@
 //! 🔏️ Versioned counted Drawing identity preimages and controlled SHA-256 commitments.
-use crate::standards::v1::subsets::any::schema::identity::{DrawingIdentityKind,DrawingIdentityCommitment};
+use semio_s_artifact_draw_drawing_model::identity::{DrawingIdentityKind, DrawingIdentityCommitment};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 const HEADER:&[u8;8]=b"DRAWID01";
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Drawing identity input exceeds canonical limits")}

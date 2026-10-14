@@ -6,9 +6,9 @@
 //! Run #1 here carries a bold mark, which the edit must leave untouched — that is the point of
 //! this case.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/✏️edit-run/✍️rewrites/📸️snapshot/⬅️before/🔣️.json");

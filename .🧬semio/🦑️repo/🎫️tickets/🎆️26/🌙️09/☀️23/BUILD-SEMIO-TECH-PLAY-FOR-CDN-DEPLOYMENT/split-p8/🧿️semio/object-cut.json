@@ -1,0 +1,43 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "object-layers.json",
+ "crate": "semio_s_artifact_stdio_semio_object",
+ "aggregator": "object",
+ "crates": {
+  "inferences": {
+   "package": "semio-s-artifact-stdio-semio-object-inferences",
+   "dir": "🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The semio object inferences derived from a snapshot, with their text and binary codecs."
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-semio-object-mutations",
+   "dir": "🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio object mutation vocabulary: every mutation with its diff and inverse, their text and binary codecs, and the member store owner."
+  },
+  "model": {
+   "package": "semio-s-artifact-stdio-semio-object-model",
+   "dir": "🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio object model: schema root, snapshot and diff with their text, binary and SQLite codecs, and the snapshot retirement implementations."
+  }
+ },
+ "move": [
+  {
+   "match": "^semio_framework_value::artifact_retire_\\w+!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_member_owner!\\([^;]*\\);\\n",
+   "to": "mutations"
+  }
+ ],
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

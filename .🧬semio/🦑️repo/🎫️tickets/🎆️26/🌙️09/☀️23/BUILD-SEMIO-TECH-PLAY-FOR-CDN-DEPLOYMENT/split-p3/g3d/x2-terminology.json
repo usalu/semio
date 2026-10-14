@@ -1,0 +1,21 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-terminology",
+ "description": "Procedural generation3d terminology: the localized label set of operators, catalogues and inputs",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology",
+ "moves": [
+  {
+   "from": "terminology",
+   "to": ""
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge"
+ ]
+}

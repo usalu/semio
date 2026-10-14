@@ -1,6 +1,7 @@
 use super::*;
-use crate::editor::remodeling::commands::import_frame_payload::checker_data_url;
-use crate::examples::synthetic_orbit::{FRAMES, FRAME_MIME};
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::frames;
+use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::FRAME_MIME;
 use semio_framework_job::{root_cancel_token, StepBudget};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick, ToolRunTraceOp};
@@ -42,35 +43,35 @@ const ORBIT_SHORT_LONG_EDGE_PX: u32 = 160;
 /// that completes without cameras.
 async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
     if example == "synthetic-orbit" || example == "orbit-short" {
-        let mut scene = <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
-        let kept = if example == "orbit-short" { ORBIT_SHORT_FRAMES } else { FRAMES.len() };
-        for (asset_id, bytes) in FRAMES.iter().take(kept) {
-            let image = crate::editor::remodeling::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");
-            let asset = crate::ImageAsset { mime: FRAME_MIME.into(), data: base64_codec::base64_standard_encode(bytes), width: image.width, height: image.height };
-            scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
+        let mut scene = <RemodelingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
+        let kept = if example == "orbit-short" { ORBIT_SHORT_FRAMES } else { frames().count() };
+        for (asset_id, bytes) in frames().take(kept) {
+            let image = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");
+            let asset = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: FRAME_MIME.into(), data: base64_codec::base64_standard_encode(bytes), width: image.width, height: image.height };
+            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset((*asset_id).into(), asset)).expect("frame asset applies");
         }
         if example == "orbit-short" {
             for stream in &mut scene.streams {
                 stream.frames.truncate(kept);
             }
-            scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::update_ingest_params(crate::IngestParams { downscale_long_edge_px: ORBIT_SHORT_LONG_EDGE_PX, ..scene.params.ingest.clone() })).expect("ingest params apply");
+            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { downscale_long_edge_px: ORBIT_SHORT_LONG_EDGE_PX, ..scene.params.ingest.clone() })).expect("ingest params apply");
         }
         return Arc::new(scene);
     }
     let payload = checker_data_url(24, 24, 3).await;
     let bytes = base64_codec::base64_standard_decode(payload.split_once(',').expect("data url").1).expect("checker bytes");
-    let mut scene = crate::default_remodeling_scene();
-    scene = crate::mutations::apply_remodeling_mutation(&scene, &crate::mutations::update_ingest_params(crate::IngestParams { frame_sample_stride: 1, ..scene.params.ingest.clone() })).expect("every frame is sampled");
+    let mut scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene();
+    scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 1, ..scene.params.ingest.clone() })).expect("every frame is sampled");
     for index in 0..4u32 {
         let asset_id = format!("checker-frame-{index}");
         let frame = FrameRef { index, timestamp_ms: f64::from(index) * 500.0, asset_id: asset_id.clone() };
         let stream = if index == 0 {
-            crate::mutations::create_stream(crate::MediaStream { id: "checker".into(), name: "checker".into(), kind: crate::MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 2.0, frames: vec![frame], source: None })
+            semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream { id: "checker".into(), name: "checker".into(), kind: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence, camera_id: None, sync_offset_ms: 0.0, fps_hint: 2.0, frames: vec![frame], source: None })
         } else {
-            crate::mutations::add_stream_frame("checker".into(), frame, crate::MediaKind::ImageSequence)
+            semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame("checker".into(), frame, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind::ImageSequence)
         };
-        for mutation in [crate::mutations::create_asset(asset_id, crate::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
-            scene = crate::mutations::apply_remodeling_mutation(&scene, &mutation).expect("frame import applies");
+        for mutation in [semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_id, semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(&bytes), width: 24, height: 24 }), stream] {
+            scene = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, &mutation).expect("frame import applies");
         }
     }
     Arc::new(scene)
@@ -461,8 +462,8 @@ async fn the_revalidate_job_keeps_the_result_on_an_unchanged_head_and_withdraws_
     let whole = run_to_end(&mut run, whole_turns());
     let checkpoint = whole.checkpoints.last().expect("a final checkpoint").clone();
     let provisional = whole.ops.len() as u32;
-    let unrelated = Arc::new(crate::mutations::apply_remodeling_mutation(&document, &crate::mutations::create_gcp(crate::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
-    let changed = Arc::new(crate::mutations::apply_remodeling_mutation(&document, &crate::mutations::update_ingest_params(crate::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
+    let unrelated = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_gcp::create_gcp(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() })).expect("gcp applies"));
+    let changed = Arc::new(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, &semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_ingest_params::update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { frame_sample_stride: 2, ..document.params.ingest.clone() })).expect("params apply"));
     for (head, withdrawn) in [(unrelated, false), (changed, true)] {
         let mut job = ReconstructionRevalidateJob::new(identity(), head, Some(&checkpoint), provisional);
         let mut sequence = 0;
@@ -482,14 +483,14 @@ async fn the_provisional_result_applies_onto_its_base_and_its_inverse_restores_t
     for op in &mirror.ops {
         let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(op, &current);
         assert!(outcome.messages().iter().all(|message| message.level != semio_framework_diagnostic::Severity::Error), "every provisional op applies onto the overlay it was planned against: {:?}", outcome.messages());
-        inverses.push(crate::mutations::inverse_remodeling_mutation(&current, op).expect("valid retained mutation inverse fixture"));
-        current = crate::mutations::apply_remodeling_mutation(&current, op).expect("provisional op applies");
+        inverses.push(semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::inverse_remodeling_mutation(&current, op).expect("valid retained mutation inverse fixture"));
+        current = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&current, op).expect("provisional op applies");
     }
     assert_ne!(current.results.mesh.source, MeshSource::Placeholder, "the committed result replaces the placeholder mesh");
-    assert!(crate::resolve_bounded_remodeling_mesh(&current.durable_artifacts, &current.results.mesh.mesh).is_some(), "the committed mesh handle resolves from the appended content");
+    assert!(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&current.durable_artifacts, &current.results.mesh.mesh).is_some(), "the committed mesh handle resolves from the appended content");
     for steps in inverses.into_iter().rev() {
         for step in steps {
-            current = crate::mutations::apply_remodeling_mutation(&current, &step).expect("inverse step applies");
+            current = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&current, &step).expect("inverse step applies");
         }
     }
     assert_eq!(current, *document, "undoing the run's single edit restores its base byte for byte");

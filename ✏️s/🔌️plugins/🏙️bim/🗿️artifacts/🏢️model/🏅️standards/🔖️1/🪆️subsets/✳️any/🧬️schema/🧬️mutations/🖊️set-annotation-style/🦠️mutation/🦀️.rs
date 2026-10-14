@@ -1,6 +1,6 @@
 //! 🖊️ `set-annotation-style` payload. Sets exactly the provided fields of an annotation style; every dimension, tag, note and leader that uses the style follows by inference.
 
-use crate::{AnnotationStylePatch, DimensionUnit, ModelDiff, ModelMutation, ModelSnapshot, Terminator};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::AnnotationStylePatch, ModelDiff}, snapshot::{DimensionUnit, ModelSnapshot, Terminator}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

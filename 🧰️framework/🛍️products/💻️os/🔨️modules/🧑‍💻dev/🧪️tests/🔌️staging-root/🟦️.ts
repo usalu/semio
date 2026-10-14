@@ -127,7 +127,7 @@ describe("healthy prepared set", () => {
     ["an unreadable descriptor is a fact, not a throw", { pluginId: "block", directoryPresent: true, bridgePresent: true, artifactMarkerPresent: true }, "incomplete", "no readable 🔣️.json descriptor"],
     ["a descriptor naming another plugin is incomplete", { ...complete("block"), descriptorPluginId: "draw" }, "incomplete", "descriptor names draw"],
     ["a missing bridge is incomplete", { ...complete("block"), bridgePresent: false }, "incomplete", "no module bridge"],
-    ["a missing Nx marker is incomplete", { ...complete("block"), artifactMarkerPresent: false }, "incomplete", "no .nx-artifact.json marker"],
+    ["a missing Semio marker is incomplete", { ...complete("block"), artifactMarkerPresent: false }, "incomplete", "no .semio-artifact.json marker"],
   ] as const)("%s", (_name, facts, kind, detail) => {
     expect(preparedComponentVerdict(facts)).toEqual({ pluginId: facts.pluginId, kind, ...(detail === undefined ? {} : { detail }) });
   });
@@ -169,11 +169,11 @@ describe("staged module freshness", () => {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
       mkdirSync(stagedDirectory, { recursive: true });
       writeFileSync(join(stagedDirectory, "component.core.wasm"), "staged");
-      writeFileSync(join(stagedDirectory, ".nx-artifact.json"), "{}");
+      writeFileSync(join(stagedDirectory, ".semio-artifact.json"), "{}");
       utimesSync(join(stagedDirectory, "component.core.wasm"), new Date(2_000_000), new Date(2_000_000));
       // 🕰️ The Nx ownership marker is written AFTER every payload file, so counting it would make every
       // staged module look newer than its own bytes and hide exactly the drift this check exists for.
-      utimesSync(join(stagedDirectory, ".nx-artifact.json"), new Date(9_000_000), new Date(9_000_000));
+      utimesSync(join(stagedDirectory, ".semio-artifact.json"), new Date(9_000_000), new Date(9_000_000));
       expect(stagedModuleMtime(stagedDirectory)).toBe(2_000_000);
       expect(stagedModuleMtime(join(sandbox, "absent"))).toBeUndefined();
 

@@ -7,7 +7,11 @@ mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
 #[cfg(test)]
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+#[cfg(test)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+#[cfg(test)]
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 use crate::schema::diff::SemioMeshDiff;
 use crate::io::text::snapshot::dec_texture;
 use crate::io::text::snapshot::enc_texture;

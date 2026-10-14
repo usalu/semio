@@ -15,15 +15,15 @@
 
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
-use semio_framework_3d_brep_representation::curve::bspline::{elevate_degree, KnotVector};
-use semio_framework_3d_brep_representation::curve::curve_ops::{interpolate_curve, ParamMethod};
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3, NurbsCurve3};
+use semio_framework_3d_brep_curve::bspline::{elevate_degree, KnotVector};
+use semio_framework_3d_brep_curve::curve_ops::{interpolate_curve, ParamMethod};
+use semio_framework_3d_brep_curve::{Curve2, Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2};
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 
@@ -204,7 +204,7 @@ impl StagedOperation for LoftJob {
         }
         let bottom = profiles[0];
         let top = profiles[n - 1];
-        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(semio_framework_3d_brep_representation::vector::Vec3::Z);
+        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(semio_framework_3d_brep_vector::Vec3::Z);
         let bottom_origin = body
             .faces
             .get(bottom)

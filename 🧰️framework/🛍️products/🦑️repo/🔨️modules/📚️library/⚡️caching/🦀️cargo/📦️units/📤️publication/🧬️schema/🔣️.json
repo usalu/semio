@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unit",
+    "semanticDigest",
+    "allocation",
+    "owner",
+    "bytes",
+    "output"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unit": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,79}$"
+    },
+    "semanticDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "allocation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    }
+  }
+}

@@ -94,7 +94,7 @@ fn regions_default_to_zero_and_are_settable() {
 
 #[test]
 fn graph_view_conversion_preserves_neutral_directed_and_undirected_arcs() {
-    use semio_framework_graph::{Directed, Normal, Storage, Undirected};
+    use semio_framework_graph_engine::{Directed, Normal, Storage, Undirected};
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🔍️decoding-and-graphs/🔣️.json")).unwrap();
     let row = &oracle["graph"];
     let mut directed = Storage::<Normal, Directed>::new();

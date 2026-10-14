@@ -12,7 +12,7 @@ fn frame() -> ModelSnapshot {
 }
 
 fn first_clash(snapshot: &ModelSnapshot) -> (String, Clash) {
-    let inference = crate::ModelInference::infer(snapshot).expect("the frame infers");
+    let inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(snapshot).expect("the frame infers");
     inference.clash_sets.iter().find_map(|(id, result)| result.clashes.iter().find(|clash| clash.kind == ClashKind::Hard).map(|clash| (id.clone(), clash.clone()))).expect("the frame has a hard clash")
 }
 
@@ -79,7 +79,7 @@ async fn raising_an_issue_from_a_clash_names_the_pair_the_clash_and_a_viewpoint_
     let viewpoint = issue.viewpoint.as_ref().expect("a viewpoint");
     assert_eq!(viewpoint.isolate, [clash.first.clone(), clash.second.clone()]);
     assert!(viewpoint.section.is_some());
-    assert_eq!(crate::issue_problem(&snapshot, &create.id, issue), None, "the issue is writable");
+    assert_eq!(crate::standards::v1::subsets::any::schema::snapshot::issue_problem(&snapshot, &create.id, issue), None, "the issue is writable");
     let missing = RaiseIssue { set: String::new(), first: "w-1".into(), second: "c-1".into() };
     assert_eq!(code(run(&snapshot, |doc, cfg| handle(&missing, doc, cfg, &mut ctx))), Some("bim.clash.missing".to_string()));
 }

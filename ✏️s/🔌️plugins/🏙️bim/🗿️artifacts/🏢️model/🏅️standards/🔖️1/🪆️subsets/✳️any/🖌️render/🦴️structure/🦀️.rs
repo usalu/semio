@@ -1,5 +1,5 @@
 //! 🦴️ Shared structural overlay meshes in world coordinates, using distinct geometry as well as colour.
-use crate::{ModelInference, Point3};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::Point3};
 use semio_framework_plugin::MeshData;
 use semio_framework_value::DslValue;
 

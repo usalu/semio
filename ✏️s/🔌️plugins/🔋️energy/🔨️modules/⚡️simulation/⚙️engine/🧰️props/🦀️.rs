@@ -1,5 +1,7 @@
 //! 💧️ Physical property functions: moist air, water, steam, refrigerants, glycol.
 
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, R_DRY_AIR, R_WATER_VAPOR};
 
 // #region 🔖️Psychrometrics

@@ -1,8 +1,9 @@
 //! 🌱 Drawing mutation — `CreateLayer`: brings a new id-keyed layer into existence at an address
 //! (root when `parent_id` is `None`, `index` FINAL-state — appends when `None`).
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🌱 `create-layer` payload — full initial payload plus optional (parent, index) address.
@@ -25,24 +26,24 @@ pub struct CreateLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_layer(parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, index: Option<usize>, layer: DrawingLayerNode) -> DrawingMutation {
-    DrawingMutation::CreateLayer(CreateLayer { parent_id, index, layer: Box::new(layer) })
+pub fn create_layer<Op: From<CreateLayer>>(parent_id: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>, index: Option<usize>, layer: DrawingLayerNode) -> Op {
+    Op::from(CreateLayer { parent_id, index, layer: Box::new(layer) })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for CreateLayer {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for CreateLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::delete_layer::mutation::DeleteLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "layer", kind: "create-layer", record: "CreatedLayer" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", crate::schema::layer_id(&self.layer)), &format!("Ebene \"{}\" erstellen", crate::schema::layer_id(&self.layer)))
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create layer \"{}\"", semio_s_artifact_draw_drawing_model::layer_id(&self.layer)), &format!("Ebene \"{}\" erstellen", semio_s_artifact_draw_drawing_model::layer_id(&self.layer)))
     }
     fn target(&self) -> Vec<String> {
-        vec![crate::schema::layer_id(&self.layer).to_string()]
+        vec![semio_s_artifact_draw_drawing_model::layer_id(&self.layer).to_string()]
     }
 }
 //#endregion 🔖️Mutation

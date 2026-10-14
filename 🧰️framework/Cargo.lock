@@ -1403,17 +1403,6 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
-dependencies = [
- "cfg-if",
- "libc",
- "wasi",
-]
-
-[[package]]
-name = "getrandom"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
@@ -3649,20 +3638,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ring"
-version = "0.17.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4689e6c2294d81e88dc6261c768b63bc4fcdb852be6d1352498b114f61383b7"
-dependencies = [
- "cc",
- "cfg-if",
- "getrandom 0.2.17",
- "libc",
- "untrusted",
- "windows-sys 0.52.0",
-]
-
-[[package]]
 name = "robust"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3755,41 +3730,6 @@ dependencies = [
  "libc",
  "linux-raw-sys 0.12.1",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "rustls"
-version = "0.23.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
-dependencies = [
- "log",
- "once_cell",
- "ring",
- "rustls-pki-types",
- "rustls-webpki",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "rustls-pki-types"
-version = "1.15.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f4925028c7eb5d1fcdaf196971378ed9d2c1c4efc7dc5d011256f76c99c0a96"
-dependencies = [
- "zeroize",
-]
-
-[[package]]
-name = "rustls-webpki"
-version = "0.103.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
-dependencies = [
- "ring",
- "rustls-pki-types",
- "untrusted",
 ]
 
 [[package]]
@@ -3891,6 +3831,26 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "rustybuzz",
+ "semio-framework-font-anta-latin-ext-regular",
+ "semio-framework-font-anta-latin-regular",
+ "semio-framework-font-anta-math-regular",
+ "semio-framework-font-anta-symbols-regular",
+ "semio-framework-font-kelly-slab-cyrillic-regular",
+ "semio-framework-font-kelly-slab-latin-ext-regular",
+ "semio-framework-font-kelly-slab-latin-regular",
+ "semio-framework-font-noto-emoji-activities-regular",
+ "semio-framework-font-noto-emoji-faces-regular",
+ "semio-framework-font-noto-emoji-flags-regular",
+ "semio-framework-font-noto-emoji-food-regular",
+ "semio-framework-font-noto-emoji-joined-forms-regular",
+ "semio-framework-font-noto-emoji-nature-regular",
+ "semio-framework-font-noto-emoji-objects-regular",
+ "semio-framework-font-noto-emoji-people-regular",
+ "semio-framework-font-noto-emoji-regions-regular",
+ "semio-framework-font-noto-emoji-supplement-regular",
+ "semio-framework-font-noto-emoji-symbols-regular",
+ "semio-framework-font-noto-emoji-travel-regular",
+ "semio-framework-font-share-tech-mono-latin-regular",
  "semio-framework-hash",
  "semio-framework-pixels",
  "semio-framework-trace",
@@ -3906,7 +3866,7 @@ name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
  "parry3d",
- "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-vector",
  "semio-framework-async-macros",
  "semio-framework-mesh-engine",
  "semio-framework-pack-json",
@@ -3919,14 +3879,53 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-analysis"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tessellation",
+ "semio-framework-3d-brep-validation",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-replication",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-curve"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-polynomial",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-engine"
 version = "0.1.0"
 dependencies = [
  "parry3d",
- "semio-framework-3d",
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-operations",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tessellation",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-validation",
+ "semio-framework-3d-brep-vector",
  "semio-framework-async-macros",
  "semio-framework-hash",
  "semio-framework-job",
@@ -3941,12 +3940,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-intersect"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-operations"
 version = "0.1.0"
 dependencies = [
- "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-analysis",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-queries",
  "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tessellation",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-validation",
+ "semio-framework-3d-brep-vector",
  "semio-framework-async-macros",
  "semio-framework-job",
  "semio-framework-trace",
@@ -3956,24 +3974,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-3d-brep-polynomial"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+]
+
+[[package]]
 name = "semio-framework-3d-brep-queries"
 version = "0.1.0"
 dependencies = [
- "semio-framework-3d",
- "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-intersect",
  "semio-framework-3d-brep-operations",
  "semio-framework-3d-brep-representation",
- "semio-framework-async",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
  "semio-framework-async-macros",
- "semio-framework-geometry",
- "semio-framework-job",
- "semio-framework-mesh-engine",
- "semio-framework-replication",
- "semio-framework-trace",
- "semio-framework-value",
- "semio-framework-value-derive",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -3981,6 +4000,10 @@ name = "semio-framework-3d-brep-representation"
 version = "0.1.0"
 dependencies = [
  "num-rational",
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
  "semio-framework-async-macros",
  "semio-framework-geometry",
  "semio-framework-mesh-engine",
@@ -3993,6 +4016,85 @@ dependencies = [
  "semio-framework-value-derive",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-surface"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-tessellation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-validation",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-async-macros",
+ "semio-framework-mesh-engine",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-tolerance"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-validation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-curve",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-3d-brep-surface",
+ "semio-framework-3d-brep-tolerance",
+ "semio-framework-3d-brep-vector",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-vector"
+version = "0.1.0"
+dependencies = [
+ "num-rational",
+ "semio-framework-3d-brep-polynomial",
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
+ "semio-framework-number",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -4066,6 +4168,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-compiler",
  "semio-framework-geometry",
+ "semio-framework-icon-contract",
  "semio-framework-intrinsic-size",
  "semio-framework-io-base64",
  "semio-framework-trace",
@@ -4137,6 +4240,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-token",
  "semio-framework-value",
  "serde_json",
 ]
@@ -4149,6 +4253,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record-derive",
+ "semio-framework-dsl-record-model",
  "semio-framework-io-sqlite-snapshot",
  "semio-framework-pack",
  "semio-framework-pack-json",
@@ -4166,6 +4271,31 @@ dependencies = [
  "quote",
  "serde_json",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "semio-framework-dsl-record-model"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-io-sqlite-snapshot",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-dsl-token"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "serde_json",
 ]
 
 [[package]]
@@ -4202,6 +4332,86 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-font-anta-latin-ext-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-anta-latin-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-anta-math-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-anta-symbols-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-kelly-slab-cyrillic-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-kelly-slab-latin-ext-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-kelly-slab-latin-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-activities-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-faces-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-flags-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-food-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-joined-forms-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-nature-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-objects-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-people-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-regions-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-supplement-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-symbols-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-noto-emoji-travel-regular"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-font-share-tech-mono-latin-regular"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-geometry"
 version = "0.1.0"
 dependencies = [
@@ -4211,20 +4421,45 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-graph"
+name = "semio-framework-graph-algorithms"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-graph-drawing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "semio-framework-graph-engine",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-graph-dsl"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl",
  "semio-framework-dsl-record",
- "semio-framework-geometry",
+ "semio-framework-graph-manifest",
  "semio-framework-pack-json",
- "semio-framework-replication",
- "semio-framework-ui-contract",
- "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-graph-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-geometry",
+ "semio-framework-graph-manifest",
+ "semio-framework-value",
+ "semio-framework-value-derive",
 ]
 
 [[package]]
@@ -4243,11 +4478,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-graph-manifest"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-hash"
 version = "0.1.0"
 dependencies = [
  "blake3",
  "sha2",
+]
+
+[[package]]
+name = "semio-framework-icon-contract"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -4338,13 +4595,95 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-math"
+name = "semio-framework-math-sampling-config"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-math-sampling-vocabulary",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-constraints"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-math-sampling-config",
+ "semio-framework-math-sampling-testing",
+ "semio-framework-math-sampling-vocabulary",
+ "semio-framework-math-sampling-workspace",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-decoding"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-math-sampling-config",
+ "semio-framework-math-sampling-engine",
+ "semio-framework-math-sampling-testing",
+ "semio-framework-math-sampling-vocabulary",
+ "semio-framework-math-sampling-workspace",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-diffusion"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-math-sampling-vocabulary",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-math-sampling-config",
+ "semio-framework-math-sampling-constraints",
+ "semio-framework-math-sampling-processors",
+ "semio-framework-math-sampling-testing",
+ "semio-framework-math-sampling-vocabulary",
+ "semio-framework-math-sampling-workspace",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-processors"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-dispatch-macros",
+ "semio-framework-math-sampling-config",
+ "semio-framework-math-sampling-testing",
+ "semio-framework-math-sampling-vocabulary",
+ "semio-framework-math-sampling-workspace",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-testing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-math-sampling-vocabulary",
+ "semio-framework-math-sampling-workspace",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-vocabulary"
 version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
- "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-math-sampling-workspace"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-math-sampling-config",
+ "semio-framework-math-sampling-vocabulary",
 ]
 
 [[package]]
@@ -4391,7 +4730,6 @@ dependencies = [
  "semio-framework-value",
  "serde",
  "serde_json",
- "ureq",
 ]
 
 [[package]]
@@ -4412,6 +4750,24 @@ dependencies = [
  "semio-framework-value",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-pack-json-retained-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-pack-record-token"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-pack",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -4557,6 +4913,7 @@ name = "semio-framework-surface-component"
 version = "0.1.0"
 dependencies = [
  "semio-framework-surface",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -4632,7 +4989,6 @@ dependencies = [
  "bytemuck",
  "js-sys",
  "libc",
- "parley",
  "semio-framework-2d",
  "semio-framework-async",
  "semio-framework-async-macros",
@@ -4641,16 +4997,26 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-pixels",
  "semio-framework-trace",
+ "semio-framework-ui-action",
+ "semio-framework-ui-arena",
  "semio-framework-ui-contract",
+ "semio-framework-ui-declaration",
+ "semio-framework-ui-draw-contract",
  "semio-framework-ui-locale",
+ "semio-framework-ui-prepared",
+ "semio-framework-ui-raster-owner",
+ "semio-framework-ui-retained-tree",
  "semio-framework-ui-scene",
+ "semio-framework-ui-select-behavior",
  "semio-framework-ui-styling",
+ "semio-framework-ui-surface-identity",
+ "semio-framework-ui-text",
+ "semio-framework-ui-theme",
  "semio-framework-ui-viewport",
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
- "swash",
  "taffy",
  "tiny-skia",
  "unicode-segmentation",
@@ -4660,6 +5026,20 @@ dependencies = [
  "wgpu",
  "winit",
 ]
+
+[[package]]
+name = "semio-framework-ui-action"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-ui-contract",
+ "semio-framework-ui-layout",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-arena"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-ui-backend-d3d12"
@@ -4715,6 +5095,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-ui-declaration"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-icon-contract",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-layout",
+ "semio-framework-ui-locale",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-draw-contract"
+version = "0.1.0"
+dependencies = [
+ "bytemuck",
+ "semio-framework-job",
+ "semio-framework-ui-scene",
+ "semio-framework-ui-styling",
+ "semio-framework-ui-theme",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-ui-host"
 version = "0.1.0"
 dependencies = [
@@ -4735,6 +5142,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-ui-layout"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-icon-contract",
+ "semio-framework-ui-contract",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-ui-locale"
 version = "0.1.0"
 dependencies = [
@@ -4742,6 +5161,43 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-prepared"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-draw-contract",
+ "semio-framework-ui-prepared-staging",
+ "semio-framework-ui-scene",
+ "semio-framework-ui-theme",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-prepared-staging"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-trace",
+ "semio-framework-ui-raster-owner",
+ "semio-framework-ui-scene",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-ui-raster-owner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -4758,6 +5214,25 @@ dependencies = [
  "serde_json",
  "swash",
  "taffy",
+]
+
+[[package]]
+name = "semio-framework-ui-retained-tree"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-ui-action",
+ "semio-framework-ui-arena",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-declaration",
+ "semio-framework-ui-layout",
+ "semio-framework-ui-locale",
+ "semio-framework-ui-scene",
+ "semio-framework-ui-select-behavior",
+ "semio-framework-ui-theme",
+ "semio-framework-ui-viewport",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -4790,8 +5265,61 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-ui-select-behavior"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-ui-theme",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-ui-styling"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-ui-surface-identity"
+version = "0.1.0"
+
+[[package]]
+name = "semio-framework-ui-text"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "parley",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-font-anta-latin-regular",
+ "semio-framework-font-kelly-slab-latin-regular",
+ "semio-framework-font-noto-emoji-activities-regular",
+ "semio-framework-font-noto-emoji-faces-regular",
+ "semio-framework-font-noto-emoji-flags-regular",
+ "semio-framework-font-noto-emoji-food-regular",
+ "semio-framework-font-noto-emoji-joined-forms-regular",
+ "semio-framework-font-noto-emoji-nature-regular",
+ "semio-framework-font-noto-emoji-objects-regular",
+ "semio-framework-font-noto-emoji-people-regular",
+ "semio-framework-font-noto-emoji-regions-regular",
+ "semio-framework-font-noto-emoji-supplement-regular",
+ "semio-framework-font-noto-emoji-symbols-regular",
+ "semio-framework-font-noto-emoji-travel-regular",
+ "semio-framework-font-share-tech-mono-latin-regular",
+ "semio-framework-ui-theme",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+ "swash",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-framework-ui-theme"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-ui-contract",
+ "semio-framework-ui-styling",
+]
 
 [[package]]
 name = "semio-framework-ui-viewport"
@@ -4839,6 +5367,22 @@ dependencies = [
 name = "semio-framework-value-resident"
 version = "0.1.0"
 dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-value-retirement-owner"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-value-snapshot-read"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value",
  "serde_json",
 ]
 
@@ -5179,12 +5723,6 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
-
-[[package]]
-name = "subtle"
-version = "2.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "svg_fmt"
@@ -6015,28 +6553,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e9df2af067a7953e9c3831320f35c1cc0600c30d44d9f7a12b01db1cd88d6b47"
 
 [[package]]
-name = "untrusted"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ecb6da28b8a351d773b68d5825ac39017e680750f980f3a1a85cd8dd28a47c1"
-
-[[package]]
-name = "ureq"
-version = "2.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02d1a66277ed75f640d608235660df48c8e3c19f3b4edb6a263315626cc3c01d"
-dependencies = [
- "base64 0.22.1",
- "flate2",
- "log",
- "once_cell",
- "rustls",
- "rustls-pki-types",
- "url",
- "webpki-roots 0.26.11",
-]
-
-[[package]]
 name = "url"
 version = "2.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6198,12 +6714,6 @@ dependencies = [
  "same-file",
  "winapi-util",
 ]
-
-[[package]]
-name = "wasi"
-version = "0.11.1+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccf3ec651a847eb01de73ccad15eb7d99f80485de043efb2f370cd654f4ea44b"
 
 [[package]]
 name = "wasip2"
@@ -6442,24 +6952,6 @@ checksum = "5a6580f308b1fad9207618087a65c04e7a10bc77e02c8e84e9b00dd4b12fa0bb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "webpki-roots"
-version = "0.26.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "521bc38abb08001b01866da9f51eb7c5d647a19260e00054a8c7fd5f9e57f7a9"
-dependencies = [
- "webpki-roots 1.0.9",
-]
-
-[[package]]
-name = "webpki-roots"
-version = "1.0.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dcd9d09a39985f5344844e66b0c530a33843579125f23e21e9f0f220850f22a"
-dependencies = [
- "rustls-pki-types",
 ]
 
 [[package]]
@@ -7273,12 +7765,6 @@ dependencies = [
  "syn 3.0.6",
  "synstructure 0.14.0",
 ]
-
-[[package]]
-name = "zeroize"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e"
 
 [[package]]
 name = "zerotrie"

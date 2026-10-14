@@ -634,15 +634,12 @@ function strictMutationCatalogs(value: unknown, owner: string, manifestPath: str
  * can never reach a host through a side door.
  *
  * `module` is the import name when it differs from the distribution name (`Pillow` → `PIL`);
- * `version` pins the distribution; `features` are the Cargo features of a local crate.
+ * `version` pins the distribution.
  */
-export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; features?: readonly string[]; rationale?: string }>;
-
-/** 🧩️ Features a generated SUBJECT host enables on the owner's own package — a subject whose surface is feature-gated. */
-export type SubjectFeatures = Readonly<{ implementation: Implementation; features: readonly string[]; rationale: string }>;
+export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; rationale?: string }>;
 
 /** 🧱️ A local package the generated SUBJECT host links beside the owner's own package — a subject spanning several packages. */
-export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; features?: readonly string[]; rationale: string }>;
+export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; rationale: string }>;
 
 /** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {
@@ -662,8 +659,6 @@ export type TestContribution = Readonly<{
   noOracleDecisions: readonly NoOracleDecision[];
   comparisonProfiles: readonly ComparisonProfileSpec[];
   oracleHostPackages: readonly OracleHostPackage[];
-  /** 🧩️ Features the subject host enables on this owner's package; never the oracle's. */
-  subjectFeatures: readonly SubjectFeatures[];
   /** 🧱️ Packages the subject host links beside this owner's package; never the oracle's. */
   subjectHostPackages: readonly SubjectHostPackage[];
   /** 🦠️ The mutation vocabularies this owner claims exhaustive coverage of. */
@@ -708,7 +703,6 @@ const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
   comparisonPipelines: "ComparisonPipeline",
   toleranceProfiles: "ToleranceProfile",
   oracleHostPackages: "OracleHostPackage",
-  subjectFeatures: "SubjectFeatures",
   subjectHostPackages: "SubjectHostPackage",
   mutationManifests: "MutationManifest",
   testEvidence: "TestEvidence",
@@ -753,7 +747,6 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     comparisonPipelines: (parsed.comparisonPipelines as ComparisonPipeline[] | undefined) ?? [],
     toleranceProfiles: (parsed.toleranceProfiles as ToleranceProfile[] | undefined) ?? [],
     oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
-    subjectFeatures: (parsed.subjectFeatures as SubjectFeatures[] | undefined) ?? [],
     subjectHostPackages: (parsed.subjectHostPackages as SubjectHostPackage[] | undefined) ?? [],
     mutationCatalogs,
     mutationManifests: (parsed.mutationManifests as MutationManifest[] | undefined) ?? [],
@@ -846,19 +839,9 @@ export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, i
 }
 
 /**
- * 🧩️ The features the generated SUBJECT host enables on the owner's own package: the union of what the owner and
- * each ancestor contribution declares for `implementation`, sorted. Empty for an owner that declares none.
- */
-export function subjectFeaturesFor(registry: OracleRegistry, owner: string, implementation: Implementation): string[] {
-  const segments = owner.split("/");
-  const ancestors = new Set(segments.map((_, index) => segments.slice(0, index + 1).join("/")));
-  return [...new Set(registry.contributions.filter((entry) => ancestors.has(entry.owner) || entry.owner === ".").flatMap((entry) => entry.subjectFeatures).filter((entry) => entry.implementation === implementation).flatMap((entry) => entry.features))].sort();
-}
-
-/**
  * 🧱️ The packages the generated SUBJECT host links beside the owner's own package: what the owner and each ancestor
- * contribution declares for `implementation`, one row per package (identical rows from two ancestors merge their
- * features; a package declared from two paths is refused).
+ * contribution declares for `implementation`, one row per package (identical rows from two ancestors merge; a package
+ * declared from two paths is refused).
  */
 export function subjectHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): SubjectHostPackage[] {
   const segments = owner.split("/");
@@ -867,7 +850,7 @@ export function subjectHostPackagesFor(registry: OracleRegistry, owner: string, 
   for (const entry of registry.contributions.filter((contribution) => ancestors.has(contribution.owner) || contribution.owner === ".").flatMap((contribution) => contribution.subjectHostPackages).filter((candidate) => candidate.implementation === implementation)) {
     const previous = merged.get(entry.package);
     if (previous !== undefined && previous.path !== entry.path) throw new Error(`subject host package ${entry.package} is contributed from two paths (${previous.path} and ${entry.path})`);
-    merged.set(entry.package, previous === undefined ? entry : { ...previous, features: [...new Set([...(previous.features ?? []), ...(entry.features ?? [])])].sort() });
+    if (previous === undefined) merged.set(entry.package, entry);
   }
   return [...merged.values()].sort((left, right) => left.package.localeCompare(right.package));
 }

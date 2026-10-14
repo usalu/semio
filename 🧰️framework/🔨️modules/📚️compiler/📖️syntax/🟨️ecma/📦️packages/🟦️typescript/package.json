@@ -6,9 +6,6 @@
     "test": "bun repo run @semio-tech/compiler-syntax-ecma-ts:test"
   },
   "version": "0.0.0",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

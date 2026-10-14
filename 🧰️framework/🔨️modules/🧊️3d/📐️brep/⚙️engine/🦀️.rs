@@ -24,28 +24,28 @@ pub use shape_value::{ImportedShape, ShapeComponent, ShapeRoot, ShapeTessellatio
 
 use semio_framework_3d_brep_operations::boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
 use semio_framework_3d_brep_operations::euler::make_vertex;
-use semio_framework_3d_brep_queries::intersect::intersect_curve_curve;
-use semio_framework_3d_brep_queries::intersect::intersect_curve_surface;
-use semio_framework_3d_brep_queries::intersect::intersect_surface_surface;
+use semio_framework_3d_brep_intersect::intersect_curve_curve;
+use semio_framework_3d_brep_intersect::intersect_curve_surface;
+use semio_framework_3d_brep_intersect::intersect_surface_surface;
 use {semio_framework_3d_brep_operations::primitives::{make_box, make_cone, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus}, semio_framework_3d_brep_representation::topology::Wire};
 use semio_framework_3d_brep_operations::sew::{convert_to_nurbs, heal_solid, sew_faces};
 use semio_framework_3d_brep_operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
 use semio_framework_3d_brep_queries::classification::point_in_solid;
 use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
-use semio_framework_3d_brep_queries::tessellation::TessellationJob;
-#[cfg(test)] use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
-use semio_framework_3d_brep_queries::validation::{issue_reaches, validate_body};
+use semio_framework_3d_brep_tessellation::TessellationJob;
+#[cfg(test)] use semio_framework_3d_brep_tessellation::tessellate_solid;
+use semio_framework_3d_brep_validation::{issue_reaches, validate_body};
 use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
-use semio_framework_3d_brep_representation::curve::Curve3;
+use {semio_framework_3d_brep_curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, interpolate_curve, ParamMethod}, semio_framework_3d_brep_surface::surface_ops::{coons_patch_nurbs, interpolate_surface_grid}};
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::{KernelError, ValidationIssue};
-use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv as surface_closest_uv_fn;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::surface_ops::closest_uv as surface_closest_uv_fn;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3};
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as NativeVec3};
+use semio_framework_3d_brep_vector::matrix::{Affine3, Frame3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3 as NativeVec3};
 use semio_framework_3d_brep_representation::contract::Vec3 as EVec3;
 use mesh_io::{export_solid_glb, export_solid_mesh, export_solid_obj, export_solid_stl, import_glb_to_body, import_mesh_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 
@@ -1261,7 +1261,7 @@ impl Brep {
             Entity::Curve(curve, _) => {
                 let (start, end) = curve.domain();
                 if !start.is_finite() || !end.is_finite() { return Err(BrepError::InvalidInput("length requires a bounded curve".into())); }
-                let length = semio_framework_3d_brep_representation::curve::curve_ops::arc_length(curve, start, end, 1e-9);
+                let length = semio_framework_3d_brep_curve::curve_ops::arc_length(curve, start, end, 1e-9);
                 if !length.is_finite() { return Err(BrepError::InvalidInput("curve length is not finite".into())); }
                 Ok(length)
             }
@@ -1569,14 +1569,14 @@ impl Brep {
             _=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation source kind is unsupported")),
         }
     }
-    fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<semio_framework_3d_brep_queries::tessellation::TessellationInput<'a>,BrepError> {
-        use semio_framework_3d_brep_queries::tessellation::TessellationInput;
+    fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<semio_framework_3d_brep_tessellation::TessellationInput<'a>,BrepError> {
+        use semio_framework_3d_brep_tessellation::TessellationInput;
         match self.entity(shape)? {
             Entity::Vertex(id)=>Ok(TessellationInput::Vertex(*id)),Entity::Solid(id)=>Ok(TessellationInput::Solid(*id)),Entity::Face(id)=>Ok(TessellationInput::Face(*id)),Entity::Shell(id)=>Ok(TessellationInput::Shell(*id)),Entity::Wire(wire,_)=>Ok(TessellationInput::Wire(&wire.members)),Entity::Compound(solids,_)=>Ok(TessellationInput::Solids(solids)),other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
         }
     }
     /// ⏱️ Presents the same original entity to one granted topology/mesh turn.
-    pub fn step_tessellation_job_sync(&self,shape:&GeometryHandle,job:&mut TessellationJob,budget:usize)->Result<semio_framework_3d_brep_queries::tessellation::TessellationStep,BrepError> {
+    pub fn step_tessellation_job_sync(&self,shape:&GeometryHandle,job:&mut TessellationJob,budget:usize)->Result<semio_framework_3d_brep_tessellation::TessellationStep,BrepError> {
         job.step(&self.body,self.tessellation_input(shape)?,budget).map_err(|error|map_err(&error))
     }
 

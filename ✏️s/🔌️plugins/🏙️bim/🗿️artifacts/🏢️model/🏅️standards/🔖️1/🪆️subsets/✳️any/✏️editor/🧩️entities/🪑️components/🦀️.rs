@@ -6,10 +6,10 @@ use super::{container, keys, number, parse_flag, parse_number, parse_point, part
 use crate::editor::bim::modes::edit::windows::family::edit::CATEGORIES;
 use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::remove_component_override::RemoveComponentOverride;
-use crate::mutations::set_component_override::SetComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Assigned, Component, FamilyCategory, MepSystem, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 /// 📏️ How far a new component stands from the previous ones of its storey, in metres.
@@ -170,7 +170,7 @@ pub fn create_component(snapshot: &ModelSnapshot, id: &str, parent: &str, name: 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let (family, _) = placeable(snapshot).into_iter().next().ok_or("bim.create.component-family-missing")?;
     let row = snapshot.components.values().filter(|component| component.storey == storey).count() as f64;
-    Ok(ModelMutation::CreateComponent(crate::mutations::create_component::CreateComponent {
+    Ok(ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent {
         id: id.into(),
         component: Component { storey, family, position: Point2 { x: row * ROW_PITCH, y: 0.0 }, elevation: 0.0, rotation: 0.0, mirrored: false, host: None, system: None, name: name.into() },
     }))

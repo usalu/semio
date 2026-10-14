@@ -1,7 +1,8 @@
 //! 🌱️ Fem2d mutation — `CreateNode` payload + `MutationKind` impl.
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::{Fem2dSnapshot, FemNode};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use crate::standards::v1::subsets::any::schema::mutations::delete_node;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -18,13 +19,16 @@ pub struct CreateNode {
     pub index: Option<usize>,
 }
 
-impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateNode {
+impl<Op> MutationKind<Fem2dSnapshot, Op> for CreateNode
+where
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<delete_node::DeleteNode>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

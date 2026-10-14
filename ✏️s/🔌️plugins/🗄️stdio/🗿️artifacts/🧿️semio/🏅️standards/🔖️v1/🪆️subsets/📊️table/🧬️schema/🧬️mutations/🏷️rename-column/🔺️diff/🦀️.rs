@@ -1,8 +1,10 @@
 //! 🔺️ Diff for `RenameColumn`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::schema::diff::{SemioTableColumnDiff, SemioTableDiff};
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableColumnDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Renames one column: a sparse `modified` row naming only the new name.

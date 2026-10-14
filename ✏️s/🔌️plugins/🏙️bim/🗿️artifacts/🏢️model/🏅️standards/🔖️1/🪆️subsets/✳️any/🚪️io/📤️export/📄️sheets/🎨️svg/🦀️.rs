@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::any::io::export::svg::sheet::Slot;
 use crate::standards::v1::subsets::any::io::export::svg::style::{self, view_class};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 const NAMESPACE: &str = "http://www.w3.org/2000/svg";

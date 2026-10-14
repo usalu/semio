@@ -88,7 +88,7 @@ Authored scripts use `tool:workspace/run-script`: `script` is the workspace-rela
 belong in their owner's target or typed declaration.
 Everything resolves to plain argument lists. Dashboard task launches use `bun repo run` and
 `bun repo run-many`. The selected build adapter owns backend flags, environment and graph discovery.
-The dashboard reads the versioned neutral publication at `.🧬semio/🦑️repo/⚡️cache/build/graph.json`.
+The dashboard reads the versioned neutral publication at `.cache/b/g/m/canonical.json`. Its shared Rust path derives from the neutral cache partition policy, the native mounted namespace and the publication-location schema; `graph.json` in that partition remains the storage charge receipt.
 Finite tasks request graph reuse only while the publication and its manifest content remain current.
 `SEMIO_BUILD_TERMINAL=false` delegates terminal rendering and lifecycle to the dashboard daemon.
 Independent daemon tasks clear the inherited `SEMIO_BUILD_INVOCATION_PID` before starting.

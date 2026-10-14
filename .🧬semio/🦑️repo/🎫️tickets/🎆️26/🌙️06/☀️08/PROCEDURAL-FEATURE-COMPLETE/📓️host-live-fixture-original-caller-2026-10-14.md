@@ -309,3 +309,44 @@ error: "nx" exited with code 1
 ## Current Carrier And Deeper Compiler Fixture Repairs
 
 Parent confirmed genuine Bootstrap Nx carrier following peer repo-carrier change; own paired BrowserOutput launches and retained inputs now use Bootstrap with same actual authored cap limits and Nx selection. No process-invocation environment fabricated. Source19327 was graph authority refusal before tests. Current deeper compiler witnesses preserve member owned mutable input donation and original ToyFixtureCaller context; live instance closes with same context remaining loan. Full failures stay intact.
+
+## Actual Bootstrap Event Source PID 25415
+
+Natural Nx terminal 1.
+
+```text
+[script] {"owner":"procedural:Host:original-browser-output-source","command":"nx","stage":"loading"}
+[script] {"owner":"procedural:Host:original-browser-output-source","command":"nx","stage":"running"}
+[nx] Admitting structural source membership (1024 directories)
+[nx] Admitted 0 structural collection manifests
+[nx] Graph and hash preparation running elapsedMs=10002
+[nx] Graph and hash preparation running elapsedMs=20004
+[nx] Graph and hash preparation running elapsedMs=30005
+
+Creating project graph nodes with 2 plugins
+  - nx/js/dependencies-and-lockfile
+  - nx/core/package-json
+Creating project graph nodes with nx/core/package-json
+
+
+[nx] Graph and hash preparation running elapsedMs=40014
+
+ NX   Failed to process project graph.
+
+The "@repo/emoji-project-json" plugin threw an error while creating dependencies: Source file "👴️leutwiler/💤️realparts-of-powers-z-n/🧘️lean/.lake/packages/proofwidgets/widget/package.json" does not exist in the workspace.
+
+[script] {"owner":"procedural:Host:original-browser-output-source","command":"nx","stage":"complete"}
+
+```
+
+## Deeper Fixture Source Repair
+
+Completion registered restart now creates one OriginalFixtureCaller/context before its whole publish/close body and retires it afterward. dispatch_typed, maintenance, publication and close forward that same context. Collected primary and close failures now retain whole OriginalTurnFailure; value failures do not pass through into_message. Member action keeps one mutable owned DslValue Option and passes existing ToyFixtureCaller context. Live lifetime close passes its same context remaining grant. These repairs remain native-unqualified pending changed compile.
+
+## Event Issuer Qualification Boundary
+
+Bootstrap Source25415 genuinely ran its current command and preserved full cap stock, but stopped before strictTypeScript/test at missing proofwidgets widget package.json Nx graph dependency. This is a graph refusal and cannot serve as the event assertion RED. No NativeFrameEventIssuer production implementation has landed yet. Existing NativeFrameCaller is still constructed pre-boot with one eight-millisecond whole-window deadline. Its standalone native test also still consumes all cumulative fuel before expecting cleanup, an invalid refill assumption requiring replacement by an explicitly narrowed zero-item same-context loan. Event issuer test schema/SQLite source oracle is authored; native runtime law must prove first event starts clock, second observed event does not replace borrowed source, actual source return/physical close, different operation second event, immutable duration/stock within each source, and Drop zero. Deadline-expired full close cannot be hidden by a new source or wider deadline; a source-return gate alone does not qualify expiry cleanup.
+
+## Native Event Law Authored Before Production
+
+Existing native_frame_caller integration now declares NativeFrameEventIssuer missing import/actual law: construction System birth/release zero, event-local absolute deadline, admitted original loan, denial of replacement with unchanged receipt/fuel/deadline, refusal of early finish, same-source loan return and complete physical root close, distinct second business operation, total System birth/release equality and Drop zero. Original native cancellation law now uses a zero-item with_retained_loan admission refusal and retains original finite fuel; it no longer consumes all original fuel before requiring close. Existing renderer BrowserOutputNative owning script selects that interpreter integration before all preserved renderer output laws; no new script or interpreter script edits. Runtime law has not yet executed because graph source refusal preceded tests.

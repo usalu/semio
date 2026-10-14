@@ -16,7 +16,7 @@
   },
   "const": {
     "version": 1,
-    "publicationStore": ".cache/framework/leases",
+    "publicationStore": ".cache/b/l/m/data",
     "foreignOwner": "refused",
     "existingBytes": "preserved",
     "retiredManifestAdoption": false,

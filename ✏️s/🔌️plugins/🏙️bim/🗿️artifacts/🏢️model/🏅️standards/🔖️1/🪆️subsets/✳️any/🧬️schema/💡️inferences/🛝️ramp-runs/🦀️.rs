@@ -10,8 +10,8 @@
 
 use super::super::element_solids::plan_kit::point;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
-use crate::{Ramp};
-#[cfg(test)] use crate::{ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
+#[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::vector::cross;

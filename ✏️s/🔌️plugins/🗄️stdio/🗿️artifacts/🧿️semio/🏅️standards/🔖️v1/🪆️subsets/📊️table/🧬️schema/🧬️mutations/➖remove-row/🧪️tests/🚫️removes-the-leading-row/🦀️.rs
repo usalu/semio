@@ -5,9 +5,9 @@
 //! `None`. Removing row #0 — the one that shifts every remaining index — is the case committed
 //! here, and its inverse must re-insert at that same BASE index rather than appending.
 
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/📸️snapshot/⬅️before/🔣️.json");

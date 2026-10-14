@@ -1,10 +1,19 @@
 //! 🛠️ The `brep.feature` widgets: fillet, chamfer, shell, draft, offset, thicken and defeature as stepped lane J operation jobs over a fresh kernel session.
 //!
 //! Face and edge selections carry the persistent labels of the input shape value; they resolve through the imported session and fault with `generation3d.geometry.selection-stale` when a label no longer exists.
+#![allow(clippy::result_large_err)]
+extern crate self as semio_s_artifact_procedural_3d_brep_feature;
 
-use super::brep_curve::guarded;
-use super::phased_job::{Pipeline, Work};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::BrepOperation;
 
 fn feature<P: Send + 'static>(kind: &Kind, inputs: &WidgetInputs, port: &'static str, read: impl FnOnce(&WidgetInputs) -> Result<P, WidgetFault>, plan: impl FnOnce(&mut Work, P) -> Result<BrepOperation, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
@@ -88,6 +97,8 @@ fn defeature(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-feature", include_str!("../../../🗂️catalogue/🔣️brep-feature.json"));
 /// 🗃️ Every `brep.feature` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.feature.fillet", start: fillet },

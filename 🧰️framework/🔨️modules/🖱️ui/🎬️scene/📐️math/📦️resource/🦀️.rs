@@ -94,6 +94,8 @@ impl Mesh3dResourceLoan {
 
     pub fn lease(&self) -> Option<Mesh3dLease> { self.lease }
 
+    pub fn lease_ref(&self) -> Option<&Mesh3dLease> { self.lease.as_ref() }
+
     pub fn loan(&self, grant: RetainedCloneGrant) -> Result<Option<(Self, RetainedCloneProgress)>, Mesh3dFault> {
         let Some(lease) = self.lease else { return Err(Mesh3dFault::Closing); };
         if !metadata_admitted(grant) { return Ok(None); }
@@ -125,3 +127,7 @@ impl Drop for Mesh3dResourceOwner {
 impl Drop for Mesh3dResourceLoan {
     fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "original native mesh resource loan dropped before paid return"); }
 }
+
+#[path="📥️receiving/🦀️.rs"]
+mod receiving;
+pub use receiving::{Mesh3dResourceReceiving,Mesh3dReceivingStep,MESH3D_RESOURCE_COMPONENT_COUNT_CAPACITY};

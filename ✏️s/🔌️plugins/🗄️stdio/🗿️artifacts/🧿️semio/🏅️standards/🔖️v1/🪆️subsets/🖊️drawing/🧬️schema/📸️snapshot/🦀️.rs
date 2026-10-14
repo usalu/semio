@@ -4,7 +4,8 @@
 //! no `serde_json::Value`, no bare tuples/nested fixed arrays (geometry fields reuse
 //! `engine::geometry`'s named structs throughout).
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 
 
 use framework_schema::ArtifactSchema;

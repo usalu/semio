@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Axis, Entry, ModelDiff, Point2, ProjectPatch, StoreyPatch, WallPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2}, diff::{Entry, ModelDiff, patches::{ProjectPatch, StoreyPatch, WallPatch}}};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

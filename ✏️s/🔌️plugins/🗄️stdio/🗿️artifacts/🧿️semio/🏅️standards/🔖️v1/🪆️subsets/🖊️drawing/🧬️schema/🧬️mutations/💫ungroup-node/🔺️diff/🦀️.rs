@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `UngroupNode`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use crate::schema::diff::{diff_at_path, node_at, DrawGroupDiff, DrawNodeDiff, SemioDrawingDiff};
 use crate::schema::mutations::delete_node::parent_and_index;
 use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};

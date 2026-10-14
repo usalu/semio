@@ -15,6 +15,8 @@
   "privateBinding": true,
   "sourceAdmission": "first-party-paid-parent-seal",
   "binding": {
+    "totalGrant": [64, 0, 0, 0, 1],
+    "callPolicy": [1, 0, 0, 0, 1],
     "operation": 71,
     "generation": 3,
     "firstEpoch": 19,
@@ -55,6 +57,11 @@
         "epoch": 21,
         "accepted": true
       }
-    ]
+    ],
+    "work": {
+      "clockBinding": 1571,
+      "absoluteDeadlineUs": 1000000,
+      "fuel": 64
+    }
   }
 }

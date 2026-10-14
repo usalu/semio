@@ -3,7 +3,7 @@
 
 use super::super::elements;
 use super::RemoveElementClassification;
-use crate::{ClassificationSetPatch, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

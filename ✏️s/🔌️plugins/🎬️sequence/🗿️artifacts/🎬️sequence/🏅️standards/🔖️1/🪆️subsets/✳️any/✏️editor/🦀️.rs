@@ -27,12 +27,14 @@ use crate::mutations::SequenceMutation;
 use crate::{SequenceCamera, SequenceEdge, SequenceHostSnapshot, SequenceSnapshot, SequenceStep, SequenceWorkingScene, SlotRef, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
 use dag::{would_create_cycle, DagHost};
-use graph::manifest::PropertyBag;
+use semio_framework_graph_manifest::PropertyBag;
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, ColdOwner, Dictionary, Registry, RegistryRetirement, SharedRegistry, Value as NeuralValue, ValueRetirement};
-use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
-use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
+use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
+use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
+
+use semio_framework_os_infinite_directed_presentation::{DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use semio_framework_plugin::app::{ChildEmit,ChildEmitPreparation};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ActionArgDef;

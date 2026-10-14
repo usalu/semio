@@ -7,10 +7,10 @@ use crate::standards::v1::subsets::any::io::export::ifc::Schema;
 use super::spatial::{number_of, single_values, string_of};
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
-use crate::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
 use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
 use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 /// 🧗️ The property sets of the wall depth package: bookkeeping of the export, restored into fields and never user data.

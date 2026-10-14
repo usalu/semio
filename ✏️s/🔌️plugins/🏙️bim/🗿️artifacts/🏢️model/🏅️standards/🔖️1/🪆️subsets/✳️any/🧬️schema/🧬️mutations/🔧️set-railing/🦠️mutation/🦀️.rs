@@ -1,6 +1,6 @@
 //! 🔧️ `set-railing` payload. Sets any of a railing's authored path, height, post spacing, rail and post sections, baluster row (an assigned null removes it), infill, host (an assigned null releases it), material, base offset and name; absent fields stay untouched.
 
-use crate::{Assigned, Baluster, Infill, ModelDiff, ModelMutation, ModelSnapshot, Point2, Profile, RailingHost, RailingPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::RailingPatch}, snapshot::{Baluster, Infill, ModelSnapshot, Point2, Profile, RailingHost}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

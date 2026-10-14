@@ -41,14 +41,29 @@ mod subject {
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonValue};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio_value::schema::mutations::{diff_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-    use semio_s_artifact_stdio_semio_value::io::binary::snapshot::decode_semio_value_pack;
-    use semio_s_artifact_stdio_semio_value::io::binary::snapshot::encode_semio_value_pack;
-    use semio_s_artifact_stdio_semio_value::io::text::snapshot::print_semio_value_dsl;
-    use semio_s_artifact_stdio_semio_value::io::text::snapshot::parse_semio_value_dsl;
-    use semio_s_artifact_stdio_semio_value::io::text::snapshot::decode_semio_value_snapshot_json;
-    use semio_s_artifact_stdio_semio_value::io::text::snapshot::encode_semio_value_snapshot_json;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::diff_semio_value_mutation;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::insert_list_item;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::inverse_semio_value_mutation;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::remove_list_item;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::remove_map_entry;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::remove_node;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_map_entry;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_node;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_value;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValuePath;
+    use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValuePathSegment;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
+    use semio_s_artifact_stdio_semio_value_model::io::binary::snapshot::decode_semio_value_pack;
+    use semio_s_artifact_stdio_semio_value_model::io::binary::snapshot::encode_semio_value_pack;
+    use semio_s_artifact_stdio_semio_value_model::io::text::snapshot::print_semio_value_dsl;
+    use semio_s_artifact_stdio_semio_value_model::io::text::snapshot::parse_semio_value_dsl;
+    use semio_s_artifact_stdio_semio_value_model::io::text::snapshot::decode_semio_value_snapshot_json;
+    use semio_s_artifact_stdio_semio_value_model::io::text::snapshot::encode_semio_value_snapshot_json;
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Decode

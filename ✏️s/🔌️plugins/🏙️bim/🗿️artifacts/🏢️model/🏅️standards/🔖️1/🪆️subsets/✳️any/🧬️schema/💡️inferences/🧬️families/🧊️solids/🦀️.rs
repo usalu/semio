@@ -5,7 +5,7 @@
 use super::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
 use super::FamilySolidMesh;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBounds, SolidPoint, CHORD_TOLERANCE};
-use crate::{ExprPoint, FamilySolid, ModelSnapshot, ParametricProfile, SolidAxis, SolidShape};
+use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid, ModelSnapshot, ParametricProfile, SolidAxis, SolidShape};
 use semio_framework_expression::{evaluate, parse, Kind, Value};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::{self, Vertex};

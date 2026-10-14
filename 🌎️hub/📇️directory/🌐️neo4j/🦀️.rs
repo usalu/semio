@@ -417,7 +417,6 @@ pub struct Neo4jDirectory {
     genesis_test_control: std::sync::Arc<ArtifactGenesisTestControlV1>,
 }
 
-#[cfg(feature = "neo4j")]
 impl Neo4jDirectory {
     /// 🔁️ One attempt of [`HubDirectory::claim_artifact_creation`]; the trait method retries it while Neo4j reports a transient fault.
     async fn claim_artifact_creation_attempt(&self, intent: &ArtifactCreationIntentV1) -> DirectoryResult<ArtifactCreationClaimV1> {

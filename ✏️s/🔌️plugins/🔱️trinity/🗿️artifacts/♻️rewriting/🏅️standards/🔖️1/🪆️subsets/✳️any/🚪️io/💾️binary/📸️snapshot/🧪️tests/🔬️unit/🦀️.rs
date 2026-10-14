@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::LayoutPoint;
 use ::store::os_store::test_support::assert_dsl_pack_equivalence;
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 fn sample_rule_state() -> RewritingSnapshot {
     let mut state = crate::editor::rewriting::fixture_rule_state();

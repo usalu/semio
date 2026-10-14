@@ -4,7 +4,7 @@
 use crate::editor::bim::commands::set_property::elements_of;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -22,7 +22,7 @@ pub fn handle(payload: &RemoveClassification, doc: &ArtifactView<'_, ModelSnapsh
     if holders.is_empty() {
         return Err(fault("bim.classification.missing", "none of the targets is classified in that system"));
     }
-    Ok(Emit::mutations(holders.into_iter().map(|id| ModelMutation::RemoveElementClassification(crate::mutations::remove_element_classification::RemoveElementClassification { id: id.clone(), system: system.to_string() })).collect()))
+    Ok(Emit::mutations(holders.into_iter().map(|id| ModelMutation::RemoveElementClassification(crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification { id: id.clone(), system: system.to_string() })).collect()))
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! 📌️ `set-dimension` payload. Sets exactly the provided fields of a dimension: anchors, measuring direction, offset, style, lock (an assigned null removes it) and name; absent fields stay untouched.
 
-use crate::{AnnotationAnchor, Assigned, DimensionPatch, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnnotationAnchor, ModelSnapshot}, diff::{Assigned, patches::DimensionPatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

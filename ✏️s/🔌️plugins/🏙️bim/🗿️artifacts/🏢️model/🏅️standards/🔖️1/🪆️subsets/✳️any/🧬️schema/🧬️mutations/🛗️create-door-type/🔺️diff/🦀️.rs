@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateDoorType;
-use crate::{is_positive_length, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateDoorType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

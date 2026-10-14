@@ -12,8 +12,8 @@
       "order": 16,
       "variant": "DwgAc1018Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1018::DwgAc1018Editor",
-      "factory": "semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1018::create_dwg_ac1018_editor",
+      "type": "semio_s_artifact_stdio_dwg_editor_ac1018::editor::dwg_ac1018::DwgAc1018Editor",
+      "factory": "semio_s_artifact_stdio_dwg_editor_ac1018::editor::dwg_ac1018::create_dwg_ac1018_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "dwg_ac1018_editor",
@@ -25,8 +25,8 @@
       "order": 17,
       "variant": "DwgAc1018Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1018::DwgAc1018Viewer",
-      "factory": "semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1018::create_dwg_ac1018_viewer",
+      "type": "semio_s_artifact_stdio_dwg_editor_ac1018::viewer::dwg_ac1018::DwgAc1018Viewer",
+      "factory": "semio_s_artifact_stdio_dwg_editor_ac1018::viewer::dwg_ac1018::create_dwg_ac1018_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -57,8 +57,10 @@
   "openTargets": [],
   "catalogPackage": null,
   "symbolPackages": [
-    "semio-s-artifact-stdio-dwg-model",
-    "semio-s-artifact-stdio-dwg-editor"
+    "semio-s-artifact-stdio-dwg-editor",
+    "semio-s-artifact-stdio-dwg-editor-ac1018",
+    "semio-s-artifact-stdio-dwg-snapshot",
+    "semio-s-artifact-stdio-dwg-mutations"
   ],
   "playgrounds": [
     {
@@ -89,8 +91,8 @@
   "mutationDescriptors": [
     {
       "name": "DwgMutation",
-      "snapshot": "semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot",
-      "mutation": "semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation"
+      "snapshot": "semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot",
+      "mutation": "semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation"
     }
   ],
   "mutationCoordinates": [

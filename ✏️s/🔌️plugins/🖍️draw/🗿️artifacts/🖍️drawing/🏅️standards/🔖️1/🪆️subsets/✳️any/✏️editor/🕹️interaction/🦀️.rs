@@ -1,16 +1,17 @@
 //! 🎯️ Document-derived layer membership for selection and stale-target pruning.
 #[path="🎯️points/🦀️.rs"]
-pub(crate) mod points;
-use crate::{DrawingLayerNode, DrawingSnapshot};
+pub mod points;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{DomainTopology, TopologyNode};
 use super::DRAWING_INTERACTION_GRANULARITY;
 
-pub(super) fn drawing_interaction_topology(snapshot: &DrawingSnapshot) -> DomainTopology {
+pub fn drawing_interaction_topology(snapshot: &DrawingSnapshot) -> DomainTopology {
     let mut ordered = Vec::new();
     let mut stack = vec![(snapshot.layers.iter(), None::<&semio_framework_value::paged::PagedUtf8<{usize::MAX}>>)];
     while let Some((layers, parent)) = stack.last_mut() {
         let Some(layer) = layers.next() else { stack.pop(); continue; };
-        let id = crate::schema::layer_id(layer);
+        let id = semio_s_artifact_draw_drawing_model::layer_id(layer);
         ordered.push(TopologyNode { id: id.to_string_owner(), granularity: DRAWING_INTERACTION_GRANULARITY.into(), parent: parent.map(semio_framework_value::paged::PagedUtf8::to_string_owner) });
         if let DrawingLayerNode::Group(group) = layer {
             stack.push((group.children.iter(), Some(id)));
@@ -20,12 +21,12 @@ pub(super) fn drawing_interaction_topology(snapshot: &DrawingSnapshot) -> Domain
 }
 
 /// 📍️ Only visible, unlocked path coordinates belong to the node-selection domain.
-pub(super) fn drawing_point_topology(snapshot:&DrawingSnapshot)->DomainTopology {
+pub fn drawing_point_topology(snapshot:&DrawingSnapshot)->DomainTopology {
     let mut ordered=Vec::new();
     let mut stack=vec![snapshot.layers.iter()];
     while let Some(layers)=stack.last_mut() {
         let Some(layer)=layers.next() else {stack.pop();continue;};
-        let base=crate::schema::layer_base(layer);
+        let base=semio_s_artifact_draw_drawing_model::layer_base(layer);
         if !base.visible || base.locked {continue;}
         match layer {
             DrawingLayerNode::Group(group)=>stack.push(group.children.iter()),

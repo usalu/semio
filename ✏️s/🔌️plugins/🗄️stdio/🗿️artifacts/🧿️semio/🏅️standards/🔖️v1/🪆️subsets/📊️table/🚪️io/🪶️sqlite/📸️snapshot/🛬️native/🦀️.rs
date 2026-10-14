@@ -1,8 +1,12 @@
 //! 📊️ Controlled native columns and rows retain independent declarations and every typed cell.
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
-use crate::schema::snapshot::{SemioTableSnapshot, SemioTableColumn, SemioTableRow, SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use crate::schema::snapshot::SemioTableSnapshot;
+use crate::schema::snapshot::SemioTableColumn;
+use crate::schema::snapshot::SemioTableRow;
+use crate::schema::snapshot::SemioTableCellKind;
+use crate::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
-use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_decoding as values;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding as values;
 use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Counts complete cells before the same caller's actual native ownership allocation.

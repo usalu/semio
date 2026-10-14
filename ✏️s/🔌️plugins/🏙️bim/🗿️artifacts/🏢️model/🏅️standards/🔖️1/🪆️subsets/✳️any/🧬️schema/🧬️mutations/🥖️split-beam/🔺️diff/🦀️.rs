@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::wall_geometry::{snap, split, Split};
 use super::SplitBeam;
-use crate::{Assigned, Beam, BeamPatch, Entry, KeyedDelta, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, Entry, KeyedDelta, ModelDiff}, snapshot::{Beam, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

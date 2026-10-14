@@ -1,10 +1,23 @@
 //! ⏱️ Phased kernel jobs: the stepped widget job of every compute that imports shape values into a fresh kernel session, runs kernel steps against it and exports the result.
 //!
 //! A [`Pipeline`] is an ordered list of steps over one [`Work`] (the session, the imported inputs and the groups of result handles). A step that is a lane J operation job is advanced with the remaining fuel of the grant, every other step is one unit, so a widget job yields between import, kernel call and export. A panic inside the kernel becomes a `generation3d.geometry.kernel` fault instead of tearing the engine down.
+#![allow(clippy::result_large_err)]
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use {semio_framework_3d_brep_engine::{BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind, ImportedShape, ShapeTessellationJob, ShapeValue}, semio_framework_3d_brep_representation::contract::MeshTransfer};
-use semio_framework_3d_brep_queries::tessellation::TessellationStep;
+use semio_framework_3d_brep_tessellation::TessellationStep;
 use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
 use std::collections::{BTreeSet, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};

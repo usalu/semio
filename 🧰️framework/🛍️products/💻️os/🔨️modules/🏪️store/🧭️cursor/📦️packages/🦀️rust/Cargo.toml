@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-store-cursor"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "os-store-cursor"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:serde"]
+
+[dependencies]
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+serde = { version = "1.0.219", features = ["derive"], optional = true }
+
+[dev-dependencies]
+serde = { version = "1.0.219", features = ["derive"] }

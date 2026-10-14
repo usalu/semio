@@ -1,8 +1,8 @@
-use super::*;
-use crate::default_remodeling_scene;
-use crate::editor::remodeling::commands::set_active_example::SetActiveExample;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::*;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::set_active_example::SetActiveExample;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, render as render_body};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn an_unset_frame_cursor_renders_no_layers_for_a_document_without_streams() {
@@ -15,7 +15,7 @@ async fn an_unset_frame_cursor_renders_no_layers_for_a_document_without_streams(
 #[semio_framework_async_macros::async_test]
 async fn an_unset_frame_cursor_falls_back_to_the_first_stream_and_frame() {
     let mut app = app().await;
-    assert!(dispatch(&mut app, RemodelingCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::synthetic_orbit::ID.into() })).await.edited_document(), "the example load publishes the document lane");
+    assert!(dispatch(&mut app, RemodelingCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit::ID.into() })).await.edited_document(), "the example load publishes the document lane");
     let scene = app.snapshot().expect("snapshot");
     let stream = scene.streams.first().expect("the example carries a stream");
     let first = stream.frames.first().expect("the example carries frames");

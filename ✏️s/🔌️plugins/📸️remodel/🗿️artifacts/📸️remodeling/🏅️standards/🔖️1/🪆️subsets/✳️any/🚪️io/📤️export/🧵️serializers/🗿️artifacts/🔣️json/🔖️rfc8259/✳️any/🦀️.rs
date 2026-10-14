@@ -1,4 +1,4 @@
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use semio_framework_value::ToValue;
@@ -16,7 +16,7 @@ impl Serializer<RemodelingSnapshot> for RemodelingIntoJson {
     const INTO: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(from: &RemodelingSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-        let owned = crate::standards::v1::subsets::any::io::remodeling_json::convert(from.to_value(),false).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
+        let owned = semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io::remodeling_json::convert(from.to_value(),false).map_err(|message|IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)))?;
         let value = semio_framework_pack_json::from_dsl_value(&owned);
         Ok(IoOutcome::clean(IoPayload::Text(write_json_pretty(&JsonSnapshot::from_value(value).value))))
     }

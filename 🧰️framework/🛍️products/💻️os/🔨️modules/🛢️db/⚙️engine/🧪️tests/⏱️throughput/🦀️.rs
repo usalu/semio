@@ -23,11 +23,8 @@ fn fixture_f64(value: &serde_json::Value, path: &[&str]) -> f64 {
 #[derive(Clone)]
 enum ThroughputTarget {
     Fs { root: std::path::PathBuf },
-    #[cfg(feature = "sqlite")]
     Sqlite { path: std::path::PathBuf },
-    #[cfg(feature = "postgres")]
     Postgres { url: String },
-    #[cfg(feature = "neo4j")]
     Neo4j { uri: String, user: String, password: String },
 }
 
@@ -35,11 +32,8 @@ impl ThroughputTarget {
     fn label(&self) -> &'static str {
         match self {
             Self::Fs { .. } => "fs",
-            #[cfg(feature = "sqlite")]
             Self::Sqlite { .. } => "sqlite",
-            #[cfg(feature = "postgres")]
             Self::Postgres { .. } => "postgres",
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { .. } => "neo4j",
         }
     }
@@ -47,17 +41,14 @@ impl ThroughputTarget {
     async fn open(&self, pool: Arc<WorkerPool>) -> Database {
         match self {
             Self::Fs { root } => Database::open_at(pool, root, Profile::Dev).await.unwrap(),
-            #[cfg(feature = "sqlite")]
             Self::Sqlite { path } => {
                 let storage = crate::db_storage_sqlite::SqliteStorage::open(pool.clone(), path).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Sqlite(storage))).await.unwrap()
             }
-            #[cfg(feature = "postgres")]
             Self::Postgres { url } => {
                 let storage = crate::db_storage_postgres::PostgresStorage::connect(pool.clone(), url).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Postgres(storage))).await.unwrap()
             }
-            #[cfg(feature = "neo4j")]
             Self::Neo4j { uri, user, password } => {
                 let storage = crate::db_storage_neo4j::Neo4jStorage::connect(pool.clone(), uri, user, password).await.unwrap();
                 Database::open(pool, DbConfig::for_profile(Profile::Dev), Arc::new(db_storage::DbBackend::Neo4j(storage))).await.unwrap()
@@ -337,7 +328,6 @@ async fn fs_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
     let _ = std::fs::remove_dir_all(root);
 }
 
-#[cfg(feature = "sqlite")]
 #[semio_framework_async_macros::async_test]
 async fn sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
     if !db_storage::process_isolated_law("db_engine::throughput_tests::sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds") {
@@ -353,12 +343,10 @@ async fn sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds() 
 /// (`OS_HUB_DATABASE_URL`, `OS_HUB_NEO4J_URI`/`_USER`/`_PASSWORD`): set by `os-hub-ts backend run <postgres|neo4j> -- …`,
 /// which claims the ONE shared development server (a run database of its own on postgres, the exclusive lease over a
 /// reset graph on neo4j) and releases it afterwards.
-#[cfg(any(feature = "postgres", feature = "neo4j"))]
 fn claimed_backend_env(key: &str) -> String {
     std::env::var(key).unwrap_or_else(|_| panic!("{key} is unset: run this law under `os-hub-ts backend run <postgres|neo4j> -- …`"))
 }
 
-#[cfg(feature = "postgres")]
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared postgres: `os-hub-ts backend run postgres -- …`"]
 async fn postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds() {
@@ -368,7 +356,6 @@ async fn postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds(
     throughput_law(ThroughputTarget::Postgres { url: claimed_backend_env("OS_HUB_DATABASE_URL") }).await;
 }
 
-#[cfg(feature = "neo4j")]
 #[semio_framework_async_macros::async_test]
 #[ignore = "needs the claimed shared neo4j: `os-hub-ts backend run neo4j -- …`"]
 async fn neo4j_commits_and_reopen_storms_stay_within_their_throughput_bounds() {

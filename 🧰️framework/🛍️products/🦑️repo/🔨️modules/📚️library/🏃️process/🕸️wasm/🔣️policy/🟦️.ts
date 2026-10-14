@@ -5,6 +5,7 @@ import {getWorkspaceRoot} from "../../../🗂️workspaces/🟦️.ts";
 import {cargoDirectories,wasmBindgenVersion} from "../../../⚡️caching/🦀️cargo/🟦️.ts";
 import {prepareCargoWorkspaceInvocation} from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import {repositoryStrictStorageV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🟦️.ts";
 import {preparedBinaryen} from "../../../⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import {resolveWorkspaceBin} from "../../🟦️.ts";
 import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -49,7 +50,7 @@ export function repositoryWasmBuildPolicyV1(cwd: string, compilerEnvironment: Re
   const mode = readBuildMode(compilerEnvironment.SEMIO_BUILD_MODE), root = getWorkspaceRoot(compilerEnvironment), bindgen = resolveWasmBindgenBin(root, compilerEnvironment), environment = wasmPackEnvironment(root, bindgen, compilerEnvironment), local = resolveWorkspaceBin("wasm-pack", cwd);
   const cargo = Bun.TOML.parse(readFileSync(join(cwd, "Cargo.toml"), "utf8")) as { package?: { name?: string } };
   if (!cargo.package?.name) throw Error("WASM source owner requires an authored Cargo package name");
-  return { version: 1, compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: join(root,".cache","framework","leases"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
+  return { version: 1, workspaceRoot:root,sourceBoundary:repositoryStrictStorageV1(root).sourceBoundary,compilerConfiguration: join(root,".cargo/config.toml"), cwd: resolve(cwd), sourceOwner: relative(root,resolve(cwd)).replaceAll("\\","/"), mode, artifactDirectory: compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR ? resolve(compilerEnvironment.SEMIO_TEST_ARTIFACT_DIR) : join(cwd, "dist"), buildDirectory: cargoDirectories(root, compilerEnvironment).build, leaseDirectory: join(root,".cache","b","l","m","data"), budgetMs: buildBudgetMs(), packageName: cargo.package.name, searchPath: environment.PATH ?? "", bindgen: { command: bindgen, args: [] }, wasmPack: local ? { command: process.execPath, args: [local] } : { command: "wasm-pack", args: [] } };
 }
 
 /** 🦀️ Prepares selected sources and retains the original browser compiler control. */

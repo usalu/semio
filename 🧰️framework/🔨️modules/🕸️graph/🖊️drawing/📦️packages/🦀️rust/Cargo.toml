@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-graph-drawing"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Graph drawing: node-placement layouts and edge and handle routing geometry."
+
+[package.metadata.semio]
+role = "framework"
+id = "graph-drawing"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_graph_drawing"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+geometry = { path = "../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-graph-engine = { path = "../../../../🕸️graph/⚙️engine/📦️packages/🦀️rust" }

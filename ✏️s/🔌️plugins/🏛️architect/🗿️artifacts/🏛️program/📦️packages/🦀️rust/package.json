@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-architect-window-ownership": "bun repo run @semio-tech/architect-program-rs:verify-architect-window-ownership",
     "verify-program-document-contract": "bun repo run @semio-tech/architect-program-rs:verify-program-document-contract",

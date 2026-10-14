@@ -1,15 +1,15 @@
 //! 🧬️ EN 1993 mutation unit tests — hierarchical entity upserts.
 
-use crate::document::AnnexChoice;
-use super::{
-    apply_en1993_mutation, change_annex, update_bolt_inputs, update_bridge_inputs, update_cold_formed_inputs, update_crane_inputs, update_fatigue_inputs,
-    update_fire_inputs, update_hss_inputs, update_member_properties, update_pile_inputs, update_plated_inputs, update_silo_shell_inputs, update_stainless_inputs,
-    update_tension_component_inputs, update_through_thickness_inputs, update_tower_inputs, update_weld_inputs, En1993Mutation,
-};
-use crate::{
-    BridgeFatigue, SteelMember, ColdFormedMember, CraneRunway, En1993Snapshot, FatigueDetail, FireExposure, LoadCase, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelPile,
-    TensionComponent, TowerLeg,
-};
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use crate::mutation_bridge::apply_en1993_mutation;
+use semio_s_artifact_norm_en1993_mut_general::{change_annex, update_member_properties, update_stainless_inputs, update_through_thickness_inputs};
+use semio_s_artifact_norm_en1993_mut_connections::{update_bolt_inputs, update_hss_inputs, update_weld_inputs};
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::{update_bridge_inputs, update_fatigue_inputs, update_fire_inputs};
+use semio_s_artifact_norm_en1993_mut_thin_walled::{update_cold_formed_inputs, update_plated_inputs, update_silo_shell_inputs};
+use semio_s_artifact_norm_en1993_mut_cranes::{update_crane_inputs, update_tension_component_inputs};
+use semio_s_artifact_norm_en1993_mut_towers::{update_pile_inputs, update_tower_inputs};
+use crate::En1993Mutation;
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, SteelMember, ColdFormedMember, CraneRunway, En1993Snapshot, FatigueDetail, FireExposure, LoadCase, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelPile, TensionComponent, TowerLeg};
 
 fn base() -> En1993Snapshot {
     En1993Snapshot::compliant_heb240_frame()
@@ -100,7 +100,7 @@ fn update_fatigue_inputs_upserts_detail() {
         id: "fat-new".into(),
         member_id: before.members[0].id.clone(),
         category: 56,
-        method: "safe_life".into(), spectrum: vec![crate::FatigueBand { id: "fb".into(), delta_sigma: 80.0e6, cycles: 2.0e6 }] };
+        method: "safe_life".into(), spectrum: vec![semio_s_artifact_norm_en1993_model::FatigueBand { id: "fb".into(), delta_sigma: 80.0e6, cycles: 2.0e6 }] };
     let mutation = En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::UpdateFatigueInputs { fatigue_detail: detail });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.fatigue_details.iter().find(|f| f.id == "fat-new").unwrap().category, 56);
@@ -127,7 +127,7 @@ fn update_cold_formed_inputs_upserts_member() {
         k_sigma: 0.43,
         psi: -1.0,
         fy: 355.0e6,
-        gross_resistance: 120.0e3, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 50.0e3 }] };
+        gross_resistance: 120.0e3, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 50.0e3 }] };
     let mutation = En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::UpdateColdFormedInputs { cold_formed_member: cf });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.cold_formed_members.iter().find(|c| c.id == "cf-1").unwrap().thickness, 0.003);
@@ -142,7 +142,7 @@ fn update_plated_inputs_upserts_panel() {
         b: 0.5,
         thickness: 0.012,
         fy: 355.0e6,
-        k_sigma: 4.0, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 200.0e6 }] };
+        k_sigma: 4.0, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 200.0e6 }] };
     let mutation = En1993Mutation::UpdatePlatedInputs(update_plated_inputs::UpdatePlatedInputs { plated_panel: panel });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.plated_panels.iter().find(|p| p.id == "pl-1").unwrap().thickness, 0.012);
@@ -168,7 +168,7 @@ fn update_silo_shell_inputs_upserts_shell() {
 #[test]
 fn update_tension_component_inputs_upserts_component() {
     let before = base();
-    let tc = TensionComponent { id: "tc-1".into(), f_uk: 500.0e3, f_k: 400.0e3, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 300.0e3 }] };
+    let tc = TensionComponent { id: "tc-1".into(), f_uk: 500.0e3, f_k: 400.0e3, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 300.0e3 }] };
     let mutation = En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::UpdateTensionComponentInputs { tension_component: tc });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.tension_components.iter().find(|t| t.id == "tc-1").unwrap().actions[0].force, 300.0e3);
@@ -198,7 +198,7 @@ fn update_tower_inputs_upserts_leg() {
         id: "tw-1".into(),
         member_id: before.members[0].id.clone(),
         force_coefficient: 1.2,
-        dynamic_factor: 1.5, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 400.0e3 }] };
+        dynamic_factor: 1.5, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 400.0e3 }] };
     let mutation = En1993Mutation::UpdateTowerInputs(update_tower_inputs::UpdateTowerInputs { tower_leg: tower });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.tower_legs.iter().find(|t| t.id == "tw-1").unwrap().force_coefficient, 1.2);
@@ -214,7 +214,7 @@ fn update_pile_inputs_upserts_pile() {
         material_id: before.materials[0].id.clone(),
         driving_stress: 200.0e6,
         embedded_length: 8.0,
-        shaft_perimeter: 1.2, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 1500.0e3 }] };
+        shaft_perimeter: 1.2, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 1500.0e3 }] };
     let mutation = En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs { pile });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert!((after.piles.iter().find(|p| p.id == "pile-1").unwrap().driving_stress - 200.0e6).abs() < 1.0);
@@ -229,12 +229,11 @@ fn update_crane_inputs_upserts_runway() {
         wheel_contact_length: 0.050,
         dispersion: 0.015,
         web_thickness: 0.012,
-        phi: 1.1, fy: 355.0e6, actions: vec![crate::ForceAction { id: "a".into(), load_case_id: "q-imposed".into(), force: 200.0e3 }] };
+        phi: 1.1, fy: 355.0e6, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "q-imposed".into(), force: 200.0e3 }] };
     let mutation = En1993Mutation::UpdateCraneInputs(update_crane_inputs::UpdateCraneInputs { crane_runway: crane });
     let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
     assert_eq!(after.crane_runways.iter().find(|c| c.id == "cr-1").unwrap().actions[0].force, 200.0e3);
 }
-
 
 #[test]
 fn insert_and_remove_member_round_trip() {
@@ -256,10 +255,10 @@ fn insert_and_remove_member_round_trip() {
         deflection_limit_ratio: 300.0,
         analysis: "elastic".into(),
     };
-    let insert = En1993Mutation::InsertMember(super::insert_member::InsertMember { index: Some(before.members.len()), member: member.clone() });
+    let insert = En1993Mutation::InsertMember(semio_s_artifact_norm_en1993_mut_general::insert_member::InsertMember { index: Some(before.members.len()), member: member.clone() });
     let (mid, _) = apply_en1993_mutation(&before, &insert).expect("insert");
     assert_eq!(mid.members.len(), before.members.len() + 1);
-    let remove = En1993Mutation::RemoveMember(super::remove_member::RemoveMember { index: mid.members.len() - 1 });
+    let remove = En1993Mutation::RemoveMember(semio_s_artifact_norm_en1993_mut_general::remove_member::RemoveMember { index: mid.members.len() - 1 });
     let (after, _) = apply_en1993_mutation(&mid, &remove).expect("remove");
     assert_eq!(after.members.len(), before.members.len());
 }

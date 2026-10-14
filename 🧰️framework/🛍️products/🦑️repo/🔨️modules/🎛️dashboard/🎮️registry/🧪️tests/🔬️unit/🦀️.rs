@@ -2,6 +2,19 @@ use super::*;
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json");
 
+#[test]
+fn neutral_graph_publication_uses_declared_partition_and_preserves_charge_identity() {
+    let document: serde_json::Value = serde_json::from_str(FIXTURE).unwrap();
+    assert_eq!(graph_file(), document["publication"]["path"].as_str().unwrap());
+    assert_ne!(graph_file(), document["publication"]["charge"].as_str().unwrap());
+    let root = materialise("publication-path");
+    std::fs::write(root.join(document["publication"]["charge"].as_str().unwrap()), "storage charge receipt").unwrap();
+    let registry = crate::inventory::discover_with_catalog(&root, &std::sync::atomic::AtomicBool::new(false), Some(&root.join("catalog")));
+    assert!(registry.find("@fixture/artifact-wav:check").is_some());
+    assert!(registry.problems().is_empty());
+    std::fs::remove_dir_all(root).unwrap();
+}
+
 fn materialise(name: &str) -> PathBuf { materialise_text(name, FIXTURE) }
 
 fn materialise_text(name: &str, fixture: &str) -> PathBuf {
@@ -163,7 +176,7 @@ fn global_axes_select_tools_by_verb_and_build_flags_do_not_reach_them() {
     let launch = resolve(&registry, "tool:workspace/bun-test", &request(&[("file", "a.test.ts"), ("build-mode", "ship"), ("test-level", "quick"), ("bail", "true")], &[], &[]));
     let process = &launch.processes[0];
     assert_eq!(process.args, ["repo", "exec", "--projects=workspace", "--", "bun", "test", "a.test.ts", "--bail"]);
-    assert_eq!((env_of(process, "SEMIO_BUILD_MODE"), env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "BUN_TEST_BAIL")), (Some("ship"), Some("quick"), Some("workspace")));
+    assert_eq!((env_of(process, "SEMIO_BUILD_MODE"), env_of(process, "SEMIO_TEST_LEVEL"), env_of(process, "BUN_TEST_BAIL")), (Some("release"), Some("quick"), Some("workspace")));
     assert!(!process.args.iter().any(|word| word.starts_with("--skip")), "buildFlags of an axis are ignored on a tool");
     let viewer = registry.find("tool:workspace/viewer").unwrap();
     assert!(registry.parameters(viewer).is_empty());
@@ -371,7 +384,7 @@ fn the_xxh3_hash_matches_the_reference_vectors() {
 }
 
 fn publish_graph_basis(root: &Path, registry: &Registry) {
-    let path = root.join(GRAPH_FILE);
+    let path = root.join(graph_file());
     let document = std::fs::read_to_string(&path).unwrap();
     std::fs::write(path, document).unwrap();
     registry.adopt_basis(GraphBasis::read(root, registry.definitions()));
@@ -382,11 +395,11 @@ fn a_build_reuses_the_neutral_graph_only_while_its_manifest_inputs_are_unchanged
     let (root, registry) = fixture("graph");
     let reuses = |registry: &Registry, id: &str| env_of(&registry.resolve(id, &Request::default()).unwrap().processes[0], GRAPH_REUSE.0).is_some();
     registry.adopt_basis(None);
-    let graph = std::fs::read(root.join(GRAPH_FILE)).unwrap();
-    std::fs::remove_file(root.join(GRAPH_FILE)).unwrap();
+    let graph = std::fs::read(root.join(graph_file())).unwrap();
+    std::fs::remove_file(root.join(graph_file())).unwrap();
     assert!(!registry.graph_is_current(), "no neutral graph has been published yet");
     assert!(!reuses(&registry, "workspace:build"));
-    std::fs::write(root.join(GRAPH_FILE), graph).unwrap();
+    std::fs::write(root.join(graph_file()), graph).unwrap();
     publish_graph_basis(&root, &registry);
     assert!(registry.graph_is_current());
     assert!(reuses(&registry, "workspace:build") && reuses(&registry, "@fixture/quiz:test"), "finite build tasks reuse the graph");

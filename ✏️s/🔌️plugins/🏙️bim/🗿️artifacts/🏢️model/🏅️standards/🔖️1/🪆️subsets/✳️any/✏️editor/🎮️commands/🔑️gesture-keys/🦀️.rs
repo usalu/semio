@@ -5,7 +5,7 @@
 use crate::editor::bim::gestures::run_key;
 use crate::editor::bim::gestures::session::GestureKey;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 /// 📐️ The turn of one rotate key, 15 degrees in radians.

@@ -4,7 +4,13 @@
 //! registers it under its own id.
 
 use semio_framework_plugin::{WindowTransientOwner, WindowTransientOwnerBundle};
-pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::{addressed_to, captured_clock, required_clock, FemPlaybackClock, FemResultsWindowTransient, FemResultsWindowTransientMutation, SetPlaybackClock};
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::addressed_to;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::captured_clock;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::required_clock;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransient;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::FemResultsWindowTransientMutation;
+pub use semio_s_artifact_fem_2d::editor::fem2d::modes::edit::windows::results::transient::SetPlaybackClock;
 
 pub const WINDOW_KIND_ID: &str = super::FEM3D_WINDOW_RESULTS;
 

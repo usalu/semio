@@ -31,7 +31,7 @@ async fn unwrap_periodic_removes_tau_jumps() {
 
 #[semio_framework_async_macros::async_test]
 async fn exact_uv_matches_cylinder_eval() {
-    let frame = semio_framework_3d_brep_representation::vector::matrix::Frame3::WORLD;
+    let frame = semio_framework_3d_brep_vector::matrix::Frame3::WORLD;
     let surface = Surface::Cylinder { frame, radius: 2.0 };
     let p = surface.eval(0.7, 1.3);
     let (u, v) = exact_uv(&surface, p);

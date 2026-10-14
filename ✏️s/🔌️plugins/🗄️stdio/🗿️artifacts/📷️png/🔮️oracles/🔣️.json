@@ -5,18 +5,12 @@
     {
       "implementation": "rust",
       "package": "semio-s-artifact-stdio-png-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🔮️oracles/📦️packages/🦀️rust"
     },
     {
       "implementation": "rust",
       "package": "semio-s-plugin-stdio-raster-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🔮️oracles/🖼️raster/📦️packages/🦀️rust"
     }
   ]
 }

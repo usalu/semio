@@ -6,7 +6,7 @@
 //! the former `⚙️engine/🖌️brush` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
 //! is the interactive brush tool's own decision logic, so it lives with the app, not the artifact.
 
-use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
+use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
     AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushKindWeights, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneSnapshot, EngineSceneObject, KindCatalogBundle, KindCompatEntry, ObjectKind,
     ObjectKindVortexTemplate, Quat, Vec3, VortexKindCatalog, VortexProps,
@@ -412,7 +412,7 @@ pub(crate) fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, w
 }
 
 fn brush_joint_weight_value(object_weights: &std::collections::BTreeMap<String, f64>, joint_weights: &std::collections::BTreeMap<String, f64>, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
-    let sep = crate::editor::puzzle3d::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let sep = crate::editor::puzzle3d::snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
     let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
     if let Some(weight) = joint_weights.get(&composite) {
         return *weight;

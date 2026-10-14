@@ -8,7 +8,7 @@ whose target file lives in another layer becomes `<that layer's crate>::<absolut
 `<monolith crate>::…` path is retargeted to the crate that owns its item. Nothing is re-exported.
 
 usage: ✂️crate-cut.py <config.json> plan|apply
-config: {"artifact": <artifact dir>, "layers": <census layers json>, "crate": <monolith crate ident>,
+config: {"artifact": <artifact dir>, "root": <crate root relative to the artifact, default 🦀️.rs>, "layers": <census layers json>, "crate": <monolith crate ident>,
          "crates": {<layer>: {"package": <name>, "dir": <package dir relative to artifact>}}, "aggregator": <layer>,
          "header": [<crate-root attribute and extern lines>], "consumers": [<repo-relative roots to scan>]}
 """
@@ -80,7 +80,7 @@ def load(config_path):
     config = json.load(open(config_path, encoding="utf-8"))
     base = os.path.dirname(os.path.abspath(config_path))
     artifact = os.path.join(REPO, config["artifact"])
-    crate = Crate(os.path.join(artifact, "🦀️.rs"))
+    crate = Crate(os.path.join(artifact, config.get("root", "🦀️.rs")))
     rules_cfg = json.load(open(os.path.join(base, config["layers"]), encoding="utf-8"))
     rules = [(re.compile(r), l) for r, l in rules_cfg["rules"]]
 
@@ -392,7 +392,11 @@ def main():
             if target in crate.files and layer(target) not in (layer(file), "external") and layer(file) != "external":
                 segs = [seg for seg in crate.files[target] if seg != "component"]
                 nested.append((segs, ("mount", m.group("name"), (m.group("vis") or "").strip(), m.group("pre") or m.group("post"), target)))
-                removals[file].append((m.start(), m.end() + (1 if crate.text[file][m.end():m.end() + 1] == "\n" else 0), ""))
+                replacement = ""
+                if re.search(r"(?<![\w:])" + re.escape(m.group("name")) + r"\s*::", crate.text[file][:m.start()] + crate.text[file][m.end():]):
+                    owner_ident = config["crate"] if layer(target) == config["aggregator"] else config["crates"][layer(target)]["package"].replace("-", "_")
+                    replacement = f"use {owner_ident}::{'::'.join(segs)};\n"
+                removals[file].append((m.start(), m.end() + (1 if crate.text[file][m.end():m.end() + 1] == "\n" else 0), replacement))
                 print(f"relocate {os.path.relpath(target, REPO)} ({layer(file)} -> {layer(target)}) at {'::'.join(segs)}")
     for segs, mount in nested:
         holder = next((tree for _, tree in trees if tree[1] == segs[0]), None)
@@ -428,7 +432,7 @@ def main():
                 if a is None:
                     continue
                 start, end = root_raw.rfind("\n", 0, a) + 1, b + (1 if root_raw[b:b + 1] == "\n" else 0)
-                kept = "\n".join(emit(tree, layer, aggregator_layer, artifact, 0)) + "\n" if has_layer(tree, layer, aggregator_layer) else ""
+                kept = "\n".join(emit(tree, layer, aggregator_layer, os.path.dirname(crate.root), 0)) + "\n" if has_layer(tree, layer, aggregator_layer) else ""
                 edits = [edit for edit in edits if not start <= edit[0] < end] + [(start, end, kept)]
             edits.sort()
         if edits:

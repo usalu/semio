@@ -1,17 +1,16 @@
 //! ↩️ `replace-machine-capabilities` inverse — reconstructs the pre-replace capabilities list from
 //! BASE state; a machine already absent from `base` has nothing to undo.
 
-use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::replace_machine_capabilities::ReplaceMachineCapabilities>>(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     base.workshop
         .machines
         .iter()
         .find(|machine| machine.id == payload.id)
-        .map(|machine| vec![Process3dMutation::ReplaceMachineCapabilities(super::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: machine.capabilities.clone() })])
+        .map(|machine| vec![Op::from(super::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: machine.capabilities.clone() })])
         .unwrap_or_default()
 
     })())

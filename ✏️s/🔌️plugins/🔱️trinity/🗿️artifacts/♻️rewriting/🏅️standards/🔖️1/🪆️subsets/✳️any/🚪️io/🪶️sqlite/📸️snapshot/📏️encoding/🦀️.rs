@@ -2,7 +2,7 @@
 use crate::RewritingSnapshot;
 use crate::standards::v1::subsets::any::schema::{Pattern,Rhs};
 use semio_s_artifact_trinity_jack::{JackSnapshot,PropertyDef};
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{ValueError,ValueType};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'a,'p>=NativeEncodingBound<'a,'p>;

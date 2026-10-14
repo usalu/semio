@@ -3,7 +3,7 @@
 
 use super::super::modify::WallEnd;
 use super::SetWallEndJoin;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetWallEndJoin, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.get(&payload.id) {

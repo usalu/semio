@@ -11,5 +11,5 @@ export async function withNxDaemonStartupV1<T>(directory:string,toolingIdentity:
  return receiveScriptProcessInvocation(environment,original=>{const control=scriptCompilerAdmissionControlV1(original,"nx:daemon-startup",0);return withResourceLeases({directory:graphResourceLeaseDirectoryV1(),resources:[{resource,mode:"exclusive"}],signal:control.signal,control},async()=>{checkResourceLeaseControl(control);const result=await body(control);checkResourceLeaseControl(control);return result;});});
 }
 /** 🗃️ Namespace identity stays in the key while physical coordination uses the actual shared short workspace store. */
-export function graphResourceLeaseDirectoryV1():string{return join(findWorkspaceRoot(dirname(fileURLToPath(import.meta.url))),".cache/framework/leases");}
+export function graphResourceLeaseDirectoryV1():string{return join(findWorkspaceRoot(dirname(fileURLToPath(import.meta.url))),".cache/b/l/m/data");}
 

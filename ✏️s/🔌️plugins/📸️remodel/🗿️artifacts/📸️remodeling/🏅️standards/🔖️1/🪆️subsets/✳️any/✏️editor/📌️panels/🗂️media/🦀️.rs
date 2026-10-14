@@ -1,10 +1,11 @@
 //! 🗂️ Remodeling play app panel — the Media tab: an import drop zone plus a summary line per imported
 //! stream/asset.
 
-use crate::editor::remodeling::commands::import_frames::REMODELING_MEDIA_ACCEPT;
-use crate::editor::remodeling::remodeling_action;
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::{MediaKind, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frames::REMODELING_MEDIA_ACCEPT;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::remodeling_action;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
@@ -31,14 +32,14 @@ pub fn definition() -> PanelTabDefinition {
 /// 🪟️ A multi-camera import brings in more streams than one node admits, so the stream list is its
 /// own windowed section beside the fixed drop zone and counts line.
 pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let chrome = crate::editor::remodeling::ui_node_list([
+    let chrome = semio_framework_plugin::ui_node_list([
         tree_item_desc("remodeling-media-drop", labels.panel_media.as_str(), Some(format!("{} ({REMODELING_MEDIA_ACCEPT})", labels.no_streams.as_str()))),
         tree_item("remodeling-media.summary", format!("{}: {} - {}: {}", labels.streams.as_str(), scene.streams.len(), labels.assets.as_str(), scene.assets.len())),
     ])?;
     let (drop_action, _) = remodeling_action("importFramePayload", None)?;
     PanelTreeBuilder::new("remodeling-media")?
-        .section("remodeling-media.streams", Some(crate::editor::remodeling::ui_label(labels.streams.as_str())?), true, chrome)?
-        .window_section(windows, "remodeling-media.imported", Some(crate::editor::remodeling::ui_label(labels.streams.as_str())?), true, &scene.streams, |stream| {
+        .section("remodeling-media.streams", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.streams.as_str())?), true, chrome)?
+        .window_section(windows, "remodeling-media.imported", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.streams.as_str())?), true, &scene.streams, |stream| {
             let kind_label = match stream.kind {
                 MediaKind::Video => labels.stream_kind_video,
                 MediaKind::ImageSequence => labels.stream_kind_image_sequence,
@@ -56,7 +57,4 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

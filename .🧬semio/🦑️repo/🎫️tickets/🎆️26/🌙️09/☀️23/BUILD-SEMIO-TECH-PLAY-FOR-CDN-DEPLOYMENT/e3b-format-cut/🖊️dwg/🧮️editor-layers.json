@@ -1,0 +1,30 @@
+{
+ "order": [
+  "examples",
+  "editor-ac1018",
+  "editor"
+ ],
+ "allow": {
+  "examples": [],
+  "editor-ac1018": [
+   "examples"
+  ],
+  "editor": [
+   "examples"
+  ]
+ },
+ "rules": [
+  [
+   "4️⃣ac1018/🪆️subsets/✳️any/📚️examples/",
+   "examples"
+  ],
+  [
+   "4️⃣ac1018/🪆️subsets/✳️any/(✏️editor|👁️viewer)/",
+   "editor-ac1018"
+  ],
+  [
+   ".",
+   "editor"
+  ]
+ ]
+}

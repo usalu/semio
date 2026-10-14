@@ -143,10 +143,8 @@ pub mod cache {
 pub mod preview {
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::scene::Scene;
-    #[cfg(not(feature = "preview-window"))]
     use crate::editor::animate::engine::scene::scene::{preview_scene_loop, SceneFrame};
     use crate::editor::animate::engine::video::VideoError;
-    #[cfg(not(feature = "preview-window"))]
     use std::io::Write;
 
     /// 🪟️ Live preview outcome.
@@ -160,11 +158,6 @@ pub mod preview {
     /// 🖥️ Previews a scene in a wgpu window when `preview-window` is enabled, else logs frame metadata.
     pub async fn preview_scene_window<S: Scene>(mut scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
         scene.setup(config);
-        #[cfg(feature = "preview-window")]
-        {
-            return preview_scene_window_winit(scene, config, max_frames).await;
-        }
-        #[cfg(not(feature = "preview-window"))]
         {
             let outcome = preview_scene_window_metadata(&mut scene, max_frames);
             scene.tear_down();
@@ -172,107 +165,7 @@ pub mod preview {
         }
     }
 
-    #[cfg(feature = "preview-window")]
-    async fn preview_scene_window_winit<S: Scene>(scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
-        use crate::editor::animate::engine::scene::sobject::Sobject;
-        use crate::editor::animate::engine::video::renderer::{CapturedFrame, VelloRenderer};
-        use std::sync::atomic::{AtomicBool, Ordering};
-        use std::sync::Arc;
-        use winit::application::ApplicationHandler;
-        use winit::event::WindowEvent;
-        use winit::event_loop::{ActiveEventLoop, EventLoop};
-        use winit::window::{Window, WindowId};
 
-        struct PreviewApp<S> {
-            scene: S,
-            config: AnimateConfig,
-            max_frames: u64,
-            frame_index: u64,
-            renderer: Option<VelloRenderer>,
-            window: Option<Arc<Window>>,
-            closed: Arc<AtomicBool>,
-            constructed: bool,
-            error: Option<VideoError>,
-        }
-
-        impl<S: Scene> PreviewApp<S> {
-            fn fail(&mut self, error: VideoError) {
-                self.error = Some(error);
-            }
-        }
-
-        impl<S: Scene> ApplicationHandler for PreviewApp<S> {
-            fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-                if self.window.is_some() {
-                    return;
-                }
-                let window = match event_loop.create_window(Window::default_attributes().with_title("Animate Preview").with_inner_size(winit::dpi::LogicalSize::new(self.config.width, self.config.height))) {
-                    Ok(window) => Arc::new(window),
-                    Err(err) => {
-                        self.fail(VideoError::backend("preview window", err));
-                        event_loop.exit();
-                        return;
-                    }
-                };
-                self.window = Some(window.clone());
-                if !self.constructed {
-                    self.scene.construct();
-                    self.constructed = true;
-                }
-                window.request_redraw();
-            }
-
-            fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-                match event {
-                    WindowEvent::CloseRequested => {
-                        self.closed.store(true, Ordering::Relaxed);
-                        event_loop.exit();
-                    }
-                    WindowEvent::RedrawRequested => {
-                        if self.frame_index >= self.max_frames {
-                            event_loop.exit();
-                            return;
-                        }
-                        self.scene.sample_frame(self.config.frame_duration());
-                        let capture = CapturedFrame { time: self.scene.scene_time(), mobjects: self.scene.mobjects().values().map(|m| m.clone_box()).collect() };
-                        if let Some(renderer) = self.renderer.as_mut() {
-                            let _ = renderer.render_capture(&capture, self.scene.camera(), &self.config);
-                        }
-                        let frame = self.scene.render_frame_index(self.frame_index);
-                        if let Some(window) = self.window.as_ref() {
-                            window.set_title(&format!("Animate Preview — frame {} t={:.2}s mobjects={} section={:?}", frame.frame, frame.time, frame.mobject_count, frame.section));
-                            if self.frame_index + 1 < self.max_frames {
-                                window.request_redraw();
-                            } else {
-                                event_loop.exit();
-                            }
-                        }
-                        self.frame_index += 1;
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        let max = max_frames.unwrap_or(300);
-        let renderer = VelloRenderer::new(config.width, config.height).await?;
-        let mut app = PreviewApp { scene, config: config.clone(), max_frames: max, frame_index: 0, renderer: Some(renderer), window: None, closed: Arc::new(AtomicBool::new(false)), constructed: false, error: None };
-        let event_loop = EventLoop::new().map_err(|err| VideoError::backend("preview event loop", err))?;
-        event_loop.run_app(&mut app).map_err(|err| VideoError::backend("preview run", err))?;
-        app.scene.tear_down();
-        if let Some(error) = app.error {
-            return Err(error);
-        }
-        if app.closed.load(Ordering::Relaxed) {
-            Ok(PreviewOutcome::WindowClosed)
-        } else if app.frame_index >= max {
-            Ok(PreviewOutcome::FrameLimit)
-        } else {
-            Ok(PreviewOutcome::WindowClosed)
-        }
-    }
-
-    #[cfg(not(feature = "preview-window"))]
     fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> PreviewOutcome {
         let max = max_frames.unwrap_or(120);
         let mut stderr = std::io::stderr();

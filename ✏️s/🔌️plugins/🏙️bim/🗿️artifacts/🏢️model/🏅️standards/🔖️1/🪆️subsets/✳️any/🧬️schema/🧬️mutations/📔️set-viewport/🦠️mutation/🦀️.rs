@@ -1,8 +1,8 @@
 //! 📔️ `set-viewport` payload. Sparsely changes a viewport: its sheet, its view, the position of its window on the paper, its scale (an assigned null never clears it), its crop (an assigned null clears it) and its label (an assigned null returns to the name of the view).
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Assigned, Point2, ViewCrop, ViewportPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ViewportPatch}, snapshot::{Point2, ViewCrop}};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

@@ -32,3 +32,7 @@ pub mod read;
 #[path = "../../🏷️type/🦀️.rs"]
 mod types;
 pub use types::{ValueKind, ValueType};
+
+#[cfg(any(test, feature="testkit"))]
+#[path="../../🧪️testing/🧾️wire/🦀️.rs"]
+pub mod testing;

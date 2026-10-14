@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-dwg-write-objects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dwg writer: object records"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-document = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+semio-s-artifact-stdio-dwg-write-records = { workspace = true }

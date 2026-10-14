@@ -12,7 +12,7 @@ class ControlledMetadataTest extends BundleScript {
     const mode = args.shift();
     if (args.length || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Expected test controlled-metadata [source|native]");
     if (mode !== "native") await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🎛️metadata/🟦️.ts")], this.repoRoot, "dwg:controlled-metadata:source", 15_000);
-    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-model", this.repoRoot, ["--lib", "dwg_controlled_metadata_"], this.invocation.control);
+    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-snapshot", this.repoRoot, ["--lib", "dwg_controlled_metadata_"], this.invocation.control);
   }
 }
 /** 🏗️ Validates zero-field record grammar with independent portable and native recognizers. */
@@ -21,7 +21,7 @@ class GrammarShapeTest extends BundleScript {
     const mode = args.shift();
     if (args.length || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Expected test grammar-shape [source|native]");
     if (mode !== "native") await runOwnedCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🏗️grammar/🟦️.ts")], this.repoRoot, "dwg:grammar-shape:source", 15_000);
-    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-model", this.repoRoot, ["--lib", "dwg_grammar_shape_"], this.invocation.control);
+    if (mode !== "source") await runArtifactRustTests("semio-s-artifact-stdio-dwg-snapshot", this.repoRoot, ["--lib", "dwg_grammar_shape_"], this.invocation.control);
   }
 }
 /** 📦️ Every Cargo package the DWG artifact is cut into: the members of its own workspace. */

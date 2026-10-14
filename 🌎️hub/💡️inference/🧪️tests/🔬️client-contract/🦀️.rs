@@ -1,5 +1,6 @@
 use semio_framework_os_mcp::inference::{install_remote_inference_protocols_v1,read_hub_inference_job_events,undo_hub_inference_approval,HubInferenceApprovalRequestV1,HubInferenceEventPageV1,InferenceHubRequestV1,InferenceHubResponseV1,InferenceHubTransport,InferenceHubTransportErrorV1,InferenceRouteErrorV1,INFERENCE_ROUTE_ERRORS};
-use semio_s_artifact_gis_gismap::{inference_mcp::gis_map_mcp_protocol_v1,inference_schema::*};
+use semio_s_artifact_gis_gismap::inference_schema::*;
+use semio_s_artifact_gis_gismap_mcp::gis_map_mcp_protocol_v1;
 use semio_framework_async::{CancelToken,OperationContext,TraceId};
 use directory::{DslValue,FromValue,ToValue};
 use directory::os_directory::DocumentScope;

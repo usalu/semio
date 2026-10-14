@@ -16,7 +16,7 @@ fn sizes_zone_with_surfaces() {
 
 #[test]
 fn sizes_equipment_for_ideal_loads_zone() {
-    let model = crate::sim::test_model_single_zone();
+    let model = crate::model::test_model_single_zone();
     let tables = SizingManager::size(&model, &SizingConfig::default());
     assert_eq!(tables.equipment.len(), 1);
     assert!(tables.equipment[0].design_load_w > 0.0);

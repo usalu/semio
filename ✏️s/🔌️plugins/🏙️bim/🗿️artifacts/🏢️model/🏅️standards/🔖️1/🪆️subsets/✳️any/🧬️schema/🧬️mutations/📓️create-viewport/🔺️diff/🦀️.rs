@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateViewport;
-use crate::{viewport_problem, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{viewport_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateViewport, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

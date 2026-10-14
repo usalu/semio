@@ -6,9 +6,10 @@
 //! `marks` is index-addressed one level deeper than `runs`, so this case pins insertion POSITION
 //! inside the run, not mere membership.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::{SemioTextMarkKind, SemioTextSnapshot};
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextMarkKind;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➕add-mark/🔗️adds/📸️snapshot/⬅️before/🔣️.json");
@@ -48,7 +49,7 @@ async fn the_undo_remove_mark_detaches_the_link_again() {
     let mutation = add_mark();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTextMutation::RemoveMark(crate::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })], "add-mark at run #0/#0 must undo as remove-mark at run #0/#0");
+    assert_eq!(undo, vec![SemioTextMutation::RemoveMark(semio_s_artifact_stdio_semio_text_mutations::schema::mutations::remove_mark::RemoveMark { run_index: 0, index: 0 })], "add-mark at run #0/#0 must undo as remove-mark at run #0/#0");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-mark applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-mark applies to the marked state");

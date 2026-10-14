@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "originalSourceSha256": "7ebf1f8593eb08c4383666eb5d62cc6632d3d81c3816c909602219de0710a57c",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "bytes": 11426,
+      "sha256": "78b00d02bde402cc2900df02487984f74d0600ea335cbda39b5a2013722051ff"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "bytes": 3840,
+      "sha256": "eb9977843e0251369540d4546c426323df72450127165c60b695c61ae3a624b5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "bytes": 5696,
+      "sha256": "c5b50857a7132ccc462a81f83ccbe8dd118bccb8bda3a3256458d5c72a2ae189"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "bytes": 21273,
+      "sha256": "c61b76c458fca565c8188486a3eb7ba25dbe428b59488de1367b5b049ce19c8f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📜️script.ts",
+      "bytes": 3828,
+      "sha256": "e2ab7fdb2a3ca404c6139906fe8f37084c58483cfbf70f982aa5d18e16d09133"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+      "bytes": 85169,
+      "sha256": "a5e7e8804b7deaeb26ce5faa133bcd53377fa19379d1d74f3c8d737196088546"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+      "bytes": 31330,
+      "sha256": "d79d43eb0b8d1da2f4db484c5e4c5c13cd08f6e720f2de5dd6b7af36b581469c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+      "bytes": 18459,
+      "sha256": "ac3517b052e4f403dcc2ea930615198111df4ce256617ef515c2cbd8a43dbb5f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+      "bytes": 7824,
+      "sha256": "0a82ad114a4e1301826f6796889f76faf50009b218e16fc365fe7b8ef04c8f6f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+      "bytes": 11955,
+      "sha256": "72b9858e3605e2bdde2ff85b44b631955dca11b8123b7a095470622dfaa8000f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/📜️script.ts",
+      "bytes": 3359,
+      "sha256": "c8c002f2bea9b1001ba0be1e3e56fbd3dd0519afec94b1200607f6f59bbf61ec"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎯️selected-runtime/🟦️.ts",
+      "bytes": 3562,
+      "sha256": "929ef691a8b3245402c9c8312a132b0c904b2e4ca7a565f424cb1e988e747987"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔁️graph-revision/🟦️.ts",
+      "bytes": 6025,
+      "sha256": "0655347013d825b44619c1c168fa48c4b3a0ef51b0affce9fb2cab3360bdc792"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🦀️cleanup-boundary/🟦️.ts",
+      "bytes": 5340,
+      "sha256": "14fe02490a10490df1e79bbc7fef75ef6e7bdda5a4143bf8fdeb3898b3742f53"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts",
+      "bytes": 23621,
+      "sha256": "1632b172b555bdb93076668499c38ebea2243c4848459b4c973250e4d99a7e0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "bytes": 31327,
+      "sha256": "38ffbb6988f7db3dd055fd716ab131eb04dc8280bd926eee4a4112912ffa76fe"
+    },
+    {
+      "path": "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+      "bytes": 21405,
+      "sha256": "4bd377c5dc61213271dd551268bd2a29422b0e309732b31cb87b2e604b76ab64"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts",
+      "bytes": 15905,
+      "sha256": "3bb19b9341e9045728688a9d1fb69e73ab224e43bb9ef4e60b84bda208ae375a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+      "bytes": 11301,
+      "sha256": "4f11e15405ed6a70dd452e4ebbc1968ebb60ce9765db83cb8a3fc0b07015e394"
+    }
+  ],
+  "references": [
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "./💾️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../🗂️workspaces/🦀️cargo/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "specifier": "../../../🗂️workspaces/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "./💾️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "./🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "../../../🗂️workspaces/🟦️bun/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "specifier": "../../../🗂️workspaces/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../🗂️workspaces/🦀️cargo/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../🗂️workspaces/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../../🏃️process/🌿️environment/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../../../🦀️cargo/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "specifier": "../🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../📜️script.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../🛠️tools/🟦️bun/📜️script.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../📜️script.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../../../🏃️process/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../📜️script.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts",
+      "specifier": "../../📜️script.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📜️script.ts",
+      "specifier": "../../⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/📜️script.ts",
+      "specifier": "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/📜️script.ts",
+      "specifier": "../📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🟦️bun/📜️script.ts",
+      "specifier": "../../📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts",
+      "specifier": "../../📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚦️ci/📜️script.ts",
+      "specifier": "../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🎯️selected-runtime/🟦️.ts",
+      "specifier": "../../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🔁️graph-revision/🟦️.ts",
+      "specifier": "../../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🦀️cleanup-boundary/🟦️.ts",
+      "specifier": "../../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧊️native-runtime/🟦️.ts",
+      "specifier": "../../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "specifier": "../../🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+      "specifier": "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts",
+      "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts",
+      "specifier": "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "exists": true
+    },
+    {
+      "caller": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts",
+      "specifier": "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "exists": true
+    }
+  ],
+  "registeredTestsCollected": 0,
+  "runtimeQualified": false
+}

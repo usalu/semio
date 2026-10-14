@@ -147,7 +147,7 @@ mod private_child_metadata {
         fn next_close_byte_demand(&self) -> usize { self.active.as_ref().map(Vec::capacity).or_else(|| self.reserved.as_ref().map(|_| shared_retirement_allocation_bytes::<String>())).or_else(|| self.fields.iter().flatten().next().map(String::capacity)).or_else(|| self.shared.iter().flatten().next().map(SharedUtf8::original_allocation_bytes)).unwrap_or(0) }
         fn terminal_is_empty(&self) -> bool { self.active.is_none() && self.reserved.is_none() && self.fields.iter().all(Option::is_none) && self.shared.iter().all(Option::is_none) }
         /// 🪵️ Retains an original backing until one work item and its whole physical release are funded.
-        fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        pub(crate) fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
             if self.terminal_is_empty() { self.closing = true; return Ok(RetainedCloneStep::Complete(Default::default())); }
             if grant.maximum_items == 0 || grant.maximum_release_bytes < self.next_close_byte_demand() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.closing = true;

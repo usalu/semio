@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetSheet`: an absolute `SetSheet` restoring the base value of exactly the fields the forward really changes, none when the sheet is absent or nothing changes.
 
 use super::SetSheet;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetSheet, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.sheets.get(&payload.id) else {

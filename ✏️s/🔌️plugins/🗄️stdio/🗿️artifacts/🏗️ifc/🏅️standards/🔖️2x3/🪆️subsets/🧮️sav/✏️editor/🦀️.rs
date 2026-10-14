@@ -42,7 +42,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v2x3::subsets::base::schema::mutations::edit_rules;
+use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::edit_rules;
 
 //#region 🔖️Dialect
 pub const IFC2X3_SAV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("sav") };
@@ -86,8 +86,8 @@ const IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.ifc.2x3.tool-comm
 const IFC2X3_SAV_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn ifc2x3_sav_editor_example_snapshot(example_id: &str) -> Ifc2x3Snapshot {
-    if example_id == crate::examples::demo::ID {
-        <Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID {
+        <Ifc2x3Snapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_ifc_2x3_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         Ifc2x3Snapshot::default()
     }
@@ -173,7 +173,7 @@ pub struct Ifc2x3SavEditor;
 impl ArtifactEditor for Ifc2x3SavEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_ifc_2x3_base::examples::demo::source()]
     }
     type Snapshot = Ifc2x3Snapshot;
     type Mutation = Ifc2x3Mutation;
@@ -306,7 +306,7 @@ impl editing::SnapshotEditingEditor for Ifc2x3SavEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ifc2x3_sav_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(IFC2X3_SAV_DIALECT).document(["stdio", "ifc2x3"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC2X3_SAV_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID, semio_s_artifact_stdio_ifc_2x3_base::examples::demo::label())], semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

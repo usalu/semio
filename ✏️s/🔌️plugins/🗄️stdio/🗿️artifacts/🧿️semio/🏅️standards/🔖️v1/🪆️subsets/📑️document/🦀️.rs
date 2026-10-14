@@ -136,4 +136,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::DocTableRow { c
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioDocumentSnapshot { schema, styles, images, blocks });
 semio_framework_value::artifact_retire_struct!(schema::mutations::DocBlockPath { segments, index });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioDocumentSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioDocumentSnapshot, schema::mutations::SemioDocumentMutation);

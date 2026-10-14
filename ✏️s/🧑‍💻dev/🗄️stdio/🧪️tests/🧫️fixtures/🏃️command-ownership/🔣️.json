@@ -7,7 +7,7 @@
       "exports": [
         "CARGO_CONTRACT_NAME",
         "JsonMap",
-        "NX_CONTRACT_NAME",
+        "BUILD_CONTRACT_NAME",
         "STDIO_RELATIVE_ROOT",
         "StdioArtifactPackageRecord",
         "canonicalStdioArtifactNames",
@@ -30,7 +30,7 @@
       "path": "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
       "exports": [
         "assertStdioArtifactCargoMetadata",
-        "assertStdioArtifactNxGraph",
+        "assertStdioArtifactBuildGraph",
         "stdioCargoMetadata"
       ]
     },
@@ -202,7 +202,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
-      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
@@ -235,7 +235,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
-      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧫️fixtures/📦️artifact-package/🔣️.json",
+      "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"

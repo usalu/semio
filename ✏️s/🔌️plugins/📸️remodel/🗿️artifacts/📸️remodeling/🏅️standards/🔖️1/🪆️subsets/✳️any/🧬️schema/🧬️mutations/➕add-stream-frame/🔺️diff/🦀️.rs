@@ -6,8 +6,11 @@
 //! kind rather than rewriting it — a stream's provenance is fixed when the stream is created, and a
 //! verb that silently rewrote it had no inverse in this vocabulary. The frame lands at its canonical
 //! `(index, asset_id)` position so `remove-stream-frame` puts it back exactly where it was.
-use crate::diff::{RemodelingDiff, RemodelingRow, MediaStreamPatch, RemodelingMembers};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::MediaStreamPatch;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingMembers;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

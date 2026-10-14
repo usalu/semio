@@ -25,10 +25,10 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
   assert.deepEqual(project.targets[fixture.target].outputs, []);
   assert.equal(project.targets[fixture.target].options.command, `bun "${fixture.entry}" prepare`);
   assert.ok(project.targets["deps-wasm"].dependsOn.includes(fixture.target));
-  const { cacheInternals } = await import("../../../../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const targets = { wasm: { cache: true, dependsOn: ["declarations"] } };
-  assert.deepEqual(cacheInternals.withWasmTooling(targets, "buildWasmWebV1({})").wasm.dependsOn, ["declarations", `workspace:${fixture.target}`]);
-  assert.deepEqual(cacheInternals.withWasmTooling(targets, "runOtherBuild({})"), targets);
+  assert.deepEqual(cacheInternals.withWasmTooling(targets, true).wasm.dependsOn, ["declarations", `workspace:${fixture.target}`]);
+  assert.deepEqual(cacheInternals.withWasmTooling(targets, false), targets);
   if (output) {
     mkdirSync(output, { recursive: true });
     const temporary = mkdtempSync(join(output, "binaryen-rejection-")), previous = globalThis.fetch;
@@ -36,11 +36,11 @@ export async function testBinaryenToolchain(workspace: string, output?: string):
     try {
       const controller = new AbortController(); controller.abort();
       globalThis.fetch = Object.assign(async (): Promise<Response> => { requests++; return new Response("invalid archive"); }, { preconnect: previous.preconnect });
-      await assert.rejects(prepareBinaryen(temporary, controller.signal), /abort/i);
+      await assert.rejects(prepareBinaryen(temporary, {control:{signal:controller.signal,remainingMilliseconds:()=>null,publish:async()=>{},yieldContinuation:async()=>{}},storage:{}} as any), /abort/i);
       assert.equal(requests, 0);
-      await assert.rejects(prepareBinaryen(temporary, new AbortController().signal), /checksum/);
-      assert.equal(requests, 1);
-      assert.deepEqual(readdirSync(join(binaryenDirectory(temporary), "..")), []);
+      await assert.rejects(prepareBinaryen(temporary, {control:{signal:new AbortController().signal,remainingMilliseconds:()=>null,publish:async()=>{},yieldContinuation:async()=>{}},storage:{}} as any), /Original issued native storage reservation/);
+      assert.equal(requests, 0);
+      assert.deepEqual(readdirSync(temporary), []);
     } finally { globalThis.fetch = previous; rmSync(temporary, { recursive: true, force: true }); }
   }
 }

@@ -65,7 +65,6 @@ impl MeshSpec {
 /// Rust ecosystem — `tobj` is the reference READER — so the oracle writes the grammar directly and
 /// the independent reader is what makes the comparison meaningful.
 /// @see https://github.com/Twinklebear/tobj
-#[cfg(feature = "oracles")]
 pub fn oracle_create_obj(spec: &MeshSpec) -> Result<Vec<u8>, String> {
     let mut out = String::from("# semio test oracle\n");
     for vertex in &spec.vertices {
@@ -78,7 +77,6 @@ pub fn oracle_create_obj(spec: &MeshSpec) -> Result<Vec<u8>, String> {
 }
 
 /// 👁️ Projects OBJ bytes with the INDEPENDENT `tobj` reader onto the owned `semantic-mesh-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_obj(input: &[u8]) -> Result<Json, String> {
     let text = String::from_utf8(input.to_vec()).map_err(|error| format!("OBJ is not UTF-8: {}", error))?;
     let mut cursor = std::io::Cursor::new(text.into_bytes());
@@ -102,7 +100,6 @@ pub fn project_obj(input: &[u8]) -> Result<Json, String> {
 //#region 🔖️Stl
 /// 🔮️ Writes a binary STL with the registered `stl_io` reference implementation.
 /// @see https://github.com/hmeyer/stl_io
-#[cfg(feature = "oracles")]
 pub fn oracle_create_stl(spec: &MeshSpec) -> Result<Vec<u8>, String> {
     let faces: Vec<stl_io::Triangle> = spec
         .triangles
@@ -117,7 +114,6 @@ pub fn oracle_create_stl(spec: &MeshSpec) -> Result<Vec<u8>, String> {
     Ok(out.into_inner())
 }
 
-#[cfg(feature = "oracles")]
 fn face_normal(corners: &[[f32; 3]; 3]) -> [f32; 3] {
     let u = [corners[1][0] - corners[0][0], corners[1][1] - corners[0][1], corners[1][2] - corners[0][2]];
     let v = [corners[2][0] - corners[0][0], corners[2][1] - corners[0][1], corners[2][2] - corners[0][2]];
@@ -132,7 +128,6 @@ fn face_normal(corners: &[[f32; 3]; 3]) -> [f32; 3] {
 
 /// 👁️ Projects STL bytes with the INDEPENDENT `stl_io` reader. STL is a triangle soup, so the
 /// projection reports resolved corner positions rather than pretending an index buffer survived.
-#[cfg(feature = "oracles")]
 pub fn project_stl(input: &[u8]) -> Result<Json, String> {
     let mut cursor = std::io::Cursor::new(input.to_vec());
     let mesh = stl_io::read_stl(&mut cursor).map_err(|error| format!("independent reader could not parse the STL: {}", error))?;
@@ -142,26 +137,5 @@ pub fn project_stl(input: &[u8]) -> Result<Json, String> {
 //#endregion 🔖️Stl
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature nothing here is linked, and every entry point fails loudly.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::{Json, MeshSpec};
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn create_obj(_spec: &MeshSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_obj(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn create_stl(_spec: &MeshSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_stl(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{create_obj as oracle_create_obj, create_stl as oracle_create_stl, project_obj, project_stl};
 //#endregion 🔖️Unavailable

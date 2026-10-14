@@ -185,7 +185,7 @@ fn inspector_boolean_controls_and_literal_text_have_distinct_accessible_controls
 
 #[test]
 fn inspector_collection_window_reaches_late_items_and_preserves_fixed_cardinality() {
-    use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
     use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
     use semio_framework_ui_locale::{Locale, Terminology};
     let key = "procedural-play-inspector.input.rows";
@@ -215,7 +215,7 @@ fn inspector_widget_metadata_controls_bind_explicit_localized_facets() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     for entry in fixture["widgets"].as_array().unwrap() {
         let widget: Widget = semio_framework_pack_json::from_json_str(&entry["widget"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let id = crate::widget_id(&widget).to_string();
+        let id = semio_s_artifact_procedural_3d_model::widget_id(&widget).to_string();
         let snapshot = FlowHostSnapshot { widgets: vec![widget], ..Default::default() };
         for (locale, key, labels) in [(semio_framework_ui_locale::Locale::En, "en", &Generation3dLabels::NATIVE_EN), (semio_framework_ui_locale::Locale::De, "de", &Generation3dLabels::NATIVE_DE)] {
             let evaluation = entry.get("evaluation").map(serde_json::Value::to_string).unwrap_or_default();
@@ -233,7 +233,7 @@ fn inspector_widget_metadata_controls_bind_explicit_localized_facets() {
                 assert_eq!(binding["args"]["facet"], expected["facet"]);
                 assert_eq!(binding["args"]["channel"], expected["channel"]);
                 assert_eq!(binding["args"]["widgetId"], id);
-                if expected["type"] == "select" { assert_eq!(control["component"]["items"].as_array().unwrap().len(), crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.len()); }
+                if expected["type"] == "select" { assert_eq!(control["component"]["items"].as_array().unwrap().len(), semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.len()); }
             }
             if let Some(value) = entry.get("reflectedValue") {
                 let row = inspector_node(&tree, "procedural-play-inspector.variable-value").unwrap();

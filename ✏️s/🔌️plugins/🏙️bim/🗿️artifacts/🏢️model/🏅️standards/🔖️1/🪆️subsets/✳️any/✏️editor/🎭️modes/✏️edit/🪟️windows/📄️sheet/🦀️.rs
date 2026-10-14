@@ -12,7 +12,7 @@ use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::io::export::sheets::{self, ink::{sheet_marks, Mark, TitleLabels}};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;

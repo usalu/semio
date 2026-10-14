@@ -3,7 +3,7 @@
 
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -24,7 +24,7 @@ pub fn handle(payload: &FlipWalls, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: 
     if walls.is_empty() {
         return Err(fault("bim.flip.wall-missing", "no wall to flip among the targets"));
     }
-    Ok(Emit::mutations(walls.into_iter().map(|id| ModelMutation::FlipWall(crate::mutations::flip_wall::FlipWall { id: id.clone() })).collect()))
+    Ok(Emit::mutations(walls.into_iter().map(|id| ModelMutation::FlipWall(crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall { id: id.clone() })).collect()))
 }
 
 #[cfg(test)]

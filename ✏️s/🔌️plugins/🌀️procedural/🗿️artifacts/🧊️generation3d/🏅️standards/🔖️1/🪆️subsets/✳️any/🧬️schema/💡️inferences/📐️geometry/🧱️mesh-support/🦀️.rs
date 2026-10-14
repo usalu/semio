@@ -1,8 +1,18 @@
 //! 🧱️ The plumbing every `mesh.*` compute shares: typed mesh inputs, selection validation against the input mesh, localized mesh faults and the stepped machines that run kernel mesh jobs under a widget fuel grant.
 //!
 //! A mesh compute describes its work as a closure that runs inside the first step, so cloning the input mesh and building the kernel job are charged to the grant like every other unit. A machine advances in batches of [`BATCH`] kernel units per fuel, reports monotone progress, turns a kernel panic into a fault and drops its kernel job on cancel.
+#![allow(clippy::result_large_err)]
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshKernelError, MeshModelingJob, MeshModelingProgress, MeshModelingStep, MeshSurfaceJob, MeshTessellationJob, MeshTessellationStep, Vec3};
 use semio_framework_mesh_engine::PolygonMeshSource;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};

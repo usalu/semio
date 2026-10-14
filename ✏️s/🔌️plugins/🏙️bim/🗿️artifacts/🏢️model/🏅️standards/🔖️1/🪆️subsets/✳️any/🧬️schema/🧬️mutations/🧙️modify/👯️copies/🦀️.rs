@@ -4,15 +4,15 @@
 //! order, so no clock and no counter is involved. An in-place image is the sparse patch of what a map changes of its sources and the
 //! absolute base states an exact inverse restores.
 
-use crate::mutations::elements::{self, placement_diff, Placement, Refusal};
-use crate::mutations::placement::host_length;
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, placement_diff, Placement, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::placement::host_length;
 use super::map::{self, Image, Map};
-use crate::{Assigned, ComponentOverride, CurtainPanelOverride, EndJoin, Entry, KeyedDelta, ModelDiff, ModelSnapshot, Opening, Patch, WallPatch, WallSweep};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, KeyedDelta, ModelDiff, Patch, patches::WallPatch}, snapshot::{ComponentOverride, CurtainPanelOverride, EndJoin, ModelSnapshot, Opening, WallSweep}};
 use protocol::OutcomeCode;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🔢️ The most records and data rows one mutation may create: what one delete restores (the inverse of every copy), so that undoing a copy never meets the bound of a removal.
-pub const MAX_CREATED: usize = crate::mutations::cascade::INVERSE_ROWS;
+pub const MAX_CREATED: usize = crate::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
 
 //#region 🔖️Sources
 /// 🧲️ What a modify mutation acts on: the placed elements it names, in id order, the openings hosted by them and the curtain panel overrides of the curtain walls among them and the wall sweeps of the walls among them, all in id order.

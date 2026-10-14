@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
-use crate::{Phase, Point2, Space, SpaceBoundary};
+use crate::standards::v1::subsets::any::schema::snapshot::{Phase, Point2, Space, SpaceBoundary};
 use protocol::Inference;
 
 fn demo() -> ModelSnapshot {
@@ -17,15 +17,15 @@ fn mounted() -> ArtifactInstanceOperationOwnerHandle {
 }
 
 fn taller() -> ModelMutation {
-    ModelMutation::SetStoreyHeight(crate::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 3.5 })
+    ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 3.5 })
 }
 
 fn described() -> ModelMutation {
-    ModelMutation::SetProjectInfo(crate::mutations::set_project_info::SetProjectInfo { description: Some("other".into()), name: None, author: None, organization: None, phase_names: None })
+    ModelMutation::SetProjectInfo(crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { description: Some("other".into()), name: None, author: None, organization: None, phase_names: None })
 }
 
 fn edited(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
-    crate::mutations::apply_model_mutation(snapshot, mutation).expect("the mutation applies")
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).expect("the mutation applies")
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn a_recorded_sequence_is_summed_and_a_recorded_diff_that_misses_the_snapshot_is
     record_mutations(Some(&instance), &snapshot, &[taller(), described()]);
     assert_eq!(with_inference(Some(&instance), &both, Clone::clone), fresh(&both));
     assert!(report(Some(&instance)).computed_by_kind.contains_key("wall-layout"));
-    let elsewhere = edited(&both, &ModelMutation::SetStoreyHeight(crate::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 4.0 }));
+    let elsewhere = edited(&both, &ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: "st-ground".into(), height: 4.0 }));
     record_mutations(Some(&instance), &both, &[described()]);
     assert_eq!(with_inference(Some(&instance), &elsewhere, Clone::clone), fresh(&elsewhere), "the recorded diff does not explain the change, so every node is checked");
 }

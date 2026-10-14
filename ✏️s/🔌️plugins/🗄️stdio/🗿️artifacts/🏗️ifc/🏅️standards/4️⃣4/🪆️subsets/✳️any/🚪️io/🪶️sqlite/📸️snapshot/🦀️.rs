@@ -60,10 +60,5 @@ fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<Sqli
 fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
-
-
 #[path = "🚦️native/🦀️.rs"]
 pub(crate) mod native;

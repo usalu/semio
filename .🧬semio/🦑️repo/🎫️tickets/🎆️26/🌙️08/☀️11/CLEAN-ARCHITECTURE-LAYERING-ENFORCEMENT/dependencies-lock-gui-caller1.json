@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "row": {
+    "name": "📥️deps javascript lock",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun repo dependencies lock --all",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "3_dev",
+      "order": -43.8
+    },
+    "env": {
+      "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock\",\"maximumElapsedMilliseconds\":600000}"
+    }
+  },
+  "sourceSha256": "c112e597a20c680df9aada03101bc6d5fda459fbbf45d2a1c964d1648258d442",
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1",
+  "arguments": [
+    "dependencies",
+    "lock",
+    "--all"
+  ],
+  "authorityInputs": {
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"repo:dependencies:javascript:lock\",\"maximumElapsedMilliseconds\":600000}",
+    "SEMIO_SCRIPT_CAPABILITIES": null,
+    "SEMIO_BUILD_MODE": null,
+    "CARGO_NET_OFFLINE": null
+  }
+}

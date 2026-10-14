@@ -47,8 +47,5 @@
         "env": "PRAESENTATION_PROJEKTETAGE_PORT"
       }
     }
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

@@ -14,7 +14,7 @@
 
 use super::super::element_solids::{dep_object, dep_value};
 use super::super::view_linework::ViewLinework;
-use crate::{revisions_of, viewports_of, ModelSnapshot, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of, ModelSnapshot, ViewKind};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

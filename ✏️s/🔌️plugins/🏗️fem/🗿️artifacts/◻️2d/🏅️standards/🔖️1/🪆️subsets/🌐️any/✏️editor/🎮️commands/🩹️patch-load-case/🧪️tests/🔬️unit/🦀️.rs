@@ -18,7 +18,7 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchLoadCase) -> Result<Emit<Fem2dMu
 #[semio_framework_async_macros::async_test]
 async fn patch_load_case_renames_and_toggles_self_weight_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchLoadCase(PatchLoadCase { id: "live".into(), field: "name".into(), value: "Imposed Load".into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchLoadCase(PatchLoadCase { id: "live".into(), field: "selfWeight".into(), value: "true".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");

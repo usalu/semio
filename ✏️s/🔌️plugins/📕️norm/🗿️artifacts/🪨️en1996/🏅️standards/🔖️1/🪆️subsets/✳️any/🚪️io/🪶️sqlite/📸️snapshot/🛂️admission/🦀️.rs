@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let walls=n::list(n::field(root,4)?)?;let mut rows=n::add(1,walls.len())?;for wall in walls{let wall=n::record(wall)?;rows=n::add(rows,n::list(n::field(wall,8)?)?.len())?;let cases=n::list(n::field(wall,32)?)?;rows=n::add(rows,cases.len())?;for case in cases{rows=n::add(rows,n::list(n::field(n::record(case)?,11)?)?.len())?}}Ok(rows)}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("en1996_document",1,&n::cells(root,[Enumeration(0,&["En","De"]),Enumeration(1,&["Class1","Class2","Class3","Class4","Class5"]),Enumeration(2,&["Persistent","Transient","Accidental","Seismic"]),Unsigned(3,u32::MAX as u64)])?)?;

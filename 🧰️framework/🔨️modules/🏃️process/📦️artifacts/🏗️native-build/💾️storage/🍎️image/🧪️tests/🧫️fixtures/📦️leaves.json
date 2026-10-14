@@ -1,0 +1,11 @@
+{"filesystemBytes":1073741824,"maximumPhysicalBytes":1074790400,"reservationBytes":939524096,"manifests":[
+"🧰️framework/🛍️products/💻️os/🔨️modules/🪪️identity/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust/Cargo.toml",
+"🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust/Cargo.toml"
+]}

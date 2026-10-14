@@ -5,7 +5,7 @@ use super::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_value, walls, wall_sweeps};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachState;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
-use crate::{ModelSnapshot, OpeningKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
 use semio_framework_value::DslValue;
 
 const TOLERANCE: f64 = 1e-9;

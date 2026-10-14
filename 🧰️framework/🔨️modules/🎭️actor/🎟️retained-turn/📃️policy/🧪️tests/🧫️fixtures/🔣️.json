@@ -11,6 +11,11 @@
       "maximumCapacityBytes": 65536,
       "maximumReleaseBytes": 262144,
       "maximumDepth": 64
+    },
+    "work": {
+      "clockBinding": 1171,
+      "absoluteDeadlineUs": 1000000,
+      "fuel": 64
     }
   },
   "lanes": [
@@ -30,6 +35,11 @@
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64
+      },
+      "work": {
+        "clockBinding": 1171,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 64
       }
     },
     {
@@ -42,6 +52,11 @@
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64
+      },
+      "work": {
+        "clockBinding": 1171,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 64
       }
     },
     {
@@ -54,6 +69,11 @@
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64
+      },
+      "work": {
+        "clockBinding": 1171,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 64
       }
     },
     {
@@ -66,13 +86,18 @@
         "maximumCapacityBytes": 65536,
         "maximumReleaseBytes": 262144,
         "maximumDepth": 64
+      },
+      "work": {
+        "clockBinding": 1171,
+        "absoluteDeadlineUs": 1000000,
+        "fuel": 64
       }
     }
   ],
   "wire": {
-    "originalInputBytes": 64,
+    "originalInputBytes": 88,
     "schedulingBudgetBytes": 34,
-    "emptyTurnGrantBytes": 109
+    "emptyTurnGrantBytes": 133
   },
   "authorityStorage": "borrowedOriginal"
 }

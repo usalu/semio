@@ -9,52 +9,19 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use {semio_framework_artifact_reference::Dialect, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId, semio_framework_plugin::ArtifactKindSpec, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability};
-
-pub use crate::standards::v1::subsets::any::schema::diff::patches::*;
-pub use crate::standards::v1::subsets::any::schema::diff::{Assigned, ClassificationSetPatch, Entry, KeyedDelta, ModelDiff, Patch, PropertySetPatch};
-pub use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-pub use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
-pub use crate::standards::v1::subsets::any::schema::snapshot::*;
-
-/// 🪪️ The document schema identity of the artifact.
-pub const BIM_MODEL_DOCUMENT_SCHEMA: &str = "s.bim.model@1";
-
-/// 🪪️ This artifact's dialect: the canonical surface ids are `s.bim.model@1/*#editor` and `s.bim.model@1/*#viewer`.
-pub const BIM_MODEL_DIALECT: Dialect = Dialect { artifact_kind: "s.bim.model", standard: StandardId("1"), subset: SubsetId::ANY };
-
-//#region 🔖️ArtifactKind
-/// 🗂️ This artifact's `ArtifactKindSpec`, stitched into the app manifests.
-pub fn artifact_kind() -> ArtifactKindSpec {
-    ArtifactKindSpec {
-        id: "3d.bim-model".into(),
-        label: semio_framework_ui_locale::LocalizedLabel::native("BIM Model", "BIM-Modell"),
-        source_format: "bim.model".into(),
-        component_kind: "bim".into(),
-        dimension: "3d".into(),
-        media_capability: OsMediaCapability::MeshOnly,
-        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-        schema: BIM_MODEL_DOCUMENT_SCHEMA.into(),
-        export_formats: vec![],
-        import_formats: vec![],
-        export_stdio_kinds: vec!["stdio.json".into()],
-        import_stdio_kinds: vec!["stdio.json".into()],
-    }
-}
-//#endregion 🔖️ArtifactKind
 
 //#region 🔖️Declaration
 /// 🔖️ This artifact's capability definition: standard, schema, inference, document codec and localization rows.
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let codec_extension = format!("{}:{}:bim", BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), BIM_MODEL_DOCUMENT_SCHEMA);
+    let codec_extension = format!("{}:{}:bim", standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
     let rows: Vec<(&str, &str, &str, Vec<(&str, &str)>, Option<(&str, &str)>)> = vec![
         ("s.bim.model.standard.v1", "standard", "1", vec![], None),
         ("s.bim.model.standard.v1.profile.any", "profile", "any", vec![], None),
         ("s.bim.model.schema.artifact", "schema", "s.bim.model", vec![("schema", "s.bim.model")], None),
         ("s.bim.model.inference.artifact", "inference", "s.bim.model.inference", vec![("schema", "s.bim.model.inference")], None),
-        ("s.bim.model.codec.document-1", "codec", "bim.model:bim", vec![("codec", BIM_MODEL_DOCUMENT_SCHEMA), ("codec-extension", codec_extension.as_str())], None),
+        ("s.bim.model.codec.document-1", "codec", "bim.model:bim", vec![("codec", standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA), ("codec-extension", codec_extension.as_str())], None),
         ("s.bim.model.localization.en", "localization", "BIM Model", vec![], Some(("en", "BIM Model"))),
         ("s.bim.model.localization.de", "localization", "BIM-Modell", vec![], Some(("de", "BIM-Modell"))),
     ];
@@ -75,7 +42,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// 🌳️ This artifact's declaration tree root, consumed by the hub composition through `declare_artifact`: schema, io (native codec and the IFC, glTF and SVG hops), viewer, editor and examples of every subset.
 pub fn artifact<A: BimApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![standards::v1::standard()] }
+    ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(standards::v1::subsets::any::schema::BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
@@ -7330,10 +7297,6 @@ pub mod standards {
             }
         }
     }
-}
-
-pub mod mutations {
-    pub use crate::standards::v1::subsets::any::schema::mutations::*;
 }
 
 #[path = "."]

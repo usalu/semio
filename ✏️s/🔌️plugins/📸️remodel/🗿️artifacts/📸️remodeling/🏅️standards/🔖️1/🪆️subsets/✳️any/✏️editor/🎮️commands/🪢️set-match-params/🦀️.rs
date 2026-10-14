@@ -1,9 +1,11 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-match-params`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::update_match_params;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::{MatchParams, MatcherKind, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_match_params::update_match_params;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MatchParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MatcherKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

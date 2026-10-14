@@ -4,7 +4,7 @@
 
 use super::SetColumn;
 use super::super::placement::rise;
-use crate::{ColumnPatch, Entry, ModelDiff, ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::ColumnPatch, Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changed<T: Clone + PartialEq>(value: &Option<T>, current: &T) -> Option<T> {

@@ -1,9 +1,9 @@
 //! 🚫 Remodeling mutation — `DeleteCameraCalibration`: removes an id-keyed camera calibration record.
 //! No app call site removes a camera today; included for id-keyed collection completeness.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::CreateCameraCalibration;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -20,17 +20,20 @@ pub struct DeleteCameraCalibration {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_camera_calibration(camera_id: String) -> RemodelingMutation {
-    RemodelingMutation::DeleteCameraCalibration(DeleteCameraCalibration { camera_id })
+pub fn delete_camera_calibration<Op: From<DeleteCameraCalibration>>(camera_id: String) -> Op {
+    Op::from(DeleteCameraCalibration { camera_id })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteCameraCalibration {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for DeleteCameraCalibration
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<CreateCameraCalibration>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "camera-calibration", kind: "delete-camera-calibration", record: "DeletedCameraCalibration" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

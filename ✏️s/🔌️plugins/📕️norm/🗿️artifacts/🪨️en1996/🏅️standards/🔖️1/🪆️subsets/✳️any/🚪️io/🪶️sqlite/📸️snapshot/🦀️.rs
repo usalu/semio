@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const WALL_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13),FloatColumn::Binary64(16),FloatColumn::Binary64(17),FloatColumn::Binary64(18),FloatColumn::Binary64(19),FloatColumn::Binary64(22),FloatColumn::Binary64(23),FloatColumn::Binary64(25),FloatColumn::Binary64(26),FloatColumn::Binary64(27),FloatColumn::Binary64(30),FloatColumn::Binary64(31),FloatColumn::Binary64(32)];
 const OPENING_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6)];
 const LOAD_CASE_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(11),FloatColumn::Binary64(12),FloatColumn::Binary64(13)];
@@ -46,7 +45,6 @@ fn groups<'a>(rows:Entities<'a>,parents:&Entities<'_>,control:&mut SqliteSnapsho
 fn ordinal(value:usize)->Result<Cell<'static>, ValueError>{Ok(Cell::Integer(i64::try_from(value).map_err(|error| invalid(error.to_string()))?))}
 fn flag(value:bool)->Cell<'static>{Cell::Integer(i64::from(value))}
 fn read_flag(row:FloatRow<'_>,column:usize)->Result<bool, ValueError>{match row.integer(column)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid("EN1996 boolean requires exactly zero or one"))}}
-
 
 impl En1996Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

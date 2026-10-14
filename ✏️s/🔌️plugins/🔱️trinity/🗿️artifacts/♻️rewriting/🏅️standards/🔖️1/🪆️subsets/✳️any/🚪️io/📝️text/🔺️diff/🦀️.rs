@@ -12,7 +12,7 @@ pub type RewritingDiffText = String;
 mod diff_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::diff::*;
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use crate::LayoutPoint;
 use ::semio_framework_schema::ArtifactSchema;
 use replication::MapDelta;

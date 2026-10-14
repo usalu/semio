@@ -47,7 +47,7 @@ fn a_slot_is_the_drawing_bounds_at_the_scale_of_its_view_plus_padding_and_the_ti
 
 #[test]
 fn a_model_without_views_has_an_empty_sheet() {
-    let sheet = layout(&crate::ModelSnapshot::default(), &Default::default());
+    let sheet = layout(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), &Default::default());
     assert!(sheet.slots.is_empty());
     assert_eq!((sheet.width, sheet.height), (2.0 * MARGIN, 2.0 * MARGIN));
 }

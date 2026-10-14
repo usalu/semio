@@ -1,11 +1,15 @@
 //! 🔺️ `move-nodes` sparse diff — every addressed widget's layout entry moves by the payload offset from its BASE
 //! position; a widget without a stored position or without a widget is skipped (`mutation.partial`).
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dLayoutDelta, Generation3dLayoutRow};
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_partial,generation3d_targets_invariant,widget_index};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dLayoutDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dLayoutRow;
+use crate::move_nodes::MoveNodes;
+use crate::generation3d_partial;
+use crate::generation3d_targets_invariant;
+use crate::widget_index;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::WidgetLayout;
 
 /// 🏗️ None left to move is `target-missing` (no such widget) or `target-mismatch` (no stored position); a zero offset

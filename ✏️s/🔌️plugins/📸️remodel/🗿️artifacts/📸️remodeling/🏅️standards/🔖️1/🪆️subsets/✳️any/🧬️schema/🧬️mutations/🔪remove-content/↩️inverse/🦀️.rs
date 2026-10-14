@@ -1,11 +1,13 @@
 //! ↩️ Inverse for `RemoveContent` — re-append the BASE leaves from `from` on with the BASE kind and
 //! presentation. An entry whose kind is not a content kind, or a removal that removes nothing, inverts to
 //! nothing.
-use crate::mutations::{append_content, AppendContent, RemodelingMutation};
-use crate::{RemodelingContentKind, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::append_content::append_content;
+use crate::standards::v1::subsets::any::schema::mutations::append_content::{AppendContent};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<AppendContent>>(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     let Some(artifact) = base.durable_artifacts.get(&payload.content_id) else { return Vec::new() };
     let (Some(kind), Ok(from)) = (RemodelingContentKind::parse(&artifact.kind), usize::try_from(payload.from)) else { return Vec::new() };

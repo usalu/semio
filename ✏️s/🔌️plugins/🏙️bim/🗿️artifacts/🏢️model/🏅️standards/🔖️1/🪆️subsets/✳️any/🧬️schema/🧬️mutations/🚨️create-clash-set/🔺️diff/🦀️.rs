@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateClashSet;
-use crate::{clash_set_problem, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{clash_set_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateClashSet, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

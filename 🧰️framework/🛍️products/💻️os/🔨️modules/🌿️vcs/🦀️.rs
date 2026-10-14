@@ -6,14 +6,14 @@
 
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
 // below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
-// import keeps that ergonomics without re-exposing `crate::os_spr::Mutation` on `vcs`'s own public API
-// (dependents import `crate::os_spr::Mutation` directly). `MutationDiff` is imported for its `apply`
+// import keeps that ergonomics without re-exposing `protocol::Mutation` on `vcs`'s own public API
+// (dependents import `protocol::Mutation` directly). `MutationDiff` is imported for its `apply`
 // method, called on `Mutation::Diff` inside `apply_mutation`.
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
+use protocol::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 #[path = "🌱️genesis/🦀️.rs"]
 mod genesis;
@@ -617,13 +617,13 @@ pub struct ArtifactGroupVisibility {
     state: std::sync::atomic::AtomicU8,
 }
 
-pub(crate) struct ArtifactGroupReadDecision<'a> {
+pub struct ArtifactGroupReadDecision<'a> {
     visibility: &'a ArtifactGroupVisibility,
     committed: bool,
 }
 
 impl ArtifactGroupReadDecision<'_> {
-    pub(crate) fn committed_for(&self, visibility: &ArtifactGroupVisibility) -> Result<bool, ()> {
+    pub fn committed_for(&self, visibility: &ArtifactGroupVisibility) -> Result<bool, ()> {
         if std::ptr::eq(self.visibility, visibility) {
             Ok(self.committed)
         } else {
@@ -662,7 +662,7 @@ impl Drop for ArtifactGroupVisibilityOwner {
 }
 
 impl ArtifactGroupVisibility {
-    pub(crate) fn capture(&self) -> ArtifactGroupReadDecision<'_> {
+    pub fn capture(&self) -> ArtifactGroupReadDecision<'_> {
         ArtifactGroupReadDecision { visibility: self, committed: self.committed() }
     }
 
@@ -951,13 +951,13 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     /// 🪢️ Binds an already reserved slot to its exact still-private visibility owner.
-    pub(crate) fn bind_group_reservation(&mut self, reservation: &ArtifactHistoryReservation, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+    pub fn bind_group_reservation(&mut self, reservation: &ArtifactHistoryReservation, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
         if self.reservation.as_ref() != Some(reservation) || !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) { return Err(()); }
         if self.group.is_none() { self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 }); }
         Ok(())
     }
 
-    pub(crate) fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
+    pub fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
@@ -968,7 +968,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(reservation)
     }
 
-    pub(crate) fn stage_group_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+    pub fn stage_group_reserved(&mut self, reservation: ArtifactHistoryReservation, value: T, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
         let Some(group) = self.group.as_ref().filter(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility) && visibility.pending()) else {
             return Err((reservation, value));
         };
@@ -984,7 +984,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(key)
     }
 
-    pub(crate) fn adopt_group(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
+    pub fn adopt_group(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<(), ()> {
         if self.reservation.is_some() || !visibility.committed() || !self.group.as_ref().is_some_and(|group| std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
             return Err(());
         }
@@ -996,7 +996,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(())
     }
 
-    pub(crate) fn abort_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<Option<T>, ()> {
+    pub fn abort_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<Option<T>, ()> {
         if self.reservation.is_some() || visibility.pending() || visibility.committed() {
             return Err(());
         }
@@ -1035,11 +1035,11 @@ impl<T> ArtifactHistoryLedger<T> {
         }
     }
 
-    pub(crate) fn group_visibility(&self) -> Option<&ArtifactGroupVisibility> {
+    pub fn group_visibility(&self) -> Option<&ArtifactGroupVisibility> {
         self.group.as_ref().map(|group| group.visibility.as_ref())
     }
 
-    pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactHistoryIter<'_, T>, ()> {
+    pub fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactHistoryIter<'_, T>, ()> {
         let (front, back, remaining) = match self.group.as_ref() {
             Some(group) if decision.ok_or(())?.committed_for(&group.visibility)? => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
             _ => (self.head, self.tail, self.len),
@@ -1581,7 +1581,7 @@ impl<P: FromValue, Mutation: FromValue> FromValue for ArtifactVcs<ArtifactGenesi
     }
 }
 
-pub(crate) struct ArtifactVcsRead<'a, P, Mutation> {
+pub struct ArtifactVcsRead<'a, P, Mutation> {
     genesis: &'a P,
     edits: ArtifactHistoryIter<'a, Edit<Mutation>>,
     changes: ArtifactHistoryIter<'a, Change>,
@@ -1603,7 +1603,7 @@ impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcsRead<'
 }
 
 impl<P, Mutation> ArtifactVcs<P, Mutation> {
-    pub(crate) fn group_visibility(&self) -> Result<Option<&ArtifactGroupVisibility>, ()> {
+    pub fn group_visibility(&self) -> Result<Option<&ArtifactGroupVisibility>, ()> {
         let mut visibility: Option<&ArtifactGroupVisibility> = None;
         for candidate in [self.edits.group_visibility(), self.changes.group_visibility(), self.checkpoints.group_visibility(), self.alternatives.group_visibility()].into_iter().flatten() {
             if visibility.is_some_and(|owner| !std::ptr::eq(owner, candidate)) {
@@ -1614,7 +1614,7 @@ impl<P, Mutation> ArtifactVcs<P, Mutation> {
         Ok(visibility)
     }
 
-    pub(crate) fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
+    pub fn read_group(&self, decision: Option<&ArtifactGroupReadDecision<'_>>) -> Result<ArtifactVcsRead<'_, P, Mutation>, ()> {
         Ok(ArtifactVcsRead {
             genesis: &self.genesis,
             edits: self.edits.read_group(decision)?,
@@ -1640,7 +1640,7 @@ impl<P: ArtifactGenesisWitness, Mutation: ToValue> ToValue for ArtifactVcs<P, Mu
 //#endregion 🔖️Schemas
 //#region 🔖️Errors
 // 🎞️ `Eq` dropped: `Rejected` below carries
-// `Vec<crate::os_spr::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
+// `Vec<protocol::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
 // (not `Eq`) — see `📡️spr/🎮️command`'s `🔖️Message` region.
 #[derive(Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub enum VcsError {
@@ -1696,15 +1696,15 @@ pub enum VcsError {
     /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
     /// raised BEFORE any mutation lands.
     CompensationFailed(String),
-    /// 🛑️ A command was rejected WHOLESALE by the authority's own `crate::os_spr::MergePolicy`
+    /// 🛑️ A command was rejected WHOLESALE by the authority's own `protocol::MergePolicy`
     /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
     /// CLASS-CONFLICTS` §C6). Carries the policy that rejected it and every message the rejected
     /// replay produced, so a caller can explain the rejection without re-running anything.
     /// `ValidationFailed` survives ONLY for structural failures now — an ordinary mutation-level
     /// rejection travels through this variant instead.
     Rejected {
-        policy: crate::os_spr::MergePolicy,
-        messages: Vec<crate::os_spr::MutationMessage>,
+        policy: protocol::MergePolicy,
+        messages: Vec<protocol::MutationMessage>,
     },
     /// ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
     /// currently-`Open` conflict on this store.
@@ -1714,7 +1714,7 @@ pub enum VcsError {
     Stale { expected_generation: u64, generation: u64 },
     /// 🗂️ A history transition of `kind` was authored on, or offered to, a store whose history `shape` does not hold it —
     /// a config store's history holds undo and redo only. Refused before anything was recorded.
-    HistoryShape { shape: crate::os_spr::HistoryShape, kind: crate::os_spr::HistoryTransitionKind },
+    HistoryShape { shape: protocol::HistoryShape, kind: protocol::HistoryTransitionKind },
     /// 🎞️ The tool transaction `transaction_id` is open on this store: until its commit or abort only its own appends, a
     /// remote ingest and a merge-policy change run — nothing else may interleave with its open edit.
     TransactionOpen { transaction_id: String },
@@ -1876,18 +1876,18 @@ pub trait Patchable<TPatch>: Sized {
 // store-level replay uses.
 
 /// ▶️ Computes `operation.diff(snapshot)`, applies the resulting diff, and returns the new
-/// snapshot alongside every [`crate::os_spr::MutationMessage`] the outcome carried. Diff-apply
+/// snapshot alongside every [`protocol::MutationMessage`] the outcome carried. Diff-apply
 /// rejection is returned as its structured [`MutationApplyError`] before a snapshot is produced. A `Fatal`
 /// message's diff is `D::default()` by construction (§C2 LAW 1), so applying it is always a no-op —
 /// callers that must not silently apply a rejected op check `worst_level(&messages)` against their
 /// `MergePolicy` themselves (this fn stays policy-agnostic, matching its old unconditional-apply
 /// shape).
-pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<crate::os_spr::MutationMessage>), MutationApplyError>
+pub fn apply_mutation<P, Mutation>(snapshot: &P, operation: &Mutation) -> Result<(P, Vec<protocol::MutationMessage>), MutationApplyError>
 where
     Mutation: self::Mutation<P>,
 {
     let (diff, messages) = operation.diff(snapshot).into_parts();
-    let applied = crate::os_spr::apply_diff(&diff, snapshot);
+    let applied = protocol::apply_diff(&diff, snapshot);
     MutationDiff::retire_cold(diff);
     Ok((applied?, messages))
 }

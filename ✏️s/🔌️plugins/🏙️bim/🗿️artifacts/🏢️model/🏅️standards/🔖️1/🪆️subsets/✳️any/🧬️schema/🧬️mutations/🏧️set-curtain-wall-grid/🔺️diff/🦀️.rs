@@ -4,7 +4,7 @@
 
 use super::super::wall_geometry::grid_flaw;
 use super::SetCurtainWallGrid;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCurtainWallGrid, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

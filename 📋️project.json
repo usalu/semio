@@ -2482,7 +2482,7 @@
                   "build"
                 ],
                 "after": [],
-                "profile": "host-tool",
+                "profile": "release",
                 "target": "host",
                 "workerProtocol": "jobserver",
                 "policies": [
@@ -3535,6 +3535,16 @@
       "outputs": [],
       "options": {
         "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test bazel-bootstrap"
+      }
+    },
+    "test-runtime-build-producer": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test runtime-build-producer",
+        "cwd": ".",
+        "forwardAllArgs": false
       }
     }
   }

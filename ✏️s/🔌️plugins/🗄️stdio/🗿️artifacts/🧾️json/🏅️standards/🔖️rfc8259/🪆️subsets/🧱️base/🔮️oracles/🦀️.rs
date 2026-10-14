@@ -42,7 +42,6 @@ pub enum PathSeg {
 
 /// 🔀️ A `path` wire value — `JsonPathSegment`s (`{"kind":"key","value":<name>}` / `{"kind":"index","value":<n>}`), the
 /// leaf payload schema's own path shape — into `PathSeg`s.
-#[cfg(feature = "oracles")]
 pub fn path_from_spec(path: &Json) -> Vec<PathSeg> {
     match path {
         Json::Array(segments) => segments
@@ -57,7 +56,6 @@ pub fn path_from_spec(path: &Json) -> Vec<PathSeg> {
 }
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment.
-#[cfg(feature = "oracles")]
 pub(crate) fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option<&'a json::JsonValue> {
     let mut node = root;
     for segment in path {
@@ -72,7 +70,6 @@ pub(crate) fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option
 
 /// 🔧️ Mutable navigation of `path` from `root`, `None` on the first unresolvable segment. An empty
 /// `path` resolves to `root` itself, so `set-scalar`'s whole-document replacement needs no special case.
-#[cfg(feature = "oracles")]
 pub(crate) fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -> Option<&'a mut json::JsonValue> {
     let mut node = root;
     for segment in path {
@@ -88,7 +85,6 @@ pub(crate) fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -
 
 //#region 🔖️Codec
 /// 📥️ Independent RFC 8259 read via the reference implementation.
-#[cfg(feature = "oracles")]
 pub(crate) fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("independent reader: input is not UTF-8: {error}"))?;
     json::parse(text).map_err(|error| format!("independent reader could not parse JSON: {error}"))
@@ -96,43 +92,33 @@ pub(crate) fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
 
 /// 📤️ Independent RFC 8259 write via the reference implementation — `json`'s own compact form
 /// (`dump`) and number formatting, never this subset's own writer.
-#[cfg(feature = "oracles")]
 pub(crate) fn write_json(value: &json::JsonValue) -> Result<Vec<u8>, String> {
     Ok(value.dump().into_bytes())
 }
 
 /// 🔁️ The oracle's own decode/re-encode, entirely through the reference implementation — an
 /// adapter never has to name `json::JsonValue` itself to ask for this.
-#[cfg(feature = "oracles")]
 pub fn round_trip(bytes: &[u8]) -> Result<Vec<u8>, String> {
     write_json(&read_json(bytes)?)
-}
-#[cfg(not(feature = "oracles"))]
-pub fn round_trip(_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Codec
 
 //#region 🔖️SpecReaders
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn path_param(params: &Json) -> Vec<PathSeg> {
     path_from_spec(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())))
 }
 /// 🌳 A tagged `JsonValue` wire value (`{"kind":"null"|"bool"|"number"|"string"|"array"|"object", ...}`) into
 /// `json::JsonValue`. A number is parsed from its verbatim `lexeme` by the reference parser itself, which is exact, so
 /// no lossy `f64` ever stands between the wire and the reference implementation.
-#[cfg(feature = "oracles")]
 fn library_from_wire(value: &Json) -> Result<json::JsonValue, String> {
     Ok(match value.str("kind").as_str() {
         "null" => json::JsonValue::Null,
@@ -153,7 +139,6 @@ fn library_from_wire(value: &Json) -> Result<json::JsonValue, String> {
 }
 
 /// 🌲️ A `json::JsonValue` as the tagged `JsonValue` wire [`library_from_wire`] reads (a number as the lexeme json-rust prints).
-#[cfg(feature = "oracles")]
 fn library_to_wire(value: &json::JsonValue) -> Json {
     let tagged = |kind: &str, member: Option<(&str, Json)>| Json::Object(std::iter::once(("kind".to_string(), Json::String(kind.to_string()))).chain(member.map(|(key, value)| (key.to_string(), value))).collect());
     match value {
@@ -168,13 +153,11 @@ fn library_to_wire(value: &json::JsonValue) -> Json {
 
 /// 🩹️ The reference's own `JsonSnapshot` reading of `input` (`{schema, value}`) that the case adapter restores the original
 /// through (`restore-snapshot`, the reference's undo, never a subject mutation).
-#[cfg(feature = "oracles")]
 pub fn snapshot_wire(input: &[u8]) -> Result<Json, String> {
     Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.json".to_string())), ("value".to_string(), library_to_wire(&read_json(input)?))]))
 }
 
 /// 🌳 The `value` member of a leaf payload, read through [`library_from_wire`].
-#[cfg(feature = "oracles")]
 fn value_param(params: &Json) -> Result<json::JsonValue, String> {
     library_from_wire(params.get("value").unwrap_or(&Json::Null))
 }
@@ -187,7 +170,6 @@ fn value_param(params: &Json) -> Result<json::JsonValue, String> {
 /// this subset's own `JsonMutation::diff`, which treats it as a no-op at the diff-algebra level):
 /// every scenario in this case targets a real, resolvable path, so a resolution failure here can
 /// only mean the spec itself is wrong.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -259,17 +241,7 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn snapshot_wire(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
@@ -286,12 +258,10 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// `str::parse::<f64>`, falling back to the crate's accessor only if the text is not a Rust float
 /// literal at all. Left as `as_f64()`, the reading drifts by one ULP per cycle and the inverse law
 /// fails on a defect that is not this repository's.
-#[cfg(feature = "oracles")]
 fn host_number(value: &json::JsonValue) -> f64 {
     value.dump().parse::<f64>().unwrap_or_else(|_| value.as_f64().unwrap_or(f64::NAN))
 }
 
-#[cfg(feature = "oracles")]
 pub(crate) fn project_value(value: &json::JsonValue) -> Json {
     match value {
         json::JsonValue::Null => Json::Null,
@@ -306,37 +276,27 @@ pub(crate) fn project_value(value: &json::JsonValue) -> Json {
 /// 👁️ Projects JSON bytes with the INDEPENDENT `json` reader onto the `ordered-json-v1` shape this
 /// case's oracle and subject are both compared through — key order is real in the wire form but not
 /// in this projection (see the module doc comment).
-#[cfg(feature = "oracles")]
 pub fn project_json_value(bytes: &[u8]) -> Result<Json, String> {
     let value = read_json(bytes)?;
     Ok(Json::Object(vec![("format".to_string(), Json::String("json".to_string())), ("value".to_string(), project_value(&value))]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_json_value(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🔎️ Reads the PROJECTED value found at `path` (a mutation spec's own wire `path` param) with `extra`
 /// segments appended first — so an adapter deriving an
 /// independent inverse spec can address "member `key` under `path`" (`extra = [Key(key)]`) or
 /// "element `index` under `path`" (`extra = [Index(index)]`) without ever naming `json::JsonValue`
 /// itself. `Ok(None)` on the first unresolvable segment.
-#[cfg(feature = "oracles")]
 pub fn read_at(bytes: &[u8], path: &Json, extra: &[PathSeg]) -> Result<Option<Json>, String> {
     let root = read_json(bytes)?;
     let mut segments = path_from_spec(path);
     segments.extend_from_slice(extra);
     Ok(resolve(&root, &segments).map(project_value))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn read_at(_bytes: &[u8], _path: &Json, _extra: &[PathSeg]) -> Result<Option<Json>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

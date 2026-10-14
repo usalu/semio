@@ -24,6 +24,48 @@
         }
       }
     },
+    "ShardCodecAnswerProjection": {
+      "title": "Closed Codec Answer Projection",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["okHex"],
+          "properties": { "okHex": { "$ref": "#/$defs/Hex" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["okPair"],
+          "properties": { "okPair": { "$ref": "#/$defs/DocumentPair" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["okMirror"],
+          "properties": {
+            "okMirror": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["faultHex"],
+          "properties": { "faultHex": { "$ref": "#/$defs/Hex" } }
+        }
+      ]
+    },
+    "ShardCodecOutcomeProjection": {
+      "oneOf": [
+        { "$ref": "#/$defs/ShardCodecAnswerProjection" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["refusal"],
+          "properties": { "refusal": { "type": "string", "minLength": 1 } }
+        }
+      ]
+    },
     "ShardCodecRequest": {
       "title": "One Codec Interface Call",
       "oneOf": [

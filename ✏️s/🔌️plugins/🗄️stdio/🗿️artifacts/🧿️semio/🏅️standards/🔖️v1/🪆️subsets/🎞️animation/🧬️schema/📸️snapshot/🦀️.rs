@@ -6,7 +6,8 @@
 //! full spec shape (typed `target`/`interpolation`, the 4-variant `AnimValue` union). Named structs
 //! throughout — no bare tuples (f6-final-summary.md §4.3), rotation reuses the shared
 //! `engine::geometry::SemioQuaternion{x,y,z,w}` instead of a local 4-field redefinition.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
 use framework_schema::ArtifactSchema;
 //#region 🔖️Ids
 pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";

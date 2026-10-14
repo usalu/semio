@@ -2,7 +2,7 @@
 
 use super::super::wall_geometry::flipped;
 use super::FlipWall;
-use crate::{Entry, ModelDiff, ModelSnapshot, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &FlipWall, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

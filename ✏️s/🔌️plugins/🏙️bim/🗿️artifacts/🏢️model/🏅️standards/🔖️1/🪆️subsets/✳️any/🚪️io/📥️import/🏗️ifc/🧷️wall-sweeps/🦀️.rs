@@ -7,7 +7,7 @@ use super::reader::{text, Doc};
 use super::spatial::set_of;
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
-use crate::{Profile, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide, WallSweep};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 🧷️ Reads the wall sweeps of the file into the model.

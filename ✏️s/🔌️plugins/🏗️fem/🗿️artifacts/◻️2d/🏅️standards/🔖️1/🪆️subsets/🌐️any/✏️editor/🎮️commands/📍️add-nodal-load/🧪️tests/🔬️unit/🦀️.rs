@@ -15,8 +15,8 @@ async fn add_load_case_and_combination_emit_ops_2d() {
     assert_eq!(app.snapshot().expect("snapshot").load_cases.last().expect("case added").name, "Live");
 
     let dead_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
-    dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::FemCombinationTerm { case_id: dead_id.clone(), factor: 1.35 }] })).await;
-    assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![crate::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
+    dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: dead_id.clone(), factor: 1.35 }] })).await;
+    assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
 }
 
 #[semio_framework_async_macros::async_test]

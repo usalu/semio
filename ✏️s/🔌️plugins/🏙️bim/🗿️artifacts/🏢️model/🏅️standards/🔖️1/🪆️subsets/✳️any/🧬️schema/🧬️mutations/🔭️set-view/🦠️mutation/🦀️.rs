@@ -1,8 +1,8 @@
 //! 🔭️ `set-view` payload. Sparsely changes a view: name, storey of a plan, plane of a section or elevation, camera, cut height (an assigned null returns to the convention), depth, crop (an assigned null clears it), hidden categories, phase filter (an assigned null shows every phase), scale and detail level. The kind and the building of a view never change.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Assigned, DetailLevel, Phase, ViewCamera, ViewCategory, ViewCrop, ViewPatch, ViewPlane};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ViewPatch}, snapshot::{DetailLevel, Phase, ViewCamera, ViewCategory, ViewCrop, ViewPlane}};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

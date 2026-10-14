@@ -7,9 +7,6 @@
     "test-long": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache -- long",
     "test-exhaustive": "bun repo run @semio-tech/ui-locale-rs:test --skip-cache -- exhaustive"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

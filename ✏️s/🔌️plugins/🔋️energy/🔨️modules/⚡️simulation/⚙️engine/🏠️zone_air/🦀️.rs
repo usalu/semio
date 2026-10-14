@@ -5,6 +5,8 @@
 //! `dT/dt ≈ (11/6·Tₙ − 3·Tₙ₋₁ + 3/2·Tₙ₋₂ − 1/3·Tₙ₋₃) / Δt`, so the sensible balance of one step
 //! is linear in `Tₙ` and can be solved simultaneously with the surface heat balances.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+
 use crate::props::{latent_heat_vaporization, moist_air_cp_j_per_kg_k, moist_air_density};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

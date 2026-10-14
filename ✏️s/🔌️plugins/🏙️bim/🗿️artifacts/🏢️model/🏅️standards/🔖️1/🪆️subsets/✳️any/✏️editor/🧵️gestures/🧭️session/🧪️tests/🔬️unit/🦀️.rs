@@ -38,7 +38,7 @@ async fn the_model_is_asked_before_a_tool_proposes_a_mutation() {
     let snapshot = model();
     let inference = ModelInference::default();
     let context = ToolContext::new(&snapshot, &inference, Surface::Plan { storey: "st-ground".into() }, "seed");
-    let storey = |id: &str| ModelMutation::SetStoreyHeight(crate::mutations::set_storey_height::SetStoreyHeight { id: id.into(), height: 3.5 });
+    let storey = |id: &str| ModelMutation::SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight { id: id.into(), height: 3.5 });
     assert!(context.accepts(&storey("st-ground")));
     assert!(!context.accepts(&storey("nowhere")));
     assert_eq!(Step::write(&context, storey("nowhere")).refused, Some(REJECTED));

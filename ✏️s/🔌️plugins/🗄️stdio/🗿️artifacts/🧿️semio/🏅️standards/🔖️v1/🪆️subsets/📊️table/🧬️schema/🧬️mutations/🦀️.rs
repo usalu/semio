@@ -17,8 +17,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (the stdio
 //! W2 agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::schema::diff::SemioTableDiff;
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Leaves
 use super::create_column;
@@ -67,7 +67,6 @@ pub fn diff_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioTabl
     <SemioTableMutation as protocol::Mutation<SemioTableSnapshot>>::diff(mutation, base)
 }
 
-
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `📊️mutate-semio-table` test adapter, whose `inverse-<kind>` scenarios
@@ -82,7 +81,6 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
     })
 }
 
-
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
@@ -96,7 +94,4 @@ mod tests;
 /// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
 /// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
 /// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
 //#endregion 🧪️FixtureTests

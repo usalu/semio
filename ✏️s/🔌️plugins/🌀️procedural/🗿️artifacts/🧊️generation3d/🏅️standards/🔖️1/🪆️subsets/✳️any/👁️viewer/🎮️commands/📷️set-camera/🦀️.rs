@@ -3,7 +3,7 @@
 
 use crate::viewer::generation3d::config;
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation, Generation3dViewCamera};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Fault, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 

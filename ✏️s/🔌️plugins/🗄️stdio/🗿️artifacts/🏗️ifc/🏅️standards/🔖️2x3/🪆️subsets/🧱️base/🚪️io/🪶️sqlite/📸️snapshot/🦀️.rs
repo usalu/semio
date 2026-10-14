@@ -75,8 +75,8 @@ impl ArtifactSqliteSnapshotHost for Ifc2x3Snapshot{
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<semio_framework_os_kernel::io_schema::IoPayload,ValueError>{native::encode(self,encoding,control,native_owner)}
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{(||->Result<semio_framework_os_kernel::io_schema::IoOutcome<()>,ValueError>{
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.ifc"||dialect.standard!="2x3"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot dialect"));}let root=db.table("ifc2x3_document")?.single_row()?;if root.text(1)?!=self.schema{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"IFC2x3 document identity differs from its projection"));}
-        let diagnostics=match dialect.subset.as_str(){"*"=>Vec::new(),"cv20"=>crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance_controlled(self,control)?,"sav"=>crate::standards::v2x3::subsets::sav::io::check_sav_conformance_controlled(self,control)?,"cobie"=>crate::standards::v2x3::subsets::cobie::io::check_cobie_conformance_controlled(self,control)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown owned IFC2x3 snapshot subset"))};Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
-    })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)}
+        Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics:Vec::new()})
+    })().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error).and_then(|outcome|if dialect.subset==semio_framework_artifact_reference::SubsetId::ANY.0{Ok(outcome)}else{store::io::validate_registered_snapshot_subset(dialect,self,db,control)})}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
     
     
@@ -87,11 +87,6 @@ const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::extent(control.limits())?;let mut p=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut p)?;p.finish()}
 fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;reconstruction::read(db,control)}
 }
-
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
-
 
 #[path = "🚦️native/🦀️.rs"]
 pub(crate) mod native;

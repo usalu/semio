@@ -1,11 +1,11 @@
 use super::*;
 use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_representation::arena::ArenaId;
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::matrix::Frame3;
 use std::collections::HashMap;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

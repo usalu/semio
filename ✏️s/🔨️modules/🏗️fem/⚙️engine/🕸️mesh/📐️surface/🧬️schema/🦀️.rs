@@ -1,6 +1,6 @@
 //! 📐️ Binary64 region identity and indexed volume/surface records.
 
-use super::{MeshOpts, PlanarDomain};
+use semio_s_fem_mesh::{MeshOpts, PlanarDomain};
 
 /// 🪪️ One explicit region input transferred by its domain owner.
 #[derive(Clone, Debug, PartialEq)]

@@ -1,3 +1,4 @@
+import {TICKET_GENERATED_OUTPUT_DIRECTORY} from "../🗂️workspaces/🧬️metadata/🟦️.ts";
 import { receiveGeneratorPreviewProgressV1 } from "../🏭️generator/👁️preview/📈️progress/🟦️.ts";
 import { requireRecord, requireStringArray, requireString, requireLiteral, requireExactKeys, type UnknownRecord } from "../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 //#region 🧲️Header
@@ -21,7 +22,7 @@ import { canonicalJson } from "../🧾️serialization/🔣️json/🟦️.ts";
 
 import { generatorPreviewExecution, generatorPreviewResourceLimits, registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type RegistryCatalogInputView, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️.ts";
 
-import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../🔍️discovery/🟦️.ts";
+import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, type SemanticPackageProjectionCatalog } from "../🔍️discovery/🟦️.ts";
 
 import { parseGeneratorInputProjection, parseCurrentSourceApprovals, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️.ts";
 import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️.ts";
@@ -1035,8 +1036,11 @@ function areaId(path: string): string {
   return first;
 }
 
+/** 🚨️ One violation. Path and message are copied into fresh strings: JavaScriptCore substrings and template ropes keep their whole source
+ * string alive, so a message quoting a token would otherwise retain the entire file it came from for the life of the report (the UTF-16
+ * round trip is exact for every code unit, lone surrogates included). */
 function violation(code: string, path: string, message: string, severity: TaxonomySeverity = "error"): TaxonomyViolation {
-  return { code, severity, path, message };
+  return { code, severity, path: Buffer.from(path, "utf16le").toString("utf16le"), message: Buffer.from(message, "utf16le").toString("utf16le") };
 }
 
 function stableViolations(rows: readonly TaxonomyViolation[]): readonly TaxonomyViolation[] {
@@ -1126,7 +1130,7 @@ function worktreeCandidate(repoRoot: string, path: string): CandidatePath | null
 }
 
 /** 🗑️ Reserved ticket-root child directory for a pipeline's own generated output; structurally excluded from {@link explicitTicketRows} so a tool's artifacts can never re-enter its own reference closure. Already gitignored repo-wide (see `.gitignore`). */
-export const TICKET_GENERATED_OUTPUT_DIRECTORY = "🗑️temp";
+export {TICKET_GENERATED_OUTPUT_DIRECTORY};
 
 function explicitTicketRows(repoRoot: string, ticketDir: string | undefined, taxonomy: LoadedTaxonomy, scope?: string, cancelFile?: string): readonly CandidatePath[] {
   if (!ticketDir) return [];
@@ -3518,7 +3522,7 @@ function pathLiteralMatches(content: string): [number, string, string][] {
   const valueEnd = (start: number): number => {
     let end = start;
     while (end < content.length && !PATH_RUN_EXCLUDED.has(content[end]!) && !REGEX_WHITESPACE.has(content[end]!)) end++;
-    if (end > start && lookahead(end)) { const slash = content.indexOf("/", start + 1); if (slash >= 0 && slash < end - 1) return end; }
+    if (end > start && lookahead(end)) for (let slash = start + 1; slash < end - 1; slash++) if (content.charCodeAt(slash) === 47) return end;
     let last = start;
     while (last < content.length && word(content.charCodeAt(last))) last++;
     if (last - start < 3 || !lookahead(last)) return -1;
@@ -4152,7 +4156,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   const edits: ReferenceEdit[] = [];
   const editTargets = new Map<string, string>();
   const unresolved: TaxonomyViolation[] = [];
-  const packageCatalog = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema);
+  const packageCatalog = nestedCargoCatalog(inventory.repoRoot, taxonomy.discoverySchema);
   const packages = packageCatalog?.packages.filter((row) => row.mappings.some((mapping) => moves.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath))) ?? [];
   const policyStates = new Map<string, DependencyPolicyStateTokens>();
   for (const contract of Object.values(taxonomy.discoverySchema.semanticPolicyStateCoordinateContracts)) if (packages.some((row) => contract.packageIds.some((id) => id === row.id))) {
@@ -4317,7 +4321,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       if (!covered && !unchanged) unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${candidate.adapter} ${candidate.structuredLocation} contains unsupported path-bearing token ${JSON.stringify(candidate.value)} targeting ${oldTarget}`));
     }
     if (fileEdits.length > 0) {
-      const deduplicated = [...new Map(fileEdits.map((edit) => [`${edit.structuredLocation}:${edit.newValue}`, edit])).values()].sort(referenceEditCompare);
+      const deduplicated = [...new Map(fileEdits.map((edit) => [`${edit.structuredLocation}:${edit.newValue}`, { ...edit, structuredLocation: Buffer.from(edit.structuredLocation, "utf16le").toString("utf16le"), oldValue: Buffer.from(edit.oldValue, "utf16le").toString("utf16le"), newValue: Buffer.from(edit.newValue, "utf16le").toString("utf16le") }])).values()].sort(referenceEditCompare);
       const conflict = referenceEditConflict(content, deduplicated);
       if (conflict) {
         unresolved.push(violation("reference-edit-conflict", entry.sourcePath, conflict));
@@ -5088,8 +5092,24 @@ function artifactCatalogProjectionRationale(sourcePath: string, destinationPath:
 //#endregion 🛤️Artifact Catalog Projection
 
 //#region 📦️Nested Cargo Packages
+/** 📚️ The nested Cargo package catalog with its admission problem instead of a throw: `semanticPackageProjectionCatalog` refuses a catalog
+ * whose bytes or census drifted from the registration; inventory reports that as a violation and planning proceeds without the catalog. */
+function nestedCargoCatalogRecord(repoRoot: string, taxonomy: LoadedTaxonomy["discoverySchema"]): Readonly<{ catalog: SemanticPackageProjectionCatalog | null; problem: string | null }> {
+  try { return { catalog: semanticPackageProjectionCatalog(repoRoot, taxonomy), problem: null }; }
+  catch (error) {
+    if (!(error instanceof Error) || !error.message.startsWith("Nested Cargo ")) throw error;
+    return { catalog: null, problem: error.message };
+  }
+}
+
+/** 📦️ The admitted nested Cargo package catalog, or `null` when it is absent or refused (the refusal is an inventory violation). */
+function nestedCargoCatalog(repoRoot: string, taxonomy: LoadedTaxonomy["discoverySchema"]): SemanticPackageProjectionCatalog | null {
+  return nestedCargoCatalogRecord(repoRoot, taxonomy).catalog;
+}
+
 function projectNestedCargoPackages(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy, prunableSourceParents: ReadonlySet<string>): void {
-  const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema);
+  const { catalog, problem } = nestedCargoCatalogRecord(repoRoot, taxonomy.discoverySchema), catalogPath = taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"].authorityCatalogPath;
+  if (problem) entries.get(catalogPath)?.violations.push(violation("nested-cargo-catalog-invalid", catalogPath, problem));
   if (!catalog) return;
   for (const row of catalog.packages) {
     const sourceManifest = `${row.sourceRoot}/Cargo.toml`, destinationManifest = `${row.destinationRoot}/Cargo.toml`;
@@ -6315,11 +6335,11 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
       if (row && catalog?.ownerEvidence[row.ownerEvidenceId]?.kind === "ordinary-owner-doc" && row.disposition === "owner-documentation-relocate" && canonicalJson(row.preimage) === canonicalJson(approvalDeclaration.baselinePreimage) && approval.schemaVersion === 1 && approval.kind === "current-source-approval" && approval.sourcePath === row.sourcePath && approval.policy?.path === ownerContract.authorityCatalogPath && approval.policy?.sha256 === ownerContract.authorityCatalogSha256 && approval.baseline?.commit === approvalDeclaration.baselineCommit && approval.baseline?.blob === approvalDeclaration.baselineBlob && canonicalJson(approval.baseline?.preimage) === canonicalJson(approvalDeclaration.baselinePreimage) && canonicalJson(approval.currentPreimage) === canonicalJson(approvalDeclaration.currentPreimage)) add("/sourcePath", row.sourcePath);
     }
     if (path === packageContract.authorityCatalogPath && sha256(bytes) === packageContract.authorityCatalogSha256) {
-      const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)!;
-      catalog.packages.forEach((row, index) => { add(`/packages/${index}/sourceRoot`, row.sourceRoot); row.mappings.forEach((mapping, mappingIndex) => add(`/packages/${index}/mappings/${mappingIndex}/sourcePath`, mapping.sourcePath)); row.sourceSplices.forEach((splice, spliceIndex) => add(`/packages/${index}/sourceSplices/${spliceIndex}/sourcePath`, splice.sourcePath)); row.derivedLeaves.forEach((leaf, leafIndex) => add(`/packages/${index}/derivedLeaves/${leafIndex}/originSourcePath`, leaf.originSourcePath)); row.generatedSourceRetirements.forEach((retirement, retirementIndex) => add(`/packages/${index}/generatedSourceRetirements/${retirementIndex}/sourcePath`, retirement.sourcePath)); });
-      catalog.packages.forEach((row, index) => row.authoredSourceFragments.forEach((fragment, fragmentIndex) => add(`/packages/${index}/authoredSourceFragments/${fragmentIndex}/sourcePath`, fragment.sourcePath)));
-      catalog.referenceConsumers.forEach((row, index) => add(`/referenceConsumers/${index}/path`, row.path));
-      for (const [id, row] of Object.entries(catalog.referenceTokenTransforms)) add(`/referenceTokenTransforms/${pointer(id)}/sourceToken`, row.sourceToken);
+      const catalog = nestedCargoCatalog(repoRoot, taxonomy.discoverySchema);
+      catalog?.packages.forEach((row, index) => { add(`/packages/${index}/sourceRoot`, row.sourceRoot); row.mappings.forEach((mapping, mappingIndex) => add(`/packages/${index}/mappings/${mappingIndex}/sourcePath`, mapping.sourcePath)); row.sourceSplices.forEach((splice, spliceIndex) => add(`/packages/${index}/sourceSplices/${spliceIndex}/sourcePath`, splice.sourcePath)); row.derivedLeaves.forEach((leaf, leafIndex) => add(`/packages/${index}/derivedLeaves/${leafIndex}/originSourcePath`, leaf.originSourcePath)); row.generatedSourceRetirements.forEach((retirement, retirementIndex) => add(`/packages/${index}/generatedSourceRetirements/${retirementIndex}/sourcePath`, retirement.sourcePath)); });
+      catalog?.packages.forEach((row, index) => row.authoredSourceFragments.forEach((fragment, fragmentIndex) => add(`/packages/${index}/authoredSourceFragments/${fragmentIndex}/sourcePath`, fragment.sourcePath)));
+      catalog?.referenceConsumers.forEach((row, index) => add(`/referenceConsumers/${index}/path`, row.path));
+      for (const [id, row] of Object.entries(catalog?.referenceTokenTransforms ?? {})) add(`/referenceTokenTransforms/${pointer(id)}/sourceToken`, row.sourceToken);
     }
     if (path === taxonomyPath) {
       if (ownerContract?.contractKind === "exact-owner-path-catalog") {
@@ -6343,7 +6363,7 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
           }
         }
       }
-      const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema);
+      const catalog = nestedCargoCatalog(repoRoot, taxonomy.discoverySchema);
       for (const [id, contract] of Object.entries(taxonomy.schema.generatorContracts)) {
         const activation = contract.projectionActivation, row = catalog?.packages.find((row) => row.id === activation?.packageId);
         if (!activation || !row || activation.sourceManifestPath !== `${row.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${row.destinationRoot}/Cargo.toml`) continue;
@@ -6593,7 +6613,7 @@ function planExactGeneratedOwnerRemovals(inventory: TaxonomyInventory, taxonomy:
 }
 
 function planNestedCargoGeneratedSourceRemovals(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy): readonly TaxonomyEvidenceRemoval[] {
-  const catalog = semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema);
+  const catalog = nestedCargoCatalog(inventory.repoRoot, taxonomy.discoverySchema);
   const contract = taxonomy.discoverySchema.semanticPackageProjectionContracts["nested-cargo-packages-v1"];
   if (!catalog || !contract) return [];
   const entries = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry])), removals: TaxonomyEvidenceRemoval[] = [];
@@ -6670,7 +6690,7 @@ interface MoveReferenceAuthority {
 function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, embeddedRoots: readonly TaxonomyEmbeddedTicketRootDisposition[], evidenceRemovals: readonly TaxonomyEvidenceRemoval[]): MoveReferenceAuthority {
   const ownerSnapshot = exactOwnedCatalogSnapshot(inventory.repoRoot, taxonomy);
   const ownerMappings = new Map(ownerSnapshot.catalog?.entries.filter((entry) => entry.disposition !== "fixed").map((entry) => [entry.sourcePath, entry.destinationPath]) ?? []);
-  const packageMappings = new Map(semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema)?.packages.flatMap((row) => row.mappings.map((mapping) => [mapping.sourcePath, mapping.destinationPath] as const)) ?? []);
+  const packageMappings = new Map(nestedCargoCatalog(inventory.repoRoot, taxonomy.discoverySchema)?.packages.flatMap((row) => row.mappings.map((mapping) => [mapping.sourcePath, mapping.destinationPath] as const)) ?? []);
   const embeddedPrefixes = embeddedRoots.map((root) => root.sourceMetadataRoot);
   const removalSources = new Set(evidenceRemovals.map((entry) => entry.sourcePath));
   const isEmbedded = (path: string): boolean => embeddedPrefixes.some((root) => path === root || path.startsWith(`${root}/`));
@@ -6742,7 +6762,7 @@ function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMov
   const destination = lstatOrNull(assertLexicalInputOutsideOpaque(repoRoot, activation.destinationManifestPath, "Generator canonical activation", true));
   if (!source && !destination) return false;
   if (source && (!source.isFile() || source.isSymbolicLink()) || destination && (!destination.isFile() || destination.isSymbolicLink()) || source && destination) throw new Error("Generator package activation requires one exact source or canonical manifest");
-  const row = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)?.packages.find((row) => row.id === activation.packageId);
+  const row = nestedCargoCatalog(repoRoot, taxonomy.discoverySchema)?.packages.find((row) => row.id === activation.packageId);
   if (!row || activation.sourceManifestPath !== `${row.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${row.destinationRoot}/Cargo.toml`) throw new Error("Generator package activation disagrees with its exact catalog");
   const relevant = moves.filter((move) => row.mappings.some((mapping) => mapping.sourcePath === move.sourcePath));
   const retired = removals.filter((removal): removal is TaxonomyEvidenceRemoval & { authority: Extract<TaxonomyRemovalAuthority, { kind: "nested-cargo-generated-source" }> } => removal.authority.kind === "nested-cargo-generated-source" && removal.authority.packageId === row.id);
@@ -6802,7 +6822,7 @@ function mutationIndex(paths: Iterable<string>): MutationIndex {
 
 function generatorPlanning(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, evidenceRemovals: readonly TaxonomyEvidenceRemoval[] = []): GeneratorPlanningResult {
   const jcoActivation = taxonomy.schema.generatorContracts["jco-package-adapter"]?.projectionActivation;
-  const packageCatalog = jcoActivation && moves.some((move) => inScope(move.sourcePath, dirname(jcoActivation.sourceManifestPath))) ? semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema) : null;
+  const packageCatalog = jcoActivation && moves.some((move) => inScope(move.sourcePath, dirname(jcoActivation.sourceManifestPath))) ? nestedCargoCatalog(inventory.repoRoot, taxonomy.discoverySchema) : null;
   const jco = packageCatalog?.packages.find((row) => row.id === "jcoprobe-guest");
   const preservedLocks = new Set(jco?.mappings.filter((mapping) => basename(mapping.sourcePath) === "Cargo.lock" && moves.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize) && !edits.some((edit) => edit.path === mapping.destinationPath)).map((mapping) => mapping.destinationPath) ?? []);
   const mutations = new Set<string>();
@@ -7911,26 +7931,26 @@ function assertGeneratorNodeRecords(records: readonly TaxonomyGeneratorNodeRecor
   if (records.some((record, index) => index > 0 && generatorPathCompare(records[index - 1].path, record.path) > 0)) throw new Error(`${label} must be path-sorted`);
 }
 
-function nxTargetRecord(repoRoot: string, ownerPath: string, target: string): UnknownRecord {
+function buildTargetRecord(repoRoot: string, ownerPath: string, target: string): UnknownRecord {
   const manifestPath = absolutePath(repoRoot, `${ownerPath}/📋️project.json`);
-  const manifest = requireRecord(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown, `Nx manifest ${manifestPath}`);
+  const manifest = requireRecord(JSON.parse(readFileSync(manifestPath, "utf8")) as unknown, `Build manifest ${manifestPath}`);
   const separator = target.lastIndexOf(":");
   const project = target.slice(0, separator);
   const targetName = target.slice(separator + 1);
-  const targets = requireRecord(manifest.targets, `Nx manifest ${manifestPath}.targets`);
-  if (manifest.name !== project || !Object.hasOwn(targets, targetName)) throw new Error(`Nx manifest ${manifestPath} does not own target ${target}`);
-  return requireRecord(targets[targetName], `Nx target ${target}`);
+  const targets = requireRecord(manifest.targets, `Build manifest ${manifestPath}.targets`);
+  if (manifest.name !== project || !Object.hasOwn(targets, targetName)) throw new Error(`Build manifest ${manifestPath} does not own target ${target}`);
+  return requireRecord(targets[targetName], `Build target ${target}`);
 }
 
-function assertNxTarget(repoRoot: string, ownerPath: string, target: string): void {
-  nxTargetRecord(repoRoot, ownerPath, target);
+function assertBuildTarget(repoRoot: string, ownerPath: string, target: string): void {
+  buildTargetRecord(repoRoot, ownerPath, target);
 }
 
 function assertGeneratorPreviewTarget(repoRoot: string, contract: GeneratorContractSpec): ReturnType<typeof generatorPreviewExecution> {
   const { ownerPath, previewTarget: target } = contract;
   if (!ownerPath || !target) throw new Error("Generator lacks an exact owner JSON preview command");
-  const preview = nxTargetRecord(repoRoot, ownerPath, target);
-  return generatorPreviewExecution(contract, { executor: preview.executor, options: requireRecord(preview.options, `Nx target ${target}.options`) });
+  const preview = buildTargetRecord(repoRoot, ownerPath, target);
+  return generatorPreviewExecution(contract, { executor: preview.executor, options: requireRecord(preview.options, `Build target ${target}.options`) });
 }
 
 function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy: LoadedTaxonomy, repoRoot: string): GeneratorContractSpec {
@@ -7952,9 +7972,9 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
   validatePreviewPreState(preview, regeneration.preOutputs);
   const identity = sha256(canonicalJson({ contractId: regeneration.contractId, cwd: regeneration.cwd, command: regeneration.command, verifyCommand: regeneration.verifyCommand, outputRoots: roots, inputs: regeneration.inputs, preOutputs: regeneration.preOutputs, outputs: regeneration.outputs, preview, previewManifestDigest: regeneration.previewManifestDigest, staleRemovals: regeneration.staleRemovals })).slice(0, 24);
   if (regeneration.id !== identity) throw new Error(`Regeneration ${regeneration.id} does not match canonical regeneration bytes`);
-  assertNxTarget(repoRoot, contract.ownerPath, contract.target);
+  assertBuildTarget(repoRoot, contract.ownerPath, contract.target);
   assertGeneratorPreviewTarget(repoRoot, contract);
-  if (contract.checkTarget) assertNxTarget(repoRoot, contract.ownerPath, contract.checkTarget);
+  if (contract.checkTarget) assertBuildTarget(repoRoot, contract.ownerPath, contract.checkTarget);
   return contract;
 }
 

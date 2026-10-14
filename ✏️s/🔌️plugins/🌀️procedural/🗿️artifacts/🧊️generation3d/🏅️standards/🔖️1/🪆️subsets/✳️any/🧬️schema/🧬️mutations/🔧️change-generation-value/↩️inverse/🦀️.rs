@@ -3,9 +3,9 @@
 //! `semio_framework_artifact_playbook_playbook::invert_generation_operation`'s own `UpdateValues` rule); missing generation ⇒
 //! nothing to undo.
 
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use crate::change_generation_value::ChangeGenerationValue;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 pub fn inverse(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok((|| {

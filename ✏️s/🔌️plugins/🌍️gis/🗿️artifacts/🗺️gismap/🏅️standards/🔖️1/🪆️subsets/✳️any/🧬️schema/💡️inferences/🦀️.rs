@@ -11,7 +11,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_drawing::schema::diff::NodePath;
 use semio_s_artifact_stdio_semio_drawing::schema::mutations::{create_node, inverse_semio_drawing_mutation, SemioDrawingMutation};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
-use semio_s_artifact_stdio_semio_value::schema::mutations::{inverse_semio_value_mutation, SemioValueMutation};
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::inverse_semio_value_mutation;
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gismap snapshot. Today: per-collection feature counts and the
 /// geographic bounding box across every `positions`/`routes`/`regions` feature (see

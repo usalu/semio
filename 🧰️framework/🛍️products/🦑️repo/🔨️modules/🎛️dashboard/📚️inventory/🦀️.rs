@@ -5,7 +5,7 @@
 //! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs
 
 use crate::command_tree::LauncherRow;
-use crate::registry::{segment_key, Facts, Fingerprint, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
+use crate::registry::{graph_file, segment_key, Facts, Fingerprint, GraphBasis, PlaygroundFacts, Problem, ProjectFacts, Registry, TargetFacts, TicketFacts, GRAPH_OWNERS, PLAYGROUND_SOURCE, TICKET_COMMANDS};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -15,7 +15,6 @@ use std::sync::{atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering}, mpsc::{self
 const SNAPSHOT_VERSION: u32 = 7;
 const SNAPSHOT_LIMIT: u64 = 64 * 1024 * 1024;
 const STALE_TEMPORARY_SECONDS: u64 = 600;
-const GRAPH_FILE: &str = ".🧬semio/🦑️repo/⚡️cache/build/graph.json";
 const PROJECT_MANIFESTS: &[&str] = &["📋️project.json", "project.json"];
 const WALK_SKIP_DIRS: &[&str] = &["node_modules", "target", "dist", "build", "generated", "cache", "fixtures"];
 
@@ -118,7 +117,7 @@ impl Snapshot {
             }
             project.targets.sort_by(|left, right| left.name.cmp(&right.name));
         }
-        problems.extend(self.graph_errors.iter().enumerate().map(|(index, message)| Problem { file: GRAPH_FILE.into(), at: format!("errors[{index}]"), message: message.clone() }));
+        problems.extend(self.graph_errors.iter().enumerate().map(|(index, message)| Problem { file: graph_file().into(), at: format!("errors[{index}]"), message: message.clone() }));
         problems.extend(self.tickets.iter().filter_map(|ticket| ticket.problem.as_ref().map(|message| Problem { file: format!("{}/{TICKET_COMMANDS}", ticket.facts.folder), at: String::new(), message: message.clone() })));
         Facts { projects: projects.into_values().collect(), playgrounds: self.playgrounds.value.clone(), tickets: self.tickets.iter().map(|ticket| ticket.facts.clone()).collect(), problems }
     }
@@ -138,7 +137,7 @@ impl Snapshot {
     fn is_current_for(&self,publication:Option<&Path>) -> bool {
         let same = |path: &str, known: Option<Fingerprint>| Fingerprint::of(&self.root.join(path)) == known;
         self.complete
-            && self.catalog_path==publication.map(|root|root.join("🚀️playgrounds.json")) && self.catalog_path.as_deref().and_then(Fingerprint::of)==self.playgrounds.fingerprint && same(GRAPH_FILE, self.graph.fingerprint)
+            && self.catalog_path==publication.map(|root|root.join("🚀️playgrounds.json")) && self.catalog_path.as_deref().and_then(Fingerprint::of)==self.playgrounds.fingerprint && same(graph_file(), self.graph.fingerprint)
             && self.manifests.iter().all(|(path, manifest)| same(path, Some(manifest.fingerprint)))
             && self.folders.iter().all(|(path, known)| same(path, *known))
             && self.tickets.iter().all(|ticket| same(&format!("{}/{}", ticket.facts.folder, semio_framework_repo_tickets::TICKET_DOCUMENT_NAME), ticket.document) && (!ticket.facts.open || same(&format!("{}/{TICKET_COMMANDS}", ticket.facts.folder), ticket.commands)))
@@ -194,7 +193,7 @@ impl GraphMetadata { fn dashboard(self) -> Option<serde_json::Value> { self.semi
 
 /// 🕸️ Reads the build graph last published, waiting out a publication in progress.
 fn read_graph(root: &Path, cancelled: &AtomicBool) -> (Sourced<Vec<ProjectFacts>>, Vec<String>) {
-    let path = root.join(GRAPH_FILE);
+    let path = root.join(graph_file());
     let started = std::time::Instant::now();
     let (fingerprint, graph) = loop {
         if cancelled.load(Ordering::Relaxed) { return (Sourced::default(), Vec::new()); }
@@ -309,7 +308,7 @@ fn gather(root: &Path, previous: Option<&Snapshot>, cancelled: &AtomicBool, prog
     progress.expected.store(previous.map_or(0, |previous| previous.walked), Ordering::Relaxed);
     snapshot.playgrounds = read_playgrounds(publication);
     snapshot.catalog_path=publication.map(|root|root.join("🚀️playgrounds.json"));
-    (snapshot.graph, snapshot.graph_errors) = match previous { Some(previous) if previous.graph.fingerprint.is_some() && previous.graph.fingerprint == Fingerprint::of(&root.join(GRAPH_FILE)) => (previous.graph.clone(), previous.graph_errors.clone()), _ => read_graph(root, cancelled) };
+    (snapshot.graph, snapshot.graph_errors) = match previous { Some(previous) if previous.graph.fingerprint.is_some() && previous.graph.fingerprint == Fingerprint::of(&root.join(graph_file())) => (previous.graph.clone(), previous.graph_errors.clone()), _ => read_graph(root, cancelled) };
     if stopped() { return None; }
     let adopt = |snapshot: &mut Snapshot, path: String| {
         if snapshot.manifests.contains_key(&path) { return; }

@@ -1,0 +1,34 @@
+{
+  "commandFiles": [
+    "package.json",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts",
+    "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📇️catalog/📣️publisher/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+  ],
+  "environmentFiles": [
+    "🏢️semio-tech/🎡️play/📋️project.json",
+    "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts"
+  ],
+  "schemaCommandFiles": [
+    "🌎️hub/🔁️rebuild/🔣️.json",
+    "✏️s/🧑‍💻dev/🔁️rebuild/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🔣️.json",
+    "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json"
+  ],
+  "complexFiles": [
+    ".vscode/launch.json",
+    "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+    "✏️s/🧑‍💻dev/🗄️stdio/🏘️composition/🕸️artifact-graph/🟦️.ts",
+    "🏢️semio-tech/🎡️play/🔨️modules/📦️site/🆕️fresh-build/🟦️.ts",
+    "🏢️semio-tech/🎡️play/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts",
+    "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts"
+  ]
+}

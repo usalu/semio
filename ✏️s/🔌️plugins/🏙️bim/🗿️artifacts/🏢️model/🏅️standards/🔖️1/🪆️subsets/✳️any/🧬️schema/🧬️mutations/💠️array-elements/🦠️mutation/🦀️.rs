@@ -1,6 +1,6 @@
 //! 💠️ `array-elements` payload. Repeats placed elements in a linear array (each copy a further spacing) or a radial array (each copy a further step about a centre), as one set of created records with ids minted from the prefix, the copy number and the position of the source; every copy is computed from the source, so no rounding accumulates.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

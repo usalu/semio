@@ -7,7 +7,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::ValueError;
 use crate::os_spr::{Edit, Mutation};
 use std::sync::Arc;
-use super::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owner_close, artifact_retirement_owner_demands};
+use super::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, retirement_owner_close, retirement_owner_demands};
 use super::snapshot_read::{ArtifactStoreEditRetirement, ArtifactStoreHistoryMetadataRetirement, ArtifactStoreOperationRowOwners};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use crate::os_vcs::Change;
@@ -75,7 +75,7 @@ impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
         if let Some(row) = self.pending.as_ref().or_else(|| self.rows.last()) { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: self.factory.as_ref().expect("operation payload retains its factory").retirement_birth_bytes(row), depth: 2, ..Default::default() }); }
         if !self.rows.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.rows.release_demand()?, depth: 1, ..Default::default() }); }
         if self.identity.is_some() { return Ok(semio_framework_value::RetirementDemand { release_bytes: self.identity.as_ref().unwrap().capacity(), depth: 1, ..Default::default() }); }
-        if self.strings.is_some() { return artifact_retirement_owner_demands(&self.strings, body); }
+        if self.strings.is_some() { return retirement_owner_demands(&self.strings, body); }
         if self.factory.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>>(), depth: 1, ..Default::default() }); }
         if let Some(owner) = self.closing_factory.as_ref() {
             let mut demand = owner.demands(body)?;
@@ -108,7 +108,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
             drop(self.identity.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
-        if self.strings.is_some() { return artifact_retirement_owner_close(&mut self.strings, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.strings.is_some() { return retirement_owner_close(&mut self.strings, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() {
             let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
             *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory));

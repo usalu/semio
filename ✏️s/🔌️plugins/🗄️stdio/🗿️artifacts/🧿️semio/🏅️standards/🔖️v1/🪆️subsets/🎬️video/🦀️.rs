@@ -13,42 +13,6 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 #[path = "."]
-pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod duration {
-            #[path = "🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-#[path = "."]
 pub mod examples {
     #[path = "📚️examples/🎥️clip/🦀️.rs"]
     pub mod clip;
@@ -122,10 +86,3 @@ pub mod viewer {
     }
 }
 
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioRational);
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioVideoStreamKind);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioVideoSample { pts, key, data });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioVideoStream { kind, codec, width, height, rate, samples });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioVideoSnapshot { schema, streams });
-
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioVideoSnapshot, schema::mutations::SemioVideoMutation);

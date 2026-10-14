@@ -1,6 +1,6 @@
 //! 🕸️ Canonical Record identity and direct mutation ownership for actual Graph fields.
 use semio_framework_dsl_record::DslField;
-use crate::manifest::{PropertyBag,PropertyDef,PropertyKind,PropertyValue,PortDirection};
+use crate::{PropertyBag,PropertyDef,PropertyKind,PropertyValue,PortDirection};
 
 #[test]
 fn graph_fields_implement_the_canonical_record_identity() {

@@ -3,24 +3,15 @@
 //! `✏️editor`/`📚️examples` children — `crate::editor::drawing`/`crate::viewer::drawing` stay mounted at
 //! the plugin's top-level `editor`/`viewer` modules (recipe §5 gotcha 1), not here.
 
-use crate::editor::drawing as editor;
-use crate::standards::v1::subsets::any::{io, schema};
-use crate::viewer::drawing as viewer;
-use crate::DRAWING_DIALECT;
+use semio_s_artifact_draw_drawing_examples::examples;
+use semio_s_artifact_draw_drawing_editor as editor;
+use semio_s_artifact_draw_drawing_io as io;
+use semio_s_artifact_draw_drawing_viewer as viewer;
+use semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-/// 📚️ The one example-document catalogue of this subset — the same slice the shell's example switcher
-/// reads through `SubsetDeclaration.examples` and the same one `setActiveExample` resolves its
-/// `example_id` against, so an id the switcher offers is exactly an id the command accepts.
-/// `✏️editor/📚️examples/🎬️demo-session` is deliberately NOT a row here: it carries a `.cmd.semio`
-/// command-replay script, a session fixture for the editor's own tests, not a drawing document, and
-/// registering it would advertise an id `setActiveExample` could never parse into a document.
-pub fn examples() -> &'static [ExampleSource] {
-    static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
-    EXAMPLES.get_or_init(|| vec![crate::examples::demo::source()]).as_slice()
-}
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = OnceLock::new();

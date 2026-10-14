@@ -19,7 +19,7 @@
     "nested/../escape",
     "nested//empty",
     "./relative",
-    ".nx-artifact.json"
+    ".semio-artifact.json"
   ],
   "invalidOwners": [
     "",

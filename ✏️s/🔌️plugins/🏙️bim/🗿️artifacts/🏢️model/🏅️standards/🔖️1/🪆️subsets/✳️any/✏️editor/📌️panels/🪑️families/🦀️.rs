@@ -9,7 +9,7 @@ use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label
 use crate::editor::bim::panels::properties::input_row;
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
-use crate::{FamilyCategory, ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{FamilyCategory, ModelSnapshot}, inferences::ModelInference};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::Buildable;

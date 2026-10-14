@@ -73,7 +73,7 @@ fn en1992_declares_its_value_tree_arguments() {
 
 #[test]
 fn en1993_declares_its_value_tree_arguments() {
-    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1993::editor::en1993::create_en1993_app());
+    assert_norm_value_tree_arguments(semio_s_artifact_norm_en1993_editor::create_en1993_app());
 }
 
 #[test]

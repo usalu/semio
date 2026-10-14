@@ -7,14 +7,16 @@
 //! through multiple inter-reflection, system properties are fitted by a sixth-order polynomial in
 //! the incidence cosine, and hemispherical values are the Simpson integral of the angular curve.
 
-use crate::model::GasKind;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
+use crate::model::{GasKind, MAX_PANES};
 use crate::props::{dew_point_c, moist_air_cp_j_per_kg_k, moist_air_density, saturation_pressure_pa};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖️Types
-/// 🪟️ Largest glazing stack the window heat balance solves.
-pub const MAX_PANES: usize = 4;
 const ANGLES: usize = 10;
 const FIT_ORDER: usize = 6;
 
@@ -591,7 +593,7 @@ pub fn rated_coefficient_adjustment(system: &GlazingSystem) -> f64 {
 fn rating_conductance(system: &GlazingSystem, ratio: f64) -> f64 {
     let (t_in, t_out) = (294.15, 255.15);
     let h_out = 26.0 * ratio;
-    let sigma = crate::units::STEFAN_BOLTZMANN;
+    let sigma = units::STEFAN_BOLTZMANN;
     let scon = system.pane_conductance_w_m2k[0];
     let (e_out, e_in) = (system.emissivity_front[0], system.emissivity_back[0]);
     let resistances = [1.0 / (26.0 + 5.3), 1.0 / scon, 1.0 / (3.2 + 5.3)];

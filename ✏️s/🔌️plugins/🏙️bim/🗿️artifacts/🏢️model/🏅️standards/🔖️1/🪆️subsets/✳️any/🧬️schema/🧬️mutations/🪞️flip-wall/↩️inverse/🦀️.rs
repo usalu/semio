@@ -3,7 +3,7 @@
 
 use super::super::wall_geometry::flipped;
 use super::FlipWall;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &FlipWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.get(&payload.id) {

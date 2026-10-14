@@ -6,7 +6,7 @@
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::schema::snapshot::SemioAudioSnapshot;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
     use crate::io::SemioAudioAnalyzer;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultScope;
@@ -123,9 +123,9 @@ use semio_framework_diagnostic::TextSpan;
     /// artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_audio_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") }, store::artifact_codec::<SemioAudioSnapshot, crate::schema::mutations::SemioAudioMutation>(
-            crate::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(semio_s_artifact_stdio_semio_audio_descriptor::schema::descriptor::semio_audio_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") }, store::artifact_codec::<SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation>(
+            semio_s_artifact_stdio_semio_audio_model::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -137,10 +137,10 @@ use semio_framework_diagnostic::TextSpan;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::schema::semio_audio_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioAudioSnapshot, crate::schema::mutations::SemioAudioMutation>(crate::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") })
+            .schemas([semio_s_artifact_stdio_semio_audio_descriptor::schema::descriptor::semio_audio_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation>(semio_s_artifact_stdio_semio_audio_model::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::schema::inferences::semio_audio_artifact_inference_descriptor()]);
+            .inferences([semio_s_artifact_stdio_semio_audio_inferences::schema::inferences::semio_audio_artifact_inference_descriptor()]);
         builder
     }
 
@@ -149,7 +149,7 @@ use semio_framework_diagnostic::TextSpan;
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_audio_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(semio_s_artifact_stdio_semio_audio_inferences::schema::inferences::semio_audio_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
     //#endregion 🔖️Register
@@ -162,21 +162,22 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::SemioAudioDiff;
-    use crate::schema::mutations::SemioAudioMutation;
+    use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::SemioAudioMutation;
     #[cfg(test)]
-    use crate::schema::mutations::{insert_channel, set_format, set_sample_rate};
-    use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::insert_channel;
+    #[cfg(test)]
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_format;
+    #[cfg(test)]
+    use semio_s_artifact_stdio_semio_audio_mutations::schema::mutations::set_sample_rate;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -254,13 +255,14 @@ pub mod derived_construction {
 
     //#region 🔖️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
@@ -326,7 +328,7 @@ pub mod derived_analysis {
 
     //#region 🔖️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
 pub use derived_analysis::*;

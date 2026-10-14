@@ -112,14 +112,14 @@ pub(crate) struct PreparedChildContentEntry {
     pub(crate) metadata: ManuallyDrop<Option<[String; 7]>>,
     metadata_cursor: usize,
     visibility: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>>>,
-    generation: u64,
+    pub(crate) generation: u64,
 }
 
 pub(crate) struct PreparedChildContentSlot {
-    index: usize,
+    pub(crate) index: usize,
     identity: usize,
     visibility: std::sync::Arc<semio_framework_os_kernel::os_vcs::ArtifactGroupVisibility>,
-    generation: u64,
+    pub(crate) generation: u64,
     taken: bool,
 }
 
@@ -637,7 +637,7 @@ pub(crate) trait ChildContentRetainers {
 
 pub(crate) struct ChildContentOwners {
     views: [ChildContentView; ARTIFACT_LIVE_OUTPUT_SLOTS],
-    len: usize,
+    pub(crate) len: usize,
 }
 
 impl ChildContentRetainers for ChildContentOwners {

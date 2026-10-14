@@ -56,7 +56,7 @@ appendFileSync(join(root, ".runs"), profile + "\\n");
     assert.equal(oracle, expected);
     for (const row of fixture.profiles) {
       assert.equal(await execute([join(root, rust, row.output, binary)]), oracle);
-      assert.ok(readdirSync(join(root, rust, row.output)).includes(".nx-artifact.json"));
+      assert.ok(readdirSync(join(root, rust, row.output)).includes(".semio-artifact.json"));
     }
   };
   await run(); assert.deepEqual(runs(), ["prototype", "release"]); await check(fixture.stdout);

@@ -54,7 +54,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🎪️Tests
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🎪️Tests

@@ -1,8 +1,9 @@
 //! 🌱 Remodeling mutation — `CreateStream`: brings a new id-keyed media stream into existence.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{MediaStream, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_stream::DeleteStream;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -20,17 +21,20 @@ pub struct CreateStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_stream(stream: MediaStream) -> RemodelingMutation {
-    RemodelingMutation::CreateStream(CreateStream { stream })
+pub fn create_stream<Op: From<CreateStream>>(stream: MediaStream) -> Op {
+    Op::from(CreateStream { stream })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CreateStream {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for CreateStream
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<DeleteStream>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "stream", kind: "create-stream", record: "CreatedStream" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

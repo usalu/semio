@@ -5,8 +5,8 @@
 
 use super::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
 use super::session::{length_label, Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
-use crate::{Beam, CurtainWall, GridLine, LocationLine, Phase, Railing, Ramp, TopConstraint, Vertex, Wall};
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::{Beam, CurtainWall, GridLine, LocationLine, Phase, Railing, Ramp, TopConstraint, Vertex, Wall};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📏️ The shortest segment a chain writes, in metres.
 const MIN_LENGTH: f64 = 1e-3;
@@ -65,7 +65,7 @@ impl Chain {
         let name = ctx.name_of(|labels| labels.kind_wall, count);
         let id = ctx.mint("wall");
         let wall = Wall { storey, wall_type, axis: axis_of(start, end, bulge), location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name };
-        Step::write(ctx, ModelMutation::CreateWall(crate::mutations::create_wall::CreateWall { id, wall }))
+        Step::write(ctx, ModelMutation::CreateWall(crate::standards::v1::subsets::any::schema::mutations::create_wall::CreateWall { id, wall }))
     }
 
     fn curtain(&self, ctx: &mut ToolContext<'_>, start: P, end: P) -> Step {
@@ -75,7 +75,7 @@ impl Chain {
         let name = ctx.name_of(|labels| labels.kind_curtain_wall, count);
         let id = ctx.mint("curtain-wall");
         let curtain_wall = CurtainWall { storey, curtain_wall_type, axis: axis_of(start, end, 0.0), base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: Phase::New, name };
-        Step::write(ctx, ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall { id, curtain_wall }))
+        Step::write(ctx, ModelMutation::CreateCurtainWall(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall { id, curtain_wall }))
     }
 
     fn beam(&self, ctx: &mut ToolContext<'_>, start: P, end: P, bulge: f64) -> Step {
@@ -85,7 +85,7 @@ impl Chain {
         let name = ctx.name_of(|labels| labels.kind_beam, count);
         let id = ctx.mint("beam");
         let beam = Beam { storey, beam_type, axis: axis_of(start, end, bulge), top_offset: 0.0, end_top_offset: None, phase: Phase::New, name };
-        Step::write(ctx, ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id, beam }))
+        Step::write(ctx, ModelMutation::CreateBeam(crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBeam { id, beam }))
     }
 
     fn grid(&self, ctx: &mut ToolContext<'_>, start: P, end: P) -> Step {
@@ -94,24 +94,24 @@ impl Chain {
         let label = next_grid_label(ctx, &building, vertical);
         let id = ctx.mint("grid");
         let grid_line = GridLine { building, label, start: point2(start), end: point2(end) };
-        Step::write(ctx, ModelMutation::CreateGridLine(crate::mutations::create_grid_line::CreateGridLine { id, grid_line }))
+        Step::write(ctx, ModelMutation::CreateGridLine(crate::standards::v1::subsets::any::schema::mutations::create_grid_line::CreateGridLine { id, grid_line }))
     }
 
     fn railing(&self, ctx: &mut ToolContext<'_>) -> Step {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let snapshot = ctx.snapshot;
-        let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Metal).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
+        let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Metal).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
         let count = snapshot.railings.values().filter(|railing| railing.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_railing, count);
         let id = ctx.mint("railing");
-        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name };
-        Step::write(ctx, ModelMutation::CreateRailing(crate::mutations::create_railing::CreateRailing { id, railing }))
+        let railing = Railing { storey, path: self.vertices.iter().map(|p| point2(*p)).collect(), height: RAILING_HEIGHT, post_spacing: RAILING_POSTS, profile: crate::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: crate::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name };
+        Step::write(ctx, ModelMutation::CreateRailing(crate::standards::v1::subsets::any::schema::mutations::create_railing::CreateRailing { id, railing }))
     }
 
     fn ramp(&self, ctx: &mut ToolContext<'_>) -> Step {
         let Some(storey) = ctx.storey().map(str::to_string) else { return Step::refuse(STOREY_MISSING) };
         let snapshot = ctx.snapshot;
-        let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::MaterialCategory::Concrete).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
+        let Some(material) = snapshot.materials.iter().find(|(_, material)| material.category == crate::standards::v1::subsets::any::schema::snapshot::MaterialCategory::Concrete).or_else(|| snapshot.materials.iter().next()).map(|(id, _)| id.clone()) else { return Step::refuse(TYPE_MISSING) };
         let count = snapshot.ramps.values().filter(|ramp| ramp.storey == storey).count();
         let name = ctx.name_of(|labels| labels.kind_ramp, count);
         let id = ctx.mint("ramp");
@@ -119,12 +119,12 @@ impl Chain {
         let ramp = Ramp {
             storey,
             path,
-            width: crate::STANDARD_RAMP_WIDTH,
-            landing_start: crate::STANDARD_RAMP_LANDING,
-            landing_end: crate::STANDARD_RAMP_LANDING,
-            landing_turn: crate::STANDARD_RAMP_LANDING,
-            max_slope: crate::STANDARD_RAMP_MAX_SLOPE,
-            thickness: crate::STANDARD_RAMP_THICKNESS,
+            width: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_WIDTH,
+            landing_start: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_end: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            landing_turn: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_LANDING,
+            max_slope: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_MAX_SLOPE,
+            thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RAMP_THICKNESS,
             material,
             base_offset: 0.0,
             top: TopConstraint::Unconnected { height: RAMP_RISE },
@@ -132,7 +132,7 @@ impl Chain {
             railing_right: false,
             name,
         };
-        Step::write(ctx, ModelMutation::CreateRamp(crate::mutations::create_ramp::CreateRamp { id, ramp }))
+        Step::write(ctx, ModelMutation::CreateRamp(crate::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp { id, ramp }))
     }
 
     fn down(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {

@@ -10,7 +10,7 @@ pub use result_mode::ResultMode;
 mod results_animation;
 pub use results_animation::{FemLoopMode, FemResultsAnimation, FemWaveform};
 
-use crate::model::Dof;
+use semio_s_fem_model::Dof;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_plugin::BuiltNode;

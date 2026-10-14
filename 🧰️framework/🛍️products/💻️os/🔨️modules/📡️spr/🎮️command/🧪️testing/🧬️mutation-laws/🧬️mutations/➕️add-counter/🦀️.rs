@@ -1,6 +1,6 @@
 //! ➕️ Direct add-counter fixture payload and behavior.
 use super::super::{Counter, CounterDiff, CounterMutation};
-use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_dsl_record_derive::DslRecord, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

@@ -116,7 +116,7 @@ fn original_session_failed_admitted_event_retains_native_primary_and_actual_cpu(
 #[test]
 fn original_session_validation_frontier_funds_actual_body_and_full_cancel_custody(){
     use semio_framework_os_flow::geometry::GeometryWorkIdentity;
-    use semio_framework_3d_brep_queries::validation::BodyValidationPhase;
+    use semio_framework_3d_brep_validation::BodyValidationPhase;
     use physical_session_custody::observe;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/🧪️tests/🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedLoops"];
     for stop in law["cancelStops"].as_array().unwrap(){

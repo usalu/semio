@@ -18,7 +18,6 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 #[path = "../../../../../../../🔮️oracles/🖊️drawing/🧰️support/🦀️.rs"]
 mod reference_support;
 
@@ -26,14 +25,12 @@ mod reference_support;
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     imp::oracle_apply_mutation(input, spec)
 }
 
 /// 🔁️ The identity round trip's own producer: `dxf` parses the document and re-serializes it from its own typed
 /// `Drawing` alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     imp::oracle_round_trip(input)
 }
@@ -44,30 +41,15 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
 /// exercise of that law, not a comparison of the implementation with itself: the forward mutation,
 /// the inverse computation and the two applications are all performed by `dxf`, never by this
 /// subset's own codec.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     imp::oracle_apply_then_undo(input, spec)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 /// 🔒️ Every `dxf`-linked helper lives inside this ONE `cfg`-gated module, so the non-`oracles` build
 /// never even parses a `dxf::` path — a single `cfg` at the module boundary instead of one on every
 /// function.
-#[cfg(feature = "oracles")]
 mod imp {
     use super::Json;
     use super::reference_support::{load, point_json, obj};
@@ -514,7 +496,7 @@ mod imp {
 /// 🧪️ Scratch smoke coverage exercising every planned `mutate-<kind>`/`inverse-<kind>` JSON row
 /// against the real committed fixture before the feature file locks them in — ticket
 /// 26/08/23/END-TO-END-TESTING-REFACTOR wave 7.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️smoke/🦀️.rs"]
 mod smoke_tests;
 //#endregion 🔖️SmokeTests

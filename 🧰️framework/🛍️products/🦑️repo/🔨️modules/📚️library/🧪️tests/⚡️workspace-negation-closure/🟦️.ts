@@ -5,7 +5,7 @@ import { testLevelAtLeast } from "../../../../../../🔨️modules/🏃️proces
  * pin that rule against Nx's own hash planner in a throwaway workspace (third-party oracle); nx.json, every 📋️project.json and
  * every named input the plugin derives must be closed.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/⚡️workspace-negation-closure/🔣️.json
- * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs
  */
 import { expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 
-import { cacheInternals, libraryBootstrap } from "../../🟨️.mjs";
+import { cacheInternals, libraryBootstrap } from "../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Inputs = readonly unknown[];
 type NamedInputs = Readonly<Record<string, Inputs>>;

@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-images"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine images: rasters, pyramids, PNG/JPEG codecs and the interactive step ceiling law."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pixels = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-stdio-jpg = { workspace = true }
+
+[dev-dependencies]
+png = "0.17.16"
+semio-framework-job = { workspace = true }

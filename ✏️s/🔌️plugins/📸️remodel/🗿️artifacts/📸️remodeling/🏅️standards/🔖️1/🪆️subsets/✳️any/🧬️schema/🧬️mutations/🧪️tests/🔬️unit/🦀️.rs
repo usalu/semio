@@ -1,8 +1,27 @@
 use super::*;
-use crate::{
-    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, Float32Buffer, ByteBuffer, QcReportSnapshot,
-    RemodelingContentKind, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
-};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraCalibration;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraPosePreview;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseCloud;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GcpObservation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::Float32Buffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RigExtrinsic;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::TrackClass;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoCodec;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::WatertightReportSnapshot;
 use protocol::SemanticMutation;
 use semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_diff_absorb_law;
 
@@ -68,7 +87,7 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.results.dense =
         Some(DenseCloud { positions: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(ByteBuffer::from_u8_slice(&[0, 0, 255])), confidence: Some(Float32Buffer::from_f32_slice(&[0.9])), classification: Some(ByteBuffer::from_u8_slice(&[2])) });
     scene.results.mesh = RemodelingMesh {
-        mesh: crate::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
+        mesh: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
         source: MeshSource::Reconstructed,
         texture_asset_id: Some("tex-1".into()),
         watertight: Some(WatertightReportSnapshot {
@@ -96,8 +115,8 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
             CameraPosePreview { camera_id: "cam-1".into(), rotation_wxyz: [0.999, 0.001, 0.0, 0.0], translation: [0.1, 0.0, 0.0] },
         ],
     });
-    scene.results.tracks.push(crate::MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
-    scene.results.geo = Some(crate::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
+    scene.results.tracks.push(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
+    scene.results.geo = Some(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
     scene.results.qc = Some(QcReportSnapshot {
         reprojection_rms_px: 0.5,
         gcp_checkpoint_rmse: Some(0.02),
@@ -225,14 +244,14 @@ async fn middle_member_inverses_restore_the_original_position() {
 #[semio_framework_async_macros::async_test]
 async fn update_params_inverse_law() {
     let base = populated_scene_fixture();
-    laws(&base, &update_ingest_params(crate::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() })).await;
-    laws(&base, &update_feature_params(crate::FeatureParams { target_count: 1, ..base.params.feature.clone() })).await;
-    laws(&base, &update_match_params(crate::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() })).await;
-    laws(&base, &update_sfm_params(crate::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() })).await;
-    laws(&base, &update_dense_params(crate::DenseParams { max_points: 1, ..base.params.dense.clone() })).await;
-    laws(&base, &update_mesh_params(crate::MeshParams { texture_size: 1, ..base.params.mesh.clone() })).await;
-    laws(&base, &update_motion_params(crate::MotionParams { enabled: true, ..base.params.motion.clone() })).await;
-    laws(&base, &update_geo_params(crate::GeoParams { enabled: true, ..base.params.geo.clone() })).await;
+    laws(&base, &update_ingest_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams { min_sharpness: 0.9, ..base.params.ingest.clone() })).await;
+    laws(&base, &update_feature_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureParams { target_count: 1, ..base.params.feature.clone() })).await;
+    laws(&base, &update_match_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MatchParams { ratio_test: 0.1, ..base.params.matching.clone() })).await;
+    laws(&base, &update_sfm_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SfmParams { ransac_iterations: 1, ..base.params.sfm.clone() })).await;
+    laws(&base, &update_dense_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseParams { max_points: 1, ..base.params.dense.clone() })).await;
+    laws(&base, &update_mesh_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshParams { texture_size: 1, ..base.params.mesh.clone() })).await;
+    laws(&base, &update_motion_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionParams { enabled: true, ..base.params.motion.clone() })).await;
+    laws(&base, &update_geo_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoParams { enabled: true, ..base.params.geo.clone() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -295,10 +314,10 @@ async fn concurrent_create_asset_ops_converge_regardless_of_order() {
     assert_eq!(a_then_b, b_then_a, "concurrent create-asset on disjoint keys must converge regardless of order");
     // 🎯️ The handle is content-addressed (`image_asset_child_handle`), so it is identical for identical
     // `(mime, data)` regardless of who mints it; the durable leaves read back the exact asset.
-    assert_eq!(a_then_b.assets.get("frame-a"), Some(&crate::image_asset_child_handle("frame-a", &asset_a)));
-    assert_eq!(a_then_b.assets.get("frame-b"), Some(&crate::image_asset_child_handle("frame-b", &asset_b)));
-    assert_eq!(crate::remodeling_asset(&a_then_b, "frame-a"), Some(asset_a));
-    assert_eq!(crate::remodeling_asset(&a_then_b, "frame-b"), Some(asset_b));
+    assert_eq!(a_then_b.assets.get("frame-a"), Some(&semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle("frame-a", &asset_a)));
+    assert_eq!(a_then_b.assets.get("frame-b"), Some(&semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::image_asset_child_handle("frame-b", &asset_b)));
+    assert_eq!(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset(&a_then_b, "frame-a"), Some(asset_a));
+    assert_eq!(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset(&a_then_b, "frame-b"), Some(asset_b));
 }
 
 /// 🔀️ Same convergence contract across two disjoint operation families (feature params tuning vs.
@@ -306,7 +325,7 @@ async fn concurrent_create_asset_ops_converge_regardless_of_order() {
 #[semio_framework_async_macros::async_test]
 async fn concurrent_edits_across_different_op_families_converge() {
     let base = populated_scene_fixture();
-    let op_feature = update_feature_params(crate::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
+    let op_feature = update_feature_params(semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureParams { target_count: 9000, ..base.params.feature.clone() });
     let gcp = GroundControlPoint { id: "gcp-99".into(), name: "New".into(), ..GroundControlPoint::default() };
     let op_gcp = create_gcp(gcp.clone());
 

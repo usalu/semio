@@ -17,7 +17,7 @@ class PreparationScript extends BundleScript {
     const moduleRoot = pluginModulesRootIn(this.repoRoot);
     const { pluginModuleDirNames, extensionModuleDirNames } = playRuntimeModuleLayout();
     for (const name of [...pluginModuleDirNames.slice(2), ...extensionModuleDirNames]) {
-      const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".nx-artifact.json"), "utf8"));
+      const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete play runtime component: ${name}`);
     }
     console.log(`Prepared play: ${PLAY_RUNTIME_PANES.length} panes, ${pluginModuleDirNames.length - 2 + extensionModuleDirNames.length} components`);

@@ -10,10 +10,10 @@
   ],
   "properties": {
     "contract": {
-      "const": "actor.original-owned-job-header/v1"
+      "const": "actor.original-owned-job-header/v2"
     },
     "extent": {
-      "const": 160
+      "const": 184
     },
     "cases": {
       "type": "array",
@@ -42,7 +42,7 @@
           },
           "prefixHex": {
             "type": "string",
-            "pattern": "^534a4831[0-9a-f]{8}$"
+            "pattern": "^534a4832[0-9a-f]{8}$"
           },
           "body": {
             "type": "array",
@@ -85,8 +85,8 @@
           },
           "extent": {
             "enum": [
-              159,
-              160
+              183,
+              184
             ]
           },
           "accepted": {

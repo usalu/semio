@@ -9,7 +9,7 @@ fn history_edit_step_reference_closure_preserves_cycles_and_refuses_invalid_cand
     let cases=corpus.get("cases").and_then(Value::as_array).unwrap();
     assert_eq!(cases.len(),8);
     for case in cases {
-        let entities=Vec::<crate::schema::snapshot::StepEntity>::from_value(case.get("entities").unwrap().clone()).unwrap();
+        let entities=Vec::<crate::standards::v_ap214::subsets::base::schema::snapshot::StepEntity>::from_value(case.get("entities").unwrap().clone()).unwrap();
         let snapshot=StepSnapshot{entities,..StepSnapshot::default()};
         let original=snapshot.clone();
         let result=validate_step_references(&snapshot);
@@ -23,7 +23,7 @@ fn history_edit_step_reference_closure_preserves_cycles_and_refuses_invalid_cand
         eprintln!("[DEBUG] STEP reference {} preserved original snapshot and exact graph admission",case.get("id").and_then(Value::as_str).unwrap());
     }
     let base=StepSnapshot::default();
-    let diff=crate::StepDiff{entities:Some(crate::schema::diff::StepEntitiesDiff{added:vec![crate::schema::diff::StepEntityAdded{index:0,entity:crate::schema::snapshot::StepEntity{id:10,name:"THING".into(),args:vec![StepValue::Reference(99)],complex:Vec::new()}}],..Default::default()}),..Default::default()};
+    let diff=crate::standards::v_ap214::subsets::base::schema::diff::StepDiff{entities:Some(crate::standards::v_ap214::subsets::base::schema::diff::StepEntitiesDiff{added:vec![crate::standards::v_ap214::subsets::base::schema::diff::StepEntityAdded{index:0,entity:crate::schema::snapshot::StepEntity{id:10,name:"THING".into(),args:vec![StepValue::Reference(99)],complex:Vec::new()}}],..Default::default()}),..Default::default()};
     let error=protocol::apply_diff(&diff, &base).unwrap_err();
     assert_eq!(error.code,"mutation.apply.dangling-reference");
     assert_eq!(error.target,["entities","10","args","0"]);

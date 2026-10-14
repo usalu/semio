@@ -1625,10 +1625,10 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
 }
 
 #[cfg(not(target_arch="wasm32"))]
-struct ServiceActorOpening{actor:RuntimeActorId,plugin_ordinal:u16,package_hash:[u8;32],opening:Option<semio_framework_plugin_host::GuestActorOpening>,instance:Option<semio_framework_plugin_host::GuestInstance>,input:Option<semio_framework_actor::retained_turn::OriginalActorInput<semio_framework_plugin_host::GuestInstance>>,scope:Option<semio_framework_actor::RetainedTurnInput>,execution:Option<semio_framework_actor::OriginalGuestExecutionBudget>,return_pending:Option<semio_framework_actor::RetainedTurnReceipt>,returned:Option<semio_framework_actor::RetainedTurnReceipt>,admitted:Option<semio_framework_actor::RetainedTurnInput>,fault:Option<semio_framework_plugin_interpreter::TurnFault>,refusal:Option<(semio_framework_actor::RetainedTurnInput,semio_framework_value::ValueRefusalKind)>}
+struct ServiceActorOpening{actor:RuntimeActorId,plugin_ordinal:u16,package_hash:[u8;32],opening:Option<semio_framework_plugin_host::GuestActorOpening>,instance:Option<semio_framework_plugin_host::GuestInstance>,input:Option<semio_framework_actor::retained_turn::OriginalActorInput<semio_framework_plugin_host::GuestInstance>>,scope:Option<semio_framework_actor::RetainedTurnInput>,execution:Option<semio_framework_actor::OriginalGuestExecutionBudget>,return_pending:Option<semio_framework_actor::RetainedTurnReceipt>,returned:Option<semio_framework_actor::RetainedTurnReceipt>,admitted:Option<semio_framework_actor::RetainedTurnInput>,fault:Option<semio_framework_plugin_guest_contract::TurnFault>,refusal:Option<(semio_framework_actor::RetainedTurnInput,semio_framework_value::ValueRefusalKind)>}
 
 #[cfg(not(target_arch="wasm32"))]
-fn run_original_input(cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::RetainedTurnInput,semio_framework_job::OriginalTurnFailure>{let epoch=cx.original_source_epoch().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"Run factory requires its actual issued input epoch"))?;cx.original_source_parent()?;Ok(semio_framework_actor::RetainedTurnInput{operation:cx.operation().0,generation:cx.generation().0,epoch,grant:cx.retained_grant()})}
+fn run_original_input(cx:&semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::RetainedTurnInput,semio_framework_job::OriginalTurnFailure>{Ok(semio_framework_actor::RetainedTurnInput::borrow_original(cx)?)}
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
@@ -1649,7 +1649,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// `ParallelRuntime::new` takes) for a future caller that does want more.
     pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy, original_clock:fn()->Option<u64>, original_cancel:CancelToken, direct_identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer) -> Result<Self,RunError> {
         let host_driver=Arc::new(semio_framework_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,original_clock,Box::new(move||original_cancel.is_cancelled_now())).map_err(|error|RunError::Original(error.into()))?);
-        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_interpreter::OwnedRuntime::new(original_clock)));
+        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_interpreter_runtime::OwnedRuntime::new(original_clock)));
         let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64,{let mut original=Some(identity);move |_|original.take().expect("sequential host has one original shard issuer")}).await;
         Ok(Self {
             guest_runtime,
@@ -1690,7 +1690,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// 🌱️ The actual Run root lends every opening slice and keeps refused or pending instance custody before Handle publication.
     async fn prepare_service_original(&mut self,plugin_id:&str,compiled:&semio_framework_plugin_host::CompiledHandle)->Result<(semio_framework_plugin_host::GuestInstance,semio_framework_actor::RetainedTurnInput),RunError>{
         use semio_framework_actor::retained_turn::{ActorGuestPhase,OriginalActorInput};
-        use semio_framework_plugin_interpreter::OwnedActorStartupStatus;
+        use semio_framework_plugin_interpreter_runtime::OwnedActorStartupStatus;
         while !self.host_driver.admit_root_step().map_err(RunError::Original)?{semio_framework_async::yield_once().await;}
         loop{
             let state=self.service_openings.as_mut().expect("original service actor is retained before opening");

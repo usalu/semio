@@ -1,5 +1,5 @@
 pub(crate) mod context {
-    use super::super::*;
+    use crate::*;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
     
@@ -52,12 +52,12 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use crate::*;
 use semio_framework_plugin::PluginApp;
 
 #[test]
 fn retained_command_dispositions_match_the_language_neutral_oracle() {
-    crate::app_surface::retained_disposition_oracle::assert_fixture(VARIANT);
+    semio_s_plugin_norm_app_surface::retained_disposition_oracle::assert_fixture(VARIANT);
     let definition = create_en1993_app();
     let mut classified = 0usize;
     for window in definition.window_kinds.iter() {
@@ -67,13 +67,13 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
         // command-bridge law uses. Norm declares all three retained tools at app level, so reading
         // `window.actions` here saw an empty roster.
         let dispatchable = semio_framework::window_kind_actions(&definition, window);
-        for id in crate::app_surface::NORM_RETAINED_TOOL_IDS {
+        for id in semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS {
             let action = dispatchable.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must dispatch {id}", window.id));
             assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
             classified += 1;
         }
     }
-    assert_eq!(classified, definition.window_kinds.len() * crate::app_surface::NORM_RETAINED_TOOL_IDS.len());
+    assert_eq!(classified, definition.window_kinds.len() * semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS.len());
 }
 
 //#region ðï¸CommandSurface
@@ -132,7 +132,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for body_key in [document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
-    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
+    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT)));
 }
 
 /// ðï¸ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
@@ -142,7 +142,7 @@ async fn declares_model_in_and_report_out_ports() {
     let ports = create_en1993_app().io.ports;
     assert!(ports.iter().any(|port| port.id == "model:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
     let report_out = ports.iter().find(|port| port.id == "report:out").expect("report:out declared");
-    assert_eq!(report_out.kind_id.as_deref(), Some(crate::app_surface::artifact_kind_id(VARIANT).as_str()));
+    assert_eq!(report_out.kind_id.as_deref(), Some(semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT).as_str()));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -230,8 +230,8 @@ async fn report_out_exports_the_computed_check_report() {
     context::dispatch(&mut app, En1993Command::Evaluate(evaluate::Evaluate {})).await;
     let media = ::semio_framework_async::poll::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
-    assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
+    assert_eq!(schema, semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT));
+    let report: semio_s_plugin_norm_compliance::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
     assert!(
         report.checks.iter().any(|c| c.id.contains("en1993")),
         "report:out must include at least one en1993 check id, got count={}",
@@ -241,4 +241,4 @@ async fn report_out_exports_the_computed_check_report() {
 }
 //#endregion ðï¸Behavior
 
-semio_framework_plugin::history_edit_acceptance_law!("norm", super::En1993PlayApp, || semio_framework_plugin::App { definition: super::create_en1993_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1993PlayApp, || semio_framework_plugin::App { definition: crate::create_en1993_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

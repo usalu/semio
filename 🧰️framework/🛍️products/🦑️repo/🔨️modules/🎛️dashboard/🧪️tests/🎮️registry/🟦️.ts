@@ -12,7 +12,8 @@ import { afterAll, beforeAll, expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, relative } from "node:path";
+import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 import {readBuildMode} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { installedDashboard } from "../../📦️installation/🟦️.ts";
 import {Oracle} from "../🗺️coverage/🔮️oracle/🟦️.ts";
@@ -21,6 +22,7 @@ type Json = Record<string, any>;
 const here = import.meta.dir;
 const dashboard = resolve(here, "../..");
 const repo = resolve(dashboard, "../../../../..");
+const graphFile = relative(repo,buildGraphPathV1(repo)).replaceAll("\\","/");
 const schema = JSON.parse(readFileSync(join(dashboard, "🧬️schema/🎮️registry/🔣️.json"), "utf8")) as Json;
 const fixture = JSON.parse(readFileSync(join(dashboard, "🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json"), "utf8")) as { files: Json[] };
 const ajv = new (Ajv2020 as any)({ allErrors: true, strict: false });
@@ -51,6 +53,12 @@ function semio(args: string[], env: Record<string, string> = {}): { code: number
   return { code: run.exitCode, out: run.stdout.toString(), err: run.stderr.toString() };
 }
 const json = (path: string): Json => JSON.parse(files.get(path)!) as Json;
+
+test("neutral publication location derives current cache authority and ignores the charge receipt",()=>{
+ const declaration=JSON.parse(readFileSync(join(dashboard,"🧪️tests/🧫️fixtures/🎮️registry/🏗️workspace.json"),"utf8")).publication,{path,charge,...locations}=declaration,publication=JSON.parse(readFileSync(join(repo,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📣️publication.json"),"utf8"));expect(new Ajv2020({strict:true}).compile(publication)(locations)).toBe(true);expect(graphFile).toBe(path);expect(buildGraphPathV1(root)).toBe(join(root,path));
+ writeFileSync(join(root,charge),JSON.stringify({version:1,allocation:"storage-charge",owner:"repository:graph-store",bytes:1}));try{const oracle=new Oracle(root);expect(oracle.projects.has("@fixture/artifact-wav")).toBe(true);expect(oracle.problems).toEqual([]);}finally{rmSync(join(root,charge),{force:true});}
+ for(const file of ["🎮️registry/🦀️.rs","📚️inventory/🦀️.rs"]){const source=readFileSync(join(dashboard,file),"utf8");expect(source).toContain("graph_file");expect(source).not.toContain("cache/build/graph.json");}console.log("[DEBUG] Neutral graph partition authority and charge separation agree with independent dashboard oracle");
+});
 
 test("the independent oracle receives the authored catalog and refuses configured absence",()=>{
   const rows=json("catalog/🚀️playgrounds.json") as unknown as Json[];
@@ -113,7 +121,7 @@ const FIXED_REPO = ["goals.list", "goals.tree", "tree.monorepo", "tree.goal", "t
 /** 🧭️ The command ids the fixture workspace must offer, derived without the registry. */
 function expectedIds(): string[] {
   const ids = new Set<string>();
-  const graph = json(".🧬semio/🦑️repo/⚡️cache/build/graph.json").projects as Json;
+  const graph = json(graphFile).projects as Json;
   const projects = new Map<string, { root: string; targets: Map<string, Json> }>();
   for (const [name, node] of Object.entries(graph)) if (existsSync(join(root, ...(node.root as string).split("/")))) projects.set(name, { root: node.root, targets: new Map(Object.entries(node.targets ?? {})) });
   for (const path of manifestPaths()) {
@@ -463,7 +471,7 @@ test("Bun's own XXH3 gives the vectors the registry pins for the Nx graph-reuse 
 
 /** 🏗️ The language-neutral publication fixture is validated independently by Ajv. */
 test("the build graph publication and build flags have no backend-specific public shape", () => {
-  const graph = json(".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+  const graph = json(graphFile);
   const validate = validator("BuildGraph");
   expect(validate(graph), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ nodes: {}, dependencies: {} })).toBe(false);

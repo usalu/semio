@@ -1,5 +1,5 @@
 //! 🧹️ Physically retires the original typed scene plan under admitted byte and item grants.
-use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneError};
+use crate::preparation::{DocumentScenePlan, DocumentSceneError};
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement}};
 #[derive(Clone,Copy,Debug)]
 pub struct ScenePlanCloseProgress{pub phase:&'static str,pub owners:u64,pub work:u64,pub done:bool}

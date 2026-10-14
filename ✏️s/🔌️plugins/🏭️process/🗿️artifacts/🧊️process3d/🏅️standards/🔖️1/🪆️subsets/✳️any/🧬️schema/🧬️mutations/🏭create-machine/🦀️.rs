@@ -4,7 +4,6 @@
 //! rename once a later pass can touch `🦀️.rs`).
 
 use crate::diff::Process3dDiff;
-use crate::mutations::Process3dMutation;
 use crate::{Process3dSnapshot, WorkshopMachine};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -21,14 +20,17 @@ pub struct CreateMachine {
     pub machine: WorkshopMachine,
 }
 
-impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for CreateMachine {
+impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for CreateMachine
+where
+    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::delete_machine::DeleteMachine>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "machine", kind: "create-machine", record: "CreatedMachine" };
 
     fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

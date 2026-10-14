@@ -530,7 +530,7 @@ pub mod derived_analysis {
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;

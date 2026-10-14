@@ -44,8 +44,8 @@ async fn headerless_round_trips() {
 async fn mismatched_row_shape_is_a_hard_error() {
     let value = SemioValue::List {
         items: vec![
-            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
-            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
+            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
+            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
         ],
     };
     let nodes = HashMap::new();

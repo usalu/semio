@@ -1,0 +1,5 @@
+{"root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs", "crate": "semio_s_artifact_puzzle_3d",
+ "moves": [
+  {"from": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs", "from_module": "editor::puzzle3d::modes::edit::windows::main", "to": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs", "to_module": "editor::puzzle3d::session",
+   "select": ["scene_geometry_fingerprint", "hash_axes", "hash_optional_dsl_value", "hash_object", "WORLD_MESH_KINDS", "mesh_lane", "world_meshes_json"]}
+ ]}

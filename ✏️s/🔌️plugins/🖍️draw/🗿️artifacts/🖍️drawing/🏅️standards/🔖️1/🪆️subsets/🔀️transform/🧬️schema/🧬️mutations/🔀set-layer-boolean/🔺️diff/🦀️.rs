@@ -1,7 +1,8 @@
 //! 🔺️ Sparse diff builder for `SetLayerBooleanOperation`.
-use crate::diff::{diff_set_boolean_operation, DrawingDiff};
-use crate::schema::find_drawing_layer;
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use semio_s_artifact_draw_drawing_diff::{diff_set_boolean_operation, DrawingDiff};
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::SetLayerBooleanOperation, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

@@ -1,6 +1,6 @@
 
     use super::*;
-    use crate::editor::puzzle3d::{empty_scene_snapshot, PUZZLE3D_VORTEX_SHOW_SELECTED};
+    use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_SELECTED};
 
     fn forest_table_object() -> Puzzle3dObject {
         let positions = [
@@ -116,7 +116,7 @@
 
     #[test]
     fn world_references_json_carries_infinite_asset_urls_the_dev_server_can_serve() {
-        use crate::editor::puzzle3d::default_scene_snapshot;
+        use crate::editor::puzzle3d::snapshot::default_scene_snapshot;
         let json = world_references_json(&default_scene_snapshot());
         let records: Vec<Value> = serde_json::from_str(&json).expect("referencesJson");
         let masterarbeit = records.iter().find(|row| row["id"] == "ref-masterarbeit").expect("ref-masterarbeit");
@@ -131,7 +131,7 @@
     #[test]
     fn meshes_json_is_published_in_exactly_the_mesh_lane_order_trace_subjects_index() {
         let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT).expect("example parses");
-        let scene_snapshot = crate::editor::puzzle3d::puzzle3d_scene_snapshot_from_document(&snapshot);
+        let scene_snapshot = crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document(&snapshot);
         let lane = mesh_lane(&scene_snapshot);
         assert_eq!(&lane[..2], [PUZZLE3D_FALLBACK_MESH_KIND, VORTEX_MARKER_MESH_KIND]);
         assert!(lane[2..].windows(2).all(|pair| pair[0] < pair[1]), "mesh urls follow in one stable sorted order");

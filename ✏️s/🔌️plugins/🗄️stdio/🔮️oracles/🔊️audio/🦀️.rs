@@ -199,14 +199,12 @@ pub fn encode_pcm16_wav(wav: &PcmWav) -> Result<Vec<u8>, String> {
 }
 
 /// 🔮️ Creates a canonical RIFF/PCM WAVE file through the owned oracle boundary.
-#[cfg(feature = "oracles")]
 pub fn oracle_create_wav(spec: &AudioSpec) -> Result<Vec<u8>, String> {
     encode_pcm16_wav(&PcmWav { format: PcmWavFormat { channels: spec.channels, sample_rate: spec.sample_rate, bits_per_sample: spec.bits_per_sample }, samples: spec.samples.iter().map(|sample| *sample as i16).collect(), other_chunks: Vec::new() })
 }
 
 /// 🔮️ Rewrites an existing WAVE at a new sample rate, keeping every sample — the reference
 /// implementation of "change the declared rate without resampling".
-#[cfg(feature = "oracles")]
 pub fn oracle_retune_wav(input: &[u8], sample_rate: u32) -> Result<Vec<u8>, String> {
     let mut spec = read_wav(input)?;
     spec.sample_rate = sample_rate;
@@ -214,12 +212,10 @@ pub fn oracle_retune_wav(input: &[u8], sample_rate: u32) -> Result<Vec<u8>, Stri
 }
 
 /// 👁️ Projects WAVE bytes with the INDEPENDENT reader onto the owned `semantic-audio-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_wav(input: &[u8]) -> Result<Json, String> {
     Ok(read_wav(input)?.projection())
 }
 
-#[cfg(feature = "oracles")]
 fn read_wav(input: &[u8]) -> Result<AudioSpec, String> {
     let wav = decode_pcm16_wav(input)?;
     Ok(AudioSpec { channels: wav.format.channels, sample_rate: wav.format.sample_rate, bits_per_sample: wav.format.bits_per_sample, samples: wav.samples.into_iter().map(i32::from).collect() })
@@ -233,23 +229,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature nothing here is linked, and every entry point fails loudly.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::{AudioSpec, Json};
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn create_wav(_spec: &AudioSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn retune_wav(_input: &[u8], _sample_rate: u32) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_wav(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{create_wav as oracle_create_wav, project_wav, retune_wav as oracle_retune_wav};
 //#endregion 🔖️Unavailable

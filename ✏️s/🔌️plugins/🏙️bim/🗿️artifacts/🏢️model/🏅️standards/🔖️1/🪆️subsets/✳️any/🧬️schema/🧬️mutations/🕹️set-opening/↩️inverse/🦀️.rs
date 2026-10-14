@@ -2,7 +2,7 @@
 //! is absent.
 
 use super::SetOpening;
-use crate::{Assigned, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetOpening, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(opening) = base.openings.get(&payload.id) else {

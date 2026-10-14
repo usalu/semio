@@ -21,20 +21,18 @@ async function cancellable(run: (signal: AbortSignal) => Promise<void>): Promise
  * describe, transpile, `wasm-opt` and its module probe as it links; the descriptor emitter, fonts, browser support, map tiles and the wasm-bindgen engines as
  * jobs under the same jobserver (the engines in the `wasm-release` lane, before the component passes); the Vite bundle as soon as its engines exist; and the
  * pages assembly once every module is published. The pipeline is declared in this project's `build` target metadata.
+ * @see ../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts
  * @see ../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The play build accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
     const root = resolve(this.root, "../.."), pipeline = JSON.parse(readFileSync(join(root, "📋️project.json"), "utf8")).targets.build.metadata.semio.release;
-    const [{ nativeBuildGenerationKindV1, runNativeBuildDriverV1 }, { cargoDirectories, nativeBuildPipelinePlanV1 }, { repoCacheDirectory }, { componentDriverStagesV1 }] = await Promise.all([
-      import("../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"),
-      import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"),
-      import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts"),
+    const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([
       import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"),
+      import("../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts"),
     ]);
-    const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(this.repoRoot, pipeline, new Set(playRuntimeComponentIds()));
-    await cancellable(async (signal) => {
-      await runNativeBuildDriverV1({ plan, compilerConfiguration: join(this.repoRoot,".cargo/config.toml"), cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: nativeBuildGenerationKindV1(process.env), leaseDirectory: join(this.repoRoot, ".cache/framework/leases"), environment: process.env, control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0), stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
+    await cancellable(async () => {
+      await buildReleasePipelineV1(this.repoRoot, pipeline, { components: new Set(playRuntimeComponentIds()), network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
     });
   }
 }

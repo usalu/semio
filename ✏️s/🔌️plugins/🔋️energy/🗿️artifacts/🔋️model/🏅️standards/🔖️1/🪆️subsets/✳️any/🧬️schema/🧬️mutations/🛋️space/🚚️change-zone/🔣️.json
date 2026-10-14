@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️space/🚚️change-zone",
+  "semanticKind": "change-space-zone",
+  "displayName": "Change Space Zone",
+  "emoji": "🚚️",
+  "aggregateVariant": "ChangeSpaceZone",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-space-zone",
+  "binaryTag": 23,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

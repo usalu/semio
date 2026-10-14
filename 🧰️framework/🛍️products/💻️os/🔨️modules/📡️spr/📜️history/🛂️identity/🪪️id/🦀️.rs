@@ -2,7 +2,7 @@
 //! The retained owner must bind each lookup to its verified dictionary and check StepContext.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum HistoryIdDiagnostic {
+pub enum HistoryIdDiagnostic {
     Identity,
     Malformed,
     Capacity,
@@ -22,7 +22,7 @@ enum Stage {
 }
 
 /// 🔤️ One wire/dictionary byte per fuel; UTF-8 and UUID expansion use only fixed storage.
-pub(crate) struct RetainedHistoryIdV1 {
+pub struct RetainedHistoryIdV1 {
     output: [u8; 256],
     length: usize,
     stage: Stage,
@@ -38,27 +38,27 @@ pub(crate) struct RetainedHistoryIdV1 {
 }
 
 impl RetainedHistoryIdV1 {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self { output: [0; 256], length: 0, stage: Stage::Tag, tag: 0, value: 0, digits: 0, remaining: 0, uuid_index: 0, utf_remaining: 0, utf_code: 0, utf_minimum: 0, error: None }
     }
 
     fn reject<T>(&mut self, error: HistoryIdDiagnostic) -> Result<T, HistoryIdDiagnostic> {
         Err(*self.error.get_or_insert(error))
     }
-    pub(crate) fn cancel(&mut self) {
+    pub fn cancel(&mut self) {
         self.error.get_or_insert(HistoryIdDiagnostic::Cancelled);
     }
-    pub(crate) fn lookup(&self) -> Option<u32> {
+    pub fn lookup(&self) -> Option<u32> {
         (self.error.is_none() && self.stage == Stage::Lookup).then_some(self.value as u32)
     }
-    pub(crate) fn dictionary_pending(&self) -> bool {
+    pub fn dictionary_pending(&self) -> bool {
         self.error.is_none() && self.stage == Stage::Dictionary
     }
-    pub(crate) fn is_complete(&self) -> bool {
+    pub fn is_complete(&self) -> bool {
         self.error.is_none() && self.stage == Stage::Done
     }
 
-    pub(crate) fn push_wire(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
+    pub fn push_wire(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
         if let Some(error) = self.error {
             return Err(error);
         }
@@ -135,7 +135,7 @@ impl RetainedHistoryIdV1 {
         Ok(())
     }
 
-    pub(crate) fn begin_dictionary(&mut self, index: u32, bytes: usize, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
+    pub fn begin_dictionary(&mut self, index: u32, bytes: usize, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
         if let Some(error) = self.error {
             return Err(error);
         }
@@ -157,7 +157,7 @@ impl RetainedHistoryIdV1 {
         Ok(true)
     }
 
-    pub(crate) fn push_dictionary(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
+    pub fn push_dictionary(&mut self, byte: u8, fuel: &mut usize) -> Result<bool, HistoryIdDiagnostic> {
         if let Some(error) = self.error {
             return Err(error);
         }
@@ -243,7 +243,7 @@ impl RetainedHistoryIdV1 {
         Ok(())
     }
 
-    pub(crate) fn finish(&mut self) -> Result<&str, HistoryIdDiagnostic> {
+    pub fn finish(&mut self) -> Result<&str, HistoryIdDiagnostic> {
         if let Some(error) = self.error {
             return Err(error);
         }
@@ -253,7 +253,7 @@ impl RetainedHistoryIdV1 {
         std::str::from_utf8(&self.output[..self.length]).map_err(|_| HistoryIdDiagnostic::Malformed)
     }
 
-    pub(crate) fn close_bytes(&mut self, maximum: usize) -> usize {
+    pub fn close_bytes(&mut self, maximum: usize) -> usize {
         self.cancel();
         let released = maximum.min(self.length);
         self.output[self.length - released..self.length].fill(0);

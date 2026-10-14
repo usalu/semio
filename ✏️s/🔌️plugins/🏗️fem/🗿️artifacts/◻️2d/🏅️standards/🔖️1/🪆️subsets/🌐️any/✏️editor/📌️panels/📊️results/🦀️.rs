@@ -6,12 +6,12 @@
 //! control also names the FIELD it changes (`{field, value}`), because the host merges a control's own
 //! scalar under the single key `value` — a slider has one binding and no other way to say what moved.
 
-use crate::app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
+use semio_s_fem_app_surface::{ANIMATION_PHASE_STEP, ANIMATION_SPEED_MAXIMUM, ANIMATION_SPEED_MINIMUM};
 use crate::editor::fem2d::modes::edit::windows::results::config::Fem2dResultsWindowConfig;
 use crate::editor::fem2d::modes::edit::windows::results::transient::FemPlaybackClock;
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_action, ui_label};
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
 use semio_framework_plugin::ui_node_list;
 use semio_framework_plugin::BuiltNode;
@@ -150,11 +150,11 @@ fn section(id: &str, label: &str, rows: impl IntoIterator<Item = UiAssemblyResul
 const RESULT_SOURCE_OPTIONS: usize = 24;
 
 /// 👁️ The wire spelling of one result mode — the `select` option value the command parses back.
-fn result_mode_value(mode: crate::app_surface::ResultMode) -> &'static str {
+fn result_mode_value(mode: semio_s_fem_app_surface::ResultMode) -> &'static str {
     match mode {
-        crate::app_surface::ResultMode::Static => "static",
-        crate::app_surface::ResultMode::Modal => "modal",
-        crate::app_surface::ResultMode::Buckling => "buckling",
+        semio_s_fem_app_surface::ResultMode::Static => "static",
+        semio_s_fem_app_surface::ResultMode::Modal => "modal",
+        semio_s_fem_app_surface::ResultMode::Buckling => "buckling",
     }
 }
 

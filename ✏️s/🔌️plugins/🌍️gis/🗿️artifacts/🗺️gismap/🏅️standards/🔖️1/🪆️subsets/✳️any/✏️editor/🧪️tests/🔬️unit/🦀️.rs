@@ -144,8 +144,8 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
     > = gis_map_drawing_one_item_preparation_factory();
     let value: std::sync::Arc<
         dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
-            semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
+            semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot,
+            semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation,
         >,
     > = gis_map_value_one_item_preparation_factory();
     assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);

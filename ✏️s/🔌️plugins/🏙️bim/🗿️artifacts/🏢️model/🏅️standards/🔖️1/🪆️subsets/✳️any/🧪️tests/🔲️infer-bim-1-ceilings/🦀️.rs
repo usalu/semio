@@ -12,13 +12,13 @@ mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::{span, underside_at};
-    use semio_s_artifact_bim_model::{ModelInference, Point2};
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::Point2};
 
     fn number(value: f64) -> String {
         format!("{value:?}")
     }
 
-    fn probe(boundary: &[semio_s_artifact_bim_model::Vertex]) -> Point2 {
+    fn probe(boundary: &[semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::Vertex]) -> Point2 {
         let count = boundary.len() as f64;
         let (mean_x, mean_y) = (boundary.iter().map(|vertex| vertex.point.x).sum::<f64>() / count, boundary.iter().map(|vertex| vertex.point.y).sum::<f64>() / count);
         let first = boundary[0].point;

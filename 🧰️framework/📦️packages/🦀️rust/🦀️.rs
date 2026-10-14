@@ -12,7 +12,7 @@ pub use ui_wgpu::wgpu::IconName;
 #[cfg(test)] use semio_framework_ui_locale::Terminology;
 
 //#region 🧬️SchemaMetadata
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 #[path = "../../🔨️modules/🧬️schema/📽️projection/🦀️.rs"]
 pub mod schema_metadata;
 //#endregion 🧬️SchemaMetadata

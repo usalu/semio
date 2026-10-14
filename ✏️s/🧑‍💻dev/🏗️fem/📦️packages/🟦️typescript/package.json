@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-fem-pcg-publication-owners": "bun repo run @semio-tech/s-fem-composition-tests:verify-fem-pcg-publication-owners",
     "verify-fem-assembly-physical-owners": "bun repo run @semio-tech/s-fem-composition-tests:verify-fem-assembly-physical-owners",

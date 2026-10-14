@@ -6,14 +6,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Table-specific hex/bracket value primitives backing the hand-rolled `ArtifactDsl` below —
@@ -177,13 +178,13 @@ use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
 use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 

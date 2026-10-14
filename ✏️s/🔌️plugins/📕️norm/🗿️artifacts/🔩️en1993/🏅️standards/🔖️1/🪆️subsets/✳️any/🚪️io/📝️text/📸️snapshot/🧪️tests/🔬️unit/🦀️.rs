@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
@@ -14,8 +14,8 @@ async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
 
 #[semio_framework_async_macros::async_test]
 async fn high_strength_connection_example_fixture_parses_and_round_trips() {
-    use crate::document::AnnexChoice;
-    use crate::standards::v1::subsets::any::schema::part_1_1;
+    use semio_s_plugin_norm_compliance::AnnexChoice;
+    use semio_s_artifact_norm_en1993_checks::part_1_1;
     let document = parse_dsl(EN1993_HIGH_STRENGTH_CONNECTION_EXAMPLE_TEXT).expect("parse high strength connection example");
     assert_eq!(document.annex, AnnexChoice::En);
     let joint = document.joints.iter().find(|j| j.id == "joint-j1").expect("joint-j1");
@@ -34,5 +34,4 @@ async fn high_strength_connection_example_fixture_parses_and_round_trips() {
     assert!(document.load_cases.iter().any(|lc| lc.kind == "imposed"));
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
-
 

@@ -3,7 +3,7 @@
 //! `operation` tag, and `with_payload_value` rebuilds the same kind or refuses — never another kind.
 
 use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, Counter, CounterMutation};
-use crate::os_spr::{Mutation, MutationLeaf, SemanticMutation};
+use protocol::{Mutation, MutationLeaf, SemanticMutation};
 use crate::{DslValue, ToValue};
 use super::super::{mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures};
 
@@ -64,11 +64,11 @@ struct Unpublished {
 
 impl Mutation<Counter> for Unpublished {
     type Diff = <CounterMutation as Mutation<Counter>>::Diff;
-    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <CounterMutation as Mutation<Counter>>::DESCRIPTORS;
-    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = <CounterMutation as Mutation<Counter>>::DESCRIPTORS;
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         self.op.descriptor()
     }
-    fn diff(&self, base: &Counter) -> crate::os_spr::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &Counter) -> protocol::MutationOutcome<Self::Diff> {
         self.op.diff(base)
     }
     fn inverse(&self, base: &Counter) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -80,10 +80,10 @@ impl Mutation<Counter> for Unpublished {
 }
 
 impl SemanticMutation<Counter> for Unpublished {
-    fn kinds() -> &'static [crate::os_spr::SemanticDescriptor] {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
         <CounterMutation as SemanticMutation<Counter>>::kinds()
     }
-    fn semantics(&self) -> &'static crate::os_spr::SemanticDescriptor {
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
         self.op.semantics()
     }
     fn label(&self) -> crate::LocalizedLabel {

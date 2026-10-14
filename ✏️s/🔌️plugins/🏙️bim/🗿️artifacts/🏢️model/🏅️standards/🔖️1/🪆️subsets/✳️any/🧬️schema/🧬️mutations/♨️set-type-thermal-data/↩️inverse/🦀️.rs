@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetTypeThermalData`: an absolute `SetTypeThermalData` restoring the base value of exactly the fields the forward really changes, none when the type is absent or nothing changes.
 
 use super::SetTypeThermalData;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetTypeThermalData, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let restore = if let Some(record) = base.window_types.get(&payload.id) {

@@ -7,7 +7,7 @@ use super::snap::{snap, SnapHit, SnapKind, SnapRequest};
 use crate::editor::bim::entities::id_taken;
 use crate::editor::bim::kit::IdMint;
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ModelInference, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_ui_locale::LabelText;
 use std::collections::BTreeMap;
 use value_derive::{FromValue, ToValue};

@@ -53,7 +53,7 @@ test("canonical module facts agree with independent runtime import oracles", asy
 });
 
 for (const vector of fixture.contexts) test(`immutable source facts resolve current context: ${vector.id}`, async () => {
-  const { cacheInternals } = await import("../../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifact) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
   mkdirSync(artifact, { recursive: true });

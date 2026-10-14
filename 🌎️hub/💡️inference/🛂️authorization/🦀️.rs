@@ -47,6 +47,6 @@ pub(crate) async fn check_live_inference_session_author(
     }
 }
 
-#[cfg(all(test, feature = "sqlite"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

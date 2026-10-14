@@ -1,13 +1,13 @@
 //! ↩️ upsert inverse — restore prior entity or remove inserted one.
-use super::UpdatePlatedInputs;
-use crate::mutations::remove_plated_panel;
-use crate::{En1993Mutation, En1993Snapshot};
-pub fn inverse(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::update_plated_inputs::UpdatePlatedInputs;
+use crate::remove_plated_panel;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::update_plated_inputs::UpdatePlatedInputs> + From<crate::remove_plated_panel::RemovePlatedPanel> {
     Ok((|| {
     if let Some(prior) = base.plated_panels.iter().find(|x| x.id == payload.plated_panel.id) {
-        vec![En1993Mutation::UpdatePlatedInputs(UpdatePlatedInputs { plated_panel: prior.clone() })]
+        vec![Op::from(UpdatePlatedInputs { plated_panel: prior.clone() })]
     } else {
-        vec![En1993Mutation::RemovePlatedPanel(remove_plated_panel::RemovePlatedPanel { index: base.plated_panels.len() })]
+        vec![Op::from(remove_plated_panel::RemovePlatedPanel { index: base.plated_panels.len() })]
     }
 
     })())

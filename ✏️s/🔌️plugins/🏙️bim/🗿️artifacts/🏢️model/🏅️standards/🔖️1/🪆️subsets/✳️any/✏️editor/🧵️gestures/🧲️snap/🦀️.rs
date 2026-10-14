@@ -4,7 +4,7 @@
 
 use super::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
 use std::f64::consts::FRAC_PI_4;
 use value_derive::{FromValue, ToValue};

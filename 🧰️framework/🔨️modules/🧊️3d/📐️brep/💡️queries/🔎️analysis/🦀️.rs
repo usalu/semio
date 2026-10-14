@@ -9,6 +9,10 @@
 //!
 //! 🔗️ [Euler-Poincare formula](https://en.wikipedia.org/wiki/Euler_characteristic) ·
 //! [Principal curvature](https://en.wikipedia.org/wiki/Principal_curvature)
+//!
+//! Crate cut of `semio-framework-3d-brep-queries` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
+
+extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
 use semio_framework_3d_brep_representation::error::KernelError;

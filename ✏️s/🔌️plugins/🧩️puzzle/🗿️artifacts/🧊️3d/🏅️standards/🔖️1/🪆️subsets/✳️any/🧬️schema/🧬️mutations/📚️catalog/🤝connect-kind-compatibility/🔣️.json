@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility",
+  "semanticKind": "connect-kind-compatibility",
+  "displayName": "Connect Kind Compatibility",
+  "emoji": "🤝",
+  "aggregateVariant": "ConnectKindCompatibility",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "connect-kind-compatibility",
+  "binaryTag": 32,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

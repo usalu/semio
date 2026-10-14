@@ -1,0 +1,11 @@
+[
+ {"package":"semio-hub","feature":"sqlite","mode":"on"},
+ {"package":"semio-hub","feature":"postgres","mode":"on"},
+ {"package":"semio-hub","feature":"neo4j","mode":"on"},
+ {"package":"semio-hub","feature":"native-artifact-execution","mode":"on"},
+ {"package":"semio-framework-os-kernel-db","feature":"fs","mode":"on"},
+ {"package":"semio-framework-os-kernel-db","feature":"deflate","mode":"on"},
+ {"package":"semio-framework-os-kernel-db","feature":"sqlite","mode":"on"},
+ {"package":"semio-framework-os-kernel-db","feature":"postgres","mode":"on"},
+ {"package":"semio-framework-os-kernel-db","feature":"neo4j","mode":"on"}
+]

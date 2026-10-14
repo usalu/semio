@@ -2,7 +2,7 @@
 
 use super::super::cascade;
 use super::DeleteRoofType;
-use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteRoofType, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

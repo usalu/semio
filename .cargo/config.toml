@@ -1,14 +1,10 @@
-# ⚡️ One shared compiler cache for every workspace, crate, profile, target, agent and dev. Intermediates live in
-# `build-dir`, uplifted deliverables in `target-dir`; both sit under the repo cache root, so disk is bounded by the
-# codebase and its build history (pruned by `bun nx run repo:cache-prune`) instead of by the
-# number of concurrent builders. `fine-grain-locking` locks per compilation unit instead of per directory, so
-# concurrent cargo invocations share every already-built unit and only wait on units another invocation is building.
-# `checksum-freshness` keys freshness on content, so Nx cache restores and checkouts that only touch mtimes rebuild nothing.
-# A private `CARGO_TARGET_DIR` only diverts the small uplifted deliverables; intermediates stay shared.
+# ⚡️ Repository launchers open the declared fixed Rust backing before compilation. Static paths select its
+# shared namespace; managed prototype and release facades retain their explicitly issued store paths.
+# `fine-grain-locking` serializes compilation units; `checksum-freshness` compares actual source contents.
 # https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#fine-grain-locking
 [build]
-target-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/target"
-build-dir = ".🧬semio/🦑️repo/⚡️cache/cargo/build"
+target-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
+build-dir = ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/build"
 rustflags = ["-Z", "threads=0"]
 
 [unstable]

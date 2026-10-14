@@ -1,6 +1,6 @@
 //! 🕰️ `set-element-phase` payload. Puts a phasable element (wall, curtain wall, column, beam, slab, roof, stair, railing, space) into a construction phase: existing, new, demolished or temporary. An opening takes the phase of its host, so only the host is set.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Phase};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Phase}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

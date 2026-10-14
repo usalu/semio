@@ -1,7 +1,7 @@
 //! 🧰️ The IFC writer kit (IFC 2x3 and IFC4 ADD2 TC1): typed value constructors, a deterministic compressed GUID and an `Ifc` builder over the Part-21 instance allocator.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ and https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/
 
-use semio_s_artifact_stdio_ifc::part21::{Part21Builder, Part21Decimal, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Builder, Part21Decimal, Part21Value};
 use std::collections::BTreeMap;
 
 pub type V = Part21Value;
@@ -365,7 +365,7 @@ impl Ifc {
     }
 
     /// 🧱️ The finished instance graph.
-    pub fn finish(self, header: semio_s_artifact_stdio_ifc::part21::Part21Header) -> semio_s_artifact_stdio_ifc::part21::Part21Document {
+    pub fn finish(self, header: semio_s_artifact_stdio_contract::part21::Part21Header) -> semio_s_artifact_stdio_contract::part21::Part21Document {
         self.builder.build(header)
     }
 }

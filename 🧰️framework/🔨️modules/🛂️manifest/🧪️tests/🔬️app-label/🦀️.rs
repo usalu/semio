@@ -1535,7 +1535,7 @@ fn action_semantics_defaults_match_language_neutral_fixture() {
 }
 //#endregion 🎯️ActionSemanticsFixture
 
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 #[test]
 fn exports_typescript_bindings() {
     crate::schema_metadata::validate().unwrap();

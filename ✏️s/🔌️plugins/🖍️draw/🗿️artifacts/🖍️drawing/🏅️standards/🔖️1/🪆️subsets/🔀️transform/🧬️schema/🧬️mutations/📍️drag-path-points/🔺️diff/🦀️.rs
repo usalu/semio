@@ -1,12 +1,13 @@
 //! 🔺️ Sparse diff builder for `DragPathPoints` — every addressed point of every surviving path moves by the offset mapped
 //! into the path's own axes, read off the BASE geometry; an anchor carries its attached tangents.
-use crate::mutations::drawing_placed_layers;
-use crate::schema::geometry::editing::{translate_world_path_points, PathPointRef};
-use crate::schema::layer_base;
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use semio_s_artifact_draw_drawing_geometry::drawing_placed_layers;
+use semio_s_artifact_draw_drawing_geometry::editing::{translate_world_path_points, PathPointRef};
+use semio_s_artifact_draw_drawing_model::layer_base;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
-pub fn diff(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+pub fn diff(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> {
     let layers = super::mutation::drag_path_points_layers(&payload.targets);
     if !(payload.dx.is_finite() && payload.dy.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "a drag offset must be finite", layers.iter().map(|id| id.to_string_owner()));
@@ -25,7 +26,7 @@ pub fn diff(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -
             Some(entry) if !entry.editable => locked.push(id.to_string_owner()),
             Some(entry) => match entry.layer {
                 DrawingLayerNode::Path(path) => {
-                    let matrix = crate::schema::geometry::multiply(entry.parent, crate::schema::drawing_transform_to_matrix(&path.base.transform));
+                    let matrix = semio_s_artifact_draw_drawing_geometry::multiply(entry.parent, semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&path.base.transform));
                     match translate_world_path_points(&path.segments, &points, matrix, [payload.dx, payload.dy]) {
                         Ok(segments) => {
                             applies = true;
@@ -49,8 +50,8 @@ pub fn diff(payload: &super::mutation::DragPathPoints, base: &DrawingSnapshot) -
         .map(|(skipped, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} path(s) skipped ({reason}): {}", skipped.len(), layers.len(), skipped.join(", "))).at(skipped))
         .collect();
     if patched.is_empty() {
-        return protocol::MutationOutcome::new(crate::diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no path point moves").at(layers.iter().map(|id| id.to_string_owner()))]));
+        return protocol::MutationOutcome::new(semio_s_artifact_draw_drawing_diff::DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no path point moves").at(layers.iter().map(|id| id.to_string_owner()))]));
     }
-    protocol::MutationOutcome::new(crate::diff::diff_set_path_geometries(patched)).absorb_messages(partial)
+    protocol::MutationOutcome::new(semio_s_artifact_draw_drawing_diff::diff_set_path_geometries(patched)).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,54 @@
+[
+ {
+  "from": "crate",
+  "to": "crate::standards::v1::subsets::any::schema::snapshot",
+  "items": [
+   "CAD_DIALECT",
+   "CAD_DOCUMENT_SCHEMA",
+   "CAD_DRAWINGS_SLOT",
+   "CAD_PLAY_DOCUMENT_SCHEMA",
+   "CadBrepChild",
+   "CadCamera",
+   "CadDrawingChild",
+   "CadModelChild",
+   "CadNode",
+   "CadPaneId",
+   "CadProjectionDsl",
+   "CadReference",
+   "CadReferenceList",
+   "CadWorkingScene",
+   "cad_brep_child",
+   "cad_child",
+   "cad_child_restore_projection",
+   "cad_drawing_child",
+   "cad_empty_pane_child",
+   "cad_model_child",
+   "cad_model_child_handle",
+   "cad_model_child_pane_slug",
+   "cad_named_pane_child",
+   "cad_pane_from_model_definition_id",
+   "cad_pane_model",
+   "cad_pane_model_mut",
+   "cad_pane_model_slot",
+   "cad_scene_pane_geometry",
+   "cad_scene_pane_objects",
+   "default_camera_position",
+   "default_camera_target",
+   "default_fov",
+   "default_image_media_kind",
+   "default_width_world",
+   "empty_cad_snapshot",
+   "one_f64"
+  ]
+ },
+ {
+  "from": "crate",
+  "to": "crate::standards::v1::subsets::any::io::geometry_import",
+  "items": [
+   "CadComposedPane",
+   "CadComposedPanes",
+   "cad_bundled_pane_scene",
+   "cad_genesis_child_pack"
+  ]
+ }
+]

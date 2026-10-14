@@ -2,7 +2,7 @@ use super::testkit::{document, document_in, house, psets, quantity, rows, string
 use super::*;
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
 use protocol::Inference;
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn house4() -> Part21Document {
     document_in(Schema::Ifc4, &house())
@@ -119,7 +119,7 @@ fn door_and_window_types_replace_the_styles_and_carry_the_operation_and_partitio
     for (_, args) in rows(&document, "IFCDOOR") {
         let tag = string(args, 7).expect("a tag");
         let opening = &model.openings[&tag];
-        let crate::OpeningKind::Door { door_type } = &opening.kind else { panic!("a door") };
+        let crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Door { door_type } = &opening.kind else { panic!("a door") };
         assert_eq!(args[11].as_enum(), Some(super::data::door_operation(&model.door_types[door_type])), "{tag}: the occurrence repeats the operation of its type");
     }
 }
@@ -193,7 +193,7 @@ fn the_psets_file_carries_the_templates_and_the_classification_chains_in_one_ifc
     assert_eq!(document.by_type("IFCPROPERTYSET").filter(|set| set.entity("IFCPROPERTYSET").is_some_and(|args| string(args, 2).as_deref() == Some("Semio_ClassificationParents"))).count(), 0, "IFC4 chains the parents instead");
 }
 
-fn model_after(schema: Schema, model: &crate::ModelSnapshot) -> crate::ModelSnapshot {
+fn model_after(schema: Schema, model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     match schema {
         Schema::Ifc2x3 => import_ifc2x3(&export_ifc2x3(model).expect("2x3 export").0).expect("2x3 import").0,
         Schema::Ifc4 => import_ifc4(&export_ifc4(model).expect("4 export").0).expect("4 import").0,
@@ -262,17 +262,17 @@ const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standa
 
 const ASSETS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
 
-fn decoded(file: &str) -> crate::ModelSnapshot {
+fn decoded(file: &str) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let text = std::fs::read_to_string(file).unwrap_or_else(|error| panic!("{file}: {error}"));
     semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|error| panic!("{file} decodes: {error:?}"))
 }
 
-fn snapshot_at(path: &str) -> crate::ModelSnapshot {
+fn snapshot_at(path: &str) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     decoded(&format!("{FIXTURES}/{path}/🔣️.json"))
 }
 
 /// 🗂️ The IFC4 fixture of a case: its folder below `🏢️ifc4` and the snapshot it is written from.
-fn case(name: &str) -> (&'static str, crate::ModelSnapshot) {
+fn case(name: &str) -> (&'static str, crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) {
     match name {
         "house" => ("🏠️house", house()),
         "psets" => ("🏷️psets", psets()),

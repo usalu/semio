@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import {join} from "node:path";
+const root=process.env.SEMIO_WORKSPACE_ROOT!;
+if(!root)throw Error("Workspace root required");
+const library=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
+const {artifactPackageInventory}=await import(join(library,"⚡️caching/📦️artifacts/🧭️package-inventory/🟦️.ts"));
+const {default:Ajv2020}=await import(join(root,"node_modules/ajv/dist/2020.js"));
+const schema=JSON.parse(await readFile(join(library,"⚡️caching/📦️artifacts/🧭️package-inventory/🧬️schema/🔣️.json"),"utf8"));
+const fixtures=JSON.parse(await readFile(join(library,"⚡️caching/🧪️tests/🧫️fixtures/artifact-packages/🔣️.json"),"utf8"));
+const validate=new Ajv2020({strict:true,allErrors:true}).compile(schema);
+for(const entry of fixtures.accepted)assert(validate(entry),JSON.stringify(validate.errors));
+for(const entry of fixtures.rejected)assert.equal(validate(entry.value),false,entry.id);
+const graph=JSON.parse(await readFile(join(root,".🧬semio/🦑️repo/⚡️cache/build/graph.json"),"utf8"));
+const contract=artifactPackageInventory(root,graph);
+assert(validate(contract),JSON.stringify(validate.errors));
+assert(contract.packages.length>0);
+console.log(`[DEBUG] Generic artifact inventory neutral schema accepted=${fixtures.accepted.length} rejected=${fixtures.rejected.length} actual=${contract.packages.length}`);

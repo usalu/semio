@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-fem-analyses-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Analysis model, load cases, combinations and the equation numbering of fem analyses"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+replication = { workspace = true }
+semio-framework-os-pack = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-fem-algebra = { workspace = true }
+semio-s-fem-model = { workspace = true }
+semio-s-fem-sparse = { workspace = true }
+semio-s-fem-static = { workspace = true }
+
+[dev-dependencies]
+semio-s-fem-elements2d = { workspace = true }
+serde_json = { workspace = true }

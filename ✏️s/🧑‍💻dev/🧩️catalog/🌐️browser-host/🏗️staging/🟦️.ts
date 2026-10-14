@@ -169,7 +169,7 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
     await materializeTestBrowserPluginV1({ target: gis, artifact: component.path, descriptorPath: descriptor.path, moduleRoot: roots.moduleRoot, selectedSource: { componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 } });
     if (lstatSync(spaceComponent.path).size !== spaceComponent.size || await pluginFileDigest(spaceComponent.path) !== spaceComponentSha256) throw new Error("Fresh Space component changed during browser staging");
     if (await pluginFileDigest(component.path) !== input.selectedGis.componentSha256 || await pluginFileDigest(descriptor.path) !== input.selectedGis.descriptorSha256) throw new Error("Selected GIS bytes changed during browser staging");
-    writeFileSync(join(roots.browserHostRoot, "extensions", ".nx-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
+    writeFileSync(join(roots.browserHostRoot, "extensions", ".semio-artifact.json"), `${JSON.stringify({ owner: "test-browser-host:extensions", version: 1 })}\n`);
     const closed = closeTestBrowserHostStagingV1(stagingArtifactRoot, { generationId: input.selectedGis.generationId, currentSha256: input.selectedGis.currentSha256, componentSha256: input.selectedGis.componentSha256, descriptorSha256: input.selectedGis.descriptorSha256 }, { byteLength: spaceComponent.size, sha256: spaceComponentSha256 });
     await stageRepositoryArtifacts(join(artifactRoot, "browser-host"), "test-browser-host:s:dev", artifactFiles(closed.browserHostRoot));
     const finalRoot = join(artifactRoot, "browser-host");

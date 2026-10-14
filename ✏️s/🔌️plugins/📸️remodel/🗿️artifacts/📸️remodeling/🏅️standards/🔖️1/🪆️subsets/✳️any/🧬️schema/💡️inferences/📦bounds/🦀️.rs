@@ -8,7 +8,8 @@
 //! a plain pure function rather than an `InferredField` chain — the family root's
 //! `impl protocol::Inference<RemodelingSnapshot>` calls it directly.
 
-use crate::{resolve_bounded_remodeling_mesh, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 

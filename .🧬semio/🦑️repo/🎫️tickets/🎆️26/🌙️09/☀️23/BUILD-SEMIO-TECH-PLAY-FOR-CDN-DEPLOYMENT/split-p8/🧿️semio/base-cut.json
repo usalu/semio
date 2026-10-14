@@ -1,0 +1,11 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "base-layers.json",
+ "crate": "semio_s_artifact_stdio_semio_base",
+ "aggregator": "base",
+ "crates": {
+  "examples": {"package": "semio-s-artifact-stdio-semio-base-examples", "dir": "📚️examples/📦️packages/🦀️rust", "doc": "//! 📚️ The stdio semio family's shared examples: one demo source per subset domain, each a real printed snapshot."}
+ },
+ "consumers": ["✏️s", "🌎️hub", "🧰️framework", "♻️mit-bestand", "🎓️teaching"]
+}

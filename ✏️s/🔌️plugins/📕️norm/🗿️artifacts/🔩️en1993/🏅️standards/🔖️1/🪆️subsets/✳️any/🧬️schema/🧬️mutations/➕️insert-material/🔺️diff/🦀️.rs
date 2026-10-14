@@ -1,8 +1,8 @@
 //! ➕️ `insert-material` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertMaterial;
-use crate::diff::{En1993Diff, En1993MaterialDelta};
-use crate::En1993Snapshot;
+use crate::insert_material::InsertMaterial;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MaterialDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertMaterial, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.materials.iter().any(|existing| existing.id == payload.material.id) {

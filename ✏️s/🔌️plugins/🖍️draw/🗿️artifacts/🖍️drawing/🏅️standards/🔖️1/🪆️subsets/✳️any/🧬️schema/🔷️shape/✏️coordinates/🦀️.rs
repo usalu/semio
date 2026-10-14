@@ -19,7 +19,7 @@ impl ShapeCoordinateField {
 }
 /// 📏️ Borrows one authored scalar without materializing the layer or polygon.
 pub fn shape_coordinate(shape:&DrawingShapeBody,field:&ShapeCoordinateField,index:Option<usize>)->Result<f64,&'static str> {
-    use ShapeCoordinateField::*;let field=*field;field.validate(shape,index)?;
+    use crate::shape_geometry::ShapeCoordinateField::*;let field=*field;field.validate(shape,index)?;
     Ok(match field {
         RectX=>shape.rect.as_ref().ok_or("Missing rectangle geometry")?.x,
         RectY=>shape.rect.as_ref().ok_or("Missing rectangle geometry")?.y,
@@ -41,7 +41,7 @@ pub fn shape_coordinate(shape:&DrawingShapeBody,field:&ShapeCoordinateField,inde
 }
 /// 🩹️ Changes exactly one admitted coordinate; rejected edits leave every field intact.
 pub fn set_shape_coordinate(shape:&mut DrawingShapeBody,field:ShapeCoordinateField,index:Option<usize>,value:f64)->Result<(),&'static str> {
-    use ShapeCoordinateField::*;field.validate(shape,index)?;
+    use crate::shape_geometry::ShapeCoordinateField::*;field.validate(shape,index)?;
     if !value.is_finite()||(field.nonnegative()&&value<0.0) {return Err("Enter a finite coordinate and nonnegative dimensions");}
     let target=match field {
         RectX=>&mut shape.rect.as_mut().ok_or("Missing rectangle geometry")?.x,

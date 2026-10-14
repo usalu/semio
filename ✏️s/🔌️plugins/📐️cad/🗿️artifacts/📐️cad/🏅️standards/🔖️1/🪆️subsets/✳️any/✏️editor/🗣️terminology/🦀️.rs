@@ -2,7 +2,7 @@
 //! from the shared OS-owned view context. Every taxonomy node that renders text reads its
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
-use crate::editor::cad::TYPOLOGY_CATALOG;
+use crate::TYPOLOGY_CATALOG;
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::ViewModel;
 

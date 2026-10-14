@@ -1,8 +1,8 @@
 //! 🌡️ `set-space-conditions` payload. Sparsely sets the thermal conditions of a space (occupancy type and density, heating and cooling set points, ventilation, lighting and equipment power density, schedule profile); the first use creates the record of the space, an assigned null clears a field. The envelope, the areas and the U-values are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Assigned, SpaceConditionsPatch};
+use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::SpaceConditionsPatch};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -29,7 +29,7 @@ pub struct SetSpaceConditions {
 
 impl SetSpaceConditions {
     /// 🌡️ The payload that states every field of `record` (an unstated field as an assigned null): applied to a space without conditions it recreates the record exactly.
-    pub fn stating(id: &str, record: &crate::SpaceConditions) -> Self {
+    pub fn stating(id: &str, record: &crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions) -> Self {
         Self {
             id: id.to_string(),
             occupancy: Some(Assigned::new(record.occupancy.clone())),

@@ -5,7 +5,7 @@
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 /// 🗄️ The demo model, handcrafted in this facet's DSL.
 pub const BIM_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -60,7 +60,7 @@ pub fn encode_inference_projection_json(snapshot: &ModelSnapshot, slug: &str) ->
     crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, snapshot, |inferred| projection_of(snapshot, slug, inferred)).ok().flatten()
 }
 
-fn projection_of(snapshot: &ModelSnapshot, slug: &str, inferred: &crate::ModelInference) -> Option<String> {
+fn projection_of(snapshot: &ModelSnapshot, slug: &str, inferred: &crate::standards::v1::subsets::any::schema::inferences::ModelInference) -> Option<String> {
     match slug {
         "storey-levels" => Some(semio_framework_pack_json::to_json_string(&inferred.storey_levels)),
         "wall-layout" => Some(semio_framework_pack_json::to_json_string(&inferred.wall_layout)),
@@ -91,7 +91,7 @@ fn projection_of(snapshot: &ModelSnapshot, slug: &str, inferred: &crate::ModelIn
         "energy-envelope" => Some(crate::standards::v1::subsets::any::schema::inferences::energy_envelope::table_json(&inferred.energy_envelopes, &inferred.energy_totals)),
         "effective-properties" => Some(crate::standards::v1::subsets::any::schema::inferences::effective_properties::table_json(&inferred.effective_properties)),
         "wall-solids" => {
-            let rows: Vec<String> = snapshot.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::Axis::Line { .. })).filter_map(|(id, _)| inferred.wall_layout.get(id).map(|layout| format!("{}:{{\"base_z\":{},\"top_z\":{},\"volume\":{}}}", semio_framework_pack_json::to_json_string(id), layout.base_z, layout.top_z, layout.volume))).collect();
+            let rows: Vec<String> = snapshot.walls.iter().filter(|(_, wall)| matches!(wall.axis, crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { .. })).filter_map(|(id, _)| inferred.wall_layout.get(id).map(|layout| format!("{}:{{\"base_z\":{},\"top_z\":{},\"volume\":{}}}", semio_framework_pack_json::to_json_string(id), layout.base_z, layout.top_z, layout.volume))).collect();
             Some(format!("{{{}}}", rows.join(",")))
         }
         _ => None,

@@ -10,7 +10,7 @@ import {cargoDirectories} from "../../🦀️cargo/🟦️.ts";
 
 /** 🧊️ Executes restored renderer artifacts and compares them with an independent native Trunk build. */
 export async function testWgpuWasmOutputs(workspace: string, output: string, invocation:ScriptInvocation): Promise<void> {
-  const control=scriptCompilerAdmissionControlV1(invocation,"test:wgpu-wasm",600000),compiler=cargoDirectories(workspace),leases=join(workspace,".cache/framework/leases");
+  const control=scriptCompilerAdmissionControlV1(invocation,"test:wgpu-wasm",600000),compiler=cargoDirectories(workspace),leases=join(workspace,".cache/b/l/m/data");
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧊️wasm-outputs/🔣️.json"), "utf8"));
   const packagePath = join(fixture.owner, "📦️packages/🦀️rust"), project = JSON.parse(readFileSync(join(workspace, fixture.owner, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   assert.equal(project.metadata.nativeRoot, packagePath, "Renderer compiler inputs must resolve from the Cargo owner");
@@ -71,7 +71,7 @@ export async function testWgpuWasmOutputs(workspace: string, output: string, inv
     await run(row.profile); assert.equal(runs(), ++count);
     const published = join(root, row.output), bytes = files(published), wasm = join(published, `${fixture.crate}_bg.wasm`);
     assert.equal(await value(wasm), fixture.values[0]);
-    assert.deepEqual([...bytes.keys()].filter(name => name !== ".nx-artifact.json").sort(), fixture.deliverables.map((suffix: string) => fixture.crate + suffix).sort(), "Publish each compiler artifact once without duplicate aliases");
+    assert.deepEqual([...bytes.keys()].filter(name => name !== ".semio-artifact.json").sort(), fixture.deliverables.map((suffix: string) => fixture.crate + suffix).sort(), "Publish each compiler artifact once without duplicate aliases");
     assert.ok(![...bytes.keys()].some(name => /plugin-modules|extension-modules|assets|target|staging/.test(name)));
     await run(row.profile); assert.equal(runs(), count);
     rmSync(published, { recursive: true });

@@ -2,7 +2,7 @@
 
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
-use crate::{FamilyCategory, ParameterKind, SolidAxis};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind, SolidAxis};
 
 /// 🏷️ The name of a family category.
 pub fn category_label(labels: &BimLabels, category: FamilyCategory) -> String {

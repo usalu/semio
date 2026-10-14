@@ -70,6 +70,8 @@ pub mod geometry;
 
 #[path = "."]
 pub mod extensions {
+    #[path = "../../🧩️extensions/🧬️schema/🦀️.rs"]
+    pub mod schema;
     #[path = "../../🧩️extensions/🕸️wasm/🦀️.rs"]
     pub mod wasm;
 }

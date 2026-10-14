@@ -1,0 +1,217 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owners",
+    "files",
+    "mutation",
+    "cold",
+    "warm",
+    "changed",
+    "racyWarm",
+    "metadata",
+    "structural",
+    "reordered",
+    "changedClosureOwners",
+    "parentReceiptAnalyses",
+    "sharedValidationReads",
+    "racyParentCurrent",
+    "dependencyReuse",
+    "raced"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owners": {
+      "const": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "content",
+        "extra"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "extra": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "content"
+          ],
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "cold": {
+      "$ref": "#/definitions/counts"
+    },
+    "warm": {
+      "$ref": "#/definitions/counts"
+    },
+    "changed": {
+      "$ref": "#/definitions/counts"
+    },
+    "racyWarm": {
+      "$ref": "#/definitions/counts"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "tags",
+        "counts"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "counts": {
+          "$ref": "#/definitions/counts"
+        }
+      }
+    },
+    "structural": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "rename",
+        "files",
+        "counts",
+        "renamed",
+        "deleted"
+      ],
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "rename": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "counts": {
+          "$ref": "#/definitions/counts"
+        },
+        "renamed": {
+          "$ref": "#/definitions/counts"
+        },
+        "deleted": {
+          "$ref": "#/definitions/counts"
+        }
+      }
+    },
+    "reordered": {
+      "$ref": "#/definitions/counts"
+    },
+    "changedClosureOwners": {
+      "const": [
+        "a",
+        "b"
+      ]
+    },
+    "parentReceiptAnalyses": {
+      "const": [
+        "b/source.ts",
+        "c/📜️script.ts"
+      ]
+    },
+    "sharedValidationReads": {
+      "const": 4
+    },
+    "racyParentCurrent": {
+      "const": true
+    },
+    "dependencyReuse": {
+      "const": {
+        "reads": {
+          "cold": 1,
+          "warm": 1,
+          "changed": 1
+        },
+        "edges": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    "raced": {
+      "$ref": "#/definitions/counts"
+    }
+  },
+  "definitions": {
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a",
+        "b",
+        "c"
+      ],
+      "properties": {
+        "a": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "b": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "c": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "d": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "renamed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

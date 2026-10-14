@@ -26,11 +26,11 @@ pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 pub type SurfaceIntersectionSample = (Pnt3, f64, f64, f64, f64);
 
 use semio_framework_3d_brep_representation::contract::ParamDomain;
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Api
 

@@ -5,10 +5,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::mutations::{inverse_drawing_mutation, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::schema::{find_drawing_layer, layer_base};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌓️set-layer-blend-mode/✖️normal/📸️snapshot/➡️after/🔣️.json");
@@ -105,7 +105,7 @@ async fn produces_committed_diff() {
 /// re-encodes byte-for-byte, so the file is a faithful `DrawingDiff`, not prose that merely resembles one.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-layer-blend-mode/normal-to-multiply: committed diff JSON is not canonical");
@@ -115,7 +115,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: semio_s_artifact_draw_drawing_diff::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-layer-blend-mode/normal-to-multiply: committed diff did not carry before to after");
 }
@@ -128,12 +128,12 @@ fn invalid_blend_edits_are_rejected_without_changing_the_document() {
     for case in cases.as_array().unwrap().iter().filter(|case| case["patch"]["field"] == "blendMode") {
         let mode = case["patch"]["value"].as_str().unwrap();
         let accepted = case["accepted"].as_bool().unwrap();
-        let mutation = crate::mutations::set_layer_blend_mode("shape-a".into(), mode.into());
+        let mutation = crate::set_layer_blend_mode::mutation::set_layer_blend_mode("shape-a".into(), mode.into());
         let blocked = protocol::Mutation::<DrawingSnapshot>::diff(&mutation, &original).messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal));
         assert_eq!(!blocked, accepted, "{mode}");
         let mut document = original.clone();
         apply_drawing_mutation(&mut document, &mutation).expect("a refused edit folds as a no-op");
-        let delta = crate::diff::diff_set_layer_blend_mode("shape-a", mode);
+        let delta = semio_s_artifact_draw_drawing_diff::diff_set_layer_blend_mode("shape-a", mode);
         assert_eq!(protocol::apply_diff(&delta, &original).is_ok(), accepted, "{mode}");
         if !accepted { assert_eq!(document, original); }
     }

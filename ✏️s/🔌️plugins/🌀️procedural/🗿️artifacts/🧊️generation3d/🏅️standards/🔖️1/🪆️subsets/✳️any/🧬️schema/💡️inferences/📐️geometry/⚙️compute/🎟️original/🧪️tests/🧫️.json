@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "mesh": {
+    "kind": "mesh.inspect.vertex",
+    "positions": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        2,
+        2,
+        3
+      ],
+      [
+        1,
+        3,
+        3
+      ]
+    ],
+    "indices": [
+      0,
+      1,
+      2
+    ],
+    "vertex": 0,
+    "output": [
+      1,
+      2,
+      3
+    ]
+  },
+  "curve": {
+    "kind": "brep.evaluate.curvePoint",
+    "degree": 2,
+    "knots": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1
+    ],
+    "controls": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "weights": [
+      1,
+      0.7071067811865476,
+      1
+    ],
+    "parameter": 0.5,
+    "output": [
+      0.7071067811865476,
+      0.7071067811865476,
+      0
+    ]
+  },
+  "tolerance": 1e-12,
+  "sameCaller": true,
+  "deniedScratchCapacity": true,
+  "deniedScratchCopy": true,
+  "cancelledScratchConserved": true,
+  "plane": {
+    "kind": "mesh.primitive.plane",
+    "width": 4,
+    "depth": 6,
+    "positions": [
+      [
+        -2,
+        0,
+        -3
+      ],
+      [
+        2,
+        0,
+        -3
+      ],
+      [
+        2,
+        0,
+        3
+      ],
+      [
+        -2,
+        0,
+        3
+      ]
+    ],
+    "normal": [
+      0,
+      -1,
+      0
+    ],
+    "faces": 1,
+    "halfedges": 4
+  },
+  "line": {
+    "kind": "brep.curve.line",
+    "start": [
+      1,
+      2,
+      3
+    ],
+    "end": [
+      4,
+      6,
+      3
+    ],
+    "parameter": 0.5,
+    "output": [
+      2.5,
+      4,
+      3
+    ]
+  },
+  "translation": {
+    "kind": "mesh.transform.translate",
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "indices": [
+      0,
+      1,
+      2
+    ],
+    "offset": [
+      1,
+      2,
+      3
+    ],
+    "output": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        2,
+        2,
+        3
+      ],
+      [
+        1,
+        3,
+        3
+      ]
+    ],
+    "seams": [
+      0
+    ],
+    "attribute": {
+      "name": "farbe Ä",
+      "values": [
+        [
+          1,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ]
+      ]
+    },
+    "material": {
+      "name": "paint",
+      "value": {
+        "baseColor": [
+          0.5,
+          0.25,
+          1,
+          1
+        ]
+      }
+    },
+    "texture": {
+      "name": "atlas Ä",
+      "mime": "image/png",
+      "bytes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        255
+      ]
+    },
+    "metadataPreserved": true
+  }
+}

@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::scene_preparation::{DocumentVectorJob,DocumentSceneLimits,DocumentAlgorithmLimits};
+use crate::preparation::{DocumentVectorJob, DocumentSceneLimits, DocumentAlgorithmLimits};
 fn rows()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🎯️query/🔣️.json")).unwrap()}
 fn scene(name:&str)->PreparedScene{
  let rows:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json")).unwrap();let row=rows.as_array().unwrap().iter().find(|r|r["name"]==name).unwrap();let document=serde_json::from_value(row["document"].clone()).unwrap();

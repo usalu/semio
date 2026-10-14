@@ -24,7 +24,7 @@ use super::super::element_solids::{dep_object, dep_value};
 use super::super::opening_frames::{OpeningFrame, Vec3};
 use super::super::spaces::{holds, inside, interior_point, obstacles_of, Obstacle, SpaceRoom, SpaceStatus, StoreyRooms};
 use super::super::wall_layout::WallLayout;
-use crate::{Layer, ModelSnapshot, OpeningKind, SpaceConditions, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, OpeningKind, SpaceConditions, Vertex};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_2d::Vec2;

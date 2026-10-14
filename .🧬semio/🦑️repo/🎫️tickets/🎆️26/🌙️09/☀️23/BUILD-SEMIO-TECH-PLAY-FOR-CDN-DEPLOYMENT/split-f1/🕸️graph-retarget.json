@@ -1,0 +1,41 @@
+{
+ "consumers": "🗑️generated/graph-consumers.json",
+ "old": "semio-framework-graph",
+ "rest": "semio-framework-graph-engine",
+ "owners": {
+  "semio-framework-graph-manifest": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust",
+  "semio-framework-graph-engine": "🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust",
+  "semio-framework-graph-algorithms": "🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust",
+  "semio-framework-graph-drawing": "🧰️framework/🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust",
+  "semio-framework-graph-dsl": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust"
+ },
+ "rules": [
+  [
+   "(?<![A-Za-z0-9_:]){alias}::manifest::",
+   "semio_framework_graph_manifest::"
+  ],
+  [
+   "(?<![A-Za-z0-9_:]){alias}::dsl::",
+   "semio_framework_graph_dsl::"
+  ],
+  [
+   "(?<![A-Za-z0-9_:]){alias}::algorithms::",
+   "semio_framework_graph_algorithms::"
+  ],
+  [
+   "(?<![A-Za-z0-9_:]){alias}::drawing::",
+   "semio_framework_graph_drawing::"
+  ],
+  [
+   "(?<![A-Za-z0-9_:]){alias}::(PropertyBag|PropertyValue)\\b",
+   "semio_framework_graph_manifest::\\1"
+  ],
+  [
+   "(?<![A-Za-z0-9_:])semio_framework_graph::",
+   "semio_framework_graph_engine::"
+  ]
+ ],
+ "skip": [
+  "semio-framework-os-infinite-directed-presentation"
+ ]
+}

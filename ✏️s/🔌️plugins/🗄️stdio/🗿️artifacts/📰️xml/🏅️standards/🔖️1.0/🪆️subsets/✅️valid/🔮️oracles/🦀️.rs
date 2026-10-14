@@ -32,7 +32,6 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️Live
-#[cfg(feature = "oracles")]
 mod live {
     use semio_s_plugin_stdio_markup_test_oracle::live::{doc_from_wire, json_to_path, member, node_at, node_at_mut, obj, parse_markup, patched_markup, usize_member, write_markup, MarkupDoc, MarkupNode};
     use semio_repo_test_host::Json;
@@ -486,48 +485,27 @@ mod live {
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     live::apply_mutation(input, &spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null))
 }
 
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     live::apply_then_undo(input, &spec.str("kind"), &spec.get("params").cloned().unwrap_or(Json::Null))
 }
 
 /// 🔁️ Decodes with the independent reader and re-encodes from its own tree alone, no mutation
 /// applied — the identity round trip.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     live::round_trip(input)
 }
 
 /// 👁️ Projects XML bytes with the INDEPENDENT reader onto the `semantic-xml-valid-1-0-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_xml_valid(bytes: &[u8]) -> Result<Json, String> {
     live::project_bytes(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_xml_valid(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch

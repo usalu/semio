@@ -152,7 +152,6 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },
-                  cargoArgs: ["--features", "component-receipt-acceptance"],
                   laws: [
                     "genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface",
                     "genuine_gis_component_rejects_stale_cold_authority_before_loading",

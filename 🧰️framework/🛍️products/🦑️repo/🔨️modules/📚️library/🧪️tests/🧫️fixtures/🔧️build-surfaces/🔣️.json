@@ -117,6 +117,129 @@
       "args": "run @semio-tech/framework-process:test-workspace --exclude-dependencies --skip-cache",
       "group": "4_gate",
       "order": 21
+    },
+    {
+      "labels": {
+        "en": "🏗️ Build Task · Run",
+        "de": "🏗️ Build-Aufgabe · Ausführen"
+      },
+      "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --output=stream",
+      "group": "4_build",
+      "order": 21.1
+    },
+    {
+      "labels": {
+        "en": "🔎️ Build Task · Inspect Plan",
+        "de": "🔎️ Build-Aufgabe · Plan Anzeigen"
+      },
+      "args": "--tool=${input:repoBuildTool} run \"${input:repoBuildTask}\" --dry-run",
+      "group": "4_build",
+      "order": 21.2
+    },
+    {
+      "labels": {
+        "en": "🧩️ Build Project · Inspect",
+        "de": "🧩️ Build-Projekt · Anzeigen"
+      },
+      "args": "show project \"${input:repoBuildProject}\"",
+      "group": "4_build",
+      "order": 21.3
+    },
+    {
+      "labels": {
+        "en": "👁️ Build Sources · Watch",
+        "de": "👁️ Build-Quellen · Beobachten"
+      },
+      "args": "--tool=${input:repoBuildTool} watch --projects=\"${input:repoBuildProjects}\" -- bun repo run \"${input:repoBuildTask}\" --output=stream",
+      "group": "4_build",
+      "order": 21.4
+    },
+    {
+      "labels": {
+        "en": "🧹️ Build Cache · Reset",
+        "de": "🧹️ Build-Cache · Zurücksetzen"
+      },
+      "args": "--tool=${input:repoBuildTool} reset",
+      "group": "0_setup",
+      "order": 21.5
+    },
+    {
+      "labels": {
+        "en": "🧪️ Runtime Build Producer · Verify",
+        "de": "🧪️ Laufzeit-Build-Erzeuger · Prüfen"
+      },
+      "args": "run workspace:test-runtime-build-producer --exclude-dependencies --skip-cache",
+      "group": "4_gate",
+      "order": 21.6
+    }
+  ],
+  "environmentSources": [
+    "♻️mit-bestand/🧺️demonstrator/📋️project.json",
+    "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+    "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧪️e2e/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+  ],
+  "commandSources": [
+    "package.json",
+    "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+    "🌎️hub/🧩️compositions/🧩️puzzle/🧵️retained/📜️script.ts",
+    "🌎️hub/🧩️compositions/🪐️space/🧪️testing/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust/📜️script.ts",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📇️catalog/📣️publisher/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts",
+    "🌎️hub/🔁️rebuild/🔣️.json",
+    "✏️s/🧑‍💻dev/🔁️rebuild/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🔁️rebuild/🔣️.json",
+    "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json",
+    "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🎚️config/🔣️.json",
+    "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
+    "🌎️hub/🚀️local-bootstrap/👷️dev-owner/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+  ],
+  "editorInputs": [
+    {
+      "id": "repoBuildTool",
+      "type": "pickString",
+      "description": "Build tool / Build-Werkzeug",
+      "options": [
+        "nx",
+        "bazel"
+      ]
+    },
+    {
+      "id": "repoBuildTask",
+      "type": "promptString",
+      "description": "Project:task[:configuration] / Projekt:Aufgabe[:Konfiguration]"
+    },
+    {
+      "id": "repoBuildProject",
+      "type": "promptString",
+      "description": "Build project / Build-Projekt"
+    },
+    {
+      "id": "repoBuildProjects",
+      "type": "promptString",
+      "description": "Project names or patterns separated by commas / Durch Komma getrennte Projektnamen oder Muster"
+    }
+  ],
+  "fixedBuildFiles": [
+    {
+      "id": "root-bazel-configuration",
+      "path": ".bazelrc"
+    },
+    {
+      "id": "root-bazel-version",
+      "path": ".bazelversion"
+    },
+    {
+      "id": "root-bazel-module",
+      "path": "MODULE.bazel"
     }
   ]
 }

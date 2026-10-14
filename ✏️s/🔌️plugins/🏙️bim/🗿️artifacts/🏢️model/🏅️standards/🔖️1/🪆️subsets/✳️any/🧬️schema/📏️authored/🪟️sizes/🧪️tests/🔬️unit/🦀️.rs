@@ -1,5 +1,5 @@
 use super::*;
-use crate::WindowType;
+use crate::standards::v1::subsets::any::schema::snapshot::WindowType;
 
 fn window() -> WindowType {
     WindowType { name: "w".into(), width: 1.2, height: 1.4, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material: "m".into(), u_value: None, g_value: None }

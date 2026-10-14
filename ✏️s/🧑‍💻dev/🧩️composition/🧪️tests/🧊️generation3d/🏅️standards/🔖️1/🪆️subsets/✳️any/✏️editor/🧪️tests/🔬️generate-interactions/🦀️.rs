@@ -177,7 +177,7 @@ async fn every_node_graph_sub_operation_the_table_names_changes_the_fixture() {
     let mut app = crate::editor_domain::editor_laws::context::app().await;
     let (node_id, base) = {
         let read = crate::editor_domain::editor_laws::context::snapshot(&app);
-        let id = read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_generation3d::widget_id).find(|id| read.host_snapshot.layout.get(*id).is_some()).expect("a placed widget").to_string();
+        let id = read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).find(|id| read.host_snapshot.layout.get(*id).is_some()).expect("a placed widget").to_string();
         let base = read.host_snapshot.layout.get(id.as_str()).map(|layout| (layout.x, layout.y)).expect("its base position");
         (id, base)
     };

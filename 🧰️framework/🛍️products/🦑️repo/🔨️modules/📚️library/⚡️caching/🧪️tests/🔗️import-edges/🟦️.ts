@@ -7,7 +7,7 @@ type ImportEdge = Readonly<{ source: string; target: string; sourceFile?: string
 
 /** 🔗️ Fixture + repo import edges from the full scan equal the incremental filesToProcess path. */
 export async function testImportEdgeEquality(workspace: string, output: string): Promise<void> {
-  const { cacheInternals } = await import("../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const previousData = process.env.NX_WORKSPACE_DATA_DIRECTORY;
   const repositoryData = previousData ?? join(workspace, ".nx/workspace-data");
   const pgPath = join(repositoryData, "project-graph.json"), fmPath = join(repositoryData, "file-map.json");

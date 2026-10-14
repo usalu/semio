@@ -5,7 +5,7 @@
       "id": "preflight-catalog",
       "stage": "catalog",
       "command": [
-        "nx",
+        "repo",
         "run",
         "os-hub:trusted-catalog-preflight",
         "--packages",
@@ -16,7 +16,7 @@
       "id": "publish-catalog",
       "stage": "catalog",
       "command": [
-        "nx",
+        "repo",
         "run",
         "os-hub:trusted-catalog-bootstrap",
         "--packages",

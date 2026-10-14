@@ -4,7 +4,7 @@
 //! live here. The old crate's hand-rolled `Fem2dCommand` enum does NOT move here — it is rebuilt by
 //! `app_commands!` in the app's `🦀️.rs` (see `crate::editor::fem2d::Fem2dCommand`).
 
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use protocol::OpBinary;
 
 //#region 📡️SemioProtocol
@@ -35,9 +35,9 @@ mod semio_protocol_conformance;
 
 mod native_codec {
 #[cfg(test)] use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::{Fem2dMutation};
-#[cfg(test)] use crate::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
-#[cfg(test)] use crate::central_apply::apply_fem2d_mutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+#[cfg(test)] use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::{inverse_fem2d_mutation};
+#[cfg(test)] use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
 impl protocol::OpBinary for Fem2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

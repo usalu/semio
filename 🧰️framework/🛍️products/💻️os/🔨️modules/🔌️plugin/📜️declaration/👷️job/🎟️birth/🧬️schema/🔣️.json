@@ -10,9 +10,12 @@
     "inlineLock",
     "sharedFrameReleaseBeforeTerminal",
     "cases",
-    "model",
     "closure",
-    "receiverRetainsPostedOwner"
+    "receiverRetainsPostedOwner",
+    "platformQuote",
+    "exactConcreteBorrow",
+    "sourceIdentity",
+    "businessOperation"
   ],
   "properties": {
     "version": {
@@ -40,9 +43,49 @@
       "const": [
         {
           "port": "typed-body",
+          "items": 0,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 2,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "typed-body",
           "items": 2,
-          "copy": 256,
-          "capacity": 160,
+          "copyDelta": -1,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 2,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copyDelta": 0,
+          "capacityDelta": -1,
+          "depth": 1,
+          "fuel": 2,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 0,
+          "fuel": 2,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "typed-body",
+          "items": 2,
+          "copyDelta": 0,
+          "capacityDelta": 0,
           "depth": 1,
           "fuel": 1,
           "admitted": false,
@@ -50,72 +93,75 @@
         },
         {
           "port": "typed-body",
+          "items": 2,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 2,
+          "admitted": true,
+          "source": false
+        },
+        {
+          "port": "admitted-box",
           "items": 0,
-          "copy": 256,
-          "capacity": 160,
+          "copyDelta": 0,
+          "capacityDelta": 0,
           "depth": 1,
+          "fuel": 1,
           "admitted": false,
-          "source": true,
-          "fuel": 2
+          "source": true
         },
         {
-          "port": "typed-body",
-          "items": 2,
-          "copy": 256,
-          "capacity": 159,
+          "port": "admitted-box",
+          "items": 1,
+          "copyDelta": -1,
+          "capacityDelta": 0,
           "depth": 1,
+          "fuel": 1,
           "admitted": false,
-          "source": true,
-          "fuel": 2
+          "source": true
         },
         {
-          "port": "typed-body",
-          "items": 2,
-          "copy": 256,
-          "capacity": 160,
+          "port": "admitted-box",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": -1,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "admitted-box",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": 0,
           "depth": 0,
+          "fuel": 1,
           "admitted": false,
-          "source": true,
-          "fuel": 2
-        },
-        {
-          "port": "typed-body",
-          "items": 2,
-          "copy": 256,
-          "capacity": 160,
-          "depth": 1,
-          "admitted": true,
-          "source": false,
-          "fuel": 2
+          "source": true
         },
         {
           "port": "admitted-box",
           "items": 1,
-          "copy": 256,
-          "capacity": 95,
+          "copyDelta": 0,
+          "capacityDelta": 0,
           "depth": 1,
+          "fuel": 0,
           "admitted": false,
-          "source": true,
-          "fuel": 1
+          "source": true
         },
         {
           "port": "admitted-box",
           "items": 1,
-          "copy": 256,
-          "capacity": 96,
+          "copyDelta": 0,
+          "capacityDelta": 0,
           "depth": 1,
+          "fuel": 1,
           "admitted": true,
-          "source": false,
-          "fuel": 1
+          "source": false
         }
       ]
-    },
-    "model": {
-      "const": {
-        "bodyBytes": 64,
-        "sharedBytes": 96,
-        "headerCopyBytes": 256
-      }
     },
     "closure": {
       "const": [
@@ -128,6 +174,26 @@
     },
     "receiverRetainsPostedOwner": {
       "const": true
+    },
+    "platformQuote": {
+      "const": "concrete-native-layout"
+    },
+    "exactConcreteBorrow": {
+      "const": true
+    },
+    "sourceIdentity": {
+      "const": [
+        807,
+        29
+      ]
+    },
+    "businessOperation": {
+      "const": [
+        17,
+        11,
+        3,
+        17
+      ]
     }
   }
 }

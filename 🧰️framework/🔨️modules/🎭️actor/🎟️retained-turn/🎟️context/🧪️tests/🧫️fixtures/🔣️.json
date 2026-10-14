@@ -1,6 +1,7 @@
 {
   "operation": 71,
   "generation": 3,
+  "totalGrant": [64, 4096, 65536, 262144, 64],
   "admissionGrant": [
     1,
     0,
@@ -57,11 +58,16 @@
       "phase": "borrow",
       "admitted": true,
       "ready": true,
-      "items": 0
+      "items": 1
     }
   ],
   "sameOriginalInput": true,
   "sameCancelAndPayload": true,
   "sourceParentBeforeBorrow": true,
-  "sourceBirthQuote": "first-party-paid-parent-seal"
+  "sourceBirthQuote": "first-party-paid-parent-seal",
+  "work": {
+    "clockBinding": 1371,
+    "absoluteDeadlineUs": 1000000,
+    "fuel": 64
+  }
 }

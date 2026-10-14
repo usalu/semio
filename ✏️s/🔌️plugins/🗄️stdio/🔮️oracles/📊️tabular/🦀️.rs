@@ -48,7 +48,6 @@ impl TableSpec {
 //#region 🔖️Csv
 /// 🔮️ Writes a table as RFC 4180 CSV with the registered `csv` reference implementation.
 /// @see https://github.com/BurntSushi/rust-csv
-#[cfg(feature = "oracles")]
 pub fn oracle_create_csv(spec: &TableSpec) -> Result<Vec<u8>, String> {
     let mut writer = csv::Writer::from_writer(Vec::new());
     writer.write_record(&spec.header).map_err(|error| format!("csv header: {}", error))?;
@@ -59,7 +58,6 @@ pub fn oracle_create_csv(spec: &TableSpec) -> Result<Vec<u8>, String> {
 }
 
 /// 🔮️ Appends one row to an existing CSV with the registered reference implementation.
-#[cfg(feature = "oracles")]
 pub fn oracle_append_csv_row(input: &[u8], row: &[String]) -> Result<Vec<u8>, String> {
     let mut spec = read_csv(input)?;
     spec.rows.push(row.to_vec());
@@ -67,12 +65,10 @@ pub fn oracle_append_csv_row(input: &[u8], row: &[String]) -> Result<Vec<u8>, St
 }
 
 /// 👁️ Projects CSV bytes with the INDEPENDENT reader onto the owned `semantic-tabular-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_csv(input: &[u8]) -> Result<Json, String> {
     Ok(read_csv(input)?.projection())
 }
 
-#[cfg(feature = "oracles")]
 fn read_csv(input: &[u8]) -> Result<TableSpec, String> {
     let mut reader = csv::ReaderBuilder::new().has_headers(true).from_reader(input);
     let header = reader.headers().map_err(|error| format!("independent reader could not read the CSV header: {}", error))?.iter().map(|cell| cell.to_string()).collect();
@@ -85,23 +81,5 @@ fn read_csv(input: &[u8]) -> Result<TableSpec, String> {
 //#endregion 🔖️Csv
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature nothing here is linked, and every entry point fails loudly.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::{Json, TableSpec};
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn create_csv(_spec: &TableSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn append_csv_row(_input: &[u8], _row: &[String]) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_csv(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{append_csv_row as oracle_append_csv_row, create_csv as oracle_create_csv, project_csv};
 //#endregion 🔖️Unavailable

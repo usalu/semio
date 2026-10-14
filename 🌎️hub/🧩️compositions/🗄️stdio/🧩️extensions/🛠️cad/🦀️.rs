@@ -27,8 +27,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         StepCc6Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_step::viewer::step_cc6::StepCc6Viewer>>),
         DxfAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_dxf::editor::dxf::DxfAnyEditor>>),
         DxfAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_dxf::viewer::dxf::DxfAnyViewer>>),
-        DwgAc1018Editor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1018::DwgAc1018Editor>>),
-        DwgAc1018Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1018::DwgAc1018Viewer>>),
+        DwgAc1018Editor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_dwg_editor_ac1018::editor::dwg_ac1018::DwgAc1018Editor>>),
+        DwgAc1018Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_dwg_editor_ac1018::viewer::dwg_ac1018::DwgAc1018Viewer>>),
         DwgAc1024Editor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1024::DwgAc1024Editor>>),
         DwgAc1024Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1024::DwgAc1024Viewer>>),
     }
@@ -56,8 +56,8 @@ pub fn plugin() -> Result<Plugin<StdioCadApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_step::viewer::step_cc6::StepCc6Viewer>(semio_s_artifact_stdio_step::viewer::step_cc6::create_step_cc6_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_dxf::editor::dxf::DxfAnyEditor>(semio_s_artifact_stdio_dxf::editor::dxf::create_dxf_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_dxf::viewer::dxf::DxfAnyViewer>(semio_s_artifact_stdio_dxf::viewer::dxf::create_dxf_any_viewer());
-    builder = builder.editor::<semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1018::DwgAc1018Editor>(semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1018::create_dwg_ac1018_editor());
-    builder = builder.viewer::<semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1018::DwgAc1018Viewer>(semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1018::create_dwg_ac1018_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_dwg_editor_ac1018::editor::dwg_ac1018::DwgAc1018Editor>(semio_s_artifact_stdio_dwg_editor_ac1018::editor::dwg_ac1018::create_dwg_ac1018_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_dwg_editor_ac1018::viewer::dwg_ac1018::DwgAc1018Viewer>(semio_s_artifact_stdio_dwg_editor_ac1018::viewer::dwg_ac1018::create_dwg_ac1018_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1024::DwgAc1024Editor>(semio_s_artifact_stdio_dwg_editor::editor::dwg_ac1024::create_dwg_ac1024_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1024::DwgAc1024Viewer>(semio_s_artifact_stdio_dwg_editor::viewer::dwg_ac1024::create_dwg_ac1024_viewer());
     builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_step::artifact_kind().id });

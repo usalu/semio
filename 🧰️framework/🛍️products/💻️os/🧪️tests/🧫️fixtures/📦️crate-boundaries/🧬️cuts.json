@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "cuts": [
+    {
+      "producer": "semio-framework-value-snapshot-read",
+      "consumer": "🔨️modules/🏪️store/🔗️read/🦀️.rs",
+      "canonical": "pub use semio_framework_value_snapshot_read::*;",
+      "definition": "pub struct SnapshotRead<T: ?Sized>"
+    },
+    {
+      "producer": "semio-framework-os-store-one-item",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_one_item as one_item;",
+      "definition": "pub struct ArtifactStoreOneItemFootprint"
+    },
+    {
+      "producer": "semio-framework-os-store-ephemeral",
+      "consumer": "🔨️modules/🏪️store/🦀️.rs",
+      "canonical": "pub use semio_framework_os_store_ephemeral::*;",
+      "definition": "pub struct PresenceStore<"
+    },
+    {
+      "producer": "semio-framework-pack-json-retained-schema",
+      "consumer": "🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs",
+      "canonical": "pub use semio_framework_pack_json_retained_schema::*;",
+      "definition": "pub struct OwnedSchemaRecordCursor"
+    },
+    {
+      "producer": "semio-framework-os-presence-native-snapshot",
+      "consumer": "🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs",
+      "canonical": "pub use semio_framework_os_presence_native_snapshot::ArtifactPresenceSnapshot;",
+      "definition": "pub trait ArtifactPresenceSnapshot"
+    },
+    {
+      "producer": "semio-framework-dsl-token",
+      "consumer": "../../🔨️modules/🗣️dsl/📦️packages/🦀️rust/🦀️.rs",
+      "canonical": "pub use semio_framework_dsl_token as token;",
+      "definition": "pub struct Symbol(u32);"
+    },
+    {
+      "producer": "semio-framework-dsl-record-model",
+      "consumer": "../../🔨️modules/🗣️dsl/🧬️schema/🦀️.rs",
+      "canonical": "pub use semio_framework_dsl_record_model::*;",
+      "definition": "pub enum FieldValue {"
+    }
+  ],
+  "mutationOwners": [
+    "protocol",
+    "semio_framework_os_command",
+    "semio_framework_os_store_one_item"
+  ],
+  "forbiddenMutationOwners": [
+    "semio_framework_os_kernel"
+  ]
+}

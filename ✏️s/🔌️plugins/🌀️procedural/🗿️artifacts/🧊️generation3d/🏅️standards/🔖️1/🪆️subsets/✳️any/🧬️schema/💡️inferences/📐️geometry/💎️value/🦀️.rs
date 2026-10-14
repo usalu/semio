@@ -1,6 +1,9 @@
 //! 💎️ The values a geometry widget computes and the faults it can raise — typed, in memory, never text.
+#![allow(clippy::result_large_err)]
 
-use crate::standards::v1::subsets::any::schema::catalogue::{Localized, Quality, ShapeKind};
+use semio_s_artifact_procedural_3d_model::catalogue::Localized;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
+use semio_s_artifact_procedural_3d_model::catalogue::ShapeKind;
 use semio_framework_3d_brep_engine::{BrepError, GeometryKind, ShapeValue};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d::mesh::HalfedgeMesh;
@@ -249,6 +252,7 @@ impl WidgetEvaluation {
 
 semio_framework_value::artifact_retire_leaf!(PlaneValue, SelectionKind);
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod original_output_tests;
+
+#[path="⚠️fault/🦀️.rs"]
+mod original_fault;
+pub use original_fault::OriginalWidgetFaultProduction;

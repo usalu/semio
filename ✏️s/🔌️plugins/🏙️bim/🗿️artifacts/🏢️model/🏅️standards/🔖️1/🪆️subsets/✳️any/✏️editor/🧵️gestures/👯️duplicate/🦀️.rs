@@ -13,8 +13,8 @@ use super::session::{length_label, Mark, Pick, Pointer, Preview, Step, Style, To
 use super::transform::{ghost, outline};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
-use crate::mutations::modify::{self, ArrayPattern, MAX_COPIES};
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::modify::{self, ArrayPattern, MAX_COPIES};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use std::f64::consts::{PI, TAU};
 
 /// 🖱️ How many pixels a press must travel before it counts as a drag.
@@ -86,7 +86,7 @@ pub fn radial_count(step: f64) -> u32 {
 
 //#region 🔖️Picking
 fn pick_ids(ctx: &ToolContext<'_>, pointer: &Pointer) -> (Vec<String>, Option<(String, String)>) {
-    let placed = |id: &String| crate::mutations::elements::placement(ctx.snapshot, id).is_some();
+    let placed = |id: &String| crate::standards::v1::subsets::any::schema::mutations::elements::placement(ctx.snapshot, id).is_some();
     let selected: Vec<String> = ctx.selected.iter().filter(|id| placed(id)).cloned().collect();
     if !selected.is_empty() {
         return (selected, None);
@@ -143,7 +143,7 @@ impl Duplicate {
         }
         let prefix = ctx.mint("copy");
         let targets = minted_targets(ctx, &self.ids, &prefix, 1);
-        let mutation = ModelMutation::CopyElements(crate::mutations::copy_elements::CopyElements { ids: self.ids.clone(), vector: point2(vector), prefix });
+        let mutation = ModelMutation::CopyElements(crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements { ids: self.ids.clone(), vector: point2(vector), prefix });
         self.finish(ctx, mutation, targets)
     }
 
@@ -154,14 +154,14 @@ impl Duplicate {
         }
         let prefix = copies.then(|| ctx.mint("mirror"));
         let targets = prefix.as_ref().map_or_else(Vec::new, |prefix| minted_targets(ctx, &self.ids, prefix, 1));
-        let mutation = ModelMutation::MirrorElements(crate::mutations::mirror_elements::MirrorElements { ids: self.ids.clone(), line_start: point2(start), line_end: point2(end), prefix });
+        let mutation = ModelMutation::MirrorElements(crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements { ids: self.ids.clone(), line_start: point2(start), line_end: point2(end), prefix });
         self.finish(ctx, mutation, targets)
     }
 
     fn array(&mut self, ctx: &mut ToolContext<'_>, pattern: ArrayPattern) -> Step {
         let prefix = ctx.mint("array");
         let targets = minted_targets(ctx, &self.ids, &prefix, pattern.count());
-        let mutation = ModelMutation::ArrayElements(crate::mutations::array_elements::ArrayElements { ids: self.ids.clone(), prefix, pattern });
+        let mutation = ModelMutation::ArrayElements(crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements { ids: self.ids.clone(), prefix, pattern });
         self.finish(ctx, mutation, targets)
     }
 

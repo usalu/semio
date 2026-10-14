@@ -1201,7 +1201,7 @@ async fn db_io_output_task_yield_cancel_abandon_and_close_retire_exactly_once() 
     assert_eq!(ledger_witness(), before);
 }
 
-#[cfg(all(feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn sqlite_payload_roundtrip_obeys_the_neutral_page_lifecycle_fixture() {
     let _owner = fixture_owner();
@@ -2383,7 +2383,7 @@ async fn db_io_panic_backend_fault_and_shutdown_close_reach_exact_prior_witness(
     assert_eq!(ledger_witness(), before);
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 async fn open_real_storage_fixture(backend: &str, pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<(), DbStorageOpenRejected> {
     match backend {
         "fs" => drop(FsStorage::open(pool, path).await?),
@@ -2393,14 +2393,14 @@ async fn open_real_storage_fixture(backend: &str, pool: Arc<WorkerPool>, path: &
     Ok(())
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 fn opening_fixture_control(pool: &Arc<WorkerPool>) -> DbIoBackendControl {
     let registry = lock(db_io_backend_registry());
     let (index, slot) = registry.slots.iter().enumerate().find(|(_, slot)| slot.pool.as_ref().is_some_and(|registered| Arc::ptr_eq(registered, pool))).expect("opening registered its exact pool");
     db_io_backend_control(slot.kind, index as u16, slot.generation)
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 fn opening_fixture_close_requested(control: DbIoBackendControl) -> bool {
     let registry = lock(db_io_backend_registry());
     let (index, generation) = db_io_backend_parts(control);
@@ -2408,7 +2408,7 @@ fn opening_fixture_close_requested(control: DbIoBackendControl) -> bool {
     slot.generation != generation || slot.close_requested
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 async fn drain_opening_fixture_pool(pool: &Arc<WorkerPool>) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
     loop {
@@ -2423,7 +2423,7 @@ async fn drain_opening_fixture_pool(pool: &Arc<WorkerPool>) {
     }
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen() {
     if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen") {
@@ -2468,7 +2468,7 @@ async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen()
     }
 }
 
-#[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+#[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry() {
     if !crate::db_storage::process_isolated_law("db_storage::db_io_retained_fixtures::db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry") {

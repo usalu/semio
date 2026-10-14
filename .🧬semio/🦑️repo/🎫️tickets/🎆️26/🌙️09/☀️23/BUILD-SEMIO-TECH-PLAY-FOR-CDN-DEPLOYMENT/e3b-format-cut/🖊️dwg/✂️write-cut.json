@@ -1,0 +1,42 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust/🦀️.rs",
+ "layers": "🧮️write-layers.json",
+ "crate": "semio_s_artifact_stdio_dwg_write",
+ "aggregator": "write",
+ "crates": {
+  "records": {
+   "package": "semio-s-artifact-stdio-dwg-write-records",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust"
+  },
+  "objects": {
+   "package": "semio-s-artifact-stdio-dwg-write-objects",
+   "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "records": [
+   "//! 🧱️ `stdio.dwg` writer records: the R2004 container writer, the bit-stream writer, field writers, file-level sections and entity records.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]"
+  ],
+  "objects": [
+   "//! 📦️ `stdio.dwg` writer objects: the object-record writer and every non-entity object writer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]"
+  ]
+ },
+ "descriptions": {
+  "records": "Stdio dwg writer: containers, bit streams, fields, sections and entity records",
+  "objects": "Stdio dwg writer: object records"
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ]
+}

@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `RemoveContent`. A missing entry ⇒ Error `mutation.target-missing`; `from` past the stored
 //! leaf count ⇒ Error `mutation.target-mismatch`; `from` equal to the stored leaf count ⇒ Warning `mutation.no-op`.
-use crate::diff::{RemodelingContentRow, RemodelingDiff};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

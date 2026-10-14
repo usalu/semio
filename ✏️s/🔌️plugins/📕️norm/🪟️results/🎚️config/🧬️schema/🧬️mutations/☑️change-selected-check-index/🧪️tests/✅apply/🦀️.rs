@@ -1,5 +1,6 @@
-use super::ChangeSelectedCheckIndex;
-use crate::results_window_config::{NormResultsWindowConfig, NormResultsWindowConfigMutation};
+use crate::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
+use crate::schema::NormResultsWindowConfig;
+use crate::mutations::NormResultsWindowConfigMutation;
 
 #[semio_framework_async_macros::async_test]
 async fn selecting_and_clearing_a_check_obeys_the_inverse_sum_law() {

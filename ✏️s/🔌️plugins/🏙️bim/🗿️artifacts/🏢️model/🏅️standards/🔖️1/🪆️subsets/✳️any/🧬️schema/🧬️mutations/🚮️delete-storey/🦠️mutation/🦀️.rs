@@ -1,6 +1,6 @@
 //! 🚮️ `delete-storey` payload. Removes a storey together with everything on it (the views and schedules scoped to it, walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and the openings of its walls) and their properties and classifications; refuses while a surviving element still constrains its top to the storey.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Axis, ModelInference, Point2, SpaceBoundary};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, SpaceBoundary}, inferences::ModelInference};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -87,7 +87,7 @@ async fn walls_that_cross_or_join_do_not_clash_but_overlapping_walls_do() {
     let mut snapshot = clean();
     let line = |x0: f64, y0: f64, x1: f64, y1: f64| Axis::Line { start: Point2 { x: x0, y: y0 }, end: Point2 { x: x1, y: y1 } };
     snapshot.walls.get_mut("w-part").expect("wall").axis = line(2.0, 1.0, 2.0, 5.0);
-    snapshot.walls.get_mut("w-part").expect("wall").location = crate::LocationLine::Center;
+    snapshot.walls.get_mut("w-part").expect("wall").location = crate::standards::v1::subsets::any::schema::snapshot::LocationLine::Center;
     let mut crossing = snapshot.clone();
     crossing.walls.insert("w-cross".into(), crossing.walls["w-part"].clone());
     crossing.walls.get_mut("w-cross").expect("wall").axis = line(1.0, 3.0, 4.0, 3.0);
@@ -103,9 +103,9 @@ async fn walls_that_cross_or_join_do_not_clash_but_overlapping_walls_do() {
 #[semio_framework_async_macros::async_test]
 async fn a_beam_that_ends_on_a_column_rests_on_it_and_one_that_passes_through_clashes() {
     let mut snapshot = clean();
-    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 3.0 } };
+    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 3.0 } };
     assert!(!compute_diagnostics(&snapshot).iter().any(|row| row.code == DiagnosticCode::ClashBeamColumn), "the beam ends in the column");
-    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 5.0 } };
+    snapshot.beams.get_mut("b-1").expect("beam").axis = crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: Point2 { x: 6.0, y: 1.0 }, end: Point2 { x: 6.0, y: 5.0 } };
     let found = compute_diagnostics(&snapshot);
     assert!(has(&found, DiagnosticCode::ClashBeamColumn, &["b-1", "c-1"]), "{:?}", rows(&found));
 }
@@ -166,9 +166,9 @@ async fn storeys_without_a_datum_and_with_non_positive_heights_are_reported() {
 async fn degenerate_loops_profiles_and_paths_are_reported() {
     let mut snapshot = clean();
     snapshot.slabs.get_mut("sl-ground").expect("slab").boundary.truncate(2);
-    snapshot.slabs.get_mut("sl-first").expect("slab").boundary = [(0.0, 0.0), (6.0, 4.0), (6.0, 0.0), (0.0, 3.0)].iter().map(|(x, y)| crate::Vertex { point: Point2 { x: *x, y: *y }, bulge: 0.0 }).collect();
+    snapshot.slabs.get_mut("sl-first").expect("slab").boundary = [(0.0, 0.0), (6.0, 4.0), (6.0, 0.0), (0.0, 3.0)].iter().map(|(x, y)| crate::standards::v1::subsets::any::schema::snapshot::Vertex { point: Point2 { x: *x, y: *y }, bulge: 0.0 }).collect();
     snapshot.railings.get_mut("r-1").expect("railing").path.truncate(1);
-    snapshot.beam_types.get_mut("bt-30x50").expect("type").profile = crate::Profile::Rectangle { width: 0.0, depth: 0.5 };
+    snapshot.beam_types.get_mut("bt-30x50").expect("type").profile = crate::standards::v1::subsets::any::schema::snapshot::Profile::Rectangle { width: 0.0, depth: 0.5 };
     snapshot.columns.get_mut("c-1").expect("column").position = Point2 { x: f64::NAN, y: 0.0 };
     let found = compute_diagnostics(&snapshot);
     assert!(has(&found, DiagnosticCode::DegenerateLoop, &["sl-ground"]));
@@ -196,7 +196,7 @@ async fn dangling_references_orphans_and_duplicate_ids_are_reported() {
     let mut snapshot = clean();
     snapshot.buildings.get_mut("bldg-1").expect("building").site = "site-x".into();
     snapshot.columns.get_mut("c-1").expect("column").column_type = "ct-x".into();
-    snapshot.walls.get_mut("w-east").expect("wall").top = crate::TopConstraint::Storey { storey: "st-x".into(), offset: 0.0 };
+    snapshot.walls.get_mut("w-east").expect("wall").top = crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Storey { storey: "st-x".into(), offset: 0.0 };
     snapshot.walls.get_mut("w-west").expect("wall").storey = "st-y".into();
     snapshot.wall_types.get_mut("wt-150").expect("type").layers[0].material = "m-x".into();
     snapshot.properties.insert("ghost".into(), Default::default());
@@ -221,7 +221,7 @@ async fn dangling_references_orphans_and_duplicate_ids_are_reported() {
 
 #[semio_framework_async_macros::async_test]
 async fn viewports_and_revision_rows_whose_sheet_or_view_is_gone_are_reported_in_both_languages() {
-    use crate::{Point2, Sheet, SheetRevision, Viewport};
+    use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Sheet, SheetRevision, Viewport};
     let mut snapshot = clean();
     let view = snapshot.views.keys().next().expect("the clean house has a view").clone();
     snapshot.sheets.insert("sh-1".into(), Sheet::standard("A-101", "Plans"));
@@ -240,7 +240,7 @@ async fn viewports_and_revision_rows_whose_sheet_or_view_is_gone_are_reported_in
 
 #[semio_framework_async_macros::async_test]
 async fn diagnostics_determinism_default_and_gating_laws() {
-    use crate::{Entry, ModelDiff, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::StoreyPatch};
     let snapshot = defects();
     assert_eq!(ModelInference::infer(&snapshot).expect("infers").diagnostics, ModelInference::infer(&snapshot).expect("infers").diagnostics);
     assert!(ModelInference::infer(&ModelSnapshot::default()).expect("infers").diagnostics.is_empty());

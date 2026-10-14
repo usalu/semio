@@ -1,8 +1,8 @@
 //! 🗑️ Drawing mutation — `DeleteLayer`: removes an id-keyed layer (captures its full subtree +
 //! location for undo).
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 🗑️ `delete-layer` payload.
@@ -18,17 +18,17 @@ pub struct DeleteLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::DeleteLayer(DeleteLayer { layer_id })
+pub fn delete_layer<Op: From<DeleteLayer>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> Op {
+    Op::from(DeleteLayer { layer_id })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for DeleteLayer {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for DeleteLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::create_layer::mutation::CreateLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "layer", kind: "delete-layer", record: "DeletedLayer" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

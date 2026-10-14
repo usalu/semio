@@ -1,6 +1,6 @@
 //! 🪆️ Paid iterative semantic values retain each recursive owner until transfer.
 use crate::*;
-use graph::manifest::{PropertyBag,PropertyValue};
+use semio_framework_graph_manifest::{PropertyBag,PropertyValue};
 use semio_framework_value::{DecodedValue,DslValue,FromValue,Number,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{artifact::{FloatColumn,FloatRow,Reconstruction},SqliteRow};
 pub(super) use store::sqlite_snapshot::transfer::reserve;

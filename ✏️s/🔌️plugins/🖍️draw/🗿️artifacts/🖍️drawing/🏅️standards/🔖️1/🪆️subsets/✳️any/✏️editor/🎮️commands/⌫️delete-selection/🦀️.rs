@@ -1,9 +1,10 @@
 //! ⌫️ Atomic keyboard deletion of selected layers, anchors and handles.
-use crate::editor::drawing::commands::canvas_pointer_down::{DrawingSession,point_selection_effect,interaction_select_effect};
-use crate::editor::drawing::interaction::points;
-use crate::schema::geometry::editing::{edit_path,PathEdit,PathPointRef};
-use crate::{DrawingLayerNode,DrawingSnapshot};
-use crate::mutations::DrawingMutation;
+use crate::commands::canvas_pointer_down::{DrawingSession, point_selection_effect, interaction_select_effect};
+use crate::interaction::points;
+use semio_s_artifact_draw_drawing_geometry::editing::{edit_path, PathEdit, PathPointRef};
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_framework_plugin::{ArtifactView,ConfigView,Emit,Fault,NoConfig,NoConfigMutation};
 use std::collections::{BTreeMap,BTreeSet};
 use semio_framework_value::paged::PagedUtf8;
@@ -12,7 +13,7 @@ use semio_framework_value::paged::PagedUtf8;
 #[dsl(keyword="delete-selection")]
 pub struct DeleteSelection {}
 
-pub(crate) fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_ids:&[String])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
+pub fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_ids:&[String])->Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
     let nodes=utility=="editNodes";
     if !nodes && !matches!(utility,"selectDirect"|"selectMarquee"|"selectLasso"|"transformMove") {return Ok(Emit::default());}
     if ids.is_empty() || (nodes && point_ids.is_empty()) {return Ok(Emit::default());}
@@ -34,7 +35,7 @@ pub(crate) fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_id
         let Some(layer)=layers.get(*index) else {stack.pop();continue;};
         *index+=1;
         remaining=remaining.checked_sub(1).ok_or_else(||Fault::from("Drawing exceeds deletion capacity"))?;
-        let base=crate::schema::layer_base(layer);
+        let base=semio_s_artifact_draw_drawing_model::layer_base(layer);
         let editable=*editable && base.visible && !base.locked;
         let ancestor_selected=*ancestor_selected;
         let chosen=wanted.contains(&base.id);
@@ -49,9 +50,9 @@ pub(crate) fn plan(document:&DrawingSnapshot,utility:&str,ids:&[String],point_id
                 if targets.iter().any(|point|point.geometry!=geometry) {return Err(Fault::from("Selected path points changed"));}
                 let refs=targets.iter().map(|point|PathPointRef {index:point.index,point:point.point}).collect();
                 let segments=edit_path(&path.segments,&PathEdit::DeletePoints {points:refs}).map_err(Fault::from)?;
-                if segments.is_empty() {mutations.push(crate::mutations::delete_layer(base.id.clone()));deleted.insert(base.id.clone());}
-                else if !segments.iter().eq(path.segments.iter()) {mutations.push(crate::mutations::update_path_geometry(base.id.clone(),segments.into()));}
-            } else if !ancestor_selected {mutations.push(crate::mutations::delete_layer(base.id.clone()));}
+                if segments.is_empty() {mutations.push(semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(base.id.clone()));deleted.insert(base.id.clone());}
+                else if !segments.iter().eq(path.segments.iter()) {mutations.push(semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(base.id.clone(),segments.into()));}
+            } else if !ancestor_selected {mutations.push(semio_s_artifact_draw_drawing_structure::delete_layer::mutation::delete_layer(base.id.clone()));}
         }
         if let DrawingLayerNode::Group(group)=layer {stack.push((&group.children,0,editable,ancestor_selected || chosen));}
     }

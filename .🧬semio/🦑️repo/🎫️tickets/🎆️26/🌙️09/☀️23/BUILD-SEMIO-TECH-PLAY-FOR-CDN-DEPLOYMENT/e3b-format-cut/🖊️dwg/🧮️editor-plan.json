@@ -1,0 +1,11 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "root": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs",
+ "budget": {"lines": 3800, "bytes": 250000, "files": 30},
+ "order": ["examples", "editor-ac1018", "editor"],
+ "rules": [
+  ["4️⃣ac1018/🪆️subsets/✳️any/📚️examples/", "examples"],
+  ["4️⃣ac1018/🪆️subsets/✳️any/(✏️editor|👁️viewer)/", "editor-ac1018"],
+  [".", "editor"]
+ ]
+}

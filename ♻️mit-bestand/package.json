@@ -2,9 +2,6 @@
   "name": "semio-mit-bestand-workspace",
   "private": true,
   "type": "module",
-  "nx": {
-    "includedScripts": []
-  },
   "workspaces": [
     "../✏️s",
     "../✏️s/🔌️plugins/✒️writer/📦️packages/🟦️typescript",
@@ -178,6 +175,7 @@
     "../🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+    "../🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript",
     "../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust",
     "../🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",

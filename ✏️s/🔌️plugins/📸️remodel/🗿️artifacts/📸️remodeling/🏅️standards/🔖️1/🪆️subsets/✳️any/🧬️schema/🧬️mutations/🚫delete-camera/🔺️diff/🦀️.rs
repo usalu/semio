@@ -3,8 +3,9 @@
 //! owns nothing, so it may not be removed while another record still depends on it (the same
 //! ownership rule `delete-stream` and `delete-asset` follow). Refusing rather than cascading keeps
 //! `create-camera-calibration` the exact inverse: the delete never destroys a record it does not own.
-use crate::diff::{RemodelingDiff, RemodelingRow};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

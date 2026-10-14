@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "scope": ".",
+      "members": [
+        "w/a",
+        "w/b"
+      ],
+      "count": 3,
+      "accepted": true
+    },
+    {
+      "scope": "w/a",
+      "members": [],
+      "count": 1,
+      "accepted": true
+    },
+    {
+      "scope": ".",
+      "members": [
+        "../outside"
+      ],
+      "accepted": false
+    },
+    {
+      "scope": ".",
+      "members": [
+        "w/a",
+        "w/a"
+      ],
+      "accepted": false
+    },
+    {
+      "scope": "../outside",
+      "members": [],
+      "accepted": false
+    }
+  ]
+}

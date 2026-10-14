@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for(id,actions)in[(1,28),(2,18)]{let owners=n::list(n::field(root,id)?)?;rows=n::add(rows,owners.len())?;for owner in owners{rows=n::add(rows,n::list(n::field(n::record(owner)?,actions)?)?.len())?}}Ok(rows)}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("en1995_document",1,&n::cells(root,[Enumeration(0,&["En","De"])])?)?;

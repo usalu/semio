@@ -3,15 +3,16 @@
 //! the RELATIVE `drag-`/`rotate-`/`scale-transforms` and `move-nodes` a gumball or node drag commits. A relative leaf reads its BASE operator, so an edited gesture replays on any base; its
 //! inverse is the absolute base rows, never a negated delta.
 
-use crate::central_apply::apply_generation3d_mutation;
-use super::*;
-use crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot;
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value;
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::drag_transforms;
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
-use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::rotate_transforms;
-use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::scale_transforms;
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
+use semio_s_artifact_procedural_3d_mutations::*;
+use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
+use semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::drag_transforms::drag_transforms;
+use semio_s_artifact_procedural_3d_mutations::move_nodes::move_nodes;
+use semio_s_artifact_procedural_3d_mutations::rotate_transforms::rotate_transforms;
+use semio_s_artifact_procedural_3d_mutations::scale_transforms::scale_transforms;
 use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout};
 
@@ -43,7 +44,7 @@ fn base(offset: [f64; 3]) -> Generation3dSnapshot {
 }
 
 fn params_of<'a>(snapshot: &'a Generation3dSnapshot, id: &str) -> &'a Dictionary {
-    let widget = snapshot.host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == id).expect("operator present");
+    let widget = snapshot.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id).expect("operator present");
     match widget { Widget::Neuron { params, .. } => params, _ => panic!("operator params") }
 }
 
@@ -153,7 +154,7 @@ fn payload_invariants_are_fatal() {
 fn a_slider_value_is_absolute_and_inverts_to_the_whole_base_slider() {
     use semio_framework_diagnostic::Severity::Error;
 use semio_framework_diagnostic::Severity::Warning;
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
     let base = base([0.0; 3]);
     for (value, range) in [(7.5, (0.0, 10.0)), (42.0, (0.0, 50.0))] {
         let applied = applied_and_restored(&change_slider_value("height", value), &base);
@@ -329,7 +330,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
             }
             let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
             let target = ids[edited_at].clone();
-            let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+            let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
             let preview_base = store.state_before(&target, &drafts).expect("the preview base folds");
             let preview = preview_base.as_ref().clone();
             if let Ok(state) = std::sync::Arc::try_unwrap(preview_base) {
@@ -368,7 +369,7 @@ async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
             store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
-        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: change_slider_value("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();
+        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA.into(), payload: change_slider_value("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins");
         assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
         let result = replay.finish().expect("finished");
@@ -391,11 +392,11 @@ fn semantic_wire_native_parameters_match_independent_json_oracle() {
         let native = <Value as semio_framework_value::FromValue>::from_value(row["literal"].clone().into()).expect("IO admits neural fixture");
         let input = WidgetInputValue::of_neural_value_as(&native, row["schema"].as_str().expect("declared schema"));
         let portable: semio_framework_value::DslValue = row["literal"].clone().into();
-        assert_eq!(input, crate::standards::v1::subsets::any::io::text::value::widget_input_of_literal_as(&portable, row["schema"].as_str().expect("declared schema")), "{} portable/native classification", row["name"]);
+        assert_eq!(input, semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal_as(&portable, row["schema"].as_str().expect("declared schema")), "{} portable/native classification", row["name"]);
         let actual: serde_json::Value = match input {
             Some(input) => {
                 let generated = input.neural_value();
-                assert_eq!(semio_framework_value::ToValue::to_value(&generated), crate::standards::v1::subsets::any::io::text::value::widget_input_literal(&input), "{} portable/native construction", row["name"]);
+                assert_eq!(semio_framework_value::ToValue::to_value(&generated), semio_s_artifact_procedural_3d_io_text::value::widget_input_literal(&input), "{} portable/native construction", row["name"]);
                 generated.retire_cold();
                 serde_json::from_str(&semio_framework_pack_json::to_json_string(&input)).expect("IO prints typed input")
             },

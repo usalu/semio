@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume",
+  "semanticKind": "delete-target-volume",
+  "displayName": "Delete Target Volume",
+  "emoji": "🪦",
+  "aggregateVariant": "DeleteTargetVolume",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "delete-target-volume",
+  "binaryTag": 18,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

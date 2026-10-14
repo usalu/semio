@@ -4,7 +4,7 @@
 
 use super::super::elements::{self, Change, Refusal};
 use super::MoveElements;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn changes(payload: &MoveElements, base: &ModelSnapshot) -> Result<Change, Refusal> {

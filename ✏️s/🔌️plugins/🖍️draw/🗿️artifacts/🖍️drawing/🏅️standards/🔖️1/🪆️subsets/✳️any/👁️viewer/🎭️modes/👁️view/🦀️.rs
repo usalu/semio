@@ -3,7 +3,7 @@
 //! contract §1 requires ≥1 real window per viewer mode — the Canvas window is the drawing artifact's
 //! natural (and only) surface.
 
-use crate::viewer::drawing::modes::view::windows::canvas;
+use crate::modes::view::windows::canvas;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -31,3 +31,11 @@ pub fn layout() -> WindowLayout {
     }
 }
 //#endregion 🔖️Definition
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🖼️canvas/🦀️.rs"]
+    pub mod canvas;
+}
+//#endregion 🪢️TaxonomyMounts

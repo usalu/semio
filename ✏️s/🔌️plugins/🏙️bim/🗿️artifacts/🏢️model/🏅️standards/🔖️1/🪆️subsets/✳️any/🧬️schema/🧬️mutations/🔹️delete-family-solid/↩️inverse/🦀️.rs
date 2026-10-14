@@ -2,7 +2,7 @@
 
 use super::super::create_family_solid::CreateFamilySolid;
 use super::DeleteFamilySolid;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteFamilySolid, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.family_solids.get(&payload.id) {

@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::las::v1_0::any::SemioMeshFromLas;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioPrimitive, SemioTopology};
 use semio_framework_plugin::ArtifactDeserializer;

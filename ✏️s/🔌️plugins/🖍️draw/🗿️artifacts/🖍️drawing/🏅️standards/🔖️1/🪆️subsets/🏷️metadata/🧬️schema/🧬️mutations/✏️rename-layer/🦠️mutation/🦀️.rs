@@ -1,7 +1,7 @@
 //! ✏️ Drawing mutation — `RenameLayer`: changes one layer's identity `name` field.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// ✏️ `rename-layer` payload — `new_name` per the taxonomy's naming convention for identity fields.
@@ -18,17 +18,17 @@ pub struct RenameLayer {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn rename_layer(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, new_name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::RenameLayer(RenameLayer { layer_id, new_name })
+pub fn rename_layer<Op: From<RenameLayer>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, new_name: semio_framework_value::paged::PagedUtf8<{usize::MAX}>) -> Op {
+    Op::from(RenameLayer { layer_id, new_name })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for RenameLayer {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for RenameLayer where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<RenameLayer> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "layer", kind: "rename-layer", record: "RenamedLayer" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

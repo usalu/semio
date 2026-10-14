@@ -1,8 +1,8 @@
 use super::*;
 use protocol::{Mutation, SemanticMutation};
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
-use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
-use semio_s_artifact_cad_cad::CadNode;
+use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
+use semio_s_artifact_cad_cad_model::snapshot::CadNode;
 
 #[semio_framework_async_macros::async_test]
 async fn bundle_contributes_building_import_profile() {
@@ -96,7 +96,7 @@ async fn contributed_mutation_id_structurally_cannot_collide_with_any_cad_owner_
 /// applying `create-node` directly.
 #[semio_framework_async_macros::async_test]
 async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand() {
-    let base = semio_s_artifact_cad_cad::empty_cad_snapshot();
+    let base = semio_s_artifact_cad_cad_model::snapshot::empty_cad_snapshot();
     let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
     let folded = protocol::apply_diff(protocol::os_spr::fold::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
@@ -110,7 +110,7 @@ async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand
 
 #[semio_framework_async_macros::async_test]
 async fn contributed_inference_computes_a_real_building_summary() {
-    let mut base = semio_s_artifact_cad_cad::empty_cad_snapshot();
+    let mut base = semio_s_artifact_cad_cad_model::snapshot::empty_cad_snapshot();
     base.nodes.push(CadNode { id: "storey-1".into(), label: "Level One".into(), kind: "building-storey".into() });
     let pack = <CadSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&base);
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };

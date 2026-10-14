@@ -1,5 +1,8 @@
 //! 📈️ Equipment performance curves: polynomials, biquadratics, triquadratics, lookup tables.
 
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_num as num;
+
 use crate::error::{Diagnostics, Error, Severity};
 pub use crate::num::{biquadratic, lerp, poly_eval, LookupTable2D};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

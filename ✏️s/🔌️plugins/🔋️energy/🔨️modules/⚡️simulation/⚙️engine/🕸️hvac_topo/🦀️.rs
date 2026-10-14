@@ -1,5 +1,7 @@
 //! 🌀️ HVAC fluid topology: nodes, branches, splitters, mixers, and loop validation.
 
+extern crate semio_s_plugin_energy_engine_error as error;
+
 use crate::error::{Diagnostics, Error};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

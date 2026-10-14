@@ -1,9 +1,9 @@
-use super::*;
-use crate::mutations::create_node::CreateNode;
-use crate::mutations::delete_node::DeleteNode;
-use crate::mutations::rename_node::RenameNode;
-use crate::op::CadMutation;
-use crate::sample_scene_fixture::sample_scene;
+use semio_s_artifact_cad_cad_model::diff::*;
+use semio_s_artifact_cad_cad_mut_nodes::create_node::CreateNode;
+use semio_s_artifact_cad_cad_mut_nodes::delete_node::DeleteNode;
+use semio_s_artifact_cad_cad_mut_nodes::rename_node::RenameNode;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_testing::sample_scene;
 use protocol::{DiffAlgebra, Mutation};
 
 fn row(id: &str, label: &str) -> CadNode {

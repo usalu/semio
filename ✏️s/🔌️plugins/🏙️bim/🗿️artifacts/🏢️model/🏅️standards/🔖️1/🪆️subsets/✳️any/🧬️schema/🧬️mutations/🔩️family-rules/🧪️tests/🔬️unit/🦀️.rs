@@ -1,5 +1,5 @@
 use super::*;
-use crate::{BeamType, ColumnType, ExprPoint, ExprPoint3, FamilyCategory, FamilyParameter, ParameterKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{BeamType, ColumnType, ExprPoint, ExprPoint3, FamilyCategory, FamilyParameter, ParameterKind};
 
 fn base() -> ModelSnapshot {
     let mut base = ModelSnapshot::default();

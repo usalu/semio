@@ -1,5 +1,4 @@
 #[cfg(test)] use crate::bounded_ownership::PluginLifecycleStep;
-#[cfg(test)] use crate::store_lifecycle::ArtifactSnapshotDisposer;
 #[cfg(test)] use semio_framework::MediaForm;
 #[cfg(test)] use semio_framework::MediaClass;
 mod artifact_media_export_credit_tests {
@@ -101,57 +100,6 @@ mod artifact_media_export_credit_tests {
     }
 
     #[test]
-    fn snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop() {
-        struct DropItem(std::sync::Arc<std::sync::atomic::AtomicUsize>);
-        impl Drop for DropItem {
-            fn drop(&mut self) {
-                self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            }
-        }
-        struct SnapshotDisposer;
-        impl ArtifactSnapshotDisposer<Vec<DropItem>> for SnapshotDisposer {
-            fn retirement_demands(&self, _snapshot: &Option<std::sync::Arc<Vec<DropItem>>>, _body: usize) -> Result<RetirementDemand, ValueError> {
-                Ok(RetirementDemand { depth: 1, ..Default::default() })
-            }
+    fn installed_snapshot_supplier_retains_exact_source_until_paid_close(){crate::media_operation_refusal::tests::media_original_installed_snapshot_source_and_paid_close()}
 
-            fn close_step(&mut self, snapshot: &mut Option<std::sync::Arc<Vec<DropItem>>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
-                if grant.maximum_items == 0 {
-                    return Ok(PluginLifecycleStep::Progress(Default::default()));
-                }
-                let Some(owner) = snapshot.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
-                let Some(items) = std::sync::Arc::get_mut(owner) else { return Ok(PluginLifecycleStep::Blocked { reason: "snapshot remains externally owned" }) };
-                if items.pop().is_some() {
-                    return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-                }
-                drop(snapshot.take());
-                Ok(PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-            }
-
-            fn terminal_is_empty(&self, snapshot: &Option<std::sync::Arc<Vec<DropItem>>>) -> bool {
-                snapshot.is_none()
-            }
-        }
-
-        let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let cache_a = std::sync::Arc::new(vec![DropItem(drops.clone()), DropItem(drops.clone())]);
-        let job_a = cache_a.clone();
-        let (lease, mut retirement_a) = ArtifactSnapshotCloseLease::new(&cache_a, Box::new(SnapshotDisposer));
-        let cache_b = std::sync::Arc::new(Vec::<DropItem>::new());
-        drop(cache_a);
-        assert!(lease.can_release(&job_a), "runtime retention keeps exact A alive after cache advances to B");
-        drop(job_a);
-        drop(lease);
-        assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0, "job and lease release must not become final for snapshot A");
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4 };
-        let one_item = PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() });
-        assert_eq!(retirement_a.close_step(grant).expect("first bounded A disposal"), one_item);
-        assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(retirement_a.close_step(grant).expect("second bounded A disposal"), one_item);
-        assert_eq!(retirement_a.close_step(grant).expect("final A snapshot disposal"), one_item);
-        assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 2);
-        let shell = retirement_a.retirement_demands(0).expect("terminal shell quote");
-        assert_eq!(retirement_a.close_step(RetainedCloneGrant { maximum_release_bytes: shell.release_bytes - 1, ..grant }).expect("under-granted shell release yields"), PluginLifecycleStep::Progress(Default::default()));
-        assert_eq!(retirement_a.close_step(grant).expect("terminal A shell release"), PluginLifecycleStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: shell.release_bytes, ..Default::default() }));
-        assert!(std::sync::Arc::strong_count(&cache_b) == 1, "cache B is independent of retired A authority");
-    }
 }

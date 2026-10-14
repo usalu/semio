@@ -1,8 +1,8 @@
 //! ➖️ `remove-fire-exposure` diff — removes the row at the index.
 
-use super::RemoveFireExposure;
-use crate::diff::{En1993Diff, En1993FireExposureDelta};
-use crate::En1993Snapshot;
+use crate::remove_fire_exposure::RemoveFireExposure;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993FireExposureDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveFireExposure, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.fire_exposures.len() {

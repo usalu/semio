@@ -1,9 +1,10 @@
 //! ✏️ Undoable edits of the selected path's anchors and handles.
-use crate::editor::drawing::commands::canvas_pointer_down::{DrawingSession,point_selection_effect};
-use crate::editor::drawing::interaction::points;
-use crate::schema::geometry::editing::{edit_path, PathEdit};
-use crate::{DrawingLayerNode, DrawingSnapshot};
-use crate::mutations::DrawingMutation;
+use crate::commands::canvas_pointer_down::{DrawingSession, point_selection_effect};
+use crate::interaction::points;
+use semio_s_artifact_draw_drawing_geometry::editing::{edit_path, PathEdit};
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -15,8 +16,8 @@ pub struct EditPath {
 }
 
 pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
-    if crate::schema::drawing_layer_is_locked(doc.snapshot, &payload.layer_id) { return Err(Fault::from("Unlock the path before editing")); }
-    let Some(DrawingLayerNode::Path(path)) = crate::schema::find_drawing_layer(doc.snapshot, &payload.layer_id) else { return Err(Fault::from("Select a path to edit")); };
+    if semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(doc.snapshot, &payload.layer_id) { return Err(Fault::from("Unlock the path before editing")); }
+    let Some(DrawingLayerNode::Path(path)) = semio_s_artifact_draw_drawing_model::find_drawing_layer(doc.snapshot, &payload.layer_id) else { return Err(Fault::from("Select a path to edit")); };
     let segments = edit_path(&path.segments, &payload.edit).map_err(Fault::from)?;
     if segments.iter().eq(path.segments.iter()) {return Ok(Emit::default());}
     let rebind=segments.len()==path.segments.len()&&matches!(payload.edit.as_ref(),PathEdit::Node {..}|PathEdit::Position {..}|PathEdit::Coordinate {..}|PathEdit::Translate {..});
@@ -32,7 +33,7 @@ pub fn handle(payload: &EditPath, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg:
             }
         }
     }
-    let mut emit=Emit::mutations(vec![crate::mutations::update_path_geometry(path.base.id.clone(), segments.into())]);
+    let mut emit=Emit::mutations(vec![semio_s_artifact_draw_drawing_transform::update_path_geometry::mutation::update_path_geometry(path.base.id.clone(), segments.into())]);
     if !session.interaction.points.is_empty() {emit.effects.push(point_selection_effect(&selected));}
     Ok(emit)
 }

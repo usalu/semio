@@ -12,18 +12,18 @@ use std::collections::HashSet;
 
 use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_validation::validate_body;
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::bspline::KnotVector;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 #[cfg(test)]
-use semio_framework_3d_brep_representation::vector::Vec3;
+use semio_framework_3d_brep_vector::Vec3;
 
 // #region 🔖️SewApi
 

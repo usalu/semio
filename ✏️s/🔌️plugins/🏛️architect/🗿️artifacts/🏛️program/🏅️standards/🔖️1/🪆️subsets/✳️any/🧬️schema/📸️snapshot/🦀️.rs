@@ -278,7 +278,7 @@ impl Default for ProgramSnapshot {
 /// exists in `ArtifactApp::handle` yet, checked directly against `🔌️plugin/🦀️.rs`,
 /// W1-owned, read-only).
 //#region 🔖️ChildTypes
-pub type ProgramBenchmarksChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot>;
+pub type ProgramBenchmarksChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
@@ -287,9 +287,13 @@ pub type ProgramBenchmarksChild = store::os_store::artifact_child::ArtifactChild
 /// truth on decode); `id`/`name` are a redundant native-column projection for table-shaped tooling
 /// that only understands the neutral subset — the same split `🕸️dag`'s node/edge converter uses for
 /// its own richer-than-native domain type.
-pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
@@ -304,8 +308,8 @@ pub fn benchmark_table_from_records(records: &[BenchmarkRecord]) -> semio_s_arti
 /// never a stub. A row whose `json` cell is missing or fails to parse is honestly SKIPPED (not
 /// fabricated from `id`/`name` alone, since `BenchmarkRecord` has no `Default` and a partial
 /// reconstruction would silently invent data) — documented here rather than hidden.
-pub fn benchmark_records_from_table(table: &semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn benchmark_records_from_table(table: &semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot) -> Vec<BenchmarkRecord> {
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     table
         .rows
         .iter()
@@ -349,13 +353,17 @@ pub fn benchmarks_child_from_records(records: &[BenchmarkRecord]) -> ProgramBenc
 /// above. `KnowledgeRecord` also nests a rich `EntityHeader` with no clean native `table`-column
 /// mapping, so it follows the identical `id`/`name`-native-plus-full-`json` converter shape.
 //#region 🔖️ChildTypes
-pub type ProgramKnowledgeChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot>;
+pub type ProgramKnowledgeChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
-pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "id".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "name".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "json".into(), kind: SemioTableCellKind::Str }],
@@ -366,8 +374,8 @@ pub fn knowledge_table_from_records(records: &[KnowledgeRecord]) -> semio_s_arti
     }
 }
 
-pub fn knowledge_records_from_table(table: &semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn knowledge_records_from_table(table: &semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot) -> Vec<KnowledgeRecord> {
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     table
         .rows
         .iter()
@@ -411,7 +419,7 @@ pub fn knowledge_child_from_records(records: &[KnowledgeRecord]) -> ProgramKnowl
 /// `Effect::LoadDocument`) derives both slots here; without it the archive closure completes
 /// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
 pub fn genesis_program_child_pack(snapshot: &ProgramSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
     use pack::snapshot::ArtifactPack;
     match slot {
         "knowledge" if child_id == snapshot.knowledge.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&knowledge_table_from_records(&snapshot.knowledge_payload))),

@@ -1,9 +1,11 @@
 //! 🔺️ `delete-generation` sparse diff construction. `FormGeneration` carries no widget/synapse
 //! reference, so removing a generation never cascades into the fixture.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationsDelta, Generation3dSelectionChange};
-use crate::standards::v1::subsets::any::schema::mutations::delete_generation::DeleteGeneration;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationsDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dSelectionChange;
+use crate::delete_generation::DeleteGeneration;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 pub fn diff(payload: &DeleteGeneration, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let Some(index) = base.generation.generations.iter().position(|entry| entry.id == payload.id) else {

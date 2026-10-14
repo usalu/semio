@@ -3,7 +3,7 @@
 use super::super::create_door_type::CreateDoorType;
 use super::super::cascade;
 use super::DeleteDoorType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteDoorType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.door_types.get(&payload.id) {

@@ -17,9 +17,10 @@
 //! real and independently tested (see below) via `store::infer_field` directly; wiring it into the
 //! aggregate is an honest, flagged remainder, not a silently dropped step.
 
-use crate::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
-use crate::schema::statistics_internals;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_statistics::schema::statistics_internals;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the

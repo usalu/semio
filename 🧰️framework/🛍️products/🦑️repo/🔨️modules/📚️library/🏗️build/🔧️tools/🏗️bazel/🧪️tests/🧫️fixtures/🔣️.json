@@ -1,10 +1,172 @@
 {
-  "graph":{"version":1,"projects":{
-    "library":{"name":"library","root":"library","targets":{"build":{"execution":{"kind":"noop"},"cache":true}}},
-    "app":{"name":"app","root":"app","targets":{"prepare":{"execution":{"kind":"noop"}},"build":{"execution":{"kind":"command","command":"bun ./📜️script.ts build"},"dependsOn":["^build","prepare"],"cache":true},"test":{"execution":{"kind":"noop"},"dependsOn":[{"target":"build","projects":"self","params":"forward"}]}}}
-  },"dependencies":[{"source":"app","target":"library","type":"static"}]},
-  "request":{"tasks":["app:test"],"args":["--seed=7"]},
-  "expected":{"selected":["app:test"],"dependencies":{"app:test":["app:build"],"app:build":["app:prepare","library:build"],"app:prepare":[],"library:build":[]},"args":{"app:test":["--seed=7"],"app:build":["--seed=7"],"app:prepare":[],"library:build":[]}},
-  "sourceIdentity":{"target":"target.txt","link":"source.txt","contents":["first","second"],"directory":"tree","cycle":"loop"},
-  "runtime":{"sourceCases":[{"source":"first","output":"FIRST","executions":1},{"source":"second","output":"SECOND","executions":2}],"nestedExecutions":2,"uncachedExecutions":4,"launchExecutions":5,"serviceExecutions":6}
+  "graph": {
+    "version": 1,
+    "projects": {
+      "library": {
+        "name": "library",
+        "root": "library",
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            },
+            "cache": true
+          }
+        }
+      },
+      "app": {
+        "name": "app",
+        "root": "app",
+        "targets": {
+          "prepare": {
+            "execution": {
+              "kind": "noop"
+            }
+          },
+          "build": {
+            "execution": {
+              "kind": "command",
+              "command": "bun ./📜️script.ts build"
+            },
+            "dependsOn": [
+              "^build",
+              "prepare"
+            ],
+            "cache": true
+          },
+          "test": {
+            "execution": {
+              "kind": "noop"
+            },
+            "dependsOn": [
+              {
+                "target": "build",
+                "projects": "self",
+                "params": "forward"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "dependencies": [
+      {
+        "source": "app",
+        "target": "library",
+        "type": "static"
+      }
+    ]
+  },
+  "request": {
+    "tasks": [
+      "app:test"
+    ],
+    "args": [
+      "--seed=7"
+    ]
+  },
+  "expected": {
+    "selected": [
+      "app:test"
+    ],
+    "dependencies": {
+      "app:test": [
+        "app:build"
+      ],
+      "app:build": [
+        "app:prepare",
+        "library:build"
+      ],
+      "app:prepare": [],
+      "library:build": []
+    },
+    "args": {
+      "app:test": [
+        "--seed=7"
+      ],
+      "app:build": [
+        "--seed=7"
+      ],
+      "app:prepare": [],
+      "library:build": []
+    }
+  },
+  "sourceIdentity": {
+    "target": "target.txt",
+    "link": "source.txt",
+    "contents": [
+      "first",
+      "second"
+    ],
+    "directory": "tree",
+    "cycle": "loop"
+  },
+  "runtime": {
+    "sourceCases": [
+      {
+        "source": "first",
+        "output": "FIRST",
+        "executions": 1
+      },
+      {
+        "source": "second",
+        "output": "SECOND",
+        "executions": 2
+      }
+    ],
+    "nestedExecutions": 2,
+    "uncachedExecutions": 4,
+    "launchExecutions": 5,
+    "serviceExecutions": 6,
+    "continuousRefusals": [
+      {
+        "mode": "service-early",
+        "consumerStarted": false,
+        "error": "Continuous task exited before readiness"
+      },
+      {
+        "mode": "service-ended",
+        "consumerStarted": true,
+        "error": "Continuous task exited while required by selected tasks"
+      }
+    ],
+    "cancellation": {
+      "consumerMilliseconds": 1200,
+      "observationMilliseconds": 1500,
+      "parallelFailureMilliseconds": 100
+    }
+  },
+  "configuration": {
+    "target": {
+      "execution": {"kind":"command","command":"printf prototype","env":{"SEMIO_BUILD_MODE":"prototype","RETAINED":"true"},"args":["authored"]},
+      "outputs": ["{projectRoot}/{options.env.SEMIO_BUILD_MODE}.txt"],
+      "cache": true,
+      "configurations": {"release":{"execution":{"command":"printf release","env":{"SEMIO_BUILD_MODE":"release"},"args":["configured"]}}}
+    },
+    "expected": {"command":"printf release","env":{"SEMIO_BUILD_MODE":"release","RETAINED":"true"},"args":["configured"]},
+    "rejected": [
+      {"outputs":["different.txt"]},
+      {"inputs":["different.txt"]},
+      {"dependsOn":["prepare"]},
+      {"cache":false},
+      {"continuous":true},
+      {"execution":{"kind":"noop"}},
+      {"execution":{"ownerArguments":true}},
+      {"execution":{"nativeOwnerCommand":{}}},
+      {"execution":{"outputs":["different.txt"]}},
+      {"execution":{"cache":false}},
+      {"execution":{"commands":["printf changed-form"]}}
+    ]
+  },
+  "moduleSetup": {
+    "receipt": {
+      "version": 1,
+      "identity": "0000000000000000000000000000000000000000000000000000000000000000",
+      "lockSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "blobs": [
+        "2222222222222222222222222222222222222222222222222222222222222222"
+      ]
+    },
+    "offlineError": "Pinned Bazel module setup is not prepared for the original offline invocation"
+  }
 }

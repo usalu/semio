@@ -1,6 +1,6 @@
 //! ↗️ `create-leader` payload. Brings a new leader onto a storey plan: a text joined by a line to an anchor (a free point or an element of the model), placed beside the anchor so it follows the element.
 
-use crate::{Leader, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Leader, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

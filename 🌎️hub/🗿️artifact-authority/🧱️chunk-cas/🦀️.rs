@@ -1018,13 +1018,11 @@ impl ArtifactChunkCasStorage for FsArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "sqlite")]
 /// 🪶️ Dedicated SQLite artifact CAS table, separate from generic database payloads.
 pub struct SqliteArtifactChunkCasStorage {
     connection: Arc<Mutex<rusqlite::Connection>>,
 }
 
-#[cfg(feature = "sqlite")]
 impl SqliteArtifactChunkCasStorage {
     const SCHEMA: &'static str = "CREATE TABLE IF NOT EXISTS hub_artifact_cas_object (
         space_digest BLOB NOT NULL CHECK(length(space_digest) = 32),
@@ -1071,7 +1069,6 @@ impl SqliteArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "sqlite")]
 impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
@@ -1220,13 +1217,11 @@ impl ArtifactChunkCasStorage for SqliteArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "postgres")]
 /// 🐘️ Dedicated PostgreSQL artifact CAS table.
 pub struct PostgresArtifactChunkCasStorage {
     pool: sqlx_postgres::PgPool,
 }
 
-#[cfg(feature = "postgres")]
 impl PostgresArtifactChunkCasStorage {
     /// 🔌️ Connects and bootstraps the dedicated CAS table.
     pub async fn connect(database_url: &str) -> Result<Self, AuthorityError> {
@@ -1255,7 +1250,6 @@ impl PostgresArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "postgres")]
 impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
@@ -1389,13 +1383,11 @@ impl ArtifactChunkCasStorage for PostgresArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "neo4j")]
 /// 🕸️ Dedicated Neo4j artifact CAS label.
 pub struct Neo4jArtifactChunkCasStorage {
     graph: neo4rs::Graph,
 }
 
-#[cfg(feature = "neo4j")]
 impl Neo4jArtifactChunkCasStorage {
     /// 🔌️ Connects and installs the dedicated object-key uniqueness constraint.
     pub async fn connect(uri: &str, user: &str, password: &str) -> Result<Self, AuthorityError> {
@@ -1410,7 +1402,6 @@ impl Neo4jArtifactChunkCasStorage {
     }
 }
 
-#[cfg(feature = "neo4j")]
 impl ArtifactChunkCasStorage for Neo4jArtifactChunkCasStorage {
     async fn configure_coordinator(&self, coordinator_id: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
@@ -1510,11 +1501,8 @@ impl ArtifactChunkCasStorage for Neo4jArtifactChunkCasStorage {
 pub enum ArtifactChunkCasStores {
     Memory(MemoryArtifactChunkCasStorage),
     Filesystem(FsArtifactChunkCasStorage),
-    #[cfg(feature = "sqlite")]
     Sqlite(SqliteArtifactChunkCasStorage),
-    #[cfg(feature = "postgres")]
     Postgres(PostgresArtifactChunkCasStorage),
-    #[cfg(feature = "neo4j")]
     Neo4j(Neo4jArtifactChunkCasStorage),
 }
 
@@ -1523,11 +1511,8 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
         match self {
             Self::Memory(storage) => storage.configure_coordinator(coordinator_id, context).await,
             Self::Filesystem(storage) => storage.configure_coordinator(coordinator_id, context).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(storage) => storage.configure_coordinator(coordinator_id, context).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.configure_coordinator(coordinator_id, context).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.configure_coordinator(coordinator_id, context).await,
         }
     }
@@ -1536,11 +1521,8 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
         match self {
             Self::Memory(storage) => storage.advance_physical_epoch(coordinator_id, space_id, epoch, context).await,
             Self::Filesystem(storage) => storage.advance_physical_epoch(coordinator_id, space_id, epoch, context).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(storage) => storage.advance_physical_epoch(coordinator_id, space_id, epoch, context).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.advance_physical_epoch(coordinator_id, space_id, epoch, context).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.advance_physical_epoch(coordinator_id, space_id, epoch, context).await,
         }
     }
@@ -1549,11 +1531,8 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
         match self {
             Self::Memory(storage) => storage.put_if_absent(key, bytes, context).await,
             Self::Filesystem(storage) => storage.put_if_absent(key, bytes, context).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(storage) => storage.put_if_absent(key, bytes, context).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.put_if_absent(key, bytes, context).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.put_if_absent(key, bytes, context).await,
         }
     }
@@ -1562,11 +1541,8 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
         match self {
             Self::Memory(storage) => storage.get(key, context).await,
             Self::Filesystem(storage) => storage.get(key, context).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(storage) => storage.get(key, context).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.get(key, context).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.get(key, context).await,
         }
     }
@@ -1575,11 +1551,8 @@ impl ArtifactChunkCasStorage for ArtifactChunkCasStores {
         match self {
             Self::Memory(storage) => storage.delete_if_unreferenced(key, fence, context).await,
             Self::Filesystem(storage) => storage.delete_if_unreferenced(key, fence, context).await,
-            #[cfg(feature = "sqlite")]
             Self::Sqlite(storage) => storage.delete_if_unreferenced(key, fence, context).await,
-            #[cfg(feature = "postgres")]
             Self::Postgres(storage) => storage.delete_if_unreferenced(key, fence, context).await,
-            #[cfg(feature = "neo4j")]
             Self::Neo4j(storage) => storage.delete_if_unreferenced(key, fence, context).await,
         }
     }

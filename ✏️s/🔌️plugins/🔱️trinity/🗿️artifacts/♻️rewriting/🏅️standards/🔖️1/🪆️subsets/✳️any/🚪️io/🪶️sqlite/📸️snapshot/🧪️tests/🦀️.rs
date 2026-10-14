@@ -292,7 +292,6 @@ fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
     }
 }
 
-#[cfg(feature="component-app-assembly")]
 mod populated_public_owner {
     use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;
     use semio_framework_plugin::__semio_dispatch_PluginApp;

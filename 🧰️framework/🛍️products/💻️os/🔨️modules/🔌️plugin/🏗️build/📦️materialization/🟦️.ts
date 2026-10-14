@@ -1,3 +1,4 @@
+import {type CargoDependencyNetworkV1} from "./../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import {readCatalogBuildTargetsV1,runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { resolveTestLevel, atTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
@@ -116,9 +117,9 @@ async function readPackageName(cratePath: string): Promise<string> {
 /** 🎯️ One plugin's iterate stage: the `wasm-prototype` build of exactly this crate into its `dist/components-iterate`,
  * described locally (never committed) and bound by a `wasm-prototype` receipt. Every other plugin keeps its shipped module.
  * Fine-grain locking (`.cargo/config.toml`) lets concurrent agents and devs share every already-built unit. */
-async function buildPluginCargo(target: PluginBuildTargetV1, control: CompilerAdmissionControl): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string; readonly deliverable: ComponentDeliverableV1 }> {
+async function buildPluginCargo(target: PluginBuildTargetV1, control: CompilerAdmissionControl,network:CargoDependencyNetworkV1): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string; readonly deliverable: ComponentDeliverableV1 }> {
   publishedDescriptorEmitter(repoRoot);
-  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, join(target.cratePath, "Cargo.toml")), ITERATE_COMPONENT_PROFILE, "local", control);
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, join(target.cratePath, "Cargo.toml")), ITERATE_COMPONENT_PROFILE, "local", control,network);
   return { target, artifact: staged.deliverable.wasm, deliverable: staged.deliverable };
 }
 
@@ -134,13 +135,13 @@ async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ 
 }
 
 /** 🔁️ `components iterate <plugin-id>`: the single-plugin browser loop — iterate build, local describe, unoptimized module. */
-export async function iterateComponentV1(pluginId: string, control: CompilerAdmissionControl): Promise<void> {
+export async function iterateComponentV1(pluginId: string, control: CompilerAdmissionControl,network:CargoDependencyNetworkV1): Promise<void> {
   const target = readCatalogBuildTargetsV1().find((entry) => entry.pluginId === pluginId);
   if (!target) throw new Error(`components iterate: ${pluginId} names no discovered plugin crate with a deployment directory`);
   ensurePreview2ShimVendor();
   ensureGuestSlimTypstFontsAsset();
   publishShardWorker();
-  await materializePlugin(target, await buildPluginCargo(target, control), control);
+  await materializePlugin(target, await buildPluginCargo(target, control,network), control);
 }
 
 export { buildPluginCargo, ensureGuestSlimTypstFontsAsset, ensurePreview2ShimVendor, materializePlugin, pluginWebMaterializeContext, preview2ShimVendorDir, publishShardWorker, readPackageName, rewriteExistingPluginShimImports };

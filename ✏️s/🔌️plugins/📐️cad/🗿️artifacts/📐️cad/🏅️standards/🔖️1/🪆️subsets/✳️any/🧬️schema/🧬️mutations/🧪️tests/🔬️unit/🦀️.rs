@@ -1,11 +1,9 @@
 use super::*;
-use crate::mutations::{
-change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth,
-    create_building_model::CreateBuildingModel, create_drawing::CreateDrawing, create_energy_model::CreateEnergyModel, create_node::CreateNode, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel,
-    delete_building_model::DeleteBuildingModel, delete_drawing::DeleteDrawing, delete_energy_model::DeleteEnergyModel, delete_node::DeleteNode, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel,
-    move_reference::MoveReference, rename_node::RenameNode, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences,
-};
-use crate::sample_scene_fixture::{sample_model_child, sample_reference, sample_scene};
+use semio_s_artifact_cad_cad_mut_references::{change_reference_hidden::ChangeReferenceHidden, change_reference_locked::ChangeReferenceLocked, change_reference_width::ChangeReferenceWidth, move_reference::MoveReference, replace_reference_media::ReplaceReferenceMedia, replace_references::ReplaceReferences};
+use semio_s_artifact_cad_cad_mut_slots::{create_building_model::CreateBuildingModel, create_energy_model::CreateEnergyModel, create_shape_model::CreateShapeModel, create_structure_classic_model::CreateStructureClassicModel, delete_building_model::DeleteBuildingModel, delete_energy_model::DeleteEnergyModel, delete_shape_model::DeleteShapeModel, delete_structure_classic_model::DeleteStructureClassicModel};
+use semio_s_artifact_cad_cad_mut_documents::{create_drawing::CreateDrawing, delete_drawing::DeleteDrawing};
+use semio_s_artifact_cad_cad_mut_nodes::{create_node::CreateNode, delete_node::DeleteNode, rename_node::RenameNode};
+use semio_s_artifact_cad_cad_testing::{sample_model_child, sample_reference, sample_scene};
 use protocol::Mutation;
 
 /// ⚖️ One value per `CadMutation` variant — the closed set every wire law below iterates.
@@ -22,9 +20,9 @@ pub fn every_mutation() -> Vec<CadMutation> {
         CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
         CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() , index: None }),
         CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
-        CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: "brep-fresh".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "topology-fresh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } }, index: 0 }),
-        CadMutation::DeleteBrep(crate::mutations::delete_brep::DeleteBrep { child_id: "brep-fresh".into() }),
-        CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None }),
+        CadMutation::CreateBrep(semio_s_artifact_cad_cad_mut_documents::create_brep::CreateBrep { child_id: "brep-fresh".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "topology-fresh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } }, index: 0 }),
+        CadMutation::DeleteBrep(semio_s_artifact_cad_cad_mut_documents::delete_brep::DeleteBrep { child_id: "brep-fresh".into() }),
+        CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None }),
         CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
         CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),
         CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true }),
@@ -130,7 +128,7 @@ async fn change_hidden_on_missing_reference_is_a_target_missing_error() {
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_never_applies() {
     let base = sample_scene();
-    let duplicate = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } , index: None });
+    let duplicate = CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } , index: None });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -170,7 +168,7 @@ async fn change_reference_hidden_outcome_obeys_the_policy_matrix() {
 #[semio_framework_async_macros::async_test]
 async fn create_node_outcome_obeys_the_policy_matrix() {
     let base = sample_scene();
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None })).await;
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None })).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -200,7 +198,7 @@ fn kinds_match_the_enum_and_the_catalog() {
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
         assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
     }
-    let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
+    let manifest = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🔮️oracles/🔣️.json")).expect("../../../../🔮️oracles/🔣️.json").leak();
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
     }
@@ -213,11 +211,11 @@ fn kinds_match_the_enum_and_the_catalog() {
 async fn deleting_a_middle_row_inverts_at_its_original_index() {
     let mut base = sample_scene();
     for id in ["node-a", "node-b", "node-c"] {
-        base.nodes.push(crate::CadNode { id: id.into(), label: id.into(), kind: "group".into() });
+        base.nodes.push(semio_s_artifact_cad_cad_model::snapshot::CadNode { id: id.into(), label: id.into(), kind: "group".into() });
     }
     let target = sample_model_child("middle-drawing").target;
     for id in ["drawing-a", "drawing-b", "drawing-c"] {
-        base.drawings.push(crate::cad_drawing_child(id, &target).expect("drawing child"));
+        base.drawings.push(semio_s_artifact_cad_cad_model::snapshot::cad_drawing_child(id, &target).expect("drawing child"));
     }
     let delete_node = CadMutation::DeleteNode(DeleteNode { node_id: "node-b".into() });
     let position = base.nodes.iter().position(|node| node.id == "node-b").expect("middle node");
@@ -227,7 +225,7 @@ async fn deleting_a_middle_row_inverts_at_its_original_index() {
     let position = base.drawings.iter().position(|drawing| drawing.child_id == "drawing-b").expect("middle drawing");
     assert!(matches!(delete_drawing.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateDrawing(CreateDrawing { index: Some(index), .. })] if *index as usize == position));
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_drawing, &base).await;
-    let insert = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-first".into(), label: "First".into(), kind: "group".into() }, index: Some(0) });
+    let insert = CadMutation::CreateNode(CreateNode { node: semio_s_artifact_cad_cad_model::snapshot::CadNode { id: "node-first".into(), label: "First".into(), kind: "group".into() }, index: Some(0) });
     let after = protocol::apply_diff(insert.diff(&base).diff(), &base).expect("insert applies");
     assert_eq!(after.nodes[0].id, "node-first");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;

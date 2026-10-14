@@ -1,6 +1,6 @@
 //! 🏗️ `set-building` payload. Patches a building (name, origin, rotation, elevation): exactly the provided fields change; the site it stands on never changes here. Changing the building elevation re-infers the absolute elevation of every storey of the building (parametric).
 
-use crate::{BuildingPatch, ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::BuildingPatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

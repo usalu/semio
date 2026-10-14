@@ -1,11 +1,14 @@
 //! 🎚️ Typed operator inputs and source text are editable through the document's event history: a committed field is ONE
 //! absolute `change-widget-input` leaf (design §19), so a history edit changes exactly that typed value.
 
-use crate::standards::v1::subsets::any::io::text::value::{widget_input_literal, widget_input_of_literal, widget_input_of_literal_as};
+use semio_s_artifact_procedural_3d_io_text::value::widget_input_literal;
+use semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal;
+use semio_s_artifact_procedural_3d_io_text::value::widget_input_of_literal_as;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -71,7 +74,7 @@ pub(crate) fn edit_input_value(types: &[String], current: Option<&semio_framewor
     let schema = current.and_then(|value| value.get("$schema")).and_then(semio_framework_value::DslValue::as_str).or_else(|| types.first().map(String::as_str)).ok_or("Connect a compatible output to this input")?;
     if !types.iter().any(|kind| kind == schema) || !matches!(schema, "number" | "text" | "boolean" | "point" | "vector" | "plane") { return Err("Connect a compatible output to this input".into()); }
     if schema=="plane"{
-        use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputPlane;
+        use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputPlane;
         let(part,axis)=component.and_then(|value|value.split_once('.')).filter(|(part,axis)|matches!(*part,"origin"|"normal")&&matches!(*axis,"x"|"y"|"z")).ok_or("Choose a plane origin or normal coordinate")?;
         let mut plane=match current{Some(value)=>match widget_input_of_literal(value){Some(WidgetInputValue::Plane(plane))=>plane,_=>return Err("Plane input must contain a point origin and vector normal".into())},None=>WidgetInputPlane{origin:[0.0;3],normal:[0.0,0.0,1.0]}};
         if !plane.origin.iter().chain(&plane.normal).all(|value|value.is_finite()){return Err("Plane input must contain finite coordinates".into())}
@@ -105,7 +108,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
     if payload.path.is_some() { return Err("Only structured mesh fields have a path".into()); }
     if payload.facet.as_deref().is_some_and(|facet| facet != "port") { return widget_facet_leaf(host_snapshot, payload); }
     if payload.value.len() > 1_048_576 { return Err("Input text exceeds 1 MiB".into()); }
-    let widget = host_snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == payload.widget_id).ok_or("The selected widget no longer exists")?;
+    let widget = host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == payload.widget_id).ok_or("The selected widget no longer exists")?;
     if let Widget::InputNote { text, .. } = widget {
         if payload.channel != "text" || payload.component.is_some() || payload.index.is_some() || payload.destination.is_some() || payload.operation.as_deref().is_some_and(|operation| operation != "set") { return Err("Select an operator input or a text source".into()); }
         return Ok((*text != payload.value).then(|| change_widget_input(&payload.widget_id, "text", WidgetInputValue::Text(payload.value.clone()))));
@@ -128,7 +131,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
 
 /// 🥽️ Resolves the canonical Construct input or its connected text source without changing graph ownership.
 pub(crate) fn mesh_source_text(host: &FlowHostSnapshot, widget_id: &str, channel: &str) -> Result<(String, String, String), String> {
-    let widget = host.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id).ok_or("Choose an existing mesh source")?;
+    let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id).ok_or("Choose an existing mesh source")?;
     match widget {
         Widget::InputNote { id, text } if channel == "text" && host.synapses.iter().any(|wire| wire.from == *id && wire.to_port == "data" && host.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == &wire.to && neuron_kind == "brep.mesh.construct"))) => Ok((id.clone(), "text".into(), text.clone())),
         Widget::Neuron { id, neuron_kind, params, .. } if channel == "data" && neuron_kind == "brep.mesh.construct" => {
@@ -184,7 +187,7 @@ pub(crate) fn import_mesh_texture(text: &str, name: &str, payload: &str) -> Resu
     use semio_framework_pack_json::{Value, Object, JsonMemberPolicy};
     if name.is_empty() || name.chars().count() > 128 || text.len() > 16_777_216 || payload.len() > 22_369_664 { return Err("Texture import exceeds its bounds".into()); }
     let (mime, encoded) = if let Some(encoded) = payload.strip_prefix("data:image/png;base64,") { ("image/png", encoded) } else if let Some(encoded) = payload.strip_prefix("data:image/jpeg;base64,") { ("image/jpeg", encoded) } else { return Err("Choose a PNG or JPEG texture".into()); };
-    let bytes = crate::standards::v1::subsets::any::io::mesh_bridge::base64_decode(encoded).map_err(|error| error.to_string())?;
+    let bytes = semio_s_artifact_procedural_3d_mesh_bridge::base64_decode(encoded).map_err(|error| error.to_string())?;
     let signature = if mime == "image/png" { bytes.starts_with(&[137, 80, 78, 71, 13, 10, 26, 10]) } else { bytes.starts_with(&[255, 216, 255]) && bytes.ends_with(&[255, 217]) };
     if bytes.len() > 16_777_216 || !signature { return Err("Choose a PNG or JPEG texture".into()); }
     semio_framework::mesh_io::text::parse_polygon_mesh_source(text)?;
@@ -358,7 +361,7 @@ fn mesh_sample_default(value: &semio_framework_pack_json::Value, semantic: &str)
 /// 🪪️ Variable metadata and export configuration update the existing cohesive widget facet.
 pub(crate) fn widget_facet_leaf(host: &FlowHostSnapshot, payload: &SetWidgetInput) -> Result<Option<Generation3dMutation>, String> {
     if payload.component.is_some() || payload.index.is_some() || payload.destination.is_some() || payload.operation.is_some() { return Err("Widget metadata has no list operation or coordinate".into()); }
-    let widget = host.widgets.iter().find(|widget| crate::widget_id(widget) == payload.widget_id).ok_or("Choose an existing widget")?;
+    let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == payload.widget_id).ok_or("Choose an existing widget")?;
     let value = payload.value.trim();
     if value.is_empty() || value.chars().count() > 256 { return Err("Widget metadata requires 1 to 256 characters".into()); }
     let next = match (payload.facet.as_deref(), widget, payload.channel.as_str()) {
@@ -369,7 +372,7 @@ pub(crate) fn widget_facet_leaf(host: &FlowHostSnapshot, payload: &SetWidgetInpu
             for wire in &host.synapses {
                 let endpoint = if wire.to == *id && wire.from != *id { Some((&wire.from, &wire.from_port, false)) } else if wire.from == *id && wire.to != *id { Some((&wire.to, &wire.to_port, true)) } else { None };
                 let Some((target, port, incoming)) = endpoint else { continue; };
-                let widget = host.widgets.iter().find(|widget| crate::widget_id(widget) == target).ok_or("Variable connection target is unavailable")?;
+                let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == target).ok_or("Variable connection target is unavailable")?;
                 let (inputs, outputs, _, _) = semio_framework_artifact_flow_flow::widget_io_ports(widget, &host.synapses, &infos);
                 let channel = if incoming { &inputs } else { &outputs }.iter().find(|channel| channel.id == *port).ok_or("Variable connection port is unavailable")?;
                 if channel.value_type.as_deref().is_some_and(|schemas| !schemas.split(',').any(|schema| schema == value)) { return Err("Variable type does not match its connected ports".into()); }
@@ -377,12 +380,12 @@ pub(crate) fn widget_facet_leaf(host: &FlowHostSnapshot, payload: &SetWidgetInpu
             Widget::Variable { id: id.clone(), name: name.clone(), schema: value.into() }
         }
         (Some("exportFormat"), Widget::OutputExport { id, .. }, "format") => {
-            if !crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().any(|format| format.id == value) { return Err("Choose an artifact-owned export format".into()); }
+            if !semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().any(|format| format.id == value) { return Err("Choose an artifact-owned export format".into()); }
             Widget::OutputExport { id: id.clone(), format: value.into() }
         }
         _ => return Err("Widget facet does not match its target or field".into()),
     };
-    Ok((&next != widget).then(|| Generation3dMutation::UpdateWidget(crate::standards::v1::subsets::any::schema::mutations::update_widget::UpdateWidget { widget: next })))
+    Ok((&next != widget).then(|| Generation3dMutation::UpdateWidget(semio_s_artifact_procedural_3d_mutations::update_widget::UpdateWidget { widget: next })))
 }
 
 pub fn handle(payload: &SetWidgetInput, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

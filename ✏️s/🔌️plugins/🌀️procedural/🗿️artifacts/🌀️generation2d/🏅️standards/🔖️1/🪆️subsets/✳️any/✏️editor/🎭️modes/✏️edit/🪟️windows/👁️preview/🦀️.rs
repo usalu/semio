@@ -84,7 +84,7 @@ pub fn render(document: &Generation2dSnapshot, app_config: &Generation2dConfig, 
         }
     }
     let _ = GENERATION2D_PLAY_APP_ID;
-    crate::scene_surface(
+    semio_s_procedural_core_semantic_ui::scene_surface(
         GENERATION2D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d,
         &Canvas2dScene { framing: None, camera_x: window_config.viewport.x, camera_y: window_config.viewport.y, zoom: window_config.viewport.zoom, layers_json: semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::from(layers)), snapshot: None, tool_run_trace: None, lanes: Vec::new() },

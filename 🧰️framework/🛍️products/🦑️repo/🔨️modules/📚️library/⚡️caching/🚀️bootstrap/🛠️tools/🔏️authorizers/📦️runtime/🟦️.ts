@@ -12,6 +12,7 @@ export {readFilesystemJournalWorkerOptionsV1,runFilesystemJournalWorkerV1} from 
 export {publishGraphFilesV1,withGraphPublisherControlV1} from "../../../../🕸️graph/📤️publication/🟦️.ts";
 export {withNxDaemonStartupV1} from "../../../../🕸️graph/🏁️startup/🟦️.ts";
 export {withNxLoadedToolingUseV1} from "../../📥️use/🟦️.ts";
-export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../../🔌️nx-plugin/📥️inputs/🧮️digest/🟨️.mjs";
+export {withOriginalNxFixedCacheV1} from "../../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
+export {sourceClosureTaskEnvironments,sourceClosureReceiptHolds} from "../../../../../🏗️build/📥️inputs/🧮️digest/🟨️.mjs";
 export {compactTaskPlans} from "../../../../🕸️graph/📤️export/🟨️.mjs";
 export {readNxGraphSourceProofV1} from "../../../../🕸️graph/🔏️seal/📥️membership/🌐️transport/🟦️.ts";

@@ -6,12 +6,12 @@
 //! control cannot name the field it just changed any other way.
 
 use crate::editor::fem2d::modes::edit::windows::results;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️SetResultDisplay
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -32,7 +32,7 @@ pub struct SetResultDisplay {
 fn apply_field(config: &mut results::config::Fem2dResultsWindowConfig, field: &str, value: &str) -> Result<(), Fault> {
     match field {
         "sourceId" => config.result_source_id = Some(value.to_string()).filter(|id| !id.is_empty()),
-        "mode" => config.result_mode = crate::app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
+        "mode" => config.result_mode = semio_s_fem_app_surface::ResultMode::try_from(value).map_err(Fault::from)?,
         "modeIndex" => {
             let index = value.trim().parse::<f64>().map_err(|_| Fault::from(format!("fem2d.results.value: '{value}' is not a number")))?;
             config.result_mode_index = index.max(0.0) as u32;
@@ -53,7 +53,7 @@ pub fn handle_window(payload: &SetResultDisplay, cfg: &ConfigView<'_, NoConfig>,
         Some(field) => apply_field(&mut next, field, payload.value.as_deref().unwrap_or_default())?,
         None => {
             next.result_source_id = payload.source_id.clone();
-            next.result_mode = crate::app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
+            next.result_mode = semio_s_fem_app_surface::ResultMode::try_from(payload.mode.as_str()).map_err(Fault::from)?;
             next.result_mode_index = payload.mode_index;
         }
     }

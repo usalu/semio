@@ -9,11 +9,12 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
@@ -37,7 +38,12 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
-use semio_s_artifact_stdio_semio_base::io::binary::codec::{write_ref, read_ref, write_child, read_child, write_child_opt, read_child_opt};
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_ref;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_ref;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_child;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_child;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_child_opt;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_child_opt;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_child_list<S>(out: &mut Vec<u8>, list: &[store::os_store::artifact_child::ArtifactChild<S>]) {
@@ -124,7 +130,8 @@ pub(crate) fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
     Ok(SemioTransform { translation: SemioPoint3 { x: next()?, y: next()?, z: next()? }, rotation: SemioQuaternion { x: next()?, y: next()?, z: next()?, w: next()? }, scale: SemioPoint3 { x: next()?, y: next()?, z: next()? } })
 }
@@ -285,7 +292,7 @@ use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};

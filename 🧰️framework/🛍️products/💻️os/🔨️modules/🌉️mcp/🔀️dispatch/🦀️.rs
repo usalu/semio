@@ -129,6 +129,7 @@ pub struct InferCommand {
     pub inference_schema: String,
     pub revision: u64,
     pub turn: semio_framework_actor::RetainedTurnInput,
+    pub retained_policy: semio_framework_value::RetainedCloneGrant,
     pub cancellation_id: String,
     pub work_units: u64,
     pub maximum_elapsed_milliseconds: u64,

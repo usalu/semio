@@ -306,7 +306,7 @@ test("envelope custody keeps seven original message arrays and whole metadata ow
   expect(source).toContain("struct ArtifactEditMessageLedgerRetirement");
   const start = source.indexOf("struct ArtifactStoreEnvelopeRetirement");
   const body = source.slice(start, source.indexOf("struct ArtifactGenesisRetirement", start));
-  expect(body).toContain("artifact_retirement_owner_close");
+  expect(body).toContain("retirement_owner_close");
   expect(body).toContain("ArtifactStoreVcsRetirement");
   expect(body).toContain("ArtifactEnvelopeMetadata");
   expect(body).not.toContain("SnapshotRetirementStep");

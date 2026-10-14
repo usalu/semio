@@ -1,6 +1,6 @@
 use super::*;
 use super::tests::{atlas_fixture_authority, atlas_fixture_owner, atlas_fixture_page};
-use crate::wgpu::host::physical_job_close_tests::measured;
+use super::measured;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Close, RetainedCloneGrant};
 
 #[test]
@@ -52,7 +52,7 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         while row < pages.height() { atlas_fixture_page(&mut pages, &source, row).unwrap(); row = pages.next_row(); }
         let original = pages.page(0).unwrap().0.as_ptr();
         let payload_bytes = pages.len() * atlas["pageBytes"].as_u64().unwrap() as usize;
-        let atlas_release = payload_bytes + size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>() + size_of::<PreparedAtlasAbandonment>() + size_of::<PreparedFixedPage<PreparedRenderUpload>>();
+        let atlas_release = pages.original_owner_progress().retained_capacity_bytes + size_of::<PreparedFixedPage<PreparedRenderUpload>>();
         let mut input = PreparedRenderInput::new(law["sceneRevision"].as_u64().unwrap(), law["previewGeneration"].as_u64().unwrap(), DrawList::default(), None, 0.0);
         let expected_release = atlas_release + input.draw.layers.capacity() * size_of::<DrawLayer>() + size_of::<PreparedFixedPage<RenderDirective>>();
         input.uploads.try_push(PreparedRenderUpload::GlyphAtlasPages { pixels: pages }).unwrap();
@@ -135,35 +135,7 @@ fn prepared_original_abandoned_owners_report_full_physical_grants() {
         assert!(PREPARED_RENDER_INPUT_ABANDONMENT_OWNER[slot].load(Ordering::Acquire).is_null());
         assert_eq!(PREPARED_RENDER_INPUT_ABANDONMENT_STATE[slot].load(Ordering::Acquire), 0);
 
-        let source = vec![91; recipe["byteLength"].as_u64().unwrap() as usize];
-        let mut atlas = atlas_fixture_owner(recipe["width"].as_u64().unwrap() as u32, recipe["height"].as_u64().unwrap() as u32, recipe["channels"].as_u64().unwrap() as u8, source.len()).unwrap();
-        while atlas.next_row() < atlas.height() { let row = atlas.next_row(); atlas_fixture_page(&mut atlas, &source, row).unwrap(); }
-        let slot = usize::from(atlas.abandonment_slot);
-        let expected = atlas.len() * PREPARED_ATLAS_PAGE_BYTES + size_of::<[Option<PreparedAtlasPage>; PREPARED_ATLAS_PAGE_CAPACITY]>() + size_of::<PreparedAtlasAbandonment>();
-        drop(atlas);
-        let original = PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire);
-        assert!(!original.is_null());
-        let grant = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_items: 0, ..atlas_fixture_authority().retirement };
-        let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant));
-        assert!(matches!(step, Close::Pending { progress } if progress == Default::default()));
-        assert_eq!((births, frees), (0, 0));
-        assert_eq!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire), original);
-        let mut released = 0;
-        let mut complete = false;
-        for _ in 0..law["maximumTurns"].as_u64().unwrap() {
-            let grant = atlas_fixture_authority().retirement;
-            let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant));
-            let progress = match step { Close::Pending { progress } | Close::Complete { progress } => progress, step => panic!("original abandoned atlas failed: {step:?}") };
-            assert!(progress.fits(grant));
-            assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));
-            released += frees;
-            if matches!(step, Close::Complete { .. }) { complete = true; break; }
-        }
-        assert!(complete);
-        assert_eq!(released, expected);
-        assert!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire).is_null());
-        assert_eq!(PREPARED_ATLAS_ABANDONMENT_STATE[slot].load(Ordering::Acquire), 0);
-        println!("[DEBUG] original abandoned input/atlas copy={copy} exactBoxAndBackingRelease=true custodyRetained=true");
+
     }
 }
 

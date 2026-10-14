@@ -2,7 +2,7 @@
 //! none when the opening is absent.
 
 use super::MoveOpening;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &MoveOpening, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.openings.get(&payload.id) {

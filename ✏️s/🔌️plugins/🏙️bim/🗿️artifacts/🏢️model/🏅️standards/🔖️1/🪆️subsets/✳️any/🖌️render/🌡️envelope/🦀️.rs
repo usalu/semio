@@ -9,7 +9,7 @@
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{placement_of, SolidPlacement};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::Point;
 use semio_framework_plugin::{MeshData, World3dColorRamp};

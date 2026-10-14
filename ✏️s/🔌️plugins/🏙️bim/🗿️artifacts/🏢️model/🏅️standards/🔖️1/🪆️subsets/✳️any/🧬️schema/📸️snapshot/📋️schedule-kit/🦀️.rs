@@ -1,7 +1,7 @@
 //! 📋️ The vocabulary and the checks of authored schedules: the token form of every key (the text the editor and the CSV header speak), which built-in fields a category offers, the one validity rule
 //! of a schedule definition (`create-schedule` and `set-schedule` refuse exactly what it names) and the presets the library creates. Everything here is a pure function of authored values.
 
-use crate::{Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
+use crate::standards::v1::subsets::any::schema::snapshot::{Schedule, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleOp, ScheduleSort};
 
 //#region 🔖️Fields
 impl ScheduleField {

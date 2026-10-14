@@ -1,7 +1,7 @@
 //! 🧬️ Puzzle3d diff schema — sparse typed delta over the artifact: per-field entity patches and id-keyed collection deltas.
 
 use crate::standards::v1::subsets::any::schema::Puzzle3dArtifact;
-use crate::{Puzzle3dAttraction, Puzzle3dCompatSpecificity, Puzzle3dKindCatalogs, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dScale, Puzzle3dTargetVolume, Puzzle3dVortex};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dCompatSpecificity, crate::standards::v1::subsets::any::schema::Puzzle3dKindCatalogs, crate::standards::v1::subsets::any::schema::Puzzle3dKindCompatibility, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dObjectAnchor, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dReferenceSource, crate::standards::v1::subsets::any::schema::Puzzle3dScale, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::Puzzle3dVortex};
 use crate::Puzzle3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};

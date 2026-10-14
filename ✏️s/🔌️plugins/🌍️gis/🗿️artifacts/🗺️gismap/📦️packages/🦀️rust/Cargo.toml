@@ -15,11 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-mcp-service=["dep:semio-framework-os-mcp","dep:semio-framework"]
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-surface", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -34,8 +29,8 @@ semio-framework-schema-registry = { path = "../../../../../../../🧰️framewor
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
-semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface", default-features = false, optional = true }
-semio-framework = { workspace = true, optional = true }
+semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
+semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -52,15 +47,16 @@ semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
 semio-s-artifact-stdio-semio-image = { workspace = true }
-semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-s-artifact-stdio-semio-value-model = { workspace = true }
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-scene = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
@@ -74,4 +70,3 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-os-mcp={workspace=true,optional=true}

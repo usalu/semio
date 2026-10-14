@@ -33,5 +33,5 @@ fn timestep_weather_interpolates_like_energyplus() {
     assert!((first.beam_normal_w_m2 - 400.0).abs() < 1e-9 && (middle.beam_normal_w_m2 - 600.0).abs() < 1e-9 && (last.beam_normal_w_m2 - 750.0).abs() < 1e-9);
     assert!(!first.raining && last.raining && last.wet_bulb_c < last.dry_bulb_c);
     assert!(!TimestepWeather::interpolate(&current, &next, &next, 6, 6).raining, "missing precipitation (999) counts as dry");
-    assert!((sky_temperature_c(crate::units::STEFAN_BOLTZMANN * 273.15_f64.powi(4))).abs() < 1e-9);
+    assert!((sky_temperature_c(units::STEFAN_BOLTZMANN * 273.15_f64.powi(4))).abs() < 1e-9);
 }

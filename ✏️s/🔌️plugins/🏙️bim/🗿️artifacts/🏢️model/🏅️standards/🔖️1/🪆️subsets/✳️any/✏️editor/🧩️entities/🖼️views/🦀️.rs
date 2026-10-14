@@ -2,7 +2,7 @@
 //! a storey here; the other kinds are created by the `createView` command, which knows how to place a section, an elevation or a camera.
 
 use super::{container, number, parse_count, parse_number, parse_optional_number, parse_point, parse_text, partial, point, variant, Created, FieldRow};
-use crate::{Assigned, DetailLevel, ModelMutation, ModelSnapshot, Phase, Point2, View, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{DetailLevel, ModelSnapshot, Phase, Point2, View, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 const CATEGORIES: [ViewCategory; 11] = [
@@ -100,5 +100,5 @@ pub fn create_view(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str)
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let building = snapshot.storeys[&storey].building.clone();
     let view = View::of_storey(&building, &unique_name(snapshot, &building, name), ViewKind::Plan, &storey);
-    Ok(ModelMutation::CreateView(crate::mutations::create_view::CreateView { id: id.into(), view }))
+    Ok(ModelMutation::CreateView(crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView { id: id.into(), view }))
 }

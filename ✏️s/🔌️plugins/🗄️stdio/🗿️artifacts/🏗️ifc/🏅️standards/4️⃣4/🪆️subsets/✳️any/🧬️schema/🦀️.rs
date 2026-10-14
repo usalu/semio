@@ -3,8 +3,9 @@
 //! `IfcSnapshot`'s prior worst-offender defect (`document: semio_s_artifact_stdio_contract::part21::Part21Document`
 //! verbatim) — now mirrors `IfcSnapshot`'s own typed `header`/`entities` fields.
 
-use crate::schema::snapshot::{IfcEntity, IfcHeader};
-use crate::{IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcHeader};
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot};
+use crate::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -46,42 +47,14 @@ impl IfcArtifact {
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn spatial(&self) -> crate::engine::spatial::SpatialAnalysis {
-        let document = crate::schema::snapshot::to_part21_document(&self.to_snapshot());
-        crate::engine::spatial::analyze_spatial(&document)
+    pub fn spatial(&self) -> crate::standards::v4::subsets::any::io::spatial::SpatialAnalysis {
+        let document = crate::standards::v4::subsets::any::schema::snapshot::to_part21_document(&self.to_snapshot());
+        crate::standards::v4::subsets::any::io::spatial::analyze_spatial(&document)
     }
 }
 //#endregion 🔖️Conversions
 
 //#region 🔖️Descriptor
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn ifc_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor {
-        id: "s.stdio.ifc",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
-        snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
-        },
-        diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
-        },
-        mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
-        },
-    }
-}
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 
@@ -98,9 +71,9 @@ pub fn ifc_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::standards::v4::engine::empty_ifc_snapshot` through the `engine` barrel
+/// `crate::standards::v4::subsets::any::schema::empty_ifc_snapshot` through the `engine` barrel
 /// shim, and (via the root `crate::engine` shim, glob-imported from v4) as
-/// `crate::engine::empty_ifc_snapshot` too.
+/// `crate::standards::v4::subsets::any::schema::empty_ifc_snapshot` too.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_ifc_snapshot() -> IfcSnapshot {
     IfcSnapshot::default()
@@ -114,7 +87,7 @@ pub fn empty_ifc_snapshot() -> IfcSnapshot {
 /// demo_mutation_cases()`/`diff::demo_diff_cases()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_ifc_snapshot() -> IfcSnapshot {
-    use crate::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
+    use crate::standards::v4::subsets::any::schema::snapshot::{IfcEntity as _IfcEntity, IfcHeader as _IfcHeader, IfcValue};
     IfcSnapshot {
         schema: STDIO_IFC_DOCUMENT_SCHEMA.into(),
         header: _IfcHeader {

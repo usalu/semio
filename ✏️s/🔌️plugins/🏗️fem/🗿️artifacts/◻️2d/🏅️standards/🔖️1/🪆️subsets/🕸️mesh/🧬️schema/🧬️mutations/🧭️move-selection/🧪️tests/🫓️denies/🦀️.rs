@@ -10,21 +10,21 @@
 //!
 //! 🫓️ A zero factor would collapse the wall to a line no mesh can fill; the payload schema bounds the factor away from zero and the diff refuses it as an invariant.
 
-use super::laws;
+use crate::laws;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/🎯️outcome/🔣️.json");
+static BEFORE: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/📸️snapshot/⬅️before/🔣️.json");
+static AFTER: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/📸️snapshot/➡️after/🔣️.json");
+static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/🦠️mutation/🔣️.json");
+static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🧭️move-selection/🫓️denies/🎯️outcome/🔣️.json");
 
 /// ⛔️ The refused or no-op leaf leaves the document byte-identical, emits the declared diagnostic and inverts to nothing.
 #[test]
 fn refusal_leaves_the_document_untouched() {
-    laws::refusal(BEFORE, MUTATION, AFTER, OUTCOME);
+    laws::refusal(BEFORE.as_str(), MUTATION.as_str(), AFTER.as_str(), OUTCOME.as_str());
 }
 
 /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    laws::canonical(BEFORE, AFTER, MUTATION, None);
+    laws::canonical(BEFORE.as_str(), AFTER.as_str(), MUTATION.as_str(), None);
 }

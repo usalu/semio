@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::entities::components::tests::placed;
-use crate::ComponentOverride;
+use crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
 use semio_framework_plugin::{ui_node_list, PanelTreeBuilder, ViewModel};
 use semio_framework_ui_locale::{Locale, Terminology};
 

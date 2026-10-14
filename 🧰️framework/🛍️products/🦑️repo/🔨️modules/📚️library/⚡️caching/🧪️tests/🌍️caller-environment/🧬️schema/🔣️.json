@@ -121,7 +121,8 @@
             "required": [
               "persistent",
               "localDisabled",
-              "nextEnabled"
+              "nextEnabled",
+              "fallbackCalls"
             ],
             "properties": {
               "persistent": {
@@ -132,6 +133,9 @@
               },
               "nextEnabled": {
                 "const": true
+              },
+              "fallbackCalls": {
+                "const": 1
               }
             }
           }

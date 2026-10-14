@@ -1,17 +1,17 @@
 use super::*;
 use crate::editor::bim::entities::kind_of;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::SpaceConditions;
+use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 
 fn with_space(snapshot: ModelSnapshot, id: &str) -> ModelSnapshot {
     let create = kind_of("space").and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, "st-ground", "Sample").expect("creates");
-    crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn stated(snapshot: &ModelSnapshot, id: &str, record: &SpaceConditions) -> ModelSnapshot {
     let mutation = ModelMutation::SetSpaceConditions(SetSpaceConditions::stating(id, record));
-    crate::mutations::apply_model_mutation(snapshot, &mutation).expect("applies")
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).expect("applies")
 }
 
 fn office() -> SpaceConditions {

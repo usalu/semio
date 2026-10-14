@@ -49,7 +49,7 @@ fn the_instance_carries_its_record_its_overrides_and_its_base_quantities() {
     assert_eq!(quantity(&document, "cmp-table", QUANTITY_SET, "NetVolume"), Some(volume));
     let footprint = quantity(&document, "cmp-table", QUANTITY_SET, "GrossFootprintArea").expect("a footprint");
     assert!((footprint - 1.8 * 0.9).abs() < 1e-9, "{footprint}");
-    let text = semio_s_artifact_stdio_ifc::part21::write_part21(&document);
+    let text = semio_s_artifact_stdio_contract::part21::write_part21(&document);
     assert!(text.contains("Semio_ComponentOverrides"));
     assert!(text.contains("'1.8 m'") && text.contains("'0.9 m'"));
     let record = semio_framework_pack_json::to_json_string(&model.components["cmp-table"]);
@@ -58,7 +58,7 @@ fn the_instance_carries_its_record_its_overrides_and_its_base_quantities() {
 
 #[test]
 fn a_component_without_overrides_writes_no_override_set() {
-    let text = semio_s_artifact_stdio_ifc::part21::write_part21(&document(&components()));
+    let text = semio_s_artifact_stdio_contract::part21::write_part21(&document(&components()));
     assert_eq!(text.matches("Semio_ComponentOverrides").count(), 3, "the table, the mirrored chair and the kitchen unit");
 }
 
@@ -106,9 +106,9 @@ fn a_segment_carries_the_centre_line_the_quantities_and_the_record() {
     let polyline = axis[3].as_list().and_then(|items| items.first()).and_then(|item| document.resolve(item)).and_then(|item| item.entity("IFCPOLYLINE")).expect("a polyline");
     assert_eq!(polyline[0].as_list().map(<[_]>::len), Some(3));
     let record = semio_framework_pack_json::to_json_string(&model.mep_elements["mep-supply"]);
-    let text = semio_s_artifact_stdio_ifc::part21::write_part21(&document);
+    let text = semio_s_artifact_stdio_contract::part21::write_part21(&document);
     assert!(text.contains(&record.replace('\'', "''")));
-    let back: crate::MepElement = from_json_str(&record, JsonMemberPolicy::Reject).expect("the record decodes");
+    let back: crate::standards::v1::subsets::any::schema::snapshot::MepElement = from_json_str(&record, JsonMemberPolicy::Reject).expect("the record decodes");
     assert_eq!(back, model.mep_elements["mep-supply"]);
 }
 

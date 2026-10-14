@@ -18,7 +18,7 @@ struct CapturedRoot {
 }
 
 impl CapturedRoot {
-    fn new(read: SnapshotRead<InteractionState>, identity: LocalInteractionIdentity) -> Self {
+    pub(crate) fn new(read: SnapshotRead<InteractionState>, identity: LocalInteractionIdentity) -> Self {
         let mut generation = [b'0'; 20];
         let mut value = identity.generation;
         let mut generation_start = 19;

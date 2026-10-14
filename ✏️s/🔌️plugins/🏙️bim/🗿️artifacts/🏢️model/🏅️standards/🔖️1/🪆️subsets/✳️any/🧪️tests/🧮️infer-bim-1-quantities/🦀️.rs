@@ -11,10 +11,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_bim_model::mutations::apply_model_mutation;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::mutations::decode_model_mutation_json;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::{decode_model_snapshot_json, encode_inference_projection_json};
-    use semio_s_artifact_bim_model::ModelSnapshot;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
     fn snapshot(ctx: &Context) -> Result<ModelSnapshot, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;

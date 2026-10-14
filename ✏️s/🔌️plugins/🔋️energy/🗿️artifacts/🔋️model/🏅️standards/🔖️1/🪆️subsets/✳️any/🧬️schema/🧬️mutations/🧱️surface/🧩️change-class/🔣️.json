@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️surface/🧩️change-class",
+  "semanticKind": "change-surface-class",
+  "displayName": "Change Surface Class",
+  "emoji": "🧩️",
+  "aggregateVariant": "ChangeSurfaceClass",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-surface-class",
+  "binaryTag": 28,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

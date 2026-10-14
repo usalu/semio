@@ -5,12 +5,12 @@
 //! `s.stdio.semio@v1/model` child (design §20.15), so the gumball drag persists, both world windows re-render, and history
 //! edits the drag's own inputs.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::tools::transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
-use crate::editor::cad::{apply_transformation_entries, ids_or_selection};
-use crate::op::CadMutation;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
+use semio_s_artifact_cad_cad_kit::{apply_transformation_entries, ids_or_selection};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 

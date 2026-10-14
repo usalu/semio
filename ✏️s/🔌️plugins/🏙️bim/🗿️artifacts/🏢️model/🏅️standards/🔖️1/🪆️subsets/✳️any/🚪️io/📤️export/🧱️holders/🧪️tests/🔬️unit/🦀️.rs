@@ -1,5 +1,5 @@
 use super::*;
-use crate::{LayerFunction, Phase, Point2, Roof, RoofShape, RoofType, Slab, SlabType, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{LayerFunction, Phase, Point2, Roof, RoofShape, RoofType, Slab, SlabType, Vertex};
 
 fn corner(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }

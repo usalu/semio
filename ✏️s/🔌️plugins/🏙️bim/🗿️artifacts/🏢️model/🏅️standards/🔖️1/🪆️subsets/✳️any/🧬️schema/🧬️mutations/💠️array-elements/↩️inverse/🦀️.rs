@@ -5,7 +5,7 @@ use super::super::delete_elements::DeleteElements;
 use super::super::modify;
 use super::diff::maps_of;
 use super::ArrayElements;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &ArrayElements, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(maps) = maps_of(payload) else {

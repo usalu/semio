@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::sample_scene_fixture::sample_scene;
+use crate::binary::snapshot::*;
+use semio_s_artifact_cad_cad_testing::sample_scene;
 
 #[semio_framework_async_macros::async_test]
 async fn cad_scene_round_trips_through_pack() {
@@ -29,10 +29,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
-    use crate::mutations::create_shape_model::CreateShapeModel;
-    use crate::op::CadMutation;
-    use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
-    use crate::host::owned::new_cad_store;
+    use semio_s_artifact_cad_cad_mut_slots::create_shape_model::CreateShapeModel;
+    use semio_s_artifact_cad_cad_mutations::CadMutation;
+    use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CAD_DOCUMENT_SCHEMA};
+    use semio_s_artifact_cad_cad_testing::sample_model_child;
+    use semio_s_artifact_cad_cad_host::new_cad_store;
     use protocol::{ArtifactId, Edit, SchemaId};
     use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 

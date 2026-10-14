@@ -5,9 +5,6 @@
   "scripts": {
     "test": "bun repo run @semio-tech/pack-json-decode-ts:test"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

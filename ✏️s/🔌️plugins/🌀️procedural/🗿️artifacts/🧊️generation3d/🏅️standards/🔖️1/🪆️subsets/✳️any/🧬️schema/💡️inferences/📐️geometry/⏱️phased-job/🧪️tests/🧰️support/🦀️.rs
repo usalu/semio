@@ -7,14 +7,27 @@
 #[path = "../../../🧪️tests/🧰️oracle-support/🦀️.rs"]
 pub mod base;
 
-use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Port;
+use semio_s_artifact_procedural_3d_model::catalogue::PortType;
+use semio_s_artifact_procedural_3d_geometry_compute::failed;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use {semio_framework_3d_brep_engine::{GeometryHandle, GeometryKind, ShapeRoot, ShapeValue}, semio_framework_3d_brep_representation::contract::MeshTransfer};
-use semio_framework_3d_brep_queries::analysis::{edge_table, face_table, ShapeScope};
+use semio_framework_3d_brep_analysis::{edge_table, face_table, ShapeScope};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-pub use base::{drive, kind_of};
+pub use semio_s_artifact_procedural_3d_brep_feature::tests::support::base::drive;
+pub use semio_s_artifact_procedural_3d_brep_feature::tests::support::base::kind_of;
 
 //#region 🔖️Recipes
 fn f(value: &Value) -> f64 {
@@ -49,11 +62,11 @@ pub fn build(recipe: &Value) -> ShapeValue {
         }
         "shelled" => {
             let mut inner = KernelSession::new();
-            let whole = inner.import(&base::build_shape(&recipe["of"])).expect("import").handle;
+            let whole = inner.import(&semio_s_artifact_procedural_3d_brep_feature::tests::support::base::build_shape(&recipe["of"])).expect("import").handle;
             let shelled = inner.brep().shell_sync(&whole, f(&recipe["thickness"]), &[]).expect("shell");
             return inner.export(&shelled).expect("shell export");
         }
-        _ => return base::build_shape(recipe),
+        _ => return semio_s_artifact_procedural_3d_brep_feature::tests::support::base::build_shape(recipe),
     };
     session.export(&handle).expect("recipe export")
 }
@@ -62,8 +75,8 @@ pub fn build(recipe: &Value) -> ShapeValue {
 //#region 🔖️Inputs
 fn selection_of(port: &Port, value: &Value, shape: &ShapeValue) -> GeometryValue {
     let declared = match port.selection.as_ref().expect("selection port").component {
-        crate::standards::v1::subsets::any::schema::catalogue::SelectionComponent::Edge => SelectionKind::Edge,
-        crate::standards::v1::subsets::any::schema::catalogue::SelectionComponent::Vertex => SelectionKind::Vertex,
+        semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent::Edge => SelectionKind::Edge,
+        semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent::Vertex => SelectionKind::Vertex,
         _ => SelectionKind::Face,
     };
     let component = value.get("component").and_then(Value::as_str).and_then(SelectionKind::parse).unwrap_or(declared);
@@ -101,7 +114,7 @@ fn decode(port: &Port, value: &Value) -> GeometryValue {
     match port.port_type {
         PortType::Shape if !port.list => GeometryValue::shape(build(value)),
         PortType::Shapes => GeometryValue::List(value.as_array().expect("shapes").iter().map(|item| GeometryValue::shape(build(item))).collect()),
-        _ => base::decode(port, value),
+        _ => semio_s_artifact_procedural_3d_brep_feature::tests::support::base::decode(port, value),
     }
 }
 
@@ -355,7 +368,7 @@ fn check_value(name: &str, actual: &GeometryValue, port: &Port, expected: &Value
             }
             items.iter().zip(wanted).enumerate().try_for_each(|(index, (item, wanted))| check_value(&format!("{name}[{index}]"), item, port, wanted, tolerance, mesh_tolerance))
         }
-        other => base::matches(other, port, expected, tolerance),
+        other => semio_s_artifact_procedural_3d_brep_feature::tests::support::base::matches(other, port, expected, tolerance),
     }
 }
 
@@ -413,7 +426,7 @@ pub fn slices(mut job: Box<dyn WidgetJob>, fuel: usize) -> (usize, WidgetEvaluat
 
 /// 🧪️ Runs every case of a fixture at fuel 1 and at unbounded fuel, asserts both against the fixture and requires the two evaluations to be equal and a repeated run to equal the first.
 pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
-    let (fixture, cases) = base::cases(text);
+    let (fixture, cases) = semio_s_artifact_procedural_3d_brep_feature::tests::support::base::cases(text);
     let tolerance = fixture["tolerance"].as_f64().expect("fixture tolerance");
     let mesh_tolerance = fixture["meshTolerance"].as_f64().unwrap_or(tolerance);
     for case in &cases {
@@ -430,7 +443,7 @@ pub fn run_fixture(text: &str, entries: &[ComputeEntry]) -> usize {
 
 /// 📚️ Asserts that the compute table lists exactly the catalogue kinds of the category and the fixture covers each at least once.
 pub fn assert_category(category: &str, entries: &[ComputeEntry], text: &str) {
-    base::assert_category(category, entries, text);
+    semio_s_artifact_procedural_3d_brep_feature::tests::support::base::assert_category(category, entries, text);
 }
 
 /// ✍️ Rewrites the fixture at `path`: every shape output of every successful case gets its `deflection` and pinned `mesh` from a fresh run. Only used with `GEN3D_WRITE_FIXTURES=1`.

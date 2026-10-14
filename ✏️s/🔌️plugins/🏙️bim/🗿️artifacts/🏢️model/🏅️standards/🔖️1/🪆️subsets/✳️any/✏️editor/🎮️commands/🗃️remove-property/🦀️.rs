@@ -4,7 +4,7 @@
 use crate::editor::bim::commands::set_property::elements_of;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -23,7 +23,7 @@ pub fn handle(payload: &RemoveProperty, doc: &ArtifactView<'_, ModelSnapshot>, _
         return Err(fault("bim.property.missing", format!("no target has the property '{}.{}'", payload.pset, payload.property)));
     }
     Ok(Emit::mutations(
-        holders.into_iter().map(|id| ModelMutation::RemoveElementProperty(crate::mutations::remove_element_property::RemoveElementProperty { id: id.clone(), pset: payload.pset.clone(), property: payload.property.clone() })).collect(),
+        holders.into_iter().map(|id| ModelMutation::RemoveElementProperty(crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty { id: id.clone(), pset: payload.pset.clone(), property: payload.property.clone() })).collect(),
     ))
 }
 

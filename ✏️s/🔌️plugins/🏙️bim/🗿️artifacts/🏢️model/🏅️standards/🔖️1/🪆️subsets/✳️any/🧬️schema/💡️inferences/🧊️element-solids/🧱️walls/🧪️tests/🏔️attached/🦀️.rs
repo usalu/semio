@@ -2,7 +2,7 @@ use super::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use serde_json::json;
 
 fn gable_end(extra: serde_json::Value) -> ModelSnapshot {

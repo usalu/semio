@@ -1,6 +1,6 @@
 //! 🧪️ Neutral registered artifact fixtures own their document and publication lifetimes.
 use crate::editor::generation3d::{create_generation3d_app, Generation3dCommand, Generation3dPlayApp};
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry, settle_registered_typed_operation, TypedOperationFixtureReceipt};
 use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
 

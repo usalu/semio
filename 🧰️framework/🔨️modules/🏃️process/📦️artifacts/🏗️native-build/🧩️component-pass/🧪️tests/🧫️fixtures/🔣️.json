@@ -738,7 +738,65 @@
         "target": "wasm32-wasip2",
         "identity": "[\"path+file:///w/base#base@0.1.0\",\"run-custom-build\",null]"
       }
-    ]
+    ],
+    "reclaim": {
+      "target": "wasm32-wasip2",
+      "live": [
+        "[\"path+file:///w/base#base@0.1.0\",\"base\",[\"lib\"],\"wasm32-wasip2\",[\"std\"]]"
+      ],
+      "messages": [
+        {
+          "package_id": "path+file:///w/base#base@0.1.0",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ]
+          },
+          "features": [
+            "std"
+          ],
+          "filenames": [
+            "/t/wasm32-wasip2/wasm-release/deps/libbase-1a.rlib",
+            "/t/wasm32-wasip2/wasm-release/deps/libbase-1a.rmeta"
+          ]
+        },
+        {
+          "package_id": "registry+https://github.com/rust-lang/crates.io-index#extra@1.0.0",
+          "target": {
+            "name": "extra",
+            "kind": [
+              "lib"
+            ]
+          },
+          "features": [],
+          "filenames": [
+            "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rlib",
+            "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rmeta"
+          ]
+        },
+        {
+          "package_id": "path+file:///w/comp-a#comp-a@0.1.0",
+          "target": {
+            "name": "comp_a",
+            "kind": [
+              "cdylib"
+            ]
+          },
+          "features": [],
+          "filenames": [
+            "/t/wasm32-wasip2/wasm-release/comp_a.wasm"
+          ]
+        }
+      ],
+      "files": [
+        "/t/wasm32-wasip2/wasm-release/comp_a.d",
+        "/t/wasm32-wasip2/wasm-release/comp_a.wasm",
+        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.d",
+        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rlib",
+        "/t/wasm32-wasip2/wasm-release/deps/libextra-2b.rmeta"
+      ]
+    }
   },
   "workerBudgets": [
     {

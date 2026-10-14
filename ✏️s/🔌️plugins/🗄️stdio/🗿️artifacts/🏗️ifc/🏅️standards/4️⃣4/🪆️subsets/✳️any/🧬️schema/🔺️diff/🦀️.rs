@@ -11,9 +11,9 @@ pub(crate) type IndexedDiffParts<D, T> = (Vec<usize>, Vec<(usize, D)>, Vec<(usiz
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
-use crate::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
-#[cfg(test)] use crate::schema::snapshot::{IfcTypedValue};
-use crate::IfcSnapshot;
+use crate::standards::v4::subsets::any::schema::snapshot::{IfcComplexType, IfcEntity, IfcValue};
+#[cfg(test)] use crate::standards::v4::subsets::any::schema::snapshot::{IfcTypedValue};
+use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};

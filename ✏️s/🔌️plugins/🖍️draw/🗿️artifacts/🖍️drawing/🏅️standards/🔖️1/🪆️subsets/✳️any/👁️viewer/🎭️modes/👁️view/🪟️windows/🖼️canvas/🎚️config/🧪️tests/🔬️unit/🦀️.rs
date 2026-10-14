@@ -1,6 +1,6 @@
 //! 📷️ Viewer camera traces retain exact window ownership and preserve artifact bytes.
 use super::*;
-use crate::viewer::drawing::{create_drawing_viewer,DrawingViewCommand,DrawingViewer};
+use crate::{create_drawing_viewer, DrawingViewCommand, DrawingViewer};
 use semio_framework_plugin::{artifact_app_laws,ActionMeta,App,PluginApp,VcsArtifactApp,ViewerApp,ViewModel,ViewWindowInstance,WindowConfigOwner};
 
 async fn scene(app: &mut VcsArtifactApp<ViewerApp<DrawingViewer>>,view: &ViewModel) -> Result<semio_framework_plugin::Canvas2dScene,String> {

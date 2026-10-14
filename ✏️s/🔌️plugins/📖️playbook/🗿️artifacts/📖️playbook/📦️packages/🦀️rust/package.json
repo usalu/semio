@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-playbook-document-contract": "bun repo run @semio-tech/playbook-playbook-rs:verify-playbook-document-contract"
   },

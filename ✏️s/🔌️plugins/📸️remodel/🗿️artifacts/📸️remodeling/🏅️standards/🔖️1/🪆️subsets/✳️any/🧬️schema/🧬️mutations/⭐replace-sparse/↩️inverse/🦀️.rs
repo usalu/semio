@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `ReplaceSparse` — the OLD `ReconstructionResults.sparse` from BASE.
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_sparse::ReplaceSparse;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::ReplaceSparse, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<ReplaceSparse>>(_payload: &super::ReplaceSparse, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
     vec![super::replace_sparse(base.results.sparse.clone())]
 

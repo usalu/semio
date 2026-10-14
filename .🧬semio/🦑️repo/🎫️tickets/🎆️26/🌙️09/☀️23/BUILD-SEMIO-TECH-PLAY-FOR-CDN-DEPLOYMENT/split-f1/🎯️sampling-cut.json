@@ -1,0 +1,222 @@
+{
+ "source": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-f1/🗑️generated/sampling-src.rs",
+ "tests": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-f1/🗑️generated/sampling-tests.rs",
+ "root": "🧰️framework/🔨️modules/🧮️math/🎯️sampling",
+ "workspace": "🧰️framework",
+ "support": "semio-framework-math-sampling-testing",
+ "rename": [
+  [
+   "geometry::random::",
+   "semio_framework_geometry::random::"
+  ]
+ ],
+ "moves": [
+  {
+   "from": [
+    6456,
+    6467
+   ],
+   "to": "semio-framework-math-sampling-vocabulary"
+  }
+ ],
+ "helpers": {
+  "small_vocab": "semio-framework-math-sampling-testing",
+  "step_view": "semio-framework-math-sampling-testing"
+ },
+ "crates": [
+  {
+   "name": "semio-framework-math-sampling-vocabulary",
+   "dir": "🔤️vocabulary",
+   "ranges": [
+    [
+     11,
+     1364
+    ]
+   ],
+   "doc": "🔤️ Token-sampling vocabulary: ids, errors, limits, JSON and UTF-8 text, numerics, token bitsets, seeded random streams and the token vocabulary.",
+   "description": "Token-sampling vocabulary: ids, errors, limits, text, numerics, bitsets, seeded random streams, vocabulary.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "header": [
+    "use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};"
+   ],
+   "deps": {
+    "semio-framework-geometry": "{ path = \"../../../../../📐️geometry/📦️packages/🦀️rust\" }",
+    "semio-framework-dispatch-macros": "{ path = \"../../../../../🔀️dispatch/📦️packages/🦀️rust\" }"
+   },
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-config",
+   "dir": "🎚️config",
+   "ranges": [
+    [
+     1366,
+     2449
+    ]
+   ],
+   "doc": "🎚️ Token-sampling configuration: schedules, sampling methods, processor/constraint/stop specs, the sampling config and its builder, and step results.",
+   "description": "Token-sampling configuration: schedules, methods, processor and constraint specs, config, results.",
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-workspace",
+   "dir": "🧺️workspace",
+   "ranges": [
+    [
+     2451,
+     2737
+    ],
+    [
+     2740,
+     2782
+    ],
+    [
+     2844,
+     2848
+    ]
+   ],
+   "doc": "🧺️ Token-sampling step contract: the reusable logits workspace, the per-step view and distribution, processor kinds, undo marks and processor stats.",
+   "description": "Token-sampling step contract: logits workspace, step view, distribution, undo marks.",
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-testing",
+   "dir": "🧪️testing",
+   "ranges": [],
+   "doc": "🧪️ Shared test vocabulary and step views for the token-sampling crates' unit tests (dev-dependency only).",
+   "description": "Shared test vocabulary and step views for the token-sampling unit tests."
+  },
+  {
+   "name": "semio-framework-math-sampling-processors",
+   "dir": "🎛️processors",
+   "ranges": [
+    [
+     2784,
+     2807
+    ],
+    [
+     2884,
+     4642
+    ]
+   ],
+   "doc": "🎛️ Token-sampling logits processors and samplers: warpers, penalties, biases, length controls, selection samplers and adaptive controllers.",
+   "description": "Token-sampling logits processors and samplers: warpers, penalties, biases, length, selection, adaptive.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "header": [
+    "use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};"
+   ],
+   "deps": {
+    "semio-framework-dispatch-macros": "{ path = \"../../../../../🔀️dispatch/📦️packages/🦀️rust\" }"
+   },
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-constraints",
+   "dir": "🚧️constraints",
+   "ranges": [
+    [
+     2809,
+     2842
+    ],
+    [
+     4644,
+     6194
+    ]
+   ],
+   "doc": "🚧️ Token-sampling constraints and stop conditions: stop matching, regex automata, trie, JSON mode, EBNF and JSON-schema constraints.",
+   "description": "Token-sampling constraints and stop conditions: stops, regex automata, trie, JSON, EBNF, JSON schema.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "header": [
+    "use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};"
+   ],
+   "deps": {
+    "semio-framework-dispatch-macros": "{ path = \"../../../../../🔀️dispatch/📦️packages/🦀️rust\" }"
+   },
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-engine",
+   "dir": "🚂️engine",
+   "ranges": [
+    [
+     2850,
+     2859
+    ],
+    [
+     6196,
+     6736
+    ]
+   ],
+   "doc": "🚂️ Token-sampling engine: sequence state with checkpoints, observers and the stateless and stateful sampling step.",
+   "description": "Token-sampling engine: sequence state, observers, stateless and stateful sampling step.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "header": [
+    "use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};"
+   ],
+   "deps": {
+    "semio-framework-dispatch-macros": "{ path = \"../../../../../🔀️dispatch/📦️packages/🦀️rust\" }"
+   },
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-decoding",
+   "dir": "🔍️decoding",
+   "ranges": [
+    [
+     2861,
+     2881
+    ],
+    [
+     6738,
+     7192
+    ]
+   ],
+   "doc": "🔍️ Token-sampling decoding strategies: continuous batching, beam search, best-of-n, speculative decoding and sharded-vocabulary sampling.",
+   "description": "Token-sampling decoding strategies: batching, beam search, best-of-n, speculative, sharded.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  },
+  {
+   "name": "semio-framework-math-sampling-diffusion",
+   "dir": "🌫️diffusion",
+   "ranges": [
+    [
+     7194,
+     7547
+    ]
+   ],
+   "doc": "🌫️ Continuous-noise diffusion sampling: noise schedules, prediction types, classifier-free guidance, solvers, img2img and inpainting.",
+   "description": "Continuous-noise diffusion sampling: noise schedules, guidance, solvers, img2img, inpainting.",
+   "attrs": [
+    "#![allow(async_fn_in_trait)]"
+   ],
+   "dev": {
+    "semio-framework-async-macros": "{ path = \"../../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }"
+   }
+  }
+ ]
+}

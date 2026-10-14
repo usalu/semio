@@ -13,42 +13,6 @@ extern crate semio_framework_value_derive as value_derive;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 #[path = "."]
-pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod duration {
-            #[path = "🧬️schema/💡️inferences/⏱️duration/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-#[path = "."]
 pub mod examples {
     #[path = "📚️examples/🎵️tone/🦀️.rs"]
     pub mod tone;
@@ -122,9 +86,3 @@ pub mod viewer {
     }
 }
 
-semio_framework_value::artifact_retire_leaf!(schema::snapshot::SemioAudioFormat);
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioAudioChannel { samples });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioAudioTag { key, value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioAudioSnapshot { schema, sample_rate, format, channels, tags });
-
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioAudioSnapshot, schema::mutations::SemioAudioMutation);

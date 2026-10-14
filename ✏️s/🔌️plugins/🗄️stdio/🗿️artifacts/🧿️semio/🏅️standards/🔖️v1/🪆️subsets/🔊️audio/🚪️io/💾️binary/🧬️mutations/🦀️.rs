@@ -7,21 +7,28 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::schema::mutations::*;
-use crate::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
-use crate::io::text::diff::hex_decode_string;
-use crate::io::text::snapshot::dec_tag;
-use crate::io::text::snapshot::enc_tag;
-use crate::io::text::snapshot::dec_f32_list;
-use crate::io::text::snapshot::enc_f32_list;
-use crate::io::text::snapshot::dec_format;
-use crate::io::text::snapshot::enc_format;
+use semio_s_artifact_stdio_semio_audio_model::schema::diff;
+use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioChannelDiff;
+use semio_s_artifact_stdio_semio_audio_model::schema::diff::SemioAudioDiff;
+use semio_s_artifact_stdio_semio_audio_model::io::text::diff::hex_decode_string;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::dec_tag;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::enc_tag;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::dec_f32_list;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::enc_f32_list;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::dec_format;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::enc_format;
 use semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32;
-use crate::io::text::snapshot::dec_snapshot;
-use crate::io::text::snapshot::enc_snapshot;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::dec_snapshot;
+use semio_s_artifact_stdio_semio_audio_model::io::text::snapshot::enc_snapshot;
 use semio_s_artifact_stdio_semio_base::io::text::codec::parse_usize;
 use semio_s_artifact_stdio_semio_base::io::text::codec::hex_encode;
-use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioChannel;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioTag;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation, OpBinary, OpText};

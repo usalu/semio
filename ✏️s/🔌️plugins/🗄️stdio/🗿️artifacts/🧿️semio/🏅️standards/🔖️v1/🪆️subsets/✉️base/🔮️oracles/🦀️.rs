@@ -40,18 +40,12 @@ pub struct Routed {
 
 //#region 🔖️Reader
 /// 📖️ Reads one committed carrier document through json-rust onto the host's own value tree.
-#[cfg(feature = "oracles")]
 pub fn read_carrier(bytes: &[u8]) -> Result<Json, String> {
     let text = std::str::from_utf8(bytes).map_err(|error| format!("envelope carrier is not UTF-8: {error}"))?;
     json::parse(text).map_err(|error| format!("json-rust refused the envelope carrier: {error}")).and_then(|value| project(&value))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn read_carrier(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the envelope carrier reference needs the `oracles` feature".to_string())
-}
 
-#[cfg(feature = "oracles")]
 fn project(value: &json::JsonValue) -> Result<Json, String> {
     Ok(match value {
         json::JsonValue::Null => Json::Null,

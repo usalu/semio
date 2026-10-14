@@ -3,14 +3,14 @@
 //! bare "delete", since `create-structure-classic-model` may have OVERWRITTEN an existing handle.
 
 use super::CreateStructureClassicModel;
-use crate::mutations::{delete_structure_classic_model, CadMutation};
-use crate::CadSnapshot;
+use crate::delete_structure_classic_model;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &CreateStructureClassicModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::create_structure_classic_model::CreateStructureClassicModel> + From<crate::delete_structure_classic_model::DeleteStructureClassicModel>>(_payload: &CreateStructureClassicModel, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match &base.structure_classic_model {
-        Some(existing) => vec![CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
-        None => vec![CadMutation::DeleteStructureClassicModel(delete_structure_classic_model::DeleteStructureClassicModel {})],
+        Some(existing) => vec![Op::from(CreateStructureClassicModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
+        None => vec![Op::from(delete_structure_classic_model::DeleteStructureClassicModel {})],
     })
 }
 //#endregion 🔖️Inverse

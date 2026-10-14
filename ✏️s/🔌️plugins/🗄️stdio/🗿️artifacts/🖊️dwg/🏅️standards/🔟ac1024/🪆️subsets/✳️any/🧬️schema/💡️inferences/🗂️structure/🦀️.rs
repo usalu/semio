@@ -1,6 +1,6 @@
 //! 🗂 `structure` — logical drawing statistics derived only from modeled layers and entities.
 
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 //#region 🔖️Structure
 /// 🗂️ Dwg (ac1024) logical drawing statistics.

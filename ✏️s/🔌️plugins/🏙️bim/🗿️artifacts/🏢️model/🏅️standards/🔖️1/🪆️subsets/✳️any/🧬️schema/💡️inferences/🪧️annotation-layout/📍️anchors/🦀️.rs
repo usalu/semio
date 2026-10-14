@@ -5,7 +5,7 @@
 
 use super::Inputs;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{mark, seg};
-use crate::{AnchorEnd, AnnotationAnchor, Axis, ModelSnapshot, Point2, Space, SpaceBoundary, WallSide};
+use crate::standards::v1::subsets::any::schema::snapshot::{AnchorEnd, AnnotationAnchor, Axis, ModelSnapshot, Point2, Space, SpaceBoundary, WallSide};
 
 /// 📏️ Lengths at or below this many metres count as zero.
 pub const EPS: f64 = 1e-9;

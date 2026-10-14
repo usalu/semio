@@ -3,9 +3,9 @@
 //! always APPENDS, so `remove-stream-frame` only round-trips exactly when `frame_index` addresses the
 //! LAST frame — the only way this mutation is ever emitted (see this facet's report for the reasoning).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::add_stream_frame::AddStreamFrame;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -23,17 +23,20 @@ pub struct RemoveStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_stream_frame(id: String, frame_index: u32) -> RemodelingMutation {
-    RemodelingMutation::RemoveStreamFrame(RemoveStreamFrame { id, frame_index })
+pub fn remove_stream_frame<Op: From<RemoveStreamFrame>>(id: String, frame_index: u32) -> Op {
+    Op::from(RemoveStreamFrame { id, frame_index })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveStreamFrame {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for RemoveStreamFrame
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<AddStreamFrame>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "stream", kind: "remove-stream-frame", record: "RemovedStreamFrame" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

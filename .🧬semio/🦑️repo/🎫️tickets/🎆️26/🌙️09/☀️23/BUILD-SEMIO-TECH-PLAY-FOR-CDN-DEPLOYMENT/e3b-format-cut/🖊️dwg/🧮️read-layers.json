@@ -1,0 +1,31 @@
+{
+ "order": [
+  "records",
+  "objects",
+  "read"
+ ],
+ "allow": {
+  "records": [],
+  "objects": [
+   "records"
+  ],
+  "read": [
+   "objects",
+   "records"
+  ]
+ },
+ "rules": [
+  [
+   "/🚪️io/📥️import/🧱️records/",
+   "records"
+  ],
+  [
+   "/🚪️io/📥️import/📦️objects/",
+   "objects"
+  ],
+  [
+   ".",
+   "read"
+  ]
+ ]
+}

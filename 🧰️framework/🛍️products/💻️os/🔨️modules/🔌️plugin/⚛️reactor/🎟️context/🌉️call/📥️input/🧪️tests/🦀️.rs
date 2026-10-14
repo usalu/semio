@@ -1,6 +1,6 @@
 //! 🧪️ Original finite actor caller pays resident ingress before any source byte donation.
 mod original_wire{wasmtime::component::bindgen!({world:"actor",path:"../../../🧬️schema"});}
-use semio_framework_plugin_interpreter::original_actor_context::OriginalActorGuestEntry;
+use semio_framework_plugin_guest_contract::original_actor_context::OriginalActorGuestEntry;
 use semio_framework_actor::{OriginalActorInput,ActorGuestPhase,RetainedTurnInput};
 use semio_framework_job::StepBudget;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};

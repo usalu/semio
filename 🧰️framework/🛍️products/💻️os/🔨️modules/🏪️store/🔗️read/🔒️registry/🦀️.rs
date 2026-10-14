@@ -3,17 +3,17 @@ use super::{SnapshotReadLeaseRegistry,SnapshotReadLease,SnapshotReadLeaseSlot,SN
 use std::sync::Arc;
 
 #[repr(transparent)]
-pub(crate) struct SnapshotReadRegistryHandle {inner:Arc<SnapshotReadLeaseRegistry>}
+pub struct SnapshotReadRegistryHandle {inner:Arc<SnapshotReadLeaseRegistry>}
 impl Clone for SnapshotReadRegistryHandle {fn clone(&self)->Self{Self{inner:self.inner.clone()}}}
 impl std::ops::Deref for SnapshotReadRegistryHandle {type Target=SnapshotReadLeaseRegistry;fn deref(&self)->&Self::Target{&self.inner}}
 impl SnapshotReadRegistryHandle {
- pub(super) fn new()->Self{Self{inner:Arc::new(SnapshotReadLeaseRegistry::new())}}
- pub(super) fn identity(&self)->usize{Arc::as_ptr(&self.inner) as usize}
- pub(super) fn strong_count(&self)->usize{Arc::strong_count(&self.inner)}
- pub(super) fn ptr_eq(&self,other:&Self)->bool{Arc::ptr_eq(&self.inner,&other.inner)}
- pub(super) fn try_unwrap(self)->Result<SnapshotReadLeaseRegistry,Self>{Arc::try_unwrap(self.inner).map_err(|inner|Self{inner})}
- pub(super) fn into_inner(self)->Option<SnapshotReadLeaseRegistry>{Arc::into_inner(self.inner)}
-    pub(super) fn try_issue<T: Send + Sync + 'static>(&self, owner: Arc<T>) -> Result<SnapshotReadLease, Arc<T>> {
+ pub fn new()->Self{Self{inner:Arc::new(SnapshotReadLeaseRegistry::new())}}
+ pub fn identity(&self)->usize{Arc::as_ptr(&self.inner) as usize}
+ pub fn strong_count(&self)->usize{Arc::strong_count(&self.inner)}
+ pub fn ptr_eq(&self,other:&Self)->bool{Arc::ptr_eq(&self.inner,&other.inner)}
+ pub fn try_unwrap(self)->Result<SnapshotReadLeaseRegistry,Self>{Arc::try_unwrap(self.inner).map_err(|inner|Self{inner})}
+ pub fn into_inner(self)->Option<SnapshotReadLeaseRegistry>{Arc::into_inner(self.inner)}
+    pub fn try_issue<T: Send + Sync + 'static>(&self, owner: Arc<T>) -> Result<SnapshotReadLease, Arc<T>> {
         let Ok(mut state) = self.state.try_lock() else {
             return Err(owner);
         };

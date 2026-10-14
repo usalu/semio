@@ -8,9 +8,6 @@
     "./pkg/framework_editor.js": "./pkg/framework_editor.js"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test-owned-error": "bun repo run @semio-tech/framework-editor-rs:test-owned-error"
   },

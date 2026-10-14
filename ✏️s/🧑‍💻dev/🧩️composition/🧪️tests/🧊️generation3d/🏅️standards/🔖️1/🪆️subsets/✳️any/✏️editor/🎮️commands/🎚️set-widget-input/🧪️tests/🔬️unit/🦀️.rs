@@ -12,7 +12,7 @@ async fn widget_input_graph_selection_projects_the_same_retained_inspector() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["selectionPublication"];
     let mut app = context::app().await;
-    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         let id = host.add_widget(&serde_json::json!({"kind":"inputSlider","id":case["widgetId"],"label":""}).to_string(), 0.0, 0.0).unwrap();
         host.set_slider_value(&id, case["value"].as_f64().unwrap());
@@ -68,7 +68,7 @@ async fn widget_input_mesh_source_actions_publish_evaluate_and_restore_history()
     for group in ["meshSource", "meshAssets"] {
     for case in fixture[group]["cases"].as_array().unwrap().iter().filter(|case| case["error"] != true) {
         let mut app = context::app().await;
-        let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+        let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
         let projected = with_host(&snapshot.host_snapshot, |host| {
             let source = host.add_widget(r#"{"kind":"inputNote","id":"source"}"#, 0.0, 0.0).unwrap();
             host.set_note_text(&source, &fixture[group]["mesh"].to_string());
@@ -119,7 +119,7 @@ async fn widget_input_publication_supports_scalar_events_and_undo_redo() {
     let mut app = context::app().await;
     context::dispatch(&mut app, Generation3dCommand::AddWidget(semio_s_artifact_procedural_generation3d::editor::generation3d::commands::add_widget::AddWidget { kind: "neuron".into(), neuron_kind: Some("brep.mesh.box".into()), format: None, action: None, x: None, y: None })).await;
     let before = context::snapshot(&app);
-    let id = semio_s_artifact_procedural_generation3d::widget_id(before.host_snapshot.widgets.last().unwrap()).to_string();
+    let id = semio_s_artifact_procedural_3d_model::widget_id(before.host_snapshot.widgets.last().unwrap()).to_string();
     let args: semio_framework_value::DslValue = serde_json::json!({"widgetId":id,"channel":"width","value":2.5}).into();
     let command = Generation3dPlayApp::command_from_action("setWidgetInput", Some((args).clone()), None).unwrap();
     context::dispatch(&mut app, command).await;
@@ -144,7 +144,7 @@ async fn widget_input_collection_actions_publish_evaluate_and_restore_history() 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["runtimeCollections"].as_array().unwrap() {
         let mut app = context::app().await;
-        let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+        let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
         let projected = with_host(&snapshot.host_snapshot, |host| {
             let source = host.add_widget(r#"{"kind":"neuron","id":"polyline","neuronKind":"brep.curve.polyline"}"#, 0.0, 0.0).unwrap();
             host.set_neuron_params(&source, &serde_json::json!({"points":fixture["runtimeInput"]}).to_string()).unwrap();
@@ -196,7 +196,7 @@ async fn widget_input_metadata_actions_preserve_live_connections_and_history() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let mut app = context::app().await;
-    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         let source = host.add_widget(r#"{"kind":"inputSlider","id":"source","label":""}"#, 0.0, 0.0).unwrap();
         host.set_slider_value(&source, 1.0);
@@ -250,7 +250,7 @@ async fn widget_input_texture_picker_retains_source_scope_and_restores_history()
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut app = context::app().await;
-    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         let source = host.add_widget(r#"{"kind":"inputNote","id":"source"}"#, 0.0, 0.0).unwrap();
         host.set_note_text(&source, &fixture["meshAssets"]["mesh"].to_string());

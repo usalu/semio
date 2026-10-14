@@ -1,7 +1,7 @@
 //! 💡️ BIM model inference schema: everything derivable from a [`ModelSnapshot`]. One field per named inference under
 //! `💡️inferences/`; the snapshot stores authored parameters only, so elevations, wall heights and quantities live here.
 
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

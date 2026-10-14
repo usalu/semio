@@ -2,16 +2,45 @@
 //! energy/structure-classic) plus the world-scene, selection-overlay and engagement-HUD builders its
 //! four windows share. Each window binds these to its own pane; nothing here is pane-specific.
 
-use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::engine::interaction::{accepts_selection, keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
-use crate::editor::cad::engine::picking;
-use crate::editor::cad::engine::typology::resolve_typology_style;
-use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
-use crate::editor::cad::terminology::CadLabels;
-use crate::editor::cad::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
-use crate::standards::v1::subsets::any::schema::geometry::{CadGeometry, CadObject};
-use crate::standards::v1::subsets::any::schema::inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
-use crate::{CadPaneId, CadSnapshot, CadWorkingScene};
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+//#region 🧩️Modules
+#[path = "."]
+pub mod options {
+    #[path = "☑️options/🕹️dislocate/🦀️.rs"]
+    pub mod dislocate;
+    #[path = "☑️options/🎥️projection/🦀️.rs"]
+    pub mod projection;
+    #[path = "☑️options/🌞️sun/🦀️.rs"]
+    pub mod sun;
+}
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🎚️config/🦀️.rs"]
+    pub mod config;
+    #[path = "🪟️windows/🏢️building/🦀️.rs"]
+    pub mod building;
+    #[path = "🪟️windows/🔥️energy/🦀️.rs"]
+    pub mod energy;
+    #[path = "🪟️windows/📐️shape/🦀️.rs"]
+    pub mod shape;
+    #[path = "🪟️windows/🏛️structure-classic/🦀️.rs"]
+    pub mod structure_classic;
+}
+//#endregion 🧩️Modules
+
+use semio_s_artifact_cad_cad_config::CadDislocateOptions;
+use semio_s_artifact_cad_cad_interaction::{accepts_selection, keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
+use semio_s_artifact_cad_cad_picking;
+use semio_s_artifact_cad_cad_typology::resolve_typology_style;
+use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
+use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;
+use semio_s_artifact_cad_cad_kit::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
+use semio_s_artifact_cad_cad_model::{geometry::CadGeometry, geometry::CadObject};
+use semio_s_artifact_cad_cad_inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
+use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot, snapshot::CadWorkingScene};
 use semio_framework_value::DslValue;
 use semio_framework_plugin::mesh_from_kind;
 use semio_framework_plugin::scene_surface;
@@ -571,3 +600,23 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
     }
 }
 //#endregion 🔖️Engagement
+
+//#region 🫧️WindowTransientOwners
+/// 🫧️ The engagement-transient owner of every CAD world window kind (design §17.4), with its registration and the
+/// per-window read and write of the window's engagement transient.
+pub mod window_transient {
+    use semio_s_artifact_cad_cad_transient::{CadWorldWindowTransient, CadWorldWindowTransientMutation};
+    use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
+
+    semio_framework_plugin::window_transient_owners! {
+        state: CadWorldWindowTransient,
+        mutation: CadWorldWindowTransientMutation,
+        windows: {
+            CadShapeWindowTransientOwner => shape::WINDOW_KIND_ID,
+            CadBuildingWindowTransientOwner => building::WINDOW_KIND_ID,
+            CadEnergyWindowTransientOwner => energy::WINDOW_KIND_ID,
+            CadStructureClassicWindowTransientOwner => structure_classic::WINDOW_KIND_ID,
+        },
+    }
+}
+//#endregion 🫧️WindowTransientOwners

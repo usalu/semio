@@ -1,0 +1,98 @@
+{
+ "union_root": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+ "union_crate": "semio_s_artifact_fem_2d_mutations",
+ "union_package_dir": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+ "model_crate": "semio_s_artifact_fem_2d_model",
+ "subsets": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets",
+ "laws": {
+  "move_selection": "🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⚖️laws/🦀️.rs"
+ },
+ "groups": [
+  {
+   "name": "mesh_topology_kinds",
+   "root": "🕸️mesh/🧪️tests/🔬️topology-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` node and element mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "⚪️create-node",
+    "🕳️delete-node",
+    "🔁️replace-node",
+    "🧩️create-element",
+    "🗑️delete-element",
+    "♻️replace-element"
+   ]
+  },
+  {
+   "name": "mesh_property_kinds",
+   "root": "🕸️mesh/🧪️tests/🔬️property-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` section and region mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "📐️create-section",
+    "✂️delete-section",
+    "📏️replace-section",
+    "🗺️create-region",
+    "🚫️delete-region",
+    "🔄️replace-region"
+   ]
+  },
+  {
+   "name": "mesh_selection_kinds",
+   "root": "🕸️mesh/🧪️tests/🔬️selection-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` selection move against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "🧭️move-selection"
+   ]
+  },
+  {
+   "name": "load_case_kinds",
+   "root": "🏋️load/🧪️tests/🔬️case-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` load case and load mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "📋️create-load-case",
+    "🗑️delete-load-case",
+    "🏷️change-load-case-name",
+    "⚖️change-load-case-self-weight",
+    "➕️add-load",
+    "➖️remove-load",
+    "🔁️replace-load"
+   ]
+  },
+  {
+   "name": "load_combination_kinds",
+   "root": "🏋️load/🧪️tests/🔬️combination-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` combination mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "🔗️create-combination",
+    "✂️delete-combination",
+    "🔁️replace-combination"
+   ]
+  },
+  {
+   "name": "boundary_kinds",
+   "root": "🛡️boundary/🧪️tests/🔬️support-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` support mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "🛡️create-support",
+    "🗑️delete-support",
+    "🔁️replace-support"
+   ]
+  },
+  {
+   "name": "material_kinds",
+   "root": "🧱️material/🧪️tests/🔬️material-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` material mutation kinds against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "🌱️create-material",
+    "🗑️delete-material",
+    "🔁️replace-material"
+   ]
+  },
+  {
+   "name": "analysis_kinds",
+   "root": "📈️analysis/🧪️tests/🔬️settings-kinds/🦀️.rs",
+   "doc": "//! 🔬️ Integration tests of the `s.fem.fem2d` analysis-settings mutation kind against the committed fixtures, the dispatch enum and the central apply.",
+   "kinds": [
+    "🎛️update-analysis-settings"
+   ]
+  }
+ ]
+}

@@ -43,7 +43,7 @@
               "type": "string",
               "pattern": "^semio-[a-z0-9-]*artifact-[a-z0-9-]+$"
             },
-            "nxName": {
+            "projectName": {
               "type": "string",
               "minLength": 1
             },
@@ -55,7 +55,7 @@
           },
           "required": [
             "cargoName",
-            "nxName",
+            "projectName",
             "manifest"
           ]
         },
@@ -67,7 +67,7 @@
               "type": "string",
               "minLength": 1
             },
-            "nxName": {
+            "projectName": {
               "type": "string",
               "minLength": 1
             },
@@ -95,7 +95,7 @@
           },
           "required": [
             "name",
-            "nxName",
+            "projectName",
             "manifest",
             "entry"
           ]

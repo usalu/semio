@@ -1,7 +1,7 @@
 use super::*;
 use protocol::Inference;
 use crate::editor::bim::entities::{kind_of, kind_holding};
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
@@ -65,6 +65,6 @@ fn a_new_family_takes_the_category_of_its_parent_and_a_new_solid_needs_its_famil
     assert_eq!(create_family_solid(&snapshot, "s-new", "fam-ghost", "Bench").err(), Some("bim.create.family-missing"));
     let created = create_family_solid(&snapshot, "s-new", "fam-table", "Bench").expect("creates");
     assert!(matches!(&created, ModelMutation::CreateFamilySolid(leaf) if leaf.solid.name == "Bench" && leaf.solid.family == "fam-table"));
-    let applied = crate::mutations::apply_model_mutation(&snapshot, &created).expect("applies");
+    let applied = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &created).expect("applies");
     assert!(applied.family_solids.contains_key("s-new"));
 }

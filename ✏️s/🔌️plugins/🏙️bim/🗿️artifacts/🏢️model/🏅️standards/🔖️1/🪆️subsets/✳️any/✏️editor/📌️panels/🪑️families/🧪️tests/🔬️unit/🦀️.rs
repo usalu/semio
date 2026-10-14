@@ -46,7 +46,7 @@ async fn the_selected_family_shows_its_measures_and_the_rows_that_place_or_open_
 async fn a_model_without_a_placeable_family_says_so() {
     let mut bare = placed();
     bare.components.clear();
-    bare.families.retain(|_, family| family.category == crate::FamilyCategory::Profile);
+    bare.families.retain(|_, family| family.category == crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile);
     assert!(text(&bare, &[], Locale::En).contains("The model has no family to place"));
     assert!(text(&bare, &[], Locale::De).contains("keine Familie zum Platzieren"));
 }

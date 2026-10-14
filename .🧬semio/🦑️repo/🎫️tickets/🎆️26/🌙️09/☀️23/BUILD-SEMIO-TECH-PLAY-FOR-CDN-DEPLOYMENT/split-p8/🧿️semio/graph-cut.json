@@ -1,0 +1,46 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "graph-layers.json",
+ "crate": "semio_s_artifact_stdio_semio_graph",
+ "aggregator": "graph",
+ "crates": {
+  "normal": {
+   "package": "semio-s-artifact-stdio-semio-graph-normal",
+   "dir": "🧬️schema/➕️normal-internals/📦️packages/🦀️rust"
+  },
+  "ports": {
+   "package": "semio-s-artifact-stdio-semio-graph-ports",
+   "dir": "🧬️schema/🔌️ports-internals/📦️packages/🦀️rust"
+  },
+  "operators": {
+   "package": "semio-s-artifact-stdio-semio-graph-operators",
+   "dir": "🧬️schema/🔧️operators-internals/📦️packages/🦀️rust"
+  },
+  "traversal": {
+   "package": "semio-s-artifact-stdio-semio-graph-traversal",
+   "dir": "🧬️schema/🚶️traversal-internals/📦️packages/🦀️rust"
+  },
+  "model": {
+   "package": "semio-s-artifact-stdio-semio-graph-model",
+   "dir": "🧬️schema/📦️packages/🦀️rust"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-semio-graph-inferences",
+   "dir": "🧬️schema/💡️inferences/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-semio-graph-mutations",
+   "dir": "🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "io": {
+   "package": "semio-s-artifact-stdio-semio-graph-io",
+   "dir": "🚪️io/📦️packages/🦀️rust"
+  }
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

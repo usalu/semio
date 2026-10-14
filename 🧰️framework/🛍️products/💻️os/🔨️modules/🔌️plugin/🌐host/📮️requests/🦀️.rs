@@ -21,6 +21,7 @@ use std::rc::Rc;
 use std::task::{Context, Poll, Waker};
 
 enum Slot {
+    Receiving,
     Pending {
         waker: Option<Waker>,
         partial: Vec<u8>,
@@ -65,11 +66,11 @@ struct Inner {
     /// into `turn-result.effects` (subject to `budget.max-effects`; overflow carries over to the
     /// next turn, see design-abi.md §4's `EffectSink` note).
     outbound: std::mem::ManuallyDrop<VecDeque<(u32, Effect)>>,
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl Inner {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut slots = Vec::new();
         let slots_admitted = slots.try_reserve_exact(REQUEST_SLOTS).is_ok();
         if slots_admitted {
@@ -223,7 +224,7 @@ pub enum ContinuationChunkStep {
 
 pub struct RequestCloseCursor {
     instance: u32,
-    index: usize,
+    pub(crate) index: usize,
     outbound_remaining: usize,
     outbound_initialized: bool,
 }
@@ -334,9 +335,9 @@ impl RequestRegistry {
         if !matches!(inner.get(id.0).map(|entry| &entry.value), Some(Slot::Continuation { .. })) {
             return None;
         }
-        let entry = inner.take(id.0)?;
+        let entry = inner.get_mut(id.0)?;
         let instance = entry.instance;
-        match entry.value {
+        match std::mem::replace(&mut entry.value,Slot::Receiving) {
             Slot::Continuation { response_action, request_json, partial } => Some(ExtensionContinuation { instance, response_action, request_json, partial }),
             _ => None,
         }
@@ -347,6 +348,18 @@ impl RequestRegistry {
         let inner=self.inner.borrow();
         inner.get(id.0).filter(|entry|matches!(entry.value,Slot::Continuation{..})).map(|entry|entry.instance)
     }
+
+    /// 🧾️ Quotes a parked request without consuming its original prologue or waker.
+    pub(crate) fn pending_instance(&self,id:RequestId)->Option<u32>{self.inner.borrow().get(id.0).filter(|entry|matches!(entry.value,Slot::Pending{..})).map(|entry|entry.instance)}
+
+    /// 📥️ Transfers only the admitted request prologue while its original slot remains occupied.
+    pub(crate) fn take_pending_partial(&self,id:RequestId)->Option<Vec<u8>>{match &mut self.inner.borrow_mut().get_mut(id.0)?.value{Slot::Pending{partial,..}=>Some(std::mem::take(partial)),_=>None}}
+
+    /// 📨️ Hands the funded result to the same parked request without consuming a refused donor.
+    pub(crate) fn resolve_original(&self,id:RequestId,result:&mut Option<Result<Vec<u8>,Fault>>)->bool{let waker={let mut inner=self.inner.borrow_mut();let Some(entry)=inner.get_mut(id.0)else{return false};if !matches!(&entry.value,Slot::Pending{partial,..}if partial.is_empty()){return false}let Some(result)=result.take()else{return false};let Slot::Pending{waker,..}=std::mem::replace(&mut entry.value,Slot::Ready{result})else{unreachable!()};waker};if let Some(waker)=waker{waker.wake()}true}
+
+    /// ♻️ Releases the original redispatch occupancy after decoder, publication and source return.
+    pub(crate) fn release_completed(&self,id:RequestId){let mut inner=self.inner.borrow_mut();if inner.get(id.0).is_some_and(|entry|matches!(entry.value,Slot::Receiving)){inner.take(id.0);}}
 
     /// ✅️ Called from `poll`'s event-routing step when `Event::Completed{req, result}` (or an
     /// equivalent streaming completion) arrives. Wakes the parked task if one was already polled
@@ -510,6 +523,7 @@ impl Future for RequestFuture {
                 inner.insert_admitted(entry);
                 Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.continuation"), "a redispatch continuation id can never back a parked future".to_string())))
             }
+            Some(entry @ SlotEntry{value:Slot::Receiving,..})=>{inner.insert_admitted(entry);Poll::Pending},
             None => Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry"), "request already consumed or unknown".to_string()))),
         }
     }

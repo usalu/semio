@@ -6,8 +6,8 @@
 //! rows (`las` 0.11, `ply-rs`, `tobj`, `stl_io`) that belong in this subset's `🔮️oracles/🔣️.json`.
 
 use super::*;
-use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
-use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
+use semio_s_artifact_remodel_remodeling_write::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+use semio_s_artifact_remodel_remodeling_read::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
 use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use semio_framework_plugin::mesh_from_kind;
@@ -212,8 +212,8 @@ async fn png_export_round_trips_a_stored_texture_asset() {
     let asset = image_asset_from_semio_image_snapshot(&image).expect("real png bridge encode");
     // 🧩️ Admitted through `create-asset` itself: the export reads the asset's DURABLE leaves back
     // (`remodeling_asset`), which a bare `assets.insert` of the handle never writes.
-    let create = crate::mutations::create_asset("tex-1".into(), asset);
-    let outcome = <crate::RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&create, &scene);
+    let create = semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset("tex-1".into(), asset);
+    let outcome = <semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&create, &scene);
     assert!(!outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "create-asset tex-1 rejected: {:?}", outcome.messages());
     let mut scene = protocol::apply_diff(outcome.diff(), &scene).expect("create-asset tex-1 applies");
     scene.results.mesh.texture_asset_id = Some("tex-1".into());

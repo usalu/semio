@@ -35,7 +35,7 @@ use super::super::super::wall_layout::joins::Band;
 use super::super::super::wall_layout::{self, band_of, layout_of, WallLayout};
 use super::plan::{element_storey, opening_storey};
 use super::{Data, DiagnosticScope, ModelNode, ModelValue, TotalsScope};
-use crate::{ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -354,7 +354,7 @@ fn probes_of<'i>(index: &Index<'i>, ids: &'i [String]) -> Vec<(&'i str, &'i Soli
 fn clash_set_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ClashSetResult {
     let Some(set) = snapshot.clash_sets.get(id) else { return ClashSetResult::default() };
     let (a, b) = clash_sets::picks(snapshot, set);
-    clash_sets::clashes_of(set, &probes_of(index, &a), &probes_of(index, &b), &clash_sets::hosting(snapshot), &|element| crate::storey_of(snapshot, element).cloned().unwrap_or_default(), &|| false)
+    clash_sets::clashes_of(set, &probes_of(index, &a), &probes_of(index, &b), &clash_sets::hosting(snapshot), &|element| crate::standards::v1::subsets::any::schema::snapshot::storey_of(snapshot, element).cloned().unwrap_or_default(), &|| false)
 }
 
 /// ⚖️ The findings of a rule over the measures of its parents.
@@ -395,7 +395,7 @@ fn frame_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> Opening
     frame_of(snapshot, id, &own, host, &siblings)
 }
 
-fn host_of<'i>(snapshot: &'i ModelSnapshot, railing: &crate::Railing, index: &'i Index<'_>) -> Option<rail_hosts::Host<'i>> {
+fn host_of<'i>(snapshot: &'i ModelSnapshot, railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing, index: &'i Index<'_>) -> Option<rail_hosts::Host<'i>> {
     let spec = railing.host.as_ref()?;
     if let Some(run) = index.runs.get(spec.element.as_str()) {
         return Some(rail_hosts::Host::Stair(run));
@@ -408,7 +408,7 @@ fn host_of<'i>(snapshot: &'i ModelSnapshot, railing: &crate::Railing, index: &'i
 }
 
 /// 🔗️ The columns a beam can join with their types and resolved vertical extent (from the levels the beam solid node has as parents).
-fn joiners_of<'a>(snapshot: &'a ModelSnapshot, beam: &crate::Beam, index: &Index<'_>) -> Vec<columns::Joiner<'a>> {
+fn joiners_of<'a>(snapshot: &'a ModelSnapshot, beam: &crate::standards::v1::subsets::any::schema::snapshot::Beam, index: &Index<'_>) -> Vec<columns::Joiner<'a>> {
     beams::joining(snapshot, beam)
         .into_iter()
         .filter_map(|(_, column)| {
@@ -459,7 +459,7 @@ fn room_value(snapshot: &ModelSnapshot, storey: &str, index: &Index<'_>) -> Stor
 }
 
 fn view_value(snapshot: &ModelSnapshot, id: &str, index: &Index<'_>) -> ViewLinework {
-    let Some(view) = snapshot.views.get(id) else { return ViewLinework { view: id.to_string(), kind: crate::ViewKind::Plan, scale: 0, detail: crate::DetailLevel::Medium, lines: plan_linework::Sheet::default().finish("", 0.0) } };
+    let Some(view) = snapshot.views.get(id) else { return ViewLinework { view: id.to_string(), kind: crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan, scale: 0, detail: crate::standards::v1::subsets::any::schema::snapshot::DetailLevel::Medium, lines: plan_linework::Sheet::default().finish("", 0.0) } };
     let storey = view.storey.as_deref().unwrap_or_default();
     let plan = PlanInputs { levels: index.levels.clone(), layouts: index.layouts.clone(), curtains: index.curtains.clone(), frames: index.frames.clone(), runs: index.runs.clone(), ramp_runs: index.ramp_runs.clone(), components: index.component_values(), meps: index.meps.clone(), rooms: index.rooms.get(storey).copied(), annotations: index.annotations.get(storey).copied() };
     let inputs = ViewInputs { plan, solids: index.solids.iter().map(|(element, entry)| (*element, &entry.solid)).collect() };
@@ -540,7 +540,7 @@ fn schedule_value(snapshot: &ModelSnapshot, id: &str, parents: &[ModelValue]) ->
     schedules::schedule_of(schedule, &view, &quantities)
 }
 
-fn members_of<'a>(snapshot: &'a ModelSnapshot, index: &Index<'a>, member: impl Fn(&crate::Space) -> bool) -> Vec<zones::Member<'a>> {
+fn members_of<'a>(snapshot: &'a ModelSnapshot, index: &Index<'a>, member: impl Fn(&crate::standards::v1::subsets::any::schema::snapshot::Space) -> bool) -> Vec<zones::Member<'a>> {
     snapshot.spaces.iter().filter(|(_, space)| member(space)).map(|(id, space)| (space, index.measured.get(id.as_str()).copied().flatten())).collect()
 }
 

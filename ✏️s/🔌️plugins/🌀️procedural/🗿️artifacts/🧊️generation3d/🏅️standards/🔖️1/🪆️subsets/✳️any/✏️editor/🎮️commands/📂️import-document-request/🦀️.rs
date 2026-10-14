@@ -11,9 +11,9 @@
 //! @see ../📥️import-document/🦀️.rs — the verb the shell re-dispatches with the picked file.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::io::document_io;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io::document_io;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -44,7 +44,7 @@ pub fn emit(payload: &ImportDocumentRequest, host: &semio_framework_artifact_flo
         }
         _ => return Err(Fault::from("Choose a complete texture target")),
     };
-    let accept = if target.is_some() { ".png,.jpg,.jpeg".into() } else { document_io::import_accept_filter().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_IMPORT_ACCEPT), error.to_string()))? };
+    let accept = if target.is_some() { ".png,.jpg,.jpeg".into() } else { document_io::import_accept_filter().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_IMPORT_ACCEPT), error.to_string()))? };
     Ok(Emit::effect(Effect::RequestFileOpen {
         req: semio_framework_plugin::RequestId(GENERATION3D_IMPORT_REQUEST_ID),
         accept,

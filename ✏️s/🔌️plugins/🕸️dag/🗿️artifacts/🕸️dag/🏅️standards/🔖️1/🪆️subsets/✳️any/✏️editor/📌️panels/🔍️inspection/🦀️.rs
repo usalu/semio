@@ -3,7 +3,7 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::editor::dag::{dag_action, ui_node_list, ui_value_list, ui_value_map, ui_value_text};
 use crate::DagScene;
-use semio_framework_artifact_infinite_dag::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
+use semio_framework_os_infinite_directed_presentation::{dag_node_kind_tag, DagNodeKind, DagNodeSpec};
 use semio_framework_plugin::plugin_app_close_prelude::input;
 use semio_framework_plugin::plugin_app_close_prelude::Buildable;
 use semio_framework_plugin::plugin_app_close_prelude::HasBase;

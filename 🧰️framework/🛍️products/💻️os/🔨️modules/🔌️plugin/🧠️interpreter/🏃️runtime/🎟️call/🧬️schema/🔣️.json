@@ -9,7 +9,8 @@
     "sourceRetained",
     "copyCuts",
     "expectedVm",
-    "noBudgetContext"
+    "noBudgetContext",
+    "maximumArguments"
   ],
   "properties": {
     "version": {
@@ -42,6 +43,9 @@
     },
     "noBudgetContext": {
       "const": true
+    },
+    "maximumArguments": {
+      "const": 19
     }
   }
 }

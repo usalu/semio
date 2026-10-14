@@ -6,8 +6,10 @@
 //! an oversight; the committed vector `🚫️removes` pins it. Every other
 //! guarded `delete-` refuses with `mutation.target-referenced` instead (see `mutations::guards`).
 use super::DeleteNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodeRemoval};
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodeRemoval;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteNode, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

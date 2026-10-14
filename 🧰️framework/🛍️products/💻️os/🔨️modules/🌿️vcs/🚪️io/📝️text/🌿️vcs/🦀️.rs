@@ -1,8 +1,8 @@
 //! 🌿️ Explicit native VCS repository text admission and emission.
-use crate::os_vcs::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
+use crate::io::binary::genesis::{AdmittedArtifactGenesis,ArtifactGenesisCodec};
 use semio_framework_value::{DslValue,FromValue,ToValue,ValueError};
 
-use crate::os_vcs::{ArtifactVcs,ArtifactHistoryLedger,ArtifactVcsRead,ArtifactGroupVisibility};
+use crate::{ArtifactVcs,ArtifactHistoryLedger,ArtifactVcsRead,ArtifactGroupVisibility};
 impl<P: ArtifactGenesisCodec, Mutation: FromValue> FromValue for ArtifactVcs<AdmittedArtifactGenesis<P>, Mutation> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Object(fields) = value else { return Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "VCS requires an object")); };
@@ -20,5 +20,5 @@ impl<P: ArtifactGenesisCodec, Mutation: FromValue> FromValue for ArtifactVcs<Adm
     }
 }
 
-pub(crate) fn native_vcs_read_value<P,M:ToValue>(read:&ArtifactVcsRead<'_,AdmittedArtifactGenesis<P>,M>)->DslValue{DslValue::object([("initialPack".into(),read.genesis.to_value()),("edits".into(),read.edits.to_value()),("changes".into(),read.changes.to_value()),("checkpoints".into(),read.checkpoints.to_value()),("alternatives".into(),read.alternatives.to_value())])}
+pub fn native_vcs_read_value<P,M:ToValue>(read:&ArtifactVcsRead<'_,AdmittedArtifactGenesis<P>,M>)->DslValue{DslValue::object([("initialPack".into(),read.genesis.to_value()),("edits".into(),read.edits.to_value()),("changes".into(),read.changes.to_value()),("checkpoints".into(),read.checkpoints.to_value()),("alternatives".into(),read.alternatives.to_value())])}
 pub fn native_vcs_value<P,M:ToValue>(vcs:&ArtifactVcs<AdmittedArtifactGenesis<P>,M>)->DslValue{let decision=vcs.group_visibility().expect("single VCS group authority").map(ArtifactGroupVisibility::capture);native_vcs_read_value(&vcs.read_group(decision.as_ref()).expect("captured VCS group authority"))}

@@ -5,9 +5,9 @@
 //! otherwise ONLY `runs[index].language` is assigned on a clone of `base.runs`. The before-snapshot
 //! deliberately mis-tags a German word (`Welt`) as `en` so the retag is semantically real.
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🌐change-run-language/🇩retags/📸️snapshot/⬅️before/🔣️.json");

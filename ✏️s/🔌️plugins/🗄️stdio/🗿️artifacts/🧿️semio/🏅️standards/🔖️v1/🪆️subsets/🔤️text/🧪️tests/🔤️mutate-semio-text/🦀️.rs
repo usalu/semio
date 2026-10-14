@@ -40,15 +40,17 @@ mod subject {
     use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio_text::schema::mutations::{diff_semio_text_mutation, inverse_semio_text_mutation, SemioTextMutation};
-    use semio_s_artifact_stdio_semio_text::io::text::mutations::decode_semio_text_mutation_json;
-    use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
-    use semio_s_artifact_stdio_semio_text::io::binary::snapshot::decode_semio_text_pack;
-    use semio_s_artifact_stdio_semio_text::io::binary::snapshot::encode_semio_text_pack;
-    use semio_s_artifact_stdio_semio_text::io::text::snapshot::print_semio_text_dsl;
-    use semio_s_artifact_stdio_semio_text::io::text::snapshot::parse_semio_text_dsl;
-    use semio_s_artifact_stdio_semio_text::io::text::snapshot::decode_semio_text_snapshot_json;
-    use semio_s_artifact_stdio_semio_text::io::text::snapshot::encode_semio_text_snapshot_json;
+    use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::diff_semio_text_mutation;
+    use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::inverse_semio_text_mutation;
+    use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation;
+    use semio_s_artifact_stdio_semio_text_mutations::io::text::mutations::decode_semio_text_mutation_json;
+    use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+    use semio_s_artifact_stdio_semio_text_model::io::binary::snapshot::decode_semio_text_pack;
+    use semio_s_artifact_stdio_semio_text_model::io::binary::snapshot::encode_semio_text_pack;
+    use semio_s_artifact_stdio_semio_text_model::io::text::snapshot::print_semio_text_dsl;
+    use semio_s_artifact_stdio_semio_text_model::io::text::snapshot::parse_semio_text_dsl;
+    use semio_s_artifact_stdio_semio_text_model::io::text::snapshot::decode_semio_text_snapshot_json;
+    use semio_s_artifact_stdio_semio_text_model::io::text::snapshot::encode_semio_text_snapshot_json;
 
     //#region 🔖️Input
     /// 📰️ The document every mutation row runs on: 384 real runs of the real German article

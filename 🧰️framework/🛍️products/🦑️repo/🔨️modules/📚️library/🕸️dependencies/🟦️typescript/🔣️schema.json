@@ -8,6 +8,9 @@
     "generated",
     "externalDependencies"
   ],
+  "$defs": {
+    "runtimeImports": {"type":"array","uniqueItems":true,"items":{"type":"string"}}
+  },
   "properties": {
     "entries": {
       "type": "array",

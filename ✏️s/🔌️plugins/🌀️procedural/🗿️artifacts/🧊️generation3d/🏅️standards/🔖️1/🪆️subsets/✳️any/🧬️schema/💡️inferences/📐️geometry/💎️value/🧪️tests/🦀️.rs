@@ -1,10 +1,10 @@
 use super::*;
-use super::super::compute::{ReadyJob, WidgetJob, WidgetStep};
+use semio_s_artifact_procedural_3d_geometry_value::*;
 use semio_framework_job::{Generation, OperationId, OriginalJobFixtureCaller};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant}, retirement::controlled::ControlledRetirement};
 
 fn wire_shape(law: &serde_json::Value) -> GeometryValue {
-    use semio_framework_3d_brep_representation::{topology::{Body,Vertex},vector::Pnt3,tolerance::Tol};
+    use {semio_framework_3d_brep_representation::topology::{Body, Vertex}, semio_framework_3d_brep_vector::Pnt3, semio_framework_3d_brep_tolerance::Tol};
     use semio_framework_3d_brep_engine::{ShapeRoot,ShapeWire};
     let mut body=Body::new();let label=body.labels.next_label();let point=&law["cancellation"]["wirePoint"];
     let id=body.vertices.insert(Vertex{position:Pnt3{x:point[0].as_f64().unwrap(),y:point[1].as_f64().unwrap(),z:point[2].as_f64().unwrap()},tol:Tol::default(),label});

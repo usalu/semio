@@ -42,7 +42,6 @@ const CLASS: &str = "ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)";
 pub const KINDS: &[&str] = &["set-file-schema", "set-product-identity", "set-shape-representation", "restore-entities"];
 //#endregion 🔖️Class
 
-#[cfg(feature = "oracles")]
 mod oracles {
     use super::{CLASS, MAX_RUNG};
     use crate::standards::v_ap214::reference::{ladder, part21};
@@ -145,52 +144,32 @@ mod oracles {
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     oracles::dispatch(input, spec)
 }
 
 /// ↩️ The independently computed inverse spec of `spec` against the untouched `base`.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
     oracles::dispatch_inverse(base, spec)
 }
 
 /// 🔁️ Decode and re-encode without passing bytes through.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's conformance-class projection.
-#[cfg(feature = "oracles")]
 pub fn project_step_ap214_cc6(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is not enabled, so no reference implementation is linked".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is not enabled, so no reference implementation is linked".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is not enabled, so no reference implementation is linked".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_step_ap214_cc6(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is not enabled, so no reference implementation is linked".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

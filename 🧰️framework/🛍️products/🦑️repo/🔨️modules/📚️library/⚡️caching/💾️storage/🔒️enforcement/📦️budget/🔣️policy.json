@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "maximumBytes": 68719476736,
+  "maximumControlBytes": 1048576,
+  "partitions": {
+    "rust": {"directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed", "capacityBytes": 17179869184},
+    "tools": {"directory": ".cache/b/t", "capacityBytes": 8589934592},
+    "graph": {"directory": ".cache/b/g", "capacityBytes": 4294967296},
+    "dependencies": {"directory": ".cache/b/d", "capacityBytes": 8589934592},
+    "products": {"directory": ".cache/b/p", "capacityBytes": 25769803776},
+    "diagnostics": {"directory": ".cache/b/o", "capacityBytes": 2147483648},
+    "leases": {"directory": ".cache/b/l", "capacityBytes": 67108864}
+  }
+}

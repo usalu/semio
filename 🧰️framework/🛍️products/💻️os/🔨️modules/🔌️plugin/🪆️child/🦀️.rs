@@ -203,8 +203,8 @@ pub(crate) struct ChildMemberEntry<M> {
 }
 
 pub(crate) struct ChildMemberAdmission {
-    index: usize,
-    generation: u64,
+    pub(crate) index: usize,
+    pub(crate) generation: u64,
     nested: bool,
 }
 
@@ -228,7 +228,7 @@ pub(crate) struct ChildMemberRegistry<M> {
     pub(crate) dense_slots: [usize; CHILD_CONTENT_SLOTS],
     ordinal_by_slot: [usize; CHILD_CONTENT_SLOTS],
     next_generation: u64,
-    len: usize,
+    pub(crate) len: usize,
     pub(crate) allocation_admitted: bool,
 }
 
@@ -253,7 +253,7 @@ impl<M> ChildMemberRegistry<M> {
         }
     }
 
-    fn hash(key: MemberKeyRef<'_>) -> Result<usize, Fault> {
+    pub(crate) fn hash(key: MemberKeyRef<'_>) -> Result<usize, Fault> {
         ChildContentView::hash(key)
     }
 
@@ -631,7 +631,7 @@ pub(crate) struct OwnedDocumentMemberIngressRegistry {
     occupied: [u64; CHILD_CONTENT_SLOTS / 64],
     pub(crate) expected: usize,
     pub(crate) len: usize,
-    generation: u64,
+    pub(crate) generation: u64,
     pub(crate) sealed: bool,
     close_cursor: usize,
 }
@@ -761,7 +761,7 @@ impl Drop for OwnedDocumentMemberIngressRegistry {
 }
 
 pub(crate) struct DocumentClosureSourceView<'a, P, M> {
-    generation: u64,
+    pub(crate) generation: u64,
     root_reference: &'a ArtifactRef,
     root_snapshot: &'a P,
     members: &'a ChildMemberRegistry<M>,
@@ -833,7 +833,7 @@ include!("../🧩️composition/📬️publication/🤝️group/🪟️mounted/�
 
 pub(crate) struct ChildContentBorrowedOwners<'a> {
     views: [Option<&'a ChildContentView>; ARTIFACT_LIVE_OUTPUT_SLOTS + 2],
-    len: usize,
+    pub(crate) len: usize,
 }
 
 impl<'a> ChildContentBorrowedOwners<'a> {
@@ -900,9 +900,9 @@ include!("../🧩️composition/♻️root/🦀️.rs");
 
 #[derive(semio_framework_value::RetireOwned)]
 struct ChildContentMemberMetadata {
-    key: MemberKey,
-    artifact_id: String,
-    dialect: ArtifactDialect,
+    pub(crate) key: MemberKey,
+    pub(crate) artifact_id: String,
+    pub(crate) dialect: ArtifactDialect,
 }
 
 pub(crate) struct ChildContentRetirement {
@@ -1094,8 +1094,8 @@ pub(super) struct ChildAdmissionTestState {
 
 #[derive(semio_framework_value::RetireOwned)]
 struct ChildMemberMetadata {
-    reference: ArtifactRef,
-    owner: store::OwnerRef,
+    pub(crate) reference: ArtifactRef,
+    pub(crate) owner: store::OwnerRef,
 }
 
 pub(crate) struct ChildMemberRetirement<M> {

@@ -1,16 +1,4 @@
 //! 🌱️ Store native ArtifactPack genesis admission capability.
-use pack::snapshot::ArtifactPack;
-use pack::record::EncodeOptions as PackEncodeOptions;
-use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
-use semio_framework_value::ValueError;
-impl<P: ArtifactPack> ArtifactGenesisCodec for P {
-    fn encode_genesis_pack(&self) -> Result<Vec<u8>, ValueError> {
-        self.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-    }
-    fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> {
-        Self::decode_pack(pack).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
-    }
-}
 
 use crate::os_store::{owned_schema_decode::OwnedSchemaToken,owned_schema_decode::OwnedSchemaTokenKind,owned_schema_decode::OwnedSchemaDecodeDiagnostic,owned_schema_decode::OwnedSchemaRecordCursor,owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority};
 pub(super) struct ArtifactGenesisPackCapture {

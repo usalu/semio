@@ -2,7 +2,7 @@
 
 use super::super::delete_wall::DeleteWall;
 use super::OffsetWall;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &OffsetWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.contains_key(&payload.id) {

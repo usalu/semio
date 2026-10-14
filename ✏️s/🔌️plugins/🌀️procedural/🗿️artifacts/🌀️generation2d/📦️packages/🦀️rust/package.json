@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-generation2d-window-camera-ownership": "bun repo run @semio-tech/procedural-generation2d-rs:verify-generation2d-window-camera-ownership"
   },

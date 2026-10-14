@@ -1,6 +1,24 @@
 //! 🧭️ The document editor's edit rules: which snapshot pointer raises which ONE concrete document mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, complete_by, ent, edited, event_path, fault, field, ins, item, keyed, named, position, record, rem, resolve, segments, unsupported, Entries, Reshape};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::build;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::complete_by;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::edited;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::event_path;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::fault;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::field;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::item;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::position;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::record;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::segments;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::unsupported;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
 use crate::schema::mutations::SemioDocumentMutation;
 use crate::schema::snapshot::SemioDocumentSnapshot;
 use semio_framework_plugin::Fault;

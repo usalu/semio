@@ -3,36 +3,316 @@
   "title": "Repository Build Project",
   "description": "Tool-independent project and task declarations projected by repository build backends.",
   "type": "object",
-  "required": ["name"],
+  "required": [
+    "name"
+  ],
   "properties": {
-    "$schema": {"type": "string"},
-    "name": {"type": "string", "minLength": 1},
-    "root": {"type": "string"},
-    "sourceRoot": {"type": "string"},
-    "projectType": {"enum": ["application", "library"]},
-    "tags": {"type": "array", "items": {"type": "string"}},
-    "implicitDependencies": {"type": "array", "items": {"type": "string"}},
-    "namedInputs": {"type": "object", "additionalProperties": {"type": "array"}},
-    "targets": {"type": "object", "additionalProperties": {"$ref": "#/$defs/Task"}},
-    "metadata": {"type": "object"}
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root": {
+      "type": "string"
+    },
+    "sourceRoot": {
+      "type": "string"
+    },
+    "projectType": {
+      "enum": [
+        "application",
+        "library"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "implicitDependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "namedInputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array"
+      }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Task"
+      }
+    },
+    "metadata": {
+      "type": "object"
+    }
   },
   "$defs": {
+    "LiteralArguments": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
     "Task": {
       "type": "object",
       "properties": {
-        "executor": {"enum": ["repo:script", "repo:noop"]},
-        "command": {"type": "string"},
-        "options": {"type": "object"},
-        "configurations": {"type": "object", "additionalProperties": {"type": "object"}},
-        "defaultConfiguration": {"type": "string"},
-        "dependsOn": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"type": "object"}]}},
-        "inputs": {"type": "array"},
-        "outputs": {"type": "array", "items": {"type": "string"}},
-        "cache": {"type": "boolean"},
-        "continuous": {"type": "boolean"},
-        "parallelism": {"type": "boolean"},
-        "metadata": {"type": "object"}
-      }
+        "executor": {
+          "enum": [
+            "repo:script",
+            "repo:noop"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "properties": {
+            "args": {"$ref": "#/$defs/LiteralArguments"}
+          },
+          "allOf": [
+            {
+              "anyOf": [
+                {
+                  "properties": {
+                    "command": false
+                  },
+                  "type": "object"
+                },
+                {
+                  "properties": {
+                    "commands": false
+                  },
+                  "type": "object"
+                }
+              ]
+            }
+          ]
+        },
+        "configurations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ExecutionConfiguration"
+          }
+        },
+        "defaultConfiguration": {
+          "type": "string"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "inputs": {
+          "type": "array"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cache": {
+          "type": "boolean"
+        },
+        "continuous": {
+          "type": "boolean"
+        },
+        "parallelism": {
+          "type": "boolean"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "options": {
+                  "properties": {
+                    "command": false
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "commands": false
+                    }
+                  }
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "options": {
+                  "properties": {
+                    "commands": false
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "command": false
+                    }
+                  }
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "command": false
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "options": {
+                  "type": "object",
+                  "properties": {
+                    "command": false,
+                    "commands": false
+                  }
+                },
+                "configurations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "commands": false
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ExecutionConfiguration": {
+      "type": "object",
+      "properties": {
+        "kind": false,
+        "ownerArguments": false,
+        "nativeOwnerCommand": false,
+        "executor": false,
+        "inputs": false,
+        "outputs": false,
+        "dependsOn": false,
+        "cache": false,
+        "continuous": false,
+        "parallelism": false,
+        "metadata": false,
+        "defaultConfiguration": false,
+        "configurations": false,
+        "options": false,
+        "command": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "command"
+                ],
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "forwardAllArgs": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "cwd": {
+          "type": "string"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "parallel": {
+          "type": "boolean"
+        },
+        "forwardAllArgs": {
+          "type": "boolean"
+        },
+        "args": {
+          "$ref": "#/$defs/LiteralArguments"
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "command": false
+              },
+              "type": "object"
+            },
+            {
+              "properties": {
+                "commands": false
+              },
+              "type": "object"
+            }
+          ]
+        }
+      ]
     }
   }
 }

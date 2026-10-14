@@ -2,7 +2,7 @@
 
 use super::super::delete_material::DeleteMaterial;
 use super::CreateMaterial;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateMaterial, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.materials.contains_key(&payload.id) {

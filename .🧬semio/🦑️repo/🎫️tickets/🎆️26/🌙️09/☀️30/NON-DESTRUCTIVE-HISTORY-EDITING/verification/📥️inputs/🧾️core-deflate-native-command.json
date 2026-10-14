@@ -1,11 +1,11 @@
 {
   "workspaceRoot": "/Users/ueli/Documents/semio",
   "arguments": [
-    "nx",
+    "repo",
     "run",
     "@semio-tech/framework-os-kernel:test",
-    "--skip-nx-cache",
-    "--excludeTaskDependencies",
+    "--skip-cache",
+    "--exclude-dependencies",
     "--configuration=prototype",
     "--parallel=1",
     "--",
@@ -22,11 +22,11 @@
     "--nocapture"
   ],
   "selection": [
-    "nx",
+    "repo",
     "run",
     "@semio-tech/framework-os-kernel:test",
-    "--skip-nx-cache",
-    "--excludeTaskDependencies",
+    "--skip-cache",
+    "--exclude-dependencies",
     "--configuration=prototype",
     "--parallel=1",
     "--",
@@ -55,5 +55,6 @@
       "offline": false
     }
   },
-  "buildMode": "prototype"
+  "buildMode": "prototype",
+  "tool": "nx"
 }

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚠️fault/🌶️change-severity",
+  "semanticKind": "change-fault-severity",
+  "displayName": "Change Fault Severity",
+  "emoji": "🌶️",
+  "aggregateVariant": "ChangeFaultSeverity",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-fault-severity",
+  "binaryTag": 240,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

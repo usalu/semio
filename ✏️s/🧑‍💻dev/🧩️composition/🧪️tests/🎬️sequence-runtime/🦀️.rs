@@ -85,7 +85,7 @@ async fn function_steps_use_data_ports_without_visible_execution_pins() {
     assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
     assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
     assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-    assert!(!node.inputs().iter().any(|port| port.shape == semio_framework_artifact_infinite_dag::PortShape::Triangle && port.visible));
+    assert!(!node.inputs().iter().any(|port| port.shape == semio_framework_os_infinite_directed_presentation::PortShape::Triangle && port.visible));
 }
 
 
@@ -99,7 +99,7 @@ async fn text_steps_use_data_ports_without_visible_execution_pins() {
     assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
     assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
     assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-    assert!(!node.inputs().iter().any(|port| port.shape == semio_framework_artifact_infinite_dag::PortShape::Triangle && port.visible));
+    assert!(!node.inputs().iter().any(|port| port.shape == semio_framework_os_infinite_directed_presentation::PortShape::Triangle && port.visible));
 }
 
 

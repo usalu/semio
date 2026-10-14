@@ -1,8 +1,8 @@
 //! 🗑️ `delete-generation` payload — removes an id-keyed [`FormGeneration`] entry.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 //#region 🔖️DeleteGeneration
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, semio_framework_value::RetireOwned)]
 #[mutation_leaf(contract = ::protocol)]
@@ -14,12 +14,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Dele
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "generation", kind: "delete-generation", record: "DeletedGeneration" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::delete_generation::diff::diff(self, base)
+        crate::delete_generation::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        crate::standards::v1::subsets::any::schema::mutations::delete_generation::inverse::inverse(self, base)?
+        crate::delete_generation::inverse::inverse(self, base)?
     
     })
 }

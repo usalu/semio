@@ -4,7 +4,7 @@
 //! `nodes`/`edges` fields are replaced by a composed `s.stdio.semio.graph` CHILD slot
 //! (`🔖️ContentBridge` below) — this plugin no longer defines its own persisted node/edge model, it
 //! composes stdio's neutral `graph` subset instead. The rich live editing types
-//! (`semio_framework_artifact_infinite_dag::DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`) still flow
+//! (`semio_framework_os_infinite_directed_presentation::DagNodeSpec`/`DagNodeKind`/`DagHostSnapshotEdge`) still flow
 //! through the app exactly as before; only the PERSISTED shape changed. They now bridge through the
 //! composed child's exact local owner rather than plain struct fields.
 
@@ -33,7 +33,10 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 pub use crate::snapshot::schema::{default_snapshot, empty_snapshot};
-pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagExpandedPaths, DagHostSnapshotEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
+pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagNodePatch};
+pub use semio_framework_os_infinite_directed_presentation::{DagHostSnapshotEdge};
+
+pub use semio_framework_os_infinite_directed_presentation::{DagExpandedPaths, DagNodeKind, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` document — the dag's nodes and edges live in this
@@ -44,7 +47,8 @@ use semio_framework_value::{DslValue, Number};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 pub use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
 /// 🔗️ The graph edge kind every DAG connection carries.
 const DAG_EDGE_KIND: &str = "dag-edge";
@@ -98,7 +102,7 @@ pub fn dag_graph_node(node: &DagNodeSpec) -> SemioGraphNode {
     let port = |port: &IoPortSpec, kind| SemioGraphPort { name: port.id.clone(), kind, category: String::new(), properties: Vec::new() };
     SemioGraphNode {
         id: SemioGraphNodeId::new(node.id.clone()),
-        kind: semio_framework_artifact_infinite_dag::dag_node_kind_tag(&node.kind).to_string(),
+        kind: semio_framework_os_infinite_directed_presentation::dag_node_kind_tag(&node.kind).to_string(),
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
         width: node.width,
@@ -272,14 +276,14 @@ impl Default for DagCamera {
     }
 }
 
-impl From<DagCamera> for semio_framework_artifact_infinite_dag::DagCamera {
+impl From<DagCamera> for semio_framework_os_infinite_directed_presentation::DagCamera {
     fn from(value: DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }
 
-impl From<semio_framework_artifact_infinite_dag::DagCamera> for DagCamera {
-    fn from(value: semio_framework_artifact_infinite_dag::DagCamera) -> Self {
+impl From<semio_framework_os_infinite_directed_presentation::DagCamera> for DagCamera {
+    fn from(value: semio_framework_os_infinite_directed_presentation::DagCamera) -> Self {
         Self { x: value.x, y: value.y, zoom: value.zoom }
     }
 }

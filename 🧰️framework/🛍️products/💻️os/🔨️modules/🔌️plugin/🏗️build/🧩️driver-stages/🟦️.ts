@@ -1,13 +1,14 @@
+import {type CargoDependencyNetworkV1,withRepositoryCargoInputsV1} from "./../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import {runtimeCatalogBuildInventoryV1} from "../../📇️registry/📖️catalog-view/🟦️.ts";
 import { requireMaterializedPathV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type { CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { buildModeEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { buildModeEnvironment, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { mkdirSync, rmSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { join } from "node:path";
-import { runNativeBuildDriverV1, type LinkedComponentV1, type NativeBuildOutcomeV1, type NativeBuildStageV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
-import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { cargoDirectories, componentPassPlanV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { nativeBuildGenerationKindV1, runNativeBuildDriverV1, type LinkedComponentV1, type NativeBuildGenerationKindV1, type NativeBuildGenerationV1, type NativeBuildJobV1, type NativeBuildOutcomeV1, type NativeBuildPipelineV1, type NativeBuildPlanV1, type NativeBuildStageV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
+import { componentPassPlanV1, nativeBuildPipelinePlanV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { assembleComponentModuleV1, optimizeComponentCoresV1, probeComponentModuleV1, publishComponentModuleV1, transpileComponentModulesV1, type ComponentModuleWorkV1 } from "../../🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 import { componentDeliverableV1, SHIPPED_COMPONENT_PROFILE, componentProfileV1, type ComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { componentStageTargetV1, componentsDescribeArgumentsV1, describeComponentStageV1, describeIterateComponentsV1, settleComponentDescriptorV1, writeComponentStageReceiptV1, type ComponentDescribeModeV1 } from "../../🖨️describe/🧩️component-stage/🟦️.ts";
@@ -65,11 +66,32 @@ export function componentDriverStagesV1(repoRoot: string, describeMode: Extract<
   };
 }
 
+/** 🏪️ Runs one build driver over `plan` inside the repository's charged compiler store of `mode`, the one owner every component driver run goes through:
+ * the store issues the native storage reservation, the configured Source boundary, the Cargo home, target and build directories and the stage cache root,
+ * and the bounded registry custody of every pass manifest is held under the caller's own network grant.
+ * @see ../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts
+ * @see ../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts */
+function runRepositoryComponentDriverV1(repoRoot: string, mode: BuildMode, plan: NativeBuildPlanV1, options: Readonly<{ network: CargoDependencyNetworkV1; control: CompilerAdmissionControl; environment: Readonly<Record<string, string | undefined>>; generation: NativeBuildGenerationKindV1; stages: (component: LinkedComponentV1) => readonly NativeBuildStageV1[]; jobEnvironment?: (job: NativeBuildJobV1, generation: NativeBuildGenerationV1) => Readonly<Record<string, string>>; log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
+  const [first, ...rest] = plan.passes;
+  if (!first) throw Error("Component build driver requires declared Cargo passes");
+  return withRepositoryCompilerStoreV1(repoRoot, mode, options.control, options.environment, (store) => withRepositoryCargoInputsV1({ workspace: repoRoot, manifest: first.manifest, args: ["--target", first.target], additionalManifests: rest.map((pass) => ({ manifest: pass.manifest, args: ["--target", pass.target] })), network: options.network, control: options.control, storage: store.storage, environment: store.environment }, (environment) => runNativeBuildDriverV1({ storage: store.storage, sourceBoundary: store.sourceBoundary, compilerConfiguration: join(repoRoot, ".cargo/config.toml"), plan, cwd: repoRoot, cacheRoot: join(store.root, "components"), shared: { target: store.environment.CARGO_TARGET_DIR!, build: store.buildDirectory }, generation: options.generation, leaseDirectory: join(repoRoot, ".cache/framework/leases"), environment, control: options.control, stages: options.stages, ...(options.jobEnvironment ? { jobEnvironment: options.jobEnvironment } : {}), ...(options.log ? { log: options.log } : {}) })));
+}
+
+/** 🚀️ Runs a product's whole release pipeline (`pipeline`, the `metadata.semio.release` of its release target) as one build driver in the compiler store of
+ * the caller's build mode: one Cargo pass per component workspace restricted to `components` (every discovered component when omitted), the pipeline's
+ * jobs with their owner policies, and the generation `SEMIO_NATIVE_BUILD_GENERATION` selects.
+ * @see ../../../../../../../📜️script.ts
+ * @see ../../../../../../../🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts */
+export function buildReleasePipelineV1(repoRoot: string, pipeline: NativeBuildPipelineV1, options: Readonly<{ components?: ReadonlySet<string>; network: CargoDependencyNetworkV1; control: CompilerAdmissionControl }>): Promise<NativeBuildOutcomeV1> {
+  const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(repoRoot, pipeline, options.components);
+  return runRepositoryComponentDriverV1(repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE), plan, { network: options.network, control: options.control, environment: process.env, generation: nativeBuildGenerationKindV1(process.env), stages: componentDriverStagesV1(repoRoot), jobEnvironment });
+}
+
 /** 🎯️ Builds exactly `pluginIds` — the closure one dev launch serves — through the one build driver over the warm stores: only the passes and packages of
  * those components, each streamed through its cached stages into the one plugin-modules root. A launch never pays for components it does not load.
  * @see ../../../🧑‍💻dev/♻️activation/🧰️preparation/🟦️.ts */
-export function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{ control: CompilerAdmissionControl; log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
-  return runNativeBuildDriverV1({ compilerConfiguration: join(repoRoot,".cargo/config.toml"), plan: componentPassPlanV1(repoRoot, pluginIds), cwd: repoRoot, cacheRoot: repoCacheDirectory(repoRoot), shared: cargoDirectories(repoRoot), generation: "warm", leaseDirectory: join(repoRoot, ".cache/framework/leases"), environment: process.env, control: options.control, stages: componentDriverStagesV1(repoRoot), ...(options.log ? { log: options.log } : {}) });
+export function buildComponentClosureV1(repoRoot: string, pluginIds: ReadonlySet<string>, options: Readonly<{network:CargoDependencyNetworkV1; control: CompilerAdmissionControl; log?: (line: string) => void }>): Promise<NativeBuildOutcomeV1> {
+  return runRepositoryComponentDriverV1(repoRoot, "prototype", componentPassPlanV1(repoRoot, pluginIds), { network: options.network, control: options.control, environment: process.env, generation: "warm", stages: componentDriverStagesV1(repoRoot), ...(options.log ? { log: options.log } : {}) });
 }
 
 /** 🧭️ The components one playground variant loads: `boot` is the host closure a launch must serve before anything else (its app scope only), `full` is
@@ -83,9 +105,9 @@ export function playgroundComponentClosureV1(variant: string, scope: "boot" | "f
 /** ✍️ `components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype]`: writes the committed semantic pairs from freshly built bytes. Shipped
  * bytes come from one build driver run over exactly the selected components, each described (writing a differing pair), receipted and materialized as it
  * links; iterate bytes are built and described one component at a time. */
-export async function describeComponentsV1(repoRoot: string, segments: readonly string[], control: CompilerAdmissionControl): Promise<void> {
+export async function describeComponentsV1(repoRoot: string, segments: readonly string[], control: CompilerAdmissionControl,network:CargoDependencyNetworkV1): Promise<void> {
   const { all, pluginIds, profile } = componentsDescribeArgumentsV1(segments);
-  if (profile !== SHIPPED_COMPONENT_PROFILE) return describeIterateComponentsV1(repoRoot, segments, control);
-  const outcome = await runNativeBuildDriverV1({ compilerConfiguration: join(repoRoot,".cargo/config.toml"), plan: componentPassPlanV1(repoRoot, all ? undefined : new Set(pluginIds), "release"), cwd: repoRoot, cacheRoot: repoCacheDirectory(repoRoot), shared: cargoDirectories(repoRoot), generation: "warm", leaseDirectory: join(repoRoot, ".cache/framework/leases"), environment: buildModeEnvironment("release"), control, stages: componentDriverStagesV1(repoRoot, "write") });
+  if (profile !== SHIPPED_COMPONENT_PROFILE) return describeIterateComponentsV1(repoRoot, segments, control,network);
+  const outcome = await runRepositoryComponentDriverV1(repoRoot, "release", componentPassPlanV1(repoRoot, all ? undefined : new Set(pluginIds), "release"), { network, control, environment: buildModeEnvironment("release"), generation: "warm", stages: componentDriverStagesV1(repoRoot, "write") });
   console.log(`components describe: ${outcome.staged.length} component(s) described from ${profile} bytes; report ${outcome.report}`);
 }

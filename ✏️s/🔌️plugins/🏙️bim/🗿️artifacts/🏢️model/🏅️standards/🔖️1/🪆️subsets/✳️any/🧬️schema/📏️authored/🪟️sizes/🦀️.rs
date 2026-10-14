@@ -1,6 +1,6 @@
 //! 🪟️ `sizes`: the size an authored opening resolves to, the override-else-type rule of the opening record over the window or door type it names.
 
-use crate::{ModelSnapshot, Opening, OpeningKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, OpeningKind};
 
 /// 📐️ Size and sill of an opening after the override-else-type rule.
 #[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]

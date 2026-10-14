@@ -40,11 +40,11 @@ impl OriginalActorGuestEntry{
  /// ♻️ Partial or completed ingress retires its exact backing before its inline source header.
  pub fn close_poll_input_step(&mut self,input:RetainedTurnInput,budget:StepBudget,recipient:&mut RetainedCloneProgress,clock:fn()->Option<u64>)->OriginalActorCall<bool,OriginalActorEntryFailure>{
   if !self.poll_input.matches(input){return self.poll_input_refusal(input,recipient)}
-  let source=&mut self.poll_input;let call=self.context.dispatch_step(input,budget,recipient,clock,|cx|->Result<bool,OriginalTurnFailure>{
-   if source.terminal_is_empty(){return Ok(true)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+  let source=&mut self.poll_input;let call=self.context.dispatch_step(input,budget,recipient,clock,|cx|->Result<bool,OriginalTurnFailure>{cx.with_original_retirement(|cx|{
+   if source.terminal_is_empty(){return Ok(true)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
    if source.bytes.is_some(){cx.consume_fuel(1);let bytes=source.bytes.take().unwrap();match ControlledRetirement::new(bytes){Ok(owner)=>{*source.retirement=Some(owner);source.closing=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(false)},Err((error,bytes))=>{*source.bytes=Some(bytes);Err(error.into())}}}
    else if let Some(owner)=source.retirement.as_mut(){if !owner.terminal_is_empty(){let demand=RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?};if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(false)}cx.consume_fuel(1);let step=owner.step(RetainedCloneGrant{maximum_items:1,..grant}).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;cx.consume_retained(step.progress())?;return Ok(false)}cx.consume_fuel(1);drop(source.retirement.take());cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(false)}
    else{cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;source.header=None;source.closing=false;Ok(true)}
-  });self.poll_input_result(call)
+  })});self.poll_input_result(call)
  }
 }

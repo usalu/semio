@@ -1,5 +1,5 @@
 pub(crate) mod context {
-    use super::super::*;
+    use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::*;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry, settle_registered_typed_operation};
     use semio_framework_plugin::{App, Effect, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
@@ -43,6 +43,15 @@ pub(crate) mod context {
     }
 
     semio_framework_plugin::history_edit_acceptance_law!("remodel", RemodelingPlayApp, remodeling_app_manifest_for_tests, "../..");
+
+    /// 📥️ Imports `n` checker frames as one new image-sequence stream via `ImportFramePayload`, mirroring
+    /// exactly what a real `importFrames` → `RequestFileOpen.multiple` re-dispatch loop sends. Shared with
+    /// `🎮️commands/🏗️run-reconstruction`'s own tests, which need real decodable frames to run a pipeline on.
+    pub async fn verify_import_checker_stream(app: &mut RemodelingApp, n: u32) {
+        for index in 0..n {
+            dispatch(app, RemodelingCommand::ImportFramePayload(semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload::ImportFramePayload { payload: semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, name: format!("frame-{index}.png"), index, total: n })).await;
+        }
+    }
 
     /// 🧪️ The ONE app shape every test uses: wired to the real manifest registry with a bound instance
     /// id, exactly what the plugin host mounts. A registry-less `new_app` cannot admit the bounded tool
@@ -242,7 +251,7 @@ pub(crate) mod context {
     }
 }
 
-use super::*;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::*;
 use crate::editor::remodeling::unit_tests::context::{app, app_with_registry, remodeling_app_manifest_for_tests, render};
 use protocol::{OpBinary, OpText};
 use semio_framework_plugin::artifact_app_laws;
@@ -384,7 +393,7 @@ fn every_command() -> Vec<RemodelingCommand> {
         RemodelingCommand::ClearTracks(clear_tracks::ClearTracks {}),
         RemodelingCommand::ClearGeoProducts(clear_geo_products::ClearGeoProducts {}),
         RemodelingCommand::ClearResult(clear_result::ClearResult {}),
-        RemodelingCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig::default().camera }),
+        RemodelingCommand::SetCamera(set_camera::SetCamera { camera: semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig::default().camera }),
         RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: "dense".into(), visible: false }),
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }),
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 }),
@@ -451,7 +460,7 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
         .map_err(|(error, _)| error)
         .expect("Remodel document Store owners install");
     let factory = <RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("Remodel document one-item preparation factory");
-    let mutation = RemodelingMutation::ReplaceQc(crate::mutations::replace_qc::ReplaceQc { qc: None });
+    let mutation = RemodelingMutation::ReplaceQc(semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::replace_qc::ReplaceQc { qc: None });
     let mut publication = document
         .begin_apply_batch(
             semio_framework_job::OperationId(992),
@@ -702,12 +711,12 @@ async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         payload: MediaPayload::Structured {
             schema: "2d.image".into(),
-            json: base64_codec::base64_standard_encode(crate::editor::remodeling::engine::images::encode_png(&crate::editor::remodeling::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
+            json: base64_codec::base64_standard_encode(semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::encode_png(&semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::ImageRgba8::new(4, 4)).expect("encode png")),
         },
     };
     let emit = RemodelingPlayApp::import_media("photos:in", &media, &doc).expect("photos:in import");
     assert_eq!(emit.artifact_mutations.len(), 2, "one create-asset + one create-stream");
-    let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| crate::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+    let next = emit.artifact_mutations.iter().fold(projection.clone(), |scene, operation| semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
     assert_eq!(next.streams.len(), 1);
     assert_eq!(next.streams[0].id, REMODELING_WORKFLOW_PHOTOS_STREAM_ID);
     assert_eq!(next.streams[0].frames.len(), 1);
@@ -715,7 +724,7 @@ async fn import_media_photos_in_creates_and_appends_to_the_workflow_stream() {
     let history2 = HistoryView::empty();
     let doc2 = ArtifactView::new(&next, &history2);
     let emit2 = RemodelingPlayApp::import_media("photos:in", &media, &doc2).expect("second photos:in import");
-    let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| crate::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
+    let next2 = emit2.artifact_mutations.iter().fold(next.clone(), |scene, operation| semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&scene, operation).expect("valid mutation diff"));
     assert_eq!(next2.streams.len(), 1, "still one workflow-photos stream");
     assert_eq!(next2.streams[0].frames.len(), 2, "second import appends a second frame");
 }

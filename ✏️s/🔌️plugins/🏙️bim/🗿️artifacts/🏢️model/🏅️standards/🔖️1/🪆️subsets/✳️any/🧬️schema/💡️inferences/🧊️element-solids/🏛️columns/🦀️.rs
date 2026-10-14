@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan
 use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
-use crate::{Column, ModelSnapshot, Profile, Slope};
+use crate::standards::v1::subsets::any::schema::snapshot::{Column, ModelSnapshot, Profile, Slope};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::{extrude_loops, prism_between, TriMesh};
 use semio_framework_geometry::placement::ZPlane;

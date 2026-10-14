@@ -1,0 +1,5 @@
+{"manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
+ "targets": [
+  {"name": "sqlite_snapshots", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🔬️sqlite-snapshots/🦀️.rs", "doc": "//! 🧪️ The IFC4 and IFC2x3 owned SQLite snapshot laws, run against the artifact's actual declaration.", "tests": ["🪶️sqlite/📸️snapshot/🧪️tests/🦀️\\.rs$", "🪶️sqlite/📸️snapshot/🚦️native/🧪️tests/💰️backing/🦀️\\.rs$"]},
+  {"name": "mutation_laws", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧪️tests/🔬️mutation-laws/🦀️.rs", "doc": "//! 🧪️ The IFC4 and IFC2x3 mutation codec and round-trip laws over the subsets' fixtures.", "tests": ["(4️⃣4/🪆️subsets/✳️any|🔖️2x3/🪆️subsets/🧱️base)/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️\\.rs$"]}
+ ]}

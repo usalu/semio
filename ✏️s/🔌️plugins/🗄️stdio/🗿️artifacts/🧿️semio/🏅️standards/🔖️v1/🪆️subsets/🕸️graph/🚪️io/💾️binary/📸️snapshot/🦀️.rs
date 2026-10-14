@@ -8,12 +8,13 @@ use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::native;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::io::binary::diff::dec_semio_value_bin;
-use semio_s_artifact_stdio_semio_value::io::binary::diff::enc_semio_value_bin;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::io::binary::diff::dec_semio_value_bin;
+use semio_s_artifact_stdio_semio_value_model::io::binary::diff::enc_semio_value_bin;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
@@ -252,11 +253,11 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::native;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
-use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
-use semio_s_artifact_stdio_semio_value::io::binary::diff::dec_semio_value_bin;
-use semio_s_artifact_stdio_semio_value::io::binary::diff::enc_semio_value_bin;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value_model::io::binary::diff::dec_semio_value_bin;
+use semio_s_artifact_stdio_semio_value_model::io::binary::diff::enc_semio_value_bin;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use framework_schema::ArtifactSchema;
 use crate::io::text::snapshot::*;
 /// 📦️ Encodes a [`SemioGraphSnapshot`] as a semio pack envelope — the binary twin of the DSL text, produced by a

@@ -3,18 +3,13 @@
 use semio_repo_test_host::Json;
 
 /// 🌓️ Independent JPEG luma output through the existing image test interface.
-#[cfg(feature = "oracles")]
 pub fn oracle_decode_luma(input: &[u8]) -> Result<(u32,u32,Vec<u8>),String> {
     let image=image::load_from_memory_with_format(input,image::ImageFormat::Jpeg).map_err(|error|error.to_string())?.into_luma8();
     Ok((image.width(),image.height(),image.into_raw()))
 }
 
-/// 📴️ Refuses independent decoding when the explicit oracle feature is absent.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_decode_luma(_input: &[u8]) -> Result<(u32,u32,Vec<u8>),String> {Err("JPEG oracle feature is disabled".into())}
 
 /// 🎚️ Independent image encoder controlled by an explicit physical export request.
-#[cfg(feature="oracles")]
 pub fn oracle_encode_rgba(width:u32,height:u32,pixels:&[u8],quality:u8)->Result<Vec<u8>,String> {
     use image::ImageEncoder;
     let rgba=image::RgbaImage::from_raw(width,height,pixels.to_vec()).ok_or("JPEG oracle raster extent is invalid")?;
@@ -24,12 +19,8 @@ pub fn oracle_encode_rgba(width:u32,height:u32,pixels:&[u8],quality:u8)->Result<
     Ok(output)
 }
 
-/// 📴️ Refuses independent encoding when the explicit oracle feature is absent.
-#[cfg(not(feature="oracles"))]
-pub fn oracle_encode_rgba(_width:u32,_height:u32,_pixels:&[u8],_quality:u8)->Result<Vec<u8>,String>{Err("JPEG oracle feature is disabled".into())}
 
 //#region 🔖️Oracles
-#[cfg(feature = "oracles")]
 mod oracles {
     use image::ImageEncoder;
     use semio_repo_test_host::Json;
@@ -454,59 +445,33 @@ mod oracles {
 //#endregion 🔖️Oracles
 
 //#region 🔖️Dispatch
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     oracles::apply_mutation(input, spec)
 }
 
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     oracles::undo_mutation(original_input, spec, mutated)
 }
 
 /// 🔁️ The `@id-identity-round-trip` scenario's independent computation. @see
 /// `oracles::identity_round_trip`.
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::identity_round_trip(input)
 }
 
 /// 👁️ Projects JFIF bytes (oracle or subject, either role) onto the shape every scenario compares
 /// under `@comparison-semantic-jpg-mutate-v1`. @see `oracles::project`.
-#[cfg(feature = "oracles")]
 pub fn project_jpg_mutation(input: &[u8]) -> Result<Json, String> {
     oracles::project(input)
 }
 
 /// 🧾️ Hex spelling of a byte payload, so the case adapter and the feature agree on one encoding.
-#[cfg(feature = "oracles")]
 pub fn oracle_hex(bytes: &[u8]) -> String {
     oracles::hex(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_jpg_mutation(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_hex(_bytes: &[u8]) -> String {
-    String::new()
-}
 //#endregion 🔖️Dispatch

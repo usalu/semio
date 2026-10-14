@@ -1,7 +1,7 @@
 use super::*;
 use super::super::tests::kit;
 use super::super::parameters::resolve;
-use crate::{FamilyCategory, ParameterKind, ParametricProfile};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind, ParametricProfile};
 use semio_framework_geometry::mesh::TriMesh;
 use std::f64::consts::PI;
 

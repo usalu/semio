@@ -79,7 +79,7 @@ if (segments[0] === "home-host-panel-owner") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-plugin", "--lib", "view_context_capacity_tests", "--", "--nocapture"], this.repoRoot);
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-renderer-wgpu", "--lib", "host_panel_", "--", "--nocapture"], this.repoRoot);
-        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-space-home", "--features", "component-app-assembly", "--lib", "--", "--nocapture"], this.repoRoot);
+        await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-space-home", "--lib", "--", "--nocapture"], this.repoRoot);
       }
       return;
     }

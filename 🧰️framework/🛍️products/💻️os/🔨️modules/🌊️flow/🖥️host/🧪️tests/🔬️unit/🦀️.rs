@@ -3,10 +3,10 @@ use crate::vcs::forms_bridge;
 use canvas::camera::{world_to_screen, Camera, Viewport};
 use canvas::Point;
 use dag::{computation_node_width, slider_widget_height, HandleRole};
-use graph::dsl::{WireEdge, WireNode};
-use graph::manifest::PropertyBag;
+use semio_framework_graph_dsl::{WireEdge, WireNode};
+use semio_framework_graph_manifest::PropertyBag;
 use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo};
-use semio_framework_artifact_infinite_dag::DagPreviewContent;
+use semio_framework_os_infinite_directed_presentation::DagPreviewContent;
 // 🌿️ The flow ARTIFACT crate's own vcs surface — `crate::vcs` glob-imports it privately, so the
 // undo/redo law names it at its source.
 use semio_framework_artifact_flow_flow::FlowEnvelope;
@@ -2026,7 +2026,7 @@ fn add_note_widget_with_text() {
     };
     assert_eq!(dag_text, "some text");
     assert!(node.width >= 40.0);
-    assert_eq!(node.height, semio_framework_artifact_infinite_dag::DAG_CHANNEL_ROW_HEIGHT);
+    assert_eq!(node.height, semio_framework_os_infinite_directed_presentation::DAG_CHANNEL_ROW_HEIGHT);
     host.retire_cold();
 }
 
@@ -2220,9 +2220,9 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
     host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
     let ghost = host.dag.ghost_node().expect("ghost");
     assert_eq!(host.draw_lod_label(), "micro");
-    assert_eq!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.node_label(), semio_framework_artifact_infinite_dag::DagNodeLabel::Name);
-    assert!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.shows_port_labels());
-    assert!(semio_framework_artifact_infinite_dag::DagDrawLod::Micro.shows_handles());
+    assert_eq!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.node_label(), semio_framework_os_infinite_directed_presentation::DagNodeLabel::Name);
+    assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_port_labels());
+    assert!(semio_framework_os_infinite_directed_presentation::DagDrawLod::Micro.shows_handles());
     let ghost_overlay_rows = host.dag.label_overlay_rows_for_node_spec(ghost, true);
     assert_eq!(ghost_overlay_rows.len(), 3);
     let overlay: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();

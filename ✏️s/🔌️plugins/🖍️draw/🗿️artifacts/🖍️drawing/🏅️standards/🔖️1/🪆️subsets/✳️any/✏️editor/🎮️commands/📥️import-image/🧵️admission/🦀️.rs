@@ -1,8 +1,8 @@
 //! 🧵️ Imports one privately decoded image through cooperative work and explicit child retirement.
 use super::*;
-use crate::DrawingImageAsset;
-use crate::standards::v1::subsets::any::io::image::DrawingImageAdmissionJob;
-use import_image::publication::DrawingImagePublicationJob;
+use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
+use semio_s_artifact_draw_drawing_io::image::DrawingImageAdmissionJob;
+use crate::commands::import_image::publication::DrawingImagePublicationJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
@@ -66,8 +66,8 @@ impl ArtifactCommandWork<App> for Work {
  fn terminal_frame_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
  fn terminal_is_empty(&self)->bool {self.closing&&self.workspace.as_ref().is_none_or(ControlledRetirement::terminal_is_empty)}
 }
-pub(super) struct DrawingImageCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
-impl DrawingImageCommandJobFactory {pub(super) fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"importImage")]}}}
+pub struct DrawingImageCommandJobFactory {keys:Vec<semio_framework::ToolFactoryKey>}
+impl DrawingImageCommandJobFactory {pub fn new(controller:&str)->Self {Self {keys:vec![semio_framework::ToolFactoryKey::new(controller,"importImage")]}}}
 impl semio_framework::ToolJobFactory for DrawingImageCommandJobFactory {
     type Payload=semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<App>;
     type Job=semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<App>;
@@ -87,7 +87,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DrawingImageCommand
     const DOCUMENT_SCHEMA:&'static str=DRAWING_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS:&'static[semio_framework_plugin::ArtifactToolPublicationContract]=DRAWING_IMAGE_PUBLICATION_CONTRACTS;
 }
-pub(super) fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->Result<semio_framework::ToolOperationSpec,Fault> {
+pub fn build(request:semio_framework_plugin::ArtifactOwnedToolJobRequest<App>)->Result<semio_framework::ToolOperationSpec,Fault> {
     let work=Work::new();
     if request.tool_id!="importImage"||work.extent(&request.command,&request.snapshot,&request.interaction_state,Some(&request.context))!=Some(1) {return Err(Fault::from("Image import exceeds its registered source capacity"));}
     let operation=semio_framework_plugin::AppOperationContext {app_instance_id:request.app_instance_id,parent_document_id:request.parent_document_id.clone(),operation_id:request.operation.operation.0,generation:request.operation.generation.0,canonical_base_revision:request.canonical_base_revision,retained: request.retained,authoring_seed:request.authoring_seed.clone()};

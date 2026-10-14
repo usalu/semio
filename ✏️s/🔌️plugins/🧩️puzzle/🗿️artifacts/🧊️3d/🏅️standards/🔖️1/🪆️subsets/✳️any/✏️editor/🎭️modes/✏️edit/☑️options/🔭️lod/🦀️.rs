@@ -1,9 +1,10 @@
 //! 🔭️ Edit-mode window option — the level-of-detail group: automatic-zoom and depth-variable
 //! toggles plus the manual LOD slider whose range `setLodManual` clamps against.
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle3d::snapshot::puzzle3d_action;
 use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Constants

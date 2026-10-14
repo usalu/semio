@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/replace-register-row/schema.json",
+  "title": "ReplaceRegisterRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "row"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replaceRegisterRow"
+    },
+    "row": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterRow",
+      "x-semio-ui": {
+        "widget": "record",
+        "role": "payload",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "The replacement row, tagged by its register; its id addresses the row to replace.",
+          "de": "Ersatzzeile, markiert mit ihrem Register; ihre Id adressiert die zu ersetzende Zeile."
+        },
+        "group": "payload",
+        "order": 10
+      }
+    }
+  }
+}

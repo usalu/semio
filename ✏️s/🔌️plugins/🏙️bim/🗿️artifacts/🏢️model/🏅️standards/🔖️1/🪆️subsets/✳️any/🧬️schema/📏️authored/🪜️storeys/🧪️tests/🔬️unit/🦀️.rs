@@ -1,5 +1,5 @@
 use super::*;
-use crate::Storey;
+use crate::standards::v1::subsets::any::schema::snapshot::Storey;
 
 fn storey(level: i32, height: f64) -> Storey {
     Storey { building: "b".into(), name: format!("level {level}"), level, height, cut_height: None }

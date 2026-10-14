@@ -168,13 +168,13 @@ export type PreparedComponentVerdict = Readonly<{
 /** 🩺️ Decides one staged component's prepared-ness from already-collected facts — pure, so the
  * preparation pass and the activation receipt share ONE rule. Precedence is most-fundamental-first:
  * nothing staged beats a descriptor naming a different plugin, which beats a missing bridge or
- * Nx artifact marker. */
+ * Semio artifact marker. */
 export function preparedComponentVerdict(facts: PreparedComponentFacts): PreparedComponentVerdict {
   if (!facts.directoryPresent) return { pluginId: facts.pluginId, kind: "unstaged", detail: "no staged module directory" };
   if (facts.descriptorPluginId === undefined) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no readable 🔣️.json descriptor" };
   if (facts.descriptorPluginId !== facts.pluginId) return { pluginId: facts.pluginId, kind: "incomplete", detail: `descriptor names ${facts.descriptorPluginId}` };
   if (!facts.bridgePresent) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no module bridge" };
-  if (!facts.artifactMarkerPresent) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no .nx-artifact.json marker" };
+  if (!facts.artifactMarkerPresent) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no .semio-artifact.json marker" };
   return { pluginId: facts.pluginId, kind: "prepared" };
 }
 

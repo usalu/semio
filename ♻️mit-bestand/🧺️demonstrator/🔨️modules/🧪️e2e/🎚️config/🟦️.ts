@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ ♻️mit-bestand/🧺️demonstrator/🔨️modules/🧪️e2e/🎚️config/🟦️.ts
 // Specs: Run Playwright acceptance coverage against a live "Entwerfen mit Bestand" demonstrator dev server.
-// Summary: Nx prepares an isolated continuous service; the E2E consumer validates its generation
+// Summary: The build tool prepares an isolated continuous service; the E2E consumer validates its generation
 // before supplying PLAYWRIGHT_BASE_URL. Playwright consumes that server and does not start one.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -20,7 +20,7 @@ const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {
   return url.endsWith("/") ? url : `${url}/`;
 }
-if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through Nx");
+if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the Demonstrator test-e2e target through bun repo");
 const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL);
 
 /** 🖥️ Every one of the demonstrator's eight panes drives a GPU surface, and one of them only boots on a real adapter.

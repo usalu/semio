@@ -1,0 +1,8 @@
+{"source": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs",
+ "drop": ["1-9", "2786-2790"],
+ "pieces": [
+  {"name": "core", "crate": "semio_s_fem_mesh", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️.rs", "ranges": ["10-2440", "2791-2917"],
+   "doc": ["//! 🕸️ Meshing: 2D constrained Delaunay triangulation with holes (`PlanarDomain` → `TriMesh2`) as a one-shot call and as", "//! the incremental, checkpointed `MeshJob`, plus the region surface schema. The deterministic constrained Bowyer-Watson", "//! kernel is first-party; every public type is plain data composed of `f64` and `u32`."]},
+  {"name": "derived", "crate": "semio_s_fem_mesh_derived", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/🦀️.rs", "ranges": ["2441-2785"],
+   "doc": ["//! 🧬️ Meshes derived from a triangulation or a rectangle: structured quad grids, quadratic promotion, 3D extrusion", "//! (wedge/hex) with tet splitting and boundary faces, and the element quality report."]}
+ ]}

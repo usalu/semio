@@ -1,9 +1,9 @@
 //! 📥️ 📥️ Remodeling play app commands command — `set-stream-sync`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::change_stream_sync;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::change_stream_sync::change_stream_sync;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

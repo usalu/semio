@@ -4,7 +4,7 @@ use super::super::testkit::{house_with_sheets, inferred, labels};
 use super::*;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
-fn written() -> (Vec<u8>, crate::ModelSnapshot, crate::ModelInference) {
+fn written() -> (Vec<u8>, crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {
     let model = house_with_sheets();
     let inferred = inferred(&model);
     (super::super::sheets_pdf(&model, &inferred, None, &labels()).expect("the set writes"), model, inferred)

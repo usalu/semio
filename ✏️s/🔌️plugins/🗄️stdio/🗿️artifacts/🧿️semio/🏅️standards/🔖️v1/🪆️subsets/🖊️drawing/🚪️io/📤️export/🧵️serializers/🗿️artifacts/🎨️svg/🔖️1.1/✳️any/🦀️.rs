@@ -10,7 +10,8 @@
 //! sibling `<g id="layer-<id>">`, so MULTIPLE layers DO survive, just not as anything SVG itself
 //! calls a layer); colors are emitted as `rgba(r,g,b,a)` (matches the import leaf's own parser).
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_svg::{

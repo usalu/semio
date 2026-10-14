@@ -7,7 +7,7 @@ use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
 use crate::editor::bim::kit::{fault, select_effect};
 use crate::editor::bim::modes::edit::windows::family;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

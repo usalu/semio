@@ -3,11 +3,11 @@
 use store::ArtifactStoreInitializationOwnerCatalog;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
 
-pub(super) fn initialization_catalog_close_demands(owner: &Option<ArtifactStoreInitializationOwnerCatalog>) -> Result<RetirementDemand, ValueError> {
+pub fn initialization_catalog_close_demands(owner: &Option<ArtifactStoreInitializationOwnerCatalog>) -> Result<RetirementDemand, ValueError> {
     owner.as_ref().map_or(Ok(RetirementDemand::default()), ArtifactStoreInitializationOwnerCatalog::close_demands)
 }
 
-pub(super) fn close_initialization_catalog(owner: &mut Option<ArtifactStoreInitializationOwnerCatalog>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn close_initialization_catalog(owner: &mut Option<ArtifactStoreInitializationOwnerCatalog>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let Some(catalog) = owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
     let step = catalog.close_step(grant)?;
     if matches!(step, RetainedCloneStep::Complete(_)) {

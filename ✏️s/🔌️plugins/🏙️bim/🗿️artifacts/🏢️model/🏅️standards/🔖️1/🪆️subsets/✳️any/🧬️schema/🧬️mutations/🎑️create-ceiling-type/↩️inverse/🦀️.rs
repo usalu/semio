@@ -2,7 +2,7 @@
 
 use super::super::delete_ceiling_type::DeleteCeilingType;
 use super::CreateCeilingType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateCeilingType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.ceiling_types.contains_key(&payload.id) {

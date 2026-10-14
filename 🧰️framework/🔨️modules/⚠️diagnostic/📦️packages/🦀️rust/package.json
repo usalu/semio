@@ -8,9 +8,6 @@
     "test-source": "bun repo run @semio-tech/framework-diagnostic-rs:test-source"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

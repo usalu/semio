@@ -13,7 +13,7 @@ use super::ViewLinework;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{DetailLevel, ModelSnapshot, View, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
 use semio_framework_geometry::triangulation::triangulate;
 use semio_framework_geometry::Point;
 use std::collections::BTreeMap;

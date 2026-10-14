@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
@@ -590,7 +591,7 @@ class TileCheckScript extends BundleScript {
     console.log(`gis-map-tiles: laws=${await proveGisMapTilesV1(root)} passed`);
     if (args.includes("--native")) {
       const { runExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.repoRoot, groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }], progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`) });
+      await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }],progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`)});
     }
   }
 }

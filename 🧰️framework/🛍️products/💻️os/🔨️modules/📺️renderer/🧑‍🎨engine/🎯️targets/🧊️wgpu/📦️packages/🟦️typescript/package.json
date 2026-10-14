@@ -38,8 +38,5 @@
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/products/os/modules/renderer/engine/targets/wgpu/packages/typescript"
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

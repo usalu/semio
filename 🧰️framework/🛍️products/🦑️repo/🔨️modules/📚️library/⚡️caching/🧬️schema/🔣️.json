@@ -55,7 +55,7 @@
       },
       "uniqueItems": true
     },
-    "nxSerialTargets": {
+    "serialTargets": {
       "description": "Nx target names that must keep parallelism:false because they mutate shared toolchain stores.",
       "type": "array",
       "items": {
@@ -147,19 +147,41 @@
         "cargo",
         "vite",
         "agents",
-        "tests"
+        "tests",
+        "strictStorage",
+        "sourceBoundary"
       ],
       "properties": {
         "pressure": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["version", "minimumAvailableBytes", "targetAvailableBytes", "guardAgeMs", "maximumDeletionBytes"],
+          "required": [
+            "version",
+            "minimumAvailableBytes",
+            "targetAvailableBytes",
+            "guardAgeMs",
+            "maximumDeletionBytes"
+          ],
           "properties": {
-            "version": {"const": 1},
-            "minimumAvailableBytes": {"type": "integer", "minimum": 1},
-            "targetAvailableBytes": {"type": "integer", "minimum": 1},
-            "guardAgeMs": {"type": "integer", "minimum": 1},
-            "maximumDeletionBytes": {"type": "integer", "minimum": 1}
+            "version": {
+              "const": 1
+            },
+            "minimumAvailableBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "targetAvailableBytes": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "guardAgeMs": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "maximumDeletionBytes": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         },
         "guardAgeMs": {
@@ -244,6 +266,79 @@
             "unusedAgeMs": {
               "type": "integer",
               "exclusiveMinimum": 0
+            }
+          }
+        },
+        "strictStorage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "directory",
+            "capacityBytes",
+            "filesystemBytes",
+            "maximumWorkspaceBytes",
+            "maximumArtifactBytes"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "directory": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(/|$))(?!.*[\\\\:*?{}\\[\\]\\u0000]).+$"
+            },
+            "capacityBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "filesystemBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maximumWorkspaceBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "maximumArtifactBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "sourceBoundary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "maxSourceBytes",
+            "maxSourceFiles",
+            "maxActiveLines"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "maxSourceBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 262144
+            },
+            "maxSourceFiles": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "maxActiveLines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4000
             }
           }
         }

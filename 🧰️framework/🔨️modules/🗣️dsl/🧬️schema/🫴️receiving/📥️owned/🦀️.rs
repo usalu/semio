@@ -42,7 +42,19 @@ pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,
 pub fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"owned receiving source or destination is already occupied")}
 
 /// 🛂️ Closed authored record identities leave all rejected fields in their exact original source.
-pub fn declared_record(record:&RecordValue,declared:&[u16],required:&[u16])->Result<(),ValueError>{if record.fields.len()>declared.len()||record.fields.keys().any(|id|declared.binary_search(id).is_err())||required.iter().any(|id|matches!(record.get(*id),None|Some(FieldValue::Absent))){return Err(invalid())}Ok(())}
+pub fn declared_record(record:&RecordValue,declared:&[(u16,bool)],owner:&mut super::NativeSnapshotDecodeOwner<'_,'_>)->Result<(),ValueError>{let mut shape=DeclaredRecordShape::default();while !shape.is_ready(){let grant=owner.remaining_grant();if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"declared record shape requires original work authority"))}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"declared record shape requires original depth authority"))}match shape.step(record,declared,owner.native(),grant){Ok(progress)=>owner.record_progress(progress)?,Err(error)=>{owner.record_progress(error.retained_progress())?;return Err(error)}}}Ok(())}
+
+/// 🪜️ One funded declaration inspection retains the whole original record until shape admission completes.
+#[derive(Default)]
+pub struct DeclaredRecordShape{declaration:usize,field:usize,ready:bool,refused:bool}
+impl DeclaredRecordShape{
+ /// 👓️ Reports completed admission without traversing the original source.
+ pub fn is_ready(&self)->bool{self.ready}
+ /// 🎟️ Caps source count before constant-time slot inspection under one original metadata turn.
+ pub fn step(&mut self,record:&RecordValue,declared:&[(u16,bool)],native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  if self.ready{return Ok(Default::default())}let demand=metadata::<()>();if !funds(grant,demand){return Ok(Default::default())}native.checkpoint()?;if self.refused{return Err(invalid())}let progress=receipt(demand);let result=(||{if record.fields.len()>declared.len(){return Err(invalid())}if let Some(&(id,required))=declared.get(self.declaration){let value=record.fields.at(self.field);if value.is_some_and(|(field,_)|field<id){return Err(invalid())}let present=value.filter(|(field,_)|*field==id);if required&&present.is_none_or(|(_,value)|matches!(value,FieldValue::Absent)){return Err(invalid())}if present.is_some(){self.field+=1}self.declaration+=1}if self.declaration==declared.len(){if self.field!=record.fields.len(){return Err(invalid())}self.ready=true}Ok(progress)})();if result.is_err(){self.refused=true}result.map_err(|error|error.with_retained_progress(progress))
+ }
+}
 
 /// 🎒️ A retained root closes physically before its slot can disappear.
 pub struct OwnedSlot<T:RetireOwned>{pub value:ManuallyDrop<Option<T>>,retiring:ManuallyDrop<Option<ControlledRetirement<T>>>}

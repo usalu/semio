@@ -3,7 +3,7 @@ use super::{indexes::{Rows,invalid},properties::{Reader,retire}};
 use crate::{RewritingSnapshot,LayoutPoint};
 use crate::standards::v1::subsets::any::schema::{Pattern,Lhs,Rhs,Assignment,ParameterSpec,ParameterKind,RuleLayout};
 use semio_s_artifact_trinity_jack::{JackSnapshot,JackContentChild,Manifest,NodeKindDef,EdgeKindDef,PortKindDef,PropertyDef,PropertyKind,PortDirection,Camera};
-use semio_framework_graph::manifest::PropertyBag;
+use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_value::{ValueError,ValueRefusalKind,ValueType,DecodedValue};
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,transfer,artifact::{FloatColumn,read_binary64}};
 fn pattern(id:i64,read:&mut Reader<'_,'_,'_>)->Result<Pattern,ValueError>{

@@ -95,6 +95,21 @@
         "command": "bun ./📜️script.ts test-original-job-native"
       }
     },
+    "test-media-turn-source": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-media-turn-source"
+      }
+    },
     "test-media-turn-native": {
       "executor": "repo:script",
       "cache": false,
@@ -555,6 +570,30 @@
           "execution": {
             "version": 1,
             "kind": "source"
+          }
+        }
+      }
+    },
+    "test-reserved-producer-native": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-reserved-producer-native"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
           }
         }
       }

@@ -1,8 +1,8 @@
 //! ➖️ `remove-member-action` diff — removes the row at the index.
 
-use super::RemoveMemberAction;
-use crate::diff::{En1993Diff, En1993MemberActionDelta};
-use crate::En1993Snapshot;
+use crate::remove_member_action::RemoveMemberAction;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MemberActionDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveMemberAction, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.member_actions.len() {

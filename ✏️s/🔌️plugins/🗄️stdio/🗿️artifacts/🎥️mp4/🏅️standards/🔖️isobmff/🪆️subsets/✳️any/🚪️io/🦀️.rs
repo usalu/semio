@@ -1728,7 +1728,7 @@ pub mod playback {
         const ARTIFACT_ID: &'static str = "stdio.mp4";
         const ARTIFACT_NAME: &'static str = "MP4 Video";
         const COMPONENT_KIND: &'static str = "video";
-        fn cursor(snapshot: &Mp4Snapshot) -> Result<Mp4EncodeCursor, Fault> { Ok(Mp4EncodeCursor::new(snapshot)) }
+        fn cursor(snapshot: &Mp4Snapshot) -> Mp4EncodeCursor { Mp4EncodeCursor::new(snapshot) }
         fn advance(cursor: &mut Mp4EncodeCursor, snapshot: &Mp4Snapshot, maximum_bytes: usize) -> Result<IncrementalMediaAdvance, Fault> {
             cursor.advance(snapshot, maximum_bytes).map(|advance| match advance {
                 Mp4EncodeAdvance::Progress => IncrementalMediaAdvance::Progress,

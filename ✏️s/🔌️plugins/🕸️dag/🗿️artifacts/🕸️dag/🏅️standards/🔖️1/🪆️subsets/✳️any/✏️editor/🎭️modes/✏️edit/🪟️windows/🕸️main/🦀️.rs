@@ -3,7 +3,7 @@
 use crate::editor::dag::terminology::DagPlayLabels;
 use crate::schema::document_to_workflow;
 use crate::DagScene;
-use semio_framework_artifact_infinite_dag::DagCamera;
+use semio_framework_os_infinite_directed_presentation::DagCamera;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

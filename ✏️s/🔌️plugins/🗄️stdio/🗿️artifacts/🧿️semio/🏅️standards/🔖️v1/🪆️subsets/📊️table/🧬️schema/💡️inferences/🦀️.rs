@@ -7,7 +7,7 @@
 //! shape does not apply here since table has no heading/text structure — a table's honest
 //! structural summary is its dimensions and declared column kinds).
 
-use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::shape::compute_semio_table_shape;

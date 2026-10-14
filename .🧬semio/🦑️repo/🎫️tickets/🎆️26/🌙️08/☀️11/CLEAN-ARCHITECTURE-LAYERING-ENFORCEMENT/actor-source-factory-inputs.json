@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "capabilityOwner": "createBuildBootstrapCapabilitiesV1",
+  "rows": [
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "row": {
+        "name": "🗞️Actor · General Wire Turn Source",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:test-wire-turn-source",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:wire-turn:caller\",\"maximumElapsedMilliseconds\":600000}"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.8278
+        }
+      }
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "row": {
+        "name": "🏛️Actor · Product Independent Source",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:test-product-independent-source",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:product-independent:caller\",\"maximumElapsedMilliseconds\":600000}",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.8279
+        }
+      }
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "row": {
+        "name": "🏛️Actor · Canonical Architecture",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.828
+        }
+      }
+    },
+    {
+      "path": ".vscode/launch.json",
+      "row": {
+        "name": "🗞️Actor · General Wire Turn Source",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:test-wire-turn-source",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:wire-turn:caller\",\"maximumElapsedMilliseconds\":600000}"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.8278
+        }
+      }
+    },
+    {
+      "path": ".vscode/launch.json",
+      "row": {
+        "name": "🏛️Actor · Product Independent Source",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:test-product-independent-source",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:product-independent:caller\",\"maximumElapsedMilliseconds\":600000}",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.8279
+        }
+      }
+    },
+    {
+      "path": ".vscode/launch.json",
+      "row": {
+        "name": "🏛️Actor · Canonical Architecture",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun repo run @semio-tech/framework-actor:canonical-architecture",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"actor:canonical-architecture:caller\",\"maximumElapsedMilliseconds\":600000}",
+          "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tests/actor-product-independent"
+        },
+        "presentation": {
+          "group": "4_gate",
+          "order": 900.828
+        }
+      }
+    }
+  ]
+}

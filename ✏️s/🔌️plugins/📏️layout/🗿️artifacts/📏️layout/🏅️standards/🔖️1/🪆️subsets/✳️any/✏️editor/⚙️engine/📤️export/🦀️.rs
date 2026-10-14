@@ -10,7 +10,11 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBor
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
 #[path="🧾️dictionary/🦀️.rs"] mod dictionary;
@@ -2229,17 +2233,16 @@ enum LayoutCloseTurn {
 /// 🔔️ The close budget one staged turn is quoted for; stages release at most one output chunk per turn.
 const LAYOUT_EXPORT_CLOSE_TURN_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
 
-fn layout_close_step(turn: Result<LayoutCloseTurn, Fault>) -> InteractiveJobCloseStep {
-    match turn {
-        Ok(LayoutCloseTurn::Pending { released_items, released_bytes }) => InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: released_items, released_bytes, ..Default::default() } },
-        Ok(LayoutCloseTurn::Granted(progress)) => InteractiveJobCloseStep::Pending { progress },
-        Ok(LayoutCloseTurn::Complete) => InteractiveJobCloseStep::Complete { progress: Default::default() },
-        Ok(LayoutCloseTurn::AwaitingInput { .. } | LayoutCloseTurn::Blocked { .. }) => InteractiveJobCloseStep::Blocked,
-        Err(_) => InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: Default::default() },
-    }
+fn layout_close_step(turn:Result<LayoutCloseTurn,Fault>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    Ok(match turn?{
+        LayoutCloseTurn::Pending{released_items,released_bytes}=>InteractiveJobCloseStep::Pending{progress:semio_framework_value::RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}},
+        LayoutCloseTurn::Granted(progress)=>InteractiveJobCloseStep::Pending{progress},
+        LayoutCloseTurn::Complete=>InteractiveJobCloseStep::Complete{progress:Default::default()},
+        LayoutCloseTurn::AwaitingInput{..}|LayoutCloseTurn::Blocked{..}=>InteractiveJobCloseStep::Blocked,
+    })
 }
 
-type LayoutExportTurn<'a> = Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>;
+type LayoutExportTurn<'a> = Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;
 
 struct LayoutExportPublication {
     kind: LayoutExportPublicationKind,
@@ -2263,9 +2266,9 @@ impl LayoutExportPublication {
             LayoutExportPublicationKind::Preview => JobPublicationKind::Preview,
             LayoutExportPublicationKind::Checkpoint { applied_progress } => JobPublicationKind::Checkpoint { applied_progress },
             LayoutExportPublicationKind::Fault => JobPublicationKind::Fault,
-            LayoutExportPublicationKind::Commit => return JobOutcomeBorrow::admit_complete(context, None, None),
+            LayoutExportPublicationKind::Commit => return JobOutcomeBorrow::admit_complete(context, None, None).map_err(Into::into),
         };
-        self.publication.advance_from_source(kind, &self.bytes[..self.length], context)
+        self.publication.advance_from_source(kind, &self.bytes[..self.length], context).map_err(Into::into)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -2314,7 +2317,7 @@ impl LayoutPublicationSlot {
 
     fn advance<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
         let Some(publication) = self.publication.as_mut() else {
-            return JobOutcomeBorrow::admit_yield(context);
+            return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
         };
         let outcome = publication.advance(context)?;
         if outcome.is_some() {
@@ -2353,7 +2356,8 @@ impl LayoutPublicationSlot {
 
 pub struct LayoutExportJob {
     operation: Operation,
-    request: LayoutExportRequest,
+    source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),
+    request: Option<LayoutExportRequest>,
     stage: ExportStage,
     validation_group: u8,
     validation_index: usize,
@@ -2396,12 +2400,12 @@ pub struct LayoutExportJob {
     zip_central_offset: u32,
     zip: ZipState,
     media_output_credit: Option<ArtifactMediaExportCredit>,
-    output_chunks: ArtifactOutputChunks,
+    output_chunks: Option<ArtifactOutputChunks>,
+    output_retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,
     commit_cursor: usize,
     completed_units: u64,
     restore_target: Option<LayoutExportCheckpoint>,
     snapshot_close: Option<ArtifactSnapshotCloseLease<LayoutSnapshot>>,
-    snapshot_placeholder: Option<Arc<LayoutSnapshot>>,
     slot: LayoutPublicationSlot,
     closing: bool,
     close_stage: LayoutExportCloseStage,
@@ -2432,7 +2436,7 @@ pub struct LayoutExportToolJob {
 }
 
 impl LayoutExportToolJob {
-    fn materialize_decoded_job(&mut self) -> bool {
+    fn materialize_decoded_job(&mut self,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> bool {
         if self.inner.is_some() {
             return true;
         }
@@ -2440,7 +2444,7 @@ impl LayoutExportToolJob {
             return false;
         };
         self.name = output_name(&request);
-        self.inner = LayoutExportJob::new(operation, request).ok().map(|job| job.with_output_chunks(output_chunks));
+        self.inner = Some(LayoutExportJob::from_admitted(operation,source_identity,request,output_chunks));
         self.inner.is_some()
     }
 
@@ -2478,30 +2482,20 @@ impl LayoutExportToolJob {
         self.slot.advance(context)
     }
 
-    fn close_demand(&self) -> semio_framework_value::RetirementDemand {
-        let release_bytes = LAYOUT_EXPORT_CLOSE_TURN_BYTES;
-        if let Some(retirement) = self.rejected_download.as_ref() {
-            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, 0).unwrap_or_default();
-        }
-        if self.pending_download.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_download).unwrap_or_default();
-        }
-        if let Some(inner) = self.inner.as_ref() {
-            if !inner.terminal_is_empty() {
-                return inner.close_demand();
-            }
-        }
-        if !self.raw_bytes.is_empty() || self.raw_input.as_ref().is_some_and(|input| !input.terminal_is_empty()) || !self.name.is_empty() {
-            return semio_framework_value::RetirementDemand { release_bytes, depth: 1, ..Default::default() };
-        }
-        if !self.slot.terminal_is_empty() {
-            return self.slot.retirement_demands().unwrap_or_default();
-        }
-        if self.completion.is_some() {
-            return semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
-        }
-        Default::default()
+    fn close_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
+        if let Some(owner)=self.rejected_download.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
+        if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_download)}
+        if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{inner.close_demand()}}
+        if self.pending_request.is_some(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportJob>(),..one})}
+        if self.raw_bytes.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.raw_bytes.capacity(),..one})}
+        if let Some(input)=self.raw_input.as_ref(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:input.next_close_copy_byte_demand()?,capacity_bytes:input.next_close_capacity_byte_demand(0)?,release_bytes:input.next_close_release_byte_demand()?,depth:input.next_close_depth_demand()?.max(1)})}
+        if self.name.capacity()!=0{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.name.capacity(),..one})}
+        if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
+        if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
+        Ok(Default::default())
     }
+
 }
 
 impl InteractiveJob for LayoutExportToolJob {
@@ -2514,10 +2508,10 @@ impl InteractiveJob for LayoutExportToolJob {
         }
         if !self.raw_validated {
             if context.is_cancelled() {
-                return JobOutcomeBorrow::admit_cancelled(context);
+                return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
             }
             if context.should_yield() || context.fuel_remaining() == 0 {
-                return JobOutcomeBorrow::admit_yield(context);
+                return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
             }
             context.set_stage("layout-export-retained-wire-decode");
             let Some(input) = self.raw_input.as_ref() else {
@@ -2533,7 +2527,7 @@ impl InteractiveJob for LayoutExportToolJob {
             if !self.decoded_wire_command_matches() {
                 return self.fault(context, "layout-export-wire-command-mismatch");
             }
-            if !self.materialize_decoded_job() {
+            if !self.materialize_decoded_job((context.operation(),context.generation())) {
                 return self.fault(context, "layout-export-wire-job-refused");
             }
             self.raw_validated = true;
@@ -2550,7 +2544,7 @@ impl InteractiveJob for LayoutExportToolJob {
             // share one queue, and the job's own close (`LayoutExportCloseStage::OutputChunks`) pops it —
             // which drained every export to a 0-byte `Demo.pdf` before the host could take a single
             // chunk (ticket 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END). The job keeps an empty stand-in.
-            let chunks = std::mem::replace(&mut inner.output_chunks, ArtifactOutputChunks::new(0));
+            let chunks = inner.output_chunks.take().expect("layout publication owns its admitted output");
             let download = ArtifactDownloadOutput::new(format!("{}.{}", sanitize_filename(&self.name), self.kind.extension()), self.kind.mime_type(), self.kind.binary().then(|| "base64".into()), chunks);
             if let Some(completion) = &self.completion {
                 if let Err(rejected) = completion.complete_download(download, EphemeralEmit::<EditorApp<LayoutPlayApp>>::default()) {
@@ -2579,89 +2573,36 @@ impl InteractiveJob for LayoutExportToolJob {
         if let Some(input) = self.raw_input.as_mut() {
             input.begin_close();
         }
-        let _ = self.materialize_decoded_job();
         if let Some(inner) = self.inner.as_mut() {
             inner.begin_close();
         }
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-        self.begin_close();
-        let refused = |error: semio_framework_value::ValueError| InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() };
-        let unit = InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } };
-        if grant.maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        if self.rejected_download.is_some() {
-            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected_download, child) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => refused(error),
-            };
-        }
-        if self.pending_download.is_some() {
-            return match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_download, &mut self.rejected_download, child) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => refused(error),
-            };
-        }
-        if let Some(inner) = self.inner.as_mut() {
-            match InteractiveJob::close_step(inner, grant) {
-                InteractiveJobCloseStep::Complete { progress } if inner.terminal_is_empty() => {
-                    self.inner = None;
-                    return InteractiveJobCloseStep::Pending { progress };
-                }
-                InteractiveJobCloseStep::Complete { progress } => return InteractiveJobCloseStep::Pending { progress },
-                step => return step,
-            }
-        }
-        if !self.raw_bytes.is_empty() {
-            if grant.maximum_release_bytes == 0 {
-                return InteractiveJobCloseStep::Pending { progress: Default::default() };
-            }
-            let released_bytes = self.raw_bytes.len().min(grant.maximum_release_bytes);
-            self.raw_bytes.truncate(self.raw_bytes.len() - released_bytes);
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { released_bytes, ..Default::default() } };
-        }
-        if let Some(input) = self.raw_input.as_mut() {
-            let step = input.close_step(grant);
-            if input.terminal_is_empty() {
-                self.raw_input = None;
-            }
-            return match step {
-                InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                other => other,
-            };
-        }
-        if !self.name.is_empty() {
-            if grant.maximum_release_bytes < self.name.len() {
-                return InteractiveJobCloseStep::Pending { progress: Default::default() };
-            }
-            let released_bytes = self.name.len();
-            self.name.clear();
-            return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } };
-        }
-        if !self.slot.terminal_is_empty() {
-            return match self.slot.close_step(child) {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => refused(error),
-            };
-        }
-        if self.completion.is_none() {
-            return InteractiveJobCloseStep::Complete { progress: Default::default() };
-        }
-        self.completion = None;
-        unit
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};self.begin_close();
+        if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
+        if self.inner.is_none()&&self.pending_request.is_none(){if let Some(input)=self.raw_input.as_mut(){let step=input.close_step(cx)?;if input.terminal_is_empty(){self.raw_input.take();}return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}}
+        let source_identity=(cx.operation(),cx.generation());let demand=self.close_demand()?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+            if self.rejected_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected_download,grant)}
+            if self.pending_download.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_download,&mut self.rejected_download,grant)}
+            if self.inner.is_some(){self.inner.take();return Ok(RetainedCloneStep::Progress(item))}
+            if self.pending_request.is_some(){if self.pending_operation.is_none()||self.pending_output_chunks.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout pending producer lost one of its paired original inputs"))}let operation=self.pending_operation.take().unwrap();let request=self.pending_request.take().unwrap();let chunks=self.pending_output_chunks.take().unwrap();let mut inner=LayoutExportJob::from_admitted(operation,source_identity,request,chunks);inner.begin_close();self.inner=Some(inner);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportJob>(),..item}))}
+            if self.raw_bytes.capacity()!=0{let bytes=std::mem::take(&mut self.raw_bytes).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
+            if self.name.capacity()!=0{let bytes=std::mem::take(&mut self.name).capacity();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:bytes,..item}))}
+            if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
+            if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.rejected_download,grant)}
+            Ok(RetainedCloneStep::Complete(Default::default()))
+        })?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().depth) }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
-        self.rejected_download.is_none() && self.pending_download.is_none() && self.slot.terminal_is_empty() && self.name.is_empty() && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.is_empty() && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
+        self.rejected_download.is_none() && self.pending_download.is_none() && self.slot.terminal_is_empty() && self.name.capacity()==0 && self.completion.is_none() && self.raw_input.is_none() && self.raw_bytes.capacity()==0 && self.inner.is_none() && self.pending_operation.is_none() && self.pending_request.is_none() && self.pending_output_chunks.is_none()
     }
 }
 
@@ -2670,112 +2611,76 @@ pub struct LayoutExportJobFactory {
 }
 
 pub struct LayoutMediaExportJob {
-    inner: LayoutExportJob,
-    completion: Option<ArtifactMediaExportCompletion>,
-    slot: LayoutPublicationSlot,
-    completed: bool,
+ inner:Option<LayoutExportJob>,completion:Option<ArtifactMediaExportCompletion>,active:Option<Box<dyn store::ErasedSnapshotRetirement>>,
+ metadata:std::mem::ManuallyDrop<Option<([Vec<u8>;2],Option<(String,String)>)>>,metadata_retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<([Vec<u8>;2],Option<(String,String)>)>>>,
+ pending_result:std::mem::ManuallyDrop<Option<Result<ArtifactMediaExportResult,semio_framework::MediaError>>>,result_published:bool,
+ slot:LayoutPublicationSlot,completed:bool,
 }
-
-impl LayoutMediaExportJob {
-    pub fn new(inner: LayoutExportJob, completion: ArtifactMediaExportCompletion) -> Self {
-        Self { inner, completion: Some(completion), slot: LayoutPublicationSlot::default(), completed: false }
-    }
+impl LayoutMediaExportJob{
+ pub fn admit_original(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+  let _=cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let grant=cx.retained_grant();
+  if body.is_none(){let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout producer lost original request"))?;let page=input.snapshot.pages.first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires one actual page"))?;
+   if !bounded_id(&page.id)||!bounded_id(&input.parent_document_id){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"layout media requires its exact bounded original authority").into())}let bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(false)}
+   let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"layout media original body allocation refused"))?;
+   let owner=Self{inner:None,completion:None,active:None,metadata:std::mem::ManuallyDrop::new(Some((std::array::from_fn(|_|Vec::new()),None))),metadata_retirement:std::mem::ManuallyDrop::new(None),pending_result:std::mem::ManuallyDrop::new(None),result_published:false,slot:LayoutPublicationSlot::default(),completed:false};*body=Some(unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+  }
+  let owner=(&mut**body.as_mut().unwrap()as &mut dyn std::any::Any).downcast_mut::<Self>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media requires its exact concrete body"))?;
+  if owner.inner.is_some()&&request.is_none(){return Ok(true)}if owner.inner.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout original request cannot overwrite its prepared body").into())}
+  let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout media lost original source before admission"))?;let page=input.snapshot.pages.first().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"layout captured page changed"))?;let fields=&mut owner.metadata.as_mut().unwrap().0;
+  for index in 0..2{let bytes=if index==0{page.id.len()}else{64};let output=&mut fields[index];if output.capacity()<bytes{if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(false)}output.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"layout original authority allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+   if output.len()<bytes{let count=(bytes-output.len()).min(grant.maximum_copy_bytes);if grant.maximum_items==0||grant.maximum_depth==0||count==0{return Ok(false)}let start=output.len();if index==0{output.extend_from_slice(&page.id.as_bytes()[start..start+count])}else{const HEX:&[u8;16]=b"0123456789abcdef";for offset in start..start+count{let value=input.canonical_base_revision[offset/2];output.push(HEX[usize::from(if offset%2==0{value>>4}else{value&15})])}}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+  }
+  let bytes=size_of::<LayoutExportJob>()+size_of::<semio_framework_plugin::ArtifactMediaExportJobRequest<EditorApp<LayoutPlayApp>>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+  let input=request.take().unwrap();let fields=&mut owner.metadata.as_mut().unwrap().0;let page_id=String::from_utf8(std::mem::take(&mut fields[0])).expect("layout retained page bytes preserve original UTF-8");let revision=String::from_utf8(std::mem::take(&mut fields[1])).expect("layout original revision is hexadecimal");
+  let export=LayoutExportRequest{kind:LayoutExportKind::Svg,page_id:Some(page_id),snapshot:input.snapshot,preflight_json:None,parent_document_id:input.parent_document_id,canonical_base_revision_hex:revision};
+  owner.inner=Some(LayoutExportJob::from_admitted(input.operation,input.source_identity,export,input.output_chunks).with_snapshot_close_lease(input.snapshot_close).with_media_output_credit(input.output_credit));owner.completion=Some(input.completion);owner.metadata.as_mut().unwrap().1=Some((input.tool_id,input.port));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
+ }
+ fn close_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+  let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
+  if let Some(inner)=self.inner.as_ref(){return if inner.terminal_is_empty(){Ok(one)}else{Ok(semio_framework_value::RetirementDemand{copy_bytes:inner.next_close_copy_byte_demand()?,capacity_bytes:inner.next_close_capacity_byte_demand(body)?,release_bytes:inner.next_close_release_byte_demand()?,depth:inner.next_close_depth_demand()?.max(1)})}}
+  if let Some(active)=self.active.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}
+  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
+  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)}
+  if !self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
+  if let Some(owner)=self.metadata_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.selected_demand(body)}}
+  Ok(if self.metadata.is_some(){one}else{Default::default()})
+ }
+ fn close_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+  let item=semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()};
+  if self.inner.as_ref().is_some_and(InteractiveJob::terminal_is_empty){self.inner.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
+  if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
+  if self.pending_result.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_result,&mut self.active,grant)}
+  if self.completion.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.active,grant)}
+  if !self.slot.terminal_is_empty(){return self.slot.close_step(grant)}
+  if let Some(owner)=self.metadata_retirement.as_mut(){if owner.terminal_is_empty(){self.metadata_retirement.take();return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}return owner.step(grant)}
+  if let Some(metadata)=self.metadata.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new(metadata){Ok(owner)=>*self.metadata_retirement=Some(owner),Err((error,metadata))=>{*self.metadata=Some(metadata);return Err(error)}}return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}
+  Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
+ }
 }
-
-impl InteractiveJob for LayoutMediaExportJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
-        if !self.slot.settle(context)? {
-            return Ok(None);
-        }
-        if self.slot.publication.is_some() {
-            return self.slot.advance(context);
-        }
-        if self.inner.commit_ready() && !self.completed {
-            if let Some(credit) = &self.inner.media_output_credit {
-                if credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len()).is_err() {
-                    self.slot.publication = Some(LayoutExportJob::fault_publication("layout-media-export-credit-refused"));
-                    return self.slot.advance(context);
-                }
-            }
-            // 📤️ Same ownership handover as the download route: the media result owns the sealed queue.
-            let chunks = std::mem::replace(&mut self.inner.output_chunks, ArtifactOutputChunks::new(0));
-            let Ok(media) = ArtifactMediaExportResult::structured(MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, LAYOUT_MEDIA_EXPORT_SCHEMA, "application/json", chunks) else {
-                self.slot.publication = Some(LayoutExportJob::fault_publication("layout-media-export-result-refused"));
-                return self.slot.advance(context);
-            };
-            let Some(completion) = self.completion.as_ref() else {
-                self.slot.publication = Some(LayoutExportJob::fault_publication("layout-media-export-completion-missing"));
-                return self.slot.advance(context);
-            };
-            if completion.complete(Ok(media)).is_err() {
-                self.slot.publication = Some(LayoutExportJob::fault_publication("layout-media-export-completion-refused"));
-                return self.slot.advance(context);
-            }
-            self.completed = true;
-        }
-        self.inner.step(context)
-    }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        match descriptor.kind() {
-            JobOutcomeKind::Yield => descriptor.yielded(),
-            JobOutcomeKind::Cancelled => descriptor.cancelled(),
-            _ if self.slot.delivered => self.slot.borrow_outcome(descriptor),
-            _ => self.inner.borrow_outcome(descriptor),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.inner.begin_close();
-    }
-
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if grant.maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { progress: Default::default() };
-        }
-        match InteractiveJob::close_step(&mut self.inner, grant) {
-            InteractiveJobCloseStep::Complete { .. } if !self.inner.terminal_is_empty() => return InteractiveJobCloseStep::Blocked,
-            InteractiveJobCloseStep::Complete { .. } => {}
-            step => return step,
-        }
-        if !self.slot.terminal_is_empty() {
-            return match self.slot.close_step(grant) {
-                Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
-                Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
-            };
-        }
-        let Some(completion) = self.completion.as_ref() else { return InteractiveJobCloseStep::Complete { progress: Default::default() } };
-        if self.inner.output_chunks.chunks_remaining() != 0 {
-            return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::InvariantViolated, progress: Default::default() };
-        }
-        let _ = completion;
-        drop(self.completion.take());
-        InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } }
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().depth) }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.completion.is_none() && self.slot.terminal_is_empty() && self.inner.terminal_is_empty()
-    }
-}
-
-impl LayoutMediaExportJob {
-    fn close_demand(&self) -> semio_framework_value::RetirementDemand {
-        if !self.inner.terminal_is_empty() {
-            return self.inner.close_demand();
-        }
-        if !self.slot.terminal_is_empty() {
-            return self.slot.retirement_demands().unwrap_or_default();
-        }
-        if self.completion.is_some() {
-            return semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
-        }
-        Default::default()
-    }
+impl InteractiveJob for LayoutMediaExportJob{
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{
+  if !self.slot.settle(cx)?{return Ok(None)}if self.slot.publication.is_some(){return self.slot.advance(cx)}
+  if self.pending_result.is_some()||self.result_published{self.completed=self.completion.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost its original completion receiver"))?.complete_original(&mut self.pending_result,&mut self.result_published,cx)?;return Ok(None)}
+  let inner=self.inner.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media cannot drive an unadmitted body"))?;
+  if inner.commit_ready()&&!self.completed{
+   if let Some(credit)=inner.media_output_credit.as_ref(){credit.credit(LAYOUT_MEDIA_EXPORT_SCHEMA.len())?}
+   let chunks=inner.output_chunks.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout media lost supplied output roots"))?;
+   let media=ArtifactMediaExportResult::structured(MediaType{class:MediaClass::TwoD,form:MediaForm::Vector},LAYOUT_MEDIA_EXPORT_SCHEMA,"application/json",chunks)?;
+   *self.pending_result=Some(Ok(media));return Ok(None);
+  }inner.step(cx)
+ }
+ fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,semio_framework_value::ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_ if self.slot.delivered=>self.slot.borrow_outcome(descriptor),_=>self.inner.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout outcome lost its original body"))?.borrow_outcome(descriptor)}}
+ fn begin_close(&mut self){if let Some(inner)=self.inner.as_mut(){inner.begin_close()}}
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+  self.begin_close();if let Some(inner)=self.inner.as_mut(){if !inner.terminal_is_empty(){return inner.close_step(cx).map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()})}}
+  let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_turn(grant))?;Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+ }
+ fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
+ fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(body)?.capacity_bytes)}
+ fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.release_bytes)}
+ fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand(0)?.depth)}
+ fn terminal_is_empty(&self)->bool{self.inner.is_none()&&self.completion.is_none()&&self.active.is_none()&&self.slot.terminal_is_empty()&&self.metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
 }
 
 impl ArtifactReservedJob for LayoutMediaExportJob {}
@@ -2851,7 +2756,7 @@ impl ToolJobFactory for LayoutExportJobFactory {
     fn create_job(&mut self, operation: Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
         let kind = payload.request.kind;
         let name = output_name(&payload.request);
-        let inner = LayoutExportJob::new(operation, payload.request).map_err(ToolJobFactoryError::new)?.with_output_chunks(payload.output_chunks);
+        let inner = LayoutExportJob::from_admitted(operation,(operation.operation,operation.generation),payload.request,payload.output_chunks);
         Ok(LayoutExportToolJob {
             inner: Some(inner),
             rejected_download:None,
@@ -2924,14 +2829,11 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutExportJobFact
 }
 
 impl LayoutExportJob {
-    pub fn new(operation: Operation, request: LayoutExportRequest) -> Result<Self, String> {
-        if !bounded_id(&request.parent_document_id) || request.canonical_base_revision_hex.len() != 64 || !request.canonical_base_revision_hex.bytes().all(|byte| byte.is_ascii_hexdigit()) || request.page_id.as_ref().is_some_and(|id| !bounded_id(id))
-        {
-            return Err("layout-export-authority-invalid".into());
-        }
-        Ok(Self {
+    fn from_admitted(operation:Operation,source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation),request:LayoutExportRequest,output_chunks:ArtifactOutputChunks)->Self {
+        Self {
             operation,
-            request,
+            source_identity,
+            request:Some(request),
             stage: ExportStage::Validate,
             validation_group: 0,
             validation_index: 0,
@@ -2974,16 +2876,16 @@ impl LayoutExportJob {
             zip_central_offset: 0,
             zip: ZipState::default(),
             media_output_credit: None,
-            output_chunks: ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES),
+            output_chunks:Some(output_chunks),
+            output_retirement:None,
             commit_cursor: 0,
             completed_units: 0,
             restore_target: None,
             snapshot_close: None,
-            snapshot_placeholder: Some(Arc::new(empty_close_snapshot())),
             slot: LayoutPublicationSlot::default(),
             closing: false,
             close_stage: LayoutExportCloseStage::JsonValidation,
-        })
+        }
     }
 
     pub fn with_snapshot_close_lease(mut self, snapshot_close: ArtifactSnapshotCloseLease<LayoutSnapshot>) -> Self {
@@ -2995,12 +2897,6 @@ impl LayoutExportJob {
         self.media_output_credit = Some(credit);
         self
     }
-
-    pub fn with_output_chunks(mut self, output_chunks: ArtifactOutputChunks) -> Self {
-        self.output_chunks = output_chunks;
-        self
-    }
-
 
     fn close_string(value: &mut String, maximum_bytes: usize) -> Option<usize> {
         if value.is_empty() {
@@ -3229,45 +3125,11 @@ impl LayoutExportJob {
                 Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
             }
             LayoutExportCloseStage::ZipCurrentName => Ok(Self::close_optional_string(&mut self.zip.current_name, LayoutExportCloseStage::PageAuthority, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::PageAuthority => Ok(Self::close_optional_string(&mut self.request.page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::Preflight => Ok(Self::close_optional_string(&mut self.request.preflight_json, LayoutExportCloseStage::ParentAuthority, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::ParentAuthority => Ok(Self::close_required_string(&mut self.request.parent_document_id, LayoutExportCloseStage::RevisionAuthority, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::RevisionAuthority => Ok(Self::close_required_string(&mut self.request.canonical_base_revision_hex, LayoutExportCloseStage::OutputChunks, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::OutputChunks => {
-                if maximum_bytes < OUTPUT_CHUNK_BYTES {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 0, released_bytes: 0 });
-                }
-                match self.output_chunks.close_take_chunk()? {
-                    Some(chunk) => Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: chunk.len() }),
-                    None => {
-                        self.close_stage = LayoutExportCloseStage::MediaCredit;
-                        Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-                    }
-                }
-            }
-            LayoutExportCloseStage::MediaCredit => {
-                drop(self.media_output_credit.take());
-                self.close_stage = LayoutExportCloseStage::Snapshot;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::Snapshot => {
-                if let Some(lease) = self.snapshot_close.as_ref() {
-                    if !lease.can_release(&self.request.snapshot) {
-                        return Err(Fault::from("layout-export-close-snapshot-owner-missing"));
-                    }
-                } else if Arc::strong_count(&self.request.snapshot) <= 1 {
-                    return Err(Fault::from("layout-export-close-snapshot-unwitnessed"));
-                }
-                let snapshot = std::mem::replace(&mut self.request.snapshot, self.snapshot_placeholder.take().expect("layout close owns pre-admitted snapshot placeholder"));
-                drop(snapshot);
-                self.close_stage = LayoutExportCloseStage::SnapshotOwner;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::SnapshotOwner => {
-                drop(self.snapshot_close.take());
-                self.close_stage = LayoutExportCloseStage::Complete;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
+            LayoutExportCloseStage::PageAuthority => Ok(Self::close_optional_string(&mut self.request.as_mut().unwrap().page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::Preflight => Ok(Self::close_optional_string(&mut self.request.as_mut().unwrap().preflight_json, LayoutExportCloseStage::ParentAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::ParentAuthority => Ok(Self::close_required_string(&mut self.request.as_mut().unwrap().parent_document_id, LayoutExportCloseStage::RevisionAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::RevisionAuthority => Ok(Self::close_required_string(&mut self.request.as_mut().unwrap().canonical_base_revision_hex, LayoutExportCloseStage::OutputChunks, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner=>Err(Fault::from("layout paired roots require their original quoted close")),
             LayoutExportCloseStage::Complete => Ok(LayoutCloseTurn::Complete),
         }
     }
@@ -3288,26 +3150,23 @@ impl LayoutExportJob {
             && self.pdf_engine.is_none()
             && self.zip.entries.is_empty()
             && self.zip.current_name.is_none()
-            && self.request.page_id.is_none()
-            && self.request.preflight_json.is_none()
-            && self.request.parent_document_id.is_empty()
-            && self.request.canonical_base_revision_hex.is_empty()
-            && self.output_chunks.chunks_remaining() == 0
+            && self.request.is_none()
+            && self.output_chunks.is_none() && self.output_retirement.is_none()
             && self.media_output_credit.is_none()
             && self.snapshot_close.is_none()
-            && self.snapshot_placeholder.is_none()
+
     }
 
     #[cfg(test)]
     pub fn restore(operation: Operation, request: LayoutExportRequest, state: &[u8]) -> Result<Self, String> {
         let checkpoint = decode_checkpoint(&operation, &request, state)?;
-        let mut job = Self::new(operation, request)?;
+        let mut job = Self::from_admitted(operation,(operation.operation,operation.generation),request,ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES));
         job.restore_target = Some(checkpoint);
         Ok(job)
     }
 
     fn active_output(&self) -> &ChunkRope {
-        if self.request.kind.binary() && matches!(self.stage, ExportStage::Base64 | ExportStage::PackageCommit | ExportStage::Complete) {
+        if self.request.as_ref().unwrap().kind.binary() && matches!(self.stage, ExportStage::Base64 | ExportStage::PackageCommit | ExportStage::Complete) {
             &self.encoded
         } else {
             &self.output
@@ -3316,7 +3175,7 @@ impl LayoutExportJob {
 
     fn checkpoint_publication(&self) -> Result<LayoutExportPublication, String> {
         let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
-        let state = encode_checkpoint(&self.operation, &self.request, &checkpoint)?;
+        let state = encode_checkpoint(&self.operation, self.request.as_ref().unwrap(), &checkpoint)?;
         LayoutExportPublication::new(LayoutExportPublicationKind::Checkpoint { applied_progress: self.completed_units }, &state)
     }
 
@@ -3334,11 +3193,11 @@ impl LayoutExportJob {
     }
 
     fn page(&self) -> Result<&Page, String> {
-        self.target_page.and_then(|index| self.request.snapshot.pages.get(index)).ok_or_else(|| "layout-export-page-missing".into())
+        self.target_page.and_then(|index| self.request.as_ref().unwrap().snapshot.pages.get(index)).ok_or_else(|| "layout-export-page-missing".into())
     }
 
     fn validate_one(&mut self) -> Result<(), String> {
-        let snapshot = &self.request.snapshot;
+        let snapshot = &self.request.as_ref().unwrap().snapshot;
         match self.validation_group {
             0 => {
                 if snapshot.pages.len() > MAX_LAYOUT_EXPORT_PAGES
@@ -3387,7 +3246,7 @@ impl LayoutExportJob {
                     let nested = page.frames.len() + page.overrides.len() + page.guides.len() + page.layers.len() + page.layer_ids.len() + page.layers.iter().map(|layer| layer.object_ids.len()).sum::<usize>();
                     self.validation_total_frames = self.validation_total_frames.checked_add(page.frames.len()).ok_or("layout-export-item-limit")?;
                     add_validated_items(&mut self.validation_total_items, nested)?;
-                    if self.request.page_id.as_deref().is_some_and(|id| id == page.id) || self.request.page_id.is_none() && self.target_page.is_none() {
+                    if self.request.as_ref().unwrap().page_id.as_deref().is_some_and(|id| id == page.id) || self.request.as_ref().unwrap().page_id.is_none() && self.target_page.is_none() {
                         self.target_page = Some(self.validation_index);
                     }
                     self.validation_index += 1;
@@ -3530,7 +3389,7 @@ impl LayoutExportJob {
                 }
             }
             10 => {
-                let Some(value) = &self.request.preflight_json else {
+                let Some(value) = &self.request.as_ref().unwrap().preflight_json else {
                     self.validation_group = 11;
                     return Ok(());
                 };
@@ -3569,12 +3428,12 @@ impl LayoutExportJob {
                 }
             }
             13 => {
-                if !matches!(self.request.kind, LayoutExportKind::Package) && self.target_page.is_none() {
+                if !matches!(self.request.as_ref().unwrap().kind, LayoutExportKind::Package) && self.target_page.is_none() {
                     return Err("layout-export-page-missing".into());
                 }
                 self.parent_frame_count =
                     self.target_page.and_then(|index| snapshot.pages.get(index)).and_then(|page| page.parent_page_id.as_ref().and_then(|id| snapshot.parent_pages.iter().find(|parent| &parent.id == id))).map_or(0, |parent| parent.frames.len());
-                if matches!(self.request.kind, LayoutExportKind::Package) {
+                if matches!(self.request.as_ref().unwrap().kind, LayoutExportKind::Package) {
                     self.begin_zip_entry("document.json")?;
                     self.stage = ExportStage::Encode;
                 } else {
@@ -3587,11 +3446,11 @@ impl LayoutExportJob {
     }
 
     fn plan_one(&mut self) -> Result<(), String> {
-        if matches!(self.request.kind, LayoutExportKind::Pdf) {
+        if matches!(self.request.as_ref().unwrap().kind, LayoutExportKind::Pdf) {
             return self.plan_pdf_one();
         }
         let page = self.page()?;
-        let parent = page.parent_page_id.as_ref().and_then(|id| self.request.snapshot.parent_pages.iter().find(|candidate| &candidate.id == id));
+        let parent = page.parent_page_id.as_ref().and_then(|id| self.request.as_ref().unwrap().snapshot.parent_pages.iter().find(|candidate| &candidate.id == id));
         let frame = if self.plan_cursor < self.parent_frame_count { parent.and_then(|value| value.frames.get(self.plan_cursor)) } else { page.frames.get(self.plan_cursor - self.parent_frame_count) };
         let Some(frame) = frame else {
             self.begin_encoder()?;
@@ -3608,7 +3467,7 @@ impl LayoutExportJob {
     }
 
     fn begin_encoder(&mut self) -> Result<(), String> {
-        match self.request.kind {
+        match self.request.as_ref().unwrap().kind {
             LayoutExportKind::Svg => {
                 let page = self.page()?;
                 let width = finite_dimension(page.width)?;
@@ -3623,7 +3482,7 @@ impl LayoutExportJob {
     }
 
     fn encode_one(&mut self) -> Result<(), String> {
-        match self.request.kind {
+        match self.request.as_ref().unwrap().kind {
             LayoutExportKind::Svg => self.encode_svg_one(),
             LayoutExportKind::Pdf => self.encode_pdf_one(),
             LayoutExportKind::Png => self.encode_png_one(),
@@ -3648,8 +3507,8 @@ impl LayoutExportJob {
     /// 📕️ Which pages the PDF carries: the addressed page, or every page when none is addressed.
     fn pdf_page_indices(&self) -> Vec<usize> {
         match self.target_page {
-            Some(index) if self.request.page_id.is_some() => vec![index],
-            _ => (0..self.request.snapshot.pages.len()).collect(),
+            Some(index) if self.request.as_ref().unwrap().page_id.is_some() => vec![index],
+            _ => (0..self.request.as_ref().unwrap().snapshot.pages.len()).collect(),
         }
     }
 
@@ -3662,7 +3521,7 @@ impl LayoutExportJob {
             self.stage = ExportStage::Encode;
             return Ok(());
         };
-        let snapshot = Arc::clone(&self.request.snapshot);
+        let snapshot = Arc::clone(&self.request.as_ref().unwrap().snapshot);
         let page = snapshot.pages.get(page_index).ok_or("layout-export-page-missing")?;
         let width = finite_dimension(page.width)?;
         let height = finite_dimension(page.height)?;
@@ -4176,7 +4035,7 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
                 self.package_section = PackageSection::Scalars;
             }
             PackageSection::Scalars => {
-                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.snapshot)?;
+                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.as_ref().unwrap().snapshot)?;
                 if !bytes.is_empty() {
                     self.append_zip_data(&bytes)?;
                 }
@@ -4185,14 +4044,14 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
                     self.end_zip_entry()?;
                     self.begin_zip_entry("preflight-report.json")?;
                     self.package_byte_cursor = 0;
-                    if self.request.preflight_json.is_none() {
+                    if self.request.as_ref().unwrap().preflight_json.is_none() {
                         self.package_json = Some(TypedJsonCursor::preflight());
                     }
                     self.package_section = PackageSection::Preflight;
                 }
             }
             PackageSection::Preflight => {
-                if let Some(preflight) = &self.request.preflight_json {
+                if let Some(preflight) = &self.request.as_ref().unwrap().preflight_json {
                     let end = self.package_byte_cursor.saturating_add(OUTPUT_CHUNK_BYTES).min(preflight.len());
                     if self.package_byte_cursor < end {
                         let bytes = preflight.as_bytes()[self.package_byte_cursor..end].to_vec();
@@ -4203,7 +4062,7 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
                     }
                     return Ok(());
                 }
-                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.snapshot)?;
+                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.as_ref().unwrap().snapshot)?;
                 if !bytes.is_empty() {
                     self.append_zip_data(&bytes)?;
                 }
@@ -4213,7 +4072,7 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
                 }
             }
             PackageSection::Manifest => {
-                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.snapshot)?;
+                let (bytes, done) = self.package_json.as_mut().ok_or("layout-export-json-cursor")?.advance(&self.request.as_ref().unwrap().snapshot)?;
                 if !bytes.is_empty() {
                     self.append_zip_data(&bytes)?;
                 }
@@ -4346,15 +4205,15 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
     }
 
     fn package_commit_one(&mut self) -> Result<(), String> {
-        let chunk = if self.request.kind.binary() { self.encoded.take_chunk() } else { self.output.take_chunk() };
+        let chunk = if self.request.as_ref().unwrap().kind.binary() { self.encoded.take_chunk() } else { self.output.take_chunk() };
         if let Some(bytes) = chunk {
             if let Some(credit) = &self.media_output_credit {
                 credit.credit(bytes.len()).map_err(|error| error.message)?;
             }
-            self.output_chunks.push(bytes).map_err(|error| error.message)?;
+            self.output_chunks.as_ref().unwrap().push(bytes).map_err(|error| error.message)?;
             self.commit_cursor += 1;
         } else {
-            self.output_chunks.seal().map_err(|error| error.message)?;
+            self.output_chunks.as_ref().unwrap().seal().map_err(|error| error.message)?;
             self.stage = ExportStage::Complete;
         }
         Ok(())
@@ -4362,7 +4221,7 @@ fn pdf_preview_ops(mark: &str, x: f32, y: f32, width: f32, height: f32, page_hei
 
     fn commit_publication(&mut self) -> Result<LayoutExportPublication, String> {
         let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
-        let state = encode_checkpoint(&self.operation, &self.request, &checkpoint)?;
+        let state = encode_checkpoint(&self.operation, self.request.as_ref().unwrap(), &checkpoint)?;
         LayoutExportPublication::new(LayoutExportPublicationKind::Commit, &state)
     }
 }
@@ -4380,15 +4239,31 @@ impl LayoutExportJob {
         self.close_export_step(grant.maximum_items, grant.maximum_release_bytes)
     }
 
-    fn close_demand(&self) -> semio_framework_value::RetirementDemand {
-        if self.close_stage == LayoutExportCloseStage::Publication && !self.slot.terminal_is_empty() {
-            return self.slot.retirement_demands().unwrap_or_default();
+    fn close_demand(&self)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
+        if self.close_stage==LayoutExportCloseStage::Publication&&!self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
+        if self.close_terminal_is_empty(){return Ok(Default::default())}
+        if matches!(self.close_stage,LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit){
+            if let Some(owner)=self.output_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
+            if self.close_stage==LayoutExportCloseStage::OutputChunks&&self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output_chunks)}
+            if self.close_stage==LayoutExportCloseStage::MediaCredit&&self.media_output_credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_output_credit)}return Ok(one)
         }
-        if self.close_terminal_is_empty() {
-            return Default::default();
-        }
-        semio_framework_value::RetirementDemand { release_bytes: LAYOUT_EXPORT_CLOSE_TURN_BYTES, depth: 1, ..Default::default() }
+        if self.close_stage==LayoutExportCloseStage::Snapshot{return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportRequest>(),..one})}
+        if self.close_stage==LayoutExportCloseStage::SnapshotOwner{return Ok(self.snapshot_close.as_ref().map_or(one,|lease|if lease.terminal_is_empty(){one}else{lease.retirement_demands()}))}
+        Ok(semio_framework_value::RetirementDemand{release_bytes:LAYOUT_EXPORT_CLOSE_TURN_BYTES,..one})
     }
+    fn close_paired_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+        if self.output_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.output_retirement,grant)}
+        match self.close_stage{
+            LayoutExportCloseStage::OutputChunks=>{if self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output_chunks,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::MediaCredit;}
+            LayoutExportCloseStage::MediaCredit=>{if self.media_output_credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_output_credit,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::Snapshot;}
+            LayoutExportCloseStage::Snapshot=>{if let Some(request)=self.request.as_ref(){if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(&request.snapshot)>1,|lease|lease.can_release(&request.snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout snapshot lost its paired original supplier"))}if request.page_id.is_some()||request.preflight_json.is_some()||!request.parent_document_id.is_empty()||!request.canonical_base_revision_hex.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout request metadata remains live before snapshot return"))}self.request.take();self.close_stage=LayoutExportCloseStage::SnapshotOwner;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportRequest>(),..item}))}self.close_stage=LayoutExportCloseStage::SnapshotOwner;}
+            LayoutExportCloseStage::SnapshotOwner=>{if let Some(lease)=self.snapshot_close.as_mut(){if lease.terminal_is_empty(){self.snapshot_close.take();}else{return lease.close_step(grant)}}else{self.close_stage=LayoutExportCloseStage::Complete;}}
+            _=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout paired roots were closed outside their authored stage")),
+        }Ok(RetainedCloneStep::Progress(item))
+    }
+
 }
 
 impl InteractiveJob for LayoutExportJob {
@@ -4400,9 +4275,9 @@ impl InteractiveJob for LayoutExportJob {
             return self.drive_publication(context);
         }
         if context.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(context);
+            return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+        if (context.operation(),context.generation())!=self.source_identity {
             self.slot.publication = Some(Self::fault_publication("layout-export-stale-operation"));
             return self.drive_publication(context);
         }
@@ -4415,7 +4290,7 @@ impl InteractiveJob for LayoutExportJob {
             self.completed_units = self.completed_units.saturating_add(1);
             context.consume_fuel(1);
             if context.is_cancelled() {
-                return JobOutcomeBorrow::admit_cancelled(context);
+                return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
             }
             match self.verify_restore_target() {
                 Ok(true) => {
@@ -4433,7 +4308,7 @@ impl InteractiveJob for LayoutExportJob {
                     Ok(publication) => publication,
                     Err(error) => Self::fault_publication(&error),
                 });
-                return JobOutcomeBorrow::admit_yield(context);
+                return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
             }
             if self.completed_units.is_multiple_of(64) {
                 self.slot.publication = Some(match self.checkpoint_publication() {
@@ -4447,7 +4322,7 @@ impl InteractiveJob for LayoutExportJob {
                 return self.drive_publication(context);
             }
             if context.should_yield() {
-                return JobOutcomeBorrow::admit_yield(context);
+                return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
             }
         }
     }
@@ -4468,15 +4343,17 @@ impl InteractiveJob for LayoutExportJob {
         self.close_stage = LayoutExportCloseStage::Publication;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> InteractiveJobCloseStep {
-        self.begin_close();
-        layout_close_step(self.close_turn(grant))
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        self.begin_close();let demand=self.close_demand()?;
+        if matches!(self.close_stage,LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner){return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_paired_turn(grant))}
+        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        let step=layout_close_step(self.close_turn(grant))?;cx.consume_retained(step.progress())?;if step.progress().copied_items>0{cx.consume_fuel(1)}Ok(step)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand().depth) }
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,_body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demand()?.depth)}
 
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.slot.terminal_is_empty() && self.close_terminal_is_empty()
@@ -4782,8 +4659,8 @@ pub fn run_layout_export_headless_batch(operation: Operation, request: LayoutExp
     let kind = request.kind;
     let name = output_name(&request);
     let snapshot_owner = Arc::clone(&request.snapshot);
-    let job = LayoutExportJob::new(operation, request)?;
-    let output_chunks = job.output_chunks.clone();
+    let job = LayoutExportJob::from_admitted(operation,(operation.operation,operation.generation),request,ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES));
+    let output_chunks = job.output_chunks.as_ref().unwrap().clone();
     let params = BatchJobParams {
         operation: operation.operation,
         generation: operation.generation,

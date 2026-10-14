@@ -87,6 +87,14 @@ impl WidgetInputsConstruction {
         }
         Ok(None)
     }
+    /// 📊️ Reads monotonic construction progress without scanning the declaration.
+    pub fn progress(&self,kind:&Kind)->f32{
+        let state=&*self.state;if state.phase==10{return 1.0}if state.source.is_none(){return 0.0}
+        if state.phase==1{return 0.1*state.byte as f32/state.source.unwrap().widget_bytes.max(1) as f32}
+        if state.phase==9{return 0.99}
+        let fraction=match state.phase{3|4|5=>{let bytes=kind.inputs.get(state.port).map_or(1,|port|match state.phase{3=>port.name.len(),4=>port.label.en.len(),_=>port.label.de.len()}).max(1);((state.phase-3)as f32+state.byte as f32/bytes as f32)/4.0},6|7|8=>0.75,_=>0.0};
+        (0.1+0.9*(state.port as f32+fraction)/kind.inputs.len().max(1)as f32).min(0.99)
+    }
     pub fn terminal_is_empty(&self)->bool{self.transferred||self.state.source.is_none()&&self.state.values.is_none()&&self.state.labels.is_none()&&self.state.insertion.is_none()&&self.state.widget.capacity()==0&&self.state.name.capacity()==0&&self.state.en.capacity()==0&&self.state.de.capacity()==0}
 }
 
@@ -94,7 +102,7 @@ fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yiel
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
 fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
 
-fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut bool,binding:&mut Option<(usize,usize)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+pub(crate) fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut bool,binding:&mut Option<(usize,usize)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     let identity=(source.as_ptr() as usize,source.len());
     if binding.is_some_and(|original|original!=identity){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"widget input UTF8 source identity changed").into())}
     let grant=cx.retained_grant();

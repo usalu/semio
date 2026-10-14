@@ -23,7 +23,7 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 use super::snapshot_read::{SnapshotRead, artifact_retirement_box_close_step, artifact_retirement_box_demands};
 use super::snapshot_read::ArtifactStoreDisplacedOwnerReservation;
-use super::snapshot_read_registry_retirement::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
+use semio_framework_value_snapshot_read::{SnapshotReadRegistryAliasRetirement,snapshot_registry_alias_demands,snapshot_registry_alias_close_step};
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 use crate::os_vcs::{
     Identified, Patchable,
@@ -777,29 +777,9 @@ impl<P, Mutation> Drop for MemberStoreOneItemPublication<P, Mutation> {
 
 /// 🔄 Persistent store-side operation phases. Publication and ACK are distinct turns; close
 /// remains observable until the domain owner proves exact terminal emptiness.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub enum ArtifactStoreOneItemPublicationPhase {
-    Preparing,
-    PreparingCursor,
-    PreflightingCommit,
-    Publishing,
-    AwaitingAck,
-    Closing,
-    Complete,
-    Fault,
-}
+pub use semio_framework_os_store_one_item::ArtifactStoreOneItemPublicationPhase;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ArtifactStoreOneItemAdvance {
-    Progress(ArtifactStoreOneItemCheckpoint),
-    PreparationProgress(ArtifactStoreOneItemCheckpoint, RetainedCloneProgress),
-    PreparationRefused,
-    Published(LaneItemReceipt),
-    AwaitingAck(LaneItemReceipt),
-    Complete,
-    Blocked,
-}
+pub use semio_framework_os_store_one_item::ArtifactStoreOneItemAdvance;
 
 /// 🚫 Exact owners returned when the app has no retained factory, preflight rejects, or the
 /// store's live base authority no longer matches. The whole admitted gesture comes back in the

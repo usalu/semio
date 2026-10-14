@@ -15,11 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
-
 [dependencies]
+semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-s-procedural-core-generation-sqlite = { workspace = true }
+semio-s-procedural-core-semantic-ui = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -34,7 +33,6 @@ semio-framework-schema-registry = { path = "../../../../../../../🧰️framewor
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -55,16 +53,16 @@ semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
 # 🛠️ Gestures are `🔄️machine` statecharts folded by the tool-machine runner (design §5, §13); `statechart!` expands to
 # `machine::…`, hence the rename.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
-semio-framework-os-flow = { workspace = true, optional = true }
-semio-framework-os-infinite = { workspace = true, optional = true }
-semio-framework-ui = { workspace = true, optional = true, features = ["wgpu"] }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-styling = { workspace = true, optional = true }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-styling = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

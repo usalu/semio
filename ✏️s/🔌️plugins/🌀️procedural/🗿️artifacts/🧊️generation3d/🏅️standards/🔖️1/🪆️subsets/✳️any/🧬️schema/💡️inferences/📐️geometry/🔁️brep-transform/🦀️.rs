@@ -1,13 +1,20 @@
 //! 🔁️ The `brep.transform` widgets: rigid, scaling and mirroring motions of any solid, compound, face, wire, curve, surface or vertex, and the three patterns as stepped lane J operation jobs.
 //!
 //! A motion never edits its input: the input value is imported into a fresh kernel session and the moved copy is exported, so the input widget's value is shared untouched.
+#![allow(clippy::result_large_err)]
 
-use super::brep_curve::guarded;
-use super::phased_job::{Pipeline, Work};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{Brep, BrepError, BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d_brep_representation::vector::matrix::Affine3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Affine3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 const ZERO_VECTOR: &str = "generation3d.geometry.vector-zero";
 const COUNT_RANGE: &str = "generation3d.geometry.input-range";
@@ -153,6 +160,8 @@ fn grid_pattern(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Pattern
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-transform", include_str!("../../../🗂️catalogue/🔣️brep-transform.json"));
 /// 🗃️ Every `brep.transform` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.transform.translate", start: translate },

@@ -8,7 +8,7 @@
 //! empty and `reads()` only advertises this subset's own native dialect.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
     use crate::io::SemioTableAnalyzer;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::ComposerEntry,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
@@ -84,9 +84,9 @@ pub mod derived_composition {
     /// from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_table_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") }, store::artifact_codec::<SemioTableSnapshot, crate::schema::mutations::SemioTableMutation>(
-            crate::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(semio_s_artifact_stdio_semio_table_descriptor::schema::descriptor::semio_table_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") }, store::artifact_codec::<SemioTableSnapshot, semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation>(
+            semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
@@ -100,10 +100,10 @@ pub mod derived_composition {
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         builder
-            .schemas([crate::schema::semio_table_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioTableSnapshot, crate::schema::mutations::SemioTableMutation>(crate::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") })
+            .schemas([semio_s_artifact_stdio_semio_table_descriptor::schema::descriptor::semio_table_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioTableSnapshot, semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation>(semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("table") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::schema::inferences::semio_table_artifact_inference_descriptor()])
+            .inferences([semio_s_artifact_stdio_semio_table_inferences::schema::inferences::semio_table_artifact_inference_descriptor()])
             .composers(semio_s_artifact_stdio_semio_base::semio_written(io_entries(), &COMPOSERS))
     }
 
@@ -112,7 +112,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_table_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(semio_s_artifact_stdio_semio_table_inferences::schema::inferences::semio_table_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 
@@ -124,19 +124,16 @@ pub mod derived_composition {
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::SemioTableDiff;
-    use crate::schema::mutations::SemioTableMutation;
-    use crate::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+    use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+    use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::SemioTableMutation;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -200,13 +197,14 @@ pub mod derived_construction {
 
     //#region 🔖️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::schema::snapshot::{SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

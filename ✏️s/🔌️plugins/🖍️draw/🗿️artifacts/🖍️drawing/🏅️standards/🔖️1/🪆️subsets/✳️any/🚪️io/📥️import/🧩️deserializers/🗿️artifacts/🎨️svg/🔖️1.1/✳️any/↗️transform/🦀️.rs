@@ -1,5 +1,5 @@
 //! ↗️ Preserve SVG transform lists in the owned editable affine representation.
-use crate::DrawingTransform;
+use semio_s_artifact_draw_drawing_model::DrawingTransform;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{Matrix2D, TransformOp};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_transform_list};
 pub fn parse_editable_svg_transform(source:&str)->Result<DrawingTransform,String> {
@@ -22,7 +22,7 @@ pub fn editable_svg_transform_operations(operations:&[TransformOp])->Result<Draw
         matrix=matrix.multiply(&operation.to_matrix());
         if ![matrix.a,matrix.b,matrix.c,matrix.d,matrix.e,matrix.f].iter().all(|value|value.is_finite()) {return Err("SVG transform exceeds finite coordinates".into());}
     }
-    let result=crate::schema::drawing_matrix_to_transform([matrix.a,matrix.b,matrix.c,matrix.d,matrix.e,matrix.f]);
+    let result=semio_s_artifact_draw_drawing_model::affine::drawing_matrix_to_transform([matrix.a,matrix.b,matrix.c,matrix.d,matrix.e,matrix.f]);
     if ![result.x,result.y,result.scale_x,result.scale_y,result.shear,result.rotation].iter().all(|value|value.is_finite()) {return Err("SVG transform cannot be represented".into());}
     Ok(result)
 }

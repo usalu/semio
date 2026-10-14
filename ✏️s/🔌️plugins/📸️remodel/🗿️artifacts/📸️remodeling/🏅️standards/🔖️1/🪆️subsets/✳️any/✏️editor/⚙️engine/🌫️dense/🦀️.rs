@@ -2,12 +2,14 @@
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
 // this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
-use crate::editor::remodeling::engine::{camera as remodeling_camera, images as remodeling_image};
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 
 use std::collections::{BTreeMap, HashMap};
 
-use crate::algebra::{jacobi_eigen_symmetric, MatD};
-use crate::spatial::KdTree;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::jacobi_eigen_symmetric;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::MatD;
+use semio_s_artifact_remodel_remodeling_spatial::standards::v1::subsets::any::schema::spatial_internals::KdTree;
 
 const MAX_INTERACTIVE_FUSED_POINTS: usize = 512;
 
@@ -152,7 +154,7 @@ struct Plane {
 struct RefContext<'a> {
     img: &'a remodeling_image::ImageGray,
     intr: &'a remodeling_camera::Intrinsics,
-    to_world: &'a remodeling_camera::Se3,
+    to_world: &'a semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3,
 }
 
 fn dot3(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -833,7 +835,7 @@ fn normal_angle_ok(n0: [f32; 3], n1: [f32; 3], cos_thresh: f32) -> bool {
 /// (counting the originating view) are kept, positioned at the average of every agreeing view's own
 /// unprojection of that surface point.
 pub fn fuse_depth_maps(views: &[(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)], depth_maps: &[DepthMap], cfg: &FusionConfig) -> PointCloud {
-    let to_worlds: Vec<remodeling_camera::Se3> = views.iter().map(|(pose, _)| pose.0.inverse()).collect();
+    let to_worlds: Vec<semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3> = views.iter().map(|(pose, _)| pose.0.inverse()).collect();
     let cos_thresh = cfg.max_normal_angle_deg.to_radians().cos();
     let mut positions = Vec::new();
     let mut normals = Vec::new();

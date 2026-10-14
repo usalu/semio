@@ -3,7 +3,7 @@
 use super::super::family_rules;
 use super::super::set_component_override::SetComponentOverride;
 use super::RemoveComponentOverride;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &RemoveComponentOverride, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.component_overrides.get(&family_rules::parameter_key(&payload.component, &payload.name)) {

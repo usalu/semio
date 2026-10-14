@@ -10,7 +10,7 @@ use super::snap::SnapHit;
 use super::typed::INVALID;
 use crate::editor::bim::entities::components::{placeable, system_of, wall_mounted, SYSTEMS};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::{Axis, Component, MepSystem, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Component, MepSystem, ModelSnapshot}, mutations::ModelMutation};
 use std::f64::consts::TAU;
 
 /// 🚫️ The model holds no family the tool could place.
@@ -174,7 +174,7 @@ impl Place {
         let count = ctx.snapshot.components.values().filter(|component| component.family == family).count();
         let name = format!("{} {}", ctx.snapshot.families.get(&family).map_or("", |row| row.name.as_str()), count + 1);
         let component = Component { storey, family, position: point2(at), elevation: self.elevation, rotation: self.rotation, mirrored: self.mirrored, host: mounted.map(|mount| mount.wall), system: self.system, name };
-        let probe = ModelMutation::CreateComponent(crate::mutations::create_component::CreateComponent { id: "probe".into(), component: component.clone() });
+        let probe = ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id: "probe".into(), component: component.clone() });
         Some(Candidate { valid: ctx.accepts(&probe), component, frame, hit })
     }
 
@@ -189,7 +189,7 @@ impl Place {
             Some(candidate) => {
                 let component = candidate.component.clone();
                 let id = ctx.mint("component");
-                Step::write(ctx, ModelMutation::CreateComponent(crate::mutations::create_component::CreateComponent { id, component }))
+                Step::write(ctx, ModelMutation::CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent { id, component }))
             }
         }
     }

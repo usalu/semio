@@ -24,12 +24,12 @@ use {crate::primitives::make_planar_face_from_wire, semio_framework_3d_brep_repr
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::FaceId;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 pub use loft::{loft_profiles, LoftJob};
 pub use revolve::{revolve_face, RevolveJob};
@@ -190,7 +190,7 @@ pub struct StationSweepJob {
     stations: Vec<frame::Station>,
     previous: Option<Pnt3>,
     rmf: Vec<frame::RmfFrame>,
-    frames: Vec<semio_framework_3d_brep_representation::vector::matrix::Frame3>,
+    frames: Vec<semio_framework_3d_brep_vector::matrix::Frame3>,
     aligned: Option<FaceId>,
     bottom: Option<FaceId>,
     prism: Option<core::PrismBuilder>,
@@ -200,7 +200,7 @@ pub struct StationSweepJob {
 
 impl StationSweepJob {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn planar_profile_frame(body: &Body, profile: FaceId, label: &str) -> Result<semio_framework_3d_brep_representation::vector::matrix::Frame3, KernelError> {
+    fn planar_profile_frame(body: &Body, profile: FaceId, label: &str) -> Result<semio_framework_3d_brep_vector::matrix::Frame3, KernelError> {
         let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?;
         match body.surfaces.get(f.surface) {
             Some(Surface::Plane { frame }) => Ok(*frame),

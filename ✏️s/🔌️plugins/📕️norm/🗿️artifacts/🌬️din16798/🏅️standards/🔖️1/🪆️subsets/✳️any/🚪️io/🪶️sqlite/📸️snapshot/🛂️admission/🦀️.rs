@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::{RecordValue as R};
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let d=n::cells(root,[Enumeration(0,&["En","De"]),Real(1),Real(2),Real(5),Real(6),Real(7),Real(8),Real(9)])?;
  out.insert_key_float("din16798_document",1,&d,DOCUMENT_FLOATS)?;

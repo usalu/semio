@@ -11,9 +11,6 @@
     "test-native-drawing-reader": "bun repo run @semio-tech/hub-stdio-test-oracle:test-native-drawing-reader",
     "test-type-ownership": "bun repo run @semio-tech/hub-stdio-test-oracle:test-type-ownership"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

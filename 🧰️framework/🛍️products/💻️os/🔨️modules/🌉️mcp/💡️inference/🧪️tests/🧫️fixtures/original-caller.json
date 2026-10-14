@@ -1,0 +1,30 @@
+{
+  "turn": {
+    "operation": 71,
+    "generation": 3,
+    "epoch": 19,
+    "work": {
+      "clockBinding": 1671,
+      "absoluteDeadlineUs": 1000000,
+      "fuel": 64
+    },
+    "grant": {
+      "maximumItems": 64,
+      "maximumCopyBytes": 4096,
+      "maximumCapacityBytes": 524288,
+      "maximumReleaseBytes": 1048576,
+      "maximumDepth": 128
+    }
+  },
+  "retainedPolicy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 3,
+    "maximumCapacityBytes": 524288,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "revision": 7,
+  "cancellationId": "original cancellation 源",
+  "workUnits": 11,
+  "maximumElapsedMilliseconds": 13
+}

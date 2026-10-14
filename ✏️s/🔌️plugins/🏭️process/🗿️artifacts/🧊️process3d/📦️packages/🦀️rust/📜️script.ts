@@ -28,4 +28,4 @@ class ReplaySourceScript extends BundleScript {
     await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
   }
 }
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { commands: { "check-snapshot-sqlite-source": SourceCheckScript, "test-replay-source": ReplaySourceScript }, snapshotSqliteTestFeatures: [], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-process-process3d", { commands: { "check-snapshot-sqlite-source": SourceCheckScript, "test-replay-source": ReplaySourceScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

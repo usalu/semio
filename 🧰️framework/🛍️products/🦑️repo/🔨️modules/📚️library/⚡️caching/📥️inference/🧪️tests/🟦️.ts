@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import fg from "fast-glob";
-import plugin, { cacheInternals } from "../../../🟨️.mjs";
+import plugin, { cacheInternals } from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Corpus = { version: 1; files: Record<string, string>; cases: { id: string; files: string[]; names: string[] }[]; authorities: string[]; snapshot: { entry: string; inputs: string[]; nextSource: string; nextFile: string; nextInputs: string[] } };
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "🧫️fixtures/🔣️.json"), "utf8")) as Corpus;
@@ -17,7 +17,7 @@ async function copiedPlugin(root: string): Promise<typeof plugin> {
   const revision = JSON.parse(readFileSync(join(library, "⚡️caching/🧫️fixtures/🔁️graph-revision/🔣️.json"), "utf8"));
   const files = [...revision.files.map((path: string) => relative(repository, resolve(library, path))), "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs", ...cacheInternals.relativeScriptInputs(revision.commandSources.map((path: string) => join(repository, path)), repository).map((path: string) => path.slice("{workspaceRoot}/".length))];
   for (const path of new Set<string>(files)) { const destination = join(root, path); mkdirSync(dirname(destination), { recursive: true }); copyFileSync(join(repository, path), destination); }
-  return (await import(pathToFileURL(join(root, relative(repository, library), "🟨️.mjs")).href)).default;
+  return (await import(pathToFileURL(join(root, relative(repository, library), "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)).default;
 }
 
 /** 📥️ Materializes each producer law in its caller's ticket without running native commands. */

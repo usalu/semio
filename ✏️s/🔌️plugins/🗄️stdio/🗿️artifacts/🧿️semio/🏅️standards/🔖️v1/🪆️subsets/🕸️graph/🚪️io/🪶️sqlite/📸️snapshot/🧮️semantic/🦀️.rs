@@ -4,7 +4,7 @@ use super::{SemioGraphSnapshot,ValueError,ValueRefusalKind};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
-use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::semantic as values;
+use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic as values;
 use values::{Census,add};
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Graph native field differs from its authored shape")}

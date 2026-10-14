@@ -2,8 +2,8 @@
 //! `(payload, base)` (idempotent even when `base.structure_classic_model` is already `None`).
 
 use super::DeleteStructureClassicModel;
-use crate::diff::{CadDiff, CadModelSlot};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadModelSlot};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

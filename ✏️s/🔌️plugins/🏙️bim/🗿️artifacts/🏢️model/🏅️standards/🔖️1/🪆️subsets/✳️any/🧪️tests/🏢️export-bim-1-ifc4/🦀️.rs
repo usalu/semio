@@ -16,7 +16,7 @@ mod subject {
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::export::ifc::{codec, export_ifc4, Schema};
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::import::ifc::import_ifc4;
     use semio_s_artifact_bim_model::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
-    use semio_s_artifact_bim_model::ModelSnapshot;
+    use semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
     fn snapshot(ctx: &Context) -> Result<ModelSnapshot, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.contains("📸️snapshot")).ok_or_else(|| "the scenario names no snapshot".to_string())?;

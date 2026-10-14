@@ -4,7 +4,7 @@
 
 use super::super::{component_rules, elements, placement};
 use super::SetElementStorey;
-use crate::{Component, ComponentPatch, Entry, KeyedDelta, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Component, ModelSnapshot}, diff::{patches::ComponentPatch, Entry, KeyedDelta, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

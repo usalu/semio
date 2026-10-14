@@ -3,7 +3,7 @@
 
 use super::super::cascade;
 use super::DeleteSheetRevision;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteSheetRevision, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

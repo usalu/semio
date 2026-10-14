@@ -4,7 +4,7 @@ use super::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, Shee
 use crate::standards::v1::subsets::any::schema::inferences::bodies::{beam_outline, beam_span, column_outline, column_section, slab_span};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts::{host_paths, Host};
-use crate::RailingHost;
+use crate::standards::v1::subsets::any::schema::snapshot::RailingHost;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, point};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
 use semio_framework_geometry::loops::{self, Vertex as Corner};

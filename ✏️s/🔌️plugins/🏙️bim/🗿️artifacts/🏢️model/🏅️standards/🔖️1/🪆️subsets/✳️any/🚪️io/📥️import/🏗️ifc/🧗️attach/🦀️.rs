@@ -8,7 +8,7 @@ use super::reader::text;
 use super::spatial::set_of;
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::walls::ATTACH_SET;
-use crate::TopConstraint;
+use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 
 fn top_of(i: &Import<'_>, kind: &str, target: &str, offset: f64, height: f64) -> Option<TopConstraint> {
     let own = || target.to_string();

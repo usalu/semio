@@ -1,8 +1,8 @@
 //! ➖️ `remove-tower-leg` diff — removes the row at the index.
 
-use super::RemoveTowerLeg;
-use crate::diff::{En1993Diff, En1993TowerLegDelta};
-use crate::En1993Snapshot;
+use crate::remove_tower_leg::RemoveTowerLeg;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993TowerLegDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveTowerLeg, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.tower_legs.len() {

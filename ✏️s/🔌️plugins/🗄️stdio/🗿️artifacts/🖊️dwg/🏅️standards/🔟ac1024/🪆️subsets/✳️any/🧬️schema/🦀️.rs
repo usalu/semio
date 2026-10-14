@@ -1,16 +1,18 @@
 //! 🧬️ DwgArtifact schema — full artifact state.
 
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::{
-    DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate,
-};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationHistory;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgApplicationInfo;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgAuxiliaryHeader;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgClass;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgDependency;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgIndexedPreview;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgRevisionHistory;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgSummaryInfo;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::DwgTemplate;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderVariables;
+use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
-
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_DWG_DOCUMENT_SCHEMA: &str = "stdio.dwg";
-
-/// 🧬️ Artifact schema descriptor id.
-pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
@@ -139,27 +141,33 @@ impl DwgArtifact {
 pub fn dwg_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.dwg",
-        artifact: semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") },
+        artifact: semio_framework_schema_registry::FacetLeaves {
+            rust: semio_s_artifact_stdio_dwg_exports_code::ARTIFACT_RUST,
+            typescript: semio_s_artifact_stdio_dwg_exports_code::ARTIFACT_TYPESCRIPT,
+            graphql: semio_s_artifact_stdio_dwg_exports_graphql::ARTIFACT,
+            json_schema: semio_s_artifact_stdio_dwg_exports_json::ARTIFACT,
+            proto: semio_s_artifact_stdio_dwg_exports_proto::ARTIFACT,
+        },
         snapshot: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("📸️snapshot/🦀️.rs"),
-            typescript: include_str!("📸️snapshot/🟦️.ts"),
-            graphql: include_str!("📸️snapshot/🔗️.graphql"),
-            json_schema: include_str!("📸️snapshot/🔣️.json"),
-            proto: include_str!("📸️snapshot/🛰️.proto"),
+            rust: semio_s_artifact_stdio_dwg_exports_code::SNAPSHOT_RUST,
+            typescript: semio_s_artifact_stdio_dwg_exports_code::SNAPSHOT_TYPESCRIPT,
+            graphql: semio_s_artifact_stdio_dwg_exports_graphql::SNAPSHOT,
+            json_schema: semio_s_artifact_stdio_dwg_exports_json::SNAPSHOT,
+            proto: semio_s_artifact_stdio_dwg_exports_proto::SNAPSHOT,
         },
         diff: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🔺️diff/🦀️.rs"),
-            typescript: include_str!("🔺️diff/🟦️.ts"),
-            graphql: include_str!("🔺️diff/🔗️.graphql"),
-            json_schema: include_str!("🔺️diff/🔣️.json"),
-            proto: include_str!("🔺️diff/🛰️.proto"),
+            rust: semio_s_artifact_stdio_dwg_exports_code::DIFF_RUST,
+            typescript: semio_s_artifact_stdio_dwg_exports_code::DIFF_TYPESCRIPT,
+            graphql: semio_s_artifact_stdio_dwg_exports_graphql::DIFF,
+            json_schema: semio_s_artifact_stdio_dwg_exports_json::DIFF,
+            proto: semio_s_artifact_stdio_dwg_exports_proto::DIFF,
         },
         mutations: semio_framework_schema_registry::FacetLeaves {
-            rust: include_str!("🧬️mutations/🦀️.rs"),
-            typescript: include_str!("🧬️mutations/🟦️.ts"),
-            graphql: include_str!("🧬️mutations/🔗️.graphql"),
-            json_schema: include_str!("🧬️mutations/🔣️.json"),
-            proto: include_str!("🧬️mutations/🛰️.proto"),
+            rust: semio_s_artifact_stdio_dwg_exports_code::MUTATIONS_RUST,
+            typescript: semio_s_artifact_stdio_dwg_exports_code::MUTATIONS_TYPESCRIPT,
+            graphql: semio_s_artifact_stdio_dwg_exports_graphql::MUTATIONS,
+            json_schema: semio_s_artifact_stdio_dwg_exports_json::MUTATIONS,
+            proto: semio_s_artifact_stdio_dwg_exports_proto::MUTATIONS,
         },
     }
 }
@@ -177,21 +185,7 @@ pub fn dwg_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
-/// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::standards::v_ac1024::subsets::any::schema::empty_dwg_snapshot` through the `engine`
-/// barrel shim, and (via the root `crate::engine` shim, ac1024-only) as
-/// `crate::standards::v_ac1024::subsets::any::schema::empty_dwg_snapshot` too.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn empty_dwg_snapshot() -> DwgSnapshot {
-    DwgSnapshot::default()
-}
 
-/// 📄️ The minimal logical `stdio.dwg` AC1024 demonstration document.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn demo_dwg_snapshot() -> DwgSnapshot {
-    DwgSnapshot { version: "AC1024".into(), maintenance_version: 2, codepage: 30, ..Default::default() }
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️RegisterSchemaSpecs
@@ -208,7 +202,7 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
     ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec));
-    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::schema::diff::DwgDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

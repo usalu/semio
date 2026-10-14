@@ -10,14 +10,14 @@
 #[cfg(test)]
 use semio_framework_3d_brep_representation::arena::{CoedgeId, VertexId};
 use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId, ShellId, SolidId};
-use semio_framework_3d_brep_representation::curve::curve_ops;
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::curve_ops;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::surface_ops;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::surface_ops;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::predicates::{orient2d, Orient};
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_vector::predicates::{orient2d, Orient};
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Types
 
@@ -184,7 +184,7 @@ pub fn solid_mass_with_area_centroid(body: &Body, solid: SolidId, tol: f64) -> R
 
 /// 📏 Summed trimmed surface-integral moments of `faces` and their propagated error estimate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn faces_moments(body: &Body, faces: &[FaceId], tol: f64) -> Result<([f64; MOMENT_COMPONENTS], f64), KernelError> {
+pub fn faces_moments(body: &Body, faces: &[FaceId], tol: f64) -> Result<([f64; MOMENT_COMPONENTS], f64), KernelError> {
     let mut totals = [0.0; MOMENT_COMPONENTS];
     let mut err = 0.0;
     for &face in faces {
@@ -199,20 +199,20 @@ pub(crate) fn faces_moments(body: &Body, faces: &[FaceId], tol: f64) -> Result<(
 
 /// 📏 Total boundary area held in `totals`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn area_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> f64 {
+pub fn area_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> f64 {
     totals[IDX_AREA]
 }
 
 /// 📏 Area-weighted centroid of the surface held in `totals`, `None` for a zero area.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn area_centroid_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> Option<Pnt3> {
+pub fn area_centroid_from_moments(totals: &[f64; MOMENT_COMPONENTS]) -> Option<Pnt3> {
     let area = totals[IDX_AREA];
     (area.abs() > 1e-300).then(|| Pnt3::new(totals[IDX_AMX] / area, totals[IDX_AMY] / area, totals[IDX_AMZ] / area))
 }
 
 /// 📏 Volume, centroid and centroid inertia held in `totals`; a net-inward orientation is folded into a positive volume.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn mass_from_moments(totals: &[f64; MOMENT_COMPONENTS], err: f64) -> Result<MassProperties, KernelError> {
+pub fn mass_from_moments(totals: &[f64; MOMENT_COMPONENTS], err: f64) -> Result<MassProperties, KernelError> {
     let vol_raw = totals[IDX_VOL];
     if vol_raw.abs() < 1e-15 {
         return Err(KernelError::InvalidInput("solid has zero volume".into()));
@@ -469,7 +469,7 @@ pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, 
 /// 📏 `true` when a sample point on either solid's boundary is genuinely `Inside` the other, per
 /// the one authoritative classifier — not a bounding-box or sample-distance proxy for overlap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
+pub fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
     use semio_framework_3d_brep_representation::contract::PointClassification;
     use crate::classification::point_in_solid;
     for face in body.solid_faces(a) {
@@ -897,7 +897,7 @@ fn loop_has_only_straight_edges(body: &Body, loop_id: semio_framework_3d_brep_re
 /// ⚖️ ONE face's divergence-theorem contribution to the signed volume of the shell that owns it —
 /// the atomic unit [`shell_signed_volume`] sums, and therefore the smallest piece of that sum a
 /// budgeted validator can do per step. Exposed so a resumable pass
-/// ([`crate::validation::BodyValidationJob`])
+/// (`semio_framework_3d_brep_validation::BodyValidationJob`)
 /// can accumulate the same total one face at a time instead of paying the whole shell in one
 /// non-preemptible call (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1039,7 +1039,7 @@ fn face_surface(body: &Body, face: FaceId) -> Result<&Surface, KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn outward_plane_normal(frame: &semio_framework_3d_brep_representation::vector::matrix::Frame3, flipped: bool) -> Vec3 {
+fn outward_plane_normal(frame: &semio_framework_3d_brep_vector::matrix::Frame3, flipped: bool) -> Vec3 {
     let mut n = frame.z;
     if flipped {
         n = -n;
@@ -1169,7 +1169,7 @@ const UV_WELD: f64 = 1e-12;
 /// `sample_curve_adaptive` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn coedge_sample_count(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
-    if let (true, Some(semio_framework_3d_brep_representation::curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
+    if let (true, Some(semio_framework_3d_brep_curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
         let turn = dir.x.abs() * (co.prange.1 - co.prange.0).abs();
         return (turn / std::f64::consts::FRAC_PI_4).ceil().max(1.0) as usize + 1;
     }
@@ -1271,7 +1271,7 @@ fn unwrap_u(prev: f64, u: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
+pub fn surface_uv(surface: &Surface, p: Pnt3) -> Pnt2 {
     match surface {
         Surface::Plane { frame } => {
             let l = frame.to_local(p);
@@ -1522,8 +1522,8 @@ pub mod oracle {
     //! land in the phases that need them.
 
     use semio_framework_3d_brep_representation::topology::Body;
-    use semio_framework_3d_brep_representation::vector::matrix::Trsf;
-    use semio_framework_3d_brep_representation::vector::Pnt3;
+    use semio_framework_3d_brep_vector::matrix::Trsf;
+    use semio_framework_3d_brep_vector::Pnt3;
 
     // #region 🔖️Sdf
 

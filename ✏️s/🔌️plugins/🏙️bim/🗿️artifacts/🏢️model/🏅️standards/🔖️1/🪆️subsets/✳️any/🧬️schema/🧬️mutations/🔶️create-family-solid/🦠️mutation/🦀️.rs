@@ -1,6 +1,6 @@
 //! 🔶️ `create-family-solid` payload. Adds a solid to a family: an extrusion, revolution, sweep or cuboid whose dimensions, material and visibility are formulas of the family parameters.
 
-use crate::{FamilySolid, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{FamilySolid, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

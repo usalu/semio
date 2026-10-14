@@ -1,6 +1,7 @@
 //! ⚠️ Bounded typed Fault binding donates original strings and domain cells without cloning the parsed donor.
 use super::*;
-use semio_framework::{Fault,FaultCode,FaultScope,FaultOrigin,FaultCause,FaultParams,FaultSource,Severity};
+use semio_framework_diagnostic::FaultSource;
+use semio_framework::{Fault,FaultCode,FaultScope,FaultOrigin,FaultCause,FaultParams,Severity};
 pub(super) struct FaultCursor{output:ManuallyDrop<Option<Fault>>,closing:ManuallyDrop<Option<ControlledRetirement<Fault>>>,field:usize,nested:usize,kind:u8,cause:usize,cause_field:usize,seen:u8,progress_seen:u8,cause_seen:bool,reserved:bool,closed:bool}
 impl FaultCursor{
  pub(super) const fn empty()->Self{Self{output:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),field:0,nested:0,kind:0,cause:0,cause_field:0,seen:0,progress_seen:0,cause_seen:false,reserved:false,closed:false}}

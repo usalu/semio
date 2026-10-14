@@ -17,14 +17,14 @@ type ExecaOracle = (file: string, args: readonly string[], options: { readonly e
 const execa: ExecaOracle = createRequire(import.meta.url)("execa");
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];
 
-test("owned snapshot Cargo feature admission remains separate from the ordinary artifact suite",async()=>{
+test("artifact test routes select no Cargo feature (law L2)",async()=>{
  const corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🪶️snapshot-test-selection/🔣️.json",import.meta.url),"utf8"));
  const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket generated directory");
  const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
- for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"snapshot-features-"));
-  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryCargoTests:async(packages,cwd,control,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
+ for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"artifact-routes-"));
+  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runRepositoryCargoTests:async(packages,cwd,control,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{snapshotSqliteTests:["owned-test-source"]});`;
   const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_TEST_ARTIFACT_DIR:output},timeout:10000,reject:false});if(result.code!==0)throw Error(`Owned feature route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);expect(result.stdout).toContain("owned-assertions-complete");
-  const call=JSON.parse(result.stdout.split(/\r?\n/u).find(line=>line.startsWith("{"))!);expect(call.packages).toEqual([corpus.packageName]);expect(call.cwd).toBe(root.replace(/[/\\]$/u,""));expect(call.args.flatMap((value:string,index:number)=>value==="--features"?[call.args[index+1]]:[])).toEqual(row.expectedFeatures);expect(call.args).toContain("--lib");
+  const call=JSON.parse(result.stdout.split(/\r?\n/u).find(line=>line.startsWith("{"))!);expect(call.packages).toEqual([corpus.packageName]);expect(call.cwd).toBe(root.replace(/[/\\]$/u,""));expect(call.args).not.toContain("--features");expect(call.args).toContain("--lib");
 
  }
 },30000);

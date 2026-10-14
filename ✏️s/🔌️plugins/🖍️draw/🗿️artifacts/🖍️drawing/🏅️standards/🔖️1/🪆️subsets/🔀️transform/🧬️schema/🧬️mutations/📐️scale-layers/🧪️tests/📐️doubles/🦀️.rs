@@ -1,9 +1,10 @@
 //! 🧪️ `scale-layers` fixture — `📐️doubles`. The committed quintet is computed by an independent Python implementation
 //! (`🧪️w3-t-draw-selection-leaves.py`, ticket `26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING`); these laws hold the Rust leaf to it
 //! byte for byte and pin the resize handle's equivalence and the leaf's outcome and label laws.
-use crate::mutations::{inverse_drawing_mutation, scale_layers, DrawingMutation};
-use crate::standards::v1::subsets::any::io::text::mutations::apply_drawing_mutation;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::{inverse_drawing_mutation, DrawingMutation};
+use crate::scale_layers::mutation::scale_layers;
+use semio_s_artifact_draw_drawing_mutations::text::apply_drawing_mutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use protocol::{Mutation, SemanticMutation};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/⬅️before/🔣️.json");
@@ -50,13 +51,13 @@ fn inverse_restores_before() {
 fn equals_the_resize_handle_matrix() {
     let bounds = [10.0, 20.0, 120.0, 60.0];
     for (handle, constrained, centered) in [(4, false, false), (0, false, false), (4, true, false), (4, false, true), (5, true, true)] {
-        let handle_motion = crate::schema::geometry::handles::handle_motion(handle, bounds, [130.0, 80.0], [190.0, 60.0], constrained, centered).unwrap();
-        let crate::schema::geometry::handles::HandleMotion::Scale { pivot, scale } = handle_motion else { panic!("a resize handle scales") };
+        let handle_motion = semio_s_artifact_draw_drawing_geometry::handles::handle_motion(handle, bounds, [130.0, 80.0], [190.0, 60.0], constrained, centered).unwrap();
+        let semio_s_artifact_draw_drawing_geometry::handles::HandleMotion::Scale { pivot, scale } = handle_motion else { panic!("a resize handle scales") };
         let motion = handle_motion.matrix();
         let mut snapshot = before();
         apply_drawing_mutation(&mut snapshot, &scale_layers(vec!["shape-a".into()].into(), pivot[0], pivot[1], scale[0], scale[1])).unwrap();
-        let actual = crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&snapshot.layers[0]).transform);
-        let wanted = crate::schema::geometry::multiply(motion, crate::schema::drawing_transform_to_matrix(&crate::schema::layer_base(&before().layers[0]).transform));
+        let actual = semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&semio_s_artifact_draw_drawing_model::layer_base(&snapshot.layers[0]).transform);
+        let wanted = semio_s_artifact_draw_drawing_geometry::multiply(motion, semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&semio_s_artifact_draw_drawing_model::layer_base(&before().layers[0]).transform));
         for index in 0..6 {
             assert!((actual[index] - wanted[index]).abs() < 1e-9, "handle {handle}: {actual:?} vs {wanted:?}");
         }

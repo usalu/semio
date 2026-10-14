@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for id in 1..=8{rows=n::add(rows,n::list(n::field(root,id)?)?.len())?}for(id,nested)in[(2,7),(3,11),(4,4),(7,6),(8,5)]{for item in n::list(n::field(root,id)?)?{rows=n::add(rows,n::list(n::field(n::record(item)?,nested)?)?.len())?;if id==4{rows=n::add(rows,2)?}}}Ok(rows)}
 fn actions(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,r:&R,id:u16)->Result<(),ValueError>{for(index,a)in n::list(n::field(r,id)?)?.iter().enumerate(){n::entity(out,table,parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Text(2),Text(3),Real(4),Real(5),Real(6),Real(7),Real(8),Real(9),Real(10)])?,ACTION)?;}Ok(())}
 fn write(root:&R,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

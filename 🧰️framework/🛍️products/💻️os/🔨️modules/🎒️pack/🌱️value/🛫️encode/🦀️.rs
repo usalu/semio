@@ -72,7 +72,7 @@ impl Output{
     fn signed(&mut self,value:i64,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.varint(((value as u64)<<1)^((value>>63)as u64),control)}
 }
 
-struct Encoder<'a,'b,'c,'d>{symbols:&'a Symbols<'b>,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,writer:Option<&'c mut crate::os_pack::format::ControlledPackWriter>,chunking:bool,next_chunk:u32}
+struct Encoder<'a,'b,'c,'d>{symbols:&'a Symbols<'b>,options:&'a EncodeOptions,control:&'c mut NativeEncodeControl<'d>,writer:Option<&'c mut crate::format::ControlledPackWriter>,chunking:bool,next_chunk:u32}
 impl Encoder<'_,'_,'_,'_>{
     fn text(&mut self,text:&str,inline:bool,output:&mut Output)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;output.bytes(text.as_bytes(),self.control)}
     fn forced(&mut self,text:&str,output:&mut Output)->Result<(),PackRefusal>{let index=self.symbols.index(text,self.control)?.ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"Pack forced symbol missing"))?;output.varint(index,self.control)}
@@ -149,7 +149,7 @@ pub(super) fn document(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptio
         control.begin_stage(0)?;let mut symbols=Symbols{entries:Vec::new()};symbols.record(Some(spec),record,0,options.limits.max_depth,control)?;symbols.finish(control)?;
         
         let symbol_bytes=|output:&mut Output,control:&mut NativeEncodeControl<'_>|->Result<(),PackRefusal>{output.varint(symbols.entries.len()as u64,control)?;for symbol in &symbols.entries{control.checkpoint()?;output.varint(symbol.text.len()as u64,control)?;output.bytes(symbol.text.as_bytes(),control)?;}Ok(())};
-        let write=crate::os_pack::format::WriteOptions{required_flags:0,optional_flags:if options.canonical{crate::os_pack::format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=crate::os_pack::format::ControlledPackWriter::begin(&write,&options.limits,control)?;
+        let write=crate::format::WriteOptions{required_flags:0,optional_flags:if options.canonical{crate::format::OPTIONAL_CANONICAL}else{0},codec:options.codec};let mut writer=crate::format::ControlledPackWriter::begin(&write,&options.limits,control)?;
         
         let mut measure=Output::measure();symbol_bytes(&mut measure,control)?;let mut payload=Output::allocated(measure.length,control)?;symbol_bytes(&mut payload,control)?;writer.symbols(&payload.bytes.unwrap(),symbols.entries.len()as u64,control)?;
         
@@ -160,7 +160,7 @@ pub(super) fn document(spec:&RecordSpec,record:&RecordValue,options:&EncodeOptio
         if payload.length!=measure.length{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Pack document size changed after admission").into())}let bytes=payload.bytes.unwrap();let start=writer.position();let size=usize::try_from(options.frame_size.max(1)).map_err(|_|ValueError::new(ValueRefusalKind::OwnershipLimit,"Pack frame size exceeds address space"))?;let frames=bytes.len().div_ceil(size);control.scoped_stage(|control|{control.begin_stage(frames)?;for frame in bytes.chunks(size){writer.segment(crate::KIND_DOCUMENT,frame,control)?;control.step()?;}Ok::<_,PackRefusal>(())})?;let end=writer.position();
         let hash=schema_hash_controlled(spec,control)?;
         
-        let manifest=crate::os_pack::format::Manifest{schema_name:String::new(),schema_hash:hash,doc_span:crate::os_pack::ByteRange{offset:start,len:end-start},doc_frame_count:frames as u64,symbols_span:crate::os_pack::ByteRange{offset:0,len:0},chunk_table_span:crate::os_pack::ByteRange{offset:0,len:0},field_index_span:crate::os_pack::ByteRange{offset:0,len:0},uncompressed_body_len:bytes.len()as u64,field_count:record.fields.values().filter(|value|!matches!(value,FieldValue::Absent)).count()as u64,chunk_count:0,symbol_count:symbols.entries.len()as u64};writer.finish(&manifest,control)
+        let manifest=crate::format::Manifest{schema_name:String::new(),schema_hash:hash,doc_span:crate::ByteRange{offset:start,len:end-start},doc_frame_count:frames as u64,symbols_span:crate::ByteRange{offset:0,len:0},chunk_table_span:crate::ByteRange{offset:0,len:0},field_index_span:crate::ByteRange{offset:0,len:0},uncompressed_body_len:bytes.len()as u64,field_count:record.fields.values().filter(|value|!matches!(value,FieldValue::Absent)).count()as u64,chunk_count:0,symbol_count:symbols.entries.len()as u64};writer.finish(&manifest,control)
     }))
 }
 

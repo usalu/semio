@@ -53,7 +53,7 @@ impl ArtifactViewer for Din4108Viewer {
     const DIALECT: Dialect = DIN4108_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DIN4108_DOCUMENT_SCHEMA;
 
-    semio_s_artifact_norm_contract::norm_exact_viewer_store_ownership!();
+    semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
     fn initial_snapshot() -> Din4108Snapshot {
         Din4108Snapshot::default()

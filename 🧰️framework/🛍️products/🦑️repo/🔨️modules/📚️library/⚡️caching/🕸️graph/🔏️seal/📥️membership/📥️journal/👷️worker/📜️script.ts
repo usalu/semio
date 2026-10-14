@@ -47,7 +47,7 @@ export async function runFilesystemJournalWorkerV1(value: unknown): Promise<void
   const control: FilesystemJournalControlV1 = { signal: lifetime.signal, remainingMilliseconds: () => null, publish: async progress => { parentPort?.postMessage({ type: "progress", progress }); }, yieldContinuation: () => new Promise(resolve => setImmediate(resolve)) };
   const toolkitDirectory = dirname(fileURLToPath(import.meta.url));
   if (toolkitDirectory.split(/[\\/]/u).at(-1) !== identity) throw Error("Original immutable journal bundle directory required");
-  toolkit = await acquireResourceLease({ directory: join(toolkitDirectory, "../../../agents/resource-leases"), resource: "nx-tooling:" + identity, mode: "shared", signal: control.signal, control: { signal: control.signal, remainingMilliseconds: control.remainingMilliseconds, publish: async progress => { parentPort?.postMessage({ type: "toolkit-wait", progress }); }, yieldContinuation: control.yieldContinuation } });
+  toolkit = await acquireResourceLease({ directory: join(options.root, ".cache/b/l/m/data"), resource: "nx-tooling:" + identity, mode: "shared", signal: control.signal, control: { signal: control.signal, remainingMilliseconds: control.remainingMilliseconds, publish: async progress => { parentPort?.postMessage({ type: "toolkit-wait", progress }); }, yieldContinuation: control.yieldContinuation } });
   await mkdir(options.directory, { recursive: true });
   for (let path = options.directory; ; path = dirname(path)) { const status = await lstat(path); if (!status.isDirectory() || status.isSymbolicLink()) throw Error("Original journal worker directory ancestry required"); if (dirname(path) === path) break; }
   let native: any, refusal: unknown;

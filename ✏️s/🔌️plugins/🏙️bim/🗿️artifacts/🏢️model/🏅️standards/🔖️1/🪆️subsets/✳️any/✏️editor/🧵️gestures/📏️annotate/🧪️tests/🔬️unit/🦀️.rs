@@ -2,7 +2,7 @@ use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
 use crate::editor::bim::gestures::tests::fixture::room;
 use crate::editor::bim::gestures::tests::fixture::Rig;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
-use crate::{AnchorEnd, AnnotationAnchor, ModelInference, ModelMutation, Point2, TagCategory, WallSide};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, Point2, TagCategory, WallSide}, inferences::ModelInference, mutations::ModelMutation};
 use protocol::Inference;
 
 fn annotations(rig: &Rig) -> StoreyAnnotations {

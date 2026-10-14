@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Direct JavaScript Dependency Invocation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mode",
+    "selection"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "sync",
+        "lock"
+      ]
+    },
+    "selection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "all"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "owner"
+          ],
+          "properties": {
+            "kind": {
+              "const": "scope"
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\u0000]+$"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

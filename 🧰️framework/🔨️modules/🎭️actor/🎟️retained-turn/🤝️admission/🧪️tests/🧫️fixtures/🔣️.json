@@ -52,7 +52,7 @@
       "release": 0
     },
     {
-      "items": 0,
+      "items": 1,
       "copy": 0,
       "capacity": 0,
       "release": 0
@@ -65,7 +65,7 @@
     }
   ],
   "remaining": [
-    28,
+    27,
     25,
     3872,
     4096,
@@ -97,5 +97,12 @@
     512,
     512,
     8
-  ]
+  ],
+  "work": {
+    "clockBinding": 1771,
+    "absoluteDeadlineUs": 1000000,
+    "fuel": 64
+  },
+  "remainingFuel": 59,
+  "slotRemainingItems": 26
 }

@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-forms-document-contract": "bun repo run @semio-tech/forms-forms-rs:verify-forms-document-contract"
   },

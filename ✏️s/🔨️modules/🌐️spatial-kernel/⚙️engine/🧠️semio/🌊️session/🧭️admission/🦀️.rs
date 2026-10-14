@@ -113,7 +113,7 @@ impl Session {
             let(job,validation)=kernel.admit_tessellation_job(admission.handle.as_str(),tolerance)?;
             let validation_units=usize::from(validation);
             let original=registry.admission.take().ok_or_else(ownership_busy)?;
-            let row=RetainedTessellation{identity:original.identity,source:original.source,length:original.length,source_units:original.units+1,geometry:Some(original.handle),admission_claim:original.claim,validation_units,validation:validation.then(||semio_framework_3d_brep_queries::validation::BodyValidationJob::new(kernel.tessellation_body())),validated:validation_units==0,job,last_step:registry.clock,retired:false,output:None,previous_mesh:None};
+            let row=RetainedTessellation{identity:original.identity,source:original.source,length:original.length,source_units:original.units+1,geometry:Some(original.handle),admission_claim:original.claim,validation_units,validation:validation.then(||semio_framework_3d_brep_validation::BodyValidationJob::new(kernel.tessellation_body())),validated:validation_units==0,job,last_step:registry.clock,retired:false,output:None,previous_mesh:None};
             match registry.jobs.insert_reserved(original.job_key,row,grant){Ok((previous,receipt))=>{assert!(previous.is_none());retained=receipt;},Err((error,key,row))=>{registry.admission=Some(TessellationAdmission{identity:row.identity,source:row.source,length:row.length,tolerance:key.1,handle:row.geometry.unwrap(),claim:row.admission_claim,job_key:key,copied:0,phase:9,units:original.units,cancelled:original.cancelled});return Err(error);}}
         }
         if let Some(admission)=&mut registry.admission{admission.units+=1;}

@@ -54,7 +54,8 @@ use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDraw
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
 
 
@@ -76,7 +77,8 @@ use crate::{gis_map_drawing_child_handle, gis_map_value_child_handle, GisMapDraw
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
 pub(crate) fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
@@ -186,7 +188,9 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio_drawing_export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
@@ -253,7 +257,9 @@ use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_plugin::{ArtifactSerializer}; use semio_framework_plugin::io::{io_dispatch, ErasedComposeSource, IoDirection, IoKey, IoPayload};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_drawing::schema::geometry::{circle_normal_form, compose_affine, flatten_segments, semio_transform_affine};
 use semio_s_artifact_stdio_semio_drawing_export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};

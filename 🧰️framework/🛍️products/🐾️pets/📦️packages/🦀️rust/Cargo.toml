@@ -17,15 +17,9 @@ workspace = true
 name = "pets"
 path = "🦀️.rs"
 
-[features]
-sut = ["dep:serde_json"]
-
 [dependencies]
 serde = { workspace = true }
 # 🎯️ `float_roundtrip`: without it serde_json reads a long decimal one unit in the last place off (measured:
 # 0.9421396472025663 came back as 0.9421396472025664), while JSON.parse and Python round correctly. The subject
 # hosts and the unit tests must feed the twins the very doubles the other languages read, or nothing is bit-exact.
-serde_json = { workspace = true, optional = true, features = ["float_roundtrip"] }
-
-[dev-dependencies]
 serde_json = { workspace = true, features = ["float_roundtrip"] }

@@ -35,7 +35,7 @@ use super::super::effective_properties::EffectiveProperties;
 use super::super::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
 use super::super::wall_layout::WallLayout;
 use super::super::ModelInference;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -492,11 +492,11 @@ impl ModelValue {
         let base = size_of::<ModelValue>();
         base + match &self.data {
             Data::Structure(value) => value.members.values().map(|m| 256+(m.path.len()+m.boundary.len())*24).sum::<usize>()+(value.loads.len()+value.supports.len()+value.rigid_links.len())*256,
-            Data::Layout(layout) => layout.layer_offsets.len() * 8 + layout.footprint.len() * size_of::<crate::Vertex>() + layout.joins.iter().map(|join| size_of_val(join) + join.other.len()).sum::<usize>(),
+            Data::Layout(layout) => layout.layer_offsets.len() * 8 + layout.footprint.len() * size_of::<crate::standards::v1::subsets::any::schema::snapshot::Vertex>() + layout.joins.iter().map(|join| size_of_val(join) + join.other.len()).sum::<usize>(),
             Data::Curtain(layout) => (layout.u_edges.len() + layout.v_edges.len() + layout.ignored_u.len() + layout.ignored_v.len()) * 8 + layout.overrides.len() * 96 + (layout.stray.len() + layout.repeated.len()) * 32,
             Data::Solid(entry) => entry.solid.byte_size(),
             Data::Frame(frame) => size_of_val(&**frame) + frame.plan.len() * 64,
-            Data::Rooms(rooms) => rooms.values().map(|room| 128 + (room.outline.len() + room.holes.iter().map(Vec::len).sum::<usize>()) * size_of::<crate::Vertex>()).sum(),
+            Data::Rooms(rooms) => rooms.values().map(|room| 128 + (room.outline.len() + room.holes.iter().map(Vec::len).sum::<usize>()) * size_of::<crate::standards::v1::subsets::any::schema::snapshot::Vertex>()).sum(),
             Data::Plan(plan) => plan.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + plan.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + plan.texts.len() * 128,
             Data::View(view) => view.lines.regions.iter().map(|region| 96 + region.outer.len() * 24).sum::<usize>() + view.lines.polylines.iter().map(|line| 96 + line.vertices.len() * 24).sum::<usize>() + view.lines.texts.len() * 128,
             Data::Sheet(layout) => 512 + (layout.viewports.len() * 192) + layout.title_block.cells.iter().map(|cell| 96 + cell.value.len()).sum::<usize>() + layout.revisions.rows.iter().map(|row| 128 + row.description.len()).sum::<usize>() + layout.findings.len() * 96,

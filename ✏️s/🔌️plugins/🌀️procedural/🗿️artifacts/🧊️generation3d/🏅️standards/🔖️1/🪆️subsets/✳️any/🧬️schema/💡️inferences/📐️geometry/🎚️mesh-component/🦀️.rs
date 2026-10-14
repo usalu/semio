@@ -1,9 +1,22 @@
 //! 🎚️ `mesh.component` computes: translate, rotate, scale, proportional move and grid snap of selected vertices, edges or faces as stepped kernel mesh jobs.
 //!
 //! Selections are mesh element ids validated against the input mesh; edge ids are half-edge handles. Shared vertices of a selection move once.
+#![allow(clippy::result_large_err)]
 
-use super::mesh_support::{mode_element, owned_mesh, picked, point3, modeling, scalar, vector3, Element, KernelResult};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::mode_element;
+use semio_s_artifact_procedural_3d_mesh_support::owned_mesh;
+use semio_s_artifact_procedural_3d_mesh_support::picked;
+use semio_s_artifact_procedural_3d_mesh_support::point3;
+use semio_s_artifact_procedural_3d_mesh_support::modeling;
+use semio_s_artifact_procedural_3d_mesh_support::scalar;
+use semio_s_artifact_procedural_3d_mesh_support::vector3;
+use semio_s_artifact_procedural_3d_mesh_support::Element;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId};
 
 type Components = (Vec<VertexId>, Vec<EdgeId>, Vec<FaceId>);
@@ -74,6 +87,8 @@ fn snap_to_grid(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-component", include_str!("../../../🗂️catalogue/🔣️mesh-component.json"));
 /// 🗃️ The `mesh.component` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "mesh.component.moveVertices", start: move_vertices },

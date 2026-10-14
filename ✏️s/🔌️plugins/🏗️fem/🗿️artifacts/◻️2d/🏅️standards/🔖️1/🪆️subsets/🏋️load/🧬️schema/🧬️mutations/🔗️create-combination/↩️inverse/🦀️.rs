@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `CreateCombination` — always a `delete-combination` of the created id.
 use super::CreateCombination;
-use crate::standards::v1::subsets::any::schema::mutations::{delete_combination,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::delete_combination;
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CreateCombination, _base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<delete_combination::DeleteCombination>>(payload: &CreateCombination, _base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Fem2dMutation::DeleteCombination(delete_combination::DeleteCombination { id: payload.combination.id.clone() })]
+    vec![Op::from(delete_combination::DeleteCombination { id: payload.combination.id.clone() })]
 
     })())
 }

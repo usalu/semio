@@ -1,6 +1,6 @@
 //! 🚩️ `create-issue` payload. Raises an issue (a BCF topic): title, description, status, priority, assignee, author, the moment it was raised, labels, the elements it concerns, the clash it was raised from and the viewpoint (orbit camera, section box, isolated elements) that shows it.
 
-use crate::{Issue, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Issue, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

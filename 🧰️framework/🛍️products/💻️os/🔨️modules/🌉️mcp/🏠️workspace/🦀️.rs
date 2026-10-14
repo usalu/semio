@@ -1645,7 +1645,7 @@ impl PluginArtifactChannel {
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
             budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units, recursion_depth: INFERENCE_RECURSION_DEPTH },
-            retained: command.turn.grant,
+            retained: command.retained_policy,
             cancellation_id: command.cancellation_id.clone(),
             previous_state: None,
             requested_cache_mode: crate::schema::ArtifactInferenceCacheModeV1::Cold,
@@ -1793,7 +1793,7 @@ impl PluginArtifactChannel {
             .collect();
         let budget = headless_open_budget();
         let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| match error {
-            semio_framework_plugin_interpreter::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
+            semio_framework_plugin_guest_contract::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
             other => Self::not_wired("instantiate", other),
         })?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
@@ -1821,7 +1821,7 @@ impl PluginArtifactChannel {
                 Err(error) if semio_framework_plugin_host::retryable_lifecycle_turn(&error, &events) => {
                     owed.splice(0..0, events);
                 }
-                Err(error @ (semio_framework_plugin_interpreter::TurnFault::DeadlineExceeded | semio_framework_plugin_interpreter::TurnFault::FuelExhausted)) => {
+                Err(error @ (semio_framework_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_framework_plugin_guest_contract::TurnFault::FuelExhausted)) => {
                     semio_framework_async::block_on(self.runtime.drop_instance(guest));
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
                 }
@@ -1989,7 +1989,7 @@ impl PluginArtifactChannel {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 self.discard_instance(instance);
                 return Err(match error {
-                    semio_framework_plugin_interpreter::TurnFault::DeadlineExceeded | semio_framework_plugin_interpreter::TurnFault::FuelExhausted => {
+                    semio_framework_plugin_guest_contract::TurnFault::DeadlineExceeded | semio_framework_plugin_guest_contract::TurnFault::FuelExhausted => {
                         Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand exceeded one turn's ceiling ({error}); the instance was discarded") }
                     }
                     error => Self::not_wired("execute_turn", error),
@@ -3075,7 +3075,7 @@ fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             let budget = headless_codec_budget();
-            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_interpreter::GuestCallCancellation::default()).await {
+            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_guest_contract::GuestCallCancellation::default()).await {
                 Ok(replayed) => replayed,
                 Err(error) => {
                     refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
@@ -3111,8 +3111,8 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
 /// 🪶️ Resolves semantic snapshot conversion by its declared schema and exact dialect.
 /// 🖥️ Classifies the VM's intrinsic outcome separately from a provider rejection.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_turn_error(error: semio_framework_plugin_interpreter::TurnFault) -> semio_framework::io_schema::IoError {
-    use semio_framework_plugin_interpreter::TurnFault;
+fn guest_sqlite_turn_error(error: semio_framework_plugin_guest_contract::TurnFault) -> semio_framework::io_schema::IoError {
+    use semio_framework_plugin_guest_contract::TurnFault;
     use semio_framework_value::{ValueError, ValueRefusalKind};
     let kind = match &error {
         TurnFault::Cancelled => ValueRefusalKind::Canceled,
@@ -3135,7 +3135,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
     use semio_framework_os_kernel::io::{self};
-    use semio_framework_plugin_interpreter::{sqlite_wire, GuestCallCancellation};
+    use semio_framework_plugin_guest_contract::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
@@ -3161,7 +3161,7 @@ struct GuestSqliteImportFrame {
     database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
     bytes: Vec<u8>,
     coordinate: String,
-    wire: Option<semio_framework_plugin_interpreter::sqlite_wire::SnapshotPayloadResult>,
+    wire: Option<semio_framework_plugin_guest_contract::sqlite_wire::SnapshotPayloadResult>,
     diagnostics: Vec<semio_framework::Diagnostic>,
 }
 
@@ -3196,7 +3196,7 @@ fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::A
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
-    use semio_framework_plugin_interpreter::{sqlite_wire,GuestCallCancellation};
+    use semio_framework_plugin_guest_contract::{sqlite_wire,GuestCallCancellation};
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
     if database.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest SQLite import original database is absent")))}
     native.receive_nested::<GuestSqliteImportFrame,semio_framework::io_schema::IoResult<IoPayload>>(|slot,native|{

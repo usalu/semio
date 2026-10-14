@@ -8,7 +8,12 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_norm_contract::{app_surface, document, impl_norm_artifact_record, norm_owned_tool_job_factory, norm_results_window_config_owner, results_window_config};
+pub use semio_s_plugin_norm_app_surface as app_surface;
+pub use semio_s_plugin_norm_compliance as document;
+pub use semio_s_plugin_norm_results_config as results_window_config;
+pub use semio_s_plugin_norm_compliance::impl_norm_artifact_record;
+pub use semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory;
+pub use semio_s_plugin_norm_results_config::norm_results_window_config_owner;
 
 // #region 🔖️Types
 /// 🪵 Timber strength properties in SI (Pa, kg/m³) from EN 338 / EN 14080 tables.
@@ -203,7 +208,6 @@ pub struct TimberConnection {
     pub actions: Vec<ConnectionAction>,
 }
 //#endregion 🔖️Types
-
 
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -1049,16 +1053,11 @@ pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-
-
-
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-
-
 
 }
 pub mod mutations {
@@ -1067,16 +1066,12 @@ pub mod mutations {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
 
-
-
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-
-
 
 }
 pub use crate::standards::v1::subsets::any::schema::diff::En1995Diff;

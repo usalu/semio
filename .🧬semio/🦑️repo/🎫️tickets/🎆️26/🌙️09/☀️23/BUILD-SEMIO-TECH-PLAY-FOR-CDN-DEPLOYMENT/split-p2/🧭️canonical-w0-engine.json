@@ -1,0 +1,20 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+ "crate": "semio_s_artifact_remodel_remodeling",
+ "barrels": {
+  "editor::remodeling::engine::mesh": [
+   "editor::remodeling::engine::mesh",
+   "editor::remodeling::engine::mesh::surface",
+   "editor::remodeling::engine::mesh::repair",
+   "editor::remodeling::engine::mesh::atlas"
+  ],
+  "editor::remodeling::engine::sfm": [
+   "editor::remodeling::engine::sfm",
+   "editor::remodeling::engine::sfm::geometry"
+  ],
+  "editor::remodeling::engine::video": [
+   "editor::remodeling::engine::video",
+   "editor::remodeling::engine::video::h264"
+  ]
+ }
+}

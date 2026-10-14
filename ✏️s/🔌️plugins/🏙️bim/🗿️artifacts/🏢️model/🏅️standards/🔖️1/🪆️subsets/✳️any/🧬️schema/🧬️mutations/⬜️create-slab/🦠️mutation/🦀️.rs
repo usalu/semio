@@ -1,6 +1,6 @@
 //! ⬜️ `create-slab` payload. Brings a new slab onto a storey; its boundary and holes are closed counter-clockwise loops, area and solid are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Slab};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Slab}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

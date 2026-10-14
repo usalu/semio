@@ -1,9 +1,10 @@
 //! 🧩️ Typed catalogue creation with deterministic automatic placement.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{with_host, GraphEditor};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::GraphEditor;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -27,7 +28,7 @@ pub struct AddWidget {
 }
 
 fn creation_fault(message: impl Into<String>) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_WIDGET_ADD), message.into())
+    Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_WIDGET_ADD), message.into())
 }
 
 /// 🧯️ The source diagnostic keeps its exact reason while the UI uses a translated notice.
@@ -79,7 +80,7 @@ impl AddWidget {
                 return Err(creation_fault(format!("{} requires only its own descriptor fields; invalid {name}", self.kind)));
             }
         }
-        if self.kind == "outputExport" && self.format.as_deref().is_some_and(|format| !crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().any(|row| row.id == format)) { return Err(creation_fault("choose an artifact-owned 3D export format")); }
+        if self.kind == "outputExport" && self.format.as_deref().is_some_and(|format| !semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().any(|row| row.id == format)) { return Err(creation_fault("choose an artifact-owned 3D export format")); }
         if [self.x, self.y].into_iter().flatten().any(|number| !number.is_finite()) {
             return Err(creation_fault("widget coordinates must be finite"));
         }

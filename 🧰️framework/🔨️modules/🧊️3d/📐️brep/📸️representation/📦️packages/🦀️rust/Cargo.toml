@@ -16,6 +16,10 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
 semio-framework-mesh-engine.workspace = true
 semio-framework-number.workspace = true
 semio-framework-replication.workspace = true
@@ -26,7 +30,7 @@ semio-framework-value-derive.workspace = true
 semio-framework-async-macros.workspace = true
 semio-framework-geometry.workspace = true
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-replication = { workspace = true, features = ["history-index-serde"] }
+semio-framework-replication = { workspace = true }
 num-rational = "0.4"
 pack.workspace = true
 serde.workspace = true

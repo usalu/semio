@@ -79,7 +79,7 @@ fn every_example_declares_a_distinct_id_and_a_localized_label() {
 /// 🧫️ The committed quintet generator. Every fixture under
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/` is emitted from THIS table, so a
 /// hand-edited fixture is a bug by construction: run `cargo test -p semio-s-artifact-wfc-bitmap
-/// --features component-app-assembly --lib -- --ignored fixtures` to regenerate them.
+/// --lib -- --ignored fixtures` to regenerate them.
 #[cfg(test)]
 pub mod fixtures {
     use super::*;
@@ -266,7 +266,6 @@ fn emit_committed_fixtures() {
 /// (`✳️any/🧫️fixtures/🧩️mount-contract/🔣️.json`) from inside the crate: the dialect both surfaces share, the app, kind and
 /// tool ids, the window roster, the mutation roster and the bundled examples with their DSL and pack round trips. The
 /// `🧩️mount-contract` case runs the same statement through the platform.
-#[cfg(feature = "component-app-assembly")]
 mod mount_contract {
     use crate::examples::{flowers_24, rooms_16};
     use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};

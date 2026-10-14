@@ -13,7 +13,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
     pub enum FemApps: PluginApp {
         Fem2dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp>>),
-        Fem2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_2d::viewer::fem2d::Fem2dViewer>>),
+        Fem2dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>>),
         Fem3dEditor(VcsArtifactApp<EditorApp<semio_s_artifact_fem_3d::editor::fem3d::Fem3dPlayApp>>),
         Fem3dViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_fem_3d::viewer::fem3d::Fem3dViewer>>),
     }
@@ -44,12 +44,12 @@ pub fn plugin() -> Result<Plugin<FemApps>, PluginAssemblyError> {
         .declare_artifact(semio_s_artifact_fem_2d::artifact::<FemApps>())
         .declare_artifact(semio_s_artifact_fem_3d::artifact::<FemApps>())
         .editor_mutation_roster::<semio_s_artifact_fem_2d::editor::fem2d::Fem2dPlayApp>()
-        .viewer_mutation_roster::<semio_s_artifact_fem_2d::viewer::fem2d::Fem2dViewer>()
+        .viewer_mutation_roster::<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>()
         .editor_mutation_roster::<semio_s_artifact_fem_3d::editor::fem3d::Fem3dPlayApp>()
         .viewer_mutation_roster::<semio_s_artifact_fem_3d::viewer::fem3d::Fem3dViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d::computation_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::computation_artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::computation_artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d::document_artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::document_artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_fem_3d::document_artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist fem2d/fem3d edits to the open document".into(), optional: false })

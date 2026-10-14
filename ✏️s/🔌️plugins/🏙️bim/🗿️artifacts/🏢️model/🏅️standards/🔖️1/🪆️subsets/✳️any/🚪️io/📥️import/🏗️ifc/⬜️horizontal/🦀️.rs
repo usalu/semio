@@ -7,9 +7,9 @@ use super::data::label;
 use super::reader::{text, Doc, Section};
 use super::spatial::{authoring_of, phase_of};
 use super::Import;
-use crate::{Layer, LayerFunction, Point2, Roof, RoofShape, RoofType, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Layer, LayerFunction, Point2, Roof, RoofShape, RoofType, Vertex};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn roof_type_for(i: &mut Import<'_>, ifc: u64, thickness: f64) -> String {
     if let Some(known) = i.doc.index.types.get(&ifc).and_then(|kind| i.type_ids.get(kind)).filter(|id| i.model.roof_types.contains_key(*id)) {

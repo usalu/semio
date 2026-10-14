@@ -10,7 +10,7 @@
 //! paired import leaf refuses the inverse by name rather than fabricating triangles. Coordinates are
 //! quantized by LAS's own scaled-integer storage (`SemioMeshToLas` writes a fine `0.0001` scale);
 //! this is a real property of the format, never claimed bit-exact.
-use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_las::LasSnapshot;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::las::v1_0::any::SemioMeshToLas;

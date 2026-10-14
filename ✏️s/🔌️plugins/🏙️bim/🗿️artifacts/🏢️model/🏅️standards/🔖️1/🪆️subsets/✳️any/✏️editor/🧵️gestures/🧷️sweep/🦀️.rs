@@ -5,10 +5,10 @@
 use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
 use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
 use crate::editor::bim::entities::wall_sweeps::baseboard;
-use crate::mutations::create_wall_sweep::CreateWallSweep;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
-use crate::{ModelMutation, ModelSnapshot, Profile, Wall, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, Wall, WallSide, WallSweep}};
 
 /// 📏️ The metres between two samples of the ghost along an arc wall.
 const STEP: f64 = 0.25;

@@ -1,9 +1,9 @@
 //! ➕ `create-widget` payload — brings a new id-keyed [`Widget`] into existence at an insertion
 //! index (FINAL-state, per `📓️derivation-rules.md` rule 3's addressing convention).
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 //#region 🔖️CreateWidget
 /// ➕ Full initial payload for a new widget, placed at `index` if no widget with the same id
@@ -19,19 +19,20 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "widget", kind: "create-widget", record: "CreatedWidget" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::create_widget::diff::diff(self, base)
+        crate::create_widget::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        crate::standards::v1::subsets::any::schema::mutations::create_widget::inverse::inverse(self, base)?
+        crate::create_widget::inverse::inverse(self, base)?
     
     })
 }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        use crate::terminology::{generation3d_catalogue_name, Generation3dLabels};
-        let id = crate::widget_id(&self.widget);
+        use semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name;
+        use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
+        let id = semio_s_artifact_procedural_3d_model::widget_id(&self.widget);
         match &self.widget {
             Widget::Neuron { neuron_kind, .. } => {
                 let name = |labels: &'static Generation3dLabels| generation3d_catalogue_name(labels, neuron_kind, neuron_kind).to_string();
@@ -42,7 +43,7 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Crea
     }
 
     fn target(&self) -> Vec<String> {
-        vec![crate::widget_id(&self.widget).to_string()]
+        vec![semio_s_artifact_procedural_3d_model::widget_id(&self.widget).to_string()]
     }
 }
 //#endregion 🔖️CreateWidget

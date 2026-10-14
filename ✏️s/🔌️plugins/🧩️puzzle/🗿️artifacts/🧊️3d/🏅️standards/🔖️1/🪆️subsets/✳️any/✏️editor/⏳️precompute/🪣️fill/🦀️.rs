@@ -4,7 +4,7 @@
 //! tool run ledger owns and steps (ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS `📋️tool-run-contract.md`
 //! §2.7, §3.7).
 
-use crate::editor::puzzle3d::modes::edit::windows::main::VORTEX_MARKER_MESH_KIND;
+use crate::editor::puzzle3d::snapshot::VORTEX_MARKER_MESH_KIND;
 use crate::editor::puzzle3d::precompute::brush::{
     brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, fill_rng, resolve_object_kind_mesh_url, resolve_placed_object_mesh_url, vortex_world_from_object, AttractionVortexContext, BrushCatalogView,
     BrushFillVortexTarget, BrushSceneView, TargetVortexWorld,
@@ -14,8 +14,8 @@ use crate::editor::puzzle3d::precompute::geometry::{
     CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec,
     Pose3d, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
-use crate::editor::puzzle3d::{empty_scene_snapshot, puzzle3d_next_object_label, Puzzle3dSceneSnapshot, Puzzle3dObject};
-use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
+use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::snapshot::puzzle3d_next_object_label, crate::editor::puzzle3d::snapshot::Puzzle3dSceneSnapshot, crate::editor::puzzle3d::snapshot::Puzzle3dObject};
+use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{
     AttractionProps, BrushCompatibleCandidate, BrushHostRules, BrushPlacePayload, BrushPreviewState, CableKindCatalog, EngineSceneObject, FillRunCheckpoint, FillRunCounter, FillRunReason, FillRunStage, KindCompatEntry,
     KindCatalogBundle, ObjectKind, SceneConfig, VortexKindCatalog, VortexProps, WorldVolumeProps,
@@ -503,7 +503,7 @@ fn retained_candidate_suggestion_weight(candidate: &BrushCompatibleCandidate, we
 }
 
 fn retained_joint_weight(weights: &RetainedBrushKindWeights, object_kind_id: &str, vortex_kind_id: &str) -> f64 {
-    let sep = crate::editor::puzzle3d::PUZZLE3D_JOINT_WEIGHT_SEP;
+    let sep = crate::editor::puzzle3d::snapshot::PUZZLE3D_JOINT_WEIGHT_SEP;
     let composite = format!("{object_kind_id}{sep}{vortex_kind_id}");
     if let Some(weight) = weights.vortex_weights.get(&composite) {
         return *weight;
@@ -2400,7 +2400,7 @@ pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionPr
     use crate::standards::v1::subsets::any::io::binary::mutations::encode_op;
     use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices,create_object};
 
-    let mut document: crate::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
+    let mut document: crate::standards::v1::subsets::any::schema::Puzzle3dObject = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(object)).ok()?;
     let kind_id = object.object_kind.as_deref().unwrap_or("object");
     if document.label.as_deref().map(str::is_empty).unwrap_or(true) {
         document.label = Some(puzzle3d_next_object_label(peers, catalog_snapshot, kind_id));

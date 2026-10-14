@@ -1,0 +1,53 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-ui-text"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-text"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-theme = { path = "../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+semio-framework-font-anta-latin-regular = { path = "../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-kelly-slab-latin-regular = { path = "../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-share-tech-mono-latin-regular = { path = "../../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-regions-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-flags-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-symbols-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-objects-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-activities-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-travel-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-food-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-nature-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-people-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-faces-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-joined-forms-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/📦️packages/🦀️rust" }
+semio-framework-font-noto-emoji-supplement-regular = { path = "../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+parley = { version = "0.5.0", default-features = false, features = ["libm"] }
+swash = { version = "0.2.6", default-features = false, features = ["render","std"] }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.140"
+semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+semio-framework-async = { path = "../../../../⏳️async/📦️packages/🦀️rust" }
+web-sys = { version = "0.3.98", features = ["Window","Response","Request","RequestInit","RequestMode"] }

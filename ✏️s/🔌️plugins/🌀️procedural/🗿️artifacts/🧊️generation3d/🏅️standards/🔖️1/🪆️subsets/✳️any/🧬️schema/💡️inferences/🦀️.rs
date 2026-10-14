@@ -3,9 +3,12 @@
 //! shape mirrors `🧬️mutations/`: this file is the family-root assembly (never mod's/includes the
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
 
-use super::geometry::{infer_geometry, GeometryInput};
-use super::topology::compute_generation3d_topology;
+use semio_s_artifact_procedural_3d_geometry::infer_geometry;
+use semio_s_artifact_procedural_3d_geometry::GeometryInput;
+use crate::topology::compute_generation3d_topology;
 use ::semio_framework_schema::ArtifactSchema;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
@@ -68,6 +71,13 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use super::geometry::{Generation3dFaultRecord, Generation3dGeometryRecord, Generation3dOutputRecord, Generation3dWidgetRecord};
-pub use super::topology::Generation3dTopology;
+
+pub use crate::topology::Generation3dTopology;
 //#endregion 🔁️Re-exports
+
+#[path = "."]
+pub mod topology {
+    #[path = "🧭topology/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}

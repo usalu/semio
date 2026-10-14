@@ -1,9 +1,9 @@
 use crate::euler::make_vertex;
 use crate::primitives::make_box;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::arena::ArenaId;
 use semio_framework_3d_brep_representation::topology::{history, Body, EntityRef, ReachabilityJob, ReachabilityStep};
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 
 /// ♻️ A closed box plus one orphan vertex: `compact` must free exactly the orphan and nothing
 /// the box's solid transitively reaches.

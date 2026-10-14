@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "entry": [
+    "key Ä",
+    [
+      1,
+      2,
+      3
+    ]
+  ],
+  "left": null,
+  "right": 2,
+  "implementationBounds": [
+    "K: RetainedClone",
+    "V: RetainedClone"
+  ],
+  "coldDeclarationUnconstrained": true
+}

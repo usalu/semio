@@ -1,5 +1,5 @@
-use super::*;
-use crate::standards::v1::subsets::any::schema::default_generation3d_snapshot;
+use semio_s_artifact_procedural_3d_mutations::*;
+use semio_s_artifact_procedural_3d_model::default_generation3d_snapshot;
 use change_generation_value::ChangeGenerationValue;
 use change_schema::ChangeSchema;
 use connect_synapse::ConnectSynapse;
@@ -18,13 +18,14 @@ use rename_generation::RenameGeneration;
 use update_camera::UpdateCamera;
 use update_synapse::UpdateSynapse;
 use update_widget::UpdateWidget;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_selection_removal,generation3d_widget_removal};
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_mutations::generation3d_selection_removal;
+use semio_s_artifact_procedural_3d_mutations::generation3d_widget_removal;
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
-fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead {
-    let mut forward = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection.clone());
+fn round_trip(projection: &Generation3dSnapshot, operation: &Generation3dMutation) -> semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead {
+    let mut forward = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(projection.clone());
     apply_generation3d_mutation(&mut forward, operation).expect("valid mutation");
-    let mut restored = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new((*forward).clone());
+    let mut restored = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new((*forward).clone());
     for back in operation.inverse(projection).expect("valid retained mutation inverse fixture") {
         apply_generation3d_mutation(&mut restored, &back).expect("valid inverse mutation");
     }
@@ -106,8 +107,8 @@ fn generation_mutation_bridge_covers_every_variant() {
 }
 
 /// 🎬️ Replays `leaves` on a copy of `base`, the way the store does.
-fn replay(base: &Generation3dSnapshot, leaves: &[Generation3dMutation]) -> crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead {
-    let mut snapshot = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(base.clone());
+fn replay(base: &Generation3dSnapshot, leaves: &[Generation3dMutation]) -> semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead {
+    let mut snapshot = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(base.clone());
     for leaf in leaves {
         apply_generation3d_mutation(&mut snapshot, leaf).unwrap_or_else(|refused| panic!("{leaf:?} refused: {refused:?}"));
     }
@@ -232,7 +233,7 @@ fn move_widget_round_trip_replaces_when_present() {
 /// success (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`'s `MutationDiff` contract).
 #[test]
 fn move_widget_on_a_missing_widget_is_rejected_and_leaves_the_projection_untouched() {
-    let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(default_generation3d_snapshot());
+    let mut projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(default_generation3d_snapshot());
     let mutation = Generation3dMutation::MoveWidget(MoveWidget { id: "ghost".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } });
     let refused = apply_generation3d_mutation(&mut projection, &mutation).expect_err("a missing move target must be rejected");
     assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", semio_framework_diagnostic::Severity::Error)]);
@@ -250,7 +251,7 @@ fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
     ] {
         let (diff, expected) = <Generation3dMutation as protocol::Mutation<Generation3dSnapshot>>::diff(&mutation, &base).into_parts();
         diff.retire_cold();
-        let mut projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(base.clone());
+        let mut projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(base.clone());
         match apply_generation3d_mutation(&mut projection, &mutation) {
             Err(refused) => {
                 assert_eq!(refused, expected, "{mutation:?}");

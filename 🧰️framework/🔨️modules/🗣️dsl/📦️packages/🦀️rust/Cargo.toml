@@ -18,6 +18,8 @@ name = "semio_framework_dsl"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-lexical = { path="../../🔍️lexer/📦️packages/🦀️rust" }
+semio-framework-dsl-token = { path="../../🔤️token/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 

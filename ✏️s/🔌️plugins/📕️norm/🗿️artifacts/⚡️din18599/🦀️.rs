@@ -10,7 +10,12 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_norm_contract::{app_surface, document, impl_norm_artifact_record, norm_owned_tool_job_factory, norm_results_window_config_owner, results_window_config};
+pub use semio_s_plugin_norm_app_surface as app_surface;
+pub use semio_s_plugin_norm_compliance as document;
+pub use semio_s_plugin_norm_results_config as results_window_config;
+pub use semio_s_plugin_norm_compliance::impl_norm_artifact_record;
+pub use semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory;
+pub use semio_s_plugin_norm_results_config::norm_results_window_config_owner;
 
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -271,7 +276,6 @@ impl MonthlyClimate {
     }
 }
 
-
 //#region 🔖️Composition
 /// 🧩️ Design §20.15 model (a): the climate is parent-owned persisted state (`Din18599Snapshot::climate`); the composed
 /// `s.stdio.semio`/`table` child (`climateTable`, twelve rows — one per calendar month — and the columns `thetaEC`/`gHWM2`)
@@ -279,7 +283,7 @@ impl MonthlyClimate {
 /// the child from the parent's own state through `genesis_child_pack` (`follow_derivable_children`). No leaf reads child
 /// content, so a decoded, reloaded or remote document folds and evaluates with its own climate.
 //#region 🔖️ChildTypes
-pub type Din18599ClimateChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot>;
+pub type Din18599ClimateChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot>;
 
 /// 🪆️ Child slot of the derived climate table (the camelCase name of `Din18599Snapshot::climate_table`).
 pub const DIN18599_CLIMATE_TABLE_SLOT: &str = "climateTable";
@@ -288,9 +292,13 @@ pub const DIN18599_CLIMATE_TABLE_SLOT: &str = "climateTable";
 //#region 🔖️Converters
 /// 🌉 `MonthlyClimate`'s two parallel twelve-month arrays -> `table` rows: one row per calendar month (month = row index
 /// + 1), two columns (`thetaEC: Float`, `gHWM2: Float`).
-pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::STDIO_SEMIOTABLE_DOCUMENT_SCHEMA;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float }],
@@ -300,9 +308,9 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_art
 
 /// 🔁️ Inverse of [`din18599_climate_table_from_data`] for a foreign reader of the derived child; a short or non-numeric row
 /// reads `0.0` for the missing month.
-pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableRow;
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
     fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
         match row.and_then(|row| row.cells.get(index)) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
@@ -872,16 +880,11 @@ pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-
-
-
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-
-
 
 }
 pub mod mutations {
@@ -890,16 +893,12 @@ pub mod mutations {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
 
-
-
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-
-
 
 }
 pub use crate::standards::v1::subsets::any::schema::diff::Din18599Diff;

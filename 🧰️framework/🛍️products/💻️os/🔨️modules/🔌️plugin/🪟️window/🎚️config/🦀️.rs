@@ -141,8 +141,8 @@ impl WindowConfigSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{O
 pub struct WindowConfigSnapshot {
     window_id: String,
     window_kind_id: &'static str,
-    generation: u64,
-    revision: [u8; 32],
+    pub(crate) generation: u64,
+    pub(crate) revision: [u8; 32],
     snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
@@ -203,8 +203,8 @@ pub(crate) trait ErasedWindowConfigPublication: Send {
 
 struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     window_id: ControlledRetirement<String>,
-    operation: semio_framework_job::OperationId,
-    generation: u64,
+    pub(crate) operation: semio_framework_job::OperationId,
+    pub(crate) generation: u64,
     revision: [u8;32],
     actor: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
     pending: std::mem::ManuallyDrop<Vec<O::Mutation>>,
@@ -212,7 +212,7 @@ struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     publication: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<O::State, O::Mutation>>>,
     ingress: ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
     cancelled: Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<O: WindowConfigOwner> TypedWindowConfigPublication<O> {

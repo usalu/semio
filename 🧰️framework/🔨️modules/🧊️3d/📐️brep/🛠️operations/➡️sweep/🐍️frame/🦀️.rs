@@ -9,11 +9,11 @@
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
 use semio_framework_3d_brep_representation::topology::Wire;
-use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_curve::curve_ops::closest_parameter;
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 /// 🐍 One sampled path station: world point and unit tangent for frame propagation.
 pub(super) struct Station {

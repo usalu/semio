@@ -1,0 +1,290 @@
+[
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "🗞️Actor · General Wire Turn Source",
+    "policy": {
+      "version": 1,
+      "owner": "actor:wire-turn:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:test-wire-turn-source"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-wire-turn-source"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-wire-turn-source"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:test-wire-turn-source"
+        ]
+      ]
+    }
+  },
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "🏛️Actor · Product Independent Source",
+    "policy": {
+      "version": 1,
+      "owner": "actor:product-independent:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:test-product-independent-source"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-product-independent-source"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-product-independent-source"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:test-product-independent-source"
+        ]
+      ]
+    }
+  },
+  {
+    "file": ".vscode/🧩️launch.seed.jsonc",
+    "name": "🏛️Actor · Canonical Architecture",
+    "policy": {
+      "version": 1,
+      "owner": "actor:canonical-architecture:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:canonical-architecture"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:canonical-architecture"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:canonical-architecture"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:canonical-architecture"
+        ]
+      ]
+    }
+  },
+  {
+    "file": ".vscode/launch.json",
+    "name": "🗞️Actor · General Wire Turn Source",
+    "policy": {
+      "version": 1,
+      "owner": "actor:wire-turn:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:test-wire-turn-source"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-wire-turn-source"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-wire-turn-source"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:test-wire-turn-source"
+        ]
+      ]
+    }
+  },
+  {
+    "file": ".vscode/launch.json",
+    "name": "🏛️Actor · Product Independent Source",
+    "policy": {
+      "version": 1,
+      "owner": "actor:product-independent:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:test-product-independent-source"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-product-independent-source"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:test-product-independent-source"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:test-product-independent-source"
+        ]
+      ]
+    }
+  },
+  {
+    "file": ".vscode/launch.json",
+    "name": "🏛️Actor · Canonical Architecture",
+    "policy": {
+      "version": 1,
+      "owner": "actor:canonical-architecture:caller",
+      "maximumElapsedMilliseconds": 600000
+    },
+    "request": [
+      "run",
+      "@semio-tech/framework-actor:canonical-architecture"
+    ],
+    "capabilities": {
+      "tool": "nx",
+      "workspaceRoot": "/Users/ueli/Documents/semio",
+      "arguments": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:canonical-architecture"
+      ],
+      "selection": [
+        "repo",
+        "run",
+        "@semio-tech/framework-actor:canonical-architecture"
+      ],
+      "buildMode": "prototype",
+      "native": {
+        "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "transport": {
+          "maximumBytes": 134217728,
+          "maximumLines": 1000000
+        },
+        "child": {
+          "maximumElapsedMilliseconds": 3600000
+        },
+        "network": {
+          "offline": false
+        }
+      },
+      "launches": [
+        [
+          "repo",
+          "run",
+          "@semio-tech/framework-actor:canonical-architecture"
+        ]
+      ]
+    }
+  }
+]

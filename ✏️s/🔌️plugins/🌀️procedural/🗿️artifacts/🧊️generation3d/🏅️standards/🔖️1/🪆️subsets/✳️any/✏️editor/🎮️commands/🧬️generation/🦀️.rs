@@ -2,12 +2,12 @@
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
 use crate::editor::generation3d::Generation3dCommand;
-use crate::standards::v1::subsets::any::schema::generation_host_snapshot_for;
-use crate::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::generation_host_snapshot_for;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
-use crate::standards::v1::subsets::any::schema::mutations::{generation_mutation_to_generation3d};
+use semio_s_artifact_procedural_3d_mutations::generation_mutation_to_generation3d;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::{apply_generation_mutation, generation_operations, select_generation, selected_generation};
 use semio_framework_os_flow::forms_bridge::flow_host_snapshot_to_form_spec;

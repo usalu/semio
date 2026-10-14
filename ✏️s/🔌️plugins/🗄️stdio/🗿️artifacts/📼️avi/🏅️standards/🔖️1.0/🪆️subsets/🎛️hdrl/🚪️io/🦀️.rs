@@ -1144,9 +1144,7 @@ pub mod playback {
         const ARTIFACT_NAME: &'static str = "AVI Video";
         const COMPONENT_KIND: &'static str = "video";
 
-        fn cursor(snapshot: &AviSnapshot) -> Result<AviEncodeCursor, Fault> {
-            Ok(AviEncodeCursor::new(snapshot))
-        }
+        fn cursor(snapshot: &AviSnapshot) -> AviEncodeCursor { AviEncodeCursor::new(snapshot) }
 
         fn advance(cursor: &mut AviEncodeCursor, snapshot: &AviSnapshot, maximum_bytes: usize) -> Result<IncrementalMediaAdvance, Fault> {
             cursor.advance(snapshot, maximum_bytes).map(|advance| match advance {

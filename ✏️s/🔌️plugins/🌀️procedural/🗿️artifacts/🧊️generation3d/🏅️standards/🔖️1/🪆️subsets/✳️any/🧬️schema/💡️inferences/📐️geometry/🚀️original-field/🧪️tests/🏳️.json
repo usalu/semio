@@ -1,0 +1,16 @@
+{
+ "version":1,
+ "widgets":[
+  {"id":"surface Ä","kind":"brep.surface.plane","params":{"plane":{"origin":[1,2,3],"normal":[0,0,2]}}},
+  {"id":"surface point","kind":"brep.evaluate.surfacePoint","params":{"u":2,"v":3}},
+  {"id":"surface normal","kind":"brep.evaluate.surfaceNormal","params":{"u":2,"v":3}}
+ ],
+ "wires":[
+  {"from":"surface Ä","fromPort":"shape","to":"surface point","toPort":"surface"},
+  {"from":"surface Ä","fromPort":"shape","to":"surface normal","toPort":"surface"}
+ ],
+ "frame":{"x":[0,1,0],"y":[-1,0,0],"z":[0,0,1],"origin":[1,2,3]},
+ "expected":{"point":[-2,4,3],"normal":[0,0,1]},
+ "tolerance":1e-12,
+ "sameOriginalCallerClose":true
+}

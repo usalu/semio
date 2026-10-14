@@ -1,5 +1,11 @@
 //! 📋️ Canonical simulation results and summary tables.
 
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_meters as meters;
+extern crate semio_s_plugin_energy_engine_metrics as metrics;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_output as output;
+
 use crate::error::Diagnostics;
 use crate::meters::MeterTable;
 use crate::metrics::{EnvironmentalMetrics, ResilienceMetrics};
@@ -137,35 +143,35 @@ pub struct SurfaceEnergySummary {
 /// `SimulationModel::surfaces`/`::windows` already do.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct SurfaceEnergyTable {
-    pub(crate) opaque: FixedTable<EntityId, SurfaceEnergy>,
-    pub(crate) windows: FixedTable<EntityId, SurfaceEnergy>,
+    pub opaque: FixedTable<EntityId, SurfaceEnergy>,
+    pub windows: FixedTable<EntityId, SurfaceEnergy>,
 }
 
 impl SurfaceEnergyTable {
     /// 🧺️ Reserves both backings once. Called from the numerical job's initialization stages.
-    pub(crate) fn admit(&mut self, opaque: usize, windows: usize) -> Result<(), FixedTableError> {
+    pub fn admit(&mut self, opaque: usize, windows: usize) -> Result<(), FixedTableError> {
         self.opaque.admit(opaque)?;
         self.windows.admit(windows)
     }
 
-    pub(crate) fn insert_opaque(&mut self, id: EntityId) -> Result<(), FixedTableError> {
+    pub fn insert_opaque(&mut self, id: EntityId) -> Result<(), FixedTableError> {
         self.opaque.insert(id, SurfaceEnergy::default()).map(|_| ())
     }
 
-    pub(crate) fn insert_window(&mut self, id: EntityId) -> Result<(), FixedTableError> {
+    pub fn insert_window(&mut self, id: EntityId) -> Result<(), FixedTableError> {
         self.windows.insert(id, SurfaceEnergy::default()).map(|_| ())
     }
 
-    pub(crate) fn opaque_mut(&mut self, id: EntityId) -> Option<&mut SurfaceEnergy> {
+    pub fn opaque_mut(&mut self, id: EntityId) -> Option<&mut SurfaceEnergy> {
         self.opaque.get_mut(&id)
     }
 
-    pub(crate) fn window_mut(&mut self, id: EntityId) -> Option<&mut SurfaceEnergy> {
+    pub fn window_mut(&mut self, id: EntityId) -> Option<&mut SurfaceEnergy> {
         self.windows.get_mut(&id)
     }
 
     /// 🧹️ One bounded retirement step, mirroring how the job drains `surfaces`/`windows`.
-    pub(crate) fn pop(&mut self) -> bool {
+    pub fn pop(&mut self) -> bool {
         self.windows.pop().is_some() || self.opaque.pop().is_some()
     }
 

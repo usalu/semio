@@ -43,7 +43,7 @@ pub(crate) struct MountedMemberReceipt {
     inverse_count: usize,
     validated_operations: usize,
     group_offset: usize,
-    index: usize,
+    pub(crate) index: usize,
     phase: usize,
     edit_offset: usize,
     edit: MountedReceiptBytes,
@@ -54,7 +54,7 @@ pub(crate) struct MountedMemberReceipt {
     triples: ManuallyDrop<VecDeque<MemberMutationTriple>>,
     close_field: usize,
     operation_schema: Option<[(usize, usize); 2]>,
-    closing: bool,
+    pub(crate) closing: bool,
     transferred: bool,
 }
 

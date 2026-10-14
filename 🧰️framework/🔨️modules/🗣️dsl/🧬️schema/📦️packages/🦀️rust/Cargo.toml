@@ -17,6 +17,7 @@ name = "semio_framework_dsl_record"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record-model = { path="../../📐️model/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -7,7 +8,7 @@ import { BROWSER_CANVAS_HOT_CRATES } from "../../../🖱️ui/🖌️render/🏗
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 /** 🦀️ General Surface routes own Paint, Terrain and TiledMap browser sessions plus neutral graph scene materialization. */
 import { join } from "node:path";
 
@@ -38,7 +39,7 @@ class WasmScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runOwnedCommand("bun", ["test", join(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-surface"], cwd: this.root, extraArgs: segments }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-surface"], cwd: this.root, extraArgs: segments }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -55,7 +56,7 @@ class SourceScript extends BundleScript{
 class SceneWireNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-scene-wire-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 

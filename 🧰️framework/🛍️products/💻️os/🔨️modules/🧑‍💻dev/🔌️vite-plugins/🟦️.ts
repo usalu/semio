@@ -1,4 +1,6 @@
-import { phaseCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {receiveScriptProcessInvocation} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {checkResourceLeaseControl} from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 /** 🔌️ The dev server's own Vite plugins — backbone document IO, the content-addressed blob
  * endpoint, the plugin hot-swap SSE stream and the production test boundary — kept in a module of
  * their own so `⚙️vite.config.ts` can mount them without pulling `📜️script.ts`'s task router (and
@@ -782,10 +784,17 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
           const promise = (async () => {
             console.log(`[lazy-activate] build ${pluginId} through the build driver`);
             const { buildComponentClosureV1 } = await import("../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
-            await buildComponentClosureV1(REPO_ROOT, new Set([component.pluginId]), { control: phaseCompilerAdmissionControlV1(controller.signal, 0, progress => { for (const listener of listeners) listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`); }, () => new Promise(done => setImmediate(done))), log: (text) => { const trimmed = text.trim(); if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength)); } }).catch((error: unknown) => { throw controller.signal.aborted ? new Error(`cancelled ${pluginId}`) : error; });
-            await publishOne(pluginId);
-            const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
-            send({ kind: "built", pluginId, rebuiltAt });
+            await receiveScriptProcessInvocation(process.env,async original=>{
+              const {repositoryCargoNetworkV1}=await import("../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts");
+              const parent=scriptCompilerAdmissionControlV1(original,"vite:lazy-activate:"+pluginId,0,controller.signal);
+              const control={...parent,publish:async(progress:Parameters<typeof parent.publish>[0])=>{await parent.publish(progress);for(const listener of listeners)listener(`Waiting for compiler capacity (${progress.elapsedMs}ms)`);}};
+              await buildComponentClosureV1(REPO_ROOT,new Set([component.pluginId]),{control,network:repositoryCargoNetworkV1(original,REPO_ROOT),log:text=>{const trimmed=text.trim();if(trimmed)for(const listener of listeners)listener(trimmed.slice(0,STREAM_MUX_BOUNDS_V1.maxDetailLength));}});
+              checkResourceLeaseControl(control);
+              await publishOne(pluginId);
+              checkResourceLeaseControl(control);
+              const rebuiltAt=readActivationReceipt(options.receiptDirectory).plugins.find((row)=>row.pluginId===pluginId)?.rebuiltAt??Date.now();
+              send({kind:"built",pluginId,rebuiltAt});
+            }).catch((error:unknown)=>{throw controller.signal.aborted?new Error(`cancelled ${pluginId}`):error;});
           })().finally(() => { jobs.delete(pluginId); });
           job = { controller, promise, listeners, owners: 0 };
           jobs.set(pluginId, job);

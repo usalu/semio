@@ -2,7 +2,7 @@
 
 use super::super::delete_issue::DeleteIssue;
 use super::CreateIssue;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateIssue, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.issues.contains_key(&payload.id) {

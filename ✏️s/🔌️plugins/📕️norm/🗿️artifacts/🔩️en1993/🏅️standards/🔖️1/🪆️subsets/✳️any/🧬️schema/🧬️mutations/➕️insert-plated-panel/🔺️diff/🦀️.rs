@@ -1,8 +1,8 @@
 //! ➕️ `insert-plated-panel` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertPlatedPanel;
-use crate::diff::{En1993Diff, En1993PlatedPanelDelta};
-use crate::En1993Snapshot;
+use crate::insert_plated_panel::InsertPlatedPanel;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993PlatedPanelDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertPlatedPanel, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.plated_panels.iter().any(|existing| existing.id == payload.plated_panel.id) {

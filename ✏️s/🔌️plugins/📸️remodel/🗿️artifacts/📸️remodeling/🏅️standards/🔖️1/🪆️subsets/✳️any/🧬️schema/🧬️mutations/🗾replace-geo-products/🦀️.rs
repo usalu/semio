@@ -1,9 +1,9 @@
 //! 🔁 Remodeling mutation — `ReplaceGeoProducts`: whole-value swap of `ReconstructionResults.geo`, a large
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{GeoProducts, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoProducts;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -23,17 +23,20 @@ pub struct ReplaceGeoProducts {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_geo_products(geo: Option<GeoProducts>) -> RemodelingMutation {
-    RemodelingMutation::ReplaceGeoProducts(ReplaceGeoProducts { geo })
+pub fn replace_geo_products<Op: From<ReplaceGeoProducts>>(geo: Option<GeoProducts>) -> Op {
+    Op::from(ReplaceGeoProducts { geo })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceGeoProducts {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ReplaceGeoProducts
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ReplaceGeoProducts>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "geo-products", kind: "replace-geo-products", record: "ReplacedGeoProducts" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

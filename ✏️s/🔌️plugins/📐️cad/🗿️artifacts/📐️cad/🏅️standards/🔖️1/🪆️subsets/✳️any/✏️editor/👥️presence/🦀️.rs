@@ -1,5 +1,15 @@
 //! 👥️ CAD presence — shareable live ephemeral state + mutations.
 
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🧩️Modules
+
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactPack;
@@ -51,7 +61,7 @@ pub struct CadPresenceDiff {
     #[value(skip_serializing_if = "Option::is_none")]
     pub engagement_step: Option<String>,
     #[value(skip_serializing_if = "Option::is_none")]
-    pub engagement_pane: Option<crate::editor::cad::config::CadTextSet>,
+    pub engagement_pane: Option<semio_s_artifact_cad_cad_config::CadTextSet>,
 }
 
 impl protocol::MutationDiff<CadPresence> for CadPresenceDiff {
@@ -90,7 +100,7 @@ impl protocol::DiffAlgebra<CadPresence> for CadPresenceDiff {
             camera_zoom: self.camera_zoom.map(|_| base.camera_zoom),
             camera_fov: self.camera_fov.map(|_| base.camera_fov),
             engagement_step: self.engagement_step.as_ref().map(|_| base.engagement_step.clone()),
-            engagement_pane: self.engagement_pane.as_ref().map(|_| crate::editor::cad::config::CadTextSet { value: base.engagement_pane.clone() }),
+            engagement_pane: self.engagement_pane.as_ref().map(|_| semio_s_artifact_cad_cad_config::CadTextSet { value: base.engagement_pane.clone() }),
         }
     }
     fn is_empty(&self) -> bool {
@@ -192,7 +202,7 @@ impl Mutation<CadPresence> for CadPresenceMutation {
             camera_zoom: (base.camera_zoom != presence.camera_zoom).then_some(presence.camera_zoom),
             camera_fov: (base.camera_fov != presence.camera_fov).then_some(presence.camera_fov),
             engagement_step: (base.engagement_step != presence.engagement_step).then(|| presence.engagement_step.clone()),
-            engagement_pane: (base.engagement_pane != presence.engagement_pane).then(|| crate::editor::cad::config::CadTextSet { value: presence.engagement_pane.clone() }),
+            engagement_pane: (base.engagement_pane != presence.engagement_pane).then(|| semio_s_artifact_cad_cad_config::CadTextSet { value: presence.engagement_pane.clone() }),
         };
         if diff == CadPresenceDiff::default() {
             return protocol::MutationOutcome::new(diff).warning("mutation.no-op", "Presence is already up to date.");

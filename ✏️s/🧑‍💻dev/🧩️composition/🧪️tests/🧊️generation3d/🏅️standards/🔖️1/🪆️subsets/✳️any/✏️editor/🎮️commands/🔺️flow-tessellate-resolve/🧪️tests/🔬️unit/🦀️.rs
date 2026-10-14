@@ -52,7 +52,7 @@ fn a_partial_step_owes_the_run_another_hop_with_progress() {
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-2".into()));
     assert!(session.arm_window_tick("procedural-preview-test"), "the run arms the hop");
     session.begin_window_tick("procedural-preview-test");
-    session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_generation3d::preview_eval::tick_is_unfinished(false, 1));
+    session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, 1));
     session.note_window_extensions_in_flight("procedural-preview-test", 1);
     let working = r#"{"done":false,"cancellable":true,"phase":"meshingFaces","unitsDone":12,"unitsTotal":30,"facesDone":4,"facesTotal":6}"#;
     let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: working.into() }, &doc, &cfg, &mut session).expect("flowTessellateResolve");
@@ -82,7 +82,7 @@ fn a_chunked_mesh_body_only_lands_on_its_last_chunk() {
     assert!(session.note_pending_tessellate(node_hash, "brep:solid-3".into()));
     assert!(session.arm_window_tick("procedural-preview-test"), "the run arms the hop");
     session.begin_window_tick("procedural-preview-test");
-    session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_generation3d::preview_eval::tick_is_unfinished(false, 1));
+    session.note_window_tick_outcome("procedural-preview-test", semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, 1));
     session.note_window_extensions_in_flight("procedural-preview-test", 1);
     let first = format!(r#"{{"done":true,"phase":"complete","unitsDone":3,"unitsTotal":3,"facesDone":1,"facesTotal":1,"chunk":0,"chunks":2,"meshPack":"{}"}}"#, &pack[..split]);
     let emit = handle(&FlowTessellateResolve { window_id: "procedural-preview-test".into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), node_hash, output_json: first }, &doc, &cfg, &mut session).expect("first chunk");

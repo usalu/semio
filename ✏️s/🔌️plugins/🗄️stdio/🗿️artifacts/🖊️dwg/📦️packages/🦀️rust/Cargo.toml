@@ -26,6 +26,10 @@ semio-framework-plugin = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-diff = { workspace = true }
+semio-s-artifact-stdio-dwg-inferences = { workspace = true }
+semio-s-artifact-stdio-dwg-mutations = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

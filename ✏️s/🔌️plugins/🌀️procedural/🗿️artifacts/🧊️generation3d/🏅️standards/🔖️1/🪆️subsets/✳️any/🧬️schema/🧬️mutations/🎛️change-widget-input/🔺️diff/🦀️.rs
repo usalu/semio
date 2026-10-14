@@ -1,10 +1,13 @@
 //! 🔺️ `change-widget-input` sparse diff — replaces the ONE addressed operator with its input set to the typed literal
 //! (or the addressed text source with its text set), read off the BASE widget through [`ChangeWidgetInput::landing`].
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dWidgetPatch, Generation3dWidgetModification, Generation3dWidgetsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput;
-use crate::standards::v1::subsets::any::schema::mutations::widget_index;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetModification;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dWidgetsDelta;
+use crate::change_widget_input::ChangeWidgetInput;
+use crate::widget_index;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ A payload outside its schema bounds (empty address, overlong name or text, non-finite number) is
 /// `mutation.invariant`; a missing widget or an input its record does not hold is `target-missing`; an input a wire drives,

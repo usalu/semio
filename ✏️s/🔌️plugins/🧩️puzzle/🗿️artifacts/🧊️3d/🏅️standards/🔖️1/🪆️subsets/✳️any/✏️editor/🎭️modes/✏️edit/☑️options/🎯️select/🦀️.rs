@@ -6,10 +6,11 @@
 //! longer renderable here (`ArtifactApp::window_measures` never gained an `InteractionView`
 //! parameter; see `panels::inspection::render`'s doc comment for the same framework-level gap).
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle3d::snapshot::puzzle3d_action;
 use semio_framework_plugin::WindowMeasure;
 
 

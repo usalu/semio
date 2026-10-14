@@ -37,7 +37,7 @@ pub fn plugin() -> Result<Plugin<RemodelApps>, PluginAssemblyError> {
         // `run_whole_pipeline`'s synchronous structure-from-motion loop (`🎮️commands/🏗️run-reconstruction`,
         // `▶️run-stage`, `🔁️retry-stage`) is this packet's genuine "SfM" long-running-compute finding,
         // and why its `Effect::SpawnJob` conversion is blocked upstream, not by anything in this crate.
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::remodeling::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest {
             id: CapabilityId("artifacts.write".into()),

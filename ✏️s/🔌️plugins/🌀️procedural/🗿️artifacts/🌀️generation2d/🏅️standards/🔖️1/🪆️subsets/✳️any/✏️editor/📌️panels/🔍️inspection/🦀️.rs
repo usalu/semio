@@ -38,7 +38,7 @@ pub fn render(document: &Generation2dSnapshot, config: &Generation2dConfig, labe
         tree_item("procedural2d-play-inspector.widgets", format!("{} {}", labels.widgets_prefix.as_str(), document.host_snapshot.widgets.len())),
         tree_item("procedural2d-play-inspector.show-mode", format!("{} {}", labels.show_mode_prefix.as_str(), config.show_mode)),
     ])?;
-    PanelTreeBuilder::new("procedural2d-play-inspector")?.section("procedural2d-play-inspector.empty", Some(crate::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, items)?.build()
+    PanelTreeBuilder::new("procedural2d-play-inspector")?.section("procedural2d-play-inspector.empty", Some(semio_s_procedural_core_semantic_ui::ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, items)?.build()
 }
 //#endregion 🔖️Render
 

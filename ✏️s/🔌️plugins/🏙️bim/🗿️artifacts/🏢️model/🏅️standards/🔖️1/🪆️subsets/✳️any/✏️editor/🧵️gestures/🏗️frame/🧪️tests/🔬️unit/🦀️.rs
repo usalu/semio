@@ -1,6 +1,6 @@
 use crate::editor::bim::gestures::session::{Modifiers, Shape, Surface, ToolEvent};
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
-use crate::{Axis, Column, CurtainGrid, CurtainPanel, CurtainWall, ModelMutation, ModelSnapshot, Phase, Point2, Slope, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Column, CurtainGrid, CurtainPanel, CurtainWall, ModelSnapshot, Phase, Point2, Slope, TopConstraint}, mutations::ModelMutation};
 
 fn framed() -> ModelSnapshot {
     let mut snapshot = room();

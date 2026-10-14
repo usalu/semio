@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::Axis;
+use crate::standards::v1::subsets::any::schema::snapshot::Axis;
 
 fn flip(ids: &[&str], selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let snapshot = demo();
@@ -8,7 +8,7 @@ fn flip(ids: &[&str], selected: &[&str]) -> Result<Emit<ModelMutation, NoConfigM
     run(&snapshot, |doc, cfg| handle(&FlipWalls { ids: ids.iter().map(|id| id.to_string()).collect() }, doc, cfg, &mut ctx))
 }
 
-fn ends(snapshot: &ModelSnapshot, wall: &str) -> (crate::Point2, crate::Point2) {
+fn ends(snapshot: &ModelSnapshot, wall: &str) -> (crate::standards::v1::subsets::any::schema::snapshot::Point2, crate::standards::v1::subsets::any::schema::snapshot::Point2) {
     match &snapshot.walls[wall].axis {
         Axis::Line { start, end } | Axis::Arc { start, end, .. } => (*start, *end),
     }

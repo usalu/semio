@@ -13,7 +13,7 @@ import * as api from "../../🟦️.ts";
 
 const base=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")).policies[0];
 const leaseStores=new Map<string,string>();
-const artifact=()=>{const path=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(path).toBeTruthy();mkdirSync(path!,{recursive:true});const root=mkdtempSync(join(path!,"t-")),store=join(process.cwd(),".cache/framework/leases");mkdirSync(store,{recursive:true});leaseStores.set(root,mkdtempSync(join(store,"t-")));return root;};
+const artifact=()=>{const path=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(path).toBeTruthy();mkdirSync(path!,{recursive:true});const root=mkdtempSync(join(path!,"t-")),store=join(process.cwd(),".cache/b/l/m/data");mkdirSync(store,{recursive:true});leaseStores.set(root,mkdtempSync(join(store,"t-")));return root;};
 const retire=(root:string)=>{rmSync(root,{recursive:true,force:true});const leases=leaseStores.get(root);if(leases)rmSync(leases,{recursive:true,force:true});leaseStores.delete(root);};
 const policy=(root:string)=>({...base,manifestPath:join(root,"Cargo.toml"),targetDirectory:join(root,"target"),buildDirectory:join(root,"build"),leaseDirectory:leaseStores.get(root)!,configPath:join(root,"nextest.toml"),artifactDirectory:root,level:"long",coverageEnabled:false,coveragePath:null,retainArtifacts:false,buildBudgetMs:corpus.maximumProcessMs});
 const request=(root:string,current:any)=>({manifestPath:current.manifestPath,packages:["owner-package"],cwd:root,environment:{...process.env,LEASE_ROOT:root},extraArgs:[]});

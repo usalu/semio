@@ -744,29 +744,8 @@ impl DeterminismVerifier {
 //#endregion 🔖️Determinism
 
 //#region 🔖️Otel
-/// 🛰️ Where a completed span goes for OpenTelemetry export — gated behind the `otel`
-/// Cargo feature per the contract. Extension seam: no OTLP/otel crate is a workspace dependency
-/// today, so this defines the trait shape a real exporter would implement without committing to
-/// one yet (repo rule: don't add a dependency that isn't genuinely needed). See
-/// `UnwiredOtelExporter` for the honest not-yet-implemented default.
-#[cfg(feature = "otel")]
-pub trait OtelSpanExporter: Send + Sync {
-    async fn export(&self, span: &CompletedSpan) -> Result<(), DbError>;
-}
 
-/// 🚫️ An `OtelSpanExporter` that reports `DbError::Unimplemented` rather than silently
-/// dropping spans or panicking — the honest placeholder until a real OTLP exporter crate is added
-/// as a workspace dependency.
-#[cfg(feature = "otel")]
-#[derive(Clone, Copy, Default, Debug)]
-pub struct UnwiredOtelExporter;
 
-#[cfg(feature = "otel")]
-impl OtelSpanExporter for UnwiredOtelExporter {
-    async fn export(&self, _span: &CompletedSpan) -> Result<(), DbError> {
-        Err(DbError::Unimplemented("otel export requires an OTLP exporter crate not yet a workspace dependency"))
-    }
-}
 //#endregion 🔖️Otel
 
 //#region 🧪️Tests

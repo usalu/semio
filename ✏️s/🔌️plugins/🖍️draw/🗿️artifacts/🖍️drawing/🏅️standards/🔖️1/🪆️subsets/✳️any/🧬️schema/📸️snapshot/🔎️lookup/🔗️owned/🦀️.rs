@@ -1,6 +1,7 @@
 //! 🔗️ Native recursive lookup owns root-backed projection frames and reborrows targets per turn.
 
-use crate::{DrawingLayerNode, DrawingSnapshot};
+use crate::DrawingLayerNode;
+use crate::snapshot::DrawingSnapshot;
 use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 use std::mem::size_of;
@@ -109,7 +110,7 @@ impl DrawingOwnedLayerLookupCursor {
             return Ok(DrawingOwnedLayerLookupStep::Pending(progress));
         }
         let current = self.current.as_ref().expect("selected native Drawing node");
-        let step = self.comparison.compare(current.borrow()?.project(1, crate::schema::layer_id), target, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+        let step = self.comparison.compare(current.borrow()?.project(1, crate::layer_id), target, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
         let (ordering, progress) = match step {
             BoundedOrdStep::Authority(progress) => return Ok(DrawingOwnedLayerLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => (None, progress),

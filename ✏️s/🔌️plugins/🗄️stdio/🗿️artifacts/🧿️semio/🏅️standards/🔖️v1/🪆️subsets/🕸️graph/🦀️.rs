@@ -342,4 +342,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphNode 
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioGraphSnapshot { schema, nodes, edges });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioGraphSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioGraphSnapshot, schema::mutations::SemioGraphMutation);

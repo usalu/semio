@@ -1,9 +1,9 @@
 //! 🧰️ Shared helpers of the IFC export tests: the committed house model and readers over the generated Part-21 document.
 
 use super::{model_to_part21, Schema};
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
 
 /// 🏠️ The committed export fixture: one site, one building, four storeys and every element family.

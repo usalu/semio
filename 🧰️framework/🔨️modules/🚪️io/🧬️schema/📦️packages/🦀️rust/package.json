@@ -9,9 +9,6 @@
     "test-native": "bun repo run @semio-tech/framework-io-schema-rs:test-native",
     "test-refusal": "bun repo run @semio-tech/framework-io-schema-rs:test-refusal"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

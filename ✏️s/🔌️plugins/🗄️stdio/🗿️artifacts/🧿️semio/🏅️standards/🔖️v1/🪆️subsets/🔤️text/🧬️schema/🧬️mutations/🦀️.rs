@@ -15,8 +15,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (the stdio
 //! W2 agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Leaves
 use super::add_mark;
@@ -64,7 +64,6 @@ pub fn diff_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTextSn
     <SemioTextMutation as protocol::Mutation<SemioTextSnapshot>>::diff(mutation, base)
 }
 
-
 /// ↩️ Computes `mutation`'s own inverse against `base` — a thin wrapper around
 /// `protocol::Mutation::inverse` so external Rust callers that cannot name this crate's private
 /// `protocol` extern-crate item (the `🔤️mutate-semio-text` test adapter, whose `inverse-<kind>`
@@ -79,7 +78,6 @@ pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTex
     })
 }
 
-
 //#endregion 🔖️Apply
 
 //#region 🧪️Tests
@@ -88,12 +86,3 @@ pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTex
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🧪️FixtureTests
-/// 🧪️ Handcrafted mutation fixtures (contract D1, ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`)
-/// — one case per triad leaf, self-wired here rather than in `🦀️.rs` so this subset owns its
-/// own test surface. `#[path = "."]` re-roots the nested `#[path]`s at THIS file's directory (the
-/// `🧬️mutations` root) instead of the implicit `🦀️component/` child directory.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests

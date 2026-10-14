@@ -49,7 +49,6 @@ pub const KINDS: [&str; 3] = ["set-id3v2", "set-frames", "set-id3v1"];
 //#region 🔖️Layers
 /// 🧬️ The three-layer split, the frame walk and the two writers — everything that touches `id3` or
 /// the ISO/IEC 11172-3 bit layout lives here, behind the `oracles` feature.
-#[cfg(feature = "oracles")]
 mod layers {
     use id3::TagLike;
     use semio_repo_test_host::Json;
@@ -332,7 +331,6 @@ mod layers {
 
 //#region 🔖️WireReaders
 /// 🔎️ A byte array member of a wire value. An absent member is the empty default the vocabulary declares.
-#[cfg(feature = "oracles")]
 fn wire_bytes(value: &Json, key: &str) -> Result<Vec<u8>, String> {
     match value.get(key) {
         None => Ok(Vec::new()),
@@ -342,7 +340,6 @@ fn wire_bytes(value: &Json, key: &str) -> Result<Vec<u8>, String> {
 }
 
 /// 🔎️ A small unsigned integer member of a wire value.
-#[cfg(feature = "oracles")]
 fn wire_u8(value: &Json, key: &str) -> Result<u8, String> {
     match value.get(key) {
         Some(Json::Number(n)) if (0.0..=255.0).contains(n) && n.fract() == 0.0 => Ok(*n as u8),
@@ -351,7 +348,6 @@ fn wire_u8(value: &Json, key: &str) -> Result<u8, String> {
 }
 
 /// 🔎️ A boolean member of a wire value.
-#[cfg(feature = "oracles")]
 fn wire_bool(value: &Json, key: &str) -> Result<bool, String> {
     match value.get(key) {
         Some(Json::Bool(flag)) => Ok(*flag),
@@ -363,21 +359,14 @@ fn wire_bool(value: &Json, key: &str) -> Result<bool, String> {
 
 //#region 🔖️Projection
 /// 🎯️ Reads a real `.mp3` stream into the semantic projection both roles are compared through.
-#[cfg(feature = "oracles")]
 pub fn project_mp3(bytes: &[u8]) -> Result<Json, String> {
     layers::project(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn project_mp3(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🔖️Dispatch
 /// 🏷️ The leading ID3v2 region an `Id3v2Tag` wire value (or `null`, no tag at all) describes, written by `id3`.
-#[cfg(feature = "oracles")]
 fn id3v2_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
     let Some(tag @ Json::Object(_)) = tag else { return Ok(Vec::new()) };
     let mut frames=Vec::new();for frame in tag.array("frames"){let id=frame.str("id");let c=frame.get("content").ok_or("metadata content")?;let values=||->Result<String,String>{let rows=c.array("values");if rows.is_empty(){return Err("metadata values".into());}rows.iter().map(|v|match v{Json::String(s)=>Ok(s.clone()),_=>Err("metadata text value".into())}).collect::<Result<Vec<_>,String>>().map(|v|v.join("\0"))};
@@ -393,7 +382,6 @@ fn id3v2_region(tag: Option<&Json>) -> Result<Vec<u8>, String> {
 
 /// 🎼️ The audio region an `Mp3Frame` wire list describes: each frame's four header bytes packed from its typed
 /// fields per ISO/IEC 11172-3 §2.4.1.3, followed by its payload. The walk then re-derives every frame size.
-#[cfg(feature = "oracles")]
 fn audio_region(frames: Option<&Json>) -> Result<Vec<u8>, String> {
     let frames = match frames {
         None => Vec::new(),
@@ -424,14 +412,12 @@ fn audio_region(frames: Option<&Json>) -> Result<Vec<u8>, String> {
 }
 
 /// 🏷️ Writes named semantic ID3v1 metadata with the independent fixed-width writer.
-#[cfg(feature="oracles")]
 fn id3v1_region(tag:Option<&Json>)->Result<Vec<u8>,String>{let Some(tag @ Json::Object(_))=tag else{return Ok(Vec::new())};let optional=|key|match tag.get(key){Some(Json::Null)=>Ok(None),Some(_)=>wire_u8(tag,key).map(Some),None=>Err(format!("missing {key}"))};layers::write_v1(&layers::V1Fields{title:tag.str("title"),artist:tag.str("artist"),album:tag.str("album"),year:tag.str("year"),comment:tag.str("comment"),track:optional("track")?,genre_id:optional("genre")?.unwrap_or(255)})}
 
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes. `params` is the
 /// leaf's wire payload (`payload_value()`), and the three layers are addressed independently, exactly as
 /// `Mp3Mutation` addresses `id3v2`/`frames`/`id3v1`; an absent or `null` tag removes that layer. An unrecognised
 /// kind is an error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
     let mut regions = layers::split(input)?;
@@ -445,18 +431,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(layers::join(&regions))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Inverse
 /// ↩️ The independently computed inverse of `spec`, applied on top of `mutated`: every variant of this vocabulary
 /// is a whole-layer replace, so its inverse restores exactly the layer(s) it replaced from the UNMUTATED `base` —
 /// `Mp3Mutation::inverse()`'s own base-relative semantics — and leaves the others as the forward mutation left them.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(base: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     let original = layers::split(base)?;
     let mut restored = layers::split(mutated)?;
@@ -469,11 +449,6 @@ pub fn oracle_apply_mutation_inverse(base: &[u8], spec: &Json, mutated: &[u8]) -
     Ok(layers::join(&restored))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_base: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Inverse
 
 //#region 🔖️RoundTrip
@@ -483,7 +458,6 @@ pub fn oracle_apply_mutation_inverse(_base: &[u8], _spec: &Json, _mutated: &[u8]
 /// slab), the ID3v1 trailer through the field layout. `id3`'s writer chooses its own padding, so
 /// this does NOT reproduce the input bytes — which is the point: see the `identity-round-trip`
 /// scenario's no-byte-pass-through half.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     let regions = layers::split(input)?;
     let v2 = match layers::read_v2(&regions.v2)? {
@@ -501,15 +475,10 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     Ok(layers::join(&layers::Regions { v2, audio, v1 }))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️RoundTrip
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

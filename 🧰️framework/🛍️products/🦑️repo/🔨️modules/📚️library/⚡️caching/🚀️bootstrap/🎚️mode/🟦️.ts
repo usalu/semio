@@ -1,16 +1,16 @@
 import { buildModeEnvironment, readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { fixedTargetBuildMode } from "../../../🔌️nx-plugin/🎚️mode/🟨️.mjs";
+import {fixedTargetBuildMode} from "../../../🏗️build/🎚️mode/🟨️.mjs";
 
 type Selection = { args: string[]; env: NodeJS.ProcessEnv; watch?: string };
 
 /** 🎯️ Resolves mode options before the task graph and daemon receive the environment. */
 export function resolveNxBuildMode(selection: Selection, environment: NodeJS.ProcessEnv): Selection {
   const delimiter = selection.args.indexOf("--"), head = selection.args.slice(0, delimiter < 0 ? undefined : delimiter), tail = delimiter < 0 ? [] : selection.args.slice(delimiter);
-  if (!["run", "run-many", "affected"].includes(head[0])) return selection;
+  if (!["run", "run-many", "affected"].includes(head[0]??"")) return selection;
   const configurations: string[] = [], args: string[] = [];
   for (let index = 0; index < head.length; index++) {
-    const argument = head[index];
-    if (argument === "--configuration" || argument === "-c") configurations.push(head[++index]);
+    const argument = head[index]!;
+    if (argument === "--configuration" || argument === "-c") {const value=head[++index];if(!value||value.startsWith("-"))throw Error("Explicit compiler configuration value required");configurations.push(value);}
     else if (/^(?:--configuration|-c)=/.test(argument)) configurations.push(argument.slice(argument.indexOf("=") + 1));
     else args.push(argument);
   }

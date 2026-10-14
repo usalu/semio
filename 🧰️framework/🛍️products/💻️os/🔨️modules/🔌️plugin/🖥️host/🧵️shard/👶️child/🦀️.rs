@@ -1,7 +1,7 @@
 //! 👶️ `semio-shard` — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): the `[[bin]]`
 //! `📓️design-runtime.md` §2 names ("in wave P1, the `semio-shard` `[[bin]]` runs over stdio").
 //! Hosts exactly ONE `🧵️shard/🦀️.rs::ShardLoop`, driven by a real
-//! [`semio_framework_plugin_interpreter::OwnedRuntime`] over
+//! [`semio_framework_plugin_interpreter_runtime::OwnedRuntime`] over
 //! [`semio_framework_plugin_host::process_transport::StdioTransport`] — the child-process half of
 //! `ProcessTransport`'s duplex link (`../🚚️process-transport/🦀️.rs`). One process per
 //! shard, one `semio-shard` invocation per process; multiple actors on the SAME shard register on
@@ -20,7 +20,8 @@ use semio_framework::kernel::Budget;
 use semio_framework_actor::ActorId;
 use semio_framework_plugin_host::process_transport::StdioTransport;
 use semio_framework_plugin_host::shard::{ShardLoop, ShardTransports};
-use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageHash, PackageId, PackageRef}; use semio_framework_plugin_interpreter::OwnedRuntime;
+use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use std::sync::Arc;
 use std::time::Duration;
 

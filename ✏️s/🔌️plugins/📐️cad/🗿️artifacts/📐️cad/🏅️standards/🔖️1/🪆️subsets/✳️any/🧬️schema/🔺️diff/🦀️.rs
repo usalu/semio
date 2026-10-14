@@ -1,7 +1,6 @@
 //! 🧬️ Cad diff schema — sparse field delta over the artifact.
 
-use crate::mutations::{CadNodePatch, CadOpacitySet, CadOrientationSet, CadReferencePatch, CadScaleSet};
-use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadNode, CadReference};
+use crate::{snapshot::CadBrepChild, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadReference};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -83,7 +82,7 @@ protocol::plain_list_delta! {
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️Rows
-use crate::CadSnapshot;
+use crate::snapshot::CadSnapshot;
 use protocol::list_delta::RowPatch;
 use protocol::MutationDiff;
 
@@ -351,6 +350,44 @@ impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
 }
 //#endregion 🔖️Apply
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
+//#region 🔖️InternalPatches
+/// 🩹 Option-bag field delta for [`crate::CadNode`] — INTERNAL diff-construction glue only.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct CadNodePatch {
+    pub label: Option<String>,
+}
+/// 🩹 Option-bag field delta for [`crate::CadReference`] — INTERNAL diff-construction glue only.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+pub struct CadReferencePatch {
+    pub source_url: Option<String>,
+    pub media_kind: Option<String>,
+    pub origin: Option<[f64; 3]>,
+    pub orientation: Option<CadOrientationSet>,
+    pub scale: Option<CadScaleSet>,
+    pub width_world: Option<f64>,
+    pub hidden: Option<bool>,
+    pub locked: Option<bool>,
+    pub opacity: Option<CadOpacitySet>,
+}
+/// 🧭️ Explicit set-or-clear of a reference's orientation (an absent patch field leaves it untouched).
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadOrientationSet {
+    pub value: Option<[f64; 4]>,
+}
+/// 📐️ Explicit set-or-clear of a reference's scale.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadScaleSet {
+    pub value: Option<f64>,
+}
+/// 🌫️ Explicit set-or-clear of a reference's opacity.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadOpacitySet {
+    pub value: Option<f64>,
+}
+//#endregion 🔖️InternalPatches

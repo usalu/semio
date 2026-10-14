@@ -215,7 +215,7 @@ async fn instance_lifetime_close_preflight_and_shared_restore_preserve_exact_own
         for _ in 0..200_000 {
             if instance.app.close_terminal_is_empty() { break; }
             let demand = instance.app.close_retirement_demands(4096).unwrap();
-            let _ = instance.app.close_step(cx,cx.retained_grant()).unwrap();
+            let loan=cx.retained_grant();let _ = instance.app.close_step(cx,loan).unwrap();
         }
         assert!(instance.app.close_terminal_is_empty());
     }

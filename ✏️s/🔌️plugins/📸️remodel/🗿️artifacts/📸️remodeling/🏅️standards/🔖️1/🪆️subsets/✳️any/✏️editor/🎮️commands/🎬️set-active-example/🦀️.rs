@@ -3,10 +3,13 @@
 //! rows: an example switch is not an edit and leaves no history row.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::editor::remodeling::decode_still_image;
-use crate::editor::remodeling::examples::example_text;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::{durable_remodeling_asset, store_remodeling_asset, ImageAsset, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::example_text;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::durable_remodeling_asset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::store_remodeling_asset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ImageAsset;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -25,11 +28,11 @@ pub struct SetActiveExample {
 /// document IS the boot example) answers an empty emit, so the shell's boot-time `setActiveExample` loads nothing.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<RemodelingMutation, NoConfigMutation>, Fault> {
     let Some(text) = example_text(&payload.example_id) else { return Ok(Emit::default()) };
-    let Ok(mut next) = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text) else { return Ok(Emit::default()) };
+    let Ok(mut next) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text) else { return Ok(Emit::default()) };
     example_media_content(&payload.example_id, &mut next);
     match &next == doc.snapshot {
         true => Ok(Emit::default()),
-        false => Ok(Emit { effects: vec![crate::editor::remodeling::reset_document_effect(&next)], ..Default::default() }),
+        false => Ok(Emit { effects: vec![semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::reset_document_effect(&next)], ..Default::default() }),
     }
 }
 
@@ -37,11 +40,11 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, RemodelingSnaps
 /// only references by asset id, so a selected example whose frames are committed PNGs loads each frame as asset-handle and durable
 /// content, the same content a file-picker drop mints. Only `📚️examples/🛰️synthetic-orbit` ships frames today.
 fn example_media_content(example_id: &str, next: &mut RemodelingSnapshot) {
-    use crate::examples::synthetic_orbit;
+    use semio_s_artifact_remodel_remodeling_examples::examples::synthetic_orbit;
     if example_id != synthetic_orbit::ID {
         return;
     }
-    for (asset_id, bytes) in synthetic_orbit::FRAMES {
+    for &(asset_id, bytes) in synthetic_orbit::frames() {
         let (width, height) = decode_still_image(synthetic_orbit::FRAME_MIME, bytes).map_or((0, 0), |image| (image.width, image.height));
         let asset = ImageAsset { mime: synthetic_orbit::FRAME_MIME.to_string(), data: base64_codec::base64_standard_encode(bytes), width, height };
         let Some(artifact) = durable_remodeling_asset(&asset) else { continue };
@@ -54,7 +57,4 @@ fn example_media_content(example_id: &str, next: &mut RemodelingSnapshot) {
 //#endregion 🔖️Handler
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

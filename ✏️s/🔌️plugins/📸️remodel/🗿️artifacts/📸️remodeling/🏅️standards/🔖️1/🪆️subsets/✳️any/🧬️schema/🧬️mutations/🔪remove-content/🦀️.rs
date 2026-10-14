@@ -1,9 +1,9 @@
 //! 🔪️ Remodeling mutation — `RemoveContent`: removes every leaf of one durable content entry from leaf
 //! index `from` on; `from` 0 removes the entry. It is `append-content`'s exact inverse.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +21,20 @@ pub struct RemoveContent {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn remove_content(content_id: String, from: u64) -> RemodelingMutation {
-    RemodelingMutation::RemoveContent(RemoveContent { content_id, from })
+pub fn remove_content<Op: From<RemoveContent>>(content_id: String, from: u64) -> Op {
+    Op::from(RemoveContent { content_id, from })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for RemoveContent {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for RemoveContent
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<AppendContent>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "content", kind: "remove-content", record: "RemovedContent" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

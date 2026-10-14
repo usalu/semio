@@ -1,3 +1,4 @@
+import authoringSchema from "../🧬️schema/📥️authoring.json";
 import schema from "../🧬️schema/📥️caller.json";
 import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
 import executionPolicy from "../../⚡️caching/📦️artifacts/📋️native-orchestration/🔣️policy.json";
@@ -19,6 +20,16 @@ export function createNativeBuildCallerCapabilitiesV1(root:string,args:readonly 
   if(!["true","false"].includes(offline))throw Error("Build native network selection refused");
   const capabilities={tool,workspaceRoot:resolve(root),arguments:["repo",...args],selection:["repo",...args],buildMode:(environment.SEMIO_BUILD_MODE??"prototype") as "prototype"|"release",native:{artifactDirectory:canonical.CARGO_TARGET_DIR!,transport:executionPolicy.transport,child:executionPolicy.child,network:{offline:offline==="true"}},launches:[["repo",...args]]};
   if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Build native caller capabilities refused");
+  return capabilities;
+}
+
+/** 📝️ Admits explicit editor resource grants before an original process envelope is created. */
+export function readBuildAuthoringCapabilitiesV1(root:string,args:readonly string[],tool:"nx"|"bazel",value:unknown):NativeBuildCallerCapabilitiesV1 {
+  if(validateJsonSchemaSubset(authoringSchema,value).length)throw Error("Build authoring capabilities refused");
+  const declared=value as NativeBuildCallerCapabilitiesV1,request=["repo",...args],workspaceRoot=resolve(root);
+  if(resolve(workspaceRoot,declared.workspaceRoot)!==workspaceRoot||declared.tool!==undefined&&declared.tool!==tool||JSON.stringify(declared.arguments)!==JSON.stringify(request)||JSON.stringify(declared.selection)!==JSON.stringify(request)||!declared.launches.some(launch=>JSON.stringify(launch)===JSON.stringify(request)))throw Error("Original authored build request changed");
+  const capabilities={...declared,tool,workspaceRoot,native:{...declared.native,artifactDirectory:resolve(workspaceRoot,declared.native.artifactDirectory)}};
+  if(validateJsonSchemaSubset(schema,capabilities).length)throw Error("Initial build caller capabilities refused");
   return capabilities;
 }
 

@@ -1,9 +1,9 @@
 //! ⚙️ Remodeling mutation — `UpdateGeoParams`: full-record replace of `ReconstructionParams.geo` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{GeoParams, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +21,20 @@ pub struct UpdateGeoParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_geo_params(params: GeoParams) -> RemodelingMutation {
-    RemodelingMutation::UpdateGeoParams(UpdateGeoParams { params })
+pub fn update_geo_params<Op: From<UpdateGeoParams>>(params: GeoParams) -> Op {
+    Op::from(UpdateGeoParams { params })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateGeoParams {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for UpdateGeoParams
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<UpdateGeoParams>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "geo-params", kind: "update-geo-params", record: "UpdatedGeoParams" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

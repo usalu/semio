@@ -79,7 +79,7 @@ fn fixture() -> EvaluateBudgetFixture {
 /// 📈️ The status object the preview window would publish right now, through the same pure
 /// projection the surface uses.
 fn observed_status(session: &FlowEvalSession) -> serde_json::Value {
-    serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_progress_status_json_for(Some(session), None, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json")
+    serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()))).expect("status json")
 }
 
 /// ⏱️ The hop the run dispatched before an answer can land: armed, begun, recorded unfinished, one
@@ -87,7 +87,7 @@ fn observed_status(session: &FlowEvalSession) -> serde_json::Value {
 fn park_one_evaluate_hop(session: &mut FlowEvalSession) {
     assert!(session.arm_window_tick(BUDGET_WINDOW_ID), "the run arms the hop");
     session.begin_window_tick(BUDGET_WINDOW_ID);
-    session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_generation3d::preview_eval::tick_is_unfinished(true, 1));
+    session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(true, 1));
     session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, 1);
 }
 
@@ -255,8 +255,8 @@ fn progress_is_monotone_across_the_round_trips_of_one_evaluation() {
 #[test]
 fn the_kernel_release_reaches_the_evaluation_registry_too() {
     let fixture = fixture();
-    let payload = semio_s_artifact_procedural_generation3d::preview_eval::FlowEvalRelease { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
-    let invocations = semio_s_artifact_procedural_generation3d::preview_eval::release_invocations_for(&payload, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()));
+    let payload = semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease { window_id: BUDGET_WINDOW_ID.into(), window_kind_id: semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into() };
+    let invocations = semio_s_artifact_procedural_3d_preview_eval::release_invocations_for(&payload, Ok(GEOMETRY_EXTENSION_PLUGIN_ID.to_string()));
     let capabilities: Vec<&str> = invocations.iter().map(|invocation| invocation.capability.as_str()).collect();
     assert!(capabilities.contains(&fixture.cancel_capability.as_str()), "the release emits the fixture's evaluation-cancel capability, got {capabilities:?}");
     assert!(capabilities.contains(&"tessellateCancel"), "the release still emits the mesh-job cancel, got {capabilities:?}");
@@ -333,7 +333,7 @@ fn replay_chain(wave_widths: &[usize], cancel_before_hop: Option<usize>, spent_t
     for (index, width) in wave_widths.iter().enumerate() {
         let hop = index + 1;
         session.begin_window_tick(BUDGET_WINDOW_ID);
-        session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_generation3d::preview_eval::tick_is_unfinished(false, *width));
+        session.note_window_tick_outcome(BUDGET_WINDOW_ID, semio_s_artifact_procedural_3d_preview_eval::tick_is_unfinished(false, *width));
         session.note_window_extensions_in_flight(BUDGET_WINDOW_ID, *width);
         let mut continued = false;
         for answer in 0..*width {

@@ -11,7 +11,7 @@
 use super::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
-use crate::{ModelDiff, ModelInference, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{InferenceWorkFailure,InferenceError, Mutation, MutationDiff};
 use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
 use std::borrow::Cow;

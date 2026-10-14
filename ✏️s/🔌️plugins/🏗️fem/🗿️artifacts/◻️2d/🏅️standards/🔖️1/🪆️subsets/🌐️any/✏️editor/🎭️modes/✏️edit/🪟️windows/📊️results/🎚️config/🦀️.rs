@@ -7,11 +7,11 @@ pub use schema::*;
 impl Default for Fem2dResultsWindowConfig {
     fn default() -> Self {
         Self {
-            camera: crate::Viewport2d::default(),
+            camera: semio_framework_os_kernel::Viewport2d::default(),
             result_source_id: None,
-            result_mode: crate::app_surface::ResultMode::Static,
+            result_mode: semio_s_fem_app_surface::ResultMode::Static,
             result_mode_index: 0,
-            animation: crate::app_surface::FemResultsAnimation::default(),
+            animation: semio_s_fem_app_surface::FemResultsAnimation::default(),
         }
     }
 }

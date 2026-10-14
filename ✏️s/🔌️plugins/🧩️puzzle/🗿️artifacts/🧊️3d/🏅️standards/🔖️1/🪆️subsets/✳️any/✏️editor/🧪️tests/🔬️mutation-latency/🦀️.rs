@@ -104,7 +104,7 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 fn a_mutation_emits_o_changed_operations_whatever_the_document_size() {
     let large = &*NAKAGIN_EXAMPLE_SNAPSHOT;
     assert!(large.objects.len() >= 100, "the law needs a document large enough for O(n) and O(changed) to differ; got {}", large.objects.len());
-    let before = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(large).expect("host fixture admits");
+    let before = crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(large).expect("host fixture admits");
     let first = large.objects[0].id.clone();
     let second = large.objects[1].id.clone();
     let no_vortices = std::collections::HashSet::new();
@@ -141,7 +141,7 @@ async fn b44_measures_the_turns_one_mutation_settles_in() {
 /// runtime grants them.
 async fn mutation_turns(app: &mut Puzzle3dApp) -> usize {
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection");
+    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection");
     let (result, settled) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("delete dispatches");
     settled.turns
@@ -216,7 +216,7 @@ async fn latency_census(app: &mut Puzzle3dApp, example: &'static str) -> Puzzle3
     let set_camera_us = started.elapsed().as_micros();
     let victim = first_object_id(app);
     let started = Instant::now();
-    let _ = select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await;
+    let _ = select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await;
     let select_us = started.elapsed().as_micros();
     let started = Instant::now();
     let _ = dispatch(app, "deleteSelection", None, None).await;
@@ -295,11 +295,11 @@ impl std::fmt::Display for Puzzle3dTurnCensus {
 async fn turn_census(app: &mut Puzzle3dApp, label: &'static str) -> Puzzle3dTurnCensus {
     let objects = object_count(app);
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
+    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before translate");
     let (result, translated) = dispatch_reporting_with_items(app, "translateSelection", Some(&json!({ "ids": [victim.as_str()], "dx": 3.5, "dy": 0.0, "dz": 0.0 })), None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("translate dispatches");
     let victim = first_object_id(app);
-    select_id(app, crate::editor::puzzle3d::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
+    select_id(app, crate::editor::puzzle3d::snapshot::PUZZLE3D_GRANULARITY_OBJECT, &victim).await.expect("selection before delete");
     let (result, deleted) = dispatch_reporting_with_items(app, "deleteSelection", None, None, SETTLE_HOST_TURN_ITEMS).await;
     result.expect("delete dispatches");
     Puzzle3dTurnCensus {

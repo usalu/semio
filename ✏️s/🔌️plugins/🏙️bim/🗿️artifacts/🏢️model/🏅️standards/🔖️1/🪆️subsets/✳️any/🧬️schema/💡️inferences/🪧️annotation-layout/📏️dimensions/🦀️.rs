@@ -6,7 +6,7 @@
 
 use super::anchors::{resolve, Reason, Reference, EPS};
 use super::{marks_of, print, text_width, AnchorLayout, DimensionLayout, DimensionSegment, Inputs, Line, TextAnchor};
-use crate::{Dimension, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::{Dimension, ModelSnapshot, Point2};
 
 fn dot(a: (f64, f64), b: (f64, f64)) -> f64 {
     a.0 * b.0 + a.1 * b.1

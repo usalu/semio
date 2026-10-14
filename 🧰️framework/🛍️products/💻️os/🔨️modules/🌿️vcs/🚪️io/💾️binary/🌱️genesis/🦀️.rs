@@ -1,5 +1,5 @@
 //! 🌱️ Exact native Pack custody and typed genesis admission.
-use crate::os_vcs::genesis::{ArtifactGenesis,ArtifactGenesisWitness};
+use crate::genesis::{ArtifactGenesis,ArtifactGenesisWitness};
 use semio_framework_value::ValueError;
 use std::sync::Arc;
 /// 📦️ Native binary genesis capability.
@@ -36,3 +36,15 @@ impl<P:ArtifactGenesisCodec> AdmittedArtifactGenesis<P>{
 }
 
 impl<P> ArtifactGenesisWitness for AdmittedArtifactGenesis<P>{type Snapshot=P;fn genesis_facts(&self)->&ArtifactGenesis<P>{&self.facts}}
+
+use pack::snapshot::ArtifactPack;
+use pack::record::EncodeOptions as PackEncodeOptions;
+impl<P: ArtifactPack> ArtifactGenesisCodec for P {
+    fn encode_genesis_pack(&self) -> Result<Vec<u8>, ValueError> {
+        self.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+    }
+    fn decode_genesis_pack(pack: &[u8]) -> Result<Self, ValueError> {
+        Self::decode_pack(pack).map_err(|error| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))
+    }
+}
+

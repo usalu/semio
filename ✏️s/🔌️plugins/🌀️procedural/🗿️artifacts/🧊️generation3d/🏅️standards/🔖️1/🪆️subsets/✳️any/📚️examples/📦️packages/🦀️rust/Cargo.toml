@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-procedural-3d-examples"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d bundled examples"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-s-artifact-procedural-generation3d = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-procedural-3d-inferences = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }

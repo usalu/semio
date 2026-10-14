@@ -4,15 +4,15 @@
 use crate::JackWorkingScene;
 use crate::lexer::{lex, lex_spanned, SpannedToken, Token};
 use crate::{port_node_id, port_port_id, Camera, Edge, Graph, JackSnapshot, Manifest, Node, Port, PortDirection, PropertyBag, PropertyValue};
-use semio_framework_graph::dsl::{QueryableEdge, QueryableGraph};
+use semio_framework_graph_dsl::{QueryableEdge, QueryableGraph};
 use std::collections::BTreeSet;
 
 pub mod queryable {
     use super::*;
 
-    fn trinity_jack_manifest() -> &'static semio_framework_graph::manifest::GraphManifest {
+    fn trinity_jack_manifest() -> &'static semio_framework_graph_manifest::GraphManifest {
         use std::sync::OnceLock;
-        static MANIFEST: OnceLock<semio_framework_graph::manifest::GraphManifest> = OnceLock::new();
+        static MANIFEST: OnceLock<semio_framework_graph_manifest::GraphManifest> = OnceLock::new();
         MANIFEST.get_or_init(|| crate::graph_manifest::manifest_by_id("nakagin").expect("nakagin manifest"))
     }
 
@@ -39,7 +39,7 @@ pub mod queryable {
     pub struct TrinityQueryableGraph<'a>(pub &'a Graph);
 
     impl QueryableGraph for TrinityQueryableGraph<'_> {
-        fn manifest(&self) -> Option<&semio_framework_graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&semio_framework_graph_manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 
@@ -78,7 +78,7 @@ pub mod queryable {
     pub struct OwnedTrinityQueryableGraph(pub Graph);
 
     impl QueryableGraph for OwnedTrinityQueryableGraph {
-        fn manifest(&self) -> Option<&semio_framework_graph::manifest::GraphManifest> {
+        fn manifest(&self) -> Option<&semio_framework_graph_manifest::GraphManifest> {
             Some(trinity_jack_manifest())
         }
 
@@ -117,7 +117,7 @@ pub mod queryable {
 
 use crate::ast::{Assignment, Clause, Expr, Pattern, PatternEdge, PatternNode, Query, ReturnItem};
 pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
-use semio_framework_graph::dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
+use semio_framework_graph_dsl::{Completion, Diagnostic, DiagnosticSeverity, Hover, SemanticToken};
 
 // #region 🔖️Language
 fn completion_prefix(source: &str, cursor: usize) -> String {
@@ -266,7 +266,7 @@ fn filter_completions(candidates: impl IntoIterator<Item = (String, String, Opti
 
 /// 🔎️ Context-aware jack completions for the editor.
 pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion> {
-    semio_framework_graph::dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
+    semio_framework_graph_dsl::complete(&TrinityQueryableGraph(graph), source, cursor)
 }
 // #endregion 🔖️Language
 fn collect_pattern_vars(pattern: &Pattern, out: &mut BTreeSet<String>) {
@@ -410,7 +410,7 @@ fn find_ident_span(source: &str, ident: &str) -> Option<(usize, usize)> {
 
 /// 🩺️ Lint jack source with syntax and semantic diagnostics.
 pub fn lint(graph: &Graph, source: &str) -> Vec<Diagnostic> {
-    semio_framework_graph::dsl::lint(&TrinityQueryableGraph(graph), source)
+    semio_framework_graph_dsl::lint(&TrinityQueryableGraph(graph), source)
 }
 
 #[allow(dead_code)]
@@ -451,7 +451,7 @@ fn format_token(tok: &Token) -> String {
 
 /// 🪞️ Format jack source canonically (idempotent).
 pub fn format(source: &str) -> Result<String, String> {
-    semio_framework_graph::dsl::format(source).map_err(|err| err.to_string())
+    semio_framework_graph_dsl::format(source).map_err(|err| err.to_string())
 }
 
 #[allow(dead_code)]
@@ -487,12 +487,12 @@ fn hover_word_at(source: &str, cursor: usize) -> Option<(usize, usize, String)> 
 
 /// 💬️ Hover information at cursor.
 pub fn hover(graph: &Graph, source: &str, cursor: usize) -> Option<Hover> {
-    semio_framework_graph::dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
+    semio_framework_graph_dsl::hover(&TrinityQueryableGraph(graph), source, cursor)
 }
 
 /// 🎨️ Semantic token classes for LSP highlighting.
 pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
-    semio_framework_graph::dsl::semantic_tokens(source)
+    semio_framework_graph_dsl::semantic_tokens(source)
 }
 // #endregion 🔖️LanguageService
 

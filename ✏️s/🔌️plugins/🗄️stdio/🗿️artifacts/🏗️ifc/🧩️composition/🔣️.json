@@ -12,8 +12,8 @@
       "order": 0,
       "variant": "Ifc2x3AnyEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::Ifc2x3AnyEditor",
-      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::create_ifc2x3_any_editor",
+      "type": "semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::Ifc2x3AnyEditor",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::create_ifc2x3_any_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "ifc2x3_any_editor",
@@ -25,8 +25,8 @@
       "order": 1,
       "variant": "Ifc2x3AnyViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::Ifc2x3AnyViewer",
-      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::create_ifc2x3_any_viewer",
+      "type": "semio_s_artifact_stdio_ifc_2x3_base::viewer::ifc2x3_any::Ifc2x3AnyViewer",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_base::viewer::ifc2x3_any::create_ifc2x3_any_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -35,8 +35,8 @@
       "order": 2,
       "variant": "Ifc2x3CobieEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::Ifc2x3CobieEditor",
-      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor",
+      "type": "semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::Ifc2x3CobieEditor",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "ifc2x3_cobie_editor",
@@ -48,8 +48,8 @@
       "order": 3,
       "variant": "Ifc2x3CobieViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::Ifc2x3CobieViewer",
-      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::create_ifc2x3_cobie_viewer",
+      "type": "semio_s_artifact_stdio_ifc_2x3_cobie::viewer::ifc2x3_cobie::Ifc2x3CobieViewer",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_cobie::viewer::ifc2x3_cobie::create_ifc2x3_cobie_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -58,8 +58,8 @@
       "order": 4,
       "variant": "Ifc2x3Cv20Editor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::Ifc2x3Cv20Editor",
-      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::create_ifc2x3_cv20_editor",
+      "type": "semio_s_artifact_stdio_ifc_2x3_cv20::editor::ifc2x3_cv20::Ifc2x3Cv20Editor",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_cv20::editor::ifc2x3_cv20::create_ifc2x3_cv20_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "ifc2x3_cv20_editor",
@@ -71,8 +71,8 @@
       "order": 5,
       "variant": "Ifc2x3Cv20Viewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::Ifc2x3Cv20Viewer",
-      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::create_ifc2x3_cv20_viewer",
+      "type": "semio_s_artifact_stdio_ifc_2x3_cv20::viewer::ifc2x3_cv20::Ifc2x3Cv20Viewer",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_cv20::viewer::ifc2x3_cv20::create_ifc2x3_cv20_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -81,8 +81,8 @@
       "order": 6,
       "variant": "Ifc2x3SavEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::Ifc2x3SavEditor",
-      "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::create_ifc2x3_sav_editor",
+      "type": "semio_s_artifact_stdio_ifc_2x3_sav::editor::ifc2x3_sav::Ifc2x3SavEditor",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_sav::editor::ifc2x3_sav::create_ifc2x3_sav_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "ifc2x3_sav_editor",
@@ -94,8 +94,8 @@
       "order": 7,
       "variant": "Ifc2x3SavViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::Ifc2x3SavViewer",
-      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::create_ifc2x3_sav_viewer",
+      "type": "semio_s_artifact_stdio_ifc_2x3_sav::viewer::ifc2x3_sav::Ifc2x3SavViewer",
+      "factory": "semio_s_artifact_stdio_ifc_2x3_sav::viewer::ifc2x3_sav::create_ifc2x3_sav_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -104,8 +104,8 @@
       "order": 8,
       "variant": "Ifc4AnyEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_ifc::editor::ifc4_any::Ifc4AnyEditor",
-      "factory": "semio_s_artifact_stdio_ifc::editor::ifc4_any::create_ifc4_any_editor",
+      "type": "semio_s_artifact_stdio_ifc_4::editor::ifc4_any::Ifc4AnyEditor",
+      "factory": "semio_s_artifact_stdio_ifc_4::editor::ifc4_any::create_ifc4_any_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "ifc4_any_editor",
@@ -117,15 +117,25 @@
       "order": 9,
       "variant": "Ifc4AnyViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::Ifc4AnyViewer",
-      "factory": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::create_ifc4_any_viewer",
+      "type": "semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::Ifc4AnyViewer",
+      "factory": "semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::create_ifc4_any_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
   "catalogPackage": null,
-  "symbolPackages": [],
+  "symbolPackages": [
+    "semio-s-artifact-stdio-ifc-2x3-base",
+    "semio-s-artifact-stdio-ifc-2x3-base-model",
+    "semio-s-artifact-stdio-ifc-2x3-base-mutations",
+    "semio-s-artifact-stdio-ifc-2x3-cobie",
+    "semio-s-artifact-stdio-ifc-2x3-cv20",
+    "semio-s-artifact-stdio-ifc-2x3-sav",
+    "semio-s-artifact-stdio-ifc-4",
+    "semio-s-artifact-stdio-ifc-4-model",
+    "semio-s-artifact-stdio-ifc-4-mutations"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-bim",
@@ -191,28 +201,28 @@
   "mutationDescriptors": [
     {
       "name": "Ifc2x3Mutation",
-      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
-      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation"
+      "snapshot": "semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation"
     },
     {
       "name": "Ifc2x3CobieMutation",
-      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
-      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3CobieMutation"
+      "snapshot": "semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc_2x3_cobie::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3CobieMutation"
     },
     {
       "name": "Ifc2x3Cv20Mutation",
-      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
-      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::Ifc2x3Cv20Mutation"
+      "snapshot": "semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc_2x3_cv20::standards::v2x3::subsets::cv20::schema::mutations::Ifc2x3Cv20Mutation"
     },
     {
       "name": "Ifc2x3SavMutation",
-      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
-      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3SavMutation"
+      "snapshot": "semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc_2x3_sav::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3SavMutation"
     },
     {
       "name": "IfcMutation",
-      "snapshot": "semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::snapshot::IfcSnapshot",
-      "mutation": "semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::mutations::IfcMutation"
+      "snapshot": "semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot",
+      "mutation": "semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation"
     }
   ],
   "mutationCoordinates": [

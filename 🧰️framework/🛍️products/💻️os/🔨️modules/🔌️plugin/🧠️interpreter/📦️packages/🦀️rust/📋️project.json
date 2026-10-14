@@ -9,45 +9,51 @@
     "family:os-plugin"
   ],
   "targets": {
-
-  "test-poll-input-source": {
-    "metadata": {
-      "semio": {
-        "execution": {
-          "version": 1,
-          "kind": "source"
+    "test-poll-input-source": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
         }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun 📜️script.ts test-poll-input-source",
+        "cwd": "{projectRoot}"
       }
     },
-    "executor": "repo:script",
-    "cache": false,
-    "dependsOn": [],
-    "options": {
-      "command": "bun 📜️script.ts test-poll-input-source",
-      "cwd": "{projectRoot}"
-    }
-  },
-  "test-poll-input-native": {
-    "metadata": {
-      "semio": {
-        "execution": {
-          "version": 1,
-          "kind": "native",
-          "scope": "test"
+    "test-poll-input-native": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
         }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun 📜️script.ts test-poll-input-native",
+        "cwd": "{projectRoot}"
       }
     },
-    "executor": "repo:script",
-    "cache": false,
-    "dependsOn": [],
-    "options": {
-      "command": "bun 📜️script.ts test-poll-input-native",
-      "cwd": "{projectRoot}"
-    }
-  }
-,
     "test-job-exports-native": {
-      "metadata": { "semio": { "execution": { "version": 1, "kind": "native", "scope": "test" } } },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
       "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test-job-exports-native",
@@ -56,7 +62,14 @@
       }
     },
     "test-job-exports": {
-      "metadata": { "semio": { "execution": { "version": 1, "kind": "source" } } },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
       "executor": "repo:script",
       "options": {
         "command": "bun 📜️script.ts test-job-exports",
@@ -87,6 +100,41 @@
           "target": "component"
         }
       ]
+    },
+    "test-completed-source": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun 📜️script.ts test-completed-source",
+        "cwd": "{projectRoot}"
+      }
+    },
+    "test-completed-native": {
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "native",
+            "scope": "test"
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "bun 📜️script.ts test-completed-native",
+        "cwd": "{projectRoot}"
+      }
     }
   }
 }

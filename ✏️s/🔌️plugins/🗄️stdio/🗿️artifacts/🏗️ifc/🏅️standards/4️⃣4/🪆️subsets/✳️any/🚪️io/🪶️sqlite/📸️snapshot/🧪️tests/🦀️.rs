@@ -1,11 +1,11 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v4::subsets::any::io::sqlite::snapshot::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::*};
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_ifc4_actual_declaration_preserves_every_ieee_word_in_owned_encodings(){
     use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
-    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("IFC SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();let snapshot=fixture();let dialect=ArtifactDialect{artifact_kind:"s.stdio.ifc".into(),standard:"4".into(),subset:"*".into()};
+    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("IFC SQLite declaration").version("0.0.1").package_id("semio:stdio").artifact(semio_s_artifact_stdio_ifc::declaration(semio_s_artifact_stdio_ifc::definition().unwrap()).unwrap()).try_build().unwrap();let snapshot=fixture();let dialect=ArtifactDialect{artifact_kind:"s.stdio.ifc".into(),standard:"4".into(),subset:"*".into()};
     for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut phases=Vec::new();let exported=async{let original_file_dialect=&dialect;let original_file_input=&snapshot;let original_file_encoding=encoding;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |p|{phases.push(p.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_decoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_export_sqlite_snapshot(original_file_dialect,original_file_input,original_file_encoding,sqlite_control,native_owner).await).await}.await.unwrap();let imported=async{let original_file_dialect=&dialect;let original_file_input=&exported.value;let original_file_limits=SqliteDatabaseLimits::default();let original_file_progress:&mut dyn FnMut(semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress)->bool=&mut |p|{phases.push(p.phase);true};semio_framework_os_kernel::io::testing::with_snapshot_file_encoding(semio_framework_os_kernel::io::testing::ORIGINAL_FILE_CALLER,original_file_limits,original_file_progress,async|sqlite_control,native_owner|io_import_sqlite_snapshot::<IfcSnapshot>(original_file_dialect,original_file_input,sqlite_control,native_owner).await).await}.await.unwrap();assert_eq!(project(&imported.value),project(&snapshot));assert!(!phases.iter().any(|phase|matches!(phase,SqliteSnapshotPhase::EncodeNative|SqliteSnapshotPhase::DecodeNative)));}
 }
 #[test]
@@ -91,7 +91,7 @@ fn sqlite_snapshot_ifc4_controlled_native_owned_frame_preserves_literal_schema_a
 
 #[test]
 fn sqlite_snapshot_ifc4_actual_removal_keeps_literal_references_through_erased_native_and_sqlite_file() {
- use crate::schema::mutations::{apply_ifc_mutation,IfcMutation,remove_entity::RemoveEntity};
+ ussemio_s_artifact_stdio_ifc::::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation,IfcMutation,remove_entity::RemoveEntity};
  use std::{io::Write,process::{Command,Stdio}};
  fn edit(value:&mut IfcValue,from:u64,to:u64){match value{IfcValue::Reference(word)if *word==from=>*word=to,IfcValue::Aggregate(items)|IfcValue::TypedValue(IfcTypedValue {items,..})=>for item in items{edit(item,from,to)},_=>{}}}
  let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧩️intermediate/🔣️.json")).unwrap();

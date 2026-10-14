@@ -1,8 +1,8 @@
 use super::table::{natural, order, passes};
 use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::schedules::table_json;
-use crate::schedule_kit::preset;
-use crate::{ModelInference, Phase, ScheduleOp};
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{Phase, ScheduleOp}};
 use protocol::Inference;
 use std::cmp::Ordering;
 
@@ -90,7 +90,7 @@ async fn the_table_and_its_oracle_json_are_deterministic_and_follow_the_authored
     assert_eq!(first, ModelInference::infer(&snapshot).expect("infers"));
     assert_eq!(table_json(&first.schedules), table_json(&ModelInference::infer(&snapshot).expect("infers").schedules));
     let schedule = snapshot.schedules.get_mut("sch-walls").expect("the schedule");
-    schedule.filter.push(crate::ScheduleFilter { key: ScheduleKey::field(crate::ScheduleField::Name), op: ScheduleOp::Equals, value: "no wall is called this".into() });
+    schedule.filter.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleFilter { key: ScheduleKey::field(crate::standards::v1::subsets::any::schema::snapshot::ScheduleField::Name), op: ScheduleOp::Equals, value: "no wall is called this".into() });
     let filtered = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(filtered.schedules["sch-walls"].items, 0);
     assert!(filtered.schedules["sch-walls"].rows.is_empty());

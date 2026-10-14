@@ -26,13 +26,13 @@ use original_latest_key::ToolLatestWinsKeyCopy;
 
 pub(crate) struct ToolLatestWinsScope {
     key: semio_framework_value::ordered::SharedOwner<String>,
-    operation: u64,
-    token: semio_framework_job::CancelToken,
+    pub(crate) operation: u64,
+    pub(crate) token: semio_framework_job::CancelToken,
     claim: PublicationClaimHandle,
 }
 
 impl ToolLatestWinsScope {
-    fn cancel(&self) {
+    pub(crate) fn cancel(&self) {
         self.claim.cancel();
         self.token.cancel_now();
     }
@@ -56,7 +56,7 @@ pub(crate) struct ToolLatestWinsRegistry {
     scan: usize,
     admission_scan: Option<usize>,
     update_closing: bool,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl ToolLatestWinsRegistry {

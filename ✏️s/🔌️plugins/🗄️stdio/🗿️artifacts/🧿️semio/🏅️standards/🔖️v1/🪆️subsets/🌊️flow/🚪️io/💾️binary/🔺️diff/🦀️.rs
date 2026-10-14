@@ -7,8 +7,10 @@ mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_triple;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use crate::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};

@@ -2,23 +2,34 @@
 
 // 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
 // this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
-use crate::editor::remodeling::engine::{camera as remodeling_camera, dense as remodeling_dense, images as remodeling_image, mesh as remodeling_mesh, sfm as remodeling_sfm};
+use semio_s_artifact_remodel_remodeling_camera::editor::remodeling::engine::camera as remodeling_camera;
+use semio_s_artifact_remodel_remodeling_dense::editor::remodeling::engine::dense as remodeling_dense;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images as remodeling_image;
 
 use std::collections::HashMap;
 
-pub use crate::lie::Sim3;
-pub use remodeling_camera::{CameraPose, Intrinsics};
-pub use remodeling_mesh::WatertightReport;
-pub use remodeling_sfm::Reconstruction;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Sim3;
+use remodeling_camera::{CameraPose, Intrinsics};
+use semio_s_artifact_remodel_remodeling_mesh_repair::editor::remodeling::engine::mesh::repair::WatertightReport;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::Reconstruction;
 
-use crate::algebra::{pseudo_inverse, solve_llsq, vec3d_normalize, vec3d_sub, MatD, VecD};
-use crate::lie::umeyama;
-use crate::optimize::{camera_covariances, LmConfig, ResidualTerm, SchurResult};
-use crate::spatial::KdTree;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::pseudo_inverse;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::solve_llsq;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_normalize;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::vec3d_sub;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::MatD;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::VecD;
+use semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::umeyama;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::camera_covariances;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::LmConfig;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::ResidualTerm;
+use semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::SchurResult;
+use semio_s_artifact_remodel_remodeling_spatial::standards::v1::subsets::any::schema::spatial_internals::KdTree;
 use remodeling_camera::{reproject, reprojection_jacobians, reprojection_residual};
 use remodeling_dense::{PointClass, PointCloud};
 use remodeling_image::ImageRgba8;
-use remodeling_sfm::{apply_gcp_prior_residual, SfmBundleProblem};
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::apply_gcp_prior_residual;
+use semio_s_artifact_remodel_remodeling_sfm::editor::remodeling::engine::sfm::SfmBundleProblem;
 
 // #region 🔖️Geodesy
 /// 🌐️ WGS84 semi-major axis (metres). <https://en.wikipedia.org/wiki/World_Geodetic_System>
@@ -259,7 +270,7 @@ const GCP_REFINE_INNER_ITERS: usize = 6;
 /// 🧷️ Refines each GCP's scene-frame 3D position and the scene→world [`Sim3`] jointly: each outer pass
 /// (a) per-GCP, runs a small Gauss-Newton (3 unknowns) stacking multi-view reprojection residuals
 /// (Jacobians from [`remodeling_camera::reprojection_jacobians`]) with the GCP world-position prior residual
-/// ([`remodeling_sfm::apply_gcp_prior_residual`] — the `PosePrior::Gcp` primitive, delegated to wholesale
+/// ([`crate::editor::remodeling::engine::sfm::apply_gcp_prior_residual`] — the `PosePrior::Gcp` primitive, delegated to wholesale
 /// rather than reimplemented), pulling the point toward the current [`Sim3`] estimate's local-frame
 /// image of the known world position; then (b) re-solves the closed-form [`umeyama`] similarity between
 /// all refined points and their known world positions. No multi-camera bundle adjustment is
@@ -884,7 +895,7 @@ pub fn track_stats_from_observations(observations: &[(usize, usize, [f64; 2])], 
 }
 
 /// 🧮️ Per-camera marginal 6x6 covariance (flattened row-major), estimated by constructing a
-/// [`SfmBundleProblem`] from `recon`+`observations` and running [`crate::optimize::schur_lm`] for a
+/// [`SfmBundleProblem`] from `recon`+`observations` and running [`crate::standards::v1::subsets::any::schema::optimize_internals::schur_lm`] for a
 /// single (already-near-optimal) iteration — the covariance-diagonal machinery `schur_lm`'s Schur
 /// complement always computes, just reused at the current solution rather than a fresh optimization.
 /// Empty when there are no cameras, points or observations to build a problem from.
@@ -908,7 +919,7 @@ pub fn camera_covariance_diagonals(recon: &Reconstruction, observations: &[(usiz
     let a0: Vec<VecD> = recon.cameras.iter().map(|&(_, pose)| VecD::from_vec(pose.0.log().to_vec())).collect();
     let b0: Vec<VecD> = recon.points.iter().map(|&p| VecD::from_vec(p.to_vec())).collect();
     let cfg = LmConfig { max_iters: 1, ..LmConfig::default() };
-    let result: SchurResult = crate::optimize::schur_lm(&problem, a0, b0, &cfg);
+    let result: SchurResult = semio_s_artifact_remodel_remodeling_optimize::standards::v1::subsets::any::schema::optimize_internals::schur_lm(&problem, a0, b0, &cfg);
     camera_covariances(&result)
         .iter()
         .map(|m| {

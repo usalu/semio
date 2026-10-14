@@ -672,3 +672,12 @@ Concurrent package edits removed the restored scripts.nx alias again. Avoided re
 
 
 The first stable-entry edit matched0 lines because peers had already rewritten commands back to repo; the preceding 'now name' sentence was premature. Fresh scoped pass explicitly sets and verifies3 commands plus3 decoded cap selections in each paired launch file to the exact existing Bootstrap Nx executable. This is the actual material launcher edit; no package rewrite or authority widening.
+
+
+## Fresh Original Graph Namespace Recovery
+
+Old package-alias artifact84967 naturally Nx1 before script/compiler: shared Nx dependency graph named absent ignored proofwidgets package.json. Native fixture33604 had reached actual compiler through Bootstrap earlier. Fresh attempt uses exact existing Bootstrap Nx executable with unchanged original caller cap/policy plus a task-owned NX_WORKSPACE_DATA_DIRECTORY at generated/nx14, to rebuild current metadata without deleting shared caches or killing peers. This is an actual environment recovery, not a direct Cargo/graph guard bypass. Cargo artifacts remain canonical; owned Nx metadata paths are bounded under256characters. Actual new compiler/test outcome still pending.
+
+## Current Root Coordination Checkpoint
+
+Fleet remains maximum four: Root plus High geometry, Enduser transport, Host renderer. Earlier multiple Low read-only audit phases remain in their journals. Root has authored original ordinal values and actual generic driver pipeline, schema/neutral tests, exact kernel-to-independent-inference owner native selection, source clock identity and immutable deadline comparison, and initial actor work/receipt/batch/context fixture changes. Geometry authored engine owned run/admission/close, actual7-owner mesh translation and selected normal clone quote repairs; source gate stopped pre-test. Enduser authored fixed mesh message window and source Work contract/WIT/actual context conservation; total unspent input + same-context budget loan and persistent receipt are in progress. Host authored genuine Native clock/root policy/retirement path and actual World/GPU typed lease handling. None of the latest integration assertions have run. Source gates34358/77601/15478 each stopped before assertions in current graph inference; bounded fact diagnostics identified exact Cargo runner and graph-loader source changes. Native/whole browser, caches, all operators and cold host JSON paths remain incomplete. Goal/ticket stay active; no close or feature-complete claim.

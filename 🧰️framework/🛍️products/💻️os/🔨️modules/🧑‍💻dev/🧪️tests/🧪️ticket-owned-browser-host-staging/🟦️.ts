@@ -1201,7 +1201,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       const { loadCatalogTaxonomy, fixedFilenameContractIdsForPath } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
       const taxonomy = loadCatalogTaxonomy(), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8"));
       const vendorRoot = join(pluginOutRoot, fixture.vendorPath), urls = new Map<string, string>();
-      expect(readdirSync(vendorRoot).filter((name) => name !== ".nx-artifact.json").sort()).toEqual(fixture.vendorFiles);
+      expect(readdirSync(vendorRoot).filter((name) => name !== ".semio-artifact.json").sort()).toEqual(fixture.vendorFiles);
       for (const filename of fixture.vendorFiles) {
         const file = join(vendorRoot, filename), relativeFile = relative(repoRoot, file).replace(/\\/g, "/");
         const installed = readFileSync(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser", filename));

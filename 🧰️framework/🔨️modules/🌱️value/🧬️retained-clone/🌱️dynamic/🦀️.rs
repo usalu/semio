@@ -117,6 +117,8 @@ impl RetainedCloneDemandCursor<DslValue> for DslValueRetainedCloneCursor {
 }
 
 impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
+    fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
     fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.demands(source,grant.maximum_copy_bytes)?;

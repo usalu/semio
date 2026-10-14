@@ -5,8 +5,8 @@ use super::data::label;
 use super::spatial::{authoring_of, phase_of};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use super::Import;
-use crate::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn vertices(ring: &Loop, to_building: &impl Fn([f64; 2]) -> Point2) -> Vec<Vertex> {
     ring.iter().map(|(point, bulge)| Vertex { point: to_building(*point), bulge: *bulge }).collect()

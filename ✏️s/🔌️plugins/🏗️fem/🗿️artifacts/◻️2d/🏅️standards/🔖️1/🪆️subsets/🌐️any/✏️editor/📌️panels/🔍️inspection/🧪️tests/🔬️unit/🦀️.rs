@@ -187,7 +187,7 @@ async fn nothing_selected_renders_the_document_summary_2d() {
     let json = english(&doc, &[]);
     assert!(json.contains("fem2d-play-inspection.summary.nodes"), "{json}");
     assert!(json.contains(&doc.nodes.len().to_string()));
-    assert!(json.contains(crate::FEM_2D_SCHEMA));
+    assert!(json.contains(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA));
     assert!(json.contains("fem2d-play-inspection.summary.deformation-scale"), "the analysis settings are reported, not edited, here");
     assert!(!json.contains("patchNode"));
     assert!(carries_a_tree(&json), "the empty-selection summary is still a tree panel: {json}");
@@ -215,7 +215,7 @@ async fn german_resolves_every_field_label_the_inspector_binds_2d() {
 #[semio_framework_async_macros::async_test]
 async fn the_body_key_routes_to_this_panel_on_the_live_app_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     let json = render_body(&mut app, BODY_KEY);
     assert!(json.contains("fem2d-play-inspection.summary.nodes"), "{json}");
     assert!(json.contains("12"), "the demo's twelve nodes are counted");

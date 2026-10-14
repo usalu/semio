@@ -5,6 +5,10 @@ import { stageArtifacts } from "../📤️publication/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
 import { captureOwnedCommandV1, startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
 import {acquireCargoTargetRecipeV1,cargoTargetRecipeEnvironmentV1,type CargoTargetRecipeV1,type CargoTargetRecipeLeaseV1} from "./🎯️recipe/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "./💾️storage/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "./🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1} from "./📥️source/🎟️admission/🟦️.ts";
+import {requireNativeStoragePathV1} from "./💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import { chmodSync, closeSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -182,6 +186,15 @@ export function cargoArtifactArgumentsV1(args:readonly string[],policy:Pick<Carg
  return cargoConfigurationArgumentsV1(selected,policy.compilerConfiguration,policy.buildDirectory);
 }
 
+/** 📏️ Refuses the owned crate's longest known Cargo intermediate suffix before compiler writes. */
+export function requireCargoCompilerPathEnvelopeV1(manifest:string,args:readonly string[],policy:Pick<CargoArtifactBuildPolicyV1,"buildDirectory"|"mode">):void{
+ const authored=Bun.TOML.parse(readFileSync(manifest,"utf8")) as {package?:{name?:string};lib?:{name?:string};bin?:{name?:string}[]},name=authored.package?.name;if(!name)throw Error("Bounded Cargo capture requires one declared package");
+ const profile=cargoRequestedProfileV1(args)??buildModePolicy(policy.mode).cargoProfile,targets=[authored.lib?.name??name.replaceAll("-","_"),...(authored.bin??[]).flatMap(row=>row.name?[row.name]:[])],delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter);let target:string|undefined;
+ for(let index=0;index<head.length;index++){const argument=head[index]!;if(argument==="--target")target=head[++index];else if(argument.startsWith("--target="))target=argument.slice(9);}
+ const targetDirectory=target?(isAbsolute(target)?basename(target).replace(/\.json$/u,""):target):"";
+ for(const crate of targets){for(const extension of["rmeta","rlib","dylib","dll","pdb","d"]){requireMaterializedPathV1(join(policy.buildDirectory,targetDirectory,profile,"build",name,"0".repeat(16),"out",`lib${crate}-${"0".repeat(16)}.${extension}`));requireMaterializedPathV1(join(policy.buildDirectory,"t","0".repeat(32),targetDirectory,profile,`lib${crate}.${extension}`));}}
+}
+
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state.
  * `sourcesRecord` names a {@link CargoBinarySourcesV1} file staged beside the selected executable, in
  * the same atomic publication, so a consumer can tell a stale executable from a fresh one without
@@ -200,7 +213,7 @@ export function cargoObservationOutputV1(value:unknown,buildDirectory:string):st
  return directory;
 }
 
-export type CargoArtifactBuildOptionsV1 = { readonly control: CompilerAdmissionControl; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[]; compilerIdentity:string; toolchainIdentity:string }>; readonly provenance?: (receiptPath: string) => void };
+export type CargoArtifactBuildOptionsV1 = { readonly control: CompilerAdmissionControl; readonly storage:NativeStorageReservationV1; readonly sourceBoundary:CargoSourceBoundaryPolicyV1; readonly planningPort?:CargoCompilerPlanningPortV1; readonly sourcePort?:CargoSourceAdmissionPortV1; readonly observationOutput?: CargoObservationOutputV1; readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[]; compilerIdentity:string; toolchainIdentity:string }>; readonly provenance?: (receiptPath: string) => void };
 
 /** 🧭️ Observes the original compiler recipe while leaving source freshness validation to every Cargo run. */
 async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[],policy:CargoArtifactBuildPolicyV1,options:CargoArtifactBuildOptionsV1):Promise<Readonly<{recipe:CargoTargetRecipeV1;recheck:()=>Promise<void>}>>{
@@ -212,18 +225,27 @@ async function cargoArtifactTargetRecipeV1(manifest:string,args:readonly string[
 
 /** 🚦️ Retains exact recipe target and shared store custody through invocation capture and provenance under the original control. */
 export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
+  const storage=requireNativeStorageReservationV1(options.storage,options.control);if(storage.allocation.kind!=="compiler-workspace")throw Error("Original compiler workspace storage required");await storage.recheck();
   policy = admitArtifactPolicy(policy);
   args = cargoArtifactArgumentsV1(args,policy);
   if(options.observationOutput&&options.output)throw Error("Compiler observations and source deliverables require separate output ownership");
-  options = { ...options, ...(options.observationOutput?{}:{output: options.output ?? `dist/build/${policy.mode}`}) };
+  options = { ...options, ...(options.observationOutput?{}:{output: options.output ?? join(storage.backing.root,"published",createHash("sha256").update(resolve(manifest)).digest("hex").slice(0,20),policy.mode)}) };
   if (!isAbsolute(manifest)) throw Error("Cargo artifact manifest must be absolute");
   const control = requestedCompilerAdmissionControlV1(options.control, policy.budgetMs);
+  requireCargoCompilerPathEnvelopeV1(manifest,args,policy);
+  const environment=options.environment??process.env;
+  for(const path of[policy.buildDirectory,policy.captureDirectory,options.observationOutput?.directory??resolve(dirname(manifest),options.output!),...(environment.SEMIO_TEST_ARTIFACT_DIR?[environment.SEMIO_TEST_ARTIFACT_DIR]:[])])requireNativeStoragePathV1(storage.backing.root,path);
+  if(!environment.CARGO_HOME)throw Error("Original bounded Cargo dependency storage required");requireNativeStoragePathV1(storage.backing.root,environment.CARGO_HOME);
+  const temporary=requireNativeStoragePathV1(storage.backing.root,join(storage.backing.root,"tmp"));await storage.recheck();mkdirSync(temporary,{recursive:true});options={...options,environment:{...environment,TMPDIR:temporary,TMP:temporary,TEMP:temporary}};
   if (!cargoBuildOwnerAliveV1(options.environment ?? process.env)) throw Error("Original Cargo build owner exited");
   let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined, lease:CargoTargetRecipeLeaseV1|undefined;
   try {
     options = { ...options, control };
+    const planning=await captureCargoCompilationGraphV1({workspaceRoot:policy.cwd,cwd:policy.cwd,program:"cargo",prefix:[],args:[options.command??"build","--locked","--manifest-path",manifest,...args],environment:options.environment??process.env,maximumOutputBytes:16777216},control,options.planningPort??actualCargoCompilerPlanningPortV1());
+    await admitCargoSourceBoundariesV1(planning,policy.cwd,options.sourceBoundary,control,options.sourcePort??actualCargoSourceAdmissionPortV1(options.environment??process.env,policy.cwd));await storage.recheck();
     const recipe=await cargoArtifactTargetRecipeV1(manifest,args,policy,options);
     lease=await acquireCargoTargetRecipeV1({directory:policy.leaseDirectory,recipe:recipe.recipe,control});
+    requireNativeStoragePathV1(storage.backing.root,lease.targetDirectory);await storage.recheck();
     capacity = await acquireCompilerCapacityLeaseV1({ directory: policy.leaseDirectory, control, environment: options.environment });
     const environment: Record<string, string | undefined> = { ...(options.environment ?? process.env), SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(capacity.parallelism) };
     if (!environment.MAKEFLAGS && !environment.CARGO_MAKEFLAGS) environment.CARGO_BUILD_JOBS = String(capacity.parallelism);
@@ -732,16 +754,14 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const path = resolve(manifest);
   const sourceRoot = dirname(path);
   const staging = options.observationOutput?cargoObservationOutputV1(options.observationOutput,policy.buildDirectory):resolve(sourceRoot, options.output ?? "dist/build");
-  if (!options.observationOutput&&!staging.startsWith(sourceRoot + sep)) throw new Error("Cargo deliverables must belong to their source project");
+  requireNativeStoragePathV1(options.storage.backing.root,staging);
   const captureParent = policy.captureDirectory;
   mkdirSync(captureParent, { recursive: true });
   const capture = mkdtempSync(join(captureParent, "cargo-artifacts-"));
   const owner = relative(policy.cwd, path).split(sep).join("/");
   const files = new Map<string, string>();
-  const dependencies = new Map<string, string>();
   const provenanceRoot = (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR;
   const units: any[] = [], buildScripts: any[] = [], stagedNames = new Map<string, string>();
-  let hasLibrary = false;
   let primaryExecutable: string | undefined;
   let cancelled = false;
   let forceKill: ReturnType<typeof setTimeout> | undefined;
@@ -807,6 +827,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
           const primary = selected && packageUrl !== undefined && packageUrl.startsWith("file:") && resolve(fileURLToPath(packageUrl)) === sourceRoot;
           if (primary && typeof message.executable === "string") primaryExecutable = message.executable;
           for (const file of message.filenames ?? []) {
+            requireNativeStoragePathV1(options.storage.backing.root,file);
             if (file.endsWith(".d")) continue;
             if (primary && options.deliverables && !options.deliverables.some((extension) => file.endsWith(extension))) continue;
             const library = primary && file.endsWith(".rmeta") ? message.filenames.find((candidate: string) => candidate.endsWith(".rlib")) : undefined;
@@ -815,7 +836,6 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
             if (!key) continue;
             stagedNames.set(file, key);
             if (!primary) {
-              dependencies.set(key, file);
               continue;
             }
             const captured = join(capture, key);
@@ -823,7 +843,6 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
             copyFileSync(file, captured);
             chmodSync(captured, lstatSync(file).mode & 0o777);
             files.set(key, captured);
-            hasLibrary ||= file.endsWith(".rlib");
           }
         }
       } catch (error) {
@@ -847,14 +866,6 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
       if (deadline) clearTimeout(deadline);
     }
     if (files.size === 0) throw new Error(`Cargo emitted no final artifacts for ${owner}`);
-    if (hasLibrary)
-      for (const [name, file] of dependencies) {
-        const captured = join(capture, name);
-        mkdirSync(dirname(captured), { recursive: true });
-        copyFileSync(file, captured);
-        chmodSync(captured, lstatSync(file).mode & 0o777);
-        files.set(name, captured);
-      }
     if (options.sourcesRecord !== undefined) {
       if (primaryExecutable === undefined) throw new Error(`Cargo emitted no executable to record the sources of: ${owner}`);
       const record: CargoBinarySourcesV1 = { schema: CARGO_BINARY_SOURCES_SCHEMA_V1, builtAtMs, sources: cargoDepInfoSourcesV1(readFileSync(`${primaryExecutable.replace(/\.exe$/u, "")}.d`, "utf8")) };

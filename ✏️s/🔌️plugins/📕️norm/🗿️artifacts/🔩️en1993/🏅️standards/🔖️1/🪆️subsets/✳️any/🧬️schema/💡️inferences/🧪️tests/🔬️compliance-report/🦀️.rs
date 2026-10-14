@@ -1,8 +1,8 @@
 //! 🔬️ evaluate() report shape for hierarchical EN 1993 subject.
 
-use crate::document::CheckStatus;
-use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use crate::En1993Snapshot;
+use semio_s_plugin_norm_compliance::CheckStatus;
+use crate::evaluate;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 #[test]
 fn evaluate_compliant_covers_core_parts_and_passes() {

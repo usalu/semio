@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallTop`: an absolute `SetWallTop` back to the base constraint, none when the wall is absent.
 
 use super::SetWallTop;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetWallTop, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.get(&payload.id) {

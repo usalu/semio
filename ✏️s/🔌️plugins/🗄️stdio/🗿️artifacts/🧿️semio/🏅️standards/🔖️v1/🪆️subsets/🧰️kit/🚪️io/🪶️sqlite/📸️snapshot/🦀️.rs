@@ -8,7 +8,7 @@ use crate::schema::snapshot::{SemioKitSnapshot, SemioKitType, SemioKitDesign, Se
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion}, semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity};
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]

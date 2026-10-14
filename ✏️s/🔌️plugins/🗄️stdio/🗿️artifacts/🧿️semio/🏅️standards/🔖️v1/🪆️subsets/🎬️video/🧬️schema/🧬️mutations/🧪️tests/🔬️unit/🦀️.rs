@@ -8,7 +8,7 @@ use protocol::MutationDiff;
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
@@ -33,7 +33,7 @@ fn fixture() -> SemioVideoSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
@@ -52,7 +52,7 @@ fn sweep_a() -> SemioVideoSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Audio,
@@ -164,7 +164,7 @@ fn assert_absorb_matches_sequential(base: &SemioVideoSnapshot, d1: &SemioVideoDi
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn streams_diff(diff: &SemioVideoDiff) -> &crate::schema::diff::SemioVideoStreamsDiff {
+fn streams_diff(diff: &SemioVideoDiff) -> &semio_s_artifact_stdio_semio_video_model::schema::diff::SemioVideoStreamsDiff {
     diff.streams.as_ref().expect("streams diff present")
 }
 

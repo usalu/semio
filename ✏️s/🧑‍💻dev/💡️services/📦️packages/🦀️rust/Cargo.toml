@@ -18,18 +18,13 @@ path = "../../🦀️.rs"
 [[bin]]
 name = "semio-s-services-native"
 path = "../../⌨️entrypoint/🦀️.rs"
-required-features = ["native-renderer"]
 
 [[bin]]
 name = "semio-s-services-mcp"
 path = "../../🌉️mcp/⌨️entrypoint/🦀️.rs"
-required-features = ["mcp-service"]
 
 [dependencies]
 semio-framework-os-kernel.workspace = true
-semio-framework-os-renderer-wgpu = { workspace = true, optional = true }
-semio-framework-os-mcp = { workspace = true, optional = true }
+semio-framework-os-renderer-wgpu = { workspace = true }
+semio-framework-os-mcp = { workspace = true }
 
-[features]
-native-renderer = ["dep:semio-framework-os-renderer-wgpu"]
-mcp-service = ["dep:semio-framework-os-mcp"]

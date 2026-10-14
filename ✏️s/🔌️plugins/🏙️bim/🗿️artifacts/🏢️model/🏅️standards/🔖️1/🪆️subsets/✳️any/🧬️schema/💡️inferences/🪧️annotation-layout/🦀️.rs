@@ -12,7 +12,7 @@
 use super::super::diagnostics::{Diagnostic, DiagnosticCode};
 use super::super::element_solids::{dep_object, dep_value};
 use super::super::wall_layout::WallLayout;
-use crate::{AnnotationAnchor, DimensionUnit, ModelSnapshot, Point2, Terminator};
+use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, DimensionUnit, ModelSnapshot, Point2, Terminator};
 use anchors::{Reason, EPS};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
@@ -266,8 +266,8 @@ fn element_input(snapshot: &ModelSnapshot, id: &str) -> DslValue {
         ("roof_type", dep_value(&roof.as_ref().and_then(|row| snapshot.roof_types.get(&row.roof_type).cloned()))),
         ("opening", dep_value(&opening)),
         ("host", dep_value(&opening.as_ref().and_then(|row| snapshot.walls.get(&row.host).map(|host| host.axis.clone()).or_else(|| snapshot.curtain_walls.get(&row.host).map(|host| host.axis.clone()))))),
-        ("window_type", dep_value(&opening.as_ref().and_then(|row| if let crate::OpeningKind::Window { window_type } = &row.kind { snapshot.window_types.get(window_type).cloned() } else { None }))),
-        ("door_type", dep_value(&opening.as_ref().and_then(|row| if let crate::OpeningKind::Door { door_type } = &row.kind { snapshot.door_types.get(door_type).cloned() } else { None }))),
+        ("window_type", dep_value(&opening.as_ref().and_then(|row| if let crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Window { window_type } = &row.kind { snapshot.window_types.get(window_type).cloned() } else { None }))),
+        ("door_type", dep_value(&opening.as_ref().and_then(|row| if let crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Door { door_type } = &row.kind { snapshot.door_types.get(door_type).cloned() } else { None }))),
         ("stair", dep_value(&snapshot.stairs.get(id).cloned())),
         ("railing", dep_value(&snapshot.railings.get(id).cloned())),
         ("space", dep_value(&snapshot.spaces.get(id).cloned())),

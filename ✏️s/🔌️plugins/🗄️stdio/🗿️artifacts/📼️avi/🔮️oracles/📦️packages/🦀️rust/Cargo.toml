@@ -20,9 +20,6 @@ role = "test"
 name = "semio_s_artifact_stdio_avi_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = ["dep:riff"]
-
 [dependencies]
-"riff" = { version = "2.0", optional = true }
+"riff" = { version = "2.0" }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

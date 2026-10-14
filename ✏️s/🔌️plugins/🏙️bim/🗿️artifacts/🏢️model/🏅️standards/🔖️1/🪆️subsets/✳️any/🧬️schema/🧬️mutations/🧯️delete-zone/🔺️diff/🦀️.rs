@@ -5,7 +5,7 @@
 use super::super::cascade;
 use super::super::elements;
 use super::DeleteZone;
-use crate::{Assigned, Entry, KeyedDelta, ModelDiff, ModelSnapshot, SpacePatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, KeyedDelta, ModelDiff, patches::SpacePatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteZone, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

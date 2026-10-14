@@ -3,7 +3,7 @@ use crate::editor::fem2d::commands::{canvas_pointer_move, canvas_pointer_up};
 use crate::editor::fem2d::interaction::{canvas_gesture, fem2d_layer_to_canvas, FEM2D_INTERACTION_DOMAIN, FEM2D_POINTER_CHANNEL};
 use crate::editor::fem2d::modes::edit::windows::model as model_window;
 use crate::editor::fem2d::modes::edit::windows::results as results_window;
-use crate::Viewport2d;
+use semio_framework_os_kernel::Viewport2d;
 use model_window::{find_node_2d, screen_2d};
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework_plugin::{HistoryView, ViewModel, ViewWindowInstance};

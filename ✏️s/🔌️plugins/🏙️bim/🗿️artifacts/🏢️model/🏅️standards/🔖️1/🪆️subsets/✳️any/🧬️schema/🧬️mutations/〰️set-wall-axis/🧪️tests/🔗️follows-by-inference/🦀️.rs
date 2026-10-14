@@ -4,7 +4,7 @@
 use super::SetWallAxis;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout, refusal};
-use crate::{Axis, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Point2}, mutations::ModelMutation};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/〰️set-wall-axis/✅️stretches-under-an-opening/📸️snapshot/⬅️before/🔣️.json");
 

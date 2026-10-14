@@ -80,7 +80,8 @@ pub type WiresContentChild = store::os_store::artifact_child::ArtifactChild<Semi
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 pub use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 pub use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-pub use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
+pub use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+pub use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
 /// 🧾️ Board-node keys the graph node carries natively; every other board key is one keyed node property.
 const WIRES_NATIVE_NODE_KEYS: &[&str] = &["id", "nodeKind", "text", "x", "y", "width", "height"];

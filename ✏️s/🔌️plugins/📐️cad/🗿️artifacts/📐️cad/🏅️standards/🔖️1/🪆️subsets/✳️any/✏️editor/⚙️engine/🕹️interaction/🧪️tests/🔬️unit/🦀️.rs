@@ -18,7 +18,7 @@ async fn catalog_lists_every_model_definition_asset() {
     assert!(interaction_by_id("building.building.placeWall").is_some());
     assert_eq!(list_interactions_for_model_definition("spatial.shape").len(), 37);
     assert_eq!(list_interactions_for_model_definition("aec.building").len(), 11);
-    assert_eq!(catalog().len(), RAW_INTERACTION_ASSETS.len(), "every embedded asset parses into a catalog entry");
+    assert_eq!(catalog().len(), RAW_INTERACTION_ASSETS.iter().map(|assets| assets.len()).sum::<usize>(), "every embedded asset parses into a catalog entry");
 }
 
 /// 📌️ `RAW_INTERACTION_ASSETS` is a hand-maintained `include_str!` list — pin it against the
@@ -297,7 +297,7 @@ async fn every_model_definition_interaction_drives_to_a_commit_outcome() {
     let mut stuck = Vec::new();
     let selection = vec!["object-a".to_string(), "object-b".to_string()];
     for entry in catalog() {
-        let pane = crate::cad_pane_from_model_definition_id(&entry.model_definition_id).unwrap_or(CadPaneId::Shape);
+        let pane = semio_s_artifact_cad_cad_model::snapshot::cad_pane_from_model_definition_id(&entry.model_definition_id).unwrap_or(CadPaneId::Shape);
         let mut session = start_session(&entry.id, pane).expect("session");
         if !drive_to_commit(&mut session, &selection) {
             stuck.push(format!("{}@{}", entry.id, session.state));

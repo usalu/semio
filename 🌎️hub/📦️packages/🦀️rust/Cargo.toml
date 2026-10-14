@@ -21,20 +21,11 @@ name = "os-hub"
 path = "../../🏗️bootstrap/🦀️.rs"
 
 [features]
-default = ["sqlite", "native-artifact-execution"]
-# 🔌️ Each backend feature both pulls in its own driver dep and forwards to `db`'s same-named
-# storage feature (`db::storage_sqlite`/`storage_postgres`/`storage_neo4j`) — one feature name
-# controls both the directory backend AND the document/blob storage substrate together, so there
-# is no split-brain where one half of a backend is compiled in and the other isn't.
-sqlite = ["dep:rusqlite", "db/sqlite"]
-postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
-neo4j = ["dep:neo4rs", "db/neo4j"]
-native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio-drawing", "dep:semio-s-artifact-stdio-semio-value", "dep:semio-hub-stdio-catalog", "dep:semio-hub-gis", "dep:semio-hub-vcs"]
 # 🏗️ Test-only, cross-target: compiles the real GIS Map profile builder in
 # `🌎️hub/🧪️tests/🔏️trusted-catalog-profile/` so the `os-hub` BINARY target's own laws can
 # construct a verified catalog and frozen Map binding. `#[cfg(test)]` cannot serve another target, so
 # this must be a feature. It never enters a default build.
-integration-fixtures = ["native-artifact-execution"]
+integration-fixtures = []
 
 [dependencies]
 semio-framework-pack = { path = "../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -56,14 +47,15 @@ semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏�
 # level, and an injectable sink. `AGENTS.md` forbids a runtime dependency on `tracing`, and a
 # second, hub-local logger would be exactly the drift the shared module exists to prevent.
 semio-framework-trace = { workspace = true }
-semio-hub-stdio-catalog = { workspace = true, optional = true }
-semio-s-artifact-stdio-json = { workspace = true, optional = true }
-semio-s-artifact-stdio-semio-drawing = { workspace = true, optional = true }
-semio-s-artifact-stdio-semio-value = { workspace = true, optional = true }
-semio-hub-gis = { workspace = true, optional = true }
-semio-hub-vcs = { workspace = true, optional = true }
+semio-hub-stdio-catalog = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-hub-gis = { workspace = true }
+semio-hub-vcs = { workspace = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
-semio-framework-plugin-interpreter = { workspace = true }
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
 # 🧬️ The os-kernel-free named-export registry (`📋️execution-contract.md` §C): every `🧬️schema/🦀️.rs`
 # of this crate registers its scope's exports through it, so registration is production code and not
 # a test artefact. It is a leaf crate — depending on it introduces no os-kernel edge.
@@ -75,7 +67,7 @@ protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 # 🛢️ The document database over filesystem storage with deflate-compressed snapshots; relational and graph backends
 # join through this crate's own storage features.
-db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", default-features = false, features = ["fs", "deflate"] }
+db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
 # 🖥️ The generic server product hub is instance #1 of: `🗄️stores/🦀️.rs` defines `HubInstance`
 # and the four durable storage roles it closes the product's ports over. The crate's lib is named
 # `server`, so hub writes `use server::gateway::ServerInstance;`.
@@ -84,13 +76,15 @@ semio-framework-dispatch-macros = { workspace = true }
 
 # 🔌️ Directory backend drivers — optional, enabled only by this crate's same-named feature (see
 # `[features]` above and `connect_db`/`connect_directory` in `🏗️bootstrap/🦀️.rs`).
-rusqlite = { version = "0.38.0", features = ["bundled"], optional = true }
-sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"], optional = true }
-sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"], optional = true }
-neo4rs = { version = "0.8", optional = true }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
+sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }
+neo4rs = { version = "0.8" }
 
 [dev-dependencies]
-semio-s-artifact-gis-gismap = { workspace = true, features = ["mcp-service"] }
+semio-framework-plugin-interpreter = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-s-artifact-gis-gismap-mcp = { workspace = true }
 semio-framework-os-mcp = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 # 🔬️ `conformance` compiles the server product's backend-generic storage contract into the
 # library for test builds only, so hub's own stores are held against the identical assertion bodies
@@ -105,7 +99,7 @@ tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
 # 🗝️ Test-only: the directory lanes' postgres/neo4j fixtures run on the ONE claimed shared server (`db_storage::claimed_backend`).
-db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", default-features = false, features = ["fs", "deflate", "claimed-backend-laws"] }
+db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db", features = ["claimed-backend-laws"] }
 
 [[test]]
 name = "inference_client_contract"

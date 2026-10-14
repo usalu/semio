@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Profile, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{Profile, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use serde_json::json;
 
@@ -67,7 +67,7 @@ fn an_attach_names_a_target_of_the_same_building_with_a_finite_offset() {
 #[test]
 fn only_a_wall_attaches_the_top_of_an_element_to_a_surface() {
     let base = house();
-    let flaw = crate::mutations::wall_geometry::top_flaw(&base, "st", &TopConstraint::Roof { roof: "r".into(), offset: 0.0 }).expect("a refusal");
+    let flaw = crate::standards::v1::subsets::any::schema::mutations::wall_geometry::top_flaw(&base, "st", &TopConstraint::Roof { roof: "r".into(), offset: 0.0 }).expect("a refusal");
     assert_eq!((flaw.code, flaw.path), (OutcomeCode::Invariant, vec!["top".to_string()]));
 }
 

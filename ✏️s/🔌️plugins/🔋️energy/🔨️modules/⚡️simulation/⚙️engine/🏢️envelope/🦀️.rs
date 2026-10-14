@@ -6,6 +6,8 @@
 //! forced correlation (MoWiTT smooth-surface coefficients scaled by the roughness multiplier)
 //! outside, and wind at the surface centroid from the power-law boundary layer.
 
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::units::STEFAN_BOLTZMANN;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

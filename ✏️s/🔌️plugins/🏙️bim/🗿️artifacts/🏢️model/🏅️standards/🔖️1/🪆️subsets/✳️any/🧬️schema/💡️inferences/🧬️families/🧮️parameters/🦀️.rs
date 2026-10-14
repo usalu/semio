@@ -3,7 +3,7 @@
 
 use super::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
 use super::{ParameterValue, ResolvedParameter};
-use crate::{FamilyParameter, ModelSnapshot, ParameterKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyParameter, ModelSnapshot, ParameterKind};
 use semio_framework_expression::{evaluate_all_declared, parse, print, Expr, Kind, Value};
 use std::collections::{BTreeMap, BTreeSet};
 

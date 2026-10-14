@@ -1,0 +1,161 @@
+{
+ "order": [
+  "model",
+  "engine",
+  "mesh-topology",
+  "mesh",
+  "load",
+  "boundary",
+  "material",
+  "analysis",
+  "mutations",
+  "io",
+  "viewer",
+  "aggregator"
+ ],
+ "allow": {
+  "engine": [
+   "model"
+  ],
+  "mesh-topology": [
+   "model"
+  ],
+  "mesh": [
+   "model",
+   "mesh-topology"
+  ],
+  "load": [
+   "model"
+  ],
+  "boundary": [
+   "model"
+  ],
+  "material": [
+   "model"
+  ],
+  "analysis": [
+   "model"
+  ],
+  "mutations": [
+   "model",
+   "mesh-topology",
+   "mesh",
+   "load",
+   "boundary",
+   "material",
+   "analysis"
+  ],
+  "io": [
+   "model",
+   "engine",
+   "mesh-topology",
+   "mesh",
+   "load",
+   "boundary",
+   "material",
+   "analysis",
+   "mutations"
+  ],
+  "viewer": [
+   "model",
+   "engine",
+   "mutations",
+   "io"
+  ],
+  "aggregator": [
+   "model",
+   "engine",
+   "mesh-topology",
+   "mesh",
+   "load",
+   "boundary",
+   "material",
+   "analysis",
+   "mutations",
+   "io",
+   "viewer"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "^🌉️apply/",
+   "mutations"
+  ],
+  [
+   "^⚙️engine/◻️2d/",
+   "engine"
+  ],
+  [
+   "🪆️subsets/[^/]+/🧬️schema/🧬️mutations/[^/]+/🧪️tests/",
+   "mutations"
+  ],
+  [
+   "🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/(⚪️create-node|🕳️delete-node|🔁️replace-node|🧩️create-element|🗑️delete-element|♻️replace-element)/",
+   "mesh-topology"
+  ],
+  [
+   "🪆️subsets/🕸️mesh/",
+   "mesh"
+  ],
+  [
+   "🪆️subsets/🏋️load/",
+   "load"
+  ],
+  [
+   "🪆️subsets/🛡️boundary/",
+   "boundary"
+  ],
+  [
+   "🪆️subsets/🧱️material/",
+   "material"
+  ],
+  [
+   "🪆️subsets/📈️analysis/",
+   "analysis"
+  ],
+  [
+   "🪆️subsets/🌐️any/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🪆️subsets/🌐️any/🧬️schema/",
+   "model"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🚪️io/",
+   "io"
+  ],
+  [
+   "🪆️subsets/🌐️any/📚️examples/",
+   "io"
+  ],
+  [
+   "🪆️subsets/🌐️any/👁️viewer/",
+   "viewer"
+  ],
+  [
+   "🪆️subsets/🌐️any/✏️editor/",
+   "aggregator"
+  ],
+  [
+   "🏅️standards/🔖️1/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "🪆️subsets/🌐️any/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

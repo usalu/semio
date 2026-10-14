@@ -214,7 +214,7 @@ fn every_surface_class_and_family_carries_its_own_swatch() {
 
 #[test]
 fn the_bestest_600_example_renders_every_surface_and_every_window() {
-    let model = crate::examples::bestest_600::model();
+    let model = crate::bestest::model("600").expect("ANSI/ASHRAE 140 §5.2 case 600 is registered");
     let (meshes_json, instances_json) = energy_model_scene_parts(&model, &EnergySceneStyle::default());
     let instances = parsed(&instances_json);
     let ids: Vec<&str> = instances.as_array().expect("instances").iter().filter_map(|entry| entry["id"].as_str()).collect();

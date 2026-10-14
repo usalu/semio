@@ -28,15 +28,15 @@
 //! @see ../../../../🧬️mvd/🦀️.rs — the Part-21 editing primitives the three MVD subsets share.
 //! @see ../../🔣️oracle.json — the `ifc-2x3-cobie` catalog `KINDS` is checked against.
 
-use crate::standards::v2x3::mvd;
-use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::mvd;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 #[cfg(test)] use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 #[cfg(test)]
-pub use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation};
-pub use crate::standards::v2x3::subsets::base::schema::mutations::{Ifc2x3Mutation};
+pub use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::apply_ifc2x3_mutation;
+pub use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
 
 //#region 🔖️Vocabulary
 /// 📐️ `IfcRoot.Name` is attribute 3 of every rooted entity (index 2) — COBie's key column.

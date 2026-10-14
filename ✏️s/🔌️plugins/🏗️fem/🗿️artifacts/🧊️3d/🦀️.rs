@@ -8,9 +8,15 @@ extern crate semio_framework_os_kernel as vcs;
 #[path = "🌉️apply/🦀️.rs"]
 pub mod central_apply;
 
-#[cfg(feature = "component-app-assembly")]
 pub use semio_s_artifact_fem_2d::app_surface;
-pub use semio_s_artifact_fem_2d::{algebra, analyses, elements2d, elements3d, formulation, mesh, model, sparse};
+pub use semio_s_artifact_fem_2d::algebra;
+pub use semio_s_artifact_fem_2d::analyses;
+pub use semio_s_artifact_fem_2d::elements2d;
+pub use semio_s_artifact_fem_2d::elements3d;
+pub use semio_s_artifact_fem_2d::formulation;
+pub use semio_s_artifact_fem_2d::mesh;
+pub use semio_s_artifact_fem_2d::model;
+pub use semio_s_artifact_fem_2d::sparse;
 #[path = "."]
 pub mod fem3d_engine {
     #[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🦀️.rs"]
@@ -50,7 +56,7 @@ pub const FEM3D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): this used to be a byte-identical second copy of
 /// `fem2d::FemDof`; both dimensions' DOF sets are the same 6 tags with the same `#[dsl(key = ...)]`
 /// wire encoding, so this dimension now re-exports the canonical definition instead of duplicating it.
-pub use semio_s_artifact_fem_2d::FemDof;
+pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 // `From<Dof> for FemDof` / `From<FemDof> for Dof` already live on `fem2d::FemDof` above — this is now
 // the same concrete type, so re-implementing either direction here would be a duplicate trait impl.
 
@@ -183,7 +189,7 @@ pub struct FemCombination {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): this used to be a byte-identical second copy of
 /// `fem2d::FemAnalysisSettings` (same fields, same `Default`, same missing `#[dsl(keyword = ...)]` for
 /// the reason the removed doc comment here used to explain) — re-exported from there now instead.
-pub use semio_s_artifact_fem_2d::FemAnalysisSettings;
+pub use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 /// 🧭️ The world axis a `FemSolid`'s footprint is extruded along. The footprint plane is the one
 /// perpendicular to it and its `(u, v)` coordinates are the two remaining world axes in world order —
@@ -342,7 +348,6 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 
 // #region 🔖️Register
 /// 🧩️ Application wrappers supported by this artifact declaration.
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::fem3d::Fem3dPlayApp>>>
@@ -350,7 +355,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::fem3d::Fem3dPlayApp>>>
@@ -406,7 +410,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -483,7 +486,6 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 mod tests;
 // #endregion 🧪️Tests
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧵️session/🦀️.rs"]
 pub mod live_visual;
 
@@ -491,20 +493,16 @@ pub mod live_visual;
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[cfg(feature = "component-app-assembly")]
         #[path = "🏅️standards/🔖️1/🦀️.rs"]
         mod component;
-        #[cfg(feature = "component-app-assembly")]
         pub use component::*;
 
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 #[path = "."]
@@ -1245,7 +1243,6 @@ pub mod standards {
                         }
                     }
                 }
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🪆️subsets/🌐️any/🎬️scene/🦀️.rs"]
                 pub mod scene;
                 #[path = "."]
@@ -1396,7 +1393,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -1536,7 +1532,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

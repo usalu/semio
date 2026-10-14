@@ -1,5 +1,5 @@
 //! 🖼️ Native encoded sources admit logical RGBA assets before semantic tracing or rendering.
-use crate::DrawingImageAsset;
+use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
 use semio_framework_pixels::{RasterImage,image_decoding::{ImageDecodeInput,ImageDecodeJob,ImageDecodeProgress,ImageDecodeError}};
 
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
@@ -76,7 +76,7 @@ pub fn drawing_image_data_uri(asset:&DrawingImageAsset)->Result<String,String>{d
 mod tests;
 
 /// 🖥️ Admit a completed semantic scene node into the browser image-source output format.
-pub fn prepared_scene_node_value(node:&crate::schema::scene_view::PreparedSceneNode<'_>,document:&crate::DrawingSnapshot)->Result<semio_framework_value::DslValue,String>{
+pub fn prepared_scene_node_value(node:&semio_s_artifact_draw_drawing_scene::view::PreparedSceneNode<'_>,document:&semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot)->Result<semio_framework_value::DslValue,String>{
  use semio_framework_value::ToValue;
  let mut value=node.to_value();
  if let Some((asset,width,height))=node.image{let source=document.assets.get(&asset.id).ok_or("Missing authored image identity")?;let src=drawing_image_data_uri(source)?;
@@ -87,7 +87,7 @@ pub fn prepared_scene_node_value(node:&crate::schema::scene_view::PreparedSceneN
 
 /// 🧪️ Cold fixture construction retains every decoder child until its quoted physical close.
 #[cfg(test)]
-pub(crate) fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{
+pub fn drawing_image_from_png(bytes:&[u8])->DrawingImageAsset{
  let source=base64_codec::base64_standard_encode(bytes);
  let mut job=DrawingImageAdmissionJob::new(ImageDecodeInput{mime:"image/png",data:&source,max_source_bytes:268439552,max_bytes:67108864,max_pixels:16777216,max_chunks:65536}).expect("valid fixture PNG source");
  let grant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:16777216,maximum_capacity_bytes:536870912,maximum_release_bytes:0,maximum_depth:128};

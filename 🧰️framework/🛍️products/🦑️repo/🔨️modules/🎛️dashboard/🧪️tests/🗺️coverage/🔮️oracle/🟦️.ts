@@ -8,6 +8,7 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join,isAbsolute } from "node:path";
+import {buildGraphPathV1} from "../../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 
 export type Json = Record<string, any>;
 export type Selection = { id: string; parameters: Record<string, string | boolean>; extraArgs: string[]; env?: Record<string, string> };
@@ -32,7 +33,7 @@ export class Oracle {
   readonly tickets = new Map<string, Json>();
 
   constructor(readonly root: string, catalogRoot?:string) {
-    const graphPath = join(root, ".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+    const graphPath = buildGraphPathV1(root);
     const graph = existsSync(graphPath) ? JSON.parse(readFileSync(graphPath, "utf8")) : { version: 1, projects: {}, dependencies: [] };
     const skipped = (folder: string): boolean => folder.split("/").some((part) => part !== "." && (part.startsWith(".") || SKIPPED.has(keyOf(part))));
     for (const [name, node] of Object.entries<Json>(graph.projects)) {

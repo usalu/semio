@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteLayer`.
-use crate::diff::{diff_remove_layer, DrawingDiff};
-use crate::schema::find_drawing_layer;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_remove_layer, DrawingDiff};
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DeleteLayer, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

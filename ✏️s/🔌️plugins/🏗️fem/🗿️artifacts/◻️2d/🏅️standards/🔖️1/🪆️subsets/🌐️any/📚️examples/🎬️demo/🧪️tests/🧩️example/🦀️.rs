@@ -7,7 +7,7 @@ fn primary_asset_is_nonempty() {
 //#region 🧪️InferenceLaws
 #[test]
 fn inference_determinism_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::Fem2dInference;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::inferences::Fem2dInference;
     use protocol::Inference;
 
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
@@ -17,8 +17,8 @@ fn inference_determinism_law() {
 
 #[test]
 fn inference_default_law() {
-    use crate::standards::v1::subsets::any::schema::inferences::Fem2dInference;
-    use crate::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::inferences::Fem2dInference;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use protocol::Inference;
 
     assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()).expect("valid materialized inference fixture"), Fem2dInference::default());

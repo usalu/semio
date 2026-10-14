@@ -115,7 +115,7 @@ describe("playground session output ownership", () => {
       expect(result.session.variant).toBe(row.variant);
       expect(result.session.registryPluginId).toBe(row.pluginId);
       expect(existsSync(join(stagedRoot, row.variant, "🟦️session.ts"))).toBe(false);
-      expect(JSON.parse(readFileSync(join(stagedRoot, row.variant, ".nx-artifact.json"), "utf8")).files).toEqual(["🎠️playgrounds.json", fixture.staging.artifactKey, "🔌️plugins.json"]);
+      expect(JSON.parse(readFileSync(join(stagedRoot, row.variant, ".semio-artifact.json"), "utf8")).files).toEqual(["🎠️playgrounds.json", fixture.staging.artifactKey, "🔌️plugins.json"]);
       const native = await import(pathToFileURL(result.path).href + "?native=" + row.variant);
       expect(native.PLAYGROUND_SESSION.variant).toBe(row.variant);
       expect(native.PLAYGROUND_SESSION.registryPluginId).toBe(row.pluginId);

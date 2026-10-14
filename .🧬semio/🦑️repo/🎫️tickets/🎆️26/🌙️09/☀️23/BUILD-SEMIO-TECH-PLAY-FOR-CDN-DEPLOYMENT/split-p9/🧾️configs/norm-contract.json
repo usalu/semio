@@ -1,0 +1,79 @@
+{
+ "root": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🦀️.rs",
+ "crate": "semio_s_artifact_norm_contract",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_os_kernel as vcs;",
+  "extern crate semio_framework_schema as schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "compliance": {
+   "package": "semio-s-plugin-norm-compliance",
+   "owner": "✏️s/🔌️plugins/📕️norm/⚖️compliance",
+   "prefix": "document",
+   "description": "Norm compliance: check reports, clauses, quantities, remedies and the norm artifact record"
+  },
+  "results": {
+   "package": "semio-s-plugin-norm-results-config",
+   "owner": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config",
+   "prefix": "results_window_config",
+   "description": "Norm results window config: schema, diff, mutations and codecs"
+  },
+  "surface": {
+   "package": "semio-s-plugin-norm-app-surface",
+   "owner": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🖥️app-surface",
+   "prefix": "app_surface",
+   "description": "Norm app surface: panels, windows, field meta, tool jobs and the retained editor"
+  },
+  "agg": {
+   "package": "semio-s-artifact-norm-contract",
+   "owner": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract",
+   "prefix": "",
+   "description": "Shared package-neutral contract for independently compiled norm artifacts",
+   "role": "s-module"
+  }
+ },
+ "rules": [
+  [
+   "⚖️compliance/",
+   "compliance"
+  ],
+  [
+   "🪟️results/🎚️config/",
+   "results"
+  ],
+  [
+   "📇️registry/🧬️contract/🖥️app-surface/",
+   "surface"
+  ],
+  [
+   "📇️registry/🧬️contract/",
+   "agg"
+  ]
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/📕️norm",
+  "🌎️hub/🧩️compositions/📕️norm",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "generated": {
+  "__semio_dispatch_NationalAnnex": "compliance"
+ },
+ "workspace_root": "✏️s/🔌️plugins/📕️norm",
+ "test_targets": {
+  "results": [
+   {
+    "name": "config_mutation",
+    "path": "✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/🧪️tests/🎚️config/🦀️.rs",
+    "dev": [
+     "semio-framework-async-macros"
+    ]
+   }
+  ]
+ }
+}

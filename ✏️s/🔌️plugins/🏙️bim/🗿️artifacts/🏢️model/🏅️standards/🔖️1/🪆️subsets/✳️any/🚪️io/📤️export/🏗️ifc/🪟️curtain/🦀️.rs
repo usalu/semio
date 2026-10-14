@@ -9,7 +9,7 @@ use super::writer::en;
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::filler_cell;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
-use crate::{CurtainPanel, OpeningKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, OpeningKind};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored curtain wall record.
@@ -71,7 +71,7 @@ pub fn emit(x: &mut Export<'_>) {
             }
         }
         x.links.aggregated.insert(wall, members);
-        let overrides: BTreeMap<String, crate::CurtainPanelOverride> = model.curtain_panel_overrides.iter().filter(|(_, row)| row.curtain == *id).map(|(key, row)| (key.clone(), row.clone())).collect();
+        let overrides: BTreeMap<String, crate::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride> = model.curtain_panel_overrides.iter().filter(|(_, row)| row.curtain == *id).map(|(key, row)| (key.clone(), row.clone())).collect();
         let mut rows = vec![(WALL_ROW, label(&semio_framework_pack_json::to_json_string(row))), (TYPE_ID_ROW, label(&row.curtain_wall_type)), (TYPE_ROW, label(&semio_framework_pack_json::to_json_string(kind)))];
         if !overrides.is_empty() {
             rows.push((OVERRIDES_ROW, label(&semio_framework_pack_json::to_json_string(&overrides))));

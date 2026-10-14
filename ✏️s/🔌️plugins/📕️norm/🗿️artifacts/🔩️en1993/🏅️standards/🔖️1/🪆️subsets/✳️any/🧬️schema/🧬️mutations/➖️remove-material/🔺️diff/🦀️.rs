@@ -1,8 +1,8 @@
 //! ➖️ `remove-material` diff — removes the row at the index.
 
-use super::RemoveMaterial;
-use crate::diff::{En1993Diff, En1993MaterialDelta};
-use crate::En1993Snapshot;
+use crate::remove_material::RemoveMaterial;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MaterialDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveMaterial, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.materials.len() {

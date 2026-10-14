@@ -1,6 +1,6 @@
 use super::*;
 use super::super::tests::kit;
-use crate::FamilyCategory;
+use crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory;
 
 fn table() -> ModelSnapshot {
     let mut snapshot = kit::model();

@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::gestures::tests::fixture::room;
-use crate::{GridLine, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::{GridLine, Point2};
 
 fn request(tolerance: f64) -> SnapRequest<'static> {
     SnapRequest { storey: Some("st-ground"), tolerance, ..SnapRequest::default() }

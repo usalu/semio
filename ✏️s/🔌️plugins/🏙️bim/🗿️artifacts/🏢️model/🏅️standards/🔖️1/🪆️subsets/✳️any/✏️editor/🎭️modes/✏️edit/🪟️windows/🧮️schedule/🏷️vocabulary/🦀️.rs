@@ -2,7 +2,7 @@
 
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleCell;
-use crate::{Phase, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey, ScheduleOp};
+use crate::standards::v1::subsets::any::schema::snapshot::{Phase, ScheduleCategory, ScheduleColumn, ScheduleField, ScheduleKey, ScheduleOp};
 
 /// 🏷️ The name of a built-in field.
 pub fn field_label(labels: &BimLabels, field: ScheduleField) -> String {

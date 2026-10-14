@@ -157,19 +157,41 @@
         "id": "zero-items",
         "items": 0,
         "capacityBytes": 16777216,
-        "expected": false
+        "expected": false,
+        "copyBytes": 65536,
+        "depth": 4096
       },
       {
         "id": "zero-capacity",
         "items": 1,
         "capacityBytes": 0,
-        "expected": false
+        "expected": false,
+        "copyBytes": 65536,
+        "depth": 4096
       },
       {
         "id": "paid",
         "items": 1,
         "capacityBytes": 16777216,
-        "expected": true
+        "expected": true,
+        "copyBytes": 65536,
+        "depth": 4096
+      },
+      {
+        "id": "copy-denied",
+        "items": 1,
+        "capacityBytes": 16777216,
+        "copyBytes": 0,
+        "depth": 4096,
+        "expected": false
+      },
+      {
+        "id": "depth-denied",
+        "items": 1,
+        "capacityBytes": 16777216,
+        "copyBytes": 65536,
+        "depth": 0,
+        "expected": false
       }
     ]
   },
@@ -234,5 +256,152 @@
         ]
       }
     ]
-  }
+  },
+  "producerPreparation": {
+    "phases": [
+      "body",
+      "request",
+      "frame",
+      "publication"
+    ],
+    "cases": [
+      {
+        "id": "phase-0",
+        "deniedPhase": 0,
+        "sourceRoot": 807,
+        "incomingRoot": 807,
+        "expectedPhases": []
+      },
+      {
+        "id": "phase-1",
+        "deniedPhase": 1,
+        "sourceRoot": 807,
+        "incomingRoot": 807,
+        "expectedPhases": [
+          "body"
+        ]
+      },
+      {
+        "id": "phase-2",
+        "deniedPhase": 2,
+        "sourceRoot": 807,
+        "incomingRoot": 807,
+        "expectedPhases": [
+          "body",
+          "request"
+        ]
+      },
+      {
+        "id": "phase-3",
+        "deniedPhase": 3,
+        "sourceRoot": 807,
+        "incomingRoot": 807,
+        "expectedPhases": [
+          "body",
+          "request",
+          "frame"
+        ]
+      },
+      {
+        "id": "phase-4",
+        "deniedPhase": 4,
+        "sourceRoot": 807,
+        "incomingRoot": 807,
+        "expectedPhases": [
+          "body",
+          "request",
+          "frame",
+          "publication"
+        ]
+      },
+      {
+        "id": "foreign-root",
+        "deniedPhase": 4,
+        "sourceRoot": 807,
+        "incomingRoot": 808,
+        "expectedPhases": []
+      }
+    ]
+  },
+  "completionPublication": [
+    {
+      "id": "unfunded",
+      "funded": false,
+      "busy": false,
+      "occupied": false,
+      "expectedSource": true,
+      "expectedReceiver": false
+    },
+    {
+      "id": "busy",
+      "funded": true,
+      "busy": true,
+      "occupied": false,
+      "expectedSource": true,
+      "expectedReceiver": false
+    },
+    {
+      "id": "occupied",
+      "funded": true,
+      "busy": false,
+      "occupied": true,
+      "expectedSource": true,
+      "expectedReceiver": false
+    },
+    {
+      "id": "admitted",
+      "funded": true,
+      "busy": false,
+      "occupied": false,
+      "expectedSource": false,
+      "expectedReceiver": true
+    }
+  ],
+  "handleReceiving": [
+    {
+      "id": "zero-work",
+      "items": false,
+      "copy": true,
+      "occupied": false,
+      "postRefused": false,
+      "expectedSource": true,
+      "expectedReceiver": false
+    },
+    {
+      "id": "zero-copy",
+      "items": true,
+      "copy": false,
+      "occupied": false,
+      "postRefused": false,
+      "expectedSource": true,
+      "expectedReceiver": false
+    },
+    {
+      "id": "occupied",
+      "items": true,
+      "copy": true,
+      "occupied": true,
+      "postRefused": false,
+      "expectedSource": true,
+      "expectedReceiver": true
+    },
+    {
+      "id": "post-refused",
+      "items": true,
+      "copy": true,
+      "occupied": false,
+      "postRefused": true,
+      "expectedSource": false,
+      "expectedReceiver": true
+    },
+    {
+      "id": "paid",
+      "items": true,
+      "copy": true,
+      "occupied": false,
+      "postRefused": false,
+      "expectedSource": false,
+      "expectedReceiver": true
+    }
+  ]
 }

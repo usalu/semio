@@ -1,0 +1,61 @@
+{
+ "ident": "semio_s_artifact_stdio_dwg_model",
+ "moves": [
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::metadata",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::metadata",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🎛️metadata"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::xrecord",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🏷️xrecord"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::tables",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::tables",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🗃️tables"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::entities",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::entities",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "📐️entities"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::associativity",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🔗️associativity"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::styles",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::styles",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🖌️styles"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::blocks",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "🧩️blocks"
+  },
+  {
+   "from": "standards::v_ac1024::subsets::any::schema::snapshot::constraints",
+   "to": "standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints",
+   "from_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+   "to_parent": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/🦀️.rs",
+   "dir": "📏️constraints"
+  }
+ ]
+}

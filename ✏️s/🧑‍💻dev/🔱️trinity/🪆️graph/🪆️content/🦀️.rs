@@ -4,9 +4,12 @@ use jack::{JackContentChild,JackContentVisual,JackContentProjection,JackContentL
 use jack::{Node,Edge,Port,PortDirection,PropertyBag,PropertyValue,JackSnapshot};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, binary64_lexeme, read_binary64_lexeme};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::binary64_lexeme;
+use semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme;
 use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 use std::sync::Arc;
 
 use {semio_s_artifact_stdio_semio_graph::schema::mutations::add_edge_property::AddEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::add_node_property::AddNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_edge_property::RemoveEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_node_property::RemoveNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_edge_property::SetEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_node_property::SetNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};

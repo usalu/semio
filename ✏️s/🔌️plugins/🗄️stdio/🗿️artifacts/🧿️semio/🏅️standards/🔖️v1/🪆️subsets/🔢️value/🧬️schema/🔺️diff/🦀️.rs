@@ -9,7 +9,13 @@
 //! like every other mutation. Structural template (Replace-on-kind-change fallback, recursive
 //! between/apply/absorb) copied from `json`'s own `JsonDiff` (this subset's informing source).
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{inverse_indexed_rows, IndexAdded, IndexModified, IndexedRow, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::inverse_indexed_rows;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedRow;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 
 
 

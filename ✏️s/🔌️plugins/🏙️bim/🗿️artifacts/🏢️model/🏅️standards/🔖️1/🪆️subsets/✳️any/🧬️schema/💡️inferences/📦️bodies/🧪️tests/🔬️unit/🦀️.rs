@@ -2,13 +2,13 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::compute_stair_runs;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
-use crate::{Point2, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Vertex};
 
 fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, StoreyLevel>) -> Vec<Body> {
     let (layouts, runs) = (compute_wall_layout(snapshot), compute_stair_runs(snapshot));
     storey_bodies(snapshot, storey, levels, &layouts.iter().map(|(id, layout)| (id.as_str(), layout)).collect(), &runs.iter().map(|(id, run)| (id.as_str(), run)).collect())
 }
-use crate::{Slope, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{Slope, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");

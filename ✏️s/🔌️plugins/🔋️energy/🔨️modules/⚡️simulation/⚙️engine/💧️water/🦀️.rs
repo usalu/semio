@@ -1,5 +1,8 @@
 //! 💧️ Water systems: fixtures, tanks, rainwater, condensate, irrigation, cooling tower makeup.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::water_density;
 use crate::units::RHO_WATER;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

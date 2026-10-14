@@ -1,0 +1,15 @@
+{
+  "selections": [
+    null,
+    "",
+    "null",
+    "α\u0000😀"
+  ],
+  "turn": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 128
+  }
+}

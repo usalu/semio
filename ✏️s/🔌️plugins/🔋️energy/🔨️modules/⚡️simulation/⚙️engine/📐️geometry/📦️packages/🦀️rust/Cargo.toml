@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `geometry`: Surface geometry"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+geometry = { workspace = true }
+semio-s-plugin-energy-engine-units = { workspace = true }

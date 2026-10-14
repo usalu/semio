@@ -12,7 +12,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::cuts_of;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{fraction, WallLayout};
-use crate::{Axis, Wall, WallSide, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Wall, WallSide, WallSweep};
 use semio_framework_geometry::Point;
 
 /// 🧷️ The property set that records the authored wall sweep on each of its runs.

@@ -36,7 +36,7 @@ async fn renders_fem2d_model_scene() {
 #[semio_framework_async_macros::async_test]
 async fn mesh_preview_renders_region_edges() {
     let mut app = fem2d_app();
-    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    crate::editor::fem2d::unit_tests::context::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = render(&snapshot, &Viewport2d::default()).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
@@ -46,13 +46,13 @@ async fn mesh_preview_renders_region_edges() {
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_model_extent_degenerate_model_returns_one() {
-    assert_eq!(fem2d_model_extent(&crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()), 1.0);
+    assert_eq!(fem2d_model_extent(&semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot()), 1.0);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn live_visual_language_distinguishes_every_progress_state() {
     use pack::snapshot::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let region_id = doc.regions.first().expect("example region").id.clone();
     let element_id = element_id(doc.elements.first().expect("example element")).to_string();
     let node_id = doc.nodes.first().expect("example node").id.clone();
@@ -81,7 +81,7 @@ async fn live_visual_language_distinguishes_every_progress_state() {
 #[semio_framework_async_macros::async_test]
 async fn model_visual_language_includes_load_and_support_glyphs() {
     use pack::snapshot::ArtifactDsl;
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let encoded = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
     assert!(encoded.contains("support-"));
     assert!(encoded.contains("load-"));
@@ -92,7 +92,7 @@ async fn live_visual_replay_is_deterministic_and_bounded() {
     use std::time::Instant;
     use pack::snapshot::ArtifactDsl;
 
-    let doc = Fem2dSnapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
+    let doc = Fem2dSnapshot::parse_dsl(semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT).expect("parse example");
     let node_id = doc.nodes.first().expect("example node").id.clone();
     let visual = Fem2dLiveVisual {
         region_quality: doc.regions.iter().rev().enumerate().map(|(index, region)| (region.id.clone(), if index % 2 == 0 { RegionVisualQuality::Coarse } else { RegionVisualQuality::Refined })).collect(),
@@ -151,7 +151,7 @@ fn mounted_visual_output_exact_maximum_plus_one_and_page_handback() {
 #[test]
 fn fem2d_visual_job_maximum_plus_one_rejects_before_owner_transfer() {
     let mut doc = Fem2dSnapshot::default();
-    doc.nodes.resize_with(FEM2D_VISUAL_MAXIMUM_NODES + 1, || crate::FemNode { id: "n".into(), x: 0.0, y: 0.0 });
+    doc.nodes.resize_with(FEM2D_VISUAL_MAXIMUM_NODES + 1, || semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode { id: "n".into(), x: 0.0, y: 0.0 });
     let before = doc.nodes.as_ptr();
     let mut job = Fem2dVisualJob::new(visual_freshness(19));
     assert!(job.step_one(&doc, &Fem2dLiveVisual::default(), visual_freshness(19)).is_err());

@@ -40,7 +40,7 @@ pub type Puzzle3dSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dTargetVolume, PUZZLE_3D_SCHEMA};
+use {crate::standards::v1::subsets::any::schema::Puzzle3dAttraction, crate::standards::v1::subsets::any::schema::Puzzle3dMeta, crate::standards::v1::subsets::any::schema::Puzzle3dObject, crate::standards::v1::subsets::any::schema::Puzzle3dReference, crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
@@ -72,14 +72,12 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::*;
 use crate::{Puzzle3dSnapshot};
 use ::semio_framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::derived_construction::*;
-use crate::standards::v1::subsets::any::io::derived_analysis::*;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::Puzzle3dMeta;
-use crate::Puzzle3dObject;
-use crate::Puzzle3dAttraction;
-use crate::Puzzle3dTargetVolume;
-use crate::Puzzle3dReference;
+use crate::standards::v1::subsets::any::schema::Puzzle3dMeta;
+use crate::standards::v1::subsets::any::schema::Puzzle3dObject;
+use crate::standards::v1::subsets::any::schema::Puzzle3dAttraction;
+use crate::standards::v1::subsets::any::schema::Puzzle3dTargetVolume;
+use crate::standards::v1::subsets::any::schema::Puzzle3dReference;
 
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Puzzle3dEngineCommand {

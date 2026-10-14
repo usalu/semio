@@ -7,7 +7,8 @@ mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ P2 pilot (flow, the FIRST semio subset upgraded): real hex/bracket-encoded value
@@ -43,7 +44,8 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_f64, dec_f64};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_f64;
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

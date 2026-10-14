@@ -1,0 +1,25 @@
+{
+ "artifact": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "monolith": "semio_s_artifact_procedural_generation3d",
+ "package": "semio-s-artifact-procedural-3d-mutations",
+ "description": "Procedural generation3d mutations: the mutation union, every mutation kind with its diff and inverse, the graph editor recorder and the central apply",
+ "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "moves": [
+  {
+   "from": "standards::v1::subsets::any::schema::mutations",
+   "to": ""
+  },
+  {
+   "from": "central_apply",
+   "to": "central_apply"
+  }
+ ],
+ "exclude": [],
+ "consumers": [
+  "🌎️hub/🧩️compositions/🌀️procedural",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🧑‍💻dev/🧩️composition",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep",
+  "✏️s/🔌️plugins/🌀️procedural/🏭️bridge"
+ ]
+}

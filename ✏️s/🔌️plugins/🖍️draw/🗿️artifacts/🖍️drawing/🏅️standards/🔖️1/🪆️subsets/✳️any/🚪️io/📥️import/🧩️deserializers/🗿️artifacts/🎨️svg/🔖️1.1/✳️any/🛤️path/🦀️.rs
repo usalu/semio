@@ -1,5 +1,5 @@
 //! 🛤️ Normalize the first-party SVG parser's commands to editable Draw geometry.
-use crate::PathSegment;
+use semio_s_artifact_draw_drawing_model::PathSegment;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{PathCommand};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_path_data};
 
@@ -31,7 +31,7 @@ pub fn editable_svg_path_commands(commands:&[PathCommand])->Result<Vec<PathSegme
             PathCommand::Arc {rx,ry,x_axis_rotation,large_arc,sweep,x,y,relative}=>{if rx<0.0 || ry<0.0 {return Err("Negative SVG arc radius".into());}PathSegment::Arc {rx,ry,rotation:x_axis_rotation,large_arc,sweep,to:point(x,y,relative)}},
             PathCommand::ClosePath=>PathSegment::Close,
         };
-        if !crate::schema::valid_path_segment(&segment) {return Err("Nonfinite SVG path geometry".into());}
+        if !semio_s_artifact_draw_drawing_model::valid_path_segment(&segment) {return Err("Nonfinite SVG path geometry".into());}
         current=match segment {PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Cubic {to,..}|PathSegment::Quad {to,..}|PathSegment::Arc {to,..}=>to,PathSegment::Close=>start};
         if matches!(segment,PathSegment::Move {..}) {start=current;}
         closed=matches!(segment,PathSegment::Close);cubic=next_cubic;quad=next_quad;segments.push(segment);

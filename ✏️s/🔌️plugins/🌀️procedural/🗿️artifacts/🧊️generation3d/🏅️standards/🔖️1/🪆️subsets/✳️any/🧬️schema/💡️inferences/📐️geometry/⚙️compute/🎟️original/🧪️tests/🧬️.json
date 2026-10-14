@@ -1,0 +1,319 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mesh",
+    "curve",
+    "tolerance",
+    "sameCaller",
+    "deniedScratchCapacity",
+    "deniedScratchCopy",
+    "cancelledScratchConserved",
+    "plane",
+    "line",
+    "translation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "positions",
+        "indices",
+        "vertex",
+        "output"
+      ],
+      "properties": {
+        "kind": {
+          "const": "mesh.inspect.vertex"
+        },
+        "positions": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/definitions/vector"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "vertex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output": {
+          "$ref": "#/definitions/vector"
+        }
+      }
+    },
+    "curve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "degree",
+        "knots",
+        "controls",
+        "weights",
+        "parameter",
+        "output"
+      ],
+      "properties": {
+        "kind": {
+          "const": "brep.evaluate.curvePoint"
+        },
+        "degree": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "knots": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "controls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vector"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "parameter": {
+          "type": "number"
+        },
+        "output": {
+          "$ref": "#/definitions/vector"
+        }
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "sameCaller": {
+      "const": true
+    },
+    "deniedScratchCapacity": {
+      "const": true
+    },
+    "deniedScratchCopy": {
+      "const": true
+    },
+    "cancelledScratchConserved": {
+      "const": true
+    },
+    "plane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "width",
+        "depth",
+        "positions",
+        "normal",
+        "faces",
+        "halfedges"
+      ],
+      "properties": {
+        "kind": {
+          "const": "mesh.primitive.plane"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "positions": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/definitions/vector"
+          }
+        },
+        "normal": {
+          "$ref": "#/definitions/vector"
+        },
+        "faces": {
+          "const": 1
+        },
+        "halfedges": {
+          "const": 4
+        }
+      }
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "start",
+        "end",
+        "parameter",
+        "output"
+      ],
+      "properties": {
+        "kind": {
+          "const": "brep.curve.line"
+        },
+        "start": {
+          "$ref": "#/definitions/vector"
+        },
+        "end": {
+          "$ref": "#/definitions/vector"
+        },
+        "parameter": {
+          "type": "number"
+        },
+        "output": {
+          "$ref": "#/definitions/vector"
+        }
+      }
+    },
+    "translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "positions",
+        "indices",
+        "offset",
+        "output",
+        "seams",
+        "attribute",
+        "material",
+        "texture",
+        "metadataPreserved"
+      ],
+      "properties": {
+        "kind": {
+          "const": "mesh.transform.translate"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vector"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "offset": {
+          "$ref": "#/definitions/vector"
+        },
+        "output": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/vector"
+          }
+        },
+        "seams": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "attribute": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "values"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "material": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "value"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "object"
+            }
+          }
+        },
+        "texture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "mime",
+            "bytes"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "mime": {
+              "type": "string"
+            },
+            "bytes": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        },
+        "metadataPreserved": {
+          "const": true
+        }
+      }
+    }
+  },
+  "definitions": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

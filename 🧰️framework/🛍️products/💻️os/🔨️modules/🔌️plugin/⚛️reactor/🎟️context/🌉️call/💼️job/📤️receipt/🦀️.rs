@@ -26,10 +26,10 @@ impl OriginalOwnedJobCall {
 }
 
 /// 🧱️ The fixed metadata frame never serializes, clones or releases the original source or output body.
-pub struct OriginalOwnedJobFixedReceipt { bytes: [u8; 160] }
+pub struct OriginalOwnedJobFixedReceipt { bytes: [u8; 184] }
 impl OriginalOwnedJobFixedReceipt {
-    pub const fn empty() -> Self { Self { bytes: [0; 160] } }
-    pub fn bytes(&self) -> &[u8; 160] { &self.bytes }
+    pub const fn empty() -> Self { Self { bytes: [0; 184] } }
+    pub fn bytes(&self) -> &[u8; 184] { &self.bytes }
     pub fn write(&mut self, call: OriginalOwnedJobCall) {
         let (tag, authority) = match call.refusal { None => (0, None), Some(OriginalJobCallFailure::Authority(kind)) => (1, Some(kind)), Some(OriginalJobCallFailure::Semantic) => (2, None) };
         let mut body = [0u64; 5];
@@ -47,19 +47,19 @@ impl OriginalOwnedJobFixedReceipt {
             OriginalOwnedJobStatus::Cancel { admitted } => (5, u8::from(admitted)),
             OriginalOwnedJobStatus::Close { admitted } => (6, u8::from(admitted)),
         };
-        self.bytes[..8].copy_from_slice(&[b'S', b'J', b'H', b'1', kind, flags, tag, 0]);
+        self.bytes[..8].copy_from_slice(&[b'S', b'J', b'H', b'2', kind, flags, tag, 0]);
         let mut actor = OriginalActorFixedReceipt::empty();
         actor.write(OriginalActorFixedCall { input: call.input, spent: call.spent, work_units_spent: call.work_units_spent, kind: OriginalActorFixedKind::Failure { authority } });
-        self.bytes[8..120].copy_from_slice(actor.bytes());
-        for (index, value) in body.into_iter().enumerate() { self.bytes[120 + index * 8..128 + index * 8].copy_from_slice(&value.to_le_bytes()); }
+        self.bytes[8..144].copy_from_slice(actor.bytes());
+        for (index, value) in body.into_iter().enumerate() { self.bytes[144 + index * 8..152 + index * 8].copy_from_slice(&value.to_le_bytes()); }
     }
     pub fn read(bytes: &[u8]) -> Result<OriginalOwnedJobCall, ValueError> {
-        if bytes.len() != 160 || &bytes[..4] != b"SJH1" || bytes[7] != 0 { return Err(invalid()); }
-        let actor = OriginalActorFixedReceipt::read(&bytes[8..120])?;
+        if bytes.len() != 184 || &bytes[..4] != b"SJH2" || bytes[7] != 0 { return Err(invalid()); }
+        let actor = OriginalActorFixedReceipt::read(&bytes[8..144])?;
         let OriginalActorFixedKind::Failure { authority } = actor.kind else { return Err(invalid()) };
         let refusal = match (bytes[6], authority) { (0, None) => None, (1, Some(kind)) => Some(OriginalJobCallFailure::Authority(kind)), (2, None) => Some(OriginalJobCallFailure::Semantic), _ => return Err(invalid()) };
         let mut body = [0u64; 5];
-        for (index, value) in body.iter_mut().enumerate() { *value = u64::from_le_bytes(bytes[120 + index * 8..128 + index * 8].try_into().unwrap()); }
+        for (index, value) in body.iter_mut().enumerate() { *value = u64::from_le_bytes(bytes[144 + index * 8..152 + index * 8].try_into().unwrap()); }
         let flags = bytes[5];
         let empty = body.iter().all(|value| *value == 0);
         let status = match bytes[4] {
@@ -84,8 +84,8 @@ impl OriginalOwnedJobFixedReceipt {
 pub struct OriginalOwnedJobReceiptLoan { receipt: OriginalOwnedJobFixedReceipt, borrowed: bool }
 impl OriginalOwnedJobReceiptLoan {
  pub const fn empty()->Self{Self{receipt:OriginalOwnedJobFixedReceipt::empty(),borrowed:false}}
- pub fn produce(&mut self,body:impl FnOnce()->OriginalOwnedJobCall)->Result<&[u8;160],ValueError>{if self.borrowed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned job receipt remains borrowed"))}self.receipt.write(body());self.borrowed=true;Ok(self.receipt.bytes())}
- pub fn hand_back(&mut self,pointer:usize,length:usize)->bool{if !self.borrowed||pointer!=self.receipt.bytes().as_ptr()as usize||length!=160{return false}self.borrowed=false;true}
+ pub fn produce(&mut self,body:impl FnOnce()->OriginalOwnedJobCall)->Result<&[u8;184],ValueError>{if self.borrowed{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original owned job receipt remains borrowed"))}self.receipt.write(body());self.borrowed=true;Ok(self.receipt.bytes())}
+ pub fn hand_back(&mut self,pointer:usize,length:usize)->bool{if !self.borrowed||pointer!=self.receipt.bytes().as_ptr()as usize||length!=184{return false}self.borrowed=false;true}
  pub fn owns_pointer(&self,pointer:usize)->bool{pointer==self.receipt.bytes().as_ptr()as usize}
 }
 

@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const DOCUMENT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(4), FloatColumn::Binary64(8), FloatColumn::Binary64(9), FloatColumn::Binary64(12), FloatColumn::Binary64(13)];
 const PERMANENT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(2)];
 const VARIABLE_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(2)];

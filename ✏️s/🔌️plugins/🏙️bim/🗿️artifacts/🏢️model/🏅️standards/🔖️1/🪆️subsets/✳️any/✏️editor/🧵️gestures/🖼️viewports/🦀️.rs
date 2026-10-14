@@ -11,11 +11,11 @@ use super::plane::{dist, point2, P};
 use super::session::{Mark, Pointer, Preview, Step, Style, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::entities::sheets::{next_view, scale_of};
 use crate::editor::bim::modes::edit::windows::sheet;
-use crate::mutations::create_viewport::CreateViewport;
-use crate::mutations::set_viewport::SetViewport;
+use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
+use crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
-use crate::{view_is_drawn, ModelMutation, Viewport};
+use crate::standards::v1::subsets::any::schema::{snapshot::{view_is_drawn, Viewport}, mutations::ModelMutation};
 
 /// 🚫️ The model has no view the tool could put on the sheet.
 pub const VIEW_MISSING: &str = "bim.create.view-missing";

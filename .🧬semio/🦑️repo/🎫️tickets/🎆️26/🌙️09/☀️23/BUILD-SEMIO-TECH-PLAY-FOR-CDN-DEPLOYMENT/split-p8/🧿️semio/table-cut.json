@@ -1,0 +1,88 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "table-layers.json",
+ "crate": "semio_s_artifact_stdio_semio_table",
+ "aggregator": "table",
+ "crates": {
+  "entropy": {
+   "package": "semio-s-artifact-stdio-semio-table-entropy",
+   "dir": "🧬️schema/🌀️entropy-internals/📦️packages/🦀️rust",
+   "doc": "//! 🌀️ Zero-dependency information theory for the semio table: entropies, estimators, counts and the numeric primitives every measure builds on."
+  },
+  "dependence": {
+   "package": "semio-s-artifact-stdio-semio-table-dependence",
+   "dir": "🧬️schema/🌀️entropy-internals/🤝️dependence/📦️packages/🦀️rust",
+   "doc": "//! 🤝️ Dependence measures over table columns: divergences, mutual and transfer information, partial information decomposition, matrix entropies and Fisher criteria."
+  },
+  "series": {
+   "package": "semio-s-artifact-stdio-semio-table-series",
+   "dir": "🧬️schema/🌀️entropy-internals/📈️series/📦️packages/🦀️rust",
+   "doc": "//! 📈️ Series complexity measures: regularity, ordinal and Markov entropies, multiscale and Lempel-Ziv complexity, spectra, wavelets and resampling inference."
+  },
+  "applied": {
+   "package": "semio-s-artifact-stdio-semio-table-applied",
+   "dir": "🧬️schema/🌀️entropy-internals/🗂️applied/📦️packages/🦀️rust",
+   "doc": "//! 🗂️ Applied entropy measures: streaming estimators, machine-learning uncertainty, spatial and graph entropies and the feature registry."
+  },
+  "tabular": {
+   "package": "semio-s-artifact-stdio-semio-table-tabular",
+   "dir": "🧬️schema/📋️tabular-internals/📦️packages/🦀️rust",
+   "doc": "//! 📋️ Tabular data internals of the semio table: typed columns, frames and their validation."
+  },
+  "probability": {
+   "package": "semio-s-artifact-stdio-semio-table-probability",
+   "dir": "🧬️schema/🎲️probability-internals/📦️packages/🦀️rust",
+   "doc": "//! 🎲️ Probability internals of the semio table: distributions, densities and sampling."
+  },
+  "statistics": {
+   "package": "semio-s-artifact-stdio-semio-table-statistics",
+   "dir": "🧬️schema/📊️statistics-internals/📦️packages/🦀️rust",
+   "doc": "//! 📊️ Statistics internals of the semio table: moments, summaries and tests over tabular columns."
+  },
+  "causal": {
+   "package": "semio-s-artifact-stdio-semio-table-causal",
+   "dir": "🧬️schema/🧭️causal-internals/📦️packages/🦀️rust",
+   "doc": "//! 🧭️ Causal inference internals of the semio table: graphs, identification and effect estimation."
+  },
+  "descriptor": {
+   "package": "semio-s-artifact-stdio-semio-table-descriptor",
+   "dir": "🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+   "doc": "//! 📇️ The semio table schema descriptor: every schema facet leaf of the table subset, for the schema registry."
+  },
+  "model": {
+   "package": "semio-s-artifact-stdio-semio-table-model",
+   "dir": "🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio table model: schema descriptor, snapshot and diff with their text, binary and SQLite codecs, and the snapshot retirement implementations."
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-semio-table-inferences",
+   "dir": "🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The semio table inferences: shape, moments and entropy fields derived from a table snapshot, with their text and binary codecs."
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-semio-table-mutations",
+   "dir": "🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio table mutation vocabulary: every mutation with its diff and inverse, their text and binary codecs, and the member store owner."
+  }
+ },
+ "move": [
+  {
+   "match": "^semio_framework_value::artifact_retire_\\w+!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_member_owner!\\([^;]*\\);\\n",
+   "to": "mutations"
+  }
+ ],
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

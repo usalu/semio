@@ -5,9 +5,12 @@
 //! resolutions `create-element` runs (`mutation.target-missing`, Error), and finally the
 //! `mutation.no-op` warning when the replacement equals what is already there.
 use super::ReplaceElement;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dElementsDelta, Fem2dElementsModification};
-use crate::standards::v1::subsets::any::schema::mutations::guards;
-use crate::{element_id, Fem2dSnapshot};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dElementsModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::guards;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &ReplaceElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

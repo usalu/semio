@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "publication": {"partition":"graph","graph":"canonical.json","authority":"authority.json","snapshots":"snapshots","path":".cache/b/g/m/canonical.json","charge":".cache/b/g/m/graph.json"},
   "files": [
     {
       "path": "package.json",
@@ -246,7 +247,7 @@
       "text": "the owner of the playground targets"
     },
     {
-      "path": ".🧬semio/🦑️repo/⚡️cache/build/graph.json",
+      "path": ".cache/b/g/m/canonical.json",
       "json": {
         "version": 1,
         "projects": {
@@ -389,7 +390,7 @@
       }
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🚀️playgrounds.json",
+      "path": "catalog/🚀️playgrounds.json",
       "json": [
         {
           "variant": "shell",

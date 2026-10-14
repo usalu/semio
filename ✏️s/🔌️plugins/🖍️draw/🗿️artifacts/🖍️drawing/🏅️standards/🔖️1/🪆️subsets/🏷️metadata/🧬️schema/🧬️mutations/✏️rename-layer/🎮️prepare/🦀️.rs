@@ -5,9 +5,10 @@ pub mod inverse;
 #[path = "🔗️owned/🦀️.rs"]
 pub mod owned;
 
-use super::mutation::RenameLayer;
-use crate::{DrawingLayerNode, DrawingSnapshot};
-use crate::standards::v1::subsets::any::schema::snapshot::lookup::{DrawingLayerLookupCursor, DrawingLayerLookupStep};
+use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::snapshot::lookup::{DrawingLayerLookupCursor, DrawingLayerLookupStep};
 use semio_framework_value::{paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}, paged::PagedUtf8BoundedOrdCursor};
 
@@ -27,7 +28,7 @@ pub struct DrawingRenamePlan<'a> {
 
 impl<'a> DrawingRenamePlan<'a> {
     pub fn inverse_name(self) -> Option<RetainedCloneRef<'a, PagedUtf8<{usize::MAX}>>> {
-        self.node.map(|node| node.project(2, |node| &crate::schema::layer_base(node).name))
+        self.node.map(|node| node.project(2, |node| &semio_s_artifact_draw_drawing_model::layer_base(node).name))
     }
 }
 
@@ -80,7 +81,7 @@ impl<'a> DrawingRenamePreparationCursor<'a> {
             return Ok(DrawingRenamePreparationStep::Pending(step.progress()));
         }
         if self.phase == 2 {
-            let old_name = self.node.expect("found Drawing rename layer").project(2, |node| &crate::schema::layer_base(node).name);
+            let old_name = self.node.expect("found Drawing rename layer").project(2, |node| &semio_s_artifact_draw_drawing_model::layer_base(node).name);
             let new_name = self.payload.expect("retained Drawing rename payload").project(2, |payload| &payload.new_name);
             let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
             let (ordering, progress) = match step {

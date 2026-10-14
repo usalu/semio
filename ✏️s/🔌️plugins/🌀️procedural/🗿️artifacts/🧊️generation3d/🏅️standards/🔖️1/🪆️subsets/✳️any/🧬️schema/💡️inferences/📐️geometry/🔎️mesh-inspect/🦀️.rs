@@ -1,9 +1,20 @@
 //! 🔎️ `mesh.inspect` computes: the position of a vertex, the ends and length of an edge and the corners, normal and center of a face, read without changing the mesh.
 //!
 //! Each reads one element, so each is a single cheap unit.
+#![allow(clippy::result_large_err)]
 
-use super::mesh_support::{picked_one, Element, KernelResult};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::picked_one;
+use semio_s_artifact_procedural_3d_mesh_support::Element;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{EdgeId, FaceId, MeshKernelError, VertexId};
 
 fn axes(point: semio_framework_3d::mesh::Vec3) -> [f64; 3] {
@@ -31,7 +42,7 @@ fn face_outputs(inputs: &WidgetInputs) -> Result<Outputs, WidgetFault> {
     let corners = mesh.face_vertex_ids(FaceId(id)).kernel()?;
     let normal = axes(mesh.face_normal(FaceId(id)).kernel()?);
     if normal.iter().all(|axis| *axis == 0.0) {
-        return Err(super::mesh_support::mesh_fault(&MeshKernelError::DegenerateOperation).at("face"));
+        return Err(semio_s_artifact_procedural_3d_mesh_support::mesh_fault(&MeshKernelError::DegenerateOperation).at("face"));
     }
     let mut center = [0.0f64; 3];
     for corner in &corners {
@@ -56,6 +67,8 @@ fn face(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish(kind, face_outputs(&inputs))
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-inspect", include_str!("../../../🗂️catalogue/🔣️mesh-inspect.json"));
 /// 🗃️ The `mesh.inspect` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[ComputeEntry { id: "mesh.inspect.vertex", start: vertex }, ComputeEntry { id: "mesh.inspect.edge", start: edge }, ComputeEntry { id: "mesh.inspect.face", start: face }];
 

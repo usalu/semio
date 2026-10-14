@@ -1,12 +1,11 @@
 //! ↩️ Inverse for `ReplaceRegion` — recovers the pre-mutation region from `base`.
 use super::ReplaceRegion;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<replace_region::ReplaceRegion>>(payload: &ReplaceRegion, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.regions.iter().find(|item| item.id == payload.id).map(|item| vec![Fem2dMutation::ReplaceRegion(ReplaceRegion { id: payload.id.clone(), new_region: item.clone() })]).unwrap_or_default()
+    base.regions.iter().find(|item| item.id == payload.id).map(|item| vec![Op::from(ReplaceRegion { id: payload.id.clone(), new_region: item.clone() })]).unwrap_or_default()
 
     })())
 }

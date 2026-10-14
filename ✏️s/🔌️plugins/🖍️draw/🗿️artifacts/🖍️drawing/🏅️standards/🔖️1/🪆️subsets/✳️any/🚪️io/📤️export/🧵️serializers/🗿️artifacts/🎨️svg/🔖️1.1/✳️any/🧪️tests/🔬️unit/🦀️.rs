@@ -82,16 +82,16 @@ fn svg_preserves_shared_isolated_compositing_hierarchies() {
 
 #[test]
 fn drawing_projection_keeps_isolation_without_changing_leaf_opacity() {
-    let first=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
-    let second=crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
-    let mut blend=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Blend")).to_string().into()).expect("nonempty authored identity"), "Blend");
-    let crate::DrawingLayerNode::Group(body)=&mut blend else {unreachable!()};
+    let first=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+    let second=semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
+    let mut blend=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Blend")).to_string().into()).expect("nonempty authored identity"), "Blend");
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(body)=&mut blend else {unreachable!()};
     body.base.id="blend".into();body.base.blend_mode="screen".into();body.children=vec![second].into();
-    let mut half=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Half")).to_string().into()).expect("nonempty authored identity"), "Half");
-    let crate::DrawingLayerNode::Group(body)=&mut half else {unreachable!()};
+    let mut half=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Half")).to_string().into()).expect("nonempty authored identity"), "Half");
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(body)=&mut half else {unreachable!()};
     body.base.id="half".into();body.base.opacity=0.5;body.base.transform.x=5.0;body.children=vec![first,blend].into();
-    let mut outer=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Outer")).to_string().into()).expect("nonempty authored identity"), "Outer");
-    let crate::DrawingLayerNode::Group(body)=&mut outer else {unreachable!()};
+    let mut outer=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Outer")).to_string().into()).expect("nonempty authored identity"), "Outer");
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(body)=&mut outer else {unreachable!()};
     body.base.transform.x=10.0;body.children=vec![half].into();
     let document=DrawingSnapshot {layers:vec![outer].into(),..Default::default()};
     let nodes=flatten_drawing_document_to_scene_nodes(&document);
@@ -103,13 +103,13 @@ fn drawing_projection_keeps_isolation_without_changing_leaf_opacity() {
 
 #[test]
 fn explicit_isolation_survives_unit_opacity_scene_projection() {
-    let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Isolated")).to_string().into()).expect("nonempty authored identity"), "Isolated");
-    let crate::DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
-    body.isolation=true;body.base.id="isolated".into();body.children.push(crate::schema::create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Child")).to_string().into()).expect("nonempty authored identity"), "Child"));
+    let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Isolated")).to_string().into()).expect("nonempty authored identity"), "Isolated");
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(body)=&mut group else {unreachable!()};
+    body.isolation=true;body.base.id="isolated".into();body.children.push(semio_s_artifact_draw_drawing_model::create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Child")).to_string().into()).expect("nonempty authored identity"), "Child"));
     let mut document=DrawingSnapshot {layers:vec![group].into(),..Default::default()};
     let nodes=flatten_drawing_document_to_scene_nodes(&document);
     assert_eq!(nodes[0].groups.len(),1);assert_eq!(nodes[0].groups[0].id,"isolated");assert_eq!(nodes[0].groups[0].opacity,1.0);
-    let crate::DrawingLayerNode::Group(body)=&mut document.layers[0] else {unreachable!()};body.isolation=false;
+    let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Group(body)=&mut document.layers[0] else {unreachable!()};body.isolation=false;
     assert!(flatten_drawing_document_to_scene_nodes(&document)[0].groups.is_empty());
 }
 

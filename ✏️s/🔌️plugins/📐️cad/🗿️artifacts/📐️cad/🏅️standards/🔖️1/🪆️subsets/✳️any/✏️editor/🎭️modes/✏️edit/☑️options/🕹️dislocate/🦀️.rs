@@ -1,8 +1,8 @@
 //! 🕹️ Edit-mode window option — the Dislocate gumball's Move and Rotate handle toggles, shown only
 //! while the window that owns them has the Dislocate utility active.
 
-use crate::editor::cad::config::CadDislocateOptions;
-use crate::editor::cad::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
+use semio_s_artifact_cad_cad_config::CadDislocateOptions;
+use semio_s_artifact_cad_cad_kit::{cad_window_action, CAD_DISLOCATE_UTILITY_ID};
 use semio_framework_plugin::WindowMeasure;
 
 fn dislocate_option_args(option: &str) -> semio_framework_value::DslValue {

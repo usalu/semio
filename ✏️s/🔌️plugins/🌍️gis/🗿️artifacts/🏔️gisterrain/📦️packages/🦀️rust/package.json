@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-terrain-document-contract": "bun repo run @semio-tech/gis-gisterrain-rs:verify-terrain-document-contract",
     "verify-gis-terrain-window-config": "bun repo run @semio-tech/gis-gisterrain-rs:verify-gis-terrain-window-config"

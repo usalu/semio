@@ -41,7 +41,7 @@ fn sqlite_snapshot_energy_strict_controlled_input_owner(){
 fn sqlite_snapshot_energy_canonical_u32_owners_have_real_controlled_constructors(){
  use semio_framework_value::{FromValue,ToValue,DslValue,native_decoding::NativeDecodeControl,native_encoding::NativeEncodeControl};let input=DslValue::uint(u64::from(u32::MAX));
  let entity=<crate::model::EntityId as FromValue>::from_value_controlled(&input,&mut NativeDecodeControl::new(1024,&mut |_|true)).unwrap();assert_eq!(entity.0,u32::MAX);assert_eq!(ToValue::to_value_controlled(&entity,&mut NativeEncodeControl::new(1024,&mut |_|true)).unwrap(),input);
- let schedule=<crate::model::ScheduleId as FromValue>::from_value_controlled(&input,&mut NativeDecodeControl::new(1024,&mut |_|true)).unwrap();assert_eq!(schedule.0,u32::MAX);assert_eq!(ToValue::to_value_controlled(&schedule,&mut NativeEncodeControl::new(1024,&mut |_|true)).unwrap(),input);
+ let schedule=<crate::schedule::ScheduleId as FromValue>::from_value_controlled(&input,&mut NativeDecodeControl::new(1024,&mut |_|true)).unwrap();assert_eq!(schedule.0,u32::MAX);assert_eq!(ToValue::to_value_controlled(&schedule,&mut NativeEncodeControl::new(1024,&mut |_|true)).unwrap(),input);
 }
 
 #[test]

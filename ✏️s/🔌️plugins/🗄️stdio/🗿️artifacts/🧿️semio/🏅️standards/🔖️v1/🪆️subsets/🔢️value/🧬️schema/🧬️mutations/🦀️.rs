@@ -7,23 +7,31 @@
 //! tree descent. Every variant's `diff()` and `inverse()` is handcrafted directly against the
 //! sparse [`SemioValueTreeDiff`] shape — never apply-and-capture.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 
 
-use crate::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
-
-
-
-
-
-
-
+use semio_s_artifact_stdio_semio_value_model::schema::diff::NamedAdded;
+use semio_s_artifact_stdio_semio_value_model::schema::diff::SemioValueDiff;
+use semio_s_artifact_stdio_semio_value_model::schema::diff::SemioValueTreeDiff;
 
 
 
 
 
-use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+
+
+
+
+
+
+
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
 
 
 #[cfg(test)]
@@ -215,7 +223,7 @@ pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioV
 pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
-        SemioValueSnapshot { schema: crate::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
+        SemioValueSnapshot { schema: semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {

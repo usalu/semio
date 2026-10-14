@@ -38,7 +38,6 @@ import type { ShardCodecAnswer, ShardCodecRequest } from "./🧬️component-cod
 import { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
 export { ACTOR_RETURN_RESULT_MAXIMUM_BYTES, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, type ActorReturnControl, type ActorReturnDrive, type ActorReturnFault, type ActorReturnIdentity, type ActorReturnOrigin, type ActorReturnPageReceipt, type ActorReturnResult } from "../📤️return/🟦️.ts";
 export { admitSegmentedDownloadChunk, admitSegmentedDownloadOperationId, SEGMENTED_DOWNLOAD_CONTRACT, SEGMENTED_DOWNLOAD_REFUSAL } from "./📤️segmented-download/🟦️.ts";
-export { ACTOR_CODEC_REFUSAL, actorCodecAnswer, type ActorCodecExports, type ShardCodecAnswer, type ShardCodecDocumentPair, type ShardCodecRequest } from "./🧬️component-codec/🟦️.ts";
 /** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
  * `OwnedResidentLedger` arrives over an import cycle (`📮️shard-client` → `🎠️kernel/📥️input` →
  * `🖱️ui/…/💾️resident` → back here), and reading `.prototype` at module-evaluation time touches the

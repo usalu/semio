@@ -15,11 +15,67 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
-
 [dependencies]
+semio-s-artifact-procedural-3d-examples = { workspace = true }
+semio-s-artifact-procedural-3d-preview-eval = { workspace = true }
+semio-s-artifact-procedural-3d-host-initialization = { workspace = true }
+semio-s-artifact-procedural-3d-host-envelope = { workspace = true }
+semio-s-artifact-procedural-3d-host = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-service = { workspace = true }
+semio-s-artifact-procedural-3d-io = { workspace = true }
+semio-s-artifact-procedural-3d-io-binary = { workspace = true }
+semio-s-artifact-procedural-3d-io-sqlite = { workspace = true }
+semio-s-artifact-procedural-3d-io-text = { workspace = true }
+semio-s-artifact-procedural-3d-io-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-io-export = { workspace = true }
+semio-s-artifact-procedural-3d-io-import = { workspace = true }
+semio-framework-os-infinite-directed-presentation = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }
+semio-s-procedural-core-generation-sqlite = { workspace = true }
+semio-s-procedural-core-semantic-ui = { workspace = true }
+semio-s-artifact-procedural-3d-inferences = { workspace = true }
+semio-s-artifact-procedural-3d-geometry = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-uv = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-shading = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-inspect = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-repair = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-edit = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-component = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-transform = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-convert = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-primitive = { workspace = true }
+semio-s-artifact-procedural-3d-brep-topology = { workspace = true }
+semio-s-artifact-procedural-3d-brep-evaluate = { workspace = true }
+semio-s-artifact-procedural-3d-brep-intersect = { workspace = true }
+semio-s-artifact-procedural-3d-brep-transform = { workspace = true }
+semio-s-artifact-procedural-3d-brep-feature = { workspace = true }
+semio-s-artifact-procedural-3d-brep-boolean = { workspace = true }
+semio-s-artifact-procedural-3d-brep-solid = { workspace = true }
+semio-s-artifact-procedural-3d-brep-surface = { workspace = true }
+semio-s-artifact-procedural-3d-brep-primitive = { workspace = true }
+semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
+semio-s-artifact-procedural-3d-brep-sources = { workspace = true }
+semio-s-artifact-procedural-3d-analysis-check = { workspace = true }
+semio-s-artifact-procedural-3d-analysis-measure = { workspace = true }
+semio-s-artifact-procedural-3d-math-list = { workspace = true }
+semio-s-artifact-procedural-3d-math-vector = { workspace = true }
+semio-s-artifact-procedural-3d-math-arithmetic = { workspace = true }
+semio-s-artifact-procedural-3d-math-values = { workspace = true }
+semio-s-artifact-procedural-3d-mesh-support = { workspace = true }
+semio-s-artifact-procedural-3d-phased-job = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-mutations = { workspace = true }
+semio-s-artifact-procedural-3d-terminology = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-3d-brep-intersect = { workspace = true }
+semio-framework-3d-brep-tessellation = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -34,7 +90,6 @@ semio-framework-schema-registry = { path = "../../../../../../../🧰️framewor
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -51,7 +106,8 @@ semio-framework-schema = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
@@ -73,16 +129,16 @@ semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
 # 🛠️ Gestures are `🔄️machine` statecharts folded by the tool-machine runner (design §5, §13); `statechart!` expands to
 # `machine::…`, hence the rename.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
-semio-framework-os-flow = { workspace = true, optional = true }
-semio-framework-os-infinite = { workspace = true, optional = true }
-semio-framework-ui = { workspace = true, optional = true, features = ["wgpu"] }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-styling = { workspace = true, optional = true }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-os-flow = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
+semio-framework-ui = { workspace = true, features = ["wgpu"] }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-styling = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

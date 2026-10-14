@@ -6,6 +6,11 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { TEST_LEVELS, isTestLevel, type TestLevel } from "../🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../🎛️execution/🟦️.ts";
 import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
+import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,type CargoCompilerPlanningPortV1} from "../../📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1,type CargoSourceAdmissionPortV1} from "../../📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {acquireCargoBuildLeaseV1,cargoBuildLeaseIdentityV1,type CargoBuildLeaseIdentityV1} from "../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 
 /** 🦀️ Binds a Cargo invocation to its exact caller-owned execution policy. */
@@ -14,6 +19,11 @@ export type CargoTestPolicyV1 = Readonly<{version:1;mode:BuildMode;manifestPath:
 export type CargoTestRequestV1 = Readonly<{manifestPath:string;packages:readonly string[];cwd:string;extraArgs?:readonly string[];environment?:Readonly<Record<string,string|undefined>>;signal?:AbortSignal;remainingMilliseconds?:()=>number|null}>;
 /** 🎬️ Describes a compiler, assertion, or report invocation under an explicit budget. */
 export type CargoTestStepV1 = Readonly<{phase:"build"|"assert"|"report";args:string[];budgetMs:number;capture:boolean}>;
+
+/** 🔐️ Holds dependency identity fixed after acquisition and Source admission on every compiling operation. */
+export function cargoTestExecutionArgumentsV1(step:CargoTestStepV1):string[]{
+ const compiling=step.phase==="build"||step.phase==="assert"&&(step.args[0]==="test"||step.args[0]==="llvm-cov"&&step.args[1]==="test");if(!compiling)return[...step.args];const separator=step.args.indexOf("--"),head=separator<0?step.args:step.args.slice(0,separator),tail=separator<0?[]:step.args.slice(separator);return[...head,...["--locked","--offline"].filter(flag=>!head.includes(flag)),...tail];
+}
 const policySchema=JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json",import.meta.url),"utf8"));
 
 /** 🔐️ Refuses absent or malformed execution policies before starting a compiler. */
@@ -157,23 +167,28 @@ export function cargoTestBuildLeaseIdentityV1(request:CargoTestRequestV1,input:C
  return cargoBuildLeaseIdentityV1(policy.buildDirectory,compiler);
 }
 
-/** 🏃️ Executes the admitted plan, retaining metadata only when its caller explicitly requests it. */
-export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
-  const policy=admitPolicy(input);
-  if(![policy.artifactDirectory,policy.buildDirectory,policy.leaseDirectory].every(isAbsolute)) throw Error("Cargo artifact and compiler lease directories must be absolute");
-  mkdirSync(policy.artifactDirectory,{recursive:true});
-  const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")), metadata=join(directory,"binaries-metadata.json"),environment=request.environment??process.env,env={...environment,CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:environment.RUST_MIN_STACK??policy.rustMinStack},controller=new AbortController(),abort=()=>controller.abort();
-  request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
-  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
-  try {
-   const plan=cargoTestPlanV1(request,policy,metadata),identity=cargoTestBuildLeaseIdentityV1(request,policy),stop=startNativeProgress("cargo:compiler-lease");
-   try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:controller.signal});}finally{stop();}
-   for(const step of plan){
-    const stop=startNativeProgress(`cargo:${step.phase}`), decoder=new StringDecoder("utf8");let output="";
-    try {const remaining=request.remainingMilliseconds?.();if(remaining!==undefined&&remaining!==null&&(!Number.isFinite(remaining)||remaining<1))throw Error("Original Cargo deadline exhausted");const budgetMs=remaining===undefined||remaining===null?step.budgetMs:Math.floor(step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining);await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env,signal:controller.signal,budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:536870912,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
-    catch(error){if(step.capture)writeFileSync(join(directory,`${step.phase}-failure.stdout.txt`),output+decoder.end());throw error;}
-    finally {stop();}
-  }} finally {lease?.release();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}
+/** 🎟️ Retains issued physical storage and the original caller through compiler and assertion settlement. */
+export interface CargoTestAdmissionV1 {readonly workspaceRoot:string;readonly control:ResourceLeaseControl;readonly storage:NativeStorageReservationV1;readonly sourceBoundary:CargoSourceBoundaryPolicyV1;readonly planningPort?:CargoCompilerPlanningPortV1;readonly sourcePort?:CargoSourceAdmissionPortV1}
+
+async function admitCargoExecutionV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,admission:CargoTestAdmissionV1,compilerArgs:readonly string[]):Promise<Readonly<Record<string,string|undefined>>>{
+ const control=admission?.control,storage=admission?.storage;if(!control)throw Error("Original Cargo test admission required");checkResourceLeaseControl(control);requireNativeStorageReservationV1(storage,control);if(storage.allocation.kind!=="compiler-workspace")throw Error("Compiler workspace reservation required");await storage.recheck();
+ for(const path of [policy.targetDirectory,policy.buildDirectory,policy.artifactDirectory,...(policy.coveragePath?[policy.coveragePath]:[])])requireNativeStoragePathV1(storage.backing.root,path);
+ const original=request.environment??process.env,env:Record<string,string|undefined>={...original,CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory,RUST_MIN_STACK:original.RUST_MIN_STACK??policy.rustMinStack};
+ for(const name of ["CARGO_HOME","TMPDIR","TMP","TEMP"]){const path=env[name];if(!path)throw Error("Bounded original Cargo environment required: "+name);requireNativeStoragePathV1(storage.backing.root,path);}
+ const graph=await captureCargoCompilationGraphV1({workspaceRoot:admission.workspaceRoot,cwd:request.cwd,program:"cargo",prefix:[],args:compilerArgs,environment:env,maximumOutputBytes:16777216},control,admission.planningPort??actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,admission.workspaceRoot,admission.sourceBoundary,control,admission.sourcePort??actualCargoSourceAdmissionPortV1(env,request.cwd));await storage.recheck();return env;
+}
+
+/** 🏃️ Executes only after actual backing and selected Source admission, under unchanged original authority. */
+export async function runCargoTestsV1(request:CargoTestRequestV1,input:CargoTestPolicyV1,admission:CargoTestAdmissionV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
+ const policy=admitPolicy(input),split=partitionNextestExecutionFilters(request.extraArgs??[]),compilerArgs=["test","--no-run","--profile",buildModePolicy(policy.mode).cargoProfile,"--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),...split.buildArgs],env=await admitCargoExecutionV1(request,policy,admission,compilerArgs),control=admission.control;
+ mkdirSync(policy.artifactDirectory,{recursive:true});const directory=mkdtempSync(join(policy.artifactDirectory,"semio-nextest-")),metadata=join(directory,"binaries-metadata.json");requireNativeStoragePathV1(admission.storage.backing.root,directory);
+ let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+ try{const plan=cargoTestPlanV1(request,policy,metadata),identity=cargoTestBuildLeaseIdentityV1(request,policy);lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:control.signal,control});
+  for(const step of plan){checkResourceLeaseControl(control);await admission.storage.recheck();const stop=startNativeProgress(`cargo:${step.phase}`),decoder=new StringDecoder("utf8");let output="";
+   try{const remaining=checkResourceLeaseControl(control),budgetMs=Math.floor(remaining===null?step.budgetMs:step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining);await runBudgetedTestCommand(port.command,[...port.args,...cargoTestExecutionArgumentsV1(step)],{cwd:request.cwd,env,signal:control.signal,budgetMs,throwOnFailure:true,...(step.capture?{captureStdout:{limitBytes:16777216,onChunk:(bytes:Uint8Array)=>{output+=decoder.write(Buffer.from(bytes));}}}:{})});if(step.capture)writeFileSync(metadata,output+decoder.end());}
+   catch(error){if(step.capture)writeFileSync(join(directory,`${step.phase}-failure.stdout.txt`),output+decoder.end());throw error;}finally{stop();}
+  }
+ }finally{lease?.release();if(policy.retainArtifacts)console.error(`[TRACE] Nextest artifacts retained at ${directory}`);else rmSync(directory,{recursive:true,force:true});}
 }
 
 /** 🧹️ Projects exact owner Clippy selection while keeping warning policy out of compiler flags. */
@@ -184,13 +199,8 @@ export function cargoLintPlanV1(request:CargoTestRequestV1,input:CargoTestPolicy
   return {phase:"build",args:["clippy","--profile",buildModePolicy(policy.mode).cargoProfile,"--manifest-path",request.manifestPath,...request.packages.flatMap(name=>["-p",name]),"--all-targets",...(request.extraArgs??[]),"--","-D","warnings"],budgetMs:policy.buildBudgetMs,capture:false};
 }
 
-/** 🛠️ Executes one exact manifest's Clippy plan under its existing build budget. */
-export async function runCargoLintV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
-  const step=cargoLintPlanV1(request,policy),identity=cargoBuildLeaseIdentityV1(policy.buildDirectory,step.args),controller=new AbortController(),abort=()=>controller.abort(),stop=startNativeProgress("cargo:lint");
-  request.signal?.addEventListener("abort",abort,{once:true});if(request.signal?.aborted)abort();process.once("SIGINT",abort);process.once("SIGTERM",abort);
-  let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
-  try {
-   lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:controller.signal});
-   await runBudgetedTestCommand(port.command,[...port.args,...step.args],{cwd:request.cwd,env:{...(request.environment??process.env),CARGO_TARGET_DIR:policy.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.buildDirectory},signal:controller.signal,budgetMs:step.budgetMs,throwOnFailure:true});
-  }finally{lease?.release();stop();request.signal?.removeEventListener("abort",abort);process.off("SIGINT",abort);process.off("SIGTERM",abort);}
+/** 🛠️ Executes admitted Clippy inside the same original physical compiler workspace. */
+export async function runCargoLintV1(request:CargoTestRequestV1,policy:CargoTestPolicyV1,admission:CargoTestAdmissionV1,port:CargoTestExecutionPortV1={command:"cargo",args:[]}):Promise<void>{
+ const step=cargoLintPlanV1(request,policy),env=await admitCargoExecutionV1(request,policy,admission,step.args),control=admission.control,identity=cargoBuildLeaseIdentityV1(policy.buildDirectory,step.args),stop=startNativeProgress("cargo:lint");let lease:Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>|undefined;
+ try{lease=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:identity.buildDirectory,targetDirectory:policy.targetDirectory,args:["--profile",identity.profile],signal:control.signal,control});await admission.storage.recheck();const remaining=checkResourceLeaseControl(control);await runBudgetedTestCommand(port.command,[...port.args,...cargoTestExecutionArgumentsV1(step)],{cwd:request.cwd,env,signal:control.signal,budgetMs:Math.floor(remaining===null?step.budgetMs:step.budgetMs>0?Math.min(step.budgetMs,remaining):remaining),throwOnFailure:true});}finally{lease?.release();stop();}
 }

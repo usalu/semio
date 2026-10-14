@@ -6,7 +6,7 @@ use super::super::cascade;
 use super::super::set_space::SetSpace;
 use super::super::elements;
 use super::DeleteZone;
-use crate::{Assigned, ModelMutation, ModelSnapshot, SpacePatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::SpacePatch}, mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteZone, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let removal = match cascade::closure(base, std::slice::from_ref(&payload.id)) {

@@ -41,7 +41,6 @@ use semio_repo_test_host::Json;
 pub const KINDS: &[&str] = &["insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part", "set-relationship", "remove-relationship", "set-content-type", "remove-content-type"];
 //#endregion 🔖️Vocabulary
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
     use quick_xml::escape::resolve_xml_entity;
@@ -1385,7 +1384,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -1398,7 +1396,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence, proving the
 /// same `apply(inverse(m, base), apply(m, base)) == base` law `DocxMutation::inverse` proves at the
 /// Rust-model level, here against the registered reference libraries instead.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -1409,41 +1406,22 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 }
 
 /// 👁️ This subset's own semantic projection. @see [`oracles::project`].
-#[cfg(feature = "oracles")]
 pub fn project_docx_ecma_376(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
 /// 🔄️ The package read and re-written by the reference alone — its side of the identity law.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_docx_ecma_376(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

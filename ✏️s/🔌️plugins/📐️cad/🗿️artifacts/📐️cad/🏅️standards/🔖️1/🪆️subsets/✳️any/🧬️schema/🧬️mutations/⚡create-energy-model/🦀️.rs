@@ -2,8 +2,7 @@
 //! `s.stdio.semio.model`) to a new owned handle. If the slot was already occupied, this OVERWRITES
 //! it (the inverse restores whichever handle was there before, not merely "delete" — see `↩️inverse`).
 
-use crate::mutations::CadMutation;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Mutation
@@ -18,13 +17,16 @@ pub struct CreateEnergyModel {
     pub target: semio_framework_artifact_reference::ArtifactRef,
 }
 
-impl MutationKind<CadSnapshot, CadMutation> for CreateEnergyModel {
+impl<Op> MutationKind<CadSnapshot, Op> for CreateEnergyModel
+where
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::create_energy_model::CreateEnergyModel> + From<crate::delete_energy_model::DeleteEnergyModel>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "energy-model", kind: "create-energy-model", record: "CreatedEnergyModel" };
 
-    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<crate::diff::CadDiff> {
+    fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<semio_s_artifact_cad_cad_model::diff::CadDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

@@ -3,7 +3,7 @@
 use super::TitleLabels;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::{IsoSize, ModelInference, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport};
+use crate::standards::v1::subsets::any::schema::{snapshot::{IsoSize, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport}, inferences::ModelInference};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 /// 📄️ The committed room with its sheet set: three sheets (A3 landscape, A4 portrait, custom paper), seven cropped viewports and two revision rows.

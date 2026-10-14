@@ -3,6 +3,10 @@
 use super::*;
 use ui_scene::math::{Mesh3dLease, Mesh3dSchema, MESH3D_PAGE_BYTES};
 
+#[path="📨️message/🦀️.rs"]
+mod message;
+pub use message::*;
+
 pub const UI_NATIVE_MESH_CHUNK_BYTES: usize = 64;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -16,6 +20,8 @@ pub struct UiNativeMeshDescriptor {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum UiNativeMeshChannel {
     Geometry,
+    Surface,
+    MeshKey,
     ComponentLabel { domain: usize, group: usize },
 }
 
@@ -67,6 +73,12 @@ impl UiNativeResourceLoans {
             let (lease, identity) = self.original_transport_lease(resource, cx)?;
             if identity != descriptor.identity || lease.schema().map_err(UiNativeResourceFailure::Mesh)? != descriptor.schema || lease.original_geometry_bytes().map_err(UiNativeResourceFailure::Mesh)? != descriptor.geometry_bytes || lease.original_component_counts().map_err(UiNativeResourceFailure::Mesh)? != descriptor.component_counts { return Err(UiNativeResourceFailure::Mesh(Mesh3dFault::Stale)); }
             match channel {
+                UiNativeMeshChannel::Surface | UiNativeMeshChannel::MeshKey => {
+                    let row=self.row(resource).ok_or(UiNativeResourceFailure::Mesh(Mesh3dFault::Stale))?;
+                    let text=if channel==UiNativeMeshChannel::Surface{row.surface.as_str()}else{row.mesh_key.as_str()};
+                    if offset>text.len(){return Err(UiNativeResourceFailure::Mesh(Mesh3dFault::Schema))}
+                    let bytes=limit.min(text.len()-offset);output[..bytes].copy_from_slice(&text.as_bytes()[offset..offset+bytes]);Ok(UiNativeMeshChunk{bytes,total_bytes:text.len(),complete:offset+bytes==text.len()})
+                },
                 UiNativeMeshChannel::Geometry => {
                     if offset > descriptor.geometry_bytes { return Err(UiNativeResourceFailure::Mesh(Mesh3dFault::Schema)); }
                     if offset == descriptor.geometry_bytes { return Ok(UiNativeMeshChunk { bytes: 0, total_bytes: offset, complete: true }); }

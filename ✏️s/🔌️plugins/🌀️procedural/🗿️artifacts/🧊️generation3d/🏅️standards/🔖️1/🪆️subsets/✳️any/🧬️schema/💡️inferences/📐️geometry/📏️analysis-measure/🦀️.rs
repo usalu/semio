@@ -6,17 +6,35 @@
 //! outruns the interactive ceiling. A query the kernel answers atomically (the distance between two shapes, the closest point) is one unit.
 //!
 //! 🔗️ [Divergence theorem](https://en.wikipedia.org/wiki/Divergence_theorem) · [Moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia) · [Axis-aligned bounding box](https://en.wikipedia.org/wiki/Minimum_bounding_box)
+#![allow(clippy::result_large_err)]
 
-use super::math_arithmetic::{finite, out_of_range};
-use super::math_vector::{angle_between, sub};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_math_arithmetic::finite;
+use semio_s_artifact_procedural_3d_math_arithmetic::out_of_range;
+use semio_s_artifact_procedural_3d_math_vector::angle_between;
+use semio_s_artifact_procedural_3d_math_vector::sub;
+use semio_s_artifact_procedural_3d_geometry_compute::failed;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::finish_with_quality;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use {semio_framework_3d_brep_engine::{BrepError, GeometryHandle, ShapeRoot, ShapeValue}, semio_framework_3d_brep_representation::contract::PointClassification};
-use semio_framework_3d_brep_queries::analysis::{bounding_box, edge_table, face_table, mass_properties, point_distance, CurveKind, ShapeScope, SurfaceKind};
+use semio_framework_3d_brep_analysis::{bounding_box, edge_table, face_table, mass_properties, point_distance, CurveKind, ShapeScope, SurfaceKind};
 use semio_framework_3d_brep_queries::classification::point_in_solid;
 use semio_framework_3d_brep_queries::mass_properties::{face_area, solid_mass_properties, solid_volume};
 use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 use semio_framework_3d::inertia::{combine, principal_inertia, InertiaPiece};
 use std::collections::BTreeSet;
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -531,11 +549,11 @@ fn angle(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         kind,
         (|| {
             let (first, second) = (direction_of(inputs.shape("a")?, "a")?, direction_of(inputs.shape("b")?, "b")?);
-            let zero = |port: &str| super::math_vector::zero_vector(port);
+            let zero = |port: &str| semio_s_artifact_procedural_3d_math_vector::zero_vector(port);
             let result = match (first, second) {
                 (Direction::Normal(a), Direction::Normal(b)) => angle_between(a, b).ok_or_else(|| zero("a"))?,
                 (Direction::Line(a), Direction::Line(b)) => {
-                    let between = angle_between(a, b).ok_or_else(|| if super::math_vector::unit(a).is_none() { zero("a") } else { zero("b") })?;
+                    let between = angle_between(a, b).ok_or_else(|| if semio_s_artifact_procedural_3d_math_vector::unit(a).is_none() { zero("a") } else { zero("b") })?;
                     between.min(std::f64::consts::PI - between)
                 }
                 _ => return Err(WidgetFault::new("generation3d.geometry.angle-mismatch", "Both shapes must be planar faces or both must be straight edges.", "Beide Formen müssen ebene Flächen oder beide müssen gerade Kanten sein.").at("b")),
@@ -546,6 +564,8 @@ fn angle(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 }
 //#endregion 🔖️Angle
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("analysis-measure", include_str!("../../../🗂️catalogue/🔣️analysis-measure.json"));
 /// 🗃️ Every analysis.measure catalogue kind and the compute that starts it.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "analysis.volume", start: volume },

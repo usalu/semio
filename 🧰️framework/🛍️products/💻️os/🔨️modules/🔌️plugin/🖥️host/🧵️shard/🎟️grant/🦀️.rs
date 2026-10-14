@@ -42,7 +42,7 @@ impl OriginalShardDispatch {
         self.decision = decision.take();
         if let Some(decision) = &self.decision {
             for grant in &decision.run {
-                if grant.original_input().validate().is_err() {
+                if grant.original_input().validate().is_err()||grant.loan.validate_for(*grant.original_input()).is_err() {
                     let error = PackError::InvalidRetainedTurn("operation identity is absent");
                     self.refusal = Some(error);
                     return Err(error);

@@ -1,0 +1,354 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step",
+ "root": "🦀️.rs",
+ "manifest": "📦️packages/🦀️rust/Cargo.toml",
+ "layers": "🧮️step-layers.json",
+ "crate": "semio_s_artifact_stdio_step",
+ "aggregator": "step",
+ "crates": {
+  "snapshot": {
+   "package": "semio-s-artifact-stdio-step-snapshot",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+  },
+  "geometry": {
+   "package": "semio-s-artifact-stdio-step-geometry",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust"
+  },
+  "ladder": {
+   "package": "semio-s-artifact-stdio-step-ladder",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/🪜️ladder/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-step-mutations",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-step-inferences",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+  },
+  "base": {
+   "package": "semio-s-artifact-stdio-step-base",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/📦️packages/🦀️rust"
+  },
+  "base-apps": {
+   "package": "semio-s-artifact-stdio-step-base-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/🧱️base/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc1": {
+   "package": "semio-s-artifact-stdio-step-cc1",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/📦️packages/🦀️rust"
+  },
+  "cc1-apps": {
+   "package": "semio-s-artifact-stdio-step-cc1-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/1️⃣cc1/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc2": {
+   "package": "semio-s-artifact-stdio-step-cc2",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/📦️packages/🦀️rust"
+  },
+  "cc2-apps": {
+   "package": "semio-s-artifact-stdio-step-cc2-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/2️⃣cc2/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc3": {
+   "package": "semio-s-artifact-stdio-step-cc3",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/📦️packages/🦀️rust"
+  },
+  "cc3-apps": {
+   "package": "semio-s-artifact-stdio-step-cc3-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/3️⃣cc3/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc4": {
+   "package": "semio-s-artifact-stdio-step-cc4",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/📦️packages/🦀️rust"
+  },
+  "cc4-apps": {
+   "package": "semio-s-artifact-stdio-step-cc4-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/4️⃣cc4/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc5": {
+   "package": "semio-s-artifact-stdio-step-cc5",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/📦️packages/🦀️rust"
+  },
+  "cc5-apps": {
+   "package": "semio-s-artifact-stdio-step-cc5-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/5️⃣cc5/✏️editor/📦️packages/🦀️rust"
+  },
+  "cc6": {
+   "package": "semio-s-artifact-stdio-step-cc6",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/📦️packages/🦀️rust"
+  },
+  "cc6-apps": {
+   "package": "semio-s-artifact-stdio-step-cc6-editor",
+   "dir": "🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "snapshot": [
+   "//! 📸️ `stdio.step` snapshot: the AP214 document, its diff, the B-rep mesh view and the text, binary and SQLite codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "geometry": [
+   "//! 📐️ `stdio.step` geometry: Part 21 geometry and topology evaluation.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "ladder": [
+   "//! 🪜️ `stdio.step` conformance ladder: the AP214 conformance-class rungs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "mutations": [
+   "//! 🧬️ `stdio.step` mutations and their text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "inferences": [
+   "//! 💡️ `stdio.step` inferences and their text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "base": [
+   "//! 🧱️ `stdio.step` base subset: artifact schema, io composition and analysis.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "base-apps": [
+   "//! ✏️ `stdio.step` base subset editor, viewer and examples.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc1": [
+   "//! 🛡️ `stdio.step` conformance class 1: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc1-apps": [
+   "//! ✏️ `stdio.step` conformance class 1 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc2": [
+   "//! 🛡️ `stdio.step` conformance class 2: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc2-apps": [
+   "//! ✏️ `stdio.step` conformance class 2 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc3": [
+   "//! 🛡️ `stdio.step` conformance class 3: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc3-apps": [
+   "//! ✏️ `stdio.step` conformance class 3 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc4": [
+   "//! 🛡️ `stdio.step` conformance class 4: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc4-apps": [
+   "//! ✏️ `stdio.step` conformance class 4 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc5": [
+   "//! 🛡️ `stdio.step` conformance class 5: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc5-apps": [
+   "//! ✏️ `stdio.step` conformance class 5 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc6": [
+   "//! 🛡️ `stdio.step` conformance class 6: composition, analysis, conformance checks and mutations.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "cc6-apps": [
+   "//! ✏️ `stdio.step` conformance class 6 editor and viewer.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ]
+ },
+ "descriptions": {
+  "snapshot": "Stdio step snapshot, diff and codecs",
+  "geometry": "Stdio step geometry",
+  "ladder": "Stdio step conformance ladder",
+  "mutations": "Stdio step mutations",
+  "inferences": "Stdio step inferences",
+  "base": "Stdio step base subset",
+  "base-apps": "Stdio step base subset editor and viewer",
+  "cc1": "Stdio step conformance class 1",
+  "cc1-apps": "Stdio step conformance class 1 editor and viewer",
+  "cc2": "Stdio step conformance class 2",
+  "cc2-apps": "Stdio step conformance class 2 editor and viewer",
+  "cc3": "Stdio step conformance class 3",
+  "cc3-apps": "Stdio step conformance class 3 editor and viewer",
+  "cc4": "Stdio step conformance class 4",
+  "cc4-apps": "Stdio step conformance class 4 editor and viewer",
+  "cc5": "Stdio step conformance class 5",
+  "cc5-apps": "Stdio step conformance class 5 editor and viewer",
+  "cc6": "Stdio step conformance class 6",
+  "cc6-apps": "Stdio step conformance class 6 editor and viewer"
+ },
+ "keep": [
+  "semio-framework-value",
+  "semio-framework-dsl-record",
+  "semio-framework-schema-state",
+  "semio-framework-schema-composition",
+  "semio-framework-pack-json",
+  "semio-framework-os-kernel",
+  "semio-framework-schema",
+  "semio-framework-value-derive"
+ ],
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ]
+}

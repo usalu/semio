@@ -1,5 +1,8 @@
 //! 📊️ Output variable registration and time aggregation.
 
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::model::FixedTable;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};
@@ -30,7 +33,7 @@ pub enum Aggregation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct OutputVariable {
     pub key: String,
-    pub unit: crate::units::Unit,
+    pub unit: units::Unit,
     pub frequency: ReportingFrequency,
     pub aggregation: Aggregation,
 }
@@ -38,12 +41,12 @@ pub struct OutputVariable {
 /// 📦️ Variable registry for sparse reporting.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct OutputRegistry {
-    pub(crate) variables: Vec<OutputVariable>,
+    pub variables: Vec<OutputVariable>,
 }
 
 impl OutputRegistry {
     #[cfg(test)]
-    pub(crate) fn register(&mut self, var: OutputVariable) {
+    pub fn register(&mut self, var: OutputVariable) {
         self.variables.push(var);
     }
 
@@ -63,22 +66,22 @@ impl OutputRegistry {
 /// 📈️ Time-series storage for one variable.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct TimeSeries {
-    pub(crate) key: String,
-    pub(crate) timestamps_hours: Vec<f64>,
-    pub(crate) values: Vec<f64>,
-    pub(crate) unit: crate::units::Unit,
-    pub(crate) admitted_samples: usize,
+    pub key: String,
+    pub timestamps_hours: Vec<f64>,
+    pub values: Vec<f64>,
+    pub unit: units::Unit,
+    pub admitted_samples: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(crate) enum TimeSeriesAppendError {
+pub enum TimeSeriesAppendError {
     BackingNotAdmitted,
     LengthMismatch,
     Full,
 }
 
 impl TimeSeries {
-    pub(crate) fn append_admitted(&mut self, t_hours: f64, value: f64) -> Result<(), TimeSeriesAppendError> {
+    pub fn append_admitted(&mut self, t_hours: f64, value: f64) -> Result<(), TimeSeriesAppendError> {
         if self.timestamps_hours.capacity() < self.admitted_samples || self.values.capacity() < self.admitted_samples {
             return Err(TimeSeriesAppendError::BackingNotAdmitted);
         }
@@ -94,7 +97,7 @@ impl TimeSeries {
     }
 
     #[cfg(test)]
-    pub(crate) fn push(&mut self, t_hours: f64, value: f64) {
+    pub fn push(&mut self, t_hours: f64, value: f64) {
         self.timestamps_hours.push(t_hours);
         self.values.push(value);
     }
@@ -108,7 +111,7 @@ impl TimeSeries {
     }
 
     #[cfg(test)]
-    pub(crate) fn sum(&self) -> f64 {
+    pub fn sum(&self) -> f64 {
         self.values.iter().sum()
     }
 
@@ -123,17 +126,18 @@ impl TimeSeries {
 /// 📦️ All time-series output.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub struct TimeSeriesTable {
-    pub(crate) series: FixedTable<String, TimeSeries>,
+    pub series: FixedTable<String, TimeSeries>,
 }
 
 impl TimeSeriesTable {
     #[cfg(test)]
-    pub(crate) fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
+    pub fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
         let key = key.into();
         if self.series.capacity() == 0 {
             self.series.admit(64).expect("test time-series backing");
         }
-        if let Some(index) = self.series.test_index_of(|candidate| candidate == &key) {
+        let found = self.series.iter().position(|(candidate, _)| candidate == &key);
+        if let Some(index) = found {
             self.series.get_index_mut(index).expect("test fixed series slot").push(t_hours, value);
             return;
         }
@@ -141,8 +145,7 @@ impl TimeSeriesTable {
         self.series.last_mut().expect("test fixed series slot").1.push(t_hours, value);
     }
 
-    #[cfg(test)]
-    pub(crate) fn get(&self, key: &str) -> Option<&TimeSeries> {
+    pub fn get(&self, key: &str) -> Option<&TimeSeries> {
         self.series.iter().find(|(candidate, _)| candidate.as_str() == key).map(|(_, value)| value)
     }
 

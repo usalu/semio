@@ -37,11 +37,11 @@ export interface PrunePlan {
 export{planCachePressurePruneV1,type CachePressurePolicyV1,type CachePressurePlanV1}from"./📉️pressure/🟦️.ts";
 
 /** 🛡️ Rescans and prunes a shared compiler store only after all admitted profiles release it. */
-export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;leaseDirectory:string;control:ResourceLeaseControl}>,run:()=>Promise<T>):Promise<T>{
+export async function withCargoCacheMaintenanceV1<T>(options:Readonly<{buildDirectory:string;relatedDirectories?:readonly string[];leaseDirectory:string;control:ResourceLeaseControl}>,run:()=>Promise<T>):Promise<T>{
   checkResourceLeaseControl(options.control);const signal=options.control.signal,prune=await acquireResourceLease({directory:options.leaseDirectory,resource:"cache-prune",mode:"exclusive",signal,control:options.control});
-  let store:Awaited<ReturnType<typeof acquireCargoStoreLeaseV1>>|undefined;
-  try{store=await acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory:options.buildDirectory,mode:"exclusive",signal,control:options.control});checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
-  finally{store?.release();prune.release();}
+  const stores:Awaited<ReturnType<typeof acquireCargoStoreLeaseV1>>[]=[];
+  try{for(const buildDirectory of [...new Set([options.buildDirectory,...(options.relatedDirectories??[])].map(path=>cargoBuildLeaseIdentityV1(path,[]).buildDirectory))].sort())stores.push(await acquireCargoStoreLeaseV1({directory:options.leaseDirectory,buildDirectory,mode:"exclusive",signal,control:options.control}));checkResourceLeaseControl(options.control);const result=await run();checkResourceLeaseControl(options.control);return result;}
+  finally{for(const store of stores.reverse())store.release();prune.release();}
 }
 
 /**

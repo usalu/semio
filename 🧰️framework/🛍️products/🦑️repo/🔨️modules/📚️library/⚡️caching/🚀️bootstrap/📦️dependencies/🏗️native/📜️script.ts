@@ -12,7 +12,7 @@ import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/�
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
 import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
-import {runNativeDependencyToolV1,runPreparedCargoDependencyPairV1,type NativeDependencyToolRunnerV1 } from "../📜️script.ts";
+import {runNativeDependencyToolV1,runPreparedCargoDependencyPairV1,type NativeDependencyToolRunnerV1 } from "../🟦️.ts";
 
 export type DependencyToolRunner=NativeDependencyToolRunnerV1;
 

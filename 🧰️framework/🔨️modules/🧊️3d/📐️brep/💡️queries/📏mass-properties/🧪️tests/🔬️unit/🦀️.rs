@@ -1,8 +1,8 @@
 use super::*;
 use semio_framework_3d_brep_representation::arena::ArenaId;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::matrix::Frame3;
 use std::f64::consts::PI;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -8,7 +8,7 @@
 //! honestly-2D placements. A pure whole-snapshot scalar (one min/max fold) — no `InferredField`
 //! needed.
 
-use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 //#region 🔖️Bounds

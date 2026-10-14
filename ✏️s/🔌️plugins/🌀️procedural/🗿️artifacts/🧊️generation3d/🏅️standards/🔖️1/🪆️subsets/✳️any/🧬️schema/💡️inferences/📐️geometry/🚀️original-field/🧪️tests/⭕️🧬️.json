@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["version","widgets","wires","expected","tolerance","partialShapeHeldOnRefusal","sameOriginalCallerClose"],
+  "properties":{
+    "version":{"const":1},
+    "widgets":{"type":"array","minItems":5,"maxItems":5,"items":{"type":"object","additionalProperties":false,"required":["id","kind","params"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["brep.curve.circle","brep.curve.ellipse","brep.evaluate.curvePoint"]},"params":{"type":"object","additionalProperties":false,"properties":{"center":{"$ref":"#/definitions/triple"},"normal":{"$ref":"#/definitions/triple"},"radius":{"type":"number","exclusiveMinimum":0},"semiMajor":{"type":"number","exclusiveMinimum":0},"semiMinor":{"type":"number","exclusiveMinimum":0},"parameter":{"type":"number","minimum":0}}}}}},
+    "wires":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["from","fromPort","to","toPort"],"properties":{"from":{"type":"string","minLength":1},"fromPort":{"const":"shape"},"to":{"type":"string","minLength":1},"toPort":{"const":"curve"}}}},
+    "expected":{"type":"object","additionalProperties":false,"required":["circle start","ellipse start","ellipse quarter"],"properties":{"circle start":{"const":[1,4,3]},"ellipse start":{"const":[5,2,3]},"ellipse quarter":{"const":[1,3.5,3]}}},
+    "tolerance":{"const":1e-12},"partialShapeHeldOnRefusal":{"const":true},"sameOriginalCallerClose":{"const":true}
+  },
+  "definitions":{"triple":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}}}
+}

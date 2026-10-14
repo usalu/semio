@@ -2,8 +2,9 @@
 //! position so `delete-rig-extrinsic` puts it back exactly where it was. A duplicate `camera_id` ⇒ Fatal
 //! `mutation.duplicate-id`; a `camera_id` naming a camera this base does not calibrate ⇒ Error
 //! `mutation.target-missing` (a base that calibrates it hosts the same payload).
-use crate::diff::{RemodelingDiff, RemodelingRow};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateRigExtrinsic, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

@@ -38,14 +38,20 @@ export function parsePlaygroundNativeHostV1(block,fieldName="nativeHost") {
   return value;
 }
 
+/** 📏 Reports exactly the decoded UTF-8 script admission predicate consumed by host ownership. */
+export function nativeHostScriptAdmissionV1(source) {return {withinLimit:new TextEncoder().encode(source).byteLength<=1024*1024};}
+
 /** 🧾 Reads Cargo and portable project identity through a bounded caller-owned source view. */
 export function nativeHostSourceFactsV1(cratePath,view) {
-  const read=(path)=>{
+  const admitPath=(path)=>{
     const parts=path.split("/");
     for(let index=1;index<=parts.length;index++) {
       const node=parts.slice(0,index).join("/"),kind=view.kind(node);
       if(kind!==(index===parts.length?"file":"directory")) throw new Error(`Native host source must be present and no-follow: ${node}`);
     }
+  };
+  const read=(path)=>{
+    admitPath(path);
     const source=view.readText(path);
     if(new TextEncoder().encode(source).byteLength>1024*1024) throw new Error("Native host metadata is oversized");
     return source;
@@ -60,7 +66,10 @@ export function nativeHostSourceFactsV1(cratePath,view) {
     if(rows?.length!==1) throw new Error("Native host binary identity must be exact");
     return /"([^"]+)"/u.exec(rows[0])[1];
   });
-  read(`${cratePath}/📜️script.ts`);
+  const script=`${cratePath}/📜️script.ts`;admitPath(script);
+  const admission=view.admitScript(script);
+  if(!admission||typeof admission!=="object"||Array.isArray(admission)||Object.keys(admission).length!==1||!Object.hasOwn(admission,"withinLimit")||typeof admission.withinLimit!=="boolean")throw Error("Invalid native host script admission");
+  if(!admission.withinLimit)throw Error("Native host script is oversized");
   const targets=Object.keys(project.targets??{}).filter(name=>{
     const target=project.targets[name];
     return ["prototype","release"].every(mode=>target.configurations?.[mode]?.env?.SEMIO_BUILD_MODE===mode) && target.executor==="repo:script" && target.options?.cwd===cratePath && /^bun (?:\.\/)?📜️script\.ts [a-z0-9-]+(?: |$)/u.test(target.options?.command??"");
@@ -80,7 +89,7 @@ export function nativeHostArtifactPathV1(host,profile,facts,platform) {
 
 /** 🧾 Captures every selected producer input while admitting both executable host declarations. */
 export function declaredPlaygroundHostInputPathsV1(manifest,view) {
-  const inputs=new Set(),hostView={kind:view.kind.bind(view),readText:(path)=>{inputs.add(path);return view.readText(path);}};
+  const inputs=new Set(),hostView={kind:view.kind.bind(view),readText:(path)=>{inputs.add(path);return view.readText(path);},admitScript:(path)=>{inputs.add(path);return view.admitScript(path);}};
   for(const block of manifest.matchAll(/^\[\[package\.metadata\.semio\.playground\]\]\s*$([\s\S]*?)(?=^\[|$(?![\s\S]))/gmu)) {
     for(const field of ["nativeHost","mcpHost"]) {
       admitPlaygroundNativeHostV1(parsePlaygroundNativeHostV1(block[1],field),(owner)=>nativeHostSourceFactsV1(owner,hostView));

@@ -47,7 +47,7 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
     const html = await initial.text(), assets = [...new Set([...html.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+)"/gu)].map(match => match[1].replaceAll("&amp;", "&")))];
     for (const asset of assets) { const response = await fetch(new URL(asset, address), { signal: invocation.control.signal }); assert.equal(response.status, fixture.nextRuntime.status); await response.arrayBuffer(); }
     let cold!: Promise<Response>, coldCompleted = false;
-    await withWholeHostCompilerCapacity(join(workspace, ".cache/framework/leases"), scriptCompilerAdmissionControlV1(invocation, "next:idle-probe", 600_000), async () => {
+    await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:idle-probe", 600_000), async () => {
       const warm = await fetch(address, { signal: AbortSignal.any([invocation.control.signal, AbortSignal.timeout(5_000)]) }); assert.equal(warm.status, fixture.nextRuntime.status); await warm.text();
       observeCold = true; cold = fetch(address + fixture.nextRuntime.coldPath, { signal: invocation.control.signal }).then(response => { coldCompleted = true; return response; });
       await Promise.race([queued, cold.then(() => { throw Error("Cold route bypassed compiler admission"); }), completed]); assert.equal(coldCompleted, false);
@@ -56,6 +56,6 @@ export async function proveNextDevRuntime(workspace: string, output: string, inv
     await mkdir(output, { recursive: true }); await writeFile(join(output, `next-${mode}-dev-runtime.html`), html);
     console.log(`[DEBUG] Next ${mode} actual dev HTTP200 assets=${assets.length}, idle admission returned, cached HTTP stayed fast under held host, cold route queued then compiled`);
   } finally { stop.abort(); await completed; }
-  await withWholeHostCompilerCapacity(join(workspace, ".cache/framework/leases"), scriptCompilerAdmissionControlV1(invocation, "next:cancel-probe", 600_000), async () => {});
+  await withWholeHostCompilerCapacity(join(workspace, ".cache/b/l/m/data"), scriptCompilerAdmissionControlV1(invocation, "next:cancel-probe", 600_000), async () => {});
   console.log("[DEBUG] Next actual development process tree cancelled and host admission reacquired");
 }

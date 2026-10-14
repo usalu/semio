@@ -1,7 +1,11 @@
 //! 🪄️ The non-neuron widgets: sources that hand a document value to the wiring, and sinks that pass or swallow one.
 
-use super::value::{outputs, GeometryValue, WidgetEvaluation, WidgetFault, FAULT_PREFIX};
-use crate::standards::v1::subsets::any::schema::catalogue::Quality;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
+use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use std::sync::Arc;
 
@@ -9,7 +13,7 @@ use std::sync::Arc;
 pub const WIDGET_UNSUPPORTED: &str = "generation3d.geometry.widget-unsupported";
 
 fn pass_through(wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> WidgetEvaluation {
-    let mut merged = super::value::Outputs::new();
+    let mut merged = semio_s_artifact_procedural_3d_geometry_value::Outputs::new();
     for wire in wires {
         let Some(source) = parent(&wire.from) else {
             let from = wire.from.clone();

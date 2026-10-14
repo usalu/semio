@@ -188,7 +188,10 @@ pub(crate) fn geometry_session() -> &'static semio_s_spatial_kernel_semio_sessio
 
 /// 🚚️ Delivers every painted handle through the concrete Session's bounded broker envelopes.
 pub(crate) fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_framework_os_flow::FlowEvalSession) {
-    use semio_s_artifact_procedural_generation3d::preview_eval::{pending_preview_tessellate_handles, preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
+    use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
+    use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
     let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
     for handle in pending_preview_tessellate_handles(&eval, graph, session) {

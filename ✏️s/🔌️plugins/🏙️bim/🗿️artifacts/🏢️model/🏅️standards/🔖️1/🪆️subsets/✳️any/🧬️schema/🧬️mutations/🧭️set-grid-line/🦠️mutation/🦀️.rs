@@ -1,6 +1,6 @@
 //! 🧭️ `set-grid-line` payload. Patches a grid line (label, start, end): exactly the provided fields change; the building it belongs to never changes here.
 
-use crate::{GridLinePatch, ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::GridLinePatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

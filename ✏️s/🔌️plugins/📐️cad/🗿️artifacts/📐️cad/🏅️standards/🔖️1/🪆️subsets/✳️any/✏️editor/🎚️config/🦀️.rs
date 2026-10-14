@@ -1,6 +1,15 @@
 //! 🧮️ CAD application preferences shared by the artifact instance. Camera, sun, and Dislocate
 //! preferences belong to exact concrete window owners beside the world windows.
 
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🧩️Modules
+
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -367,7 +376,7 @@ impl Mutation<CadConfig> for CadConfigMutation {
                 if &base.contributions_json == json {
                     return protocol::MutationOutcome::new(CadConfigDiff::default()).warning("mutation.no-op", "Contributions are already up to date.");
                 }
-                let _ = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
+                let _ = semio_s_artifact_cad_cad_inferences::validate_cad_computer_contributions(json);
                 protocol::MutationOutcome::new(CadConfigDiff { contributions_json: Some(json.clone()), ..Default::default() })
             }
         }

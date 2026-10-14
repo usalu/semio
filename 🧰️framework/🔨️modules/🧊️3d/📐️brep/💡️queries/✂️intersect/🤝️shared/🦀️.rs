@@ -9,13 +9,13 @@
 /// 📐 Knot vector and indexed basis coefficients for fitting.
 pub type SplineFitBasis = (KnotVector, Vec<(usize, Vec<f64>)>);
 
-use semio_framework_3d_brep_representation::curve::bezier::RationalBezier3;
-use semio_framework_3d_brep_representation::curve::bspline::{basis_functions, insert_knot, KnotVector};
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3, NurbsCurve3};
+use semio_framework_3d_brep_curve::bezier::RationalBezier3;
+use semio_framework_3d_brep_curve::bspline::{basis_functions, insert_knot, KnotVector};
+use semio_framework_3d_brep_curve::{Curve2, Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
-use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️LinearAlgebra
 

@@ -2,9 +2,11 @@
 //! (`durable_artifacts[content_id]`). A reconstruction run publishes every sparse cloud, mesh and raster
 //! it produced through these leaves, and `commit-reconstruction` then names the complete content by id.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{ByteBuffer, RemodelingContentKind, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::remove_content::RemoveContent;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -27,17 +29,20 @@ pub struct AppendContent {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn append_content(payload: AppendContent) -> RemodelingMutation {
-    RemodelingMutation::AppendContent(payload)
+pub fn append_content<Op: From<AppendContent>>(payload: AppendContent) -> Op {
+    Op::from(payload)
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AppendContent {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for AppendContent
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<RemoveContent>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "append", entity: "content", kind: "append-content", record: "AppendedContent" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

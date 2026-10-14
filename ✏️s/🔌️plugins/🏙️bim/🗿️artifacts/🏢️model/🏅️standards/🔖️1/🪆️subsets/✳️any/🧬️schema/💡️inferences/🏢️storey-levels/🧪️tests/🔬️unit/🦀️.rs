@@ -69,7 +69,7 @@ async fn dependency_covers_exactly_what_compute_reads() {
 #[semio_framework_async_macros::async_test]
 async fn a_height_edit_recomputes_the_storeys_above_and_nothing_else_and_a_material_edit_none() {
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
-    use crate::{Entry, MaterialPatch, ModelDiff, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).storey_levels.clone();

@@ -1,7 +1,7 @@
 import { declaredPlaygroundCatalogDefaultV1 } from "../⭐️default/🟦️.ts";
 import { declaredPlaygroundCompositionPathV1 } from "../🧩️composition/🟦️.ts";
 import { parseTileProxyAssetSpecV1 } from "../../../../../../../🔨️modules/🖼️assets/🗺️tile-proxy/🟦️.ts";
-import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
+import {admitPlaygroundNativeHostV1,parsePlaygroundNativeHostV1,nativeHostFilesystemViewV1,nativeHostTextSourceViewV1,type PlaygroundNativeHostV1} from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { RegistryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -189,7 +189,7 @@ export function parsePlaygroundsForCrate(manifestPath: string, pluginId: string,
   const entries: PlaygroundEntry[] = [];
   for (const block of blocks) {
     const entry = parsePlaygroundBlock(block.join("\n"), pluginId, cratePath);
-    if (entry) entries.push({...entry,...(entry.nativeHost?{nativeHost:admitPlaygroundNativeHostV1(entry.nativeHost,view??nativeHostFilesystemViewV1(repoRoot))}:{}),...(entry.mcpHost?{mcpHost:admitPlaygroundNativeHostV1(entry.mcpHost,view??nativeHostFilesystemViewV1(repoRoot))}:{})});
+    if (entry) entries.push({...entry,...(entry.nativeHost?{nativeHost:admitPlaygroundNativeHostV1(entry.nativeHost,view?nativeHostTextSourceViewV1(view):nativeHostFilesystemViewV1(repoRoot))}:{}),...(entry.mcpHost?{mcpHost:admitPlaygroundNativeHostV1(entry.mcpHost,view?nativeHostTextSourceViewV1(view):nativeHostFilesystemViewV1(repoRoot))}:{})});
   }
   return entries;
 }

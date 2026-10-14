@@ -1,8 +1,8 @@
 //! 🪓 Remodeling mutation — `DeleteStream`: removes an id-keyed media stream.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_stream::CreateStream;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -19,17 +19,20 @@ pub struct DeleteStream {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_stream(id: String) -> RemodelingMutation {
-    RemodelingMutation::DeleteStream(DeleteStream { id })
+pub fn delete_stream<Op: From<DeleteStream>>(id: String) -> Op {
+    Op::from(DeleteStream { id })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteStream {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for DeleteStream
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<CreateStream>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "stream", kind: "delete-stream", record: "DeletedStream" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

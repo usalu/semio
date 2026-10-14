@@ -4,26 +4,26 @@ fn hex(value: &str) -> Vec<u8> {
     value.as_bytes().as_chunks::<2>().0.iter().map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect()
 }
 
-fn transition_record(doc_id: &str, actor: &str, transition: crate::os_spr::HistoryTransition, timestamp: (u64, u64, u64)) -> HistoryTransitionRecord {
-    let envelope = crate::os_spr::history_transition_envelope(
+fn transition_record(doc_id: &str, actor: &str, transition: protocol::HistoryTransition, timestamp: (u64, u64, u64)) -> HistoryTransitionRecord {
+    let envelope = protocol::history_transition_envelope(
         &transition,
-        &crate::os_spr::ArtifactId(doc_id.to_string()),
-        &crate::os_spr::ActorId(actor.into()),
+        &protocol::ArtifactId(doc_id.to_string()),
+        &protocol::ActorId(actor.into()),
         Vec::new(),
-        crate::os_spr::HybridLogicalTimestamp { actor: timestamp.0, physical_ms: timestamp.1, logical: timestamp.2 },
+        protocol::HybridLogicalTimestamp { actor: timestamp.0, physical_ms: timestamp.1, logical: timestamp.2 },
     );
     HistoryTransitionRecord::from_envelope(&envelope)
 }
 
-fn commit(checkpoint_id: &str, parent_id: Option<&str>, change_id: &str, mutation_ids: &[&str]) -> crate::os_spr::HistoryTransition {
-    crate::os_spr::HistoryTransition::Commit(crate::os_spr::TransitionCheckpoint {
+fn commit(checkpoint_id: &str, parent_id: Option<&str>, change_id: &str, mutation_ids: &[&str]) -> protocol::HistoryTransition {
+    protocol::HistoryTransition::Commit(protocol::TransitionCheckpoint {
         checkpoint_id: checkpoint_id.to_string(),
         parent_id: parent_id.map(str::to_string),
         change_id: change_id.to_string(),
-        mutation_ids: mutation_ids.iter().map(|id| crate::os_spr::MutationId(id.to_string())).collect(),
+        mutation_ids: mutation_ids.iter().map(|id| protocol::MutationId(id.to_string())).collect(),
         description: None,
         saved_at: "2024-01-15T10:31:00Z".to_string(),
-        authors: vec![crate::os_spr::TransitionAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
+        authors: vec![protocol::TransitionAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
         message: Some("first checkpoint".to_string()),
         timestamp: "2024-01-15T10:32:00Z".to_string(),
         line_id: None,
@@ -68,15 +68,15 @@ async fn sample_log() -> HistoryLog {
                     // 🎯️ A non-`Owner`, field-carrying variant on purpose (mirrors the `group_id`
                     // choice above): proves `MutationOrigin::Contributed`'s structured payload —
                     // not just the unit `Owner` case — survives a real `.spr` byte round trip.
-                    origin: crate::os_spr::command::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: crate::os_spr::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: crate::os_spr::ids::PayloadHash([3u8; 32]) },
+                    origin: protocol::mutation::MutationOrigin::Contributed { plugin_id: "flow".to_string(), mutation_id: protocol::ids::SchemaId("widget.doc#recolor".to_string()), payload_hash: protocol::ids::PayloadHash([3u8; 32]) },
                     messages: Vec::new(),
-                    transaction: Some(crate::os_spr::command::TransactionRef { id: "tx-0123456789abcdef".to_string(), tool: "s.puzzle.2d#select".to_string() }),
+                    transaction: Some(protocol::mutation::TransactionRef { id: "tx-0123456789abcdef".to_string(), tool: "s.puzzle.2d#select".to_string() }),
                 }]), lane: None,
             },
         ].into_iter().collect(),
         transitions: vec![
             transition_record("doc-1", "alice", commit("ck-1", None, "change-1", &["edit-1#0", "edit-1#1", "op-1"]), (1, 1_700_000_001_000, 0)),
-            transition_record("doc-1", "alice", crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() }, (1, 1_700_000_001_000, 1)),
+            transition_record("doc-1", "alice", protocol::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() }, (1, 1_700_000_001_000, 1)),
         ],
         composition: None,
         conflicts: Vec::new(),
@@ -140,7 +140,7 @@ async fn a_log_without_composition_writes_no_composition_record() {
 async fn retained_history_decode_yields_across_bytes_and_semantic_records() {
     let log = sample_log().await;
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode retained history fixture");
-    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let limits = protocol::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained decode");
     let mut pending = 0usize;
     loop {
@@ -164,7 +164,7 @@ async fn retained_history_decode_rejects_a_crc_valid_malformed_transition_after_
     let mut log = sample_log().await;
     log.transitions.push(HistoryTransitionRecord { id: "transition-after-valid-prefix".to_string(), actor: "alice".into(), hlt: (1, 2, 0), dependencies: Vec::new(), observed: None, payload: vec![0xff] });
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode semantically malformed retained history");
-    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let limits = protocol::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained semantic refusal");
     let error = loop {
         match decode.step(&bytes, 11, 1) {
@@ -185,7 +185,7 @@ async fn retained_history_decode_rejects_a_repeated_transition_id() {
     let mut log = sample_log().await;
     log.transitions.push(log.transitions[0].clone());
     let bytes = encode_history(&log, &EncodeOptions::default()).await.expect("encode repeated transition");
-    let limits = crate::os_spr::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
+    let limits = protocol::format::retained::RetainedSprLimits { file_bytes: bytes.len() as u64, frame_body_bytes: 1_048_576, records: 8_192 };
     let mut decode = RetainedHistoryDecode::new(bytes.len(), limits).expect("admit retained decode");
     let error = loop {
         match decode.step(&bytes, 4096, 4) {
@@ -299,7 +299,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
         undo_policy: 0,
         payload_hash: None,
         group_id: None,
-        origin: crate::os_spr::command::MutationOrigin::Owner,
+        origin: protocol::mutation::MutationOrigin::Owner,
         transaction: None,
         messages: vec![
             HistoryMessage { level: 0, code: "mutation.cascade".to_string(), message: "cascaded".to_string(), target: Vec::new(), op_index: None },
@@ -327,7 +327,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_meta_without_messages_writes_no_messages_section() {
-    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: crate::os_spr::command::MutationOrigin::Owner, messages: Vec::new(), transaction: None };
+    let meta = HistoryOpMeta { op_id: None, dependencies: Vec::new(), base_version: 0, author_id: None, hlt: None, undo_policy: 0, payload_hash: None, group_id: None, origin: protocol::mutation::MutationOrigin::Owner, messages: Vec::new(), transaction: None };
     let mut dict = DictBuilder::new();
     let mut out = ByteWriter::new();
     write_op_meta(&mut out, &meta, &mut dict, &|_: &str| None).await.unwrap();
@@ -353,14 +353,14 @@ struct ContributedOriginOracle {
 /// 🔢️ Checks canonical origin bytes against an independent test-only serde representation.
 #[semio_framework_async_macros::async_test]
 async fn mutation_origin_canonical_json_is_byte_identical_between_serde_json_and_pack_json() {
-    let origin = crate::os_spr::MutationOrigin::Contributed { plugin_id: "s.stdio.mesh".to_string(), mutation_id: crate::os_spr::SchemaId("mesh/v1".to_string()), payload_hash: crate::os_spr::PayloadHash(core::array::from_fn(|index| index as u8)) };
+    let origin = protocol::MutationOrigin::Contributed { plugin_id: "s.stdio.mesh".to_string(), mutation_id: protocol::SchemaId("mesh/v1".to_string()), payload_hash: protocol::PayloadHash(core::array::from_fn(|index| index as u8)) };
     let oracle = ContributedOriginOracle { kind: "contributed".to_string(), plugin_id: "s.stdio.mesh".to_string(), mutation_id: "mesh/v1".to_string(), payload_hash: core::array::from_fn(|index| index as u8) };
     let via_serde = serde_json::to_string(&oracle).expect("serde_json encodes independent origin oracle");
     let via_pack = semio_framework_pack_json::to_json_string(&origin);
     assert_eq!(via_serde, via_pack, "canonical origin bytes must match the independent oracle");
     assert!(via_pack.contains("\"payloadHash\":[0,1,2,"), "got {via_pack} — payload_hash bytes must stay bare integers, never x.0");
     let round_trip_serde: ContributedOriginOracle = serde_json::from_str(&via_pack).expect("serde_json decodes first-party origin bytes");
-    let round_trip_pack: crate::os_spr::MutationOrigin = semio_framework_pack_json::from_json_str(&via_serde, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("pack::json decodes independent origin bytes");
+    let round_trip_pack: protocol::MutationOrigin = semio_framework_pack_json::from_json_str(&via_serde, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("pack::json decodes independent origin bytes");
     assert_eq!(round_trip_serde, oracle);
     assert_eq!(round_trip_pack, origin);
 }
@@ -539,8 +539,8 @@ async fn transition_payload_matches_the_language_agnostic_fixture() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔀️transition-record/🔣️.json")).unwrap();
     let record = &fixture["record"];
     let hlt: Vec<u64> = record["hlt"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap()).collect();
-    let revert = crate::os_spr::HistoryTransition::Revert { mutation_ids: record["transition"]["revert"].as_array().unwrap().iter().map(|id| crate::os_spr::MutationId(id.as_str().unwrap().to_string())).collect() };
-    assert_eq!(crate::os_spr::encode_history_transition(&revert), hex(record["payloadHex"].as_str().unwrap()));
+    let revert = protocol::HistoryTransition::Revert { mutation_ids: record["transition"]["revert"].as_array().unwrap().iter().map(|id| protocol::MutationId(id.as_str().unwrap().to_string())).collect() };
+    assert_eq!(protocol::encode_history_transition(&revert), hex(record["payloadHex"].as_str().unwrap()));
     let transition = HistoryTransitionRecord {
         id: record["id"].as_str().unwrap().to_string(),
         actor: record["actor"].as_str().unwrap().into(),
@@ -580,13 +580,13 @@ async fn transition_record_round_trips_its_envelope() {
     let transition = sample_log().await.transitions.remove(0);
     let envelope = transition.to_envelope("doc-1");
     assert_eq!(envelope.actor.0.as_ptr(),transition.actor.as_ptr());
-    assert!(crate::os_spr::is_history_transition(&envelope));
-    assert_eq!(envelope.inverse.schema.0, crate::os_spr::HISTORY_TRANSITION_SCHEMA);
+    assert!(protocol::is_history_transition(&envelope));
+    assert_eq!(envelope.inverse.schema.0, protocol::HISTORY_TRANSITION_SCHEMA);
     assert!(envelope.inverse.payload.is_empty());
     assert_eq!(envelope.document_id.0, "doc-1");
     assert_eq!(HistoryTransitionRecord::from_envelope(&envelope), transition);
     assert_eq!(HistoryTransitionRecord::from_envelope(&envelope).actor.as_ptr(),transition.actor.as_ptr());
-    assert!(matches!(crate::os_spr::history_transition_from_envelope(&envelope).unwrap(), Some(crate::os_spr::HistoryTransition::Commit(_))));
+    assert!(matches!(protocol::history_transition_from_envelope(&envelope).unwrap(), Some(protocol::HistoryTransition::Commit(_))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -673,7 +673,7 @@ async fn history_full_verification_detects_tampering() {
     let last = bytes.len();
     bytes[last - 10] ^= 0xFF;
     let options = DecodeOptions { verification: VerificationLevel::Full, limits: ProtocolLimits::default() };
-    // A single-byte flip breaks that frame's own CRC-32C, so `crate::os_spr::format::recover`
+    // A single-byte flip breaks that frame's own CRC-32C, so `protocol::format::recover`
     // (RecoveryMode::LastCommit, run by `HistoryReader::open`) truncates the trusted range to
     // before the corrupted frame — here that means before the file's only commit, so the
     // decoded log comes back empty rather than as an `Err`. Either outcome is an acceptable
@@ -705,7 +705,7 @@ async fn history_writes_every_transition_as_a_critical_record() {
     while let Some(frame) = cursor.next_frame().await.unwrap() {
         assert!(frame.kind != 0x40, "the undo/redo cursor record is gone");
         if frame.kind == REC_TRANSITION {
-            assert_ne!(frame.flags & crate::os_spr::FRAME_FLAG_CRITICAL, 0);
+            assert_ne!(frame.flags & protocol::FRAME_FLAG_CRITICAL, 0);
             transitions += 1;
         }
     }
@@ -726,7 +726,7 @@ async fn history_strips_backwards_when_write_backwards_section_is_unset_even_if_
 #[semio_framework_async_macros::async_test]
 async fn streamed_append_equals_buffered_encode() {
     let log = sample_log().await;
-    let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
+    let options = WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
     let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).await.unwrap();
     for edit in &log.edits {
         appender.append_edit(edit).await.unwrap();
@@ -744,7 +744,7 @@ async fn streamed_append_equals_buffered_encode() {
 #[semio_framework_async_macros::async_test]
 async fn appended_transitions_decode_in_append_order_across_commits() {
     let log = sample_log().await;
-    let options = WriteOptions { required_flags: crate::os_spr::REQUIRED_HASH_CHAIN, optional_flags: crate::os_spr::OPTIONAL_CANONICAL };
+    let options = WriteOptions { required_flags: protocol::REQUIRED_HASH_CHAIN, optional_flags: protocol::OPTIONAL_CANONICAL };
     let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).await.unwrap();
     let mut offsets = Vec::new();
     for transition in log.transitions.iter().rev() {
@@ -778,7 +778,7 @@ fn fold_log() -> HistoryLog {
         schema: "schema-f".to_string(),
         edits: [fold_edit("edit-a", "op-a", 100), fold_edit("edit-b", "op-b", 200)].into_iter().collect(),
         transitions: vec![
-            transition_record("doc-f", "alice", crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![crate::os_spr::MutationId("op-b".to_string())] }, (1, 400, 0)),
+            transition_record("doc-f", "alice", protocol::HistoryTransition::Revert { mutation_ids: vec![protocol::MutationId("op-b".to_string())] }, (1, 400, 0)),
             transition_record("doc-f", "alice", commit("ck-1", None, "change-1", &["op-a", "op-b"]), (1, 300, 0)),
         ],
         composition: None,
@@ -824,20 +824,20 @@ async fn fold_falls_back_to_positional_mutation_ids_and_zero_clock_without_meta(
 async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
     let mut log = fold_log();
     log.transitions.clear();
-    let quarantined = crate::os_spr::MutationEnvelope {
-        mutation_id: crate::os_spr::MutationId("op-a".to_string()),
-        document_id: crate::os_spr::ArtifactId("doc-f".to_string()),
-        actor: crate::os_spr::ActorId("bob".into()),
+    let quarantined = protocol::MutationEnvelope {
+        mutation_id: protocol::MutationId("op-a".to_string()),
+        document_id: protocol::ArtifactId("doc-f".to_string()),
+        actor: protocol::ActorId("bob".into()),
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: vec![1] },
-        inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: Vec::new() },
-        timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
+        diff: protocol::ArtifactDiff { schema: protocol::SchemaId("schema-f".to_string()), payload: vec![1] },
+        inverse: protocol::InverseMutation { schema: protocol::SchemaId("schema-f".to_string()), payload: Vec::new() },
+        timestamp: protocol::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
         transaction: None, verb: None, line: None,
     };
     let mut envelope = Vec::new();
-    crate::os_spr::encode_envelope(&quarantined, &mut envelope);
+    protocol::encode_envelope(&quarantined, &mut envelope);
     log.conflicts.push(HistoryConflict { id: "conflict-1".into(), kind: 0, status: 0, actors: vec!["bob".into()], hlt: (2, 100, 0), edit_ids: Vec::new(), envelopes: vec![envelope], messages: Vec::new() });
     assert_eq!(log.fold().unwrap().applied, vec!["edit-b".to_string()]);
     log.conflicts[0].status = 1;
@@ -849,7 +849,7 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
 #[semio_framework_async_macros::async_test]
 async fn fold_rejects_a_transition_naming_an_unknown_operation_and_a_negative_clock() {
     let mut log = fold_log();
-    log.transitions.push(transition_record("doc-f", "alice", crate::os_spr::HistoryTransition::Reinstate { mutation_ids: vec![crate::os_spr::MutationId("op-missing".to_string())] }, (1, 500, 0)));
+    log.transitions.push(transition_record("doc-f", "alice", protocol::HistoryTransition::Reinstate { mutation_ids: vec![protocol::MutationId("op-missing".to_string())] }, (1, 500, 0)));
     assert!(log.fold().is_err());
     let mut log = fold_log();
     log.edits[0].meta.as_mut().unwrap()[0].hlt = Some((1, -1, 0));
@@ -951,30 +951,30 @@ fn retained_native_history_fold_obeys_the_neutral_law() {
     let expected = source.fold().unwrap();
     for work in law["workGrants"].as_array().unwrap() {
         for bytes in law["byteGrants"].as_array().unwrap() {
-            let mut job = HistoryLog::fold_job(source.clone(), crate::os_spr::HistoryShape::Document);
+            let mut job = HistoryLog::fold_job(source.clone(), protocol::HistoryShape::Document);
             let mut completed = 0;
             let mut reached = false;
             for turn in 0..100000 {
                 match job.step(job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize).unwrap(), &mut || false).unwrap() {
-                    crate::os_spr::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 { eprintln!("[DEBUG] fold turn {turn} completed {next} progress {progress:?} grant {:?}", job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize)); } completed = next; },
-                    crate::os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
+                    protocol::HistoryFoldJobStep::Pending { completed: next, progress, .. } => { assert!(next >= completed && next-completed <= work.as_u64().unwrap()); if turn % 20000 == 19999 { eprintln!("[DEBUG] fold turn {turn} completed {next} progress {progress:?} grant {:?}", job.next_step_grant(work.as_u64().unwrap() as usize, bytes.as_u64().unwrap() as usize)); } completed = next; },
+                    protocol::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), .. } => {
                         assert_eq!(conflicts.len(), source.conflicts.len());
                         if !conflicts.is_empty() {
                             assert_eq!(conflicts[0].actors[0].0.as_str(), "Aé😀");
                             assert_eq!(conflicts[0].messages[0].message, "Änderung");
                             assert_eq!(conflicts[0].messages[0].target, vec!["Aé😀"]);
-                            let crate::os_spr::ConflictKind::Quarantined { envelopes } = &conflicts[0].kind else { panic!("quarantine kind preserved") };
+                            let protocol::ConflictKind::Quarantined { envelopes } = &conflicts[0].kind else { panic!("quarantine kind preserved") };
                             assert_eq!(envelopes[0].diff.payload, vec![0xaa,0xbb,0xcc]);
-                            assert!(matches!(&conflicts[1].kind, crate::os_spr::ConflictKind::Degraded { edit_ids } if edit_ids == &vec!["edit-b".to_string()]));
+                            assert!(matches!(&conflicts[1].kind, protocol::ConflictKind::Degraded { edit_ids } if edit_ids == &vec!["edit-b".to_string()]));
                         } assert_eq!(replay_order, fold.applied); assert_eq!(fold, expected); assert_eq!(transitions, source.transitions.iter().map(|transition| transition.to_envelope(&source.doc_id)).collect::<Vec<_>>()); reached = true; break; },
-                    crate::os_spr::HistoryFoldJobStep::Rejected { .. } => panic!("native history fold: {:?}", job.rejection()),
+                    protocol::HistoryFoldJobStep::Rejected { .. } => panic!("native history fold: {:?}", job.rejection()),
                 }
             }
             assert!(reached && job.terminal_is_empty(), "work grant {work} byte grant {bytes}: reached {reached}, terminal {}", job.terminal_is_empty());
         }
     }
     for stop in law["cancelAt"].as_array().unwrap() {
-        let mut job = HistoryLog::fold_job(source.clone(), crate::os_spr::HistoryShape::Document);
+        let mut job = HistoryLog::fold_job(source.clone(), protocol::HistoryShape::Document);
         for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1, 7).unwrap(), &mut || false).unwrap(); }
         let completed = job.completed();
         job.request_cancel();

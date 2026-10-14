@@ -7,9 +7,6 @@
     "test-native": "bun repo run @semio-tech/framework-compiler-rs:test-native"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

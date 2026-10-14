@@ -1,8 +1,8 @@
 //! ➕️ `insert-silo-shell` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertSiloShell;
-use crate::diff::{En1993Diff, En1993SiloShellDelta};
-use crate::En1993Snapshot;
+use crate::insert_silo_shell::InsertSiloShell;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993SiloShellDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertSiloShell, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.silo_shells.iter().any(|existing| existing.id == payload.silo_shell.id) {

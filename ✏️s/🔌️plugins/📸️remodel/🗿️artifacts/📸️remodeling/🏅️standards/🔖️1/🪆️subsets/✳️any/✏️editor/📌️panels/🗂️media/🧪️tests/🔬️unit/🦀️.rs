@@ -1,5 +1,5 @@
-use super::*;
-use crate::editor::remodeling::commands::import_frame_payload::verify_import_checker_stream;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::media::*;
+use crate::editor::remodeling::unit_tests::context::verify_import_checker_stream;
 use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

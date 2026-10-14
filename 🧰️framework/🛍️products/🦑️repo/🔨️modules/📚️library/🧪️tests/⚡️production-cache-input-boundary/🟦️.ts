@@ -7,7 +7,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { minimatch } from "minimatch";
 import { filterUsingGlobPatterns, getTargetInputs } from "nx/src/hasher/task-hasher";
-import cachePlugin, { cacheInternals } from "../../🟨️.mjs";
+import cachePlugin, { cacheInternals } from "../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Vector = Readonly<{
   version: 1;

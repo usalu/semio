@@ -1,0 +1,44 @@
+//! 📸️ remodeling model: the snapshot and its domain records, and the snapshot's text, binary and SQLite codecs.
+
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+#[path = "."]
+pub mod standards {
+    #[path = "."]
+    pub mod v1 {
+        #[path = "."]
+        pub mod subsets {
+            #[path = "."]
+            pub mod any {
+                #[path = "."]
+                pub mod schema {
+                    #[path = "."]
+                    pub mod snapshot {
+                        #[path = "../../🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod binary {
+                        #[path = "../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
+                    pub mod text {
+                        #[path = "../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                    #[path = "."]
+                    pub mod sqlite {
+                        #[path = "../../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -198,7 +198,7 @@ struct TypedChildEmitPreparation<M> {
     schema_started:bool,
     schema_done:bool,
     encode:ChildEncode<M>,
-    closing:bool,
+    pub(crate) closing:bool,
     ready:bool,
 }
 impl<M> TypedChildEmitPreparation<M>

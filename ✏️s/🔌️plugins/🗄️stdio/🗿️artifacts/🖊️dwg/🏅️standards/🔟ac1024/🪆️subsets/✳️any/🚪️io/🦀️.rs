@@ -5,7 +5,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
-    use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+    use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
@@ -69,9 +69,9 @@ pub mod text;
 #[path = "🪶️sqlite/🦀️.rs"]
 pub mod sqlite;
 pub mod derived_construction {
-    use crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff;
-    use crate::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
-    use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+    use semio_s_artifact_stdio_dwg_diff::standards::v_ac1024::subsets::any::schema::diff::DwgDiff;
+    use semio_s_artifact_stdio_dwg_mutations::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+    use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -118,7 +118,7 @@ pub mod derived_construction {
 }
 pub use derived_construction::*;
 pub mod derived_analysis {
-    use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+    use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts

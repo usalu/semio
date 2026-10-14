@@ -945,7 +945,7 @@ export async function verifyPrintFontStaging(output = outputRoot): Promise<void>
     writeFileSync(join(staged, "stale.ttf"), "stale");
     await stagePrintFonts(root);
     assert.equal(existsSync(join(staged, "stale.ttf")), false);
-    assert.deepEqual(JSON.parse(readFileSync(join(staged, ".nx-artifact.json"), "utf8")).files, catalog.map((row: any) => row.texFilename).sort());
+    assert.deepEqual(JSON.parse(readFileSync(join(staged, ".semio-artifact.json"), "utf8")).files, catalog.map((row: any) => row.texFilename).sort());
     const prior = readFileSync(join(staged, catalog[0].texFilename));
     const invalidSource = join(root, product, "🖼️assets/🔤️font", catalog[0].directory, catalog[0].filename);
     writeFileSync(invalidSource, "invalid");
@@ -999,7 +999,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const api = await import(join(root, modulePath, "🟦️.ts"));
   assert.deepEqual(api.printLibrarySources(), catalog.librarySources);
   assert.deepEqual(api.printLibrarySources(), ["🖋️latex", "🔨️modules/🕸️graph/📐️.tex"]);
-  const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"));
+  const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"));
   const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
   assert.equal(documents.length, 88);

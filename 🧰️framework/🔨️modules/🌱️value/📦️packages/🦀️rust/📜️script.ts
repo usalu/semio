@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 
 /** 🌱️ Tests the actual neutral value package under its explicitly supplied native policy. */
@@ -22,7 +23,7 @@ class NativeRecipientSourceTestScript extends BundleScript{
 }
 /** 🔐️ Executes original detached recipient identity and real retained physical custody laws. */
 class NativeRecipientTestScript extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-native-recipient");await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","native_local_original","--","--nocapture"]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("Expected test-native-recipient");await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","native_local_original","--","--nocapture"]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
 }
 /** 🧮️ Exercises the existing complete neutral value package route. */
 class TestScript extends BundleScript {
@@ -34,7 +35,7 @@ class TestScript extends BundleScript {
       return;
     }
     const { rest } = resolveTestLevel(args);
-    await runCargoTestsV1({ ...({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value"], cwd: this.root, extraArgs: rest }), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ ...({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-value"], cwd: this.root, extraArgs: rest }), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 /** 🛬️ Exercises canonical borrowed construction, allocation admission and owner retirement. */
@@ -60,12 +61,12 @@ class OrderedRetirementSourceTestScript extends BundleScript {
 class ControlledValueTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     const {rest}=resolveTestLevel(args);
-    await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 /** 🛫️ Exercises explicit borrowed output construction and cumulative encoding admission. */
 class ControlledEncodingTestScript extends BundleScript {
- async run(args:string[]):Promise<void>{const{rest}=resolveTestLevel(args);await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_encoding_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env));}
+ async run(args:string[]):Promise<void>{const{rest}=resolveTestLevel(args);await runCargoTestsV1({ ...({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-value"],cwd:this.root,extraArgs:["--lib","controlled_value_encoding_",...rest]}), signal: this.invocation.control.signal, remainingMilliseconds: () => this.invocation.control.remainingMilliseconds() }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);}
 }
 /** 🏷️ Validates the canonical type corpus and direct lower ownership. */
 class TypeOwnershipTestScript extends BundleScript {

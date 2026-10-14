@@ -1,10 +1,7 @@
 use super::*;
-use crate::mutations::{
-    align_elements::AlignElements, copy_elements::CopyElements, delete_elements::DeleteElements, delete_family::DeleteFamily, delete_storey::DeleteStorey, delete_wall::DeleteWall, mirror_elements::MirrorElements, move_elements::MoveElements, place_elements::PlaceElements,
-    rename_element::RenameElement, rotate_elements::RotateElements, set_element_storey::SetElementStorey, set_family::SetFamily, split_wall::SplitWall,
-};
-use crate::mutations::elements::Placement;
-use crate::{ComponentOverride, Family, FamilyParameter, MepSystem, ModelMutation, ParameterKind, Point2, Storey, Wall};
+use crate::standards::v1::subsets::any::schema::mutations::{align_elements::AlignElements, copy_elements::CopyElements, delete_elements::DeleteElements, delete_family::DeleteFamily, delete_storey::DeleteStorey, delete_wall::DeleteWall, mirror_elements::MirrorElements, move_elements::MoveElements, place_elements::PlaceElements, rename_element::RenameElement, rotate_elements::RotateElements, set_element_storey::SetElementStorey, set_family::SetFamily, split_wall::SplitWall};
+use crate::standards::v1::subsets::any::schema::mutations::elements::Placement;
+use crate::standards::v1::subsets::any::schema::{snapshot::{ComponentOverride, Family, FamilyParameter, MepSystem, ParameterKind, Point2, Storey, Wall}, mutations::ModelMutation};
 use protocol::{Mutation, OutcomeCode};
 use semio_framework_diagnostic::Severity;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -61,13 +58,13 @@ fn base() -> ModelSnapshot {
     base
 }
 
-fn messages(mutation: &ModelMutation, base: &ModelSnapshot) -> (crate::ModelDiff, Vec<protocol::MutationMessage>) {
+fn messages(mutation: &ModelMutation, base: &ModelSnapshot) -> (crate::standards::v1::subsets::any::schema::diff::ModelDiff, Vec<protocol::MutationMessage>) {
     mutation.diff(base).into_parts()
 }
 
 fn refusal(mutation: &ModelMutation, base: &ModelSnapshot) -> (String, Vec<String>) {
     let (diff, messages) = messages(mutation, base);
-    assert_eq!(diff, crate::ModelDiff::default(), "a refusal writes nothing");
+    assert_eq!(diff, crate::standards::v1::subsets::any::schema::diff::ModelDiff::default(), "a refusal writes nothing");
     let hit = messages.iter().find(|message| matches!(message.level, Severity::Warning | Severity::Error | Severity::Fatal)).expect("a refusal");
     (hit.code.0.to_string(), hit.target.clone())
 }
@@ -303,7 +300,7 @@ fn the_mounting_flag_of_a_placement_is_read_from_the_record() {
 
 #[test]
 fn aligning_uses_the_origin_of_a_component_and_the_extent_of_a_path() {
-    use crate::mutations::modify::{AlignAxis, AlignEdge};
+    use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge};
     let base = base();
     let after = roundtrip(ModelMutation::AlignElements(AlignElements { ids: vec!["c-table".into(), "m-duct".into()], axis: AlignAxis::X, edge: AlignEdge::Min, target: 0.0 }), &base);
     assert_eq!(after.components["c-table"].position.x, 0.0);

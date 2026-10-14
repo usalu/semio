@@ -51,7 +51,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
       await mkdir(source.root, { recursive: true });
       const bytes = index === 0 ? 'export const identity = "owned";' : index > 2 ? 'export { identity } from "@bytecodealliance/preview2-shim/io";' : "owned";
       await writeFile(join(source.root, name), bytes);
-      await writeFile(join(source.root, ".nx-artifact.json"), JSON.stringify({ version: 1, owner: source.owner, files: [name] }));
+      await writeFile(join(source.root, ".semio-artifact.json"), JSON.stringify({ version: 1, owner: source.owner, files: [name] }));
       await writeFile(join(source.root, "📥️install.json"), JSON.stringify({ installedAt: Date.now() }));
     }
     await writeFile(join(root, "package.json"), '{"name":"browser-production","private":true,"type":"module"}');
@@ -61,7 +61,7 @@ export async function testProductionBrowserArtifacts(workspace: string, output: 
     const outDir = join(root, "dist"), options = { root, configFile: false as const, logLevel: "silent" as const, plugins: [productionBrowserArtifactsVitePlugin(root, cases.plan)], build: { outDir, emptyOutDir: true } };
     await build(options);
     const files = await require("fast-glob")("**/*", { cwd: outDir, dot: true, onlyFiles: true });
-    assert.ok(!files.some((path: string) => path.endsWith("📥️install.json") || path.endsWith(".nx-artifact.json")));
+    assert.ok(!files.some((path: string) => path.endsWith("📥️install.json") || path.endsWith(".semio-artifact.json")));
     for (const source of sources.slice(3)) {
       const artifact = join(outDir, source.destination, "🌉️bridge.js");
       assert.equal((await import(pathToFileURL(artifact).href)).identity, "owned");

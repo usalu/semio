@@ -6,7 +6,7 @@ use crate::editor::bim::entities::{id_taken, ordered_storeys};
 use crate::editor::bim::kit::{fault, IdMint};
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{Column, GridLine, ModelMutation, ModelSnapshot, Phase, Point2, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Column, GridLine, ModelSnapshot, Phase, Point2, TopConstraint}, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -71,7 +71,7 @@ pub fn handle(payload: &PlaceGridColumns, doc: &ArtifactView<'_, ModelSnapshot>,
             .map(|(position, label)| {
                 let id = mint.mint("column", |id| id_taken(snapshot, id));
                 let column = Column { storey: storey.clone(), column_type: column_type.clone(), position, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: format!("{kind} {label}") };
-                ModelMutation::CreateColumn(crate::mutations::create_column::CreateColumn { id, column })
+                ModelMutation::CreateColumn(crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn { id, column })
             })
             .collect(),
     ))

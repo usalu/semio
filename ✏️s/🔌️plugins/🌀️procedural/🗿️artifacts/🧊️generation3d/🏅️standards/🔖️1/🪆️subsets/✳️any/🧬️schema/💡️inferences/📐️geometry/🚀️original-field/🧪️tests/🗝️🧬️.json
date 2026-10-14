@@ -1,0 +1,9 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["version","entries","needle","expected","borrowedValueIdentity","comparisonBytesPerStep","deniedComparisonHasNoEffects","sourceCallerClosesDictionary"],
+ "properties":{
+  "version":{"const":1},
+  "entries":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"array","minItems":2,"maxItems":2,"items":[{"type":"string","minLength":1},{"type":"integer"}],"additionalItems":false}},
+  "needle":{"const":"ä-key"},"expected":{"const":41},"borrowedValueIdentity":{"const":true},"comparisonBytesPerStep":{"const":1},"deniedComparisonHasNoEffects":{"const":true},"sourceCallerClosesDictionary":{"const":true}
+ }
+}

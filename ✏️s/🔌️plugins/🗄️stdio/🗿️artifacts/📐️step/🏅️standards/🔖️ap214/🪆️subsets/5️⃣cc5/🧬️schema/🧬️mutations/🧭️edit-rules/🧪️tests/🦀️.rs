@@ -1,7 +1,7 @@
 //! 🧪️ Every details-pane pointer of the STEP class 5 editor resolves to the class's mutations, and replaying them reaches the edited document.
 
 use super::*;
-use crate::schema::snapshot::{StepEntity, StepValue};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepValue};
 use semio_framework_value::{DslValue, ToValue};
 
 fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {

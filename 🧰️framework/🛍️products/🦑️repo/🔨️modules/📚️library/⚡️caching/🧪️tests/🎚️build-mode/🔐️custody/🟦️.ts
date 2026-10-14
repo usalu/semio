@@ -1,3 +1,4 @@
+import {createScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -7,13 +8,14 @@ import { setTimeout as delay } from "node:timers/promises";
 
 /** 🔐️ Exercises the installed Nx cache against a real source write while its child is running. */
 export async function testNxSourceCacheCustody(workspace: string, output: string): Promise<void> {
+  output=resolve(output);
   const row = JSON.parse(readFileSync(new URL("../../🧫️fixtures/nx-contract/🔣️.json", import.meta.url), "utf8")).cacheCustody;
   const root = mkdtempSync(join(output, "s-")), cli = resolve(workspace, ".nx/installation/node_modules/nx/dist/bin/nx.js");
   try {
     mkdirSync(join(root, ".nx"), { recursive: true });
     symlinkSync(join(workspace, ".nx/installation"), join(root, ".nx/installation"), process.platform === "win32" ? "junction" : "dir");
     symlinkSync(join(workspace, "🧰️framework"), join(root, "🧰️framework"), process.platform === "win32" ? "junction" : "dir");
-    const contract = JSON.stringify({ version: 1, files: ["source.json", "📜️script.ts"] }), key = createHash("sha256").update(contract).digest("hex"), inventory = join(root, ".🧬semio/🦑️repo/⚡️cache/nx-input-closures");
+    const contract = JSON.stringify({ version: 1, files: ["source.json", "📜️script.ts"] }), key = createHash("sha256").update(contract).digest("hex"), inventory = join(root, ".🧬semio/🦑️repo/⚡️cache/build-input-closures");
     mkdirSync(inventory, { recursive: true }); writeFileSync(join(inventory, key + ".json"), contract);
     writeFileSync(join(root, "nx.json"), JSON.stringify({ useDaemonProcess: false, plugins: [], tasksRunnerOptions: { default: { runner: "nx/tasks-runners/default", options: {} } } }));
     writeFileSync(join(root, "package.json"), JSON.stringify({ name: "source-custody-fixture", private: true, scripts: { build: "nx run fixture:build" } }));
@@ -28,8 +30,8 @@ const count=existsSync("count")?Number(readFileSync("count","utf8")):0;writeFile
 mkdirSync("out",{recursive:true});writeFileSync("out/result.json",readFileSync("source.json"));console.log("[DEBUG] fixture compiler executed");
 `);
     const launch = (suffix: string) => {
-      const env = { ...process.env, NX_SKIP_NX_CACHE: "false", NX_DISABLE_NX_CACHE: "false", NX_SKIP_REMOTE_CACHE: "true", NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_FORCE_REUSE_CACHED_GRAPH: "false" };
-      delete env.SEMIO_SCRIPT_PROCESS_INVOCATION; delete env.SEMIO_SCRIPT_CAPABILITIES;
+      const env = { ...process.env, NX_SKIP_NX_CACHE: "false", NX_DISABLE_NX_CACHE: "false", NX_SKIP_REMOTE_CACHE: "true", NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, "d"), NX_CACHE_DIRECTORY: join(root, "c"), NX_FORCE_REUSE_CACHED_GRAPH: "false" };
+      env.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(createScriptProcessEnvelope({version:1,owner:"nx-source-custody-fixture",maximumElapsedMilliseconds:0},{},Date.now()));delete env.SEMIO_SCRIPT_CAPABILITIES;delete env.SEMIO_BUILD_GRAPH_PATH;delete env.SEMIO_BUILD_GRAPH_DIGEST;delete env.SEMIO_BUILD_REUSE_GRAPH;
       const child = spawn("node", [cli, "run", "fixture:build", "--output-style=stream", "--verbose"], { cwd: root, env, stdio: ["ignore", "pipe", "pipe"] });
       let log = "";
       for (const stream of [child.stdout, child.stderr]) stream.on("data", bytes => { log += String(bytes); if (log.length > 8 * 1024 * 1024) child.kill(); });

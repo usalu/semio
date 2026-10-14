@@ -2,9 +2,6 @@
   "$schema": "https://json.schemastore.org/package.json",
   "projectType": "application",
   "name": "repo-vscode",
-  "nx": {
-    "name": "@semio-tech/repo-vscode"
-  },
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑️‍💻️",
   "version": "0.0.1",

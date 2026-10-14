@@ -18,8 +18,11 @@ export type ShardCodecRequest =
 /** 📦️ `codec::document-pair`: a document's snapshot pack and its history log. */
 export type ShardCodecDocumentPair = { readonly pack: Uint8Array; readonly spr: Uint8Array };
 
-/** 🧬️ A {@link ShardCodecRequest}'s answer: the export's value, or the guest's `plugin-error` fault pack. */
-export type ShardCodecAnswer = { readonly ok: unknown } | { readonly fault: Uint8Array };
+/** 🎁️ The three successes defined by the codec answer schema. */
+export type ShardCodecSuccess = Uint8Array | ShardCodecDocumentPair | readonly [string, string];
+
+/** 📨️ A {@link ShardCodecRequest}'s closed success or the original guest fault pack. */
+export type ShardCodecAnswer = { readonly ok: ShardCodecSuccess } | { readonly fault: Uint8Array };
 
 /** 🧬️ The jco binding of the `codec` interface, as the bridge destructures it off the component. */
 export type ActorCodecExports = {

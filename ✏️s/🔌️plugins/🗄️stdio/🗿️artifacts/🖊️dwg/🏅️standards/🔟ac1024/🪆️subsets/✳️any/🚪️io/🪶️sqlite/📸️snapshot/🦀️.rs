@@ -2,59 +2,35 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="📏️encoding/🦀️.rs"]
-mod encoding;
+pub mod encoding;
 use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
+use semio_framework_os_kernel::sqlite_snapshot::composition::{sqlite_schema_bytes, sqlite_schema_len, sqlite_schema_text};
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-#[path="🔢️number/🦀️.rs"]
-mod number;
-#[path="🫳️reader/🦀️.rs"]
-mod reader;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader;
 #[path="📄️document/🦀️.rs"]
-mod document;
-#[path="🔧️header/🦀️.rs"]
-mod header;
-#[path="✏️drawing/🦀️.rs"]
-mod drawing;
-#[path="🏷️xrecord/🦀️.rs"]
-mod xrecord;
-#[path="🗃️tables/🦀️.rs"]
-mod tables;
-#[path="🗃️tables/📇️records/🦀️.rs"]
-mod records;
-#[path="🎨️color/🦀️.rs"]
-mod color;
-#[path="📐️entities/🦀️.rs"]
-mod entities;
-#[path="📐️entities/📏️dimension/🦀️.rs"]
-mod entity_dimension;
-#[path="📐️entities/🖼️viewport/🦀️.rs"]
-mod entity_viewport;
-#[path="📦️objects/🦀️.rs"]
-mod objects;
-#[path="🔗️associativity/🦀️.rs"]
-mod associativity;
-#[path="🧮️evaluation/🦀️.rs"]
-mod evaluation;
-#[path="🧩️blocks/🦀️.rs"]
-mod blocks;
-#[path="🎬️actions/🦀️.rs"]
-mod actions;
-#[path="🖌️styles/👁️visual/🦀️.rs"]
-mod visual_style;
-#[path="🖌️styles/🧱️material/🦀️.rs"]
-mod material;
-#[path="🖌️styles/🗃️table/🦀️.rs"]
-mod table_style;
-#[path="📃️layout/🦀️.rs"]
-mod layout;
-#[path="🖌️styles/↗️mleader/🦀️.rs"]
-mod mleader_style;
-#[path="📏️constraints/🦀️.rs"]
-mod constraints;
+pub mod document;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::header;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::drawing;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::tables;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::records;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::entities;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::objects;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::associativity;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::actions;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::visual_style;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::material;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::table_style;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::layout;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::mleader_style;
+use semio_s_artifact_stdio_dwg_sqlite_drawing::standards::v_ac1024::subsets::any::io::sqlite::snapshot::constraints;
 
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl}};
 #[path="📏️encoding/🛬️admission/🦀️.rs"]
-mod native_admission;
+pub mod native_admission;
 
 impl ArtifactSqliteSnapshotHost for DwgSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit_native_rows(self,semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)}
@@ -72,16 +48,12 @@ impl ArtifactSqliteSnapshotHost for DwgSnapshot {
  
  
 }
+/// 🧵️ The DDL each projection module owns, in table-creation order.
+const SQLITE_SCHEMA_SEGMENTS: &[&str] = &[document::SQL, "\n", header::SQL, "\n", drawing::SQL, "\n", tables::SQL, "\n", entities::SQL, "\n", objects::SQL, "\n", associativity::SQL, "\n", evaluation::SQL, "\n", blocks::SQL, "\n", actions::SQL, "\n", visual_style::SQL, "\n", material::SQL, "\n", table_style::SQL, "\n", layout::SQL, "\n", mleader_style::SQL, "\n", constraints::SQL];
+/// 🗄️ The composed relational schema text of every owned DWG table.
+const SQLITE_SCHEMA_BYTES: [u8; sqlite_schema_len(SQLITE_SCHEMA_SEGMENTS)] = sqlite_schema_bytes(SQLITE_SCHEMA_SEGMENTS);
 impl pack::snapshot::ArtifactSqliteSnapshot for DwgSnapshot {
-const SQLITE_SCHEMA:&'static str=concat!(
- include_str!("📄️document/🗄️.sql"),"\n",include_str!("🔧️header/🗄️.sql"),"\n",
- include_str!("✏️drawing/🗄️.sql"),"\n",include_str!("🗃️tables/🗄️.sql"),"\n",
- include_str!("📐️entities/🗄️.sql"),"\n",include_str!("📦️objects/🗄️.sql"),"\n",
- include_str!("🔗️associativity/🗄️.sql"),"\n",include_str!("🧮️evaluation/🗄️.sql"),"\n",
- include_str!("🧩️blocks/🗄️.sql"),"\n",include_str!("🎬️actions/🗄️.sql"),"\n",
- include_str!("🖌️styles/👁️visual/🗄️.sql"),"\n",include_str!("🖌️styles/🧱️material/🗄️.sql"),"\n",
- include_str!("🖌️styles/🗃️table/🗄️.sql"),"\n",include_str!("📃️layout/🗄️.sql"),"\n",
- include_str!("🖌️styles/↗️mleader/🗄️.sql"),"\n",include_str!("📏️constraints/🗄️.sql"));
+const SQLITE_SCHEMA:&'static str=sqlite_schema_text(&SQLITE_SCHEMA_BYTES);
 fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{self.project_sqlite_database(control)}
 fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{Self::reconstruct_sqlite_database(database,control)}
 }
@@ -101,9 +73,9 @@ fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnaps
   Ok(Self{schema:document.schema,version:document.version,maintenance_version:document.maintenance_version,codepage:document.codepage,drawing,header,classes:document.classes,dependencies:document.dependencies,summary:document.summary,application:document.application,template:document.template,auxiliary_header:document.auxiliary_header,revision_history:document.revision_history,preview:document.preview,application_history:document.application_history})
  }
 }
-pub(super) fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
+pub fn construct_native_record(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<DwgSnapshot,ValueError>{native_admission::root(record,native,limits)?;DwgSnapshot::__dsl_from_record_controlled(record,native)}
 #[cfg(test)]
-pub(super) fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
+pub fn forecast_native_rows(record:&semio_framework_dsl_record::RecordValue,native:&mut semio_framework_value::NativeDecodeControl<'_>,limits:semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits)->Result<usize,ValueError>{native_admission::root(record,native,limits)}
 fn admit_native_rows(snapshot:&DwgSnapshot,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<usize,ValueError>{
     let mut projection=number::Projection::admission(DwgSnapshot::SQLITE_SCHEMA,phase,control)?;
     document::project(&mut projection,snapshot)?;header::project(&mut projection,&snapshot.header)?;

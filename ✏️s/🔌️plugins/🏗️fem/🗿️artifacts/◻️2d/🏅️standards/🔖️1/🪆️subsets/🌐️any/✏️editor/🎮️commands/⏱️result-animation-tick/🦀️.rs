@@ -14,14 +14,14 @@
 //! clears the transient — and re-arms nothing. That is how a pause, a closed window or a second
 //! chain that raced the first dies out instead of spinning the guest forever.
 
-use crate::app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
+use semio_s_fem_app_surface::{FemResultsAnimation, ANIMATION_TICK_SECONDS};
 use crate::editor::fem2d::commands::set_result_animation::{rearm_effect, resting_step, FemPlaybackStep, FemPlaybackTransport};
 use crate::editor::fem2d::modes::edit::windows::results::transient::{addressed_to, FemPlaybackClock};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️ResultAnimationTick
 /// 🕐️ One frame of the playback chain of ONE results window. `window_id` is the window the chain

@@ -5,18 +5,21 @@
     {
       "implementation": "rust",
       "package": "semio-s-artifact-stdio-dwg-test-oracle",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust",
-      "features": [
-        "oracles"
-      ]
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🔮️oracles/📦️packages/🦀️rust"
     }
   ],
   "subjectHostPackages": [
     {
       "implementation": "rust",
-      "package": "semio-s-artifact-stdio-dwg-model",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
-      "rationale": "🧬️ The DWG subject edits the model crate's snapshot through its mutation vocabulary."
+      "package": "semio-s-artifact-stdio-dwg-snapshot",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+      "rationale": "📸️ The DWG subject edits the snapshot crate's document."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-dwg-mutations",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The DWG subject edits the snapshot through the mutations crate's vocabulary."
     },
     {
       "implementation": "rust",

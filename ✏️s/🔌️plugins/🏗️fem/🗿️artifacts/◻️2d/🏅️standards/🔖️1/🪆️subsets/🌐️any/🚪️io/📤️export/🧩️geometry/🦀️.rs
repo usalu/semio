@@ -1,15 +1,15 @@
 //! 🌐️ Explicit installed FEM document to Semio mesh conversion owned by foreign export composition.
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔖️SemioMeshBridge
 /// 🌉️ Builds a real `SemioMeshSnapshot` from every `FemRegion`'s genuinely triangulated,
-/// thickness-extruded solid boundary: `crate::mesh::triangulate` the footprint (same call
+/// thickness-extruded solid boundary: `semio_s_fem_mesh::triangulate` the footprint (same call
 /// `build_nodes_and_elements` above already makes for its `Tri3Cst` regions), `extrude_tri_mesh`
 /// by the region's OWN `thickness`, `split_to_tets`, then `boundary_faces` for the outward-
-/// oriented outer surface — real, tested geometry (`crate::mesh`'s own volume/area-preservation
+/// oriented outer surface — real, tested geometry (`semio_s_fem_mesh_derived`'s own volume/area-preservation
 /// tests), not fabricated bytes. Feeds the `s.stdio.obj`/`s.stdio.stl` export leaves, which hand
 /// this to stdio's real `SemioMeshToObj`/`SemioMeshToStl` bridge + `encode_obj`/`encode_stl_ascii`
 /// grammar — this function does no byte-level encoding itself.
@@ -21,12 +21,12 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSn
 pub(crate) fn build_semio_mesh_snapshot(doc: &Fem2dSnapshot) -> SemioMeshSnapshot {
     let mut meshes = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
-        let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
-        let opts = crate::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let Ok(tri_mesh) = crate::mesh::triangulate(&domain, &opts) else { continue };
-        let volume = crate::mesh::extrude_tri_mesh(&tri_mesh, region.thickness, 1);
-        let tets = crate::mesh::split_to_tets(&volume);
-        let faces = crate::mesh::boundary_faces(&tets);
+        let domain = semio_s_fem_mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
+        let opts = semio_s_fem_mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
+        let Ok(tri_mesh) = semio_s_fem_mesh::triangulate(&domain, &opts) else { continue };
+        let volume = semio_s_fem_mesh_derived::extrude_tri_mesh(&tri_mesh, region.thickness, 1);
+        let tets = semio_s_fem_mesh_derived::split_to_tets(&volume);
+        let faces = semio_s_fem_mesh_derived::boundary_faces(&tets);
         let positions: Vec<SemioPoint3> = tets.points.iter().map(|p| SemioPoint3 { x: p[0], y: p[1], z: p[2] }).collect();
         let indices: Vec<u32> = faces.iter().flat_map(|f| f.iter().copied()).collect();
         meshes.push(SemioMesh { id: region.id.clone(), primitives: vec![SemioPrimitive { id: format!("{}-surface", region.id), topology: SemioTopology::Triangles, positions, indices, ..Default::default() }] });

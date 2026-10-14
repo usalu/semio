@@ -136,17 +136,6 @@
         "command": "bun ./📜️script.ts build-dev"
       }
     },
-    "build-dev-postgres": {
-      "executor": "repo:script",
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/build-dev-postgres"
-      ],
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts build-dev-postgres"
-      }
-    },
     "test": {
       "executor": "repo:script",
       "options": {
@@ -706,7 +695,7 @@
       },
       "configurations": {
         "stdio-only": {
-          "args": "--stdio-only",
+          "args": ["--stdio-only"],
           "env": {
             "SEMIO_TEST_ARTIFACT_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated",
             "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/tests/hub/native-openable-catalog-provider-stdio-only/🗑️generated/cargo-target"
@@ -1138,7 +1127,7 @@
       },
       "executor": "repo:script",
       "dependsOn": [
-        "build-dev-postgres",
+        "build-dev",
         {
           "target": "build",
           "projects": [
@@ -1175,7 +1164,7 @@
       },
       "executor": "repo:script",
       "dependsOn": [
-        "build-dev-postgres",
+        "build-dev",
         {
           "target": "build",
           "projects": [

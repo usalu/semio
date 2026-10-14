@@ -1,5 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 use protocol::command::DiffAlgebra;
@@ -103,11 +104,11 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
             SemioSubsetSnapshot::Object(_) => unreachable!("excluded from `bases` above"),
             SemioSubsetSnapshot::Kit(_) => unreachable!("excluded from `bases` above"),
             SemioSubsetSnapshot::Model(_) => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::RemoveElement(semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement { id: "absent".into() }) }),
-            SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::RemoveNode(semio_s_artifact_stdio_semio_value::schema::mutations::remove_node::RemoveNode { id: semio_s_artifact_stdio_semio_value::schema::snapshot::ValueId::new("absent") }) }),
+            SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::RemoveNode(semio_s_artifact_stdio_semio_value_mutations::schema::mutations::remove_node::RemoveNode { id: semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId::new("absent") }) }),
             SemioSubsetSnapshot::Document(_) => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::RemoveStyle(semio_s_artifact_stdio_semio_document::schema::mutations::remove_style::RemoveStyle { id: "absent".into() }) }),
             SemioSubsetSnapshot::Cad(_) => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::RemoveEntity(semio_s_artifact_stdio_semio_cad::schema::mutations::remove_entity::RemoveEntity { handle: "absent".into() }) }),
             SemioSubsetSnapshot::Image(_) => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetBitDepth(semio_s_artifact_stdio_semio_image::schema::mutations::set_bit_depth::SetBitDepth { bit_depth: 0 }) }),
-            SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::RemoveStream(semio_s_artifact_stdio_semio_video::schema::mutations::remove_stream::RemoveStream { index: 0 }) }),
+            SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::RemoveStream(semio_s_artifact_stdio_semio_video_mutations::schema::mutations::remove_stream::RemoveStream { index: 0 }) }),
             SemioSubsetSnapshot::Audio(_) => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: Default::default() }) }),
             SemioSubsetSnapshot::Animation(_) => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(semio_s_artifact_stdio_semio_animation::schema::mutations::remove_timeline::RemoveTimeline { index: 0 }) }),
             SemioSubsetSnapshot::Presentation(_) => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(semio_s_artifact_stdio_semio_presentation::schema::mutations::remove_slide::RemoveSlide { index: 0 }) }),
@@ -131,8 +132,8 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
 /// dispatch, produces a nested `SemioDiff::Text`, and its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
-    use semio_s_artifact_stdio_semio_text::schema::mutations::insert_run;
-    use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextRun;
+    use semio_s_artifact_stdio_semio_text_mutations::schema::mutations::insert_run;
+    use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
     let m = SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }) });
@@ -210,8 +211,8 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
 /// its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
-    use semio_s_artifact_stdio_semio_table::schema::mutations::insert_row;
-    use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table_mutations::schema::mutations::insert_row;
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
     let m = SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::InsertRow(insert_row::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }) });

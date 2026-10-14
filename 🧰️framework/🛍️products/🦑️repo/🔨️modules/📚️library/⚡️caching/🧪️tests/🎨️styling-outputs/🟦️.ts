@@ -62,7 +62,7 @@ appendFileSync(join(root, command === "deps" ? ".deps" : ".runs"), command + "\\
   };
   await run(); assert.equal(runs(), 1); await check(fixture.values[0]);
   const bytes = new Map(readdirSync(published).map(name => [name, readFileSync(join(published, name))]));
-  assert.ok(bytes.has(".nx-artifact.json"));
+  assert.ok(bytes.has(".semio-artifact.json"));
   assert.ok(!bytes.has("project.assets.json"));
   await run(); assert.equal(runs(), 1);
   rmSync(published, { recursive: true });

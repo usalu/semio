@@ -1,9 +1,13 @@
 //! 🔺️ Diff for `CreateColumn`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::schema::diff::{SemioTableDiff, SemioTableRowDiff};
-use crate::schema::snapshot::{SemioTableColumn, SemioTableSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::diff::SemioTableRowDiff;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableColumn;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 
 //#region 🔖️Diff
 /// 🧮️ Inserts one column at `index` (clamped to the end) and a `Null` cell at the same position of every row.

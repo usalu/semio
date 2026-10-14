@@ -10,9 +10,6 @@
     "test-refusals": "bun repo run @semio-tech/framework-pack-record-rs:test-refusals",
     "test-schema-storage-source": "bun repo run @semio-tech/framework-pack-record-rs:test-schema-storage-source"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@noble/hashes": "^2.4.0",
     "@semio-tech/process": "workspace:*"

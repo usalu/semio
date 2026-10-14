@@ -1,9 +1,7 @@
 //! 🧵️ Element vocabulary shared by the multi-element and data leaves: which ids name an element, the placement fields of the
 //! placed kinds (the one record a move, a rotation and their exact inverse all speak), and the name slot of every element kind.
 
-use crate::{
-    Assigned, Axis, BeamPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, Entry, GridLinePatch, KeyedDelta, MepElementPatch, ModelDiff, ModelSnapshot, OpeningPatch, Patch, Point2, Point3, RailingPatch, RampPatch, RoofPatch, RoofShape, SlabPatch, Slope, SpaceBoundary, SpacePatch, StairFlight, StairPatch, Vertex, WallPatch,
-};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::{BeamPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, GridLinePatch, MepElementPatch, OpeningPatch, RailingPatch, RampPatch, RoofPatch, SlabPatch, SpacePatch, StairPatch, WallPatch}, Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{Axis, ModelSnapshot, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -637,7 +635,7 @@ pub fn restorey(base: &ModelSnapshot, id: &str, storey: &str) -> Option<ModelDif
 }
 
 /// 🔝️ The base offset and the top constraint that resolve the height of the element `id`, `None` for an element whose extent no top constraint drives (a stair starts at its storey).
-pub fn vertical_of<'a>(base: &'a ModelSnapshot, id: &str) -> Option<(f64, &'a crate::TopConstraint)> {
+pub fn vertical_of<'a>(base: &'a ModelSnapshot, id: &str) -> Option<(f64, &'a crate::standards::v1::subsets::any::schema::snapshot::TopConstraint)> {
     base.walls
         .get(id)
         .map(|row| (row.base_offset, &row.top))
@@ -664,12 +662,12 @@ macro_rules! rephased {
 }
 
 /// 🕰️ The construction phase of the element `id`, `None` for an id that carries none (an opening takes the phase of its host, a grid line, site, building or storey has none).
-pub fn phase_of(base: &ModelSnapshot, id: &str) -> Option<crate::Phase> {
+pub fn phase_of(base: &ModelSnapshot, id: &str) -> Option<crate::standards::v1::subsets::any::schema::snapshot::Phase> {
     phased!(base, id, walls, curtain_walls, columns, beams, slabs, roofs, stairs, railings, spaces)
 }
 
 /// 🕰️ The one-field diff that puts the phasable element `id` into `phase`, `None` for an id that carries no phase.
-pub fn rephase(base: &ModelSnapshot, id: &str, phase: crate::Phase) -> Option<ModelDiff> {
+pub fn rephase(base: &ModelSnapshot, id: &str, phase: crate::standards::v1::subsets::any::schema::snapshot::Phase) -> Option<ModelDiff> {
     rephased!(
         base, id, phase,
         walls => WallPatch,

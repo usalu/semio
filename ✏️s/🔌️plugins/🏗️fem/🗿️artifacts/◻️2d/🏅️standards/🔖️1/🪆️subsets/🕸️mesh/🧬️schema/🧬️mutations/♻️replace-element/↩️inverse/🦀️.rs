@@ -1,13 +1,12 @@
 //! ↩️ Inverse for `ReplaceElement` — recovers the pre-mutation element from `base`.
 use super::ReplaceElement;
-use crate::element_id;
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ReplaceElement, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<replace_element::ReplaceElement>>(payload: &ReplaceElement, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.elements.iter().find(|item| element_id(item) == payload.id).map(|item| vec![Fem2dMutation::ReplaceElement(ReplaceElement { id: payload.id.clone(), new_element: Box::new(item.clone()) })]).unwrap_or_default()
+    base.elements.iter().find(|item| element_id(item) == payload.id).map(|item| vec![Op::from(ReplaceElement { id: payload.id.clone(), new_element: Box::new(item.clone()) })]).unwrap_or_default()
 
     })())
 }

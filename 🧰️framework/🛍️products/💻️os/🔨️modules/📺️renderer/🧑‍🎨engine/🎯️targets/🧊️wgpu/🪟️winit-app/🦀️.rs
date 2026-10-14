@@ -186,6 +186,8 @@ impl WindowDelegate for OsHost {
 }
 
 impl OsHost {
+    /// 🛶️ Event closure requires real host, frame worker, presenter and snapshot publication quiescence.
+    fn original_event_terminal_is_empty(&self)->bool{self.events.is_empty()&&!self.frame_ready&&!self.surface_resize.has_work()&&!crate::os_host::component_surface_close_occupied()&&self.frame_build.original_event_terminal_is_empty()&&!self.presenter.has_pending_presentation()&&self.original_snapshot.is_none()&&self.snapshot_sink.original_event_terminal_is_empty()&&self.runtime.original_event_terminal_is_empty()}
     /// 🔢️ The one place that answers whether an input callback may renumber the frame generation —
     /// the same `has_live_session()` predicate `redraw_core` already honours below, so the law
     /// ("it advances when input changes, and when a redraw finds no build to invalidate — never
@@ -622,7 +624,7 @@ mod native {
         accessibility: Option<crate::native_accessibility::NativeAccessibilityBridge>,
         host: Option<OsHost>,
         retirement: Option<OsHostRetirement>,
-        frame_caller:crate::native_caller::NativeFrameCaller,
+        frame_caller:crate::native_caller::NativeFrameEventIssuer,
         close_pending:bool,
         #[cfg(not(target_arch = "wasm32"))]
         pointers: ui_host::PointerRegistry,
@@ -641,7 +643,7 @@ mod native {
             #[cfg(target_arch = "wasm32")] canvas: Option<web_sys::HtmlCanvasElement>,
             #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
             #[cfg(not(target_arch = "wasm32"))] services:Vec<semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1>,
-            frame_caller:crate::native_caller::NativeFrameCaller,
+            frame_caller:crate::native_caller::NativeFrameEventIssuer,
         ) -> Self {
             Self {
                 proxy,
@@ -875,6 +877,9 @@ mod native {
     }
 
     impl ApplicationHandler<HostUserEvent> for WinitApp {
+        fn new_events(&mut self,event_loop:&ActiveEventLoop,cause:winit::event::StartCause){
+            if matches!(cause,winit::event::StartCause::ResumeTimeReached{..})&&self.host.as_ref().is_some_and(|host|self.pending_reason.is_some()||!host.original_event_terminal_is_empty()||host.scheduler.next_deadline().is_some_and(|deadline|deadline.due<=host.now_seconds())){let _=self.frame_caller.observe_event();self.recompute_control_flow(event_loop);}
+        }
         /// 🪟️ Window creation ported verbatim from the old `SemioApp::resumed` (title/size/canvas-mount
         /// logic unchanged — see this file's own module docstring for why the two-phase handshake this
         /// method starts is kept, not deleted). Only the tail changes: no `start_frame_loop` call.
@@ -1001,6 +1006,7 @@ mod native {
                     }
                 }
             }
+            if self.host.is_some(){let _=self.frame_caller.observe_event();}
             self.recompute_control_flow(event_loop);
         }
 
@@ -1023,6 +1029,7 @@ mod native {
             }
             match &event {
                 WindowEvent::CloseRequested => {
+                    let _=self.frame_caller.observe_event();
                     let requested = self.host.as_mut().is_some_and(|host| host.close_requested());
                     if requested {
                         self.close_pending=true;
@@ -1031,18 +1038,21 @@ mod native {
                     return;
                 }
                 WindowEvent::Resized(size) => {
+                    let _=self.frame_caller.observe_event();
                     let scale_factor = window.scale_factor() as f32;
                     if let Some(host) = self.host.as_mut() {
                         host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor });
                     }
                 }
                 WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                    let _=self.frame_caller.observe_event();
                     let size = window.inner_size();
                     if let Some(host) = self.host.as_mut() {
                         host.handle_metrics(WindowMetrics { physical: PhysicalSize::new(size.width, size.height), scale_factor: *scale_factor as f32 });
                     }
                 }
                 WindowEvent::ThemeChanged(theme) => {
+                    let _=self.frame_caller.observe_event();
                     publish_system_appearance(Some(*theme));
                     if let Some(host) = self.host.as_mut() {
                         let now = host.now_seconds();
@@ -1052,12 +1062,13 @@ mod native {
                     }
                 }
                 WindowEvent::Focused(false) => {
+                    let _=self.frame_caller.observe_event();
                     crate::shell::note_host_window_blur();
                     window.request_redraw();
                 }
                 WindowEvent::RedrawRequested => {
                     if let Some(reason) = self.pending_reason.take() {
-                        if !self.frame_caller.ready(){self.pending_reason=Some(reason);window.request_redraw();return;}
+                        if !self.frame_caller.ready()||self.frame_caller.finishing(){self.pending_reason=Some(reason);self.recompute_control_flow(event_loop);return;}
                         if let Some(host) = self.host.as_mut() {
                             let call=self.frame_caller.dispatch_step(|cx|host.redraw_on_original_caller(cx));
                             match call{Ok(original)=>{crate::log_debug(&format!("[DEBUG] Native frame original epoch={} copiedItems={} copiedBytes={} bornBytes={} releasedBytes={} fuel={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.copied_bytes,original.receipt_spent.retained_capacity_bytes,original.receipt_spent.released_bytes,original.work_units_spent));if original.result.is_err(){self.close_pending=true;}},Err(_)=>{self.pending_reason=Some(reason);window.request_redraw();}}
@@ -1068,6 +1079,7 @@ mod native {
                 }
                 _ => {
                     if let Some(dispatch_event) = normalize(self, &event) {
+                        let _=self.frame_caller.observe_event();
                         if let Some(host) = self.host.as_mut() {
                             host.handle_event(dispatch_event);
                         }
@@ -1084,7 +1096,8 @@ mod native {
         /// ♿️ The platform tree follows the latest presented publication; every assistive-technology action is
         /// handed to the shell as the accessibility event it is, exactly like a browser mirror event.
         fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
-            if !self.frame_caller.ready()&&(self.host.is_some()||self.retirement.is_some()||!self.close_pending){
+            if self.frame_caller.finishing(){let _=self.frame_caller.finish_event_step();self.recompute_control_flow(event_loop);return;}
+            if !self.frame_caller.terminal_is_empty()&&!self.frame_caller.ready(){
                 match self.frame_caller.admit_step(){Ok(original)=>crate::log_debug(&format!("[DEBUG] Native root admission epoch={} copiedItems={} bornBytes={} ready={}",original.input.epoch,original.receipt_spent.copied_items,original.receipt_spent.retained_capacity_bytes,original.result.as_ref().is_ok_and(|step|step.ready))),Err(_)=>{}}
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));
                 return;
@@ -1107,7 +1120,7 @@ mod native {
                 return;
             }
             if self.close_pending&&self.host.is_none()&&self.retirement.is_none(){
-                let complete=self.frame_caller.close_step().is_ok_and(|original|matches!(original.result,Ok(semio_framework_value::RetainedCloneStep::Complete(_))));
+                let complete=self.frame_caller.finish_event_step().is_ok_and(|complete|complete);
                 if complete&&self.frame_caller.terminal_is_empty(){
                     #[cfg(not(target_arch="wasm32"))]
                     {self.accessibility=None;}
@@ -1120,6 +1133,7 @@ mod native {
             if let Some(bridge) = self.accessibility.as_mut() {
                 bridge.refresh();
                 for event in bridge.take_dispatch_events() {
+                    let _=self.frame_caller.observe_event();
                     host.handle_event(event);
                 }
             }
@@ -1132,6 +1146,7 @@ mod native {
                     }
                 }
             }
+            if self.pending_reason.is_none()&&self.host.as_ref().is_some_and(OsHost::original_event_terminal_is_empty)&&!self.frame_caller.terminal_is_empty(){let _=self.frame_caller.finish_event_step();}
             self.recompute_control_flow(event_loop);
         }
     }
@@ -1142,6 +1157,7 @@ mod native {
         /// elapsed seconds, so native and browser builds share the same deadline policy.
         /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
         fn recompute_control_flow(&mut self, event_loop: &ActiveEventLoop) {
+            if self.close_pending||self.frame_caller.finishing()||(!self.frame_caller.terminal_is_empty()&&!self.frame_caller.ready())||self.pending_reason.is_some(){event_loop.set_control_flow(winit::event_loop::ControlFlow::wait_duration(std::time::Duration::from_millis(1)));return;}
             let Some(host) = self.host.as_ref() else {
                 event_loop.set_control_flow(winit::event_loop::ControlFlow::Wait);
                 return;

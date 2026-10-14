@@ -1,8 +1,8 @@
 //! 🏗️ `update-crane-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateCraneInputs;
-use crate::diff::{En1993Diff, En1993CraneRunwayDelta};
-use crate::En1993Snapshot;
+use crate::update_crane_inputs::UpdateCraneInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993CraneRunwayDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateCraneInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.crane_runways.iter().position(|row| row.id == payload.crane_runway.id) {

@@ -1,0 +1,237 @@
+[
+ {
+  "package": "semio-hub-stdio-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-note-note-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-avi-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-bcf-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-binary-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-bmp-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-csv-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-deflate-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-docx-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-dwg-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-dxf-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-epw-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-gif-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-gltf-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-html-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-ifc-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-jpg-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-json-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-las-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-md-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-mp3-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-mp4-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-obj-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-pdf-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-ply-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-png-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-pptx-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-semio-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-step-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-stl-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-svg-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-tiff-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-tsv-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-txt-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-wav-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-xlsx-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-xml-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-stdio-zip-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-archive-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-audio-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-document-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-drawing-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-markup-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-mesh-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-part21-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-raster-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-plugin-stdio-tabular-test-oracle",
+  "feature": "oracles",
+  "mode": "on"
+ }
+]

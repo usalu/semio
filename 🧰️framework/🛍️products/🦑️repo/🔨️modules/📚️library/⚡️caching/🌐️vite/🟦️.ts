@@ -49,7 +49,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<voi
   await mkdir(temporaryRoot, { recursive: true });
   const temporary = await mkdtemp(join(temporaryRoot, "vite-build-"));
   try {
-    await withCompilerState({ ...state, environment, control, leaseDirectory: join(options.workspace, ".cache/framework/leases"), files: ["deps/_metadata.json"] }, async (directory, compilerEnvironment) => {
+    await withCompilerState({ ...state, environment, control, leaseDirectory: join(options.workspace, ".cache/b/l/m/data"), files: ["deps/_metadata.json"] }, async (directory, compilerEnvironment) => {
       const cli = join(dirname(require.resolve("vite/package.json")), "bin/vite.js");
       control.signal.throwIfAborted();
       console.log(`Bundling ${options.owner}`);
@@ -91,13 +91,13 @@ export async function serveVite(options: ViteService): Promise<void> {
   const temporaryRoot = options.temporaryRoot ?? (process.env.SEMIO_TICKET_DIR ? join(process.env.SEMIO_TICKET_DIR, "🗑️generated") : join(state.root, "vite-services"));
   await mkdir(temporaryRoot, { recursive: true });
   const cache = await mkdtemp(join(temporaryRoot, "vite-service-"));
-  try { await withCompilerState({ ...state, capacity: false, control, leaseDirectory: join(workspace, ".cache/framework/leases"), files: ["snapshot/.nx-artifact.json"] }, async directory => { if (existsSync(join(directory, "snapshot"))) await cp(join(directory, "snapshot"), cache, { recursive: true }); await rm(join(cache, ".nx-artifact.json"), { force: true }); }); }
+  try { await withCompilerState({ ...state, capacity: false, control, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async directory => { if (existsSync(join(directory, "snapshot"))) await cp(join(directory, "snapshot"), cache, { recursive: true }); await rm(join(cache, ".semio-artifact.json"), { force: true }); }); }
   catch (error) { await rm(cache, { recursive: true, force: true }); throw error; }
   const listener = createHttpServer(), sockets = new Set<Socket>();
   listener.on("connection", socket => { sockets.add(socket); socket.once("close", () => sockets.delete(socket)); });
   let server: Awaited<ReturnType<typeof createServer>> | undefined;
   try {
-    await withCompilerState({ ...state, control, leaseDirectory: join(workspace, ".cache/framework/leases"), files: ["snapshot/.nx-artifact.json"] }, async () => {
+    await withCompilerState({ ...state, control, leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async () => {
     server = await createServer({ mode, dev: { preTransformRequests: false }, cacheDir: cache, root: options.root, configFile: options.config, configLoader: options.configLoader ?? "native", server: { preTransformRequests: false, host: options.host, port: options.port, strictPort: true, open: false, middlewareMode: { server: listener }, hmr: { server: listener } }, plugins: session ? [{
     name: "semio-service-readiness",
     configureServer(server) {
@@ -116,7 +116,7 @@ export async function serveVite(options: ViteService): Promise<void> {
       environment.config.dev.preTransformRequests = false;
       const transform = environment.transformRequest.bind(environment), warmup = environment.warmupRequest.bind(environment);
       const admitted = async <T>(operation: () => Promise<T>): Promise<T> => {
-        const phase = scriptCompilerAdmissionControlV1(options.invocation, "vite:transform", 600_000, options.signal), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/framework/leases"), control: phase, environment: process.env });
+        const phase = scriptCompilerAdmissionControlV1(options.invocation, "vite:transform", 600_000, options.signal), lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: phase, environment: process.env });
         try { phase.signal.throwIfAborted(); return await operation(); }
         finally { try { await Promise.allSettled(Object.values(environment.depsOptimizer?.metadata.discovered ?? {}).map(dependency => dependency.processing)); } finally { lease.release(); } }
       };
@@ -149,7 +149,7 @@ export async function serveVite(options: ViteService): Promise<void> {
     for (const socket of sockets) socket.destroy();
     try {
       await Promise.all([closed, server?.close()]);
-      if (server && !options.invocation.control.signal.aborted && (options.invocation.control.remainingMilliseconds() ?? Infinity) > 0) await withCompilerState({ ...state, capacity: false, control: scriptCompilerAdmissionControlV1(options.invocation, "vite:snapshot", 30_000), leaseDirectory: join(workspace, ".cache/framework/leases"), files: ["snapshot/.nx-artifact.json"] }, async directory => {
+      if (server && !options.invocation.control.signal.aborted && (options.invocation.control.remainingMilliseconds() ?? Infinity) > 0) await withCompilerState({ ...state, capacity: false, control: scriptCompilerAdmissionControlV1(options.invocation, "vite:snapshot", 30_000), leaseDirectory: join(workspace, ".cache/b/l/m/data"), files: ["snapshot/.semio-artifact.json"] }, async directory => {
         const files = await collectArtifactFiles(cache);
         await stageRepositoryArtifacts(join(directory, "snapshot"), "vite-service:optimizer", files);
       });

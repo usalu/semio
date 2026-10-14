@@ -1,6 +1,6 @@
 //! 🛋️ `create-space` payload. Brings a new room onto a storey; a bounded space stores only its seed point, its outline, area and volume are inferred from the walls around it.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Space};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Space}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

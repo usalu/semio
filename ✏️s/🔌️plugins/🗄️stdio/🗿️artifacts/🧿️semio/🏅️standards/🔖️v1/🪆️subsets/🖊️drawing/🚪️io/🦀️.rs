@@ -236,7 +236,9 @@ fn diagram_boundary(node: &SemioDiagramNode, toward: [f64; 2]) -> [f64; 2] {
 /// rectangles, so every drawing bridge writes them as real circles and polylines.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diagram_drawing(diagram: &SemioDiagram) -> crate::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let extent = |node: &SemioDiagramNode| match node.shape {
         SemioDiagramShape::Circle { radius } => [radius, radius],

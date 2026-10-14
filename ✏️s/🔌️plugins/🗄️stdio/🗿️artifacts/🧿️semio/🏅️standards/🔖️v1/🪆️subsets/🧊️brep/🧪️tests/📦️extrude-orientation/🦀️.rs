@@ -33,13 +33,13 @@ use {semio_framework_3d_brep_operations::primitives::{make_planar_face_from_wire
 use semio_framework_3d_brep_operations::sweep::extrude_face;
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_3d_brep_queries::mass_properties::solid_signed_volume;
-use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
-use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_tessellation::tessellate_solid;
+use semio_framework_3d_brep_validation::validate_body;
 use semio_framework_3d_brep_representation::arena::SolidId;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 // #endregion 🔖️Imports

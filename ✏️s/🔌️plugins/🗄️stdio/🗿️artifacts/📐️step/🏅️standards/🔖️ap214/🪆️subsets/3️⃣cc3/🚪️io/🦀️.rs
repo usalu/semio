@@ -4,7 +4,7 @@
 //! `SubsetValidator` directly), not per-leaf `register()` — same pattern `🧱️base/🚪️io` established.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_ap214::engine::ladder::ensure_file_schema;
+    use crate::standards::v_ap214::subsets::base::io::ladder::ensure_file_schema;
     use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use crate::standards::v_ap214::subsets::base::io::StepComposer as StepAnyComposer;
     use crate::standards::v_ap214::subsets::cc3::io::check_cc3_conformance;
@@ -12,8 +12,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
-    use std::sync::OnceLock;
+    use {semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
 
     const DIALECT_SELF: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc3") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
@@ -77,20 +76,13 @@ use semio_framework_diagnostic::TextSpan;
         }
     }
 
-    static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
+    impl store::io::SnapshotSubsetValidator for StepCc3Validator {
+        type Snapshot = StepSnapshot;
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn validator_entry() -> &'static SubsetValidatorEntry {
-        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<StepCc3Validator>)
-    }
-
-    /// 📌️ Registers this subset's `SubsetValidator` with the generic io registry (D5's
-    /// validate-on-build hook). Called from the ap214 standard's own `⚙️engine::register()`. The
-    /// `ComposerEntry` itself is registered separately by the standard-level composer aggregator
-    /// (`crate::standards::v_ap214::engine::io_registry::entries()`).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        fn validate_snapshot(snapshot: &StepSnapshot, _database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+            let diagnostics = crate::standards::v_ap214::subsets::cc3::io::check_cc3_conformance_controlled(snapshot, control).map_err(store::io_schema::IoError::from_value_error)?;
+            Ok(store::io_schema::IoOutcome { value: (), diagnostics })
+        }
     }
     //#endregion 🔖️SubsetValidator
 
@@ -102,7 +94,8 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     use crate::standards::v_ap214::subsets::cc3::io::check_cc3_conformance;
-    use crate::{StepDiff, StepSnapshot};
+    use crate::standards::v_ap214::subsets::base::schema::diff::{StepDiff};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
     use crate::standards::v_ap214::subsets::cc3::schema::mutations::{StepCc3Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -170,7 +163,7 @@ use semio_framework_diagnostic::Severity;
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v_ap214::engine::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
+    use crate::standards::v_ap214::subsets::base::io::ladder::{file_schema_contains, has_product_definition_chain, ladder_violations};
     use crate::standards::v_ap214::subsets::base::schema::snapshot::StepSnapshot;
     use crate::standards::v_ap214::subsets::base::io::StepAnalyzer as StepAnyAnalyzer;
     pub use crate::standards::v_ap214::subsets::base::io::StepParts;

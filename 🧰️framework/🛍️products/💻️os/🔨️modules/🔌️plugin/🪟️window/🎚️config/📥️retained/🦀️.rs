@@ -296,7 +296,7 @@ enum StringTarget {
 #[derive(semio_framework_value::RetireOwned)]
 struct RetainedString {
     target: StringTarget,
-    value: String,
+    pub(crate) value: String,
     remaining: Option<u64>,
     symbol: Option<(u64, usize, usize)>,
 }
@@ -741,10 +741,10 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         self.root.take()
     }
 
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: size_of::<RetainedTypedOwners<O>>(), depth: 1, ..Default::default() }), |owner| Ok(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(body)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }))
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if !super::registry::fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -759,7 +759,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
         }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.handed_back && self.root.is_none() && self.stack.capacity() == 0 && self.wrappers.capacity() == 0 && self.string.is_none() && self.retirement_original.is_none() && self.retirement.as_ref().is_some_and(ControlledRetirement::terminal_is_empty)
     }
 }
@@ -815,7 +815,7 @@ struct RetainedWindowConfigStateDecode<O: WindowConfigOwner> {
 }
 
 impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             active:ManuallyDrop::new(None),
             phase: RetainedStatePhase::Envelope,
@@ -1075,7 +1075,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         self.phase = RetainedStatePhase::Closing;
     }
 
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if self.document_byte.is_some() { return frame(size_of::<(u64, u8)>()); }
@@ -1159,7 +1159,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         if let Some(source)=self.source.as_mut(){let step=source.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window source retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !source.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window source false terminal"));}self.source.take();}return Ok(convert(step));}
         self.phase=RetainedStatePhase::Closed;Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.phase == RetainedStatePhase::Closed
             && self.active.is_none()
             && self.document_byte.is_none()
@@ -1230,7 +1230,7 @@ struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     completed_bytes: u64,
     total_bytes: u64,
     decoded_states: u8,
-    committed: bool,
+    pub(crate) committed: bool,
     terminal: bool,
 }
 
@@ -1528,7 +1528,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let frame = |copy_bytes| Ok(RetirementDemand { copy_bytes, depth: 1, ..Default::default() });
         if self.terminal { return Ok(Default::default()); }
         if self.original.is_some() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "retained original window input has no controlled authority")); }

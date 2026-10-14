@@ -23,11 +23,17 @@
 //!   (element/spatial) edges implied by the containment tree this bridge walks — other real IFC
 //!   relationship kinds (`IfcRelVoidsElement`/`IfcRelConnectsElements`/…) are not read here.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_ifc::standards::v4::subsets::any::io::spatial::{analyze_spatial, Mat4, PropertySet as IfcPropertySet, SpatialAnalysis, SpatialNode as IfcSpatialNode};
-use semio_s_artifact_stdio_ifc::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::analyze_spatial;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::Mat4;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::PropertySet as IfcPropertySet;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::SpatialAnalysis;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::spatial::SpatialNode as IfcSpatialNode;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
 //#region 🔖️Deserializer
@@ -183,7 +189,7 @@ fn walk(doc: &Part21Document, node: &IfcSpatialNode, parent_spatial_id: Option<&
 //#region 🔖️Entry
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn model_from_ifc(from: &IfcSnapshot) -> SemioModelSnapshot {
-    let doc = semio_s_artifact_stdio_ifc::schema::snapshot::to_part21_document(from);
+    let doc = semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::to_part21_document(from);
     let analysis = analyze_spatial(&doc);
     let mut spatial = Vec::new();
     let mut elements = Vec::new();

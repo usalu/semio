@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️plant-loop/⚗️create",
+  "semanticKind": "create-plant-loop",
+  "displayName": "Create Plant Loop",
+  "emoji": "⚗️",
+  "aggregateVariant": "CreatePlantLoop",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "create-plant-loop",
+  "binaryTag": 178,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

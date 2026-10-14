@@ -589,7 +589,6 @@ fn project_doc(doc: &OracleDoc) -> Json {
 /// 👁️ Projects real TIFF bytes with the INDEPENDENT reader above — used identically by both the
 /// oracle and the subject's own handlers (same pattern `project_pdf`/`project_obj`/`project_image`
 /// already use), so it is the projection, not the writer, that carries independence here.
-#[cfg(feature = "oracles")]
 pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
     read_tiff(input).map(|doc| project_doc(&doc))
 }
@@ -623,7 +622,6 @@ fn region_span(ifd:&OracleIfd,params:Option<&Json>)->Result<(usize,usize,usize,u
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test. Index/tag targets out of range are documented no-ops, mirroring
 /// `TiffMutation`'s own semantics exactly (`../🧬️schema/🧬️mutations/🦀️.rs`).
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let params = spec.get("params");
@@ -672,7 +670,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// (`../🧬️schema/🧬️mutations/🦀️.rs`) reasons over `TiffSnapshot` — "restore `base`'s own
 /// value for the facet this kind touched" — reimplemented here over [`OracleDoc`] rather than
 /// called through that trait.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -715,20 +712,7 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
     Ok(write_tiff(&doc))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn project_tiff(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️FixtureDerivation
@@ -743,18 +727,15 @@ pub fn project_tiff(_input: &[u8]) -> Result<Json, String> {
 /// with this module's own [`write_tiff`], since `image` cannot itself emit a second IFD. The two
 /// pages make `RemoveIfd`'s mutate/inverse scenarios substantive on a genuinely multi-IFD document
 /// without needing a second `Given` fixture per the Scenario Outline's single shared input.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️fixture-derivation/🦀️.rs"]
 mod fixture_derivation;
 //#endregion 🔖️FixtureDerivation
 
 //#region RoundTrip
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> { Ok(write_tiff(&read_tiff(input)?)) }
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> { Err("the oracles feature is disabled".into()) }
 //#endregion RoundTrip
 
-#[cfg(all(test,feature="oracles"))]
+#[cfg(test)]
 #[path="🧪️tests/🧬️owned-params/🦀️.rs"]
 mod oracle_owned_tests;

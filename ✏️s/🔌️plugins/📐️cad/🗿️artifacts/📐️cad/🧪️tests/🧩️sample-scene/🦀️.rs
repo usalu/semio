@@ -1,4 +1,7 @@
-use super::*;
+
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CadModelChild, snapshot::CadNode, snapshot::CadPaneId, snapshot::CadReference, snapshot::CadSnapshot};
 
 /// 🧩️ A sample composed `s.stdio.semio.model` CHILD HANDLE — `child_id` + `target` only, per
 /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
@@ -21,8 +24,8 @@ pub fn sample_scene() -> CadSnapshot {
 }
 
 /// 🧱️ A minimal ephemeral working object — the shape every object-mutation law starts from.
-pub fn sample_object(id: &str, origin: [f64; 3]) -> crate::standards::v1::subsets::any::schema::geometry::CadObject {
-    crate::standards::v1::subsets::any::schema::geometry::CadObject {
+pub fn sample_object(id: &str, origin: [f64; 3]) -> semio_s_artifact_cad_cad_model::geometry::CadObject {
+    semio_s_artifact_cad_cad_model::geometry::CadObject {
         id: id.into(),
         label: format!("Object {id}"),
         typology: "spatial.shape.primitive.box".into(),
@@ -34,6 +37,6 @@ pub fn sample_object(id: &str, origin: [f64; 3]) -> crate::standards::v1::subset
         mesh_url: None,
         extent: Some([1.0, 1.0, 1.0]),
         solid_handle: Some(format!("solid-{id}")),
-        primitives: vec![crate::standards::v1::subsets::any::schema::geometry::CadPrimitiveSlot { slot: "solid".into(), primitive_id: format!("solid-{id}"), kind: "solid".into() }],
+        primitives: vec![semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot { slot: "solid".into(), primitive_id: format!("solid-{id}"), kind: "solid".into() }],
     }
 }

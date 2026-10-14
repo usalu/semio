@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "widgets": [
+    {"id":"Kreis Ä","kind":"math.number","params":{"value":1}},
+    {"id":"cycle B","kind":"math.number","params":{"value":2}},
+    {"id":"downstream Ö","kind":"math.number","params":{"value":3}}
+  ],
+  "wires": [
+    {"from":"Kreis Ä","fromPort":"value","to":"cycle B","toPort":"value"},
+    {"from":"cycle B","fromPort":"value","to":"Kreis Ä","toPort":"value"},
+    {"from":"cycle B","fromPort":"value","to":"downstream Ö","toPort":"value"}
+  ],
+  "cycleMembers":["Kreis Ä","cycle B"],
+  "faultRows":[
+    {"id":"Kreis Ä","code":"generation3d.geometry.cycle","en":"Widget “Kreis Ä” is part of a wiring cycle or depends on one.","de":"Widget “Kreis Ä” ist Teil eines Verbindungszyklus oder hängt von einem ab."},
+    {"id":"cycle B","code":"generation3d.geometry.cycle","en":"Widget “cycle B” is part of a wiring cycle or depends on one.","de":"Widget “cycle B” ist Teil eines Verbindungszyklus oder hängt von einem ab."},
+    {"id":"downstream Ö","code":"generation3d.geometry.cycle","en":"Widget “downstream Ö” is part of a wiring cycle or depends on one.","de":"Widget “downstream Ö” ist Teil eines Verbindungszyklus oder hängt von einem ab."}
+  ],
+  "partialFaultHeldOnRefusal":true,
+  "partialFaultSameCallerClose":true,
+  "actualCacheMode":"bypass"
+}

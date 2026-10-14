@@ -12,10 +12,13 @@ pub type SemioAudioDiffText = String;
 mod diff_codec {
 use super::*;
 use crate::io::binary::diff::{encode_option, decode_option};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_indexed_triple, dec_indexed_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_indexed_triple;
 use crate::schema::diff::*;
 use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use semio_s_artifact_stdio_semio_base::io::text::codec as triples;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
@@ -95,7 +98,8 @@ pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn enc_format(f: SemioAudioFormat) -> &'static str {
@@ -176,7 +180,9 @@ pub use diff_codec::*;
 mod residual_diff_helper {
 use crate::schema::diff::*;
 use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use semio_s_artifact_stdio_semio_base::io::text::codec as triples;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/

@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "widgets": [
+    {
+      "id": "width Ä",
+      "kind": "input-slider",
+      "params": {
+        "value": 4
+      }
+    },
+    {
+      "id": "plane",
+      "kind": "mesh.primitive.plane",
+      "params": {
+        "depth": 6
+      }
+    },
+    {
+      "id": "line",
+      "kind": "brep.curve.line",
+      "params": {
+        "end": [
+          3,
+          4,
+          0
+        ]
+      }
+    },
+    {
+      "id": "curve point",
+      "kind": "brep.evaluate.curvePoint",
+      "params": {
+        "parameter": 0.5
+      }
+    },
+    {
+      "id": "position",
+      "kind": "mesh.inspect.vertex",
+      "params": {
+        "vertex": [
+          2
+        ]
+      }
+    },
+    {
+      "id": "number",
+      "kind": "math.number",
+      "params": {
+        "value": 2.5
+      }
+    },
+    {
+      "id": "flag",
+      "kind": "math.boolean",
+      "params": {
+        "value": true
+      }
+    },
+    {
+      "id": "translated mesh",
+      "kind": "mesh.transform.translate",
+      "params": {
+        "offset": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "translated position",
+      "kind": "mesh.inspect.vertex",
+      "params": {
+        "vertex": [
+          2
+        ]
+      }
+    }
+  ],
+  "wires": [
+    {
+      "from": "width Ä",
+      "fromPort": "number",
+      "to": "plane",
+      "toPort": "width"
+    },
+    {
+      "from": "line",
+      "fromPort": "shape",
+      "to": "curve point",
+      "toPort": "curve"
+    },
+    {
+      "from": "plane",
+      "fromPort": "mesh",
+      "to": "position",
+      "toPort": "mesh"
+    },
+    {
+      "from": "plane",
+      "fromPort": "mesh",
+      "to": "translated mesh",
+      "toPort": "mesh"
+    },
+    {
+      "from": "translated mesh",
+      "fromPort": "mesh",
+      "to": "translated position",
+      "toPort": "mesh"
+    }
+  ],
+  "expected": {
+    "width Ä": 4,
+    "planePositions": [
+      [
+        -2,
+        0,
+        -3
+      ],
+      [
+        2,
+        0,
+        -3
+      ],
+      [
+        2,
+        0,
+        3
+      ],
+      [
+        -2,
+        0,
+        3
+      ]
+    ],
+    "curve point": [
+      1.5,
+      2,
+      0
+    ],
+    "position": [
+      2,
+      0,
+      3
+    ],
+    "number": 2.5,
+    "flag": true,
+    "translated position": [
+      3,
+      2,
+      6
+    ]
+  },
+  "originalCaller": {
+    "operation": 744,
+    "generation": 4,
+    "items": 1000000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 1000000,
+    "deadlineMicros": 1000000000
+  },
+  "pending": {
+    "payloadHeldOnRefusal": true,
+    "outputHeldOnRefusal": true,
+    "boxBirthPaid": true,
+    "boxReleasePaid": true,
+    "sameCallerClose": true
+  },
+  "engine": {
+    "sourceOrdinalRows": true,
+    "borrowedSourceKeys": true,
+    "completedPayloadCloned": false,
+    "sameCallerSnapshotClose": true,
+    "strongSourceLoanUntilClose": true,
+    "requestDonorHeldOnAdmissionRefusal": true
+  },
+  "hostPolicy": {
+    "kind": "math.number",
+    "sourceWidget": "number",
+    "value": 41,
+    "explicitOriginalCapability": true,
+    "actualInputsClosed": true
+  }
+}

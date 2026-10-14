@@ -17,7 +17,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation.control, rest);
+    await runRepositoryCargoTests([crate], this.repoRoot, this.invocation, rest);
   }
 }
 

@@ -5,7 +5,7 @@
       "id": "provenance",
       "stage": "inputs",
       "command": [
-        "nx",
+        "repo",
         "run",
         "repo:cargo-provenance-check"
       ]
@@ -14,7 +14,7 @@
       "id": "mutation-authority",
       "stage": "inputs",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/dsl-derive-rs:check-generated"
       ]
@@ -23,7 +23,7 @@
       "id": "schema-index",
       "stage": "inputs",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/dsl-derive-rs:check-schema-index"
       ]
@@ -32,7 +32,7 @@
       "id": "guest-framework",
       "stage": "inputs",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/plugin-registry:guest-framework-check"
       ]
@@ -41,7 +41,7 @@
       "id": "describe",
       "stage": "descriptors",
       "command": [
-        "nx",
+        "repo",
         "run",
         "workspace:components",
         "describe",
@@ -52,7 +52,7 @@
       "id": "generate",
       "stage": "registry",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/plugin-registry:generate"
       ]
@@ -61,7 +61,7 @@
       "id": "check",
       "stage": "registry",
       "command": [
-        "nx",
+        "repo",
         "run",
         "@semio-tech/plugin-registry:check"
       ]

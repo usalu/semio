@@ -1,11 +1,11 @@
 //! 🗺️ CAD play app commands — which model definition the document is focused on, and which bundled example is loaded.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{publish_engagement, reset_document_effect, snapshot_of, CadPlayRuntime};
-use crate::op::CadMutation;
-use crate::standards::v1::subsets::any::schema::inferences::{default_document, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_kit::{publish_engagement, reset_document_effect, snapshot_of, CadPlayRuntime};
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_inferences::{default_document, forest_play_scene, CAD_EXAMPLE_FOREST_LEFT};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -30,8 +30,8 @@ pub mod set_active_example {
             default_document()
         } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
             forest_play_scene()
-        } else if example_id == crate::examples::demo::ID {
-            <CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).map_err(|error| Fault::from(format!("cad.example.invalid: registered example `{example_id}` does not parse: {error:?}")))?
+        } else if example_id == semio_s_artifact_cad_cad_examples::ID {
+            <CadSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_cad_cad_examples::PRIMARY_TEXT).map_err(|error| Fault::from(format!("cad.example.invalid: registered example `{example_id}` does not parse: {error:?}")))?
         } else {
             return Err(Fault::from(format!("cad.example.unknown: `{example_id}` is not an example this app ships")));
         };

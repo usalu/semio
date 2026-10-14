@@ -1,0 +1,22 @@
+{
+ "version":1,
+ "widgets":[
+  {"id":"line Ä","kind":"brep.curve.line","params":{"end":[3,4,0]}},
+  {"id":"surface Ö","kind":"brep.surface.plane","params":{"plane":{"origin":[1,2,3],"normal":[0,0,2]}}},
+  {"id":"translated line","kind":"brep.transform.translate","params":{"offset":[1,2,3]}},
+  {"id":"translated surface","kind":"brep.transform.translate","params":{"offset":[-1,-2,-3]}},
+  {"id":"translated curve point","kind":"brep.evaluate.curvePoint","params":{"parameter":0.5}},
+  {"id":"translated surface point","kind":"brep.evaluate.surfacePoint","params":{"u":2,"v":3}}
+ ],
+ "wires":[
+  {"from":"line Ä","fromPort":"shape","to":"translated line","toPort":"shape"},
+  {"from":"surface Ö","fromPort":"shape","to":"translated surface","toPort":"shape"},
+  {"from":"translated line","fromPort":"shape","to":"translated curve point","toPort":"curve"},
+  {"from":"translated surface","fromPort":"shape","to":"translated surface point","toPort":"surface"}
+ ],
+ "expected":{"translated curve point":[2.5,4,3],"translated surface point":[-3,2,0]},
+ "rootLabelsPreserved":true,
+ "labelCounterPreserved":true,
+ "sourceOwnersClosed":true,
+ "unsupportedArenaBodiesRefuse":true
+}

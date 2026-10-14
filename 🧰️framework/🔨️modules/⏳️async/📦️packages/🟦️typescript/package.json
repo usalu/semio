@@ -20,9 +20,6 @@
     "single-poll-check": "bun repo run @semio-tech/framework-async:single-poll-check",
     "test-api-contract": "bun repo run @semio-tech/framework-async:test-api-contract"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

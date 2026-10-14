@@ -15,7 +15,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 #[semio_framework_async_macros::async_test]

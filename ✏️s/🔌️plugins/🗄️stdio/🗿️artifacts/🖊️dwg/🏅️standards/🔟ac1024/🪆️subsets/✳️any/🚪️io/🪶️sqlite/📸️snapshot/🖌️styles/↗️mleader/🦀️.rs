@@ -1,16 +1,41 @@
 //! ↗️ DWG multileader style subcomponents preserve independent enum and reference state.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::number::Projection;
-use super::drawing::optional_words;
-use super::color;
-use super::evaluation::{project_coordinates as coords,reconstruct_coordinates as read_coords};
-use super::reader::{boolean,full_unsigned,high,low,optional_unsigned,signed_integer,unsigned,Reader};
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderArrow;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderAttachmentDirection;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderBlockConnection;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderBlockStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderContentType;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderDogleg;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderDrawOrder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLanding;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLeaderOrder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderLeaderStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAlignment;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAngle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextAttachment;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMLeaderTextStyle;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::color;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation::project_coordinates as coords;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation::reconstruct_coordinates as read_coords;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::boolean;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn attachment(v:DwgMLeaderTextAttachment)->&'static str{match v{DwgMLeaderTextAttachment::TopOfTop=>"top_of_top",DwgMLeaderTextAttachment::MiddleOfTop=>"middle_of_top",DwgMLeaderTextAttachment::Middle=>"middle",DwgMLeaderTextAttachment::MiddleOfBottom=>"middle_of_bottom",DwgMLeaderTextAttachment::BottomOfBottom=>"bottom_of_bottom",DwgMLeaderTextAttachment::BottomLine=>"bottom_line",DwgMLeaderTextAttachment::BottomOfTop=>"bottom_of_top",DwgMLeaderTextAttachment::BottomOfTopUnderline=>"bottom_of_top_underline",DwgMLeaderTextAttachment::BottomOfTopNoUnderline=>"bottom_of_top_no_underline",DwgMLeaderTextAttachment::Center=>"center"}}
 fn read_attachment(v:&str)->Result<DwgMLeaderTextAttachment,ValueError>{match v{"top_of_top"=>Ok(DwgMLeaderTextAttachment::TopOfTop),"middle_of_top"=>Ok(DwgMLeaderTextAttachment::MiddleOfTop),"middle"=>Ok(DwgMLeaderTextAttachment::Middle),"middle_of_bottom"=>Ok(DwgMLeaderTextAttachment::MiddleOfBottom),"bottom_of_bottom"=>Ok(DwgMLeaderTextAttachment::BottomOfBottom),"bottom_line"=>Ok(DwgMLeaderTextAttachment::BottomLine),"bottom_of_top"=>Ok(DwgMLeaderTextAttachment::BottomOfTop),"bottom_of_top_underline"=>Ok(DwgMLeaderTextAttachment::BottomOfTopUnderline),"bottom_of_top_no_underline"=>Ok(DwgMLeaderTextAttachment::BottomOfTopNoUnderline),"center"=>Ok(DwgMLeaderTextAttachment::Center),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG multileader text attachment is unknown"))}}
-pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgMLeaderStyle)->Result<(),ValueError>{
+pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgMLeaderStyle)->Result<(),ValueError>{
  let content=match v.content_type{DwgMLeaderContentType::None=>"none",DwgMLeaderContentType::Block=>"block",DwgMLeaderContentType::MText=>"mtext"};let draw=match v.draw_order{DwgMLeaderDrawOrder::LeaderFirst=>"leader_first",DwgMLeaderDrawOrder::ContentFirst=>"content_first"};let order=match v.leader_order{DwgMLeaderLeaderOrder::HeadFirst=>"head_first",DwgMLeaderLeaderOrder::TailFirst=>"tail_first"};
  p.insert_key("dwg_mleader_style",id,&[T(content),T(draw),T(order),I(i64::from(v.maximum_segment_points)),R(v.first_segment_angle),R(v.second_segment_angle),T(&v.description),R(v.overall_scale),I(i64::from(v.property_overrides_changed)),I(i64::from(v.annotative)),R(v.break_size)])?;
  let l=&v.leader;let kind=match l.kind{DwgMLeaderKind::Invisible=>"invisible",DwgMLeaderKind::Straight=>"straight",DwgMLeaderKind::Spline=>"spline"};p.insert_key("dwg_mleader_leader_style",id,&[T(kind),I(high(l.linetype_style_handle)),I(low(l.linetype_style_handle)),I(i64::from(l.lineweight))])?;color::project(p,"dwg_mleader_leader_color",id,&l.color)?;
@@ -20,7 +45,7 @@ pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgMLeaderStyle)->Resul
  let b=&v.block;let handle=optional_words(b.content_handle);let connection=match b.connection{DwgMLeaderBlockConnection::Extents=>"extents",DwgMLeaderBlockConnection::BasePoint=>"base_point"};
  p.insert_key("dwg_mleader_block_style",id,&[handle[0],handle[1],I(i64::from(b.use_scale)),R(b.rotation),I(i64::from(b.use_rotation)),T(connection)])?;color::project(p,"dwg_mleader_block_color",id,&b.color)?;coords(p,"dwg_mleader_block_scale_coordinate",id,&b.scale)
 }
-pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgMLeaderStyle,ValueError>{
+pub fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgMLeaderStyle,ValueError>{
  let root=r.component("dwg_mleader_style",id)?;let l=r.component("dwg_mleader_leader_style",id)?;let landing=r.component("dwg_mleader_landing",id)?;let dogleg=r.component("dwg_mleader_dogleg",id)?;let arrow=r.component("dwg_mleader_arrow",id)?;let t=r.component("dwg_mleader_text_style",id)?;let b=r.component("dwg_mleader_block_style",id)?;
  Ok(DwgMLeaderStyle{content_type:match root.text(1)?{"none"=>DwgMLeaderContentType::None,"block"=>DwgMLeaderContentType::Block,"mtext"=>DwgMLeaderContentType::MText,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG multileader content type is unknown"))},draw_order:match root.text(2)?{"leader_first"=>DwgMLeaderDrawOrder::LeaderFirst,"content_first"=>DwgMLeaderDrawOrder::ContentFirst,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG multileader draw order is unknown"))},leader_order:match root.text(3)?{"head_first"=>DwgMLeaderLeaderOrder::HeadFirst,"tail_first"=>DwgMLeaderLeaderOrder::TailFirst,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG multileader leader order is unknown"))},maximum_segment_points:unsigned(root,4)?,first_segment_angle:root.real(5)?,second_segment_angle:root.real(6)?,description:root.text(7)?.into(),overall_scale:root.real(8)?,property_overrides_changed:boolean(root,9)?,annotative:boolean(root,10)?,break_size:root.real(11)?,
  leader:DwgMLeaderLeaderStyle{kind:match l.text(1)?{"invisible"=>DwgMLeaderKind::Invisible,"straight"=>DwgMLeaderKind::Straight,"spline"=>DwgMLeaderKind::Spline,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG multileader leader kind is unknown"))},color:color::reconstruct(r,"dwg_mleader_leader_color",id)?,linetype_style_handle:full_unsigned(l,2,3)?,lineweight:signed_integer(l,4)?},

@@ -11,9 +11,9 @@ use super::Import;
 pub use crate::standards::v1::subsets::any::io::export::ifc::components::OVERRIDES_SET;
 use crate::standards::v1::subsets::any::io::export::ifc::components::{FAMILY_ROWS, RECORD_ROW};
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Component, ComponentOverride, ExprPoint3, Family, FamilyCategory, FamilyParameter, FamilySolid, MepSystem, ParameterKind, Point2, SolidShape};
+use crate::standards::v1::subsets::any::schema::snapshot::{Component, ComponentOverride, ExprPoint3, Family, FamilyCategory, FamilyParameter, FamilySolid, MepSystem, ParameterKind, Point2, SolidShape};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 /// 🪑️ The occurrence classes a component can be.

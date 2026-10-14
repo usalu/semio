@@ -154,6 +154,16 @@
           { "path": ".vscode/launch.json", "reason": "Generated editor launch file: `plugin-registry:generate` no longer renders it and the recording ticket deletes it.", "revision": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "index": 1, "row": {"packageId":"wgpu-renderer","path":".vscode/launch.json","transformId":"wgpu-root","occurrenceCount":65,"ownership":"generated","generatorOwnerPaths":[".vscode/🧩️launch.seed.jsonc","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts"]} },
           { "path": ".vscode/🧩️launch.seed.jsonc", "reason": "Authored seed of the removed editor launch file: no generator reads it and the recording ticket deletes it.", "revision": "2026/09/23/DASHBOARD-LAUNCH-COCKPIT", "index": 2, "row": {"packageId":"wgpu-renderer","path":".vscode/🧩️launch.seed.jsonc","transformId":"wgpu-root","occurrenceCount":42,"ownership":"authored"} }
         ]
+      },
+      {
+        "seal": "755055dad0b2ed965173c98f50d8796431d88e5a3390d9d2e0a2b7a9d426be74",
+        "recordedBy": "2026/09/23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",
+        "evidence": { "revision": "7af1259dba8", "date": "2026-10-14" },
+        "reason": "The repository build interface replaces Nx-specific vocabulary (ticket 2026/10/14/ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL): the package identity field `nxProjectName` becomes the neutral `projectName` the discovery admission already requires, and the benchmark command in the renderer doc-comment rewrite is spelled through `bun repo run`. Packages, mappings, consumers and counts are unchanged.",
+        "moves": [
+          { "from": "nxProjectName", "to": "projectName", "revision": "7af1259dba8" },
+          { "from": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun nx run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "to": "/// OS threads (see `Env`'s own doc for what this fixed for budgets 3/5/6). `bun repo run @semio-tech/framework-os-dev:bench -- plugins --renderer native`\n", "revision": "7af1259dba8" }
+        ]
       }
     ] },
     "readme-license-owner-leaves-v1": { "family": "semanticOwnedFileProjectionContracts", "seal": "b60f16acbde34545d29abfeb50a55d5db6115b2d316b33011db07da34ca7afe9", "sealedBy": "8add1df1473" }

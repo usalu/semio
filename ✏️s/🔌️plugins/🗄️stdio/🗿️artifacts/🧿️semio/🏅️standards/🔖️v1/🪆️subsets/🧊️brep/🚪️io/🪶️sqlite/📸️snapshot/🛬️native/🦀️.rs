@@ -1,5 +1,6 @@
 //! 🧊️ Admitted native BRep topology, analytic geometry, p-curves and all spline arrays.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::snapshot::{SemioBrepSnapshot, BrepVertex, BrepEdge, BrepLoop, BrepLoopEdge, BrepFace, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepCoedge, BrepCurve, BrepCurve2, BrepSurface, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;

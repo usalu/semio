@@ -1,0 +1,12 @@
+{"source": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs",
+ "drop": ["1-14", "5825-5829"],
+ "pieces": [
+  {"name": "core", "crate": "semio_s_fem_sparse", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🦀️.rs", "ranges": ["15-385", "386-691", "812-829", "870-870", "871-954", "955-1142", "1607-1828", "5758-5824"],
+   "doc": ["//! 🧮️ Sparse linear algebra core: COO/CSR/CSC storage, reverse-Cuthill-McKee ordering, and the numerical job", "//! protocol every sparse solver job shares (outcome desk, close ladder, checkpoint page writer and restore cursor)."]},
+  {"name": "ldlt", "crate": "semio_s_fem_sparse_ldlt", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔺️ldlt/🦀️.rs", "ranges": ["692-811", "830-869", "1143-1606", "1829-2329"],
+   "doc": ["//! 🔺️ Envelope (skyline) sparse LDLT direct solver: the one-shot factor and its checkpointed interactive job."]},
+  {"name": "pcg", "crate": "semio_s_fem_sparse_pcg", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/🦀️.rs", "ranges": ["2330-2811", "3064-3689"],
+   "doc": ["//! 🔁️ Jacobi-preconditioned conjugate-gradient iterative solver: construction, checkpointed job and restore."]},
+  {"name": "subspace", "crate": "semio_s_fem_sparse_subspace", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🎵️subspace/🦀️.rs", "ranges": ["2812-3063", "3690-5757"],
+   "doc": ["//! 🎵️ Subspace-iteration eigensolver for the generalized problem `Kφ=λBφ` (modal and buckling), with the modal", "//! input construction that feeds it and the dense cyclic-Jacobi oracle of its tests."]}
+ ]}

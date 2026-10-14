@@ -2,7 +2,7 @@
 //! `mutation.no-op`.
 
 use super::SetClashSet;
-use crate::{clash_set_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{clash_set_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetClashSet, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -6,7 +6,7 @@
 
 use super::super::horizontal_rules::{holes_fault, loop_fault};
 use super::SetCeilingBoundary;
-use crate::{CeilingPatch, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::CeilingPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetCeilingBoundary, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

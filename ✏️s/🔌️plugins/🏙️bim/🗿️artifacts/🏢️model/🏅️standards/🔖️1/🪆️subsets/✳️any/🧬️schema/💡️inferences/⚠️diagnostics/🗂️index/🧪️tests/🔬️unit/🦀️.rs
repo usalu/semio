@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{compute_diagnostics, render, row_of, LOCALES};
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const DEFECTS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
@@ -141,7 +141,7 @@ mod graph {
     use super::*;
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
     use crate::standards::v1::subsets::any::schema::inferences::model_graph::{infer_selected, kinds, plan, ModelInferenceSession, ModelNode, NodeKind};
-    use crate::{Entry, ModelDiff, ModelInference, WallPatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, inferences::ModelInference};
     use protocol::Inference;
 
     #[semio_framework_async_macros::async_test]

@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-cmd-ingest"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling ingest commands: frame, video and stream import, abort and the example picker."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
+semio-s-artifact-remodel-remodeling-engine = { workspace = true }
+semio-s-artifact-remodel-remodeling-examples = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-modes = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-media = { workspace = true }
+semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-reconstruct = { workspace = true }
+semio-s-artifact-remodel-remodeling-schema = { workspace = true }
+semio-s-artifact-remodel-remodeling-video = { workspace = true }

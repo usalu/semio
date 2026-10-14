@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-s-artifact-cad-cad-transient"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad world-window engagement transient"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+
+[dev-dependencies]
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }

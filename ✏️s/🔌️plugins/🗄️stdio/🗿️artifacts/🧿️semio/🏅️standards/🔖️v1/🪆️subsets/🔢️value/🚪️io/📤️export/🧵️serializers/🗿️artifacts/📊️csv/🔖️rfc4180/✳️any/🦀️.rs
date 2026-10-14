@@ -16,7 +16,9 @@
 //!   `encode_csv` layer; only the "quoted even though not structurally required" bit the
 //!   deserializer never captured in the first place is what's absent here.
 
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueSnapshot, ValueId};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_csv::schema::snapshot::{CsvField, CsvRecord};
 use semio_s_artifact_stdio_csv::CsvSnapshot;

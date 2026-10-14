@@ -1,12 +1,13 @@
 //! 📄️ Original semantic mutation authority for imported generation selection and preview restoration.
 
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation, Generation3dMutation};
+use semio_s_artifact_procedural_3d_mutations::inverse_generation3d_mutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use crate::editor::generation3d::Generation3dPlayApp;
 use semio_framework_plugin::ArtifactEditor;
 use protocol::{Mutation, OpBinary, OpText};
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 #[test]
 fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracle() {

@@ -7,7 +7,7 @@ fn window() -> WindowType {
 }
 
 fn door() -> DoorType {
-    DoorType { name: "Entrance".into(), width: 1.0, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: crate::DoorLeaves::Single, swing: crate::Swing::Left, material: "m-wood".into(), u_value: Some(1.3) }
+    DoorType { name: "Entrance".into(), width: 1.0, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Single, swing: crate::standards::v1::subsets::any::schema::snapshot::Swing::Left, material: "m-wood".into(), u_value: Some(1.3) }
 }
 
 #[test]

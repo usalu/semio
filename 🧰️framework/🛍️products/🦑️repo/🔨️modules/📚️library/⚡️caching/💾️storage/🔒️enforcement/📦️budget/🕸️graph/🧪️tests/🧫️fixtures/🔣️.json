@@ -1,0 +1,42 @@
+{
+  "graph": {
+    "version": 1,
+    "projects": {
+      "fixture": {
+        "name": "fixture",
+        "root": "fixture",
+        "targets": {
+          "build": {
+            "execution": {
+              "kind": "noop"
+            },
+            "inputs": [
+              "{projectRoot}/input.json"
+            ],
+            "outputs": []
+          }
+        }
+      }
+    },
+    "dependencies": []
+  },
+  "expectedBytes": 191,
+  "cases": [
+    {
+      "id": "publication",
+      "expected": true
+    },
+    {
+      "id": "reader-refusal",
+      "expected": true
+    }
+  ],
+  "namespaces": [
+    "build-input-closures",
+    "build-lock-closures",
+    "inference",
+    "admission"
+  ],
+  "refusedNamespace": "../outside",
+  "writerManifest": "bounded-graph-fixture/Cargo.toml"
+}

@@ -2,9 +2,10 @@
 //! emitted (always, or only for hovered/selected objects) and HOW their direction arrows point
 //! (outwards from the vortex point, or inwards onto it). Both are per-window-instance chrome.
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID, PUZZLE3D_VORTEX_DIRECTION_INWARDS, PUZZLE3D_VORTEX_DIRECTION_OUTWARDS, PUZZLE3D_VORTEX_SHOW_ALWAYS, PUZZLE3D_VORTEX_SHOW_SELECTED};
+use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_DIRECTION_INWARDS, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_ALWAYS, crate::editor::puzzle3d::config::PUZZLE3D_VORTEX_SHOW_SELECTED};
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 /// 🌀️ Window option for when vortex markers are emitted — Always (every object) or Selected (hovered/selected only).

@@ -1,9 +1,10 @@
 //! 🎯️ 🎯️ Remodeling play app commands command — `calibrate-cameras`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::create_camera_calibration;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::{CameraCalibration, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_mut_calib::standards::v1::subsets::any::schema::mutations::create_camera_calibration::create_camera_calibration;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraCalibration;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -27,7 +28,7 @@ pub fn handle(_payload: &CalibrateCameras, doc: &ArtifactView<'_, RemodelingSnap
             continue;
         }
         let Some(frame) = stream.frames.first() else { continue };
-        let Some((width, height)) = crate::remodeling_asset_dimensions(scene, &frame.asset_id) else { continue };
+        let Some((width, height)) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset_dimensions(scene, &frame.asset_id) else { continue };
         let (width, height) = (width.max(1), height.max(1));
         let f = f64::from(width.max(height));
         seen.push(camera_id.clone());

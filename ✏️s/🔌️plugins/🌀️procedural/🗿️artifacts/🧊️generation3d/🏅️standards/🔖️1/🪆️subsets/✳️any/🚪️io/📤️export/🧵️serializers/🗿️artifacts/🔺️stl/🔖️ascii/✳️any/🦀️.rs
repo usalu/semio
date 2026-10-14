@@ -14,7 +14,7 @@
 //! 🔖 Documented lossiness is `SemioMeshToStl`'s own: STL is triangles-only and non-indexed, so a
 //! preview that carries no face connectivity (a wire or point preview) is a typed error rather than
 //! invented geometry, and per-vertex normals collapse to one facet normal.
-use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;

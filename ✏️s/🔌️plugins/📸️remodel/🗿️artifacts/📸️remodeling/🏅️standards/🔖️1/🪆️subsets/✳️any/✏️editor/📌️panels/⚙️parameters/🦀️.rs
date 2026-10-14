@@ -1,8 +1,8 @@
 //! ⚙️ Remodeling play app panel — the Parameters tab: a read-only dump of the 8 param sub-groups (editing
 //! happens via the per-group `setXParams` command-palette actions' typed arg forms, not inline fields).
 
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -68,13 +68,10 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
         ("remodeling-parameters.geo", format!("{}: {}", labels.params_geo.as_str(), if p.geo.enabled { labels.enabled.as_str() } else { labels.disabled.as_str() })),
     ];
     PanelTreeBuilder::new("remodeling-parameters")?
-        .window_section(windows, "remodeling-parameters.groups", Some(crate::editor::remodeling::ui_label(labels.panel_parameters.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
+        .window_section(windows, "remodeling-parameters.groups", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.panel_parameters.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
         .build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

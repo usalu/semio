@@ -1,0 +1,67 @@
+{
+  "launchCommands": [
+    {
+      "file": ".vscode/launch.json",
+      "name": "🧪️test📨️messages✂️clamp🚀️managed",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts\" managed-start ${input:historyVerificationJob} -- nx run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache -- -- edit_message_clamp edit_replay_checks_deadline_during_message_settlement edit_replay_clamping_preserves_every_fatal_mutation_status cancelling_a_report_replay_at_every_step_leaves_the_store_untouched --nocapture"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "🧪️test📜️history🗜️original-source🦀️",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts\" managed-start ${input:historyVerificationJob} --capabilities \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📥️inputs/🧾️core-deflate-native-command.json\" -- nx run @semio-tech/framework-os-kernel:test --skip-cache --exclude-dependencies --configuration=prototype --parallel=1 -- long --lib -E \"test(original_history_deflate_receives_paid_pages_preserves_root_and_closes_original_window)\" --no-fail-fast --status-level pass --final-status-level all -- --nocapture"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "⚖️ Plugin · Original Failure Debit Source",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-plugin:test-original-failure-debit-source --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "⚖️ Plugin · Original Failure Debit Native",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-plugin:test-original-failure-debit-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "📐 Procedural 3D · Plane Input Native",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/procedural-generation3d-rs:verify-generation3d-widget-inputs-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "🧪️test🧊️wgpu📤️original-browser-output📄️source",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-renderer-wgpu:test-original-browser-output-source --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/launch.json",
+      "name": "🧪️test🧊️wgpu📤️original-browser-output📦️native",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-renderer-wgpu:test-original-browser-output-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "name": "🧪️test📨️messages✂️clamp🚀️managed",
+      "command": "bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/verification/📜️script.ts\" managed-start ${input:historyVerificationJob} -- nx run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache -- -- edit_message_clamp edit_replay_checks_deadline_during_message_settlement edit_replay_clamping_preserves_every_fatal_mutation_status cancelling_a_report_replay_at_every_step_leaves_the_store_untouched --nocapture"
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️ Plugin · Original Failure Debit Source",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-plugin:test-original-failure-debit-source --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "name": "⚖️ Plugin · Original Failure Debit Native",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/framework-plugin:test-original-failure-debit-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    },
+    {
+      "file": ".vscode/🧩️launch.seed.jsonc",
+      "name": "📐 Procedural 3D · Plane Input Native",
+      "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/procedural-generation3d-rs:verify-generation3d-widget-inputs-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype"
+    }
+  ],
+  "catalogFiles": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📣️publication/🔌️nx/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"
+  ],
+  "nativeDiscoveryFiles": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1"
+  ]
+}

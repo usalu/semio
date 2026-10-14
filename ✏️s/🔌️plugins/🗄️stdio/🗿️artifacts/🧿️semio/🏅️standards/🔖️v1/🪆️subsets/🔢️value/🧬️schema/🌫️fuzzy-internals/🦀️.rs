@@ -15,7 +15,8 @@
 //! crate entirely before this file's dependency could be re-pointed at its new home.
 
 #![allow(clippy::needless_range_loop, reason = "index-based numerics loops mirror the algebra_internals style for matrix and rule iteration")]
-use crate::schema::algebra_internals::{MatD, VecD};
+use semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::MatD;
+use semio_s_artifact_stdio_semio_value_algebra::schema::algebra_internals::VecD;
 use semio_framework_geometry::random::Rng;
 use std::f64::consts::E;
 

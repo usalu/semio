@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, honestly derivable
 //! from `sampleRate`/`channels` alone).
 
-use crate::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::duration::compute_semio_audio_duration;

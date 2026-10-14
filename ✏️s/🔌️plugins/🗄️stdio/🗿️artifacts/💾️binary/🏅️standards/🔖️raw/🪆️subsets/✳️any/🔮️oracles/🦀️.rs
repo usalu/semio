@@ -25,7 +25,6 @@ use semio_repo_test_host::Json;
 /// 🔎️ A byte payload as the wire protocol carries it: a plain JSON array of 0-255 numbers (the
 /// protocol's `Json` has no base64 accessor and no other case in this repository uses one — see
 /// `../../../../🎥️mp4/🧪️tests/🐙️mutate-mp4-isobmff/🦀️.rs`'s own local `bytes` helper).
-#[cfg(feature = "oracles")]
 fn bytes_field(value: &Json, key: &str) -> Vec<u8> {
     match value.get(key) {
         Some(Json::Array(items)) => items.iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect(),
@@ -33,7 +32,6 @@ fn bytes_field(value: &Json, key: &str) -> Vec<u8> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
     match value.get(key) {
         Some(Json::Number(number)) => Ok(*number as usize),
@@ -48,7 +46,6 @@ fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
 /// exceed the buffer's current length, and `remove_len` must not reach past it. Both are rejected
 /// with `Err`, never clamped — a clamped offset would silently mutate the wrong range instead of
 /// failing, which is exactly the "corrupts silently" failure the spec vectors exist to catch.
-#[cfg(feature = "oracles")]
 fn replace_range(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert: &[u8]) -> Result<(), String> {
     if offset > buffer.len() {
         return Err(format!("replace-byte-range offset {offset} is outside the buffer (length {})", buffer.len()));
@@ -65,7 +62,6 @@ fn replace_range(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert:
 /// 🦠️ Every declared kind, dispatched by its kebab-case name over the leaf's own wire payload:
 /// `replace-byte-range` reads
 /// `{offset, remove_len, insert}`, `append-bytes` reads `{data}`, `truncate-at` reads `{offset}`.
-#[cfg(feature = "oracles")]
 fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
     let mut out = buffer.to_vec();
     match kind {
@@ -98,7 +94,6 @@ fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -111,26 +106,15 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 
 /// 🔁️ The specification's own decode/re-encode of a raw buffer: a buffer with no format has no
 /// structure to parse, so reading it and writing it back is the identity on its bytes.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     Ok(input.to_vec())
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

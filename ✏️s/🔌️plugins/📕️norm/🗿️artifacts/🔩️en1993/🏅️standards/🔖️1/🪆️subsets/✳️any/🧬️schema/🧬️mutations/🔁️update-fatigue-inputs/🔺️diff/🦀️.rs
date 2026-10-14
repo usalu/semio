@@ -1,8 +1,8 @@
 //! 🔁️ `update-fatigue-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateFatigueInputs;
-use crate::diff::{En1993Diff, En1993FatigueDetailDelta};
-use crate::En1993Snapshot;
+use crate::update_fatigue_inputs::UpdateFatigueInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993FatigueDetailDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.fatigue_details.iter().position(|row| row.id == payload.fatigue_detail.id) {

@@ -2,7 +2,7 @@
 //! their definition (the effective properties are inferred, so nothing derived is written).
 
 use super::DeletePropertyTemplate;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeletePropertyTemplate, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

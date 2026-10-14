@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "escaped-workspaces",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"\\u0077orkspaces\":[]}"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "nested-workspaces-decoy",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"metadata\":{\"workspaces\":[]}}"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "quoted-workspaces-decoy",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"text\":\"\\\"workspaces\\\":[]\"}"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "trailing-document",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[]}false"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "invalid-nested-content",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[],\"metadata\":[true,]}"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "root-array",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "[{\"workspaces\":[]}]"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "escaped-unicode-content",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":{},\"name\":\"\\uD83E\\uDDD1\"}"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "trailing-whitespace",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "  {\n \"workspaces\" : [] , \"n\" : -0.2e+3 }\r\n"
+      },
+      "start": "domain/package",
+      "expected": "."
+    },
+    {
+      "id": "invalid-leading-zero",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": "{\"workspaces\":[],\"number\":01}"
+      },
+      "start": "domain/package",
+      "expected": null
+    },
+    {
+      "id": "empty-document",
+      "files": {
+        "📋️project.json": "{}",
+        "package.json": ""
+      },
+      "start": "domain/package",
+      "expected": null
+    }
+  ]
+}

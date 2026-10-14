@@ -7,7 +7,7 @@ use super::super::place_elements::PlaceElements;
 use super::super::set_beam::SetBeam;
 use super::diff::middle;
 use super::SplitBeam;
-use crate::{Assigned, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SplitBeam, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(beam) = base.beams.get(&payload.id).filter(|beam| middle(beam, payload.t).is_some()) else {

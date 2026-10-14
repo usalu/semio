@@ -1,8 +1,8 @@
 //! ✨️ `update-stainless-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateStainlessInputs;
-use crate::diff::{En1993Diff, En1993MaterialDelta};
-use crate::En1993Snapshot;
+use crate::update_stainless_inputs::UpdateStainlessInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MaterialDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateStainlessInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.materials.iter().position(|row| row.id == payload.material.id) {

@@ -5,7 +5,7 @@
 //! outline. `languages` excludes the unspecified tag (`""`, "inherits from context" per
 //! `SemioTextRun`'s own doc comment) — an empty tag names no language.
 
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Profile
 /// 📊️ Semio text word/mark census.

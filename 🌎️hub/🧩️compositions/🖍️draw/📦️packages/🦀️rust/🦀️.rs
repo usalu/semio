@@ -31,13 +31,13 @@ mod artifacts {
 
 //#region ✏️Editor
 mod editor {
-    pub use semio_s_artifact_draw_drawing::editor::*;
+    pub use semio_s_artifact_draw_drawing_editor::*;
 }
 //#endregion ✏️Editor
 
 //#region 👁️Viewer
 mod viewer {
-    pub use semio_s_artifact_draw_drawing::viewer::*;
+    pub use semio_s_artifact_draw_drawing_viewer::*;
 }
 //#endregion 👁️Viewer
 

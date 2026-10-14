@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
@@ -194,7 +194,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 /// 🎯️ Position law: removing ANY map entry or node (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn removals_invert_at_every_position() {
-    let base = crate::schema::snapshot::demo_semio_value_snapshot();
+    let base = semio_s_artifact_stdio_semio_value_model::schema::snapshot::demo_semio_value_snapshot();
     for node in &base.nodes {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() }), &base).await;
     }

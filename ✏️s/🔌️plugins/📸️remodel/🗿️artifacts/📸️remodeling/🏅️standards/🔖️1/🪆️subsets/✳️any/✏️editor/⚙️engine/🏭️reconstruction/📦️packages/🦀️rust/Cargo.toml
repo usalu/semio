@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-reconstruct"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling engine reconstruction: the staged reconstruction pipeline."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+geometry = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-remodel-remodeling-camera = { workspace = true }
+semio-s-artifact-remodel-remodeling-dense = { workspace = true }
+semio-s-artifact-remodel-remodeling-feature = { workspace = true }
+semio-s-artifact-remodel-remodeling-geo = { workspace = true }
+semio-s-artifact-remodel-remodeling-images = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh-atlas = { workspace = true }
+semio-s-artifact-remodel-remodeling-mesh-repair = { workspace = true }
+semio-s-artifact-remodel-remodeling-optimize = { workspace = true }
+semio-s-artifact-remodel-remodeling-sfm = { workspace = true }
+semio-s-artifact-remodel-remodeling-sfm-geometry = { workspace = true }
+semio-s-artifact-remodel-remodeling-video = { workspace = true }

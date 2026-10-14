@@ -2,7 +2,7 @@
 
 use super::super::create_schedule::CreateSchedule;
 use super::DeleteSchedule;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteSchedule, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.schedules.get(&payload.id) {

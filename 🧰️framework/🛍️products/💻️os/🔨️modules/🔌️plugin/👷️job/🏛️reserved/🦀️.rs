@@ -621,7 +621,7 @@ impl QualifiedBoundedFirstStepProof {
         self.row.contract
     }
 
-    fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
+    pub(crate) fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
         self.owner == ToolOwnerWitness::of::<A>()
             && self.row.owner == self.owner
             && admission.key == self.key()

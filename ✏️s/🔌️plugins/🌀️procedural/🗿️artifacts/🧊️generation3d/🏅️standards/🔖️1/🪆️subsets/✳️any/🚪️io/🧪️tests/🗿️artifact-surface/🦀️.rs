@@ -23,8 +23,10 @@
 //! @see ../../../✏️editor/🎮️commands/📤️export-document, ../../../✏️editor/🎮️commands/📥️import-document.
 
 use crate::{assert_oracle_agrees_on_unit_cube, project, retire_document, unit_cube_semio_mesh};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::document_io;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{export_stdio_kinds, import_stdio_kinds, mesh_bridge};
+use semio_s_artifact_procedural_3d_io::document_io;
+use semio_s_artifact_procedural_3d_io::export_stdio_kinds;
+use semio_s_artifact_procedural_3d_io::import_stdio_kinds;
+use semio_s_artifact_procedural_3d_mesh_bridge;
 
 //#region 🧫️Fixture
 const SURFACE_JSON: &str = include_str!("../../../🧪️tests/🧫️fixtures/🚪️io/🗿️artifact-surface.json");
@@ -36,7 +38,7 @@ fn gltf_scene_import_preserves_hierarchy_and_instances_as_editable_transforms() 
     use semio_framework_artifact_flow_flow::Widget;
     use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
     use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any::apply_scene_nodes;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any::apply_scene_nodes;
     use parry3d::na::{Matrix4, Quaternion, Translation3, UnitQuaternion, Vector3};
     let source: serde_json::Value = serde_json::from_str(SCENE_IMPORT_JSON).unwrap();
     let oracle = |node: &GltfNode| -> Matrix4<f64> {
@@ -170,7 +172,7 @@ fn an_unclaimed_export_format_is_refused_by_name() {
 /// dropped a face or reversed a winding moves that number; a triangle count alone does not.
 #[test]
 fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts as import_leaves;
     let mesh = unit_cube_semio_mesh();
     for row in rows(&fixture(), "exportFormats").into_iter().filter(|row| row["geometry"].as_bool().unwrap_or(false)) {
         let id = text(&row, "id");
@@ -376,7 +378,7 @@ fn document_geometry_bridge_validates_both_explicit_inputs() {
 /// 🗄️ The graph registry advertises only genuine document conversion routes.
 #[test]
 fn graph_registry_does_not_claim_geometry_materialization() {
-    let exports: Vec<_> = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::io_registry::entries().iter()
+    let exports: Vec<_> = semio_s_artifact_procedural_3d_io::io_registry::entries().iter()
         .filter(|entry| entry.writes.artifact_kind != "s.procedural.generation3d")
         .map(|entry| entry.writes.artifact_kind).collect();
     assert_eq!(exports, vec!["s.stdio.txt"]);
@@ -427,7 +429,8 @@ fn assert_json_numbers_and_structure(actual: &serde_json::Value, expected: &serd
 #[test]
 fn polygon_surface_import_preserves_original_faces_and_corner_or_vertex_channels() {
     use semio_framework_value::FromValue;
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::{obj::v3_0::any as obj, ply::v1_0::any as ply};
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::obj::v3_0::any as obj;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::ply::v1_0::any as ply;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧩️polygon-import/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let source = semio_framework_pack_json::parse(&row["source"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -523,7 +526,7 @@ fn prepared_face_surface_channels_expand_with_independent_triangle_area() {
 /// 🧊️ Quantized authored channels retain normalized values and reject mismatched accessor domains.
 #[test]
 fn gltf_surface_accessor_domains_match_the_independent_normalized_fixture() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts as import_leaves;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["gltfAccessors"]["cases"].as_array().unwrap() {
         let source = row["document"].to_string();
@@ -554,7 +557,7 @@ fn gltf_surface_accessor_domains_match_the_independent_normalized_fixture() {
 /// 🚧️ Excessive declared domains fail before decoded buffers or graph projections are allocated.
 #[test]
 fn gltf_import_declared_domains_are_admitted_before_allocation() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let admission:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🚧️import-admission/🔣️.json")).unwrap();
     let source=&fixture["gltfSurfaceAuthoring"]["cases"][0]["document"];
@@ -583,7 +586,7 @@ fn gltf_import_declared_domains_are_admitted_before_allocation() {
 /// 🎨️ Authored UV sets, tangents and material sampling enter the same editable source.
 #[test]
 fn gltf_authored_surface_metadata_enters_the_editable_constructor() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any;
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     for row in fixture["gltfSurfaceAuthoring"]["cases"].as_array().unwrap() {
         let document = any::deserialize_bytes(row["document"].to_string().as_bytes()).unwrap();
@@ -617,7 +620,8 @@ fn gltf_authored_surface_metadata_enters_the_editable_constructor() {
 fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
     use semio_framework_value::FromValue;
     use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import::deserializers::artifacts::gltf::v2_0::any as import,export::serializers::artifacts::gltf::v2_0::any as export};
+    use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::gltf::v2_0::any as import;
+    use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::gltf::v2_0::any as export;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let metadata:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔁️authored-attributes/🔣️.json")).unwrap();
     let prepared=&fixture["gltfExport"]["prepared"];
@@ -734,7 +738,8 @@ fn prepared_surface_export_scope_uses_the_existing_graph_connections() {
 #[test]
 fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_snapshot() {
     use {semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import, io_registry};
+    use semio_s_artifact_procedural_3d_io_import;
+    use semio_s_artifact_procedural_3d_io::io_registry;
     let contract = fixture()["registryText"].clone();
     assert_eq!(contract["source"], "imported-unit-cube");
     assert_eq!(contract["preserveGraph"], true);
@@ -742,7 +747,7 @@ fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_s
     assert_eq!(document.host_snapshot.widgets.len(), 3);
     let expected = semio_framework_value::ToValue::to_value(&document);
     let bytes = document_io::export_document_bytes(&document).expect("real document text");
-    let json = String::from_utf8(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("real document json")).expect("json is utf8");
+    let json = String::from_utf8(semio_s_artifact_procedural_3d_io_export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&document).expect("real document json")).expect("json is utf8");
     let independent: serde_json::Value = serde_json::from_str(&json).expect("third-party json reader");
     assert_eq!(independent["hostSnapshot"]["widgets"].as_array().expect("imported graph widgets").len(), 3);
     retire_document(document);
@@ -768,7 +773,7 @@ fn imported_graph_text_registry_round_trip_preserves_graph_and_retires_rebuilt_s
 #[test]
 fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     use semio_framework_value::FromValue;
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::gltf::v2_0::any;
+    use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::gltf::v2_0::any;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let row = &fixture["gltfExport"];
     let value = semio_framework_pack_json::parse(&row["prepared"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -892,7 +897,6 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     let envelope = document_io::export_prepared_geometry(std::slice::from_ref(&mesh), "gltf").unwrap();
     assert_eq!(envelope.data.as_bytes(), bytes.as_slice());
     assert_eq!(envelope.mime_type, "model/gltf+json");
-    #[cfg(feature = "component-app-assembly")]
     {
         use semio_s_artifact_procedural_generation3d::{editor::generation3d::commands::export_document as editor, viewer::generation3d::commands::export_document as viewer};
         let snapshot = semio_s_artifact_procedural_generation3d::Generation3dSnapshot::default();

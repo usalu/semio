@@ -2,7 +2,8 @@
 //! ordered, anonymous collection — no stable id on `SemioTableRow`).
 
 use crate::schema::mutations::SemioTableMutation;
-use crate::schema::snapshot::{SemioTableRow, SemioTableSnapshot};
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

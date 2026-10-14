@@ -316,7 +316,7 @@ fn geometry_inference_dependencies_include_sources_and_wiring_without_presentati
     snapshot.widgets.reverse();
     snapshot.synapses.reverse();
     assert_eq!(original, geometry_dependency_json(&snapshot, "add"));
-    if let semio_framework_artifact_flow_flow::Widget::InputSlider { value, .. } = snapshot.widgets.iter_mut().find(|widget| crate::widget_id(widget) == "slider").unwrap() { *value = 7.0; }
+    if let semio_framework_artifact_flow_flow::Widget::InputSlider { value, .. } = snapshot.widgets.iter_mut().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == "slider").unwrap() { *value = 7.0; }
     assert_ne!(original, geometry_dependency_json(&snapshot, "add"));
     snapshot.retire_cold();
 }

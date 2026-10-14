@@ -1051,10 +1051,10 @@ where
         }
         let nested = |mut demand: RetirementDemand| -> Result<RetirementDemand, ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "hydration child depth overflow"))?; Ok(demand) };
         let frame = |bytes| RetirementDemand { capacity_bytes: bytes, depth: 2, ..Default::default() };
-        if self.fold_job.is_some() { return super::artifact_retirement_owner_demands(&self.fold_job, body); }
+        if self.fold_job.is_some() { return super::retirement_owner_demands(&self.fold_job, body); }
         original!(normalized_conflicts);
         original!(normalized_transitions);
-        if self.target_decoder.is_some() { return super::artifact_retirement_owner_demands(&self.target_decoder, body); }
+        if self.target_decoder.is_some() { return super::retirement_owner_demands(&self.target_decoder, body); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);
@@ -1105,13 +1105,13 @@ where
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, grant); }
-        if self.fold_job.is_some() { return super::artifact_retirement_owner_close(&mut self.fold_job, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.fold_job.is_some() { return super::retirement_owner_close(&mut self.fold_job, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
             ($field:ident) => { if self.$field.is_some() { return super::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant); } };
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
-        if self.target_decoder.is_some() { return super::artifact_retirement_owner_close(&mut self.target_decoder, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.target_decoder.is_some() { return super::retirement_owner_close(&mut self.target_decoder, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);

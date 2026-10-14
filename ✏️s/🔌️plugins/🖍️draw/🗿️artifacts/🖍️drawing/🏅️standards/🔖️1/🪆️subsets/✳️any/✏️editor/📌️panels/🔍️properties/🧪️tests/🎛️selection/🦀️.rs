@@ -1,6 +1,6 @@
 //! 🧪️ Language-neutral inspector journeys through the actual UI projection.
 use super::*;
-use crate::schema::{create_drawing_shape_layer_rect, layer_base_mut};
+use semio_s_artifact_draw_drawing_model::{create_drawing_shape_layer_rect, layer_base_mut};
 use semio_framework_plugin::{artifact_app_laws::project_and_retire_fixture_tree, built_to_component_tree, ViewModel};
 
 fn retire_inspector_view(view:ViewModel){
@@ -18,7 +18,7 @@ fn retire_inspector_view(view:ViewModel){
 #[test]
 fn inspector_selection_fixtures() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
-    let mut layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
+    let mut layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     layer_base_mut(&mut layer).id = "shape.a".into();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     for case in fixture["cases"].as_array().unwrap() {
@@ -36,7 +36,7 @@ fn inspector_selection_fixtures() {
 
 #[test]
 fn inspector_stroke_controls_are_localized() {
-    let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
+    let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rectangle")).to_string().into()).expect("nonempty authored identity"), "Rectangle");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -51,7 +51,7 @@ fn inspector_stroke_controls_are_localized() {
 
 #[test]
 fn inspector_path_nodes_publish_localized_edit_actions() {
-    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 12.0], ctrl2: [12.0, 12.0], to: [12.0, 0.0] }, PathSegment::Line { to: [12.0,12.0] }, PathSegment::Move { to: [20.0,20.0] }, PathSegment::Line { to: [30.0,30.0] }].into());
+    let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 12.0], ctrl2: [12.0, 12.0], to: [12.0, 0.0] }, PathSegment::Line { to: [12.0,12.0] }, PathSegment::Move { to: [20.0,20.0] }, PathSegment::Line { to: [30.0,30.0] }].into());
     layer_base_mut(&mut layer).id = "path".into();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -119,7 +119,7 @@ fn gradient_coordinates_and_stops_have_labeled_rows() {
                 let mut actual = Vec::new();
                 inspector_input_rows(&serde_json::from_str(&json).unwrap(), &mut actual);
                 assert_eq!(serde_json::Value::Array(actual), case["rows"]);
-                let stop = crate::schema::fill::stops(&fill).first().unwrap();
+                let stop = semio_s_artifact_draw_drawing_model::fill::stops(&fill).first().unwrap();
                 let row = stop_row("path", 0, stop, true, disabled, labels).unwrap();
                 let json = project_and_retire_fixture_tree(built_to_component_tree(row)).unwrap();
                 let mut actual = Vec::new();
@@ -132,7 +132,7 @@ fn gradient_coordinates_and_stops_have_labeled_rows() {
 
 #[test]
 fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
-    let mut layer=create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
+    let mut layer=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Shape")).to_string().into()).expect("nonempty authored identity"), "Shape");
     layer_base_mut(&mut layer).id="shape".into();
     let mut document=DrawingSnapshot { layers:vec![layer].into(),..Default::default() };
     let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -150,8 +150,8 @@ fn inspector_exposes_localized_shape_conversion_only_for_editable_shapes() {
 
 #[test]
 fn gradient_inspector_projects_type_coordinates_and_stops() {
-    let mut layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
-    layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
+    let mut layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
+    layer_base_mut(&mut layer).attributes.fill = semio_s_artifact_draw_drawing_model::fill::edit_fill(None,&semio_s_artifact_draw_drawing_model::fill::FillEdit::Type { value: semio_s_artifact_draw_drawing_model::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
     let mut document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -180,8 +180,8 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
         for child in node["children"].as_array().unwrap() { check(child, events, count); }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎛️selection/🔣️.json")).unwrap();
-    let mut layer = crate::standards::v1::subsets::any::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Cubic { ctrl1: [0.0,12.0],ctrl2: [12.0,12.0],to: [12.0,0.0] }].into());
-    layer_base_mut(&mut layer).attributes.fill = crate::schema::fill::edit_fill(None,&crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }).unwrap();
+    let mut layer = semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Curve")).to_string().into()).expect("nonempty authored identity"), "Curve", vec![PathSegment::Move { to: [0.0,0.0] },PathSegment::Cubic { ctrl1: [0.0,12.0],ctrl2: [12.0,12.0],to: [12.0,0.0] }].into());
+    layer_base_mut(&mut layer).attributes.fill = semio_s_artifact_draw_drawing_model::fill::edit_fill(None,&semio_s_artifact_draw_drawing_model::fill::FillEdit::Type { value: semio_s_artifact_draw_drawing_model::fill::FillType::LinearGradient }).unwrap();
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel { tree_windows: vec![semio_framework_plugin::TreeWindowRequest { body_key: DRAWING_PLAY_BODY_PROPERTIES.into(), node_key: "drawing-inspector.nodes".into(), open: Some(true), offset: 0, rows: 2 }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -198,7 +198,7 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
 
 #[test]
 fn text_inspector_is_multiline_localized_and_commits_on_blur() {
-    let layer = crate::schema::create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
+    let layer = semio_s_artifact_draw_drawing_model::create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Text")).to_string().into()).expect("nonempty authored identity"), "Text");
     let id = layer_base(&layer).id.clone();
     let document = DrawingSnapshot { layers: vec![layer].into(), ..Default::default() };
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -219,14 +219,14 @@ fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
         if node.key.as_str()=="drawing-inspector.fillRule.input" {return Some(node.disabled);}
         node.children.iter().find_map(disabled)
     }
-    let mut first=create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
-    let mut second=create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
+    let mut first=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+    let mut second=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     layer_base_mut(&mut first).id="first".into();
     layer_base_mut(&mut second).id="second".into();
     let mut document=DrawingSnapshot {layers:vec![first,second].into(),..Default::default()};
     let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
-        for (rule,locked,value) in [(crate::FillRule::Evenodd,false,"evenodd"),(crate::FillRule::Nonzero,false,""),(crate::FillRule::Nonzero,true,"")] {
+        for (rule,locked,value) in [(semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Evenodd,false,"evenodd"),(semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero,false,""),(semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Nonzero,true,"")] {
             layer_base_mut(&mut document.layers[1]).attributes.fill_rule=rule;
             layer_base_mut(&mut document.layers[1]).locked=locked;
             let tree=render(&document,&["first".into(),"second".into()],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
@@ -246,7 +246,7 @@ fn fill_rule_inspector_preserves_choice_mixed_state_and_lock() {
 
 #[test]
 fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
-    let mut layer=create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Layer")).to_string().into()).expect("nonempty authored identity"), "Layer");
+    let mut layer=create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Layer")).to_string().into()).expect("nonempty authored identity"), "Layer");
     layer_base_mut(&mut layer).id="layer".into();
     let document=DrawingSnapshot {layers:vec![layer].into(),..Default::default()};
     let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -259,7 +259,7 @@ fn layer_stack_controls_are_localized_and_dispatch_semantic_operations() {
 
 #[test]
 fn ungroup_control_appears_for_editable_groups_in_both_languages() {
-    let mut group=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
+    let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Group")).to_string().into()).expect("nonempty authored identity"), "Group");
     layer_base_mut(&mut group).id="group".into();
     let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {for locked in [false,true] {
@@ -282,8 +282,8 @@ fn group_isolation_inspector_exposes_localized_common_mixed_and_locked_states() 
         if node.key.as_str()=="drawing-inspector.isolation.input" {return Some(node.disabled);}
         node.children.iter().find_map(disabled)
     }
-    let mut first=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
-    let mut second=crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
+    let mut first=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+    let mut second=semio_s_artifact_draw_drawing_model::create_drawing_group_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
     layer_base_mut(&mut first).id="first".into();layer_base_mut(&mut second).id="second".into();
     let mut document=DrawingSnapshot {layers:vec![first,second].into(),..Default::default()};
     let view=ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
@@ -318,8 +318,8 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
     let view = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
         for mode in &modes { for (mixed, locked) in [(false,false),(true,false),(true,true)] {
-            let mut first = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
-            let mut second = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
+            let mut first = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("First")).to_string().into()).expect("nonempty authored identity"), "First");
+            let mut second = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Second")).to_string().into()).expect("nonempty authored identity"), "Second");
             layer_base_mut(&mut first).id = "first".into();
             layer_base_mut(&mut second).id = "second".into();
             layer_base_mut(&mut first).blend_mode = (*mode).into();
@@ -346,8 +346,8 @@ fn blend_inspector_exposes_every_mode_and_preserves_mixed_and_locked_states() {
 fn authored_geometry_controls_match_shared_inspector_contract() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎛️geometry/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let layer=crate::schema::create_layer_by_kind(crate::schema::identity::DrawingIdentity::admit(((case["kind"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), case["kind"].as_str().unwrap());
-        let id=crate::schema::layer_id(&layer).to_string_owner();
+        let layer=semio_s_artifact_draw_drawing_model::create_layer_by_kind(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((case["kind"].as_str().unwrap())).to_string().into()).expect("nonempty authored identity"), case["kind"].as_str().unwrap());
+        let id=semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string_owner();
         let document=DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
         for labels in [&DrawingPlayLabels::NATIVE_EN,&DrawingPlayLabels::NATIVE_DE] {
             let mut json=String::new();
@@ -372,7 +372,7 @@ fn node_mode_and_simplification_controls_dispatch_semantic_edits() {
         let json=project_and_retire_fixture_tree(built_to_component_tree(row)).unwrap();
         for mode in fixture["nodeModes"].as_array().unwrap(){assert!(json.contains(&format!("mode.{}",mode.as_str().unwrap())));}
         for label in [labels.node_corner,labels.node_smooth,labels.node_symmetric]{assert!(json.contains(label.as_str()));}
-        let layer=crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",vec![segment.clone()].into());let id=crate::schema::layer_id(&layer).to_string_owner();
+        let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), "Path",vec![segment.clone()].into());let id=semio_s_artifact_draw_drawing_model::layer_id(&layer).to_string_owner();
         let document=DrawingSnapshot{layers:vec![layer].into(),..Default::default()};
         let view=ViewModel::new(semio_framework_ui_locale::Locale::En,semio_framework_ui_locale::Terminology::Native);
         let tree=render(&document,&[id],labels,&TreeWindows::for_body(&view,DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
@@ -394,7 +394,7 @@ fn inspector_actions_respect_selection_eligibility() {
         let mut layers=Vec::new();
         let mut ids=Vec::new();
         for index in 0..count {
-            let mut layer=if convertible {create_drawing_shape_layer_rect("Shape")} else if ungroupable || row["name"]=="one unresolved composited group" {crate::schema::create_drawing_group_layer("Group")} else {crate::schema::create_layer_by_kind("text")};
+            let mut layer=if convertible {create_drawing_shape_layer_rect("Shape")} else if ungroupable || row["name"]=="one unresolved composited group" {semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Group")} else {semio_s_artifact_draw_drawing_model::create_layer_by_kind("text")};
             let id=format!("selected-{index}");
             layer_base_mut(&mut layer).id=id.as_str().into();
             if row["name"]=="one unresolved composited group" {layer_base_mut(&mut layer).opacity=0.5;}
@@ -402,14 +402,14 @@ fn inspector_actions_respect_selection_eligibility() {
             layers.push(layer);
         }
         if locked {
-            let mut parent=crate::schema::create_drawing_group_layer("Locked parent");
+            let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Locked parent");
             layer_base_mut(&mut parent).id="locked-parent".into();
             layer_base_mut(&mut parent).locked=true;
             if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
             layers=vec![parent];
         }else if !same_parent {
             layers=layers.into_iter().enumerate().map(|(index,layer)|{
-                let mut parent=crate::schema::create_drawing_group_layer("Parent");
+                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Parent");
                 layer_base_mut(&mut parent).id=format!("parent-{index}").into();
                 if let DrawingLayerNode::Group(group)=&mut parent {group.children=vec![layer].into();}
                 parent
@@ -418,7 +418,7 @@ fn inspector_actions_respect_selection_eligibility() {
         let structure=row["structure"].as_str().unwrap_or("");
         match structure {
             "ancestorChild"|"ancestorChildSibling"=>{
-                let mut group=crate::schema::create_drawing_group_layer("Selected ancestor");
+                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Selected ancestor");
                 layer_base_mut(&mut group).id="selected-0".into();
                 let child=layers.remove(1);
                 if let DrawingLayerNode::Group(body)=&mut group {body.children=vec![child].into();}
@@ -427,14 +427,14 @@ fn inspector_actions_respect_selection_eligibility() {
             "missing"=>ids.push("missing-layer".into()),
             "hidden"=>layer_base_mut(&mut layers[0]).visible=false,
             "inheritedHidden"=>{
-                let mut parent=crate::schema::create_drawing_group_layer("Hidden parent");
+                let mut parent=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Hidden parent");
                 layer_base_mut(&mut parent).id="hidden-parent".into();
                 layer_base_mut(&mut parent).visible=false;
                 if let DrawingLayerNode::Group(group)=&mut parent {group.children=layers.into();}
                 layers=vec![parent];
             }
             "isolated"|"blended"=>{
-                let mut group=crate::schema::create_drawing_group_layer("Composited group");
+                let mut group=semio_s_artifact_draw_drawing_model::create_drawing_group_layer("Composited group");
                 layer_base_mut(&mut group).id="selected-0".into();
                 if let DrawingLayerNode::Group(body)=&mut group {
                     body.isolation=structure=="isolated";
@@ -443,16 +443,16 @@ fn inspector_actions_respect_selection_eligibility() {
                 layers=vec![group];
             }
             "duplicateRows"=>{
-                ids=vec![crate::schema::drawing_play_layers_tree_row_id(&layers[0]);2];
+                ids=vec![semio_s_artifact_draw_drawing_model::drawing_play_layers_tree_row_id(&layers[0]);2];
             }
             "shapePath"=>{
                 let shape=&layers[1];
-                layers[1]=DrawingLayerNode::Path(crate::DrawingPathBody {base:layer_base(shape).clone(),segments:crate::schema::layer_to_path_segments(shape).into()});
+                layers[1]=DrawingLayerNode::Path(semio_s_artifact_draw_drawing_model::DrawingPathBody {base:layer_base(shape).clone(),segments:crate::schema::layer_to_path_segments(shape).into()});
             }
             _=>{}
         }
         let document=DrawingSnapshot {layers:layers.into(),..Default::default()};
-        let resolved=crate::schema::selected_drawing_layers(&document,&ids);
+        let resolved=semio_s_artifact_draw_drawing_model::selected_drawing_layers(&document,&ids);
         let eligibility=selection_actions::SelectionActionEligibility::from_selection(&document,&resolved,&ids);
         assert_eq!(eligibility.count,count,"{}: resolved count",row["name"]);
         assert_eq!(eligibility.locked,locked,"{}: inherited lock",row["name"]);
@@ -463,7 +463,7 @@ fn inspector_actions_respect_selection_eligibility() {
         if !structure.is_empty() {
             for operation in ["alignLeft","distributeHorizontal","ungroup"] {
                 let expected=eligibility.allows(operation);
-                let actual=crate::editor::drawing::commands::edit_selection::plan(&document,&ids,operation).is_ok();
+                let actual=crate::commands::edit_selection::plan(&document,&ids,operation).is_ok();
                 assert_eq!(actual,expected,"{}: actual planner {operation}",row["name"]);
             }
         }

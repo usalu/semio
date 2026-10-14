@@ -1,0 +1,121 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+ "crate": "semio_s_artifact_remodel_remodeling",
+ "barrels": {
+  "": [
+   "standards::v1::subsets::any::schema::snapshot",
+   "standards::v1::subsets::any::schema",
+   "standards::v1::subsets::any::schema::diff",
+   "standards::v1::subsets::any::schema::mutations",
+   "standards::v1::subsets::any::io",
+   "standards::v1::subsets::any::schema::inferences"
+  ],
+  "schema": [
+   "standards::v1::subsets::any::schema"
+  ],
+  "mutations": [
+   "standards::v1::subsets::any::schema::mutations",
+   "standards::v1::subsets::any::schema::mutations::create_stream",
+   "standards::v1::subsets::any::schema::mutations::delete_stream",
+   "standards::v1::subsets::any::schema::mutations::change_stream_sync",
+   "standards::v1::subsets::any::schema::mutations::add_stream_frame",
+   "standards::v1::subsets::any::schema::mutations::remove_stream_frame",
+   "standards::v1::subsets::any::schema::mutations::replace_stream_source",
+   "standards::v1::subsets::any::schema::mutations::create_asset",
+   "standards::v1::subsets::any::schema::mutations::delete_asset",
+   "standards::v1::subsets::any::schema::mutations::create_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::update_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::delete_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::create_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::delete_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::update_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::create_gcp",
+   "standards::v1::subsets::any::schema::mutations::delete_gcp",
+   "standards::v1::subsets::any::schema::mutations::add_gcp_observation",
+   "standards::v1::subsets::any::schema::mutations::remove_gcp_observation",
+   "standards::v1::subsets::any::schema::mutations::update_ingest_params",
+   "standards::v1::subsets::any::schema::mutations::update_feature_params",
+   "standards::v1::subsets::any::schema::mutations::update_match_params",
+   "standards::v1::subsets::any::schema::mutations::update_sfm_params",
+   "standards::v1::subsets::any::schema::mutations::update_dense_params",
+   "standards::v1::subsets::any::schema::mutations::update_mesh_params",
+   "standards::v1::subsets::any::schema::mutations::update_motion_params",
+   "standards::v1::subsets::any::schema::mutations::update_geo_params",
+   "standards::v1::subsets::any::schema::mutations::append_content",
+   "standards::v1::subsets::any::schema::mutations::remove_content",
+   "standards::v1::subsets::any::schema::mutations::commit_reconstruction",
+   "standards::v1::subsets::any::schema::mutations::replace_sparse",
+   "standards::v1::subsets::any::schema::mutations::replace_dense",
+   "standards::v1::subsets::any::schema::mutations::replace_mesh_result",
+   "standards::v1::subsets::any::schema::mutations::replace_trajectory",
+   "standards::v1::subsets::any::schema::mutations::replace_tracks",
+   "standards::v1::subsets::any::schema::mutations::replace_geo_products",
+   "standards::v1::subsets::any::schema::mutations::replace_qc",
+   "standards::v1::subsets::any::schema::snapshot"
+  ],
+  "standards::v1::subsets::any::schema::mutations": [
+   "standards::v1::subsets::any::schema::mutations",
+   "standards::v1::subsets::any::schema::mutations::create_stream",
+   "standards::v1::subsets::any::schema::mutations::delete_stream",
+   "standards::v1::subsets::any::schema::mutations::change_stream_sync",
+   "standards::v1::subsets::any::schema::mutations::add_stream_frame",
+   "standards::v1::subsets::any::schema::mutations::remove_stream_frame",
+   "standards::v1::subsets::any::schema::mutations::replace_stream_source",
+   "standards::v1::subsets::any::schema::mutations::create_asset",
+   "standards::v1::subsets::any::schema::mutations::delete_asset",
+   "standards::v1::subsets::any::schema::mutations::create_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::update_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::delete_camera_calibration",
+   "standards::v1::subsets::any::schema::mutations::create_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::delete_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::update_rig_extrinsic",
+   "standards::v1::subsets::any::schema::mutations::create_gcp",
+   "standards::v1::subsets::any::schema::mutations::delete_gcp",
+   "standards::v1::subsets::any::schema::mutations::add_gcp_observation",
+   "standards::v1::subsets::any::schema::mutations::remove_gcp_observation",
+   "standards::v1::subsets::any::schema::mutations::update_ingest_params",
+   "standards::v1::subsets::any::schema::mutations::update_feature_params",
+   "standards::v1::subsets::any::schema::mutations::update_match_params",
+   "standards::v1::subsets::any::schema::mutations::update_sfm_params",
+   "standards::v1::subsets::any::schema::mutations::update_dense_params",
+   "standards::v1::subsets::any::schema::mutations::update_mesh_params",
+   "standards::v1::subsets::any::schema::mutations::update_motion_params",
+   "standards::v1::subsets::any::schema::mutations::update_geo_params",
+   "standards::v1::subsets::any::schema::mutations::append_content",
+   "standards::v1::subsets::any::schema::mutations::remove_content",
+   "standards::v1::subsets::any::schema::mutations::commit_reconstruction",
+   "standards::v1::subsets::any::schema::mutations::replace_sparse",
+   "standards::v1::subsets::any::schema::mutations::replace_dense",
+   "standards::v1::subsets::any::schema::mutations::replace_mesh_result",
+   "standards::v1::subsets::any::schema::mutations::replace_trajectory",
+   "standards::v1::subsets::any::schema::mutations::replace_tracks",
+   "standards::v1::subsets::any::schema::mutations::replace_geo_products",
+   "standards::v1::subsets::any::schema::mutations::replace_qc",
+   "standards::v1::subsets::any::schema::snapshot"
+  ],
+  "diff": [
+   "standards::v1::subsets::any::schema::diff"
+  ],
+  "diff::schema": [
+   "standards::v1::subsets::any::schema::diff"
+  ],
+  "snapshot::schema": [
+   "standards::v1::subsets::any::schema::snapshot"
+  ],
+  "algebra": [
+   "standards::v1::subsets::any::schema::algebra_internals"
+  ],
+  "lie": [
+   "standards::v1::subsets::any::schema::lie_internals"
+  ],
+  "optimize": [
+   "standards::v1::subsets::any::schema::optimize_internals"
+  ],
+  "signal": [
+   "standards::v1::subsets::any::schema::signal_internals"
+  ],
+  "spatial": [
+   "standards::v1::subsets::any::schema::spatial_internals"
+  ]
+ }
+}

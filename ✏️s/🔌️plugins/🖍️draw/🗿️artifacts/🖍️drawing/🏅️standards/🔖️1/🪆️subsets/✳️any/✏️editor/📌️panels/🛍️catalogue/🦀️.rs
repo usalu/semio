@@ -8,9 +8,10 @@
 //! 🕹️ Deliberately UNBOUND to any interaction domain: catalogue rows are not document targets, they
 //! carry their own drag payload (layer kinds) or their own `combineBoolean` action.
 
-use crate::editor::drawing::terminology::DrawingPlayLabels;
-use crate::editor::drawing::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
-use crate::{DrawingSnapshot, DRAWING_BOOLEAN_OPERATIONS};
+use crate::terminology::DrawingPlayLabels;
+use crate::{drawing_play_action, ui_value_list, ui_value_map, ui_value_text};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::BuiltNode;
@@ -70,7 +71,7 @@ fn catalogue_rows(labels: &DrawingPlayLabels) -> Vec<CatalogueRow> {
 
 fn kind_row(kind: &str, label: LabelText, icon: &str) -> UiAssemblyResult<BuiltNode> {
     let mut drag_data = UiFixedMap::default();
-    let key = UiText::try_from_str(crate::editor::drawing::panels::layers::DRAWING_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag mime admission failed"))?;
+    let key = UiText::try_from_str(crate::panels::layers::DRAWING_LAYER_KIND_DRAG_MIME).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag mime admission failed"))?;
     let value = UiText::try_from_string(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([("kind".to_string(), semio_framework_value::DslValue::String(kind.to_string()))])))
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag payload admission failed"))?;
     drag_data.try_push(key, value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "drawing drag map admission failed"))?;

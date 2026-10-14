@@ -21,12 +21,12 @@ use semio_framework_3d_brep_representation::topology::Wire;
 use semio_framework_3d_brep_representation::arena::{ArenaId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
 use semio_framework_3d_brep_representation::error::KernelError;
 #[cfg(test)]
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 #[cfg(test)]
 use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::Affine3;
+use semio_framework_3d_brep_vector::matrix::Affine3;
 
 // #region 🔖️Validate
 

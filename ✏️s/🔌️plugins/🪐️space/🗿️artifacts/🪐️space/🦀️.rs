@@ -13,7 +13,6 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "🫀️index/🦀️.rs"]
 pub mod index;
 
@@ -79,19 +78,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.space's typed runtime declaration.
-#[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
         .document_codec::<semio_framework_plugin::EditorApp<editor::space_index::SpaceIndexEditor>>()
-        .try_build()
-}
-/// 🪐️ The same owning declaration mounts its codec in headless public I/O hosts.
-#[cfg(not(feature="component-app-assembly"))]
-pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_framework_plugin::ArtifactDefinitionError>{
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(standards::v1::subsets::any::schema::sspace_index_schema_descriptor())
-        .document_codec_bare::<SSpaceSnapshot,SSpaceMutation>(S_SPACE_INDEX_DOCUMENT_SCHEMA,SPACE_INDEX_DIALECT)
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -197,7 +187,6 @@ pub fn declaration()->Result<semio_framework_plugin::ArtifactDeclaration,semio_f
             }
         }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -282,7 +271,6 @@ pub mod presence {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

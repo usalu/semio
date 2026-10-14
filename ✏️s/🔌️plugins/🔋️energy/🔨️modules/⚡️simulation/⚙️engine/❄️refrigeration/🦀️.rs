@@ -1,5 +1,9 @@
 //! ❄️ Refrigeration: display cases, walk-ins, compressor racks, condensers, secondary loops.
 
+extern crate semio_s_plugin_energy_engine_curves as curves;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::curves::PerformanceCurve;
 use crate::props::{r410a_saturation_pressure_pa, r410a_saturation_temp_c};
 use crate::units::P_STD;

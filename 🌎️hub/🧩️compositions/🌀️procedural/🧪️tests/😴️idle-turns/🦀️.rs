@@ -84,7 +84,7 @@ fn preview_view_state() -> String {
 /// session, the window-transient partitions and the tessellation request table.
 async fn arm_example(runtime: &ProceduralRuntime, dsl: &str) {
     let booted = plugin_document_text(runtime, IDLE_INSTANCE).await.expect("booted document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("the bundled example loads into the booted instance");
+    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("the bundled example loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, IDLE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
@@ -158,7 +158,7 @@ fn assert_idle(label: &str, reading: IdleReading) {
 #[semio_framework_async_macros::async_test]
 async fn generation3d_idle_turns_are_settled_and_retain_nothing() {
     let runtime = boot(GENERATION3D_EDITOR).await;
-    arm_example(&runtime, semio_s_artifact_procedural_generation3d::examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT).await;
+    arm_example(&runtime, semio_s_artifact_procedural_3d_examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT).await;
     let reading = measure_idle(&runtime, "generation3d").await;
     std::mem::forget(runtime);
     assert_idle("generation3d", reading);

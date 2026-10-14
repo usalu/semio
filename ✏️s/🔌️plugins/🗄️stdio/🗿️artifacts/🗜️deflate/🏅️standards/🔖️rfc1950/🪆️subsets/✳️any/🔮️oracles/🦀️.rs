@@ -20,7 +20,6 @@ use semio_repo_test_host::{digest, Json};
 
 //#region 🔖️Header
 /// 🧮️ The typed RFC1950 CMF/FLG/DICTID fields, independent of the subject's own `DeflateSnapshot`.
-#[cfg(feature = "oracles")]
 #[derive(Clone, Copy)]
 struct Header {
     method: u8,
@@ -29,7 +28,6 @@ struct Header {
     dict_id: Option<u32>,
 }
 
-#[cfg(feature = "oracles")]
 impl Header {
     /// 📖️ Parses CMF/FLG and, when FDICT is set, the four-byte dictionary id. Returns the header
     /// plus the byte offset where the DEFLATE stream begins.
@@ -73,7 +71,6 @@ impl Header {
 }
 
 /// 🎚️ RFC1950 §2.2 FLEVEL bits, independent of `DeflateLevelHint::from_bits`/`to_bits`.
-#[cfg(feature = "oracles")]
 fn level_hint_name(bits: u8) -> &'static str {
     match bits & 0b11 {
         0 => "fastest",
@@ -83,7 +80,6 @@ fn level_hint_name(bits: u8) -> &'static str {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn level_hint_bits(name: &str) -> Result<u8, String> {
     match name {
         "fastest" => Ok(0),
@@ -99,7 +95,6 @@ fn level_hint_bits(name: &str) -> Result<u8, String> {
 /// 🔮️ Wraps `payload` as a real zlib stream with `flate2`, keeping only its DEFLATE bytes and its
 /// real Adler-32 trailer — the two-byte header those bytes arrive with is always discarded and
 /// replaced by `header.write()`, since the typed CMF/FLG/DICTID fields are this subset's own.
-#[cfg(feature = "oracles")]
 fn encode(header: &Header, payload: &[u8]) -> Result<Vec<u8>, String> {
     let reference = semio_s_plugin_stdio_archive_test_oracle::oracle_zlib_compress(payload)?;
     if reference.len() < 6 {
@@ -114,7 +109,6 @@ fn encode(header: &Header, payload: &[u8]) -> Result<Vec<u8>, String> {
 /// synthetic default zlib prefix `flate2` accepts unconditionally — this subset's codec never
 /// primes a real preset dictionary (documented simplification shared with the subject), so the
 /// FDICT bit and the CMF/FLG bits actually written are never load-bearing for decompression.
-#[cfg(feature = "oracles")]
 fn independent_inflate(input: &[u8]) -> Result<Vec<u8>, String> {
     let (_, offset) = Header::parse(input)?;
     if input.len() < offset + 4 {
@@ -133,7 +127,6 @@ fn independent_inflate(input: &[u8]) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Codec
 
 //#region 🔖️Json
-#[cfg(feature = "oracles")]
 fn json_number(value: &Json, key: &str) -> Result<f64, String> {
     match value.get(key) {
         Some(Json::Number(found)) => Ok(*found),
@@ -141,7 +134,6 @@ fn json_number(value: &Json, key: &str) -> Result<f64, String> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn json_optional_u32(value: &Json, key: &str) -> Option<u32> {
     match value.get(key) {
         Some(Json::Number(found)) => Some(*found as u32),
@@ -150,22 +142,18 @@ fn json_optional_u32(value: &Json, key: &str) -> Option<u32> {
 }
 
 /// 🔎️ A byte payload as the wire carries it: a plain JSON array of 0-255 numbers.
-#[cfg(feature = "oracles")]
 fn json_bytes(value: &Json, key: &str) -> Vec<u8> {
     value.array(key).iter().filter_map(|item| if let Json::Number(number) = item { Some(*number as u8) } else { None }).collect()
 }
 
-#[cfg(feature = "oracles")]
 fn bytes_json(bytes: &[u8]) -> Json {
     Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
 }
 
-#[cfg(feature = "oracles")]
 fn params_of(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or_else(|| Json::Object(Vec::new()))
 }
 
-#[cfg(feature = "oracles")]
 fn object(pairs: Vec<(&str, Json)>) -> Json {
     Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
@@ -177,7 +165,6 @@ fn object(pairs: Vec<(&str, Json)>) -> Json {
 /// `set-compression-params` reads `{method, window_bits, level_hint}`,
 /// `set-preset-dictionary` reads `{dict_id}` and `set-payload` reads `{payload}`. An unrecognised kind
 /// is an error, never a silent no-op: a mutation that is quietly skipped reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = params_of(spec);
     match spec.str("kind").as_str() {
@@ -203,7 +190,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 
 /// 🔁️ The reference's own decode/re-encode: the header is parsed, the DEFLATE stream is genuinely
 /// inflated by `flate2` and re-deflated from the recovered payload alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     let (header, _) = Header::parse(input)?;
     encode(&header, &independent_inflate(input)?)
@@ -213,7 +199,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
 /// shape: the typed header fields plus the recovered payload's size and digest. Never the raw
 /// compressed bytes themselves — this repository's own encoder and `flate2` choose different block
 /// splits and Huffman tables for the same payload, so only the DECODED content is normative.
-#[cfg(feature = "oracles")]
 pub fn project_deflate(input: &[u8]) -> Result<Json, String> {
     let (header, _) = Header::parse(input)?;
     let payload = independent_inflate(input)?;
@@ -232,7 +217,6 @@ pub fn project_deflate(input: &[u8]) -> Result<Json, String> {
 /// reader alone — the same restore-the-prior-value algebra `DeflateMutation::inverse` implements, but
 /// never reached through it: this oracle module has no path to the subject's `protocol::Mutation`, and
 /// mirroring the algebra from data keeps the two implementations honestly separate.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     let (header, _) = Header::parse(base)?;
     let payload = independent_inflate(base)?;
@@ -249,26 +233,5 @@ pub fn oracle_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> 
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::Json;
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_deflate(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn oracle_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{oracle_apply_mutation, oracle_inverse_spec, oracle_round_trip, project_deflate};
 //#endregion 🔖️Unavailable

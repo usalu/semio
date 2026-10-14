@@ -44,7 +44,6 @@ use semio_repo_test_host::Json;
 //#region 🔖️RawDoc
 /// 🧬️ Independent read/write of the LAS public header block + VLRs + point records behind
 /// `las::raw::{Header, Vlr, Point}`, shared by every dispatch arm below.
-#[cfg(feature = "oracles")]
 mod raw_doc {
     use las::point::Format;
     use las::raw::vlr::RecordLength;
@@ -139,12 +138,10 @@ mod raw_doc {
 /// own `read_fixed_str`/`write_fixed_str` exactly (same LAS §2.3 convention, independently applied
 /// here to `las::raw::Header`'s `[u8; 16]`/`[u8; 32]` arrays rather than to this subset's own
 /// snapshot).
-#[cfg(feature = "oracles")]
 fn read_fixed_str(bytes: &[u8]) -> String {
     let end = bytes.iter().position(|&byte| byte == 0).unwrap_or(bytes.len());
     String::from_utf8_lossy(&bytes[..end]).trim_end().to_string()
 }
-#[cfg(feature = "oracles")]
 fn write_fixed<const N: usize>(text: &str) -> [u8; N] {
     let mut buf = [0u8; N];
     let bytes = text.as_bytes();
@@ -155,32 +152,27 @@ fn write_fixed<const N: usize>(text: &str) -> [u8; N] {
 //#endregion 🔖️FixedStr
 
 //#region 🔖️JsonReaders
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn string(value: &Json, key: &str) -> Option<String> {
     match value.get(key) {
         Some(Json::String(text)) => Some(text.clone()),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn bool_of(value: &Json, key: &str) -> Option<bool> {
     match value.get(key) {
         Some(Json::Bool(flag)) => Some(*flag),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn f64x3(value: &Json, key: &str) -> Option<(f64, f64, f64)> {
     match value.get(key) {
         Some(Json::Array(items)) if items.len() == 3 => {
@@ -193,7 +185,6 @@ fn f64x3(value: &Json, key: &str) -> Option<(f64, f64, f64)> {
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn u32x5(value: &Json, key: &str) -> Option<[u32; 5]> {
     match value.get(key) {
         Some(Json::Array(items)) if items.len() == 5 => {
@@ -209,25 +200,21 @@ fn u32x5(value: &Json, key: &str) -> Option<[u32; 5]> {
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn bytes_of(value: &Json, key: &str) -> Option<Vec<u8>> {
     match value.get(key) {
         Some(Json::Array(items)) => items.iter().map(|item| if let Json::Number(byte) = item { Some(*byte as u8) } else { None }).collect(),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn bytes_json(bytes: &[u8]) -> Json {
     Json::Array(bytes.iter().map(|byte| Json::Number(*byte as f64)).collect())
 }
-#[cfg(feature = "oracles")]
 fn spec_of(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
 //#endregion 🔖️JsonReaders
 
 //#region 🔖️VlrJson
-#[cfg(feature = "oracles")]
 fn vlr_to_json(vlr: &las::raw::Vlr) -> Json {
     Json::Object(vec![
         ("userId".to_string(), Json::String(read_fixed_str(&vlr.user_id))),
@@ -236,7 +223,6 @@ fn vlr_to_json(vlr: &las::raw::Vlr) -> Json {
         ("data".to_string(), Json::String(String::from_utf8_lossy(&vlr.data).to_string())),
     ])
 }
-#[cfg(feature = "oracles")]
 fn vlr_of_wire(value: &Json) -> Option<las::raw::Vlr> {
     let data = bytes_of(value, "data")?;
     Some(las::raw::Vlr {
@@ -256,7 +242,6 @@ fn vlr_of_wire(value: &Json) -> Option<las::raw::Vlr> {
 /// formats 0-3 never split synthetic/key-point/withheld out of it), the exact same union
 /// `../../🚪️io/🦀️.rs`'s `LasPoint.classification: u8` already models — so no decomposition
 /// is needed on either side of this conversion.
-#[cfg(feature = "oracles")]
 fn point_to_json(point: &las::raw::Point, header: &las::raw::Header) -> Json {
     let (a, b) = point.flags.to_two_bytes().unwrap_or((0, 0));
     let scan_angle_rank = match point.scan_angle {
@@ -280,7 +265,6 @@ fn point_to_json(point: &las::raw::Point, header: &las::raw::Header) -> Json {
         ("rgb".to_string(), point.color.map(|color| Json::Array(vec![Json::Number(color.red as f64), Json::Number(color.green as f64), Json::Number(color.blue as f64)])).unwrap_or(Json::Null)),
     ])
 }
-#[cfg(feature = "oracles")]
 fn point_of_json(value: &Json, header: &las::raw::Header) -> Option<las::raw::Point> {
     let x = number(value, "x")?;
     let y = number(value, "y")?;
@@ -328,7 +312,6 @@ fn point_of_json(value: &Json, header: &las::raw::Header) -> Option<las::raw::Po
 /// STRUCTURAL ones this never carries): the same field set `../🧬️schema/📸️snapshot/🦀️.rs`'s
 /// `LasHeader` models, `file_source_id`/`global_encoding`/`guid` excluded as out of this wave's
 /// contracted field list, exactly as `decode_las`/`encode_las` already exclude them.
-#[cfg(feature = "oracles")]
 fn header_to_json(header: &las::raw::Header) -> Json {
     Json::Object(vec![
         ("versionMajor".to_string(), Json::Number(header.version.major as f64)),
@@ -349,7 +332,6 @@ fn header_to_json(header: &las::raw::Header) -> Json {
 //#region 🔖️SnapshotJson
 /// 🧭️ The whole document as `project_las`'s `semantic-las-v1` comparison projection — `{header, vlrs,
 /// points}` with the NON-STRUCTURAL header fields only and VLR data as text.
-#[cfg(feature = "oracles")]
 fn snapshot_to_json(doc: &raw_doc::RawDoc) -> Json {
     Json::Object(vec![
         ("header".to_string(), header_to_json(&doc.header)),
@@ -359,13 +341,8 @@ fn snapshot_to_json(doc: &raw_doc::RawDoc) -> Json {
 }
 /// 🔎️ The independent reader used to project BOTH the oracle's and the subject's output onto
 /// `semantic-las-v1` before comparison.
-#[cfg(feature = "oracles")]
 pub fn project_las(bytes: &[u8]) -> Result<Json, String> {
     Ok(snapshot_to_json(&raw_doc::read(bytes)?))
-}
-#[cfg(not(feature = "oracles"))]
-pub fn project_las(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️SnapshotJson
 
@@ -373,7 +350,6 @@ pub fn project_las(_bytes: &[u8]) -> Result<Json, String> {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -473,11 +449,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Inverse
@@ -486,7 +457,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// `LasMutation::inverse()` (`../🧬️schema/🧬️mutations/🦀️.rs`) independently: an
 /// out-of-range index that the forward mutation would have rejected leaves nothing to undo
 /// (`None`), exactly as that method's empty inverse does. Every spec carries the leaf wire payload.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, String> {
     let params = mutation_params(spec);
     let doc = raw_doc::read(base)?;
@@ -551,30 +521,19 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, Str
     }))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Option<Json>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Inverse
 
 //#region 🔖️RoundTrip
 /// 🔁️ A genuine independent decode + re-encode with no shortcut. Never bit-identical to the input —
 /// see this file's top doc comment on the point-data-start-signature gap.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     raw_doc::write(&raw_doc::read(input)?)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️RoundTrip
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

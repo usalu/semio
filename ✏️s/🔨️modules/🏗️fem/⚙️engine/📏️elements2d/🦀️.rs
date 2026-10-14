@@ -2,11 +2,9 @@
 //! Tri3/Tri6/Quad4/Quad8 plane-stress/plane-strain continuum family, and the `PlateDkt` Batoz
 //! Discrete Kirchhoff Triangle thin-plate bending element.
 
-use crate::algebra::{MatD, VecD};
-use crate::formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
-#[cfg(test)]
-use crate::model::Elements;
-use crate::model::{Dof, Element, ElementContext, ElementResult, MemberUdl, PlaneStress, PlateMoments};
+use semio_s_fem_algebra::{MatD, VecD};
+use semio_s_fem_formulation::{b_matrix_plane, d_matrix_plane_strain, d_matrix_plane_stress, gauss_quad, gauss_tri, jacobian_2d, shape_quad4, shape_quad8, shape_tri3, shape_tri6};
+use semio_s_fem_model::{Dof, Element, ElementContext, ElementResult, MemberUdl, PlaneStress, PlateMoments};
 
 // #region 🔖️Geometry
 fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
@@ -52,11 +50,11 @@ impl Element for Bar2 {
     }
 
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
+        semio_s_fem_model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes([&self.id, &self.start, &self.end])
+        semio_s_fem_model::mounted_string_bytes([&self.id, &self.start, &self.end])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -306,11 +304,11 @@ impl Element for BeamEb2 {
     }
 
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
+        semio_s_fem_model::close_mounted_strings([&mut self.id, &mut self.start, &mut self.end])
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes([&self.id, &self.start, &self.end])
+        semio_s_fem_model::mounted_string_bytes([&self.id, &self.start, &self.end])
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -383,7 +381,7 @@ impl Element for BeamEb2 {
         let stations = (0..11)
             .map(|i| {
                 let x = l * (i as f64) / 10.0;
-                crate::model::BeamStation { x, n: -n1, v: v1 + wy_local * x, m: -m1 + v1 * x + wy_local * x * x / 2.0 }
+                semio_s_fem_model::BeamStation { x, n: -n1, v: v1 + wy_local * x, m: -m1 + v1 * x + wy_local * x * x / 2.0 }
             })
             .collect();
         ElementResult::Beam { stations }
@@ -545,11 +543,11 @@ impl Tri3Cst {
 
 impl Element for Tri3Cst {
     fn close_mounted_string_step(&mut self) -> Option<usize> {
-        crate::model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
+        semio_s_fem_model::close_mounted_strings(std::iter::once(&mut self.id).chain(self.nodes.iter_mut()))
     }
 
     fn mounted_next_string_bytes(&self) -> Option<usize> {
-        crate::model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
+        semio_s_fem_model::mounted_string_bytes(std::iter::once(&self.id).chain(self.nodes.iter()))
     }
 
     fn mounted_strings_terminal_is_empty(&self) -> bool {
@@ -890,8 +888,8 @@ fn dkt_edge(pi: [f64; 2], pj: [f64; 2]) -> DktEdge {
 }
 
 /// 🧱️ Bending constitutive matrix `(E t³)/(12(1-ν²)) [[1,ν,0],[ν,1,0],[0,0,(1-ν)/2]]`, shared by
-/// `PlateDkt` and (via `crate::elements2d::d_matrix_plate`) `elements3d::ShellFacet3`'s bending part.
-pub(crate) fn d_matrix_plate(e: f64, nu: f64, thickness: f64) -> MatD {
+/// `PlateDkt` and (via `d_matrix_plate`) `elements3d::ShellFacet3`'s bending part.
+pub fn d_matrix_plate(e: f64, nu: f64, thickness: f64) -> MatD {
     let factor = e * thickness.powi(3) / (12.0 * (1.0 - nu * nu));
     let mut d = MatD::zeros(3, 3);
     d.set(0, 0, factor);
@@ -913,7 +911,7 @@ pub(crate) fn d_matrix_plate(e: f64, nu: f64, thickness: f64) -> MatD {
 /// `κx=-∂Hx/∂x, κy=-∂Hy/∂y, κxy=-(∂Hx/∂y+∂Hy/∂x)` carry an overall minus relative to the raw `Hx`/`Hy`
 /// derivatives (this formulation's `Hx`/`Hy` represent the NEGATIVE of the physical rotation fields).
 /// Shared by `PlateDkt` and `elements3d::ShellFacet3`.
-pub(crate) fn dkt_b_matrix(coords: &[[f64; 2]; 3], xi: f64, eta: f64) -> MatD {
+pub fn dkt_b_matrix(coords: &[[f64; 2]; 3], xi: f64, eta: f64) -> MatD {
     let edge4 = dkt_edge(coords[1], coords[2]);
     let edge5 = dkt_edge(coords[2], coords[0]);
     let edge6 = dkt_edge(coords[0], coords[1]);
@@ -1087,21 +1085,3 @@ impl Element for PlateDkt {
     }
 }
 // #endregion 🔖️PlateDkt
-
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🔖️Tests
-
-// #region 🔖️ContinuumTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️continuum/🦀️.rs"]
-mod continuum_tests;
-// #endregion 🔖️ContinuumTests
-
-// #region 🔖️PlateTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️plate/🦀️.rs"]
-mod plate_tests;
-// #endregion 🔖️PlateTests

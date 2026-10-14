@@ -2,9 +2,11 @@
 //! sets its `kind` (image import handlers append to a stream that already exists; creating a brand
 //! new stream instead goes through `create-stream`).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{FrameRef, MediaKind, RemodelingSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::remove_stream_frame::RemoveStreamFrame;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -24,17 +26,20 @@ pub struct AddStreamFrame {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_stream_frame(id: String, frame: FrameRef, kind: MediaKind) -> RemodelingMutation {
-    RemodelingMutation::AddStreamFrame(AddStreamFrame { id, frame, kind })
+pub fn add_stream_frame<Op: From<AddStreamFrame>>(id: String, frame: FrameRef, kind: MediaKind) -> Op {
+    Op::from(AddStreamFrame { id, frame, kind })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for AddStreamFrame {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for AddStreamFrame
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<RemoveStreamFrame>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "stream", kind: "add-stream-frame", record: "AddedStreamFrame" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

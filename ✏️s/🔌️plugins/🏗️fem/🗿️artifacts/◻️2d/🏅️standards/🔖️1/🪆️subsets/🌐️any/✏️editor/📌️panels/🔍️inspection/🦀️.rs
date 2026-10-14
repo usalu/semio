@@ -27,8 +27,20 @@ use crate::editor::fem2d::interaction::{
 };
 use crate::editor::fem2d::terminology::Fem2dLabels;
 use crate::editor::fem2d::{fem2d_action, ui_label};
-use crate::Fem2dSnapshot;
-use crate::{element_id, load_id, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::tree_item_desc;
@@ -359,7 +371,7 @@ fn add_term_row(doc: &Fem2dSnapshot, combination: &FemCombination, labels: &Fem2
 /// and how much of it there is, plus the analysis settings read-only.
 fn summary(doc: &Fem2dSnapshot, labels: &Fem2dLabels) -> UiAssemblyResult<BuiltNode> {
     let mut counts = UiFixedList::default();
-    push(&mut counts, read_only_row("summary.schema", labels.schema.as_str(), crate::FEM_2D_SCHEMA))?;
+    push(&mut counts, read_only_row("summary.schema", labels.schema.as_str(), semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA))?;
     for (suffix, label, count) in [
         ("summary.nodes", labels.nodes.as_str(), doc.nodes.len()),
         ("summary.elements", labels.elements.as_str(), doc.elements.len()),

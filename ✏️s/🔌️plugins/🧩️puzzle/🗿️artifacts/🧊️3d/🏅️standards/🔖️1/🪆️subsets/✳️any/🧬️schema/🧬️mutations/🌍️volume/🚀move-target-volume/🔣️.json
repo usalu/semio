@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🚀move-target-volume",
+  "semanticKind": "move-target-volume",
+  "displayName": "Move Target Volume",
+  "emoji": "🚀",
+  "aggregateVariant": "MoveTargetVolume",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "move-target-volume",
+  "binaryTag": 19,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

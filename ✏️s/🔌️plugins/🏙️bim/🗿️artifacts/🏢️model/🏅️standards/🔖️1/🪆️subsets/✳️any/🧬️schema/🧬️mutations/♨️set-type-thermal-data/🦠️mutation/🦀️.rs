@@ -1,8 +1,8 @@
 //! ♨️ `set-type-thermal-data` payload. Sparsely sets the thermal data of a window type (U-value of the whole window, g-value of the glazing, frame fraction), of a curtain wall type (the same three for the whole facade) or of a door type (U-value); an assigned null clears a field. The envelope U-values and solar gains are inferred from them.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Assigned, CurtainWallTypePatch, DoorTypePatch, WindowTypePatch};
+use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CurtainWallTypePatch, DoorTypePatch, WindowTypePatch}};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

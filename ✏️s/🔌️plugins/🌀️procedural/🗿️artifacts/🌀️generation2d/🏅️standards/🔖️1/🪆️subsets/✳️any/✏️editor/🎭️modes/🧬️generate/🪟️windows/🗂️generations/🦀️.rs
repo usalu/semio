@@ -45,7 +45,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(generation: &GenerationPlayState, selected_id: Option<&str>, locale: Locale, terminology: Terminology, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    crate::generation_tree(GENERATION2D_PLAY_APP_ID, GENERATION2D_PLAY_GENERATE_PREFIX, generation, selected_id, locale, terminology, windows)
+    semio_s_procedural_core_semantic_ui::generation_tree(GENERATION2D_PLAY_APP_ID, GENERATION2D_PLAY_GENERATE_PREFIX, generation, selected_id, locale, terminology, windows)
 }
 //#endregion 🔖️Render
 

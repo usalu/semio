@@ -1,7 +1,7 @@
 //! 📐️ Drawing mutation — `ScaleLayers`: a relative, parametric scaling of a set of layers by two axis factors about one
 //! world-space pivot — a resize handle's gesture, replayable on any base.
-use crate::mutations::{drawing_label_layers, drawing_label_number, DrawingMutation};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{drawing_label_layers, drawing_label_number};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Mutation
 /// 📐️ `scale-layers` payload — the scaled layer ids, the world-space pivot that stays in place and the axis factors.
@@ -21,17 +21,17 @@ pub struct ScaleLayers {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn scale_layers(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> DrawingMutation {
-    DrawingMutation::ScaleLayers(ScaleLayers { targets, pivot_x, pivot_y, scale_x, scale_y })
+pub fn scale_layers<Op: From<ScaleLayers>>(targets: semio_framework_value::list::PagedList<semio_framework_value::paged::PagedUtf8<{usize::MAX}>, {usize::MAX}>, pivot_x: f64, pivot_y: f64, scale_x: f64, scale_y: f64) -> Op {
+    Op::from(ScaleLayers { targets, pivot_x, pivot_y, scale_x, scale_y })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ScaleLayers {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ScaleLayers where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<crate::update_layer_transform::mutation::UpdateLayerTransform> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "layers", kind: "scale-layers", record: "ScaledLayers" };
 
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

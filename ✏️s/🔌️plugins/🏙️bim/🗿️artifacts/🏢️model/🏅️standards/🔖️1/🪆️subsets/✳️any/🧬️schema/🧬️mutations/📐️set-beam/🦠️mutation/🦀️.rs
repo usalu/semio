@@ -1,6 +1,6 @@
 //! 📐️ `set-beam` payload. Edits a beam sparsely: type, top offset at the start (signed: positive above, negative below the storey top), top offset at the end (assigned: an inclined beam, or none for a level one) and name; absent fields stay untouched. Its axis is set by `set-beam-axis`.
 
-use crate::{Assigned, BeamPatch, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, ModelDiff}, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

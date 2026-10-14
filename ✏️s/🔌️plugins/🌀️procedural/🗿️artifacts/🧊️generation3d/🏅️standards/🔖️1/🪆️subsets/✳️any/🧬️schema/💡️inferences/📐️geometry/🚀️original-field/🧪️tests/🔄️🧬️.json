@@ -1,0 +1,16 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","widgets","wires","cycleMembers","faultRows","partialFaultHeldOnRefusal","partialFaultSameCallerClose","actualCacheMode"],
+  "properties":{
+    "version":{"const":1},
+    "widgets":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","kind","params"],"properties":{"id":{"type":"string","minLength":1},"kind":{"const":"math.number"},"params":{"type":"object","additionalProperties":false,"required":["value"],"properties":{"value":{"type":"number"}}}}}},
+    "wires":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["from","fromPort","to","toPort"],"properties":{"from":{"type":"string","minLength":1},"fromPort":{"const":"value"},"to":{"type":"string","minLength":1},"toPort":{"const":"value"}}}},
+    "cycleMembers":{"const":["Kreis Ä","cycle B"]},
+    "faultRows":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","code","en","de"],"properties":{"id":{"type":"string","minLength":1},"code":{"const":"generation3d.geometry.cycle"},"en":{"type":"string","minLength":1},"de":{"type":"string","minLength":1}}}},
+    "partialFaultHeldOnRefusal":{"const":true},
+    "partialFaultSameCallerClose":{"const":true},
+    "actualCacheMode":{"const":"bypass"}
+  }
+}

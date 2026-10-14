@@ -1,0 +1,5 @@
+{"manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml",
+ "targets": [
+  {"name": "column_mutations", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🧪️tests/🔬️columns/🦀️.rs", "doc": "//! 🧪️ Fixture laws of the semio table column mutations (create, delete, rename, reorder), over the mutation crate's public API.", "tests": ["/(🏗️create-column|🗑️delete-column|🏷️rename-column|🔀reorder-columns)/🧪️tests/"]},
+  {"name": "row_mutations", "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/🧪️tests/🔬️rows/🦀️.rs", "doc": "//! 🧪️ Fixture laws of the semio table row and cell mutations (insert, remove, reorder, edit-cell), over the mutation crate's public API.", "tests": ["/(📥insert-row|➖remove-row|🔃reorder-rows|✏️edit-cell)/🧪️tests/"]}
+ ]}

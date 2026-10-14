@@ -1,5 +1,6 @@
 //! 🧩️ Actual Hub-owned component codec integration across caller selected runtimes.
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash}; use semio_framework_plugin_interpreter::OwnedRuntime;
+use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
+use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework::kernel::Budget;
 const MINTED_DOCUMENT_ID:&str="artifact-0123456789abcdef0123456789abcdef";
 fn repo_root()->std::path::PathBuf {std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|p|p.join("nx.json").is_file()).unwrap().to_path_buf()}

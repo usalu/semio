@@ -72,7 +72,7 @@ async fn every_kind_has_a_create_delete_and_rename_mutation() {
 #[semio_framework_async_macros::async_test]
 async fn every_create_and_delete_mutation_of_the_model_has_its_row() {
     let row_of = |suffix: &str| ENTITIES.iter().find(|row| row.kind == suffix || (suffix == "grid-line" && row.kind == "grid"));
-    for kind in crate::mutations::KINDS {
+    for kind in crate::standards::v1::subsets::any::schema::mutations::KINDS {
         if let Some(suffix) = kind.strip_prefix("create-").or_else(|| kind.strip_prefix("delete-")).filter(|suffix| *suffix != "elements") {
             let row = row_of(suffix).unwrap_or_else(|| panic!("the entity table has no row for '{kind}'"));
             assert!(if kind.starts_with("create-") { row.create.is_some() } else { row.delete.is_some() }, "{kind} is wired");
@@ -110,10 +110,10 @@ async fn every_kind_creates_a_mutation_that_applies_and_the_library_comes_first(
             _ => "st-ground",
         };
         let mutation = (row.create.expect("create"))(&snapshot, &id, parent, "New").unwrap_or_else(|code| panic!("{} cannot be created: {code}", row.kind));
-        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).unwrap_or_else(|refusal| panic!("{} is refused: {refusal:?}", row.kind));
+        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).unwrap_or_else(|refusal| panic!("{} is refused: {refusal:?}", row.kind));
         assert!((row.name)(&snapshot, &id).is_some_and(|name| row.rename.is_none() || name == "New"), "{} exists after its create", row.kind);
         let removed = (row.delete.expect("delete"))(&id);
-        let without = crate::mutations::apply_model_mutation(&snapshot, &removed).unwrap_or_else(|refusal| panic!("{} cannot be deleted again: {refusal:?}", row.kind));
+        let without = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &removed).unwrap_or_else(|refusal| panic!("{} cannot be deleted again: {refusal:?}", row.kind));
         assert!((row.name)(&without, &id).is_none());
     }
 }

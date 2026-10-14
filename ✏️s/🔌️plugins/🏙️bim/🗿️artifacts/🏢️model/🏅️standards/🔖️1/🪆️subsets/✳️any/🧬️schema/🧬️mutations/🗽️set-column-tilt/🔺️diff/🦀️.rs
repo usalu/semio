@@ -3,7 +3,7 @@
 
 use super::super::wall_geometry::tilt_flaw;
 use super::SetColumnTilt;
-use crate::{Assigned, ColumnPatch, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ColumnPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetColumnTilt, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

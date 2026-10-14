@@ -1,5 +1,14 @@
 //! 🏭️ Air systems: CAV, VAV, dual-duct, multizone, DOAS, and VRF with OA mixing.
 
+extern crate semio_s_plugin_energy_engine_coils as coils;
+extern crate semio_s_plugin_energy_engine_fans as fans;
+extern crate semio_s_plugin_energy_engine_ideal_hvac as ideal_hvac;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_terminal as terminal;
+extern crate semio_s_plugin_energy_engine_units as units;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_curves as curves;
+
 use crate::coils::{cooling_coil_output_w, heating_coil_output_w, CoilAirState, CoolingCoil, HeatingCoil};
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::ideal_hvac::EconomizerControl;

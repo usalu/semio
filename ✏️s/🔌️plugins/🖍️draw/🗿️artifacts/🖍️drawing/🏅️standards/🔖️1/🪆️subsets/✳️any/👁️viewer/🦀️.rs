@@ -4,10 +4,18 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::standards::v1::subsets::any::schema::default_drawing_document;
-use crate::viewer::drawing::modes::view;
-use crate::viewer::drawing::modes::view::windows::canvas;
-use crate::{DrawingSnapshot, DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+use semio_s_artifact_draw_drawing_model::default_drawing_document;
+use crate::modes::view;
+use crate::modes::view::windows::canvas;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DRAWING_DIALECT, DRAWING_DOCUMENT_SCHEMA};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -89,7 +97,7 @@ impl protocol::OpBinary for DrawingViewCommand {
 }
 
 /// 📷️ Validates a viewer camera and publishes only the addressed local window configuration.
-fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<crate::op::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn camera_emit(command: &DrawingViewCommand, view: Option<&semio_framework_plugin::ViewModel>) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let DrawingViewCommand::SetCamera { camera } = command;
     let camera: store::Viewport2d = semio_framework_pack_json::from_json_str(camera, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::from(error.to_string()))?;
     camera.validate().map_err(|error| Fault::from(error.to_string()))?;
@@ -126,7 +134,7 @@ fn drawing_view_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<DrawingViewer>>>,
     _operation: &AppOperationContext,
-) -> Result<Emit<crate::op::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     camera_emit(command, context.and_then(|context| context.view_state.as_ref()))
 }
 
@@ -192,7 +200,7 @@ pub struct DrawingViewer;
 
 impl ArtifactViewer for DrawingViewer {
     type Snapshot = DrawingSnapshot;
-    type Mutation = crate::op::DrawingMutation;
+    type Mutation = semio_s_artifact_draw_drawing_mutations::DrawingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -205,7 +213,7 @@ impl ArtifactViewer for DrawingViewer {
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::spr::drawing_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_draw_drawing_host::owned::drawing_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
@@ -214,7 +222,7 @@ impl ArtifactViewer for DrawingViewer {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation, actor))
+        Ok(semio_s_artifact_draw_drawing_host::owned::drawing_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
@@ -343,3 +351,21 @@ pub fn create_drawing_viewer() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod config {
+    #[path = "🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod modes {
+    #[path = "🎭️modes/👁️view/🦀️.rs"]
+    pub mod view;
+}
+#[path = "."]
+pub mod presence {
+    #[path = "👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+//#endregion 🪢️TaxonomyMounts

@@ -22,7 +22,7 @@ import { readFile as readFileAsync, readdir as readdirAsync } from "node:fs/prom
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderOwnerPublications } from "../📇️catalog/📣️publication/🟦️.ts";
-import { declaredPlaygroundHostInputPathsV1 } from "../🎮️playground/🖥️native-host/🟦️.ts";
+import { declaredPlaygroundHostInputPathsV1,nativeHostTextSourceViewV1 } from "../🎮️playground/🖥️native-host/🟦️.ts";
 import { jsonDocumentDuplicateKeys } from "../🧬️schema/🔣️json-document/🟦️.ts";
 export { jsonDocumentDuplicateKeys } from "../🧬️schema/🔣️json-document/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -10281,7 +10281,7 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
   const inputs = new Set<string>();
   const packages = scanRepo(repoRoot, taxonomy, { view, inputs }).packages;
   for (const pkg of packages) if (pkg.lang === "🦀️rust") {
-    for (const path of declaredPlaygroundHostInputPathsV1(view.readText(pkg.manifestPath), view)) inputs.add(path);
+    for (const path of declaredPlaygroundHostInputPathsV1(view.readText(pkg.manifestPath), nativeHostTextSourceViewV1(view))) inputs.add(path);
   }
   for (const pkg of packages) if (pkg.lang === "🦀️rust" && declaredComponentKind(view.readText(pkg.manifestPath)) !== undefined) {
     const descriptor = relative(repoRoot, resolve(repoRoot, pkg.packageRel, authority.descriptorRelativePath)).replaceAll("\\", "/");

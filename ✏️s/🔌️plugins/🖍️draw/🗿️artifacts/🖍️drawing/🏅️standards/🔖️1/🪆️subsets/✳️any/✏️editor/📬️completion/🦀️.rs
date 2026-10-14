@@ -3,17 +3,17 @@ use super::DrawingPlayApp;
 use semio_framework_plugin::{ArtifactToolCompletionValue,ArtifactCompletionFault,ArtifactDownloadOutput,EditorApp,Emit,EphemeralEmit,NoConfigMutation,NoDraftMutation,VacantVec,VacantDeque,CompletionEffect};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::{ControlledRetirement,admit_typed_controlled_retirement}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
-type App=EditorApp<DrawingPlayApp>;type Value=ArtifactToolCompletionValue<App>;type DrawingEmit=Emit<crate::DrawingMutation,NoConfigMutation,NoDraftMutation>;
+type App=EditorApp<DrawingPlayApp>;type Value=ArtifactToolCompletionValue<App>;type DrawingEmit=Emit<semio_s_artifact_draw_drawing_mutations::DrawingMutation,NoConfigMutation,NoDraftMutation>;
 enum Source{Emit(DrawingEmit,EphemeralEmit<App>),Download(Option<ArtifactDownloadOutput>,EphemeralEmit<App>),Fault(Option<ArtifactCompletionFault>,EphemeralEmit<App>)}
 impl Source{fn ephemeral(&self)->&EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}fn ephemeral_mut(&mut self)->&mut EphemeralEmit<App>{match self{Self::Emit(_,value)|Self::Download(_,value)|Self::Fault(_,value)=>value}}}
-pub(crate) struct DrawingCompletionPayload(pub(crate) Value);
+pub struct DrawingCompletionPayload(pub Value);
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) struct RejectedCompletion{publication:DrawingCompletionPayload,fault:semio_framework::Fault}
-impl RejectedCompletion{pub(crate) fn new(original:semio_framework_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
+pub struct RejectedCompletion{publication:DrawingCompletionPayload,fault:semio_framework::Fault}
+impl RejectedCompletion{pub fn new(original:semio_framework_plugin::ArtifactToolCompletionRejection<App>)->Self{Self{publication:DrawingCompletionPayload(Value::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral)),fault:original.fault}}}
 struct Cursor{original:ManuallyDrop<Option<Source>>,phase:u8}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Draw completion retains an original opaque payload without an exact retirement facet")}
-pub(super) fn birth(value:&Value)->Option<usize>{supported(value).then_some(size_of::<ControlledRetirement<DrawingCompletionPayload>>())}
-pub(super) fn admit(value:&mut Option<Value>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
+pub fn birth(value:&Value)->Option<usize>{supported(value).then_some(size_of::<ControlledRetirement<DrawingCompletionPayload>>())}
+pub fn admit(value:&mut Option<Value>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
  let Some(original)=value.as_ref()else{return Ok(None);};let bytes=birth(original).ok_or_else(unsupported)?;if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(None);}
  match admit_typed_controlled_retirement(DrawingCompletionPayload(value.take().unwrap()),grant){Ok((owner,progress))=>Ok(Some((owner as Box<dyn ErasedSnapshotRetirement>,progress))),Err((error,DrawingCompletionPayload(original)))=>{*value=Some(original);Err(error)}}
 }

@@ -18,8 +18,6 @@ name = "semio_framework_async"
 path = "🦀️.rs"
 
 [features]
-# 🧬️ Generates the TypeScript mirror from the crate-owned versioned schema metadata.
-typegen = []
 # 🧪️ Turns on the `testkit::ManualRuntime` `HostAsyncRuntime` test double for downstream crates
 # (packets R2/R4) to unit-test against without linking tokio. Always available under `cfg(test)`
 # for this crate's own test suite regardless of this feature.

@@ -1,11 +1,17 @@
 use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::config::SetSnapshot;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::generation3d_host_snapshot_operations;
+use semio_s_artifact_procedural_3d_mutations::generation3d_host_snapshot_operations;
 use crate::SnapshotRead;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{
-    default_snapshot, example_snapshot, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE,
-    PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
-};
+use semio_s_artifact_procedural_3d_model::default_snapshot;
+use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::PluginApp;
@@ -28,12 +34,12 @@ const BUNDLED_EXAMPLES: [&str; 8] = [
 /// thread's stack the moment the eight-example walk awaits inside it.
 fn bundled_widget_ids(example_id: &str) -> std::collections::BTreeSet<String> {
     let read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
-    read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_generation3d::widget_id).map(str::to_string).collect()
+    read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).map(str::to_string).collect()
 }
 
 /// 🪪️ The same signature for the app's LIVE document — synchronous for the same reason.
 fn live_widget_ids(app: &context::Generation3dApp) -> std::collections::BTreeSet<String> {
-    context::snapshot(app).host_snapshot.widgets.iter().map(semio_s_artifact_procedural_generation3d::widget_id).map(str::to_string).collect()
+    context::snapshot(app).host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).map(str::to_string).collect()
 }
 
 /// 🧺️ Replays the store's OWN fold arithmetic over one lane's authored gesture: every item costs its
@@ -80,7 +86,7 @@ fn both_durable_lanes_derive_their_footprint_from_the_mutation() {
 fn unrecorded_example_defaults() -> Vec<String> {
     use semio_framework_artifact_flow_flow::neural::ColdRetire;
     use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
+    use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
     BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]).flat_map(|example_id| {
         let read = SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
@@ -110,7 +116,7 @@ fn every_bundled_example_records_every_declared_default_of_its_operators() {
 fn debug_print_normalized_examples() {
     use semio_framework_artifact_flow_flow::neural::ColdRetire;
     use semio_framework_artifact_flow_flow::{default_neuron_params_from_info, Widget};
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
+    use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
     for example_id in BUNDLED_EXAMPLES.iter().copied().chain([PROCEDURAL_EXAMPLE_MESH_WORKBENCH]) {
@@ -175,7 +181,7 @@ set_active_example_publishes! {
 async fn interaction_select_publishes_through_the_retained_typed_path() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_generation3d::widget_id).expect("default fixture node").to_string();
+    let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_3d_model::widget_id).expect("default fixture node").to_string();
     // 🧯️ `interactionSelect` is a framework-reserved TOOL JOB (`FrameworkInteractionSelectJob`), so
     // `handle_action` alone only admits its `Effect::SpawnJob` — the selection lands when the host
     // drives that job, which is what `select_graph` does. A `settle_registered_typed_operation`

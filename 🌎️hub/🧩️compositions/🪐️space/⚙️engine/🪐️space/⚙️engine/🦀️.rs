@@ -5,8 +5,10 @@
 //! `workflow` crate via os-core's re-export) — building `WorkflowMutation` values from arguments is
 //! still pure compute, not an `apply_X_mutation` match on a locally-owned enum.
 
-use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
-use semio_framework_artifact_infinite_dag::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, IoPortSpec};
+use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
+use semio_framework_os_infinite_directed_presentation::{DagCamera, DagHostSnapshot, DagHostSnapshotEdge};
+
+use semio_framework_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, IoPortSpec};
 use semio_framework_pack_json::Value;
 use semio_framework_os::workflow::{AddNode, AddParameter, ChangeParameter};
 use semio_framework_os::{

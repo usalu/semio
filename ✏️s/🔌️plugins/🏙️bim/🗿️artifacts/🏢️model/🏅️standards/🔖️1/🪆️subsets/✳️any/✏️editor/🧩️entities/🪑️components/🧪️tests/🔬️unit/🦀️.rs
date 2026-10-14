@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::entities::{kind_holding, kind_of};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ExprPoint3, Family, FamilyParameter, FamilySolid, ModelInference, ParameterKind, SolidShape};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, Family, FamilyParameter, FamilySolid, ParameterKind, SolidShape}, inferences::ModelInference};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -77,7 +77,7 @@ fn the_pickers_name_families_walls_and_systems_by_their_localized_labels() {
 fn a_component_is_a_placed_entity_under_its_storey_and_its_override_hangs_under_the_component() {
     let mut snapshot = placed();
     let storey = snapshot.components["c-table"].storey.clone();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let (component, overridden) = (kind_of("component").expect("component"), kind_of("component-override").expect("override"));
     assert!(!component.library && !overridden.library);
     assert_eq!((component.name)(&snapshot, "c-table").as_deref(), Some("Table 1"));
@@ -143,7 +143,7 @@ fn text_that_names_no_value_is_no_write() {
 #[test]
 fn an_override_is_written_canonical_and_deleted_by_its_key() {
     let mut snapshot = placed();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let leaf = write("component-override", "value", &snapshot, "c-table.width", "depth*2");
     assert!(matches!(leaf, Some(ModelMutation::SetComponentOverride(leaf)) if leaf.component == "c-table" && leaf.name == "width" && leaf.value == "depth * 2"));
     assert!(write("component-override", "value", &snapshot, "c-table.width", "1 m +").is_none());
@@ -169,7 +169,7 @@ fn a_new_component_is_the_first_placeable_family_beside_the_ones_on_its_storey()
 #[test]
 fn what_a_component_shows_is_inferred_and_a_component_counts_its_overrides() {
     let mut snapshot = placed();
-    snapshot.component_overrides.insert("c-table.width".into(), crate::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
+    snapshot.component_overrides.insert("c-table.width".into(), crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride { component: "c-table".into(), name: "width".into(), value: "2 m".into() });
     let inference = ModelInference::infer(&snapshot).expect("infers");
     let read = |rows: &[InferredRow], key: &str, id: &str| (rows.iter().find(|row| row.key == key).expect("row").read)(&snapshot, &inference, id);
     assert_eq!(read(COMPONENT_INFERRED, "category", "c-table").as_deref(), Some("Furniture"));

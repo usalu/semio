@@ -1,6 +1,6 @@
 use crate::primitives::{make_box, make_planar_face_from_points};
 use semio_framework_3d_brep_representation::topology::{history, Body};
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 
 /// 🌱 Law A from the W3a-0 design: `Body::from_seed(&seed).to_seed() == seed`. Exercised against a
 /// real closed solid (a box built exclusively through the checked euler editors) rather than a

@@ -1,6 +1,6 @@
 use super::compute::{take_computed, take_hashed};
 use super::*;
-use crate::{Axis, Entry, MaterialPatch, ModelDiff, Point2, StoreyPatch, Wall, WallPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, Wall}, diff::{Entry, patches::{MaterialPatch, StoreyPatch, WallPatch}, ModelDiff}};
 use protocol::{Inference, InferredField};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -210,7 +210,7 @@ fn moving_one_wall_recomputes_only_its_neighbourhood() {
 
 #[test]
 fn moving_a_window_recomputes_its_frame_its_host_wall_and_filler_only() {
-    use crate::OpeningPatch;
+    use crate::standards::v1::subsets::any::schema::diff::patches::OpeningPatch;
     let snapshot = full();
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());

@@ -8,9 +8,6 @@
     "test-ownership": "bun repo run @semio-tech/framework-deflate-rs:test-ownership",
     "test-native": "bun repo run @semio-tech/framework-deflate-rs:test-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

@@ -6,7 +6,7 @@ use crate::editor::bim::modes::edit::windows::family::edit::{apply, category_of,
 use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{Family, FamilyCategory, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Family, FamilyCategory, ModelSnapshot}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 fn parse_category(text: &str) -> Option<FamilyCategory> {
@@ -59,7 +59,7 @@ pub static FAMILY_SOLID_INFERRED: &[InferredRow] =
 /// 🧬️ A new family: empty, in the category the parent names (generic when it names none).
 pub fn create_family(_: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let category = category_of(parent).unwrap_or(FamilyCategory::Generic);
-    Ok(ModelMutation::CreateFamily(crate::mutations::create_family::CreateFamily { id: id.into(), family: Family { name: name.into(), category } }))
+    Ok(ModelMutation::CreateFamily(crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily { id: id.into(), family: Family { name: name.into(), category } }))
 }
 
 /// 🧊️ A new solid: a cuboid of a tenth of a metre in the first material of the model, in the family the parent names.

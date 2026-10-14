@@ -10,7 +10,6 @@ extern crate semio_framework_os_kernel as vcs;
 
 pub use semio_s_plugin_block::{BlockKindIdentity, BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation, BlockCamera2d, BlockCamera3d, BlockMeta};
 
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::block3d::Block3dPlayApp>>>
@@ -18,7 +17,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::block3d::Block3dPlayApp>>>
@@ -349,7 +347,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// data (schema/inference descriptors, editor/viewer, native codec) is read from
 /// `standards::v1::subsets::any::subset()` instead. Mirrors `🗒️note`/`🖍️draw`/`🔱️trinity`'s own
 /// migration exactly.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -425,19 +422,15 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[cfg(feature = "component-app-assembly")]
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                         mod component;
-                        #[cfg(feature = "component-app-assembly")]
                         pub use component::*;
                         #[path = "."]
                         pub mod schema {
@@ -1075,7 +1068,6 @@ pub mod examples {
     mod art_3d_nakagin_capsule_tests;
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -1208,7 +1200,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

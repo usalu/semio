@@ -159,7 +159,7 @@ struct TestAppCommandInputs {
     interaction_state: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionState>,
     interaction_hover: semio_framework_value::retirement::shared::SharedControlledRetirement<InteractionHoverState>,
     instance_operation_owner: crate::app::ArtifactInstanceOperationOwnerHandle,
-    output_chunks: ArtifactOutputChunks,
+    pub(crate) output_chunks: ArtifactOutputChunks,
 }
 
 struct TestAppCommandJob<const RETAINED: bool, const TOOLS: u8> {
@@ -177,7 +177,7 @@ struct TestAppCommandJob<const RETAINED: bool, const TOOLS: u8> {
     completion: Option<ArtifactToolCompletion<TestApp<RETAINED, TOOLS>>>,
     raw: Option<action_bus::RetainedToolWireInput>,
     page: usize,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
@@ -413,26 +413,27 @@ async fn test_restart_registry() -> AppActionRegistry {
 }
 
 async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta, fixture: &Value) {
+    let mut original_caller=crate::app_testing::OriginalFixtureCaller::admit().expect("original restart full-body caller");let mut original_context=original_caller.context();let cx=&mut original_context;
     let law = &fixture["restartAuthority"];
     let items = law["closeItems"].as_u64().unwrap() as usize;
     let body = law["closeBodyBytes"].as_u64().unwrap() as usize;
     let mut app = VcsArtifactApp::<TestApp<true>>::with_registry(TestApp::<true>::default(), test_restart_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
     crate::app::artifact_app_laws::settle_store_constructor(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
-    let outcome: Result<(u64, u64, u64, u64, u64, i32), Fault> = async {
+    let outcome: Result<(u64, u64, u64, u64, u64, i32), semio_framework_job::OriginalTurnFailure> = async {
         app.bind_instance_id(meta.instance_id).await;
         let contracts = app.tool_public_contracts().await;
         let exact = contracts.iter().filter(|contract| contract.tool_id == TEST_RESTART_TOOL && contract.owner == ToolOwnerWitness::of::<TestApp<true>>() && contract.controller_id == TestApp::<true>::APP_ID && contract.schema_id == TEST_RESTART_SCHEMA).count();
-        if exact as u64 != law["retainedProofs"].as_u64().unwrap() { return Err(Fault::from("restart app lost its exact registered tool contract")); }
-        let admitted = app.dispatch_typed(command, meta, &mut crate::app::artifact_app_laws::fixture_identity()).await?;
-        if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication")); }
+        if exact as u64 != law["retainedProofs"].as_u64().unwrap() { return Err(Fault::from("restart app lost its exact registered tool contract").into()); }
+        let admitted = app.dispatch_typed(command, meta, &mut crate::app::artifact_app_laws::fixture_identity(),cx).await?;
+        if !admitted.mutations.is_empty() { return Err(Fault::from("restart command bypassed retained publication").into()); }
         let (mut artifact, mut ui, mut scopes, mut terminal, mut completions) = (0, 0, 0, 0, 0);
         for _ in 0..100_000 {
-            let demand = app.maintenance_retirement_demands(body).map_err(|error| Fault::from(error.into_message()))?;
+            let demand = app.maintenance_retirement_demands(body)?;
             let grant = RetainedCloneGrant { maximum_items: items, ..plugin_demand_grant(demand) };
-            if let Some(progress) = app.maintenance_step(grant)?.progress() {
-                if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant")); }
+            if let Some(progress) = app.maintenance_step(cx,grant)?.progress() {
+                if !progress.fits(grant) { return Err(Fault::from("restart maintenance exceeded the exact grant").into()); }
             }
-            app.advance_typed_operation_publication(&mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await?;
+            app.advance_typed_operation_publication(&mut crate::app::artifact_app_laws::fixture_identity(), cx).await?;
             if let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
                 let fault = match page.lane {
                     TypedOperationResultLane::Artifact => { artifact += 1; None }
@@ -441,44 +442,45 @@ async fn test_restart_publish_and_close(command: TestCommand, meta: &ActionMeta,
                     TypedOperationResultLane::Fault => Some(Fault::from(format!("restart publication fault: {}", String::from_utf8_lossy(page.bytes())))),
                     _ => Some(Fault::from("restart publication produced an undeclared lane")),
                 };
-                if !app.acknowledge_typed_operation_result(page.token)? { return Err(Fault::from("restart publication rejected its exact result ACK")); }
-                if let Some(fault) = fault { return Err(fault); }
+                if !app.acknowledge_typed_operation_result(page.token)? { return Err(Fault::from("restart publication rejected its exact result ACK").into()); }
+                if let Some(fault) = fault { return Err(fault.into()); }
             }
             if let Some(scope) = app.take_typed_operation_ui_scope() {
-                if !matches!(scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its declared full UI scope")); }
+                if !matches!(scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart publication changed its declared full UI scope").into()); }
                 scopes += 1;
             }
             if let Some(completion) = app.take_typed_operation_completion().await? {
-                if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope")); }
-                if completion.operation == 0 { return Err(Fault::from("restart completion lost its exact operation id")); }
+                if !matches!(completion.ui_scope, semio_framework::kernel::UiDirtyScope::Full) { return Err(Fault::from("restart completion changed its declared full UI scope").into()); }
+                if completion.operation == 0 { return Err(Fault::from("restart completion lost its exact operation id").into()); }
                 completions += 1;
             }
             if !app.has_pending_typed_operations() { return Ok((artifact, ui, scopes, terminal, completions, app.snapshot()?.count)); }
             std::thread::yield_now();
         }
-        Err(Fault::from("restart publication did not retire within the existing fixture turn bound"))
+        Err(Fault::from("restart publication did not retire within the existing fixture turn bound").into())
     }.await;
-    let mut close_fault = None;
+    let mut close_fault:Option<semio_framework_job::OriginalTurnFailure> = None;
     for _ in 0..100_000 {
         if app.close_terminal_is_empty() { break; }
         let grant = match app.close_retirement_demands(body) {
             Ok(demand) => RetainedCloneGrant { maximum_items: items, ..plugin_demand_grant(demand) },
-            Err(error) => { close_fault = Some(Fault::from(error.into_message())); break; }
+            Err(error) => { close_fault = Some(error.into()); break; }
         };
-        match app.close_step(grant) {
+        match app.close_step(cx,grant) {
             Ok(step) if step.progress().is_some_and(|progress| !progress.fits(grant)) => {
-                close_fault = Some(Fault::from("restart close exceeded the exact grant"));
+                close_fault = Some(Fault::from("restart close exceeded the exact grant").into());
                 break;
             }
-            Err(fault) => { close_fault = Some(fault); break; }
+            Err(fault) => { close_fault = Some(fault.into()); break; }
             _ => {}
         }
         std::thread::yield_now();
     }
     let closed = app.close_terminal_is_empty();
-    eprintln!("restart retained publication outcome={outcome:?}, closed={closed}, close_fault={close_fault:?}");
+    eprintln!("[DEBUG] restart retained publication outcome={outcome:?}, closed={closed}, close_fault={close_fault:?}");
     assert!(closed, "original restart app must retire before the collected publication result is asserted");
     drop(app);
+    let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original restart full-body source close");
     assert!(close_fault.is_none(), "{close_fault:?}");
     let (artifact, ui, scopes, terminal, completions, count) = outcome.expect("actual registered restart publication");
     assert_eq!(artifact, law["artifactPublications"].as_u64().unwrap());

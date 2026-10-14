@@ -1,6 +1,7 @@
 //! 🎬️ Writes stream provenance, signed rational words and exact ordered sample bytes.
 use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream, SemioVideoSample, SemioVideoStreamKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(snapshot:&SemioVideoSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.video.dsl v1\n","stdio.semio.video.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn sample(value:&SemioVideoSample,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.fixed_u64(value.pts,encoding)?;writer.delimiter(b",",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{u8::from(value.key)}else if value.key{b'1'}else{b'0'})?;writer.delimiter(b",",encoding)?;writer.octets(&value.data,encoding)?;writer.delimiter(b"]",encoding)}

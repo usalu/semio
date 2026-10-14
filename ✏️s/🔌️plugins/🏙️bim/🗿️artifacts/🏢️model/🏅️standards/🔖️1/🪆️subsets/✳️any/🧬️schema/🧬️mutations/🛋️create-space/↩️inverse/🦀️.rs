@@ -2,7 +2,7 @@
 
 use super::super::delete_space::DeleteSpace;
 use super::CreateSpace;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateSpace, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.spaces.contains_key(&payload.id) {

@@ -1,5 +1,5 @@
 //! 🪪️ Native author fields projected directly into canonical JSON traversal.
-use crate::os_vcs::Author;
+use crate::Author;
 use semio_framework_pack_json::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonNode,ArtifactCanonicalJsonText};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 impl ArtifactCanonicalJsonTree for Author {

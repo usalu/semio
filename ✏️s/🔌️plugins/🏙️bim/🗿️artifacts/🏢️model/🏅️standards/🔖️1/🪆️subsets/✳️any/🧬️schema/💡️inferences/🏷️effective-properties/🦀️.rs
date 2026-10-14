@@ -12,7 +12,7 @@
 
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
-use crate::{ModelSnapshot, OpeningKind, PropertyTemplate, PropertyValue, TemplateTarget, Violation};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, PropertyTemplate, PropertyValue, TemplateTarget, Violation};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 

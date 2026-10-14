@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `RemoveSpaceConditions`: the deletion of the conditions record of a space. The space must exist; a space without conditions is a no-op.
 
 use super::RemoveSpaceConditions;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &RemoveSpaceConditions, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

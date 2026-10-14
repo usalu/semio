@@ -23,8 +23,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
         En1991Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer>>),
         En1992Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>>),
         En1992Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>>),
-        En1993Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>>),
-        En1993Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>>),
+        En1993Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1993_editor::En1993PlayApp>>),
+        En1993Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1993_viewer::En1993Viewer>>),
         En1994Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>>),
         En1994Viewer(VcsArtifactApp<ViewerApp<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>>),
         En1995Editor(VcsArtifactApp<EditorApp<semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp>>),
@@ -115,10 +115,10 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .editor_mutation_roster::<semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp>()
         .viewer::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>(semio_s_artifact_norm_en1992::viewer::en1992::create_en1992_viewer())
         .viewer_mutation_roster::<semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer>()
-        .editor::<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>(semio_s_artifact_norm_en1993::editor::en1993::create_en1993_app())
-        .editor_mutation_roster::<semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp>()
-        .viewer::<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>(semio_s_artifact_norm_en1993::viewer::en1993::create_en1993_viewer())
-        .viewer_mutation_roster::<semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer>()
+        .editor::<semio_s_artifact_norm_en1993_editor::En1993PlayApp>(semio_s_artifact_norm_en1993_editor::create_en1993_app())
+        .editor_mutation_roster::<semio_s_artifact_norm_en1993_editor::En1993PlayApp>()
+        .viewer::<semio_s_artifact_norm_en1993_viewer::En1993Viewer>(semio_s_artifact_norm_en1993_viewer::create_en1993_viewer())
+        .viewer_mutation_roster::<semio_s_artifact_norm_en1993_viewer::En1993Viewer>()
         .editor::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>(semio_s_artifact_norm_en1994::editor::en1994::create_en1994_app())
         .editor_mutation_roster::<semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp>()
         .viewer::<semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer>(semio_s_artifact_norm_en1994::viewer::en1994::create_en1994_viewer())
@@ -157,7 +157,7 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1990::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1991::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1992::artifact_kind().id })
-        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1993::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1993_model::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1994::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1995::artifact_kind().id })
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_norm_en1996::artifact_kind().id })

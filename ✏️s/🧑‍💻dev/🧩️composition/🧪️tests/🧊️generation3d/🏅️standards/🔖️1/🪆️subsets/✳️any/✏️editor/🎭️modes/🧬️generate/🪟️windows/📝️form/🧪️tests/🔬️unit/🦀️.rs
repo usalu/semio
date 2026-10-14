@@ -65,7 +65,7 @@ async fn editing_a_form_value_repatches_the_generate_preview_fixture() {
     let read = snapshot(&app);
     let stored = read.generation.generations[0].values.get(&question_id).and_then(semio_framework_value::DslValue::as_f64);
     assert_eq!(stored, Some(next), "updateGenerationValues must persist the typed number on the generation");
-    let patched = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::generation_host_snapshot_for(&read.host_snapshot, &read.generation, Some(generation_id.as_str()));
+    let patched = semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&read.host_snapshot, &read.generation, Some(generation_id.as_str()));
     let patched_value = patched
         .widgets
         .iter()

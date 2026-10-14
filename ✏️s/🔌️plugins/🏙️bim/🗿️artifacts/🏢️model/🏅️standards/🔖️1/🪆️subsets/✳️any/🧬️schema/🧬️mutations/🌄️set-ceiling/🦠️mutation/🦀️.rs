@@ -1,6 +1,6 @@
 //! 🌄️ `set-ceiling` payload. Sets exactly the provided fields of a ceiling: type, drop below the storey top, slope (set or cleared) and name; absent fields stay untouched.
 
-use crate::{Assigned, CeilingPatch, ModelDiff, ModelMutation, ModelSnapshot, Slope};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::CeilingPatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Slope}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -31,7 +31,7 @@ fn discovery_reads_manifests_the_graph_the_catalog_and_the_open_tickets_and_noth
     for expected in ["workspace:verify", "hub:serve-docs", "@fixture/quiz:materialize", "@fixture/artifact-wav:check", "@fixture/artifact-pdf:watch-tests", "playground:shell", "tool:workspace/inspector", "ticket:26/09/23/OPEN-PROBE/probe"] { assert!(ids.contains(&expected.to_string()), "{expected}"); }
     assert!(!ids.iter().any(|id| id.starts_with("script:") || id.contains("vanished") || id.contains("CLOSED-PROBE/stale")));
     let wav = registry.find("@fixture/artifact-wav:check").unwrap();
-    assert_eq!(wav.source, ".🧬semio/🦑️repo/⚡️cache/build/graph.json (project @fixture/artifact-wav)", "a graph-only target names the graph as its source");
+    assert_eq!(wav.source, format!("{} (project @fixture/artifact-wav)", graph_file()), "a graph-only target names the graph as its source");
     assert_eq!(registry.find("hub:dev").unwrap().source, "🌎️hub/📦️packages/🟦️typescript/📋️project.json");
     assert!(registry.find("@fixture/artifact-pdf:watch-tests").unwrap().long_running, "Nx `continuous` makes a target long-running");
     assert!(registry.find("hub:serve-docs").unwrap().long_running, "the graph's `continuous` reaches the registry");
@@ -143,7 +143,7 @@ fn the_job_publishes_the_known_commands_first_then_the_result_of_the_walk_and_fi
 #[test]
 fn a_partially_published_graph_is_a_problem_per_recorded_plugin_error() {
     let root = materialise("graph-errors");
-    let path = root.join(".🧬semio/🦑️repo/⚡️cache/build/graph.json");
+    let path = root.join(graph_file());
     let mut graph: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     assert!(discover_with_catalog(&root,&never(),Some(&root.join("catalog"))).check().is_empty(), "a graph without an errors array is healthy");
     graph["errors"] = serde_json::json!([]);
@@ -155,7 +155,7 @@ fn a_partially_published_graph_is_a_problem_per_recorded_plugin_error() {
     let wanted = [("errors[0]", "first build graph error"), ("errors[1]", "second build graph error"), ("errors[2]", "third build graph error")];
     assert_eq!(problems.len(), 3, "{problems:?}");
     for (problem, (at, what)) in problems.iter().zip(wanted) {
-        assert_eq!((problem.file.as_str(), problem.at.as_str()), (".🧬semio/🦑️repo/⚡️cache/build/graph.json", at));
+        assert_eq!((problem.file.as_str(), problem.at.as_str()), (graph_file(), at));
         assert_eq!(problem.message, what);
     }
     fs_remove(&root);

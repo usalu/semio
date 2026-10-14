@@ -16,7 +16,7 @@ pub fn snap_edge_handles(snapshot:&mut BoardSnapshot,control:&mut LayoutControl<
  let mut angles=HashMap::new();for edge in &snapshot.edges {control.advance(1)?;if !board_visible_or_true(&edge.visibility()){continue;}
  let (Some(source),Some(target))=(edge.source.as_deref(),edge.target.as_deref())else{continue;};let(Some(&(a,ha)),Some(&(b,hb)))=(locations.get(source),locations.get(target))else{continue;};
  let (Some((ca,sa)),Some((cb,sb)))=(shapes[a],shapes[b])else{continue;};if geometry::distance_between(ca,cb)<=1e-9{continue;}
- let angle=|center,toward,shape:Option<(f64,f64)>|match shape{Some((w,h))=>graph::drawing::routing::rectangle_handle_angle_toward(center,w,h,toward),None=>graph::drawing::routing::circle_handle_angle_toward(center,toward)};
+ let angle=|center,toward,shape:Option<(f64,f64)>|match shape{Some((w,h))=>semio_framework_graph_drawing::routing::rectangle_handle_angle_toward(center,w,h,toward),None=>semio_framework_graph_drawing::routing::circle_handle_angle_toward(center,toward)};
  angles.insert((a,ha),angle(ca,cb,sa));angles.insert((b,hb),angle(cb,ca,sb));}
  control.advance(angles.len() as u64)?;for ((ni,hi),angle) in angles{snapshot.nodes[ni].handles.as_mut().expect("admitted handle location")[hi].angle=Some(angle);}Ok(())
 }

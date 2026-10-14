@@ -18,7 +18,8 @@
 use super::*;
 use crate::SnapshotRead;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{example_snapshot, with_host};
+use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_model::with_host;
 use semio_framework_plugin::PluginApp;
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -98,12 +99,12 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
         let mut session = semio_framework_os_flow::FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
         crate::flow_operators::resolve_preview_geometry(&eval_json, &host.host_snapshot, lod_mode, &mut session);
         let payload = semio_s_artifact_procedural_generation3d::editor::generation3d::preview_payload(&eval_json, &host.host_snapshot, &config, Some(&session), &semio_s_artifact_procedural_generation3d::editor::generation3d::PreviewInteractionMarks::default());
-        let mut widget_errors = widget_errors_of(semio_s_artifact_procedural_generation3d::preview_eval::preview_status_json(&eval_json, &host.host_snapshot).as_deref());
+        let mut widget_errors = widget_errors_of(semio_s_artifact_procedural_3d_preview_eval::preview_status_json(&eval_json, &host.host_snapshot).as_deref());
         if payload_mesh_ids(&payload.meshes_json).is_empty() && widget_errors.is_empty() {
-            widget_errors.extend(tessellation_refusals(&eval_json, host, semio_s_artifact_procedural_generation3d::preview_eval::preview_tolerance(lod_mode)));
+            widget_errors.extend(tessellation_refusals(&eval_json, host, semio_s_artifact_procedural_3d_preview_eval::preview_tolerance(lod_mode)));
         }
         crate::flow_operators::retire_flow_eval_session(session);
-        PreviewReading { mesh_ids: payload_mesh_ids(&payload.meshes_json), bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&payload.meshes_json), widget_errors }
+        PreviewReading { mesh_ids: payload_mesh_ids(&payload.meshes_json), bounds: semio_s_artifact_procedural_3d_preview_eval::preview_payload_bounds(&payload.meshes_json), widget_errors }
     })
 }
 
@@ -113,8 +114,8 @@ fn oracle_reading(example_id: &str, slider_id: &str, value: f64, lod_mode: &str)
 fn tessellation_refusals(eval_json: &str, host: &semio_framework_os_flow::FlowHost, tolerance: f64) -> BTreeMap<String, String> {
     let Ok(eval) = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject) else { return BTreeMap::new() };
     let mut refusals = BTreeMap::new();
-    for widget_id in semio_s_artifact_procedural_generation3d::preview_eval::preview_widget_ids(&host.host_snapshot) {
-        for item in semio_s_artifact_procedural_generation3d::preview_eval::preview_channel_items_for_widget(&eval, &widget_id) {
+    for widget_id in semio_s_artifact_procedural_3d_preview_eval::preview_widget_ids(&host.host_snapshot) {
+        for item in semio_s_artifact_procedural_3d_preview_eval::preview_channel_items_for_widget(&eval, &widget_id) {
             if item.handle.is_empty() {
                 continue;
             }
@@ -122,7 +123,7 @@ fn tessellation_refusals(eval_json: &str, host: &semio_framework_os_flow::FlowHo
                 Err(error) => {
                     refusals.insert(widget_id.clone(), error.to_string());
                 }
-                Ok(mesh) if !semio_s_artifact_procedural_generation3d::preview_eval::mesh_has_preview_geometry(&mesh) => {
+                Ok(mesh) if !semio_s_artifact_procedural_3d_preview_eval::mesh_has_preview_geometry(&mesh) => {
                     refusals.insert(widget_id.clone(), format!("the kernel tessellated {} into no geometry at all", item.handle));
                 }
                 Ok(_) => {}
@@ -208,7 +209,7 @@ fn delivered_preview(preview_body_json: &str) -> DeliveredPreview {
         }
     }
     DeliveredPreview {
-        reading: PreviewReading { mesh_ids: payload_mesh_ids(&world.meshes_json), bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&world.meshes_json), widget_errors },
+        reading: PreviewReading { mesh_ids: payload_mesh_ids(&world.meshes_json), bounds: semio_s_artifact_procedural_3d_preview_eval::preview_payload_bounds(&world.meshes_json), widget_errors },
         phase: status.get("phase").and_then(serde_json::Value::as_str).unwrap_or("<absent>").to_string(),
         computing: status.get("computing").and_then(serde_json::Value::as_bool).unwrap_or(false),
     }

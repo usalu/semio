@@ -1,11 +1,12 @@
 //! ↩️ Inverse for the atomic reconstruction result — one `commit-reconstruction` carrying the BASE result
 //! lanes and the BASE binding of every asset id the payload bound. It never touches durable content:
 //! the `append-content` steps of the same edit own and undo the leaves.
-use crate::mutations::{commit_reconstruction, CommitReconstruction, ReconstructionAssetCommit, RemodelingMutation};
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::commit_reconstruction;
+use crate::standards::v1::subsets::any::schema::mutations::commit_reconstruction::{CommitReconstruction, ReconstructionAssetCommit};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<CommitReconstruction>>(payload: &CommitReconstruction, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let mut assets: Vec<ReconstructionAssetCommit> = Vec::new();
     for binding in &payload.assets {
         let restored = ReconstructionAssetCommit { id: binding.id.clone(), content_id: base.assets.get(&binding.id).map(|handle| handle.child_id.clone()) };

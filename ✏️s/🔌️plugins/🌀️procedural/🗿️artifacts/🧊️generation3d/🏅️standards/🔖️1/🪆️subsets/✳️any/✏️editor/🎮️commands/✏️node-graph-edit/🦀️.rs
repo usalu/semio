@@ -1,12 +1,13 @@
 //! 🕸️ Generation3d command — `node-graph-edit`: the one verb both node-graph hosts dispatch for graph edits.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value;
-use crate::standards::v1::subsets::any::schema::mutations::move_nodes::move_nodes;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{with_host, GraphEditor};
+use semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value;
+use semio_s_artifact_procedural_3d_mutations::move_nodes::move_nodes;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::GraphEditor;
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow, NodePortSide};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
@@ -103,7 +104,7 @@ pub(crate) fn generation3d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, re
         .iter()
         .filter(|record| record.moves())
         .filter_map(|record| {
-            let ids: Vec<String> = record.node_ids.iter().filter(|id| host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == id.as_str())).cloned().collect();
+            let ids: Vec<String> = record.node_ids.iter().filter(|id| host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id.as_str())).cloned().collect();
             (!ids.is_empty()).then(|| move_nodes(ids, record.dx, record.dy))
         })
         .collect()

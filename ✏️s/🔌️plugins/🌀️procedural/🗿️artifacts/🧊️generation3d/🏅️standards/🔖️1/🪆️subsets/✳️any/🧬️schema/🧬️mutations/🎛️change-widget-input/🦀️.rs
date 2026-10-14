@@ -2,10 +2,11 @@
 //! (or a text source's text) is set to: an inspector field committed on blur, or a parameter a mesh edit inserts its
 //! operator with. The intent IS the value, so editing it in history replays exactly that value on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_number,Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::generation3d_label_number;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 
 /// 🔢️ Native numeric carriers preserve portable numeric admission without Atom's boolean coercion.
@@ -268,7 +269,7 @@ impl ChangeWidgetInput {
         match (widget, &self.input) {
             (Widget::InputNote { id, .. }, WidgetInputValue::Text(text)) => Ok(Some(Widget::InputNote { id: id.clone(), text: text.clone() })),
             (Widget::InputNote { .. }, _) => Err(InputRefusal::OtherType("text")),
-            _ => Ok(Some(crate::standards::v1::subsets::any::schema::mutations::generation3d_with_params(widget, vec![(self.channel.as_str(), self.input.neural_value())]))),
+            _ => Ok(Some(crate::generation3d_with_params(widget, vec![(self.channel.as_str(), self.input.neural_value())]))),
         }
     }
 }
@@ -277,12 +278,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Chan
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "widget-input", kind: "change-widget-input", record: "ChangedWidgetInput" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::change_widget_input::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::change_widget_input::inverse::inverse(self, base)?
     
     })
 }

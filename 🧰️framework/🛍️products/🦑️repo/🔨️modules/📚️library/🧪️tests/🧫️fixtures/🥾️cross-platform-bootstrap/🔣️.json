@@ -40,7 +40,7 @@
     "rootManifest": "package.json"
   },
   "freshClone": {
-    "bootstrapSources": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json",
+    "bootstrapSources": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/🌱️sources/🔣️.json",
     "bootstrapSourcesSchema": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🛂️schema/🔣️.json",
     "entries": [
       "📜️script.ts",

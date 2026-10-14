@@ -22,7 +22,7 @@ fn the_curtain_wall_reports_its_length_height_and_side_area() {
     assert!((values[0] - 6.0).abs() < 1e-9 && (values[1] - 2.8).abs() < 1e-9 && (values[2] - 6.0 * 2.8).abs() < 1e-9);
 }
 
-use crate::{CurtainPanel, CurtainPanelOverride, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainPanelOverride, ModelSnapshot};
 
 /// 🪟️ The house whose curtain wall has a door in its first cell and an open second cell.
 pub(crate) fn framed() -> ModelSnapshot {

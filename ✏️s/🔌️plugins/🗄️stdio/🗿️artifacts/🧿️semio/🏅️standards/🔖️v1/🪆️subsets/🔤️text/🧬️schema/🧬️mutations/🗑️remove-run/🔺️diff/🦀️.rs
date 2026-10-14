@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RemoveRun`.
 
 use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
-use crate::schema::diff::SemioTextDiff;
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Removes the run at `index`: the `runs` triple names exactly that removal.

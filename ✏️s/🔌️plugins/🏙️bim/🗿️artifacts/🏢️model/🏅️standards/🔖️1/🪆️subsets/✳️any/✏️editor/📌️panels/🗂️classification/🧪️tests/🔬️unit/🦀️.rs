@@ -1,5 +1,5 @@
 use super::*;
-use crate::ClassificationItem;
+use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 

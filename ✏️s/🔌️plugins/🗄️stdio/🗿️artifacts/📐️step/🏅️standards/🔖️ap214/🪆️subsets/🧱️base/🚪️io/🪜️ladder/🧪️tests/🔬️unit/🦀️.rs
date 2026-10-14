@@ -1,6 +1,6 @@
 use semio_s_artifact_stdio_contract::part21::Part21Instance;
 use super::*;
-use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::subsets::base::schema::diff::StepDiff;
 use protocol::os_spr::command::DiffAlgebra;
 
 #[semio_framework_async_macros::async_test]

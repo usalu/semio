@@ -50,7 +50,6 @@ pub struct IsoArchive {
 //#endregion 🔖️Types
 
 //#region 🔖️Live
-#[cfg(feature = "oracles")]
 mod live {
     use super::{IsoArchive, IsoEntry, IsoMethod};
     use semio_repo_test_host::{digest, Json};
@@ -294,7 +293,6 @@ mod live {
 
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     live::write_archive(&live::apply(live::read_archive(input)?, spec)?)
 }
@@ -302,7 +300,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// ↩️ Applies `spec`'s kind to `original`, then undoes it with the mutation's own inverse computed
 /// against `mutated`. Restored payloads are sourced straight from the decoded `original`, never
 /// round-tripped through JSON.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let original_archive = live::read_archive(original)?;
     let mutated_archive = live::read_archive(mutated)?;
@@ -311,35 +308,16 @@ pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], spec: &Json) -> Res
 
 /// 🔁️ Decodes with the independent reader and re-encodes with the reference writer, no mutation
 /// applied — the identity round trip.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     live::write_archive(&live::read_archive(input)?)
 }
 
 /// 👁️ Projects ZIP bytes with the INDEPENDENT reader onto the `semantic-zip-iso21320-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_zip_iso21320(input: &[u8]) -> Result<Json, String> {
     Ok(live::projection(&live::read_archive(input)?))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_inverse(_original: &[u8], _mutated: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_zip_iso21320(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch

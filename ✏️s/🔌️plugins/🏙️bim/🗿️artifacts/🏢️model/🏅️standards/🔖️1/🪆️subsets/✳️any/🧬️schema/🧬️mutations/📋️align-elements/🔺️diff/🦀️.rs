@@ -7,7 +7,7 @@ use super::super::elements::{self, Change, Refusal};
 use super::super::modify::map::{align_gap, bounds};
 use super::super::modify::AlignAxis;
 use super::AlignElements;
-use crate::{ModelDiff, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 /// 🧲️ The placements the alignment writes: every element translated along the coordinate by the gap between its edge and the target.

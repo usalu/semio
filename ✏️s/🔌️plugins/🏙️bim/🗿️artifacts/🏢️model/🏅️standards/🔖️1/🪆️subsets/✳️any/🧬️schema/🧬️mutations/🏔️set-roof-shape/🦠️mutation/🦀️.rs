@@ -1,6 +1,6 @@
 //! 🏔️ `set-roof-shape` payload. Sets exactly the provided fields of a roof's form: shape, overhang and base offset; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, RoofShape};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, RoofShape}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

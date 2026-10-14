@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-fem-formulation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Shape functions, quadrature and plane constitutive matrices of the fem engine"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-fem-algebra = { workspace = true }

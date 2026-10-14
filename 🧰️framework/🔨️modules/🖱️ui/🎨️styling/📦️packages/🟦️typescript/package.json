@@ -49,9 +49,6 @@
     "directory": "framework/module/ui/styling/js"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "test-geometry": "bun repo run @semio-tech/ui-styling:test-geometry"
   }

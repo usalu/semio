@@ -1,6 +1,6 @@
 use super::kit::{house, items, plain, table_of, texts};
 use super::*;
-use crate::{ModelInference, Phase, PropertyValue, ScheduleCategory, ScheduleColumn, ScheduleField};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{Phase, PropertyValue, ScheduleCategory, ScheduleColumn, ScheduleField}};
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
@@ -85,9 +85,9 @@ async fn the_property_keys_of_a_schedule_are_collected_once_in_order_of_appearan
     let mut schedule = plain(ScheduleCategory::Wall, &[(ScheduleField::Name, false)]);
     let key = |set: &str, name: &str| ScheduleKey::property(set, name);
     schedule.columns.push(ScheduleColumn { key: key("B", "two"), heading: None, total: false });
-    schedule.sort.push(crate::ScheduleSort { key: key("A", "one"), descending: false });
-    schedule.filter.push(crate::ScheduleFilter { key: key("B", "two"), op: crate::ScheduleOp::NotEmpty, value: String::new() });
-    schedule.group.push(crate::ScheduleGroup { key: key("C", "three") });
+    schedule.sort.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleSort { key: key("A", "one"), descending: false });
+    schedule.filter.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleFilter { key: key("B", "two"), op: crate::standards::v1::subsets::any::schema::snapshot::ScheduleOp::NotEmpty, value: String::new() });
+    schedule.group.push(crate::standards::v1::subsets::any::schema::snapshot::ScheduleGroup { key: key("C", "three") });
     assert_eq!(rows::property_keys(&schedule), [("B".to_string(), "two".to_string()), ("A".to_string(), "one".to_string()), ("C".to_string(), "three".to_string())]);
 }
 

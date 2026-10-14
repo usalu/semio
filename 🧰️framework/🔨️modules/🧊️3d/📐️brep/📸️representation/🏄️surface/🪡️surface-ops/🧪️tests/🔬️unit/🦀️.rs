@@ -1,5 +1,5 @@
 use super::*;
-use crate::vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::matrix::Frame3;
 
 #[semio_framework_async_macros::async_test]
 async fn closest_point_on_plane_matches_orthogonal_projection() {

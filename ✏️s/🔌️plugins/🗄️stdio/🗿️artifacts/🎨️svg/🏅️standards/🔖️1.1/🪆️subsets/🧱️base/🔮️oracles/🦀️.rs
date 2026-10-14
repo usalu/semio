@@ -26,7 +26,6 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
     use quick_xml::events::{BytesCData, BytesDecl, BytesPI, BytesStart, BytesText, Event};
@@ -769,7 +768,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -777,7 +775,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -785,35 +782,16 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 }
 
 /// 🔁️ Decodes and re-encodes one real artifact through the reference implementation alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's own semantic projection. @see [`oracles::project_svg_1_1`].
-#[cfg(feature = "oracles")]
 pub fn project_svg_1_1(bytes: &[u8]) -> Result<Json, String> {
     oracles::project_svg_1_1(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_svg_1_1(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch

@@ -1,4 +1,4 @@
-import { observedFs } from "../../📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
+import { observedFs } from "../../📚️library/🏗️build/👁️observation/🟨️.mjs";
 import { join, resolve, relative, isAbsolute } from "node:path";
 import { createRequire } from "node:module";
 

@@ -2,7 +2,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{Assigned, CeilingPatch, Entry, ModelDiff, SpacePatch};
+use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CeilingPatch, SpacePatch}, Entry, ModelDiff};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -234,7 +234,7 @@ async fn without_authored_ceilings_the_finish_falls_back_to_the_soffit() {
 async fn a_ceiling_that_does_not_reach_the_room_leaves_the_soffit_ceiling() {
     let mut snapshot = load(ROOMS);
     let kitchen = snapshot.ceilings.get_mut("ce-kitchen").expect("the kitchen ceiling");
-    let corner = |x: f64, y: f64| Vertex { point: crate::Point2 { x, y }, bulge: 0.0 };
+    let corner = |x: f64, y: f64| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge: 0.0 };
     kitchen.boundary = vec![corner(4.2, 0.2), corner(5.0, 0.2), corner(5.0, 0.8), corner(4.2, 0.8)];
     kitchen.holes.clear();
     let inferred = infer(&snapshot);

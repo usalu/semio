@@ -27,7 +27,7 @@ use crate::{FlowMutation, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_artifact_flow_flow::{CameraJson, Widget};
 #[cfg(test)] use semio_framework_artifact_flow_flow::{SynapseSpec, WidgetLayout};
-use semio_framework_artifact_infinite_dag::DagDrawLod;
+use semio_framework_os_infinite_directed_presentation::DagDrawLod;
 use semio_framework_plugin::app::{ChildEmitPreparation, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::ActionArgDef;

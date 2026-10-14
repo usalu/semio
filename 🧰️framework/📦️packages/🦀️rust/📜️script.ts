@@ -1,9 +1,17 @@
 #!/usr/bin/env bun
+import {runRepositoryCargoCommandV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {runRepositoryCargoTestsV1 as runCargoTestsV1,runRepositoryCargoLintV1 as runCargoLintV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {withRepositoryCompilerStoreV1} from "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
+import type {ScriptInvocation} from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import {copyFileSync} from "node:fs";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { testLevelBudgetMs, resolveTestLevel } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { runCargoTestsV1, runCargoLintV1, readCargoTestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import {runBudgetedTestCommand} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
 import {runVitestV1,readVitestPolicyV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts";
 import {captureOwnedProcess} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -23,21 +31,18 @@ function cargoPolicy(root:string,manifest:string){
  return policy;
 }
 /** 🦀️ Runs a declared package under its supplied manifest policy and assertion budgets. */
-async function testCargo(root:string,manifest:string,packages:string[],args:string[]){
+async function testCargo(original:ScriptInvocation,root:string,manifest:string,packages:string[],args:string[]){
  const policy=cargoPolicy(root,manifest);
- await runCargoTestsV1({manifestPath:policy.manifestPath,packages,cwd:root,extraArgs:args,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy);
+ await runCargoTestsV1({manifestPath:policy.manifestPath,packages,cwd:root,extraArgs:args,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy,root,original);
 }
 /** 📥️ Captures one owned compiler operation with bounded evidence, progress and cancellation. */
-async function captureCargo(root:string,args:string[],environment:Readonly<Record<string,string|undefined>>=process.env,emit=true){
- const policy=readCargoTestPolicyV1(environment);mkdirSync(policy.artifactDirectory,{recursive:true});
- const output=mkdtempSync(join(policy.artifactDirectory,"general-cargo-")),stopProgress=startNativeProgress("framework:cargo",10_000,line=>process.stderr.write(`${line}\n`));let cancelled=false;
- const stop=()=>{cancelled=true;};process.once("SIGINT",stop);process.once("SIGTERM",stop);
- const boundary=args.indexOf("--"),invocation=boundary<0?[...args,"--manifest-path",policy.manifestPath]:[...args.slice(0,boundary),"--manifest-path",policy.manifestPath,...args.slice(boundary)];
- try{const result=await captureOwnedProcess("cargo",invocation,{cwd:root,env:{...environment,CARGO_TARGET_DIR:policy.targetDirectory},budgetMs:policy.buildBudgetMs,maxOutputBytes:536870912,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt"),cancelled:()=>cancelled});
- if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);
- if(result.reason!=="exit"||result.signal)throw Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);
- return result.status??1;
- }finally{stopProgress();process.off("SIGINT",stop);process.off("SIGTERM",stop);if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
+async function captureCargo(original:ScriptInvocation,workspace:string,root:string,args:string[],environment:Readonly<Record<string,string|undefined>>=process.env,emit=true){
+ const policy=readCargoTestPolicyV1(environment),control=scriptCompilerAdmissionControlV1(original,"framework:cargo",policy.buildBudgetMs);
+ return withRepositoryCompilerStoreV1(workspace,policy.mode,control,environment,async store=>{
+  const boundary=args.indexOf("--"),arguments_=boundary<0?[...args,"--manifest-path",policy.manifestPath]:[...args.slice(0,boundary),"--manifest-path",policy.manifestPath,...args.slice(boundary)],generated=environment.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen.ts"):undefined,env={...store.environment,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})};
+  const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root));await store.storage.recheck();
+  const output=mkdtempSync(join(store.captureDirectory,"general-cargo-"));try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw Error("Finite original compiler capture deadline required");const result=await captureOwnedProcess("cargo",arguments_,{invocation:original,cwd:root,env,budgetMs:Math.floor(remaining),maxOutputBytes:16777216,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt")});if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);if(result.reason!=="exit"||result.signal)throw Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);if(result.status===0&&generated)copyFileSync(generated,environment.SEMIO_TYPEGEN_OUT!);return result.status??1;}finally{if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
+ });
 }
 
 //#region 🧹️WireRetirement
@@ -50,12 +55,12 @@ class WireRetirementSourceScript extends BundleScript {
 class WireRetirementNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "action_bus::tests", "--", "--nocapture"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "action_bus::tests", "--", "--nocapture"]);
   }
 }
 /** ♻️ Runs the original typed argument owners under the owning protocol package policy. */
 class ArgumentRetirementNativeScript extends BundleScript {
- async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],rest.length?rest:["--lib","manifest::argument_retirement_tests::manifest_argument_retirement_original_typed_fields_preserve_denied_pointers_and_physical_receipts","--","--nocapture"]);}
+ async run(segments:string[]):Promise<void>{const {rest}=resolveTestLevel(segments);await testCargo(this.invocation,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],rest.length?rest:["--lib","manifest::argument_retirement_tests::manifest_argument_retirement_original_typed_fields_preserve_denied_pointers_and_physical_receipts","--","--nocapture"]);}
 }
 //#endregion 🧹️WireRetirement
 
@@ -78,7 +83,7 @@ class ArtifactKindSourceScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest);
     await runVitestV1(readVitestPolicyV1(process.env,this.root),rest,"../../🧪️tests/🎚️config/🟦️.ts",process.env);
   }
 }
@@ -87,7 +92,7 @@ class TestScript extends BundleScript {
 class ToolRunActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::tool_run_actions_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::tool_run_actions_tests"]);
   }
 }
 
@@ -95,7 +100,7 @@ class ToolRunActionsTestScript extends BundleScript {
 class HistoryEditActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::history_edit_actions_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::history_edit_actions_tests"]);
   }
 }
 
@@ -103,7 +108,7 @@ class HistoryEditActionsTestScript extends BundleScript {
 class HistoryProgressTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-history-progress accepts no arguments");
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
   }
 }
 
@@ -113,7 +118,7 @@ class MutationInputsTestScript extends BundleScript {
     const testCase = join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs");
     await runBudgetedTestCommand(process.execPath, ["test", join(testCase, "🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
     await runBudgetedTestCommand(process.env.SEMIO_PYTHON!, [join(testCase, "🐍️.py")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::mutation_inputs_tests"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::mutation_inputs_tests"]);
   }
 }
 
@@ -127,14 +132,14 @@ class HostEffectInvocationTestScript extends BundleScript {
 /** 🔽️ Runs the shared neutral closed-choice fixture through the native implementation. */
 class ActionChoicesTestScript extends BundleScript {
   async run(): Promise<void> {
-    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "unresolved_action_choices_follow_neutral_catalog_contract", "--", "--nocapture"]);
+    await testCargo(this.invocation,this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "unresolved_action_choices_follow_neutral_catalog_contract", "--", "--nocapture"]);
   }
 }
 
 class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    for(const [module,name] of [["🔏️hash","hash"],["🔲️pixels","pixels"],["📏️intrinsic-size","intrinsic-size"],["🏗️mesh-engine","mesh-engine"]])await testCargo(this.repoRoot,`🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`,[`semio-framework-${name}`],rest.length?rest:["--lib"]);
+    for(const [module,name] of [["🔏️hash","hash"],["🔲️pixels","pixels"],["📏️intrinsic-size","intrinsic-size"],["🏗️mesh-engine","mesh-engine"]])await testCargo(this.invocation,this.repoRoot,`🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`,[`semio-framework-${name}`],rest.length?rest:["--lib"]);
   }
 }
 
@@ -142,7 +147,7 @@ class CoreModulesTestScript extends BundleScript {
 class DeflateEncodingTestScript extends BundleScript{
   async run(segments:string[]):Promise<void>{
     const {rest}=resolveTestLevel(segments);
-    await testCargo(this.repoRoot,"🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",["semio-framework-deflate"],rest.length?rest:["--lib","deflate_controlled_"]);
+    await testCargo(this.invocation,this.repoRoot,"🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",["semio-framework-deflate"],rest.length?rest:["--lib","deflate_controlled_"]);
   }
 }
 
@@ -158,8 +163,8 @@ class SnapshotSqliteTestScript extends BundleScript {
     const nativeOnly = segments[0] === "native";
     const tests = join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests");
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🔬️unit/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",["semio-framework-io-sqlite-snapshot"],["--lib","--no-fail-fast"]);
-    await runBudgetedTestCommand("cargo", ["build", "--manifest-path",cargoPolicy(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+    await testCargo(this.invocation,this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",["semio-framework-io-sqlite-snapshot"],["--lib","--no-fail-fast"]);
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["build", "--manifest-path",cargoPolicy(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"],this.repoRoot,process.env,buildBudgetMs());
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🤝️interoperability/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }
@@ -177,7 +182,7 @@ class SnapshotReceivingSourceScript extends BundleScript{
 
 class PackageDescriptorValueCodecTestScript extends BundleScript {
   async run(): Promise<void> {
-    const status = await captureCargo(this.repoRoot,["test","-p","semio-framework","--lib","manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields","--","--exact"]);
+    const status = await captureCargo(this.invocation,this.repoRoot,this.repoRoot,["test","-p","semio-framework","--lib","manifest::package_descriptor_value_codec_tests::package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields","--","--exact"]);
     if (status !== 0) process.exit(status);
   }
 }
@@ -186,7 +191,7 @@ class PackageDescriptorValueCodecTestScript extends BundleScript {
 class LintScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const policy=cargoPolicy(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml");
-    await runCargoLintV1({manifestPath:policy.manifestPath,packages:["semio-framework"],cwd:this.root,extraArgs:segments,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy);
+    await runCargoLintV1({manifestPath:policy.manifestPath,packages:["semio-framework"],cwd:this.root,extraArgs:segments,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy,this.repoRoot,this.invocation);
   }
 }
 
@@ -198,9 +203,9 @@ function generatedManifestPath(root: string): string {
 }
 
 /** 🧬️ Runs the owned framework schema export test, optionally writing its stable projection. */
-async function runTypegenExportTest(root: string, outPath?: string): Promise<void> {
+async function runTypegenExportTest(original:ScriptInvocation,workspace:string,root: string, outPath?: string): Promise<void> {
   const env = outPath === undefined ? process.env : { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  const status = await captureCargo(root,["test","--features","typegen",TYPEGEN_TEST_FILTER],env);
+  const status = await captureCargo(original,workspace,root,["test","--features","typegen",TYPEGEN_TEST_FILTER],env);
   if (status !== 0) {
     console.error("framework typegen: owned schema export failed — see output above.");
     process.exit(status);
@@ -211,7 +216,7 @@ class GenerateScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     const outPath = generatedManifestPath(this.root);
     seedGeneratedFile(outPath);
-    await runTypegenExportTest(this.root, outPath);
+    await runTypegenExportTest(this.invocation,this.repoRoot,this.root, outPath);
     console.log(`framework typescript mirror refreshed -> ${outPath}`);
   }
 }
@@ -225,7 +230,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      const policy=readCargoTestPolicyV1(process.env),status=await captureCargo(this.root,["test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...policy,targetDirectory:join(temp,"target")}),SEMIO_TYPEGEN_OUT:outPath},false);
+      const policy=readCargoTestPolicyV1(process.env),status=await captureCargo(this.invocation,this.repoRoot,this.root,["test","--locked","--features","typegen",TYPEGEN_TEST_FILTER],{...process.env,SEMIO_CARGO_TEST_POLICY:JSON.stringify({...policy,targetDirectory:join(temp,"target")}),SEMIO_TYPEGEN_OUT:outPath},false);
       if(status!==0)throw Error(`framework preview export failed: ${status}`);
       content = readFileSync(outPath);
     } finally {
@@ -239,7 +244,7 @@ class PreviewGeneratedScript extends BundleScript {
 /** 🔎️ Validates metadata and byte-compares the owned projection with the committed mirror. */
 class CheckScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
-    await runTypegenExportTest(this.root);
+    await runTypegenExportTest(this.invocation,this.repoRoot,this.root);
     console.log("framework typescript mirror is fresh.");
   }
 }
@@ -283,8 +288,8 @@ class ViewModelOriginalScript extends BundleScript {
    await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
    await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"../node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",source],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});return;
   }
-  await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","action_bus::tests","--","--nocapture"]);
-    await testCargo(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","manifest::resolved_host_context_tests::view_model_original_retirement","--","--nocapture"]);
+  await testCargo(this.invocation,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","action_bus::tests","--","--nocapture"]);
+    await testCargo(this.invocation,this.repoRoot,"📦️packages/🦀️rust/Cargo.toml",["semio-framework"],["--lib","manifest::resolved_host_context_tests::view_model_original_retirement","--","--nocapture"]);
  }
 }
 const workspace=process.env.SEMIO_COMMAND_WORKSPACE;

@@ -16,10 +16,12 @@ use crate::editor::generation3d::modes::edit::windows::{flow as flow_window, pre
 use crate::editor::generation3d::modes::generate::windows::{form, generations, preview as generate_preview};
 use crate::editor::generation3d::modes::{edit, generate};
 use crate::editor::generation3d::panels::{catalogue as catalogue_panel, artifact as artifact_panel, inspection as inspection_panel};
-use crate::editor::generation3d::terminology::generation3d_labels;
+use semio_s_artifact_procedural_3d_terminology::generation3d_labels;
 use crate::editor::generation3d::transient::{Generation3dTransient, Generation3dTransientMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::artifact_kind;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_framework_os_flow::{FlowEvalSession, FlowHost};
 // 🚧️ SDK note (ticket 26/08/16 contract §2.1/§2.4): `ArtifactEditor`/`Editor`/`Dialect` are curated at
 // `semio_framework_plugin`'s crate root as of W0-F/W2-FIX — imported bare here, no `app::` prefix
@@ -179,21 +181,21 @@ semio_framework_plugin::app_commands! {
 pub struct Generation3dInstanceOperationOwner {
     eval_session: Option<FlowEvalSession>,
     /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
-    run_link: crate::preview_eval::PreviewEvalRunLink,
+    run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink,
     /// 🛠️ Every window's open gumball gesture — ephemeral local tool state, never history; the previews fold it in.
     gumball: transform_commands::GumballGestures,
     /// 📐️ The instance's geometry engine: the typed inference cache, the retained base and the stepped run of the `s.procedural.generation3d.inference` geometry service.
-    geometry: crate::host::geometry_service::GeometryHost,
+    geometry: semio_s_artifact_procedural_3d_geometry_service::GeometryHost,
     closing: bool,
 }
 
 impl Generation3dInstanceOperationOwner {
     pub fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), gumball: transform_commands::GumballGestures::default(), geometry: Default::default(), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), run_link: semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink::default(), gumball: transform_commands::GumballGestures::default(), geometry: Default::default(), closing: false }
     }
 
     /// 📐️ The geometry host a run of the contextual `s.procedural.generation3d.inference` geometry service executes against.
-    pub fn geometry(&self) -> &crate::host::geometry_service::GeometryHost {
+    pub fn geometry(&self) -> &semio_s_artifact_procedural_3d_geometry_service::GeometryHost {
         &self.geometry
     }
 
@@ -224,7 +226,7 @@ impl Generation3dInstanceOperationOwner {
     fn owe_attached_previews_for_mutations(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        crate::preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_for_mutations(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 
     /// 🚦️ Owes the attached previews an evaluation and puts the run start that debt needs on the
@@ -233,12 +235,12 @@ impl Generation3dInstanceOperationOwner {
     fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dConfigMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
         let Self { eval_session, run_link, closing, .. } = self;
         let session = eval_session.as_mut().filter(|_| !*closing).ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-        crate::preview_eval::owe_attached_previews_carrying(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+        semio_s_artifact_procedural_3d_preview_eval::owe_attached_previews_carrying(session, run_link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
     }
 }
 
-impl crate::preview_eval::PreviewEvalRunOwner for Generation3dInstanceOperationOwner {
-    fn preview_eval_parts(&mut self) -> Option<(&mut FlowEvalSession, &mut crate::preview_eval::PreviewEvalRunLink)> {
+impl semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner for Generation3dInstanceOperationOwner {
+    fn preview_eval_parts(&mut self) -> Option<(&mut FlowEvalSession, &mut semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunLink)> {
         let Self { eval_session, run_link, closing, .. } = self;
         eval_session.as_mut().filter(|_| !*closing).map(|session| (session, run_link))
     }
@@ -352,7 +354,7 @@ fn parse_preview_camera_json(args: &semio_framework_value::DslValue) -> crate::e
 /// `dag_host_snapshot_to_workflow` projection the node-graph window paints — so an interaction target and a
 /// graph pick can never drift apart.
 pub fn generation3d_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = crate::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| crate::standards::v1::subsets::any::schema::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 
@@ -937,7 +939,7 @@ fn generation3d_provisional_snapshot(committed: &Generation3dSnapshot, provision
 /// preview shows only what applies — and its refusal is never lost: the commit that lands the same leaf on the committed
 /// document reports it as the history row's outcome.
 fn generation3d_fold_provisional(overlay: &mut Generation3dSnapshot, leaf: Generation3dMutation) {
-    let _refused_paints_nothing = crate::central_apply::apply_generation3d_mutation(overlay, &leaf);
+    let _refused_paints_nothing = semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(overlay, &leaf);
     leaf.retire_cold();
 }
 
@@ -1410,8 +1412,8 @@ enum Generation3dDocumentRetirement {
     Projected(semio_framework_dsl_record::FieldValue),
     Writer(semio_framework_dsl_record::RetainedRecordWriter),
     Text(store::semio_format::RetainedTextEnvelope),
-    Envelope(crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope),
-    Export(crate::standards::v1::subsets::any::io::Generation3dDocumentExport),
+    Envelope(semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope),
+    Export(semio_s_artifact_procedural_3d_io::Generation3dDocumentExport),
 }
 
 impl semio_framework_value::retirement::RetireOwned for Generation3dDocumentRetirement {
@@ -1432,8 +1434,8 @@ struct Generation3dDocumentIoWork {
     projected: Option<semio_framework_dsl_record::FieldValue>,
     writer: Option<semio_framework_dsl_record::RetainedRecordWriter>,
     text: Option<store::semio_format::RetainedTextEnvelope>,
-    envelope: Option<crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope>,
-    candidate: Option<crate::standards::v1::subsets::any::io::Generation3dDocumentExport>,
+    envelope: Option<semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope>,
+    candidate: Option<semio_s_artifact_procedural_3d_io::Generation3dDocumentExport>,
     retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Generation3dDocumentRetirement>>,
     encoding: Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,
     phase: u8,
@@ -1498,7 +1500,7 @@ impl Generation3dDocumentIoWork {
                     0=>{self.source_identity=Some(identity);self.projection=Some(semio_framework_dsl_record::native_encoding::RetainedFieldProjection::new(input.snapshot));self.phase=1;},
                     1=>if let Some(value)=self.projection.as_mut().unwrap().step(input.snapshot,1,&mut control)?{
                         self.projected=Some(value);
-                        let spec=crate::standards::v1::subsets::any::io::text::snapshot::generation3d_document_spec_controlled(&mut control)?;
+                        let spec=semio_s_artifact_procedural_3d_io_text::snapshot::generation3d_document_spec_controlled(&mut control)?;
                         if !matches!(self.projected,Some(semio_framework_dsl_record::FieldValue::Record(_))){return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"generation3d projection root is not a record"))}
                         let Some(semio_framework_dsl_record::FieldValue::Record(record))=self.projected.take()else{unreachable!()};
                         self.writer=Some(semio_framework_dsl_record::RetainedRecordWriter::new(record,spec,semio_framework_dsl_record::JoinMode::Document,GENERATION3D_DOCUMENT_DOWNLOAD_BYTES));
@@ -1509,8 +1511,8 @@ impl Generation3dDocumentIoWork {
                         let retired=self.writer.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Writer(retired))?;self.phase=3;
                     },
                     3=>if let Some(text)=self.text.as_mut().unwrap().step(1,8,&mut control)?{
-                        let row=crate::standards::v1::subsets::any::io::document_io::EXPORT_FORMATS.iter().find(|row|row.id=="txt").unwrap();
-                        self.envelope=Some(crate::standards::v1::subsets::any::io::document_io::Generation3dDocumentEnvelope::new(row,text.into_bytes()));
+                        let row=semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().find(|row|row.id=="txt").unwrap();
+                        self.envelope=Some(semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope::new(row,text.into_bytes()));
                         let retired=self.text.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Text(retired))?;self.phase=4;
                     },
                     4=>if let Some(export)=self.envelope.as_mut().unwrap().step(1,&mut control).map_err(|error|semio_framework_value::ValueError::new(error.kind,error.message))?{
@@ -2119,7 +2121,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// projection is honestly empty; without it every replacement faulted with `editor did not declare
     /// a loaded-parent child projection`.
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<store::ChildRestoreProjection<'_>, Fault> {
-        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_CHILD_PROJECTION), error.to_string()))
+        store::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_CHILD_PROJECTION), error.to_string()))
     }
 
     /// 🛍️ Publishes the whole registered flow operator catalogue once per app instance on the reserved
@@ -2146,7 +2148,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(crate::host::generation3d_envelope_decode_owner_bundle())
+        Some(semio_s_artifact_procedural_3d_host_envelope::generation3d_envelope_decode_owner_bundle())
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation3dInstanceOperationOwner`].
@@ -2168,13 +2170,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::generation3d_document_store_initialization_job(envelope, operation, generation, actor))
+        Ok(semio_s_artifact_procedural_3d_host_initialization::generation3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        crate::host::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
+        semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
             .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))?;
-        crate::host::generation3d_release_app_publication_authority(operation);
+        semio_s_artifact_procedural_3d_host::generation3d_release_app_publication_authority(operation);
         Ok(())
     }
 
@@ -2204,7 +2206,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// preview evaluation's and the document-level ones.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
-            transform_commands::gumball_fault_notices().iter().chain(add_widget::source_fault_notices()).chain(crate::preview_eval::preview_eval_fault_notices()).chain(crate::generation3d_document_fault_notices()).cloned().collect()
+            transform_commands::gumball_fault_notices().iter().chain(add_widget::source_fault_notices()).chain(semio_s_artifact_procedural_3d_preview_eval::preview_eval_fault_notices()).chain(semio_s_artifact_procedural_3d_model::generation3d_document_fault_notices()).cloned().collect()
         });
         NOTICES.as_slice()
     }
@@ -2226,7 +2228,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         generation3d_preview_kind(window_kind_id).map(|kind| (window_id, kind))
     }
 
-    const DIALECT: Dialect = crate::GENERATION3D_DIALECT;
+    const DIALECT: Dialect = semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -2324,7 +2326,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn initial_snapshot() -> Generation3dSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+        semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -2354,7 +2356,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         let mesh = owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             owner.with_session(|session| export_mesh_from_session(doc.snapshot, &Generation3dConfig::default(), session))
         }).map_err(|error| MediaError::Payload(port.into(), error.message))?.map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-        crate::standards::v1::subsets::any::io::mesh_bridge::semio_mesh_from_mesh_data(&mesh)
+        semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&mesh)
             .map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
         Ok(semio_framework_plugin::Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
@@ -2381,7 +2383,7 @@ impl ArtifactEditor for Generation3dPlayApp {
                             .widgets
                             .iter()
                             .any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value: current, .. } if id == target_id && *current != number))
-                            .then(|| crate::standards::v1::subsets::any::schema::mutations::change_slider_value::change_slider_value(target_id.to_string(), number))
+                            .then(|| semio_s_artifact_procedural_3d_mutations::change_slider_value::change_slider_value(target_id.to_string(), number))
                     })
                     .collect();
                 Ok(Emit::mutations(operations))
@@ -2703,7 +2705,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         let mut ordered = Vec::new();
         let ports_by_node = generation3d_port_ids_by_node(host_snapshot);
         for widget in &host_snapshot.widgets {
-            let id = crate::widget_id(widget).to_string();
+            let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
             for port in ports_by_node.get(&id).into_iter().flatten() {
                 ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
@@ -2739,12 +2741,12 @@ impl ArtifactEditor for Generation3dPlayApp {
     fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
-        let applied_edits = crate::preview_eval::applied_document_edits_digest(doc.history) ^ doc.provisional_generation().wrapping_mul(0x9e37_79b9_7f4a_7c15);
+        let applied_edits = semio_s_artifact_procedural_3d_preview_eval::applied_document_edits_digest(doc.history) ^ doc.provisional_generation().wrapping_mul(0x9e37_79b9_7f4a_7c15);
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-                use crate::preview_eval::PreviewEvalRunOwner as _;
+                use semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner as _;
                 let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-eval-session-closing"))?;
-                Ok(crate::preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
+                Ok(semio_s_artifact_procedural_3d_preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
             })
             .unwrap_or_default()
     }
@@ -2752,11 +2754,11 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// ⏯️ The `previewEval` run job over the run's base document: the preview widgets it observes are
     /// the document's own, and its hops read the retained session this instance's commands fold into.
     fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
-        if request.tool_id != crate::preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
+        if request.tool_id != semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
             return Ok(None);
         }
-        let preview_widget_ids = crate::preview_eval::preview_widget_ids(&request.snapshot.host_snapshot);
-        Ok(Some(Box::new(crate::preview_eval::PreviewEvalRunJob::<Generation3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
+        let preview_widget_ids = semio_s_artifact_procedural_3d_preview_eval::preview_widget_ids(&request.snapshot.host_snapshot);
+        Ok(Some(Box::new(semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunJob::<Generation3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
 
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
@@ -2883,7 +2885,7 @@ impl Generation3dPlayApp {
 
 //#region 🔖️Manifest
 pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
-    Editor::builder(crate::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
+    Editor::builder(semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT).document(["semio", "procedural", "3d"])
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) }))
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung aufnehmen"), "runtime", ActionKind::View) }))
             .command(migrated_command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowTessellateResolve", LocalizedLabel::native("Resolve Preview Tessellation", "Vorschau-Tessellierung aufnehmen"), "runtime", ActionKind::View) }))
@@ -2914,7 +2916,7 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // injects its reserved actions. Both modes reference it (`🎭️modes/✏️edit`, `🎭️modes/🧬️generate`)
             // because both mount a preview window that starts it — a declared tool no mode references is
             // refused by `build_definition` (`app-definition.invalid: … not referenced by any mode`).
-            .tool(crate::preview_eval::preview_eval_tool_definition())
+            .tool(semio_s_artifact_procedural_3d_preview_eval::preview_eval_tool_definition())
             .default_layout(edit::layout())
             .named_layout(generate::layout())
             .panel_tab_def(artifact_panel::definition())
@@ -3095,20 +3097,20 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             // equal to it by `export_document_action_offers_every_declared_format`, so a format this
             // artifact stops claiming cannot linger in the picker.
             .action_args("exportDocument", vec![
-                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), crate::standards::v1::subsets::any::io::document_io::export_format_options()).required().default_value(&"stl"),
+                ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl"),
                 ActionArgDef::text("widgetId", LocalizedLabel::native("Export output", "Exportausgabe")),
             ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH, LocalizedLabel::native("Mesh Workbench", "Netzwerkstatt")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
-                    ActionArgOption::new(crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH, LocalizedLabel::native("Mesh Workbench", "Netzwerkstatt")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
+                    ActionArgOption::new(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
                 ]).required(),
             ])
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", LocalizedLabel::native("Move", "Verschieben"), "move") })
@@ -3317,15 +3319,15 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
 /// `the_example_picker_offers_the_flow_examples_and_never_the_command_session`.
 pub fn examples() -> Vec<ExampleSource> {
     vec![
-        crate::examples::art_generation3d_hexagonal_mushroom_column::source(),
-        crate::examples::art_generation3d_mesh_workbench::source(),
-        crate::examples::art_generation3d_rectangle_extrude_volume::source(),
-        crate::examples::art_generation3d_sphere_cut_with_torus::source(),
-        crate::examples::art_generation3d_box_fillet_preview::source(),
-        crate::examples::art_generation3d_sphere_box_fuse::source(),
-        crate::examples::art_generation3d_face_sweep_extrude::source(),
-        crate::examples::art_generation3d_rectangle_wire_preview::source(),
-        crate::examples::art_generation3d_box_shell_preview::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_hexagonal_mushroom_column::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_mesh_workbench::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_rectangle_extrude_volume::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_sphere_cut_with_torus::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_box_fillet_preview::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_sphere_box_fuse::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_face_sweep_extrude::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_rectangle_wire_preview::source(),
+        semio_s_artifact_procedural_3d_examples::art_generation3d_box_shell_preview::source(),
     ]
 }
 //#endregion 🔖️Manifest
@@ -3378,10 +3380,7 @@ pub async fn generation3d_io() -> semio_framework_plugin::AppIo {
 /// are ONE implementation, not an editor original plus a read-only twin. Re-exported here so this
 /// surface's own call sites (and `📌️panels`, `🎭️modes`, the io bridge) keep naming them unqualified
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub use crate::preview_eval::{
-    apply_show_mode_mesh, decode_preview_mesh_pack, geometry_extension_address, is_brep_geometry_handle, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, pending_preview_tessellate_handles, point_marker_mesh, preview_channel_items_for_widget,
-    preview_mesh_role, preview_tolerance, vector_marker_mesh, PreviewChannelItem, PreviewInlineGeometry, GENERATION_3D_GEOMETRY_EXTENSION_ID, PREVIEW_MESH_ROLES, PREVIEW_TESSELLATE_STEP_BUDGET,
-};
+
 
 pub fn preview_camera_json(cfg: &Generation3dConfig) -> String {
     semio_framework_ui::wgpu::world3d_camera_json(cfg.preview_camera.position, cfg.preview_camera.target, cfg.preview_camera.fov)
@@ -3557,7 +3556,7 @@ pub fn preview_selection_json(cfg: &Generation3dConfig, active_utility: &str, pa
 /// 📈️ The status projection ALL THREE World3d preview windows publish (edit, generate, view) lives
 /// in the surface-neutral [`crate::preview_eval`] — one schema, one place. Re-exported here so this
 /// surface's own windows keep naming it unqualified (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub use crate::preview_eval::{preview_progress_status_json, preview_progress_status_json_for, preview_scene_status_json, preview_status_json, preview_window_status_json, PreviewStatusDebug};
+
 
 /// 👁️ One preview render's world-3d payload: the handle-deduplicated mesh table, the per-channel
 /// instance table, and the instance ids the live `graph` marks resolved to — so the scene's
@@ -3620,8 +3619,8 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
     let component_group = selection::component_group(&marks.components.selected).ok().filter(|(target, _)| target.index == 0 && target.granularity == marks.components.granularity);
     let mut component_pivot = None;
     for widget in &host_snapshot.widgets {
-        let id = crate::widget_id(widget).to_string();
-        let preview = crate::widget_previews(widget);
+        let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
+        let preview = semio_s_artifact_procedural_3d_model::widget_previews(widget);
         if !preview {
             continue;
         }
@@ -3696,7 +3695,7 @@ pub fn preview_payload(eval_json: &str, host_snapshot: &semio_framework_artifact
 //#region 🔖️MeshBridge
 /// 👁️ Prepares geometry from the retained evaluation and delivered mesh packs.
 pub fn export_mesh_from_session(snapshot: &Generation3dSnapshot, cfg: &Generation3dConfig, session: &FlowEvalSession) -> Result<semio_framework_plugin::MeshData, semio_framework_diagnostic::TextError> {
-    crate::standards::v1::subsets::any::io::mesh_bridge::merge_meshes(&export_meshes_from_session(snapshot, cfg, session, None)?)
+    semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes(&export_meshes_from_session(snapshot, cfg, session, None)?)
 }
 
 /// 🎨️ Retains each prepared surface and its authored channel set for format diagnostics and export.
@@ -3706,9 +3705,9 @@ pub fn export_meshes_from_session(snapshot: &Generation3dSnapshot, _cfg: &Genera
 
 /// 🪪️ Reads exact retained channel packs without display filtering or another kernel evaluation.
 pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession, widget_id: Option<&str>) -> Result<Vec<semio_framework_plugin::MeshData>, semio_framework_diagnostic::TextError> {
-    use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+    use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
     if session.preview_chain_status().working || session.preview_eval_status().in_flight > 0 || session.preview_tessellate_status().in_flight > 0 { return Err(io_error("generation3d export is waiting for the current geometry evaluation")); }
-    let sources = crate::standards::v1::subsets::any::io::mesh_bridge::export_source_channels(snapshot, widget_id)?;
+    let sources = semio_s_artifact_procedural_3d_mesh_bridge::export_source_channels(snapshot, widget_id)?;
     let eval = semio_framework_pack_json::parse(session.eval_json(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| io_error(error.to_string()))?;
     if let Some(error) = eval.get("error").and_then(semio_framework_pack_json::Value::as_str) { return Err(io_error(error)); }
     let mut meshes = Vec::new();
@@ -3721,7 +3720,7 @@ pub fn export_meshes_from_evaluation(snapshot: &semio_framework_artifact_flow_fl
                 Some(PreviewInlineGeometry::Point { x, y, z }) => Some(point_marker_mesh(x, y, z)),
                 Some(PreviewInlineGeometry::Vector { .. }) => continue,
                 Some(PreviewInlineGeometry::Mesh { preview, .. }) => decode_preview_mesh_pack(&preview),
-                None => crate::preview_eval::session_preview_mesh(&item.handle, session),
+                None => semio_s_artifact_procedural_3d_preview_eval::session_preview_mesh(&item.handle, session),
             }.ok_or_else(|| io_error(format!("generation3d export geometry '{source}@{}' is unavailable", item.channel)))?;
             meshes.push(mesh);
         }

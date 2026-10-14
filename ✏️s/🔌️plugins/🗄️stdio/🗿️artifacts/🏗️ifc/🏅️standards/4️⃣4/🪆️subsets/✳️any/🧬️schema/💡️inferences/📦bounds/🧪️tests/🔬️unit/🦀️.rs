@@ -1,6 +1,6 @@
 use super::*;
-use crate::schema::snapshot::IfcEntity;
-use crate::STDIO_IFC_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcEntity;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn point_entity(id: u64, x: f64, y: f64, z: f64) -> IfcEntity {

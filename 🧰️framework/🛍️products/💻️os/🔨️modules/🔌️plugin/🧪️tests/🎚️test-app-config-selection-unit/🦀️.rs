@@ -5,7 +5,8 @@ fn nullable_selection_serde_text_and_binary_round_trip() {
         let mutation = ChangeTestConfigSelection { selected: value };
         assert_eq!(serde_json::from_str::<ChangeTestConfigSelection>(&serde_json::to_string(&mutation).unwrap()).unwrap(), mutation);
         assert_eq!(ChangeTestConfigSelection::parse_op(&mutation.print_op()).unwrap(), mutation);
-        assert_eq!(ChangeTestConfigSelection::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+        let operation = TestConfigMutation::ChangeTestConfigSelection(mutation);
+        assert_eq!(<TestConfigMutation as protocol::OpBinary>::decode_op(&<TestConfigMutation as protocol::OpBinary>::encode_op(&operation).unwrap()).unwrap(), operation);
     }
     for raw in ["{}", "{\"selected\":1}", "{\"selected\":null,\"other\":true}"] {
         assert!(serde_json::from_str::<ChangeTestConfigSelection>(raw).is_err());
@@ -45,4 +46,47 @@ fn close_config_original<T:semio_framework_value::retirement::RetireOwned>(origi
         let(step,heap)=observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);assert!(step.progress().copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));
     }
     assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Actual config nullable owner={scope} body={body} original={held} births={births} released={released} terminalDrop=0");
+}
+
+#[test]
+fn test_config_original_record_receiving_preserves_nullable_selection() {
+    use replication::{OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
+    use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️receiving.json")).unwrap();
+    let turn = &fixture["turn"];
+    let grant = RetainedCloneGrant { maximum_items: turn["items"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: turn["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: turn["depth"].as_u64().unwrap() as usize };
+    for selected in fixture["selections"].as_array().unwrap() {
+        let expected: TestConfigMutation = serde_json::from_value(serde_json::json!({ "operation": "changeTestConfigSelection", "payload": { "selected": selected } })).unwrap();
+        let source = expected.encode_op().unwrap();
+        assert_eq!(&source[..2], &[1, 0]);
+        let mut accept = |_| true;
+        let mut native = NativeDecodeControl::new(1 << 24, &mut accept);
+        let (mut receiver, admitted) = TestConfigMutation::admit_receiving(&source, (0, source.len()), grant).unwrap().unwrap();
+        assert!(admitted.fits(grant));
+        let mut turns = 0;
+        while !receiver.is_ready() {
+            let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
+            assert_eq!(receiver.step(&source, &mut native, denied).unwrap(), Default::default());
+            let progress = receiver.step(&source, &mut native, grant).unwrap();
+            assert!(progress.fits(grant));
+            assert_eq!(progress.copied_items, 1);
+            turns += 1;
+            assert!(turns < 4096);
+        }
+        let mut output = None;
+        assert!(receiver.take_into(&mut output, grant).unwrap().fits(grant));
+        assert_eq!(serde_json::to_value(output.as_ref().unwrap()).unwrap(), serde_json::to_value(&expected).unwrap());
+        while !receiver.terminal_is_empty() {
+            let demand = receiver.close_demands(grant.maximum_copy_bytes).unwrap();
+            native.charge(demand.capacity_bytes).unwrap();
+            assert!(receiver.close_step(grant).unwrap().fits(grant));
+            turns += 1;
+            assert!(turns < 8192);
+        }
+        let output = output.take().unwrap();
+        let TestConfigMutation::ChangeTestConfigSelection(change) = &output;
+        let held = change.selected.as_ref().map_or(0, String::capacity);
+        close_config_original(output, held, grant.maximum_copy_bytes, "receiving");
+        eprintln!("[DEBUG] actual config canonical ordinal=0 nullableSerde=true oneItemReceiving=true paidCursorClose=true turns={turns}");
+    }
 }

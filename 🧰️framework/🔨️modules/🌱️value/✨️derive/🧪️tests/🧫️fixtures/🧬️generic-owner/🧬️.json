@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "left",
+    "right",
+    "implementationBounds",
+    "coldDeclarationUnconstrained"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "const": "key Ä"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      ]
+    },
+    "left": {
+      "type": "null"
+    },
+    "right": {
+      "const": 2
+    },
+    "implementationBounds": {
+      "const": [
+        "K: RetainedClone",
+        "V: RetainedClone"
+      ]
+    },
+    "coldDeclarationUnconstrained": {
+      "const": true
+    }
+  }
+}

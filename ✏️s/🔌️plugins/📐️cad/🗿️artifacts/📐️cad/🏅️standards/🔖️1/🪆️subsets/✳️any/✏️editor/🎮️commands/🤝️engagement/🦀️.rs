@@ -3,14 +3,15 @@
 //! never config, never history (design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING); only a commit lands, as
 //! ONE transform-tool transaction of child-lane leaves on the panes' composed model children (design §20.15).
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::engine::interaction::{apply_event, inject_selection};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::modes::edit::tools::transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry};
-use crate::editor::cad::{cad_pane_id_from_suffix, engagement_submit_entries, publish_engagement, runtime_of, start_interaction_session, try_commit_session_entries, CadPlayRuntime};
-use crate::op::CadMutation;
-use crate::CadPaneId;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_interaction::{apply_event, inject_selection};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_transform::{cad_pane_models, cad_transform_tool_emit, CadToolEntry};
+use semio_s_artifact_cad_cad_kit::{cad_pane_id_from_suffix, engagement_submit_entries, publish_engagement, start_interaction_session, try_commit_session_entries, CadPlayRuntime};
+use semio_s_artifact_cad_cad_modes::windows::config::runtime_of;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};

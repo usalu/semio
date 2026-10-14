@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::{par
 use super::writer::{en, int, real};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun};
-use crate::{Stair, StairFlight};
+use crate::standards::v1::subsets::any::schema::snapshot::{Stair, StairFlight};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored stair record.
 pub const STAIR_ROW: &str = "Stair";
@@ -82,7 +82,7 @@ fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
     x.links.aggregated.insert(entity, flights);
 }
 
-fn railing(x: &mut Export<'_>, id: &str, row: &crate::Railing) {
+fn railing(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Railing) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("railing", id, "its storey is missing");
         return;

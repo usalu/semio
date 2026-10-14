@@ -1,13 +1,13 @@
 //! ↩️ Inverse for `DeleteCombination` — recreates the captured combination from `base`.
 use super::DeleteCombination;
-use crate::standards::v1::subsets::any::schema::mutations::{create_combination,Fem2dMutation};
+use crate::standards::v1::subsets::any::schema::mutations::create_combination;
 
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &DeleteCombination, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<create_combination::CreateCombination>>(payload: &DeleteCombination, base: &Fem2dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.combinations.iter().enumerate().find(|(_, item)| item.id == payload.id).map(|(at, item)| vec![Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: item.clone(), index: Some(at) })]).unwrap_or_default()
+    base.combinations.iter().enumerate().find(|(_, item)| item.id == payload.id).map(|(at, item)| vec![Op::from(create_combination::CreateCombination { combination: item.clone(), index: Some(at) })]).unwrap_or_default()
 
     })())
 }

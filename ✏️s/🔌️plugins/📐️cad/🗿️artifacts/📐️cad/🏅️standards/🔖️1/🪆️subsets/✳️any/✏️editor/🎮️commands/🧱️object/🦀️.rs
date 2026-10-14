@@ -6,12 +6,13 @@
 //! `drag-elements`) and publishes them on the child that holds the object. The parent document never changes, the pane's
 //! child id stays stable, and every leaf is its own editable history row.
 
-use crate::editor::cad::config::{CadConfig, CadConfigMutation};
-use crate::editor::cad::modes::edit::tools::transform::{cad_child_leaves_emit, cad_pane_models, cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
-use crate::editor::cad::CadDispatchCtx;
-use crate::editor::cad::{axis3_index, cad_pane_from_view, create_object_entry, delete_object_leaves, duplicate_object_entries, ids_or_selection, make_object_for_typology, patch_objects_leaves};
-use crate::op::CadMutation;
-use crate::{CadPaneId, CadSnapshot};
+use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation};
+use semio_s_artifact_cad_cad_transform::{cad_child_leaves_emit, cad_pane_models, cad_transform_tool_emit, CadToolEntry, CadTransformRecord};
+use semio_s_artifact_cad_cad_kit::CadDispatchCtx;
+use semio_s_artifact_cad_cad_kit::{axis3_index, create_object_entry, delete_object_leaves, duplicate_object_entries, ids_or_selection, make_object_for_typology, patch_objects_leaves};
+use semio_s_artifact_cad_cad_modes::windows::config::cad_pane_from_view;
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::{snapshot::CadPaneId, snapshot::CadSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -34,7 +35,7 @@ fn origin_delta_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, ids: Vec<S
 /// that changes, on the pane child holding it.
 fn patch_emit(doc: &ArtifactView<'_, CadSnapshot>, ids: &[String], field: &str, value: Option<&String>, delta: Option<f64>) -> Emit<CadMutation, CadConfigMutation> {
     let models = cad_pane_models(doc.snapshot, &doc.children);
-    let value = value.map(|value| crate::editor::cad::command_value_json(field, value));
+    let value = value.map(|value| semio_s_artifact_cad_cad_kit::command_value_json(field, value));
     let delta = delta.map(semio_framework_value::DslValue::float);
     let leaves = patch_objects_leaves(&models, ids, field, value.as_ref(), delta.as_ref());
     cad_child_leaves_emit(&models, None, leaves)

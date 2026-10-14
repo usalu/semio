@@ -1,0 +1,37 @@
+[
+ {
+  "package": "semio-s-artifact-wfc-2d",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-wfc-3d",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-wfc-bitmap",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-wfc-grid2d",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-wfc-grid3d",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-space-space",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-space-home",
+  "feature": "mutation-inventory",
+  "mode": "off"
+ }
+]

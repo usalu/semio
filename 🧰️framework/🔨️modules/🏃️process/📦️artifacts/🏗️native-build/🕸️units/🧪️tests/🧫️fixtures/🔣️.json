@@ -1,0 +1,515 @@
+{
+  "cases": [
+    {
+      "id": "target-library",
+      "roots": [
+        1
+      ],
+      "units": [
+        {
+          "pkg_id": "base",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "src_path": "/repo/base/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": "aarch64-apple-darwin",
+          "mode": "build",
+          "features": [
+            "extra"
+          ],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "consumer",
+          "target": {
+            "name": "consumer",
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "src_path": "/repo/consumer/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": "aarch64-apple-darwin",
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 0,
+              "extern_crate_name": "base",
+              "public": false,
+              "noprelude": false
+            }
+          ]
+        }
+      ],
+      "expectedKinds": [
+        "library",
+        "library"
+      ],
+      "expectedRoles": [
+        [
+          "target"
+        ],
+        [
+          "target"
+        ]
+      ]
+    },
+    {
+      "id": "proc-build-host",
+      "roots": [
+        3
+      ],
+      "units": [
+        {
+          "pkg_id": "base",
+          "target": {
+            "name": "base",
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "src_path": "/repo/base/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": null,
+          "mode": "build",
+          "features": [],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "derive",
+          "target": {
+            "name": "derive",
+            "kind": [
+              "proc-macro"
+            ],
+            "crate_types": [
+              "proc-macro"
+            ],
+            "src_path": "/repo/derive/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": null,
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 0,
+              "extern_crate_name": "base",
+              "public": false,
+              "noprelude": false
+            }
+          ]
+        },
+        {
+          "pkg_id": "consumer",
+          "target": {
+            "name": "build_script_build",
+            "kind": [
+              "custom-build"
+            ],
+            "crate_types": [
+              "bin"
+            ],
+            "src_path": "/repo/consumer/build.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": null,
+          "mode": "build",
+          "features": [],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "consumer",
+          "target": {
+            "name": "consumer",
+            "kind": [
+              "lib"
+            ],
+            "crate_types": [
+              "lib"
+            ],
+            "src_path": "/repo/consumer/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": null,
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 0,
+              "extern_crate_name": "base",
+              "public": false,
+              "noprelude": false
+            },
+            {
+              "index": 1,
+              "extern_crate_name": "derive",
+              "public": false,
+              "noprelude": false
+            },
+            {
+              "index": 2,
+              "extern_crate_name": "build_script_build",
+              "public": false,
+              "noprelude": false
+            }
+          ]
+        }
+      ],
+      "expectedKinds": [
+        "library",
+        "proc-macro",
+        "build-script",
+        "library"
+      ],
+      "expectedRoles": [
+        [
+          "host",
+          "target"
+        ],
+        [
+          "host"
+        ],
+        [
+          "host"
+        ],
+        [
+          "target"
+        ]
+      ]
+    },
+    {
+      "id": "component-cdylib-over-rlib",
+      "roots": [
+        1
+      ],
+      "units": [
+        {
+          "pkg_id": "base",
+          "target": {
+            "name": "base",
+            "kind": [
+              "rlib"
+            ],
+            "crate_types": [
+              "rlib"
+            ],
+            "src_path": "/repo/base/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": "aarch64-apple-darwin",
+          "mode": "build",
+          "features": [
+            "extra"
+          ],
+          "dependencies": []
+        },
+        {
+          "pkg_id": "consumer",
+          "target": {
+            "name": "consumer",
+            "kind": [
+              "cdylib"
+            ],
+            "crate_types": [
+              "cdylib"
+            ],
+            "src_path": "/repo/consumer/lib.rs",
+            "edition": "2021"
+          },
+          "profile": {
+            "name": "prototype",
+            "opt_level": "0",
+            "debuginfo": 1,
+            "codegen_units": 256,
+            "panic": "unwind",
+            "debug_assertions": true,
+            "overflow_checks": true,
+            "lto": "false",
+            "incremental": true
+          },
+          "platform": "aarch64-apple-darwin",
+          "mode": "build",
+          "features": [],
+          "dependencies": [
+            {
+              "index": 0,
+              "extern_crate_name": "base",
+              "public": false,
+              "noprelude": false
+            }
+          ]
+        }
+      ],
+      "expectedKinds": [
+        "library",
+        "library"
+      ],
+      "expectedRoles": [
+        [
+          "target"
+        ],
+        [
+          "target"
+        ]
+      ]
+    }
+  ],
+  "metadata": {
+    "packages": [
+      {
+        "id": "base",
+        "name": "base",
+        "version": "0.1.0",
+        "manifest_path": "/repo/base/Cargo.toml",
+        "source": null,
+        "metadata": {
+          "semio": {
+            "rust-source-boundary": {
+              "maxSourceBytes": 4096,
+              "maxSourceFiles": 8,
+              "maxActiveLines": 100
+            }
+          }
+        }
+      },
+      {
+        "id": "consumer",
+        "name": "consumer",
+        "version": "0.1.0",
+        "manifest_path": "/repo/consumer/Cargo.toml",
+        "source": null,
+        "metadata": {
+          "semio": {
+            "rust-source-boundary": {
+              "maxSourceBytes": 4096,
+              "maxSourceFiles": 8,
+              "maxActiveLines": 100
+            }
+          }
+        }
+      },
+      {
+        "id": "derive",
+        "name": "derive",
+        "version": "0.1.0",
+        "manifest_path": "/repo/derive/Cargo.toml",
+        "source": null,
+        "metadata": {
+          "semio": {
+            "rust-source-boundary": {
+              "maxSourceBytes": 4096,
+              "maxSourceFiles": 8,
+              "maxActiveLines": 100
+            }
+          }
+        }
+      }
+    ],
+    "workspace_root": "/repo"
+  },
+  "refusals": [
+    "bad-root",
+    "missing-package",
+    "missing-unit",
+    "cycle",
+    "unknown-operation",
+    "missing-workspace-root"
+  ],
+  "flags": [
+    {
+      "id": "build",
+      "configuration": {
+        "build": {
+          "rustflags": [
+            "--cfg",
+            "build_flag"
+          ]
+        }
+      },
+      "environment": {},
+      "target": "x86_64-apple-darwin",
+      "cfg": [
+        "target_os=macos"
+      ],
+      "expected": [
+        "--cfg",
+        "build_flag"
+      ]
+    },
+    {
+      "id": "encoded-precedence",
+      "configuration": {
+        "build": {
+          "rustflags": [
+            "ignored"
+          ]
+        }
+      },
+      "environment": {
+        "CARGO_ENCODED_RUSTFLAGS": "--cfg\u001fgrow",
+        "RUSTFLAGS": "ignored"
+      },
+      "target": "x86_64-apple-darwin",
+      "cfg": [],
+      "expected": [
+        "--cfg",
+        "grow"
+      ]
+    },
+    {
+      "id": "empty-env-precedence",
+      "configuration": {
+        "build": {
+          "rustflags": [
+            "ignored"
+          ]
+        }
+      },
+      "environment": {
+        "RUSTFLAGS": ""
+      },
+      "target": "x86_64-apple-darwin",
+      "cfg": [],
+      "expected": []
+    },
+    {
+      "id": "target-cfg",
+      "configuration": {
+        "target": {
+          "cfg(target_os = \"macos\")": {
+            "rustflags": [
+              "--cfg",
+              "mac_only"
+            ]
+          }
+        },
+        "build": {
+          "rustflags": [
+            "ignored"
+          ]
+        }
+      },
+      "environment": {},
+      "target": "x86_64-apple-darwin",
+      "cfg": [
+        "target_os=macos"
+      ],
+      "expected": [
+        "--cfg",
+        "mac_only"
+      ]
+    },
+    {
+      "id": "target-triple",
+      "configuration": {
+        "target": {
+          "x86_64-apple-darwin": {
+            "rustflags": [
+              "--cfg",
+              "triple_only"
+            ]
+          }
+        }
+      },
+      "environment": {},
+      "target": "x86_64-apple-darwin",
+      "cfg": [],
+      "expected": [
+        "--cfg",
+        "triple_only"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 use super::*;
-use crate::wgpu::theme::Theme;
+use semio_framework_ui_theme::Theme;
 
 #[test]
 fn dashed_line_segments_emit_dashes_along_segment() {

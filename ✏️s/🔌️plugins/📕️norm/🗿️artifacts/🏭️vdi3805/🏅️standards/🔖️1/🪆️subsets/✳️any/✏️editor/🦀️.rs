@@ -117,8 +117,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 
-    semio_s_artifact_norm_contract::norm_exact_store_ownership!();
-
+    semio_s_plugin_norm_app_surface::norm_exact_store_ownership!();
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         Vdi3805BoundedCommandJobFactory::register(registry)
@@ -138,7 +137,6 @@ impl ArtifactEditor for Vdi3805PlayApp {
         contract: crate::app_surface::norm_bounded_contract(),
         tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
-
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
@@ -161,7 +159,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
         command.command_id()
     }
 
-    semio_s_artifact_norm_contract::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_snapshot_json);
+    semio_s_plugin_norm_app_surface::norm_command_from_action!(Vdi3805Command, crate::standards::v1::subsets::any::io::text::snapshot::decode_vdi3805_snapshot_json);
 
     fn handle(
         command: &Vdi3805Command,

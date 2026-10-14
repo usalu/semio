@@ -2,13 +2,13 @@
 //! empty (`Vec::new()`) when the slot was already absent (nothing to undo).
 
 use super::DeleteStructureClassicModel;
-use crate::mutations::{create_structure_classic_model, CadMutation};
-use crate::CadSnapshot;
+use crate::create_structure_classic_model;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::create_structure_classic_model::CreateStructureClassicModel>>(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(match &base.structure_classic_model {
-        Some(existing) => vec![CadMutation::CreateStructureClassicModel(create_structure_classic_model::CreateStructureClassicModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
+        Some(existing) => vec![Op::from(create_structure_classic_model::CreateStructureClassicModel { child_id: existing.child_id.clone(), target: existing.target.clone() })],
         None => Vec::new(),
     })
 }

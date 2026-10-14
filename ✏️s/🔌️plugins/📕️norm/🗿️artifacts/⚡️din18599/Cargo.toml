@@ -70,9 +70,15 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀
 [workspace.dependencies.semio-s-artifact-stdio-semio-table]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-semio-value]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.serde]
 version = "1.0.228"
 features = [ "derive" ]
@@ -80,6 +86,15 @@ features = [ "derive" ]
 [workspace.dependencies.serde_json]
 version = "1.0.149"
 features = [ "raw_value" ]
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface]
+path = "../../📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-compliance]
+path = "../../⚖️compliance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-results-config]
+path = "../../🪟️results/🎚️config/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

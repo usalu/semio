@@ -1,5 +1,5 @@
 use super::*;
-use crate::mutations::apply_model_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const TABLE: &str = include_str!("../../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");

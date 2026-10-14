@@ -3,13 +3,15 @@
 use super::{fem2d_hit_test, interaction_select_effect, Fem2dPick, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d};
 use super::fem2d_load_glyph;
-use crate::{element_id, Fem2dSnapshot, Viewport2d};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation, ViewModel};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-type Fem2dMutation = crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+type Fem2dMutation = semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 
 //#region 🔖️Constants
 pub const FEM2D_UTILITY_SELECT_DIRECT: &str = "selectDirect";
@@ -307,7 +309,7 @@ pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str
             let start_px = super::fem2d_layer_to_canvas(camera, start_layer, width, height);
             let end_px = super::fem2d_layer_to_canvas(camera, end_layer, width, height);
             if entity_in_marquee(method, canvas_points, enclosing, start_px, Some((start_px, end_px))) {
-                push((FEM2D_GRANULARITY_LOAD, crate::load_id(load).to_string()));
+                push((FEM2D_GRANULARITY_LOAD, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(load).to_string()));
             }
         }
     }

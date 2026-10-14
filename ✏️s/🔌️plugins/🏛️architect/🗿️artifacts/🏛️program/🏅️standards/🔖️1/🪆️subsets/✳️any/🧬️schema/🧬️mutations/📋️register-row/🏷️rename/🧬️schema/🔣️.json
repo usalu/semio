@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/rename-register-row/schema.json",
+  "title": "RenameRegisterRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "register",
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "renameRegisterRow"
+    },
+    "register": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterKey",
+      "x-semio-ui": {
+        "widget": "enum",
+        "role": "target",
+        "label": {
+          "en": "Register",
+          "de": "Register"
+        },
+        "description": {
+          "en": "The register the row belongs to.",
+          "de": "Register, zu dem die Zeile gehört."
+        },
+        "group": "target",
+        "order": 5
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "The register row to rename.",
+          "de": "Zu umbenennende Registerzeile."
+        },
+        "ref": {
+          "kind": "registerRow",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "payload",
+        "label": {
+          "en": "New name",
+          "de": "Neuer Name"
+        },
+        "description": {
+          "en": "The row's new identity name.",
+          "de": "Neuer Identitätsname der Zeile."
+        },
+        "group": "payload",
+        "order": 20
+      }
+    }
+  }
+}

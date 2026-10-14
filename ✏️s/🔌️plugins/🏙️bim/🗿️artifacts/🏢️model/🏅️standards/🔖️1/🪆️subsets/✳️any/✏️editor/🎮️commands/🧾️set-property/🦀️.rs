@@ -5,7 +5,7 @@
 use crate::editor::bim::entities::{property_entry, property_type, property_value};
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -21,7 +21,7 @@ pub struct SetProperty {
 /// 🎯️ The holders of properties and classifications among the explicit ids, else among the selection: the placed elements and the type records of the library (instances inherit the properties of their type); the other library entries carry none.
 pub fn elements_of<'a>(snapshot: &ModelSnapshot, ids: &'a [String], selected: &'a [String]) -> Vec<&'a String> {
     let wanted = if ids.is_empty() { selected } else { ids };
-    wanted.iter().filter(|id| crate::mutations::elements::holds_data(snapshot, id)).collect()
+    wanted.iter().filter(|id| crate::standards::v1::subsets::any::schema::mutations::elements::holds_data(snapshot, id)).collect()
 }
 
 pub fn handle(payload: &SetProperty, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &ConfigView<'_, NoConfig>, ctx: &mut BimDispatchCtx) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
@@ -42,7 +42,7 @@ pub fn handle(payload: &SetProperty, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
         let wanted = kind.as_deref().or_else(|| existing.map(property_type));
         let value = property_value(&text, wanted).ok_or_else(|| fault("bim.property.value-invalid", format!("'{text}' does not fit the property '{pset}.{property}'")))?;
         if existing != Some(&value) {
-            mutations.push(ModelMutation::SetElementProperty(crate::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: pset.clone(), property: property.clone(), value }));
+            mutations.push(ModelMutation::SetElementProperty(crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: pset.clone(), property: property.clone(), value }));
         }
     }
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })

@@ -1,6 +1,6 @@
 use super::{ASSET_DIR, PRIMARY_TEXT, SNAPSHOT_JSON};
 use crate::examples::checks::Asset;
-use crate::{ModelSnapshot, OpeningKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
 
 const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
 
@@ -25,7 +25,7 @@ async fn the_office_is_the_documented_building() {
     assert_eq!(model.slabs.values().map(|slab| slab.holes.len()).sum::<usize>(), 6, "two stair shafts through each of the three upper slabs");
     let on_grid = |value: f64, axis: bool| model.grids.values().any(|grid| if axis { near(grid.start.x, value) && near(grid.end.x, value) } else { near(grid.start.y, value) && near(grid.end.y, value) });
     assert!(model.columns.values().filter(|column| column.tilt.is_none()).all(|column| on_grid(column.position.x, true) && on_grid(column.position.y, false)), "every plumb column stands on a grid intersection");
-    let straight = model.beams.values().filter(|beam| beam.end_top_offset.is_none()).filter_map(|beam| match beam.axis { crate::Axis::Line { start, end } => Some((start, end)), crate::Axis::Arc { .. } => None });
+    let straight = model.beams.values().filter(|beam| beam.end_top_offset.is_none()).filter_map(|beam| match beam.axis { crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } => Some((start, end)), crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { .. } => None });
     assert!(straight.into_iter().all(|(start, end)| (on_grid(start.x, true) && on_grid(end.x, true)) || (on_grid(start.y, false) && on_grid(end.y, false))), "every level straight beam runs along a grid line");
 }
 
@@ -71,7 +71,7 @@ async fn a_storey_height_edit_moves_every_storey_above_it() {
     use protocol::Inference;
     let mut model = ASSET.model();
     model.storeys.get_mut("st-1").expect("the first storey").height = 4.2;
-    let inferred = crate::ModelInference::infer(&model).expect("infers");
+    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&model).expect("infers");
     assert!(near(inferred.storey_levels["st-2"].elevation, 8.2) && near(inferred.storey_levels["st-r"].elevation, 15.8));
     assert!(near(inferred.wall_layout["w-1-west-1"].height, 3.34) && near(inferred.wall_layout["w-3-west-1"].base_z, 12.0) && near(inferred.wall_layout["w-0-west-1"].height, 3.14) && near(inferred.wall_layout["w-1-core-w-south"].height, 4.2));
 }
@@ -101,9 +101,9 @@ async fn the_office_is_reachable_through_the_mutation_api() {
 async fn the_ground_floor_frame_is_existing_and_its_north_curtain_wall_demolished() {
     use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
     let model = ASSET.model();
-    assert!(model.columns.values().filter(|column| column.storey == "st-0").all(|column| column.phase == crate::Phase::Existing));
-    assert!(model.columns.values().filter(|column| column.storey == "st-1").all(|column| column.phase == crate::Phase::New));
-    assert_eq!((model.slabs["sl-0"].phase, model.curtain_walls["cu-0-north"].phase), (crate::Phase::Existing, crate::Phase::Demolished));
+    assert!(model.columns.values().filter(|column| column.storey == "st-0").all(|column| column.phase == crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing));
+    assert!(model.columns.values().filter(|column| column.storey == "st-1").all(|column| column.phase == crate::standards::v1::subsets::any::schema::snapshot::Phase::New));
+    assert_eq!((model.slabs["sl-0"].phase, model.curtain_walls["cu-0-north"].phase), (crate::standards::v1::subsets::any::schema::snapshot::Phase::Existing, crate::standards::v1::subsets::any::schema::snapshot::Phase::Demolished));
     let inferred = crate::examples::checks::infer(&model);
     assert_eq!(inferred.phase_visibility["st-0"].ids(ViewPhase::Demolished), ["cu-0-north"]);
     assert!(inferred.phase_visibility["st-0"].ids(ViewPhase::Existing).len() > 24, "24 columns and the slab");
@@ -165,10 +165,10 @@ async fn the_suspended_ceilings_are_the_surface_the_office_ceiling_finish_covers
 
 #[semio_framework_async_macros::async_test]
 async fn a_column_row_is_the_array_of_its_first_column_and_a_beam_the_copy_of_its_neighbour() {
-    use crate::mutations::array_elements::ArrayElements;
-    use crate::mutations::copy_elements::CopyElements;
-    use crate::mutations::modify::ArrayPattern;
-    use crate::{ModelMutation, Point2};
+    use crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements;
+    use crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements;
+    use crate::standards::v1::subsets::any::schema::mutations::modify::ArrayPattern;
+    use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::Point2};
     let model = ASSET.model();
     let row = ["B", "C", "D", "E", "F"].map(|label| format!("c-0-{label}1"));
     let mut bare = model.clone();
@@ -176,18 +176,18 @@ async fn a_column_row_is_the_array_of_its_first_column_and_a_beam_the_copy_of_it
         bare.columns.remove(id);
     }
     let array = ModelMutation::ArrayElements(ArrayElements { ids: vec!["c-0-A1".into()], prefix: "row".into(), pattern: ArrayPattern::Linear { count: 5, spacing: Point2 { x: 6.0, y: 0.0 } } });
-    let arrayed = crate::mutations::apply_model_mutation(&bare, &array).expect("the row is arrayed");
+    let arrayed = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&bare, &array).expect("the row is arrayed");
     for (copy, id) in row.iter().enumerate() {
-        let made = &arrayed.columns[&crate::mutations::modify::mint("row", copy as u32 + 1, 0)];
+        let made = &arrayed.columns[&crate::standards::v1::subsets::any::schema::mutations::modify::mint("row", copy as u32 + 1, 0)];
         let authored = &model.columns[id];
         assert_eq!((made.storey.as_str(), made.column_type.as_str(), made.position, &made.top, made.phase), (authored.storey.as_str(), authored.column_type.as_str(), authored.position, &authored.top, authored.phase), "{id}");
     }
     let neighbour = &model.beams["bm-0-x-A2"];
-    let ends_of = |beam: &crate::Beam| match beam.axis {
-        crate::Axis::Line { start, end } | crate::Axis::Arc { start, end, .. } => (start, end),
+    let ends_of = |beam: &crate::standards::v1::subsets::any::schema::snapshot::Beam| match beam.axis {
+        crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, end } | crate::standards::v1::subsets::any::schema::snapshot::Axis::Arc { start, end, .. } => (start, end),
     };
-    let copied = crate::mutations::apply_model_mutation(&model, &ModelMutation::CopyElements(CopyElements { ids: vec!["bm-0-x-A1".into()], vector: Point2 { x: 0.0, y: 6.0 }, prefix: "cp".into() })).expect("the beam is copied");
-    let made = &copied.beams[&crate::mutations::modify::mint("cp", 1, 0)];
+    let copied = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&model, &ModelMutation::CopyElements(CopyElements { ids: vec!["bm-0-x-A1".into()], vector: Point2 { x: 0.0, y: 6.0 }, prefix: "cp".into() })).expect("the beam is copied");
+    let made = &copied.beams[&crate::standards::v1::subsets::any::schema::mutations::modify::mint("cp", 1, 0)];
     assert_eq!((made.beam_type.as_str(), ends_of(made), made.top_offset), (neighbour.beam_type.as_str(), ends_of(neighbour), neighbour.top_offset));
 }
 
@@ -195,7 +195,7 @@ async fn a_column_row_is_the_array_of_its_first_column_and_a_beam_the_copy_of_it
 async fn the_office_families_resolve_the_hea_profile_and_the_table_from_their_formulas() {
     let model = ASSET.model();
     assert_eq!((model.families.len(), model.family_parameters.len(), model.family_solids.len()), (7, 35, 17));
-    assert_eq!(model.beam_types["bt-hea-300"].profile, crate::Profile::Family { family: "fam-hea-300".into() });
+    assert_eq!(model.beam_types["bt-hea-300"].profile, crate::standards::v1::subsets::any::schema::snapshot::Profile::Family { family: "fam-hea-300".into() });
     let inferred = crate::examples::checks::infer(&model);
     let hea = &inferred.families["fam-hea-300"];
     assert!(hea.issues.is_empty() && hea.outline.len() == 12, "{:?}", hea.issues);
@@ -219,8 +219,8 @@ async fn the_office_has_a_sheet_set_of_plans_sections_and_elevations_without_fin
     let sheet = |id: &str| model.sheets.get(id).unwrap_or_else(|| panic!("the sheet {id}"));
     assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).number.as_str()), ["A-101", "A-201", "A-301"], "plans, sections and elevations");
     assert_eq!(["sh-plans", "sh-sections", "sh-elevations"].map(|id| sheet(id).paper.name()), ["A0", "A1", "A1"], "the smallest paper on which the windows fit");
-    let drawn = |kinds: &[crate::ViewKind]| model.viewports.values().filter(|viewport| model.views.get(&viewport.view).is_some_and(|view| kinds.contains(&view.kind))).count();
-    assert_eq!(drawn(&[crate::ViewKind::Plan]) + drawn(&[crate::ViewKind::Section]) + drawn(&[crate::ViewKind::Elevation]), model.viewports.len());
+    let drawn = |kinds: &[crate::standards::v1::subsets::any::schema::snapshot::ViewKind]| model.viewports.values().filter(|viewport| model.views.get(&viewport.view).is_some_and(|view| kinds.contains(&view.kind))).count();
+    assert_eq!(drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Plan]) + drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Section]) + drawn(&[crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Elevation]), model.viewports.len());
     let inferred = crate::examples::checks::infer(&model);
     assert_eq!(inferred.sheet_layouts.len(), model.sheets.len());
     for (id, layout) in &inferred.sheet_layouts {
@@ -231,7 +231,7 @@ async fn the_office_has_a_sheet_set_of_plans_sections_and_elevations_without_fin
 
 #[semio_framework_async_macros::async_test]
 async fn the_office_frame_has_an_arc_beam_a_leaning_column_and_a_facade_with_a_door_and_overrides() {
-    use crate::CurtainPanel;
+    use crate::standards::v1::subsets::any::schema::snapshot::CurtainPanel;
     let model = ASSET.model();
     assert_eq!(model.curtain_wall_types.keys().map(String::as_str).collect::<Vec<_>>(), ["cwt-facade"]);
     assert!(model.curtain_walls.values().all(|wall| wall.curtain_wall_type == "cwt-facade"), "every façade wall follows the one type");
@@ -268,7 +268,7 @@ async fn the_equipped_first_floor_has_desks_chairs_air_terminals_a_pantry_and_it
     assert!((supply.length - 26.0).abs() < 1e-12 && (supply.volume - 0.4 * 0.25 * 26.0).abs() < 1e-12);
     let pantry = &inferred.components["cmp-basin"];
     let half = inferred.wall_layout["w-1-core-w-west"].thickness / 2.0;
-    assert!((pantry.placement.x - (7.0 - half)).abs() < 1e-9 && pantry.connector.as_ref().is_some_and(|connector| connector.system == crate::MepSystem::Waste));
+    assert!((pantry.placement.x - (7.0 - half)).abs() < 1e-9 && pantry.connector.as_ref().is_some_and(|connector| connector.system == crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Waste));
 }
 
 #[semio_framework_async_macros::async_test]

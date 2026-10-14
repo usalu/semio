@@ -1,6 +1,6 @@
 use super::*;
 use std::collections::BTreeSet;
-use crate::schema::scene_preparation::tests::close_owned;
+use crate::preparation::tests::close_owned;
 fn close_scene(job:RasterSceneJob){let(mut close,image)=job.into_retirement();crate::draw_scene_physical_close!(close,1);if let Some(image)=image{close_owned(image);}}
 fn finish_scene(job:RasterSceneJob)->RasterImage{let(mut close,image)=job.into_retirement();crate::draw_scene_physical_close!(close,1);image.unwrap()}
 fn child_handoff(kind:&str,sources:serde_json::Value,cases:serde_json::Value){
@@ -52,7 +52,8 @@ fn painted_scenes_refuse_cancelled_partial_over_budget_and_reopened_scopes() {
 
 #[test]
 fn painted_scenes_crops_retain_uncropped_curve_paint_and_stroke() {
- use crate::{StrokeCap,StrokeJoin,GradientStop};
+ use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
+ use semio_s_artifact_draw_drawing_model::GradientStop;
  let mut paths=vec![
   vec![PathSegment::Move{to:[2.0,3.0]},PathSegment::Cubic{ctrl1:[13.0,-6.0],ctrl2:[-4.0,16.0],to:[10.0,9.0]},PathSegment::Close],
   vec![PathSegment::Move{to:[2.0,3.0]},PathSegment::Quad{ctrl:[9.0,15.0],to:[12.0,3.0]}],
@@ -73,7 +74,7 @@ fn painted_scenes_crops_retain_uncropped_curve_paint_and_stroke() {
 
 #[test]
 fn painted_scenes_large_ellipse_bounds_retain_visible_short_arc() {
- use crate::{StrokeCap,StrokeJoin};
+ use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
  let segments=vec![PathSegment::Move{to:[2.0,3.0]},PathSegment::Arc{rx:1e9,ry:1e9,rotation:0.0,large_arc:false,sweep:true,to:[12.0,3.0]}];let transform=IDENTITY;
  let stroke=Some(StrokeStyle{color:[1.0,0.0,0.0,1.0],width:0.75,cap:StrokeCap::Round,join:StrokeJoin::Miter,dash:None});
  let mut full=PathRasterJob::new(PathRasterInput{width:16,height:8,origin:[0.0;2],segments:segments.clone(),transform,tolerance:0.001,fill_rule:FillRule::Nonzero,fill:None,stroke:stroke.clone()}).unwrap();while !full.advance(4096).unwrap().done{}

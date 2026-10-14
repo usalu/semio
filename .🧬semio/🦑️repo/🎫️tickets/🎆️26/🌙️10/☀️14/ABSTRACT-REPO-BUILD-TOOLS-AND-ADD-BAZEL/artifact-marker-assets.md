@@ -1,0 +1,2920 @@
+# Artifact Marker Asset Witnesses
+
+The one-off repair commands were evaluated directly through Bun; no migration script was created. Only the marker filename changed. Every operation acquired the current publisher’s original exclusive SQLite resource at `.cache/framework/leases`, using `artifact:<absolute published directory>`. Acquisition used a zero wait timeout, so active lease holders would cause preservation. All 97 admitted products acquired custody and completed; none required forced access. The absolute neutral marker path was admitted before each rename by `requireMaterializedPathV1`: maximum 181 UTF-16 code units and 179 Unicode code points, both within 256.
+
+Each source owner and exact destination was admitted from current authored producer code before mutation. Marker metadata required the exact version/owner/files contract, unique declared paths, ordinary files and real directory ancestry. The marker had to be an ordinary file with a single link; its neutral destination had to be absent. Whole-tree payload hashing included file bytes, paths and modes, directory paths/modes and existing symlink identities without following them. Source and marker proof bytes were checked before the atomic rename. Marker bytes, inode, mode and modification time were asserted identical afterward; complete payload witnesses were recomputed and asserted identical. No payload file was deleted, copied or rewritten by repair.
+
+The initial 93 products comprise coordinator/VSCode (6), published CLI executables (6), TypeScript artifact outputs (74), fonts (2), Vite products (3) and Surface WASM outputs (2). Four additional tool wrappers were then admitted: one native executable and three Tectonic products. The native executable SHA256 equals its directory identity; the current TeX bundle matched every pinned manifest file checksum; the Tectonic toolchain matched the pinned target/version/archive and executable receipt. The previous TeX bundle retained its original matching publication identity receipt and unchanged payload; current source selects the newer bundle. These wrappers are owned publication metadata around pinned payloads, distinct from backend CAS blobs or cached task snapshots.
+
+Actual `preparedTectonic` and `preparedPrintBundle` readers admitted the repaired current products. The actual native executable pin publisher reused its repaired digest product with the existing marker inode and modification time unchanged, and the executable digest still matched. An initial validation attempt incorrectly used the pinned destination as its own pin source and conflicted with its shared source lease; that probe was terminated without mutation, then corrected to use a separate ticket-owned byte-identical input.
+
+## Repaired Published Products
+
+The marker SHA256 is the identical before/after digest; payload columns are explicit. Source and lease paths are repository-relative. Every old marker below is absent and its neutral path is present.
+
+An independent Python hashlib/pathlib oracle subsequently checked all 97 marker digests, exact owner/version/file counts, absent old paths, present ordinary new paths, matching before/after payload receipts and the 181-unit maximum absolute UTF-16 path length. It passed. The actual payload witnesses were calculated under each original publication lease during repair.
+
+- Old: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/prototype/.nx-artifact.json`
+  - New: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/prototype/.semio-artifact.json`
+  - Owner: `vite:🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript:prototype`
+  - Source: `🎓️teaching/🏛️architecture/❓️quiz/🏗️builder/🌐️vite/🟦️.ts`; SHA256 `7eb307331719a231dff3293dcbb36d9cb898fa0644bfcdbedcb43ebb2c2e4b4e`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/prototype`; database `.cache/framework/leases/b8f738843624b9480fb5685f2cb5f94f0b24b7f3263cdd9638c73a49dca2c524.sqlite`.
+  - Ownership proof: Current Vite outDir and runViteBuild owner template.
+  - Marker before = after: `5e466ccb783768da4cb4be0b015485e31e76a63254bd65e0510513e201598c75` (4195 bytes); 66 declared files.
+  - Payload before: `ad1fb11804d04515b75be3edcc737ac34641fa4159e816bc15e752ff05c7c7cb`; after: `ad1fb11804d04515b75be3edcc737ac34641fa4159e816bc15e752ff05c7c7cb` (66 files, 129 entries, 38280076 bytes).
+- Old: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/.nx-artifact.json`
+  - New: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/.semio-artifact.json`
+  - Owner: `vite:🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript:release`
+  - Source: `🎓️teaching/🏛️architecture/❓️quiz/🏗️builder/🌐️vite/🟦️.ts`; SHA256 `7eb307331719a231dff3293dcbb36d9cb898fa0644bfcdbedcb43ebb2c2e4b4e`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release`; database `.cache/framework/leases/0a121199c61a202694016fe47069f44d1b912948b816be387fd1b89dbb86db16.sqlite`.
+  - Ownership proof: Current Vite outDir and runViteBuild owner template.
+  - Marker before = after: `563475f001c50728b30267dc7d1d4d723af8d6bf0902aabaf52ecd9ba804c4a4` (4148 bytes); 65 declared files.
+  - Payload before: `61b94412b2f2c756ba4ecda1dbd7cfe71b05e4a83419342cf73d4a8e74239080`; after: `61b94412b2f2c756ba4ecda1dbd7cfe71b05e4a83419342cf73d4a8e74239080` (65 files, 128 entries, 3947489 bytes).
+- Old: `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.semio-artifact.json`
+  - Owner: `@semio-tech/print:fonts`
+  - Source: `🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️.ts`; SHA256 `c83f46ed1509777133d88d1b6c1414538fe4fbd232e5e26f44424e8c24748683`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts`; database `.cache/framework/leases/10f5e0e170bccf51c098e4e2fd9b6aedbacab866c2d594304ba3884efc6ba14d.sqlite`.
+  - Ownership proof: Current exact font destination and stageRepositoryArtifacts ownership.
+  - Marker before = after: `d0f26cc5d1447665e885de75e6868d9a34406174a630bca90224e28e7a2beb64` (157 bytes); 4 declared files.
+  - Payload before: `2f678692b855fea67e8734d27483e2e94ef0f03644093d38a74970096ea9cbab`; after: `2f678692b855fea67e8734d27483e2e94ef0f03644093d38a74970096ea9cbab` (4 files, 4 entries, 18537536 bytes).
+- Old: `dist/prototype/repo-coordinator/next/.nx-artifact.json`
+  - New: `dist/prototype/repo-coordinator/next/.semio-artifact.json`
+  - Owner: `repo-coordinator:next:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b44303743ad1265bab5463ed721f5f3f88a5f03bb8a9ccca9d8a9367adfebea9`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/dist/prototype/repo-coordinator/next`; database `.cache/framework/leases/c31b1d01209939e2e898cba6a4c13e36e6ff8295ef98177f99018857bd4c14f7.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `c15141fcfad9eb2bef83a5205176ccf15146fb4e2f75d91a62aa1b96cf469f49` (157333 bytes); 2239 declared files.
+  - Payload before: `0b9ff2ee5b9ae6865001106a445f3683d976579ddd48bdc0dd793992a1f7e433`; after: `0b9ff2ee5b9ae6865001106a445f3683d976579ddd48bdc0dd793992a1f7e433` (2242 files, 2801 entries, 69755772 bytes).
+- Old: `dist/release/repo-coordinator/next/.nx-artifact.json`
+  - New: `dist/release/repo-coordinator/next/.semio-artifact.json`
+  - Owner: `repo-coordinator:next:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b44303743ad1265bab5463ed721f5f3f88a5f03bb8a9ccca9d8a9367adfebea9`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/dist/release/repo-coordinator/next`; database `.cache/framework/leases/7bdd768e9ab447e3c4321697c5852305f2a7570998ef6a116a7d61adc76f526b.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `5be568f6c19af43f41e1c2dd8f7112b79a40aadea1a50e541e8d0e892774a696` (155894 bytes); 2221 declared files.
+  - Payload before: `914e2d5851ab9c6f506283c001421609143d114338218468a3ef1462c2bcecd2`; after: `914e2d5851ab9c6f506283c001421609143d114338218468a3ef1462c2bcecd2` (2224 files, 2783 entries, 55361410 bytes).
+- Old: `🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `vite:🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript:prototype`
+  - Source: `🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts`; SHA256 `468b576dc03adabe1036e7bd11e104e9b4f0cb66ed467b9061b7719fff64a180`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/aa68db03280ccba0b49f8a3ef7de76f774bda5bcdbd3023c3d6d405da3865b44.sqlite`.
+  - Ownership proof: Current Vite outDir and runViteBuild owner template.
+  - Marker before = after: `75dd9ded4b8b2ead1bda44bada98bbc5030245e915e3c7e3540cb5c50cec6768` (426 bytes); 14 declared files.
+  - Payload before: `342f96399d4413dbd04ca0bb33fcf815298298a69cba2892df85e697529dee26`; after: `342f96399d4413dbd04ca0bb33fcf815298298a69cba2892df85e697529dee26` (14 files, 15 entries, 43940103 bytes).
+- Old: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/.nx-artifact.json`
+  - New: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings/.semio-artifact.json`
+  - Owner: `semio-framework-surface:wasm:active`
+  - Source: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts`; SHA256 `b8929f54572cb5f7d3a948683d3f390519ec16fbbaf06c49c6dcaa852459df78`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/🕸️bindings`; database `.cache/framework/leases/8f8ed922a09c1925421c1258455514c78cd060c727818de4b2ba8e8bf4de016b.sqlite`.
+  - Ownership proof: Current surface Wasm source owner, explicit outputDirectory, buildWasmWebV1 mode/active templates and repository WASM policy canonical lease store.
+  - Marker before = after: `5b310d32065bf1bc2fc3b72eab7c1735b74cf9027915980b0e606ff49ca3c994` (207 bytes); 6 declared files.
+  - Payload before: `069757b48aac581f5a9f9d1b8cab32f10088ce4787ef671ea4977ee765a06574`; after: `069757b48aac581f5a9f9d1b8cab32f10088ce4787ef671ea4977ee765a06574` (6 files, 6 entries, 7310739 bytes).
+- Old: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/wasm/prototype/.nx-artifact.json`
+  - New: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/wasm/prototype/.semio-artifact.json`
+  - Owner: `semio-framework-surface:wasm:prototype`
+  - Source: `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/📜️script.ts`; SHA256 `b8929f54572cb5f7d3a948683d3f390519ec16fbbaf06c49c6dcaa852459df78`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/wasm/prototype`; database `.cache/framework/leases/8374d35c7b4d60dcbc8ffe2ea6a7047ef8746250d751d9da0a30fd480fb2f167.sqlite`.
+  - Ownership proof: Current surface Wasm source owner, explicit outputDirectory, buildWasmWebV1 mode/active templates and repository WASM policy canonical lease store.
+  - Marker before = after: `82c7ee8ac07ea2009c135e863806aeb1d8864969889c34bef7292fdbf5f2c0d9` (210 bytes); 6 declared files.
+  - Payload before: `069757b48aac581f5a9f9d1b8cab32f10088ce4787ef671ea4977ee765a06574`; after: `069757b48aac581f5a9f9d1b8cab32f10088ce4787ef671ea4977ee765a06574` (6 files, 6 entries, 7310739 bytes).
+- Old: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/vsix/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/vsix/.semio-artifact.json`
+  - Owner: `repo-vscode:vsix:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `105ffaf53254d3364cc84c6d6c52288d594a113774fc5eda32885df30d9b66cc`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/vsix`; database `.cache/framework/leases/a90b9fe46c88ddaffc470923f6744e94085e70b488c232c0852341fd34a6949b.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `d4ab877151bfee7537cb36ffafa9ec9716d00a182ebb0e8c68f8c5a57a8bde89` (80 bytes); 1 declared files.
+  - Payload before: `dc470d77997b8240b26c6304da8e374966fcfcd3fab0116643c268f191fa38df`; after: `dc470d77997b8240b26c6304da8e374966fcfcd3fab0116643c268f191fa38df` (1 files, 1 entries, 37708 bytes).
+- Old: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/extension/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/extension/.semio-artifact.json`
+  - Owner: `repo-vscode:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `105ffaf53254d3364cc84c6d6c52288d594a113774fc5eda32885df30d9b66cc`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/extension`; database `.cache/framework/leases/4d04a15f20e7b368beae0cb576e8166d65ce80ceb7304585162250032977b854.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `bc4bf5f5f493940cd1ab26b284446068935a06401b3a799ed58253951aad5037` (144 bytes); 4 declared files.
+  - Payload before: `3f5fa376bea4efeadf4c9250afe4949535fb5ee06e650c3209b7004b10857a35`; after: `3f5fa376bea4efeadf4c9250afe4949535fb5ee06e650c3209b7004b10857a35` (4 files, 5 entries, 4932299 bytes).
+- Old: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/vsix/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/vsix/.semio-artifact.json`
+  - Owner: `repo-vscode:vsix:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `105ffaf53254d3364cc84c6d6c52288d594a113774fc5eda32885df30d9b66cc`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/vsix`; database `.cache/framework/leases/903b015361fcb7edae3b4e621086ae09bdcdb18b3ac9c141fc2bdaecd2fab35d.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `6ea3098d6c13b7d01cf294e8de7c5587c4805165061947b87868d874688b64bb` (78 bytes); 1 declared files.
+  - Payload before: `bede9e4ad9bad042a48f4e9e44f1e39cbdba9cb6815640c624a532d938b6228d`; after: `bede9e4ad9bad042a48f4e9e44f1e39cbdba9cb6815640c624a532d938b6228d` (1 files, 1 entries, 30918 bytes).
+- Old: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension/.semio-artifact.json`
+  - Owner: `repo-vscode:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `105ffaf53254d3364cc84c6d6c52288d594a113774fc5eda32885df30d9b66cc`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension`; database `.cache/framework/leases/597499a2e708d013cdd5671f2b26fe9a78a1d5c074d52ebd3860ad0e37387b01.sqlite`.
+  - Ownership proof: Current exact destination and stageRepositoryArtifacts ownership template.
+  - Marker before = after: `5649e4981768714035f79768f58eb318dd3fe43e3fdfe315365a61c1041c56c0` (94 bytes); 2 declared files.
+  - Payload before: `21adc4a9f37ee01622c40fdec71ce469ce45680b9b8f7c6df8044dd2fff003f6`; after: `21adc4a9f37ee01622c40fdec71ce469ce45680b9b8f7c6df8044dd2fff003f6` (2 files, 3 entries, 122826 bytes).
+- Old: `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`
+  - New: `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.semio-artifact.json`
+  - Owner: `infinite:fonts`
+  - Source: `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts`; SHA256 `8a716c09caf8305ba7179063cda33649d7bd2c05b77d19221a34270b0106a72c`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts`; database `.cache/framework/leases/0ed68d72b489bcc63659963e12a750166656fc4ac41f66d2cef815c90f854a5a.sqlite`.
+  - Ownership proof: Current exact font destination and stageRepositoryArtifacts ownership.
+  - Marker before = after: `276d8db8bc90496f9c5d0764efd0ce31ac3e04c0185e550638438d89eebd17cc` (84 bytes); 1 declared files.
+  - Payload before: `78155c54cc4460880f5cc83b925376809d3b2b1aa0a0c89e5293a8bd3d48cf22`; after: `78155c54cc4460880f5cc83b925376809d3b2b1aa0a0c89e5293a8bd3d48cf22` (1 files, 1 entries, 8757072 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-obj:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `729b786d8f9ab24fcc678590328c919cdedc0851608126d3f25d89597d917ed2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/aac2d2790bbb5748b682495a23f9700e6291179435163b315f8c2369530031c4.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4ea890985f98040a8731511fe862df51ff51bf7689d2416eb716d20e18626e17` (797 bytes); 18 declared files.
+  - Payload before: `eeadd802474db62a05b1b7684e0bf811b35ab972073db2fc7155f86a5340399c`; after: `eeadd802474db62a05b1b7684e0bf811b35ab972073db2fc7155f86a5340399c` (18 files, 19 entries, 298525 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-obj:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `729b786d8f9ab24fcc678590328c919cdedc0851608126d3f25d89597d917ed2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/5ab05ec46fb50998955dc5166ba948c28f0339eb615f9bc2ec8da3186a8c93d8.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `65a88948d686fca3cdacb98939fbce5e5cec3d6a3efc4a1efad7dad69284e7b8` (794 bytes); 18 declared files.
+  - Payload before: `eeadd802474db62a05b1b7684e0bf811b35ab972073db2fc7155f86a5340399c`; after: `eeadd802474db62a05b1b7684e0bf811b35ab972073db2fc7155f86a5340399c` (18 files, 19 entries, 298525 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-tsv:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `4911663308983c81f070b273ae9efd4d3a0e0e7d7d75026e3bc7c71ebe567891`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/2ade3942bd3a28c3b4678fb1fcf51977b4633bc34817999fcdd8abb04eee75cf.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `52e748b00539a3c3e5530e03c40945818b9c74e7f2532516501b594789475d16` (212 bytes); 5 declared files.
+  - Payload before: `fea4a424d854a75a431b091cbc31a10ac54ab86d86e2635e85f402224bda1eae`; after: `fea4a424d854a75a431b091cbc31a10ac54ab86d86e2635e85f402224bda1eae` (5 files, 6 entries, 13801 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-tsv:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `4911663308983c81f070b273ae9efd4d3a0e0e7d7d75026e3bc7c71ebe567891`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/45671aa4031dd02b7e84687359d24f55c81864890082045a9ab2389e3bf57ac5.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `121a52e1a53eb9d28a50405d08cfcbeb853ab694d47d34ad440aaf28cf588687` (209 bytes); 5 declared files.
+  - Payload before: `fea4a424d854a75a431b091cbc31a10ac54ab86d86e2635e85f402224bda1eae`; after: `fea4a424d854a75a431b091cbc31a10ac54ab86d86e2635e85f402224bda1eae` (5 files, 6 entries, 13801 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-csv:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `bfa0f58b3eeb8e5bd0dba6b16162618a9eed793a4ecc78a7481f4024aa6b903a`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/57a59fc4f2f5697994603a8d432ae2d0d46751a385309bac0057c434f5084d42.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `992c766c41ddbde3637685edd51eb83d98ec7f6961b57a52ce876f98727b3626` (212 bytes); 5 declared files.
+  - Payload before: `f4bd5dbf5926544c795c56b8c840141ba70875eb386e568afa07630d6feaca4f`; after: `f4bd5dbf5926544c795c56b8c840141ba70875eb386e568afa07630d6feaca4f` (5 files, 6 entries, 21875 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/release/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/release/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-csv:release`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `bfa0f58b3eeb8e5bd0dba6b16162618a9eed793a4ecc78a7481f4024aa6b903a`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📤️dist/release`; database `.cache/framework/leases/fa75a5db8108176b0d47a28a37d758411bba8c9718a5496ae50fbe7f635875c9.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `be83c3b0e4716c3ef1fc73dfa2812ab036eee49363b4467a2911d3d8f25a7e5e` (193 bytes); 4 declared files.
+  - Payload before: `b78386b6fa8e53c921a86938f138f3737730600f8d2c86bc92c1c490dce14397`; after: `b78386b6fa8e53c921a86938f138f3737730600f8d2c86bc92c1c490dce14397` (4 files, 5 entries, 9415 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-csv:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `bfa0f58b3eeb8e5bd0dba6b16162618a9eed793a4ecc78a7481f4024aa6b903a`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/d52c3c28993587553ad3fd43a386aa7343543db153508368a422b1da6c6a45e7.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `c816419146f7dcf58b1f6dcd4d0135d74019ce85bd2fc8c4fc731658ba350fd7` (209 bytes); 5 declared files.
+  - Payload before: `f4bd5dbf5926544c795c56b8c840141ba70875eb386e568afa07630d6feaca4f`; after: `f4bd5dbf5926544c795c56b8c840141ba70875eb386e568afa07630d6feaca4f` (5 files, 6 entries, 21875 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-gltf:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `12a74747a0dc3c6636da12b6d5df1466fa8d53f851998724da3994689591ce97`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/1815195f36643dc9eb5e14b82b095eaee6acfd1f6431041b0439f865c5c4625d.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `8e83e389fb52c148c91038d7c62bb04fc02e3694ac2b85e2236a1f975dd47fd0` (7278 bytes); 162 declared files.
+  - Payload before: `4eee3ed1698c5dd2d4da9cc86ea263e554cafbcf285b026c078bf98879499040`; after: `4eee3ed1698c5dd2d4da9cc86ea263e554cafbcf285b026c078bf98879499040` (162 files, 163 entries, 1033275 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-gltf:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `12a74747a0dc3c6636da12b6d5df1466fa8d53f851998724da3994689591ce97`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a940426fa8d89d3d713141dce6c4ec46181a6c2411484ca0df78ee51409cf0d6.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `6e6fd563ef2aa6b7b4aedcd15495d1b71bc968d8b3db7f6b91b16d51ad91792d` (7275 bytes); 162 declared files.
+  - Payload before: `4eee3ed1698c5dd2d4da9cc86ea263e554cafbcf285b026c078bf98879499040`; after: `4eee3ed1698c5dd2d4da9cc86ea263e554cafbcf285b026c078bf98879499040` (162 files, 163 entries, 1033275 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-epw:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d4671e026d772ca6734dd9aa5c25b35d13dd04015b932633000d3c27a8ddd24a`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/6f2fe99062a3083332a97cec8c504a3e4d40cb8e6a988b286787194526e66257.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `0a6cf353feaefdc151c09ca2db27c28ca23358125d63c6fb4134cd035ff3c3db` (707 bytes); 16 declared files.
+  - Payload before: `038cca7ddb762f73995357ef6c53bef9b69bab62efd5e55d629beae58a3ad218`; after: `038cca7ddb762f73995357ef6c53bef9b69bab62efd5e55d629beae58a3ad218` (16 files, 17 entries, 291762 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-epw:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d4671e026d772ca6734dd9aa5c25b35d13dd04015b932633000d3c27a8ddd24a`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/53357cc908427180e1710bdec3d168dc2c8cec2b1888136a908dd3d9bef76b2c.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `a79ef07db0fa53bfa51c87552c670b68d5448bd3cd2f03668b852e2d4407ce0b` (704 bytes); 16 declared files.
+  - Payload before: `038cca7ddb762f73995357ef6c53bef9b69bab62efd5e55d629beae58a3ad218`; after: `038cca7ddb762f73995357ef6c53bef9b69bab62efd5e55d629beae58a3ad218` (16 files, 17 entries, 291762 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-ifc:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `f9903ef2f7b817f6326a9120022b5d65eb44e22d01c55fc96f0c9a3317878e8d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/046263a09c648f7a70a266202dedee59c4f9c47a763d7aa6ba697abc700b2c22.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `2b436cdf099452f5c5d51efbaa4d9a697ef8d05fc86a2ca0943389ba2f88d02b` (1112 bytes); 25 declared files.
+  - Payload before: `30c5c3b564b53703ece6178b6ad6ddd877655fe704f63f60d51fa0af2abec60b`; after: `30c5c3b564b53703ece6178b6ad6ddd877655fe704f63f60d51fa0af2abec60b` (25 files, 26 entries, 367512 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-ifc:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `f9903ef2f7b817f6326a9120022b5d65eb44e22d01c55fc96f0c9a3317878e8d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/0273688ea9d4a33a2f7288e4f640d43c918fd5551e0b09a4f672d90a43cbdc69.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `b5ec075143f39f86d8f7caa4f7d4c4f5212edfb2434c2595ffc9c783d18d7f21` (1109 bytes); 25 declared files.
+  - Payload before: `30c5c3b564b53703ece6178b6ad6ddd877655fe704f63f60d51fa0af2abec60b`; after: `30c5c3b564b53703ece6178b6ad6ddd877655fe704f63f60d51fa0af2abec60b` (25 files, 26 entries, 367512 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-dxf:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `7055f6feaa9ca559caa4c453a6316f6f8efee5d1f74878811b575be911277644`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/f0b53d3034d7e4a531848c84b0a3088db753bcaa361513b33be95f0c5bb1e4d4.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `b2a8c7e53c83c027f02547b5d626b3297ececf1422e47e308d1df99939f021b9` (212 bytes); 5 declared files.
+  - Payload before: `416c1dab18d1b5f93ec4e72458bffd4d82bceb383ef5c1022b9916d6b12230b3`; after: `416c1dab18d1b5f93ec4e72458bffd4d82bceb383ef5c1022b9916d6b12230b3` (5 files, 6 entries, 21767 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-dxf:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `7055f6feaa9ca559caa4c453a6316f6f8efee5d1f74878811b575be911277644`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a58d25819738b3727bc738402a2e48144dd383a4c09fb935f2d34d0f5f91053d.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4836e24c5cf2855687ce64132e19006c3a0587a4e7ffd7c205190374aaaaf84a` (209 bytes); 5 declared files.
+  - Payload before: `416c1dab18d1b5f93ec4e72458bffd4d82bceb383ef5c1022b9916d6b12230b3`; after: `416c1dab18d1b5f93ec4e72458bffd4d82bceb383ef5c1022b9916d6b12230b3` (5 files, 6 entries, 21767 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-avi:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `a473063baf454fde3da6f5a2d5bc4411c4ef2b993d2cc35ac842c68e59c67b99`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/29c8ac4b177dae449416909033974e3ceb68496d6a6ff4593dedfed76c3d9a92.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `0a7dc6f210b19bbb54c9824719705737069ee0cf355a9f7efb419f1fc3a462de` (707 bytes); 16 declared files.
+  - Payload before: `6acd86694c680a6078c629a0668d255cc3232632838ac3198abbaa4f1530b581`; after: `6acd86694c680a6078c629a0668d255cc3232632838ac3198abbaa4f1530b581` (16 files, 17 entries, 296066 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-avi:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `a473063baf454fde3da6f5a2d5bc4411c4ef2b993d2cc35ac842c68e59c67b99`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/11f35fdd4cd6e108a33cd02bff5d305f4b8005dd37ef2d5cc2d101fa56788aa0.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `461f5399045eefa070d43d180b0eebb2b6d9239f7986a42942c17c693dc84cbe` (704 bytes); 16 declared files.
+  - Payload before: `6acd86694c680a6078c629a0668d255cc3232632838ac3198abbaa4f1530b581`; after: `6acd86694c680a6078c629a0668d255cc3232632838ac3198abbaa4f1530b581` (16 files, 17 entries, 296066 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-gif:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b3b106f8494ccc1c774e301333609f3f898fc34dca8e73a17efa7842266b6a04`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/ac3deb84736404876c37ecdbf6d6889a47f2b37586342f78dfc1a9fd9449f751.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `d70b5d1f16f286aa9c7b5e871719faf24bc5f9f69e4436415af9cf1ff72109de` (302 bytes); 7 declared files.
+  - Payload before: `1947351524a1995b6964c9e986d953e56ce294744e3e70e299c55feeae604170`; after: `1947351524a1995b6964c9e986d953e56ce294744e3e70e299c55feeae604170` (7 files, 8 entries, 29451 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-gif:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b3b106f8494ccc1c774e301333609f3f898fc34dca8e73a17efa7842266b6a04`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/cd5500413816d6676ac8f99083108d1fb46d224596e40074a478fdcdff7d2a7f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `fbd83b5a1e92ac0b1f003ded595d80a3661f6031a5284cf15ce2baa18e7a61f0` (299 bytes); 7 declared files.
+  - Payload before: `1947351524a1995b6964c9e986d953e56ce294744e3e70e299c55feeae604170`; after: `1947351524a1995b6964c9e986d953e56ce294744e3e70e299c55feeae604170` (7 files, 8 entries, 29451 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-stl:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d3dccd4676c17650b303a3ecea12c8d94bea9f6084f0c5cbe6bb214274c48c0b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/058a6d560cfaa315d8c0c70345c50985858dee589189415561919b1c682b7dc6.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `ae3429ffdb0b0088398242c9f7f9af5d37243d86c5c238d7f42d7d5273fe9820` (797 bytes); 18 declared files.
+  - Payload before: `76c9cebaaf8b98ea431516c0fd2027662ee994c88500a9e507b97375affceeb8`; after: `76c9cebaaf8b98ea431516c0fd2027662ee994c88500a9e507b97375affceeb8` (18 files, 19 entries, 254502 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-stl:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d3dccd4676c17650b303a3ecea12c8d94bea9f6084f0c5cbe6bb214274c48c0b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/bc717b13dcd6989c322e76bca01d636cef1f57e005a8992d142233ed74300803.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `cb59ca8f36b00f3d20dfb6e6e8991174d4cea4a20826dc67a8e505e583b3c97d` (794 bytes); 18 declared files.
+  - Payload before: `76c9cebaaf8b98ea431516c0fd2027662ee994c88500a9e507b97375affceeb8`; after: `76c9cebaaf8b98ea431516c0fd2027662ee994c88500a9e507b97375affceeb8` (18 files, 19 entries, 254502 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-mp4:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0cee634190bb01c5d9a9aea02caee79f9f6a0c906b5499f253f9f672375ee9ac`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e917149247ed7d1530f6aed66f3659f9998a5434540e742ae6702857dbb5e22f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `b3973f17563a5cbf9a002a446c7b87f42d6b781755ceff715eaf4182005dff64` (662 bytes); 15 declared files.
+  - Payload before: `7b755696da904f74b62b3fc107daae1f9bb3ea21c8ae4a607a4d38c0ce61df46`; after: `7b755696da904f74b62b3fc107daae1f9bb3ea21c8ae4a607a4d38c0ce61df46` (15 files, 16 entries, 332930 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-mp4:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0cee634190bb01c5d9a9aea02caee79f9f6a0c906b5499f253f9f672375ee9ac`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/c8e07ea022ab75e04d4597063dda4df6f7947b89b7bdc31f055ef1a35a1088da.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `6a4052c4de11e8e7f81e14dc7dc5795d5a3965cc8a475070ae42856d0f62900a` (659 bytes); 15 declared files.
+  - Payload before: `7b755696da904f74b62b3fc107daae1f9bb3ea21c8ae4a607a4d38c0ce61df46`; after: `7b755696da904f74b62b3fc107daae1f9bb3ea21c8ae4a607a4d38c0ce61df46` (15 files, 16 entries, 332930 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-las:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `962a4a945c77bf266b397e1dbcbfb044cf975e3cc3bb35a7b8d0aa8d1cb8a227`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/85f826c45df9a6af2f9f531182bebbcfe1216ac6ac1119b94f1bfd615b249a43.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `c7b5bb8ab65adc792eb4e1f14546238f247ab63944ec17403ec6d00ccf589ff5` (797 bytes); 18 declared files.
+  - Payload before: `2c398091c210e41aaa65fdf5e97124ec8f7e12b31a4fab76f228010c96e8c833`; after: `2c398091c210e41aaa65fdf5e97124ec8f7e12b31a4fab76f228010c96e8c833` (18 files, 19 entries, 294718 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-las:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `962a4a945c77bf266b397e1dbcbfb044cf975e3cc3bb35a7b8d0aa8d1cb8a227`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/01054c26a843f51b48686ab7a709fc6b9ae5d376a3b981799ba45b3d36c50605.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `d3fab5cf832db0a7c6a5d468fb68650756362bed7757b9ddf6811a64d8e740f1` (794 bytes); 18 declared files.
+  - Payload before: `2c398091c210e41aaa65fdf5e97124ec8f7e12b31a4fab76f228010c96e8c833`; after: `2c398091c210e41aaa65fdf5e97124ec8f7e12b31a4fab76f228010c96e8c833` (18 files, 19 entries, 294718 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-bcf:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d5a61b2583fe6a4050209c0941294571c71ab12ba035db236b1f3281039b3a85`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/1229521989c988ea02536a872bd102fbf8bb7a93ec7dc9081229b25c71d05474.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `36f6559e4c6d593bb4af76540dd6094441f5dbfcf5c8156e1ae5e2611bf78cb2` (842 bytes); 19 declared files.
+  - Payload before: `fa2426d0f032d42191def264b6da260846f30f3c1e23af8c7cfcd70f1146a281`; after: `fa2426d0f032d42191def264b6da260846f30f3c1e23af8c7cfcd70f1146a281` (19 files, 20 entries, 320653 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-bcf:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d5a61b2583fe6a4050209c0941294571c71ab12ba035db236b1f3281039b3a85`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a4f4dcba3896e60c61035d09b5466aba21635f570471ff5986014f23b8b5ee25.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `1becc06cfb9e7bfd775333e9e1ac0e1283594eeb763790ce0f4fb5cf0bea46d4` (839 bytes); 19 declared files.
+  - Payload before: `fa2426d0f032d42191def264b6da260846f30f3c1e23af8c7cfcd70f1146a281`; after: `fa2426d0f032d42191def264b6da260846f30f3c1e23af8c7cfcd70f1146a281` (19 files, 20 entries, 320653 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-pdf:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d1de50dad41e6371bad3a48b62621f5c6beb5bb2419b4c88346a5e7711a946e1`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/2359e3a4730cfc91531588faa6139f9c81d5ac9e5a8676075b6dfd2aa65dd3ca.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4db2fdf42facf71c5606b5208d875265dd8df7d8b837d19b2c29f5fc2fccb452` (2012 bytes); 45 declared files.
+  - Payload before: `21b8af681f73408faad882e3efa247929c3142e418908b10c77a0acdff1f3e31`; after: `21b8af681f73408faad882e3efa247929c3142e418908b10c77a0acdff1f3e31` (45 files, 46 entries, 2045248 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/release/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/release/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-pdf:release`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d1de50dad41e6371bad3a48b62621f5c6beb5bb2419b4c88346a5e7711a946e1`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📤️dist/release`; database `.cache/framework/leases/ab43271ee91d2e81d3e3f763730267e4fb14994a99a2be859609dce25bd430ac.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `ff6118e061a0f8760a8bdf52fd2fbc5dd71455b3409369a348cd4c873f8506dc` (1993 bytes); 44 declared files.
+  - Payload before: `53f95e023a4b8fb9beab5d0138a654e914695b2c72fcef722df38c9f866737a6`; after: `53f95e023a4b8fb9beab5d0138a654e914695b2c72fcef722df38c9f866737a6` (44 files, 45 entries, 789305 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-pdf:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d1de50dad41e6371bad3a48b62621f5c6beb5bb2419b4c88346a5e7711a946e1`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/4d8aa4769972a88264aa84e8c5455dea07571153bb816bd49f586131a9949677.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `9df70a62110f5cbb4de7551df1fab578ab4e80ce8dbd23abf63308509c0fd3d4` (1992 bytes); 44 declared files.
+  - Payload before: `53f95e023a4b8fb9beab5d0138a654e914695b2c72fcef722df38c9f866737a6`; after: `53f95e023a4b8fb9beab5d0138a654e914695b2c72fcef722df38c9f866737a6` (44 files, 45 entries, 789305 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-json:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `6133a3e382e1fa5240cc3fa28bb3a1af2add16742582963e1dd7561b9776689b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/388f3e5807a537b845be5f39014906b2807822d6d04a8b1a8817e83d546507cf.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `0b0c52458d8364e270b92b1769db4cb991b41de8f35dcfa5f31e2c95351b97e8` (843 bytes); 19 declared files.
+  - Payload before: `d6314368d6b4493c6943b7653b180678612c224a81c58b883c8889dec009350e`; after: `d6314368d6b4493c6943b7653b180678612c224a81c58b883c8889dec009350e` (19 files, 20 entries, 340022 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-json:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `6133a3e382e1fa5240cc3fa28bb3a1af2add16742582963e1dd7561b9776689b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a793c0978767f39ed6b84532ff7b179bc4734f7bbddd7a00fb6b2e5a4de31c9f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `c1fe99dc59c5d1877951759e64c90b65fac35ddbb2fd6889b1068f4b7eca553d` (840 bytes); 19 declared files.
+  - Payload before: `d6314368d6b4493c6943b7653b180678612c224a81c58b883c8889dec009350e`; after: `d6314368d6b4493c6943b7653b180678612c224a81c58b883c8889dec009350e` (19 files, 20 entries, 340022 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-dwg:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `9ea37f6b4447313bc756dcd87633dad04c81d53c729efc62cc8911c0eafebd1b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/6f436cf199374d676550979154bc73d538eef9be9a90b585174cdb01a02ad897.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `8dfffd329ea20cc73da067b2d33d399e041a8a9f158a986c5fd3261bee7c407b` (1832 bytes); 41 declared files.
+  - Payload before: `c7961698fa6f7b1e9a973d161231b244b5c699e1915823f089809faeece8760d`; after: `c7961698fa6f7b1e9a973d161231b244b5c699e1915823f089809faeece8760d` (41 files, 42 entries, 1719062 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-dwg:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `9ea37f6b4447313bc756dcd87633dad04c81d53c729efc62cc8911c0eafebd1b`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/32366c4d5a25afeda9af6a2887b1f51125e27fcaab471323ef638d3a85ebeaa6.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `42b23b97d517f150c11b8f778926ce1cd453a614a0b262054a81f95347ca0799` (1829 bytes); 41 declared files.
+  - Payload before: `c7961698fa6f7b1e9a973d161231b244b5c699e1915823f089809faeece8760d`; after: `c7961698fa6f7b1e9a973d161231b244b5c699e1915823f089809faeece8760d` (41 files, 42 entries, 1719062 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-png:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `e4e3f22d6564c64a8501065894d37735bb47087e13448860ff00913dc1dc2acb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/14108d36d64ba7f18c1426fc6060bc5e17083db6d2b66c6b5e2cc6f8ef57eb7f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `fbd4bd09caeadb5e588212261b58d5714664b3e5ed03d562d0c2c931a971f521` (1112 bytes); 25 declared files.
+  - Payload before: `658636a43e31e9fadae5fb5a31abedfa94f52d7eb7a9da6bacca052f86215d3d`; after: `658636a43e31e9fadae5fb5a31abedfa94f52d7eb7a9da6bacca052f86215d3d` (25 files, 26 entries, 476768 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-png:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `e4e3f22d6564c64a8501065894d37735bb47087e13448860ff00913dc1dc2acb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/e8cd8ea933359bd1679e663613afbedc8b84473aa4253cb19f35523a6569094f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `cf85a16d8eb8210263d7be0f71355fc9062b236fbef74d38dfa999dbd000834d` (1109 bytes); 25 declared files.
+  - Payload before: `658636a43e31e9fadae5fb5a31abedfa94f52d7eb7a9da6bacca052f86215d3d`; after: `658636a43e31e9fadae5fb5a31abedfa94f52d7eb7a9da6bacca052f86215d3d` (25 files, 26 entries, 476768 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-binary:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b4db73361d3b1b1b9e20beaccec47890ee300f6612f4b1f49d45bab591b3d671`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/b84da177d5131ead55d8732c5babb43e4827304ced9e93eccb2b55141e0980aa.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `59e3a9973c719ea16a22d54040a565429da5f922940ed7cbce21d63066b82ef6` (215 bytes); 5 declared files.
+  - Payload before: `0aa3e113cce25d79d1009fe7659b41bb9913f6bf8a8e5ccae78099dd8f44008f`; after: `0aa3e113cce25d79d1009fe7659b41bb9913f6bf8a8e5ccae78099dd8f44008f` (5 files, 6 entries, 15494 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-binary:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b4db73361d3b1b1b9e20beaccec47890ee300f6612f4b1f49d45bab591b3d671`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/04f83c2922d70743dd353c38e415b1bf67a356e8e42005b4f43a29e32223481e.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `c04e4bffcf482333f966bdf6ff7a7ced3f4a2a58d3f49c992e6c47e3c4ab7070` (212 bytes); 5 declared files.
+  - Payload before: `0aa3e113cce25d79d1009fe7659b41bb9913f6bf8a8e5ccae78099dd8f44008f`; after: `0aa3e113cce25d79d1009fe7659b41bb9913f6bf8a8e5ccae78099dd8f44008f` (5 files, 6 entries, 15494 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-txt:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `eb75a4b3b1f8c3d9dcd40942f1698cdd9424cd79c816d923933c0a3cc7f302eb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/efdce199862a17094fe3535409ffa75e91df5520d99731b6f8c35e7a2a6e9bba.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `2c897bbcb009eb53fcfa33f28d0c7e2e71fc11ecb7af1c8e60dfa5c2cf7ac8f2` (212 bytes); 5 declared files.
+  - Payload before: `718a9f0d505ca818470135f6b597622ee84b22cfb93bb6ff1c3070dd13bd9854`; after: `718a9f0d505ca818470135f6b597622ee84b22cfb93bb6ff1c3070dd13bd9854` (5 files, 6 entries, 15072 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-txt:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `eb75a4b3b1f8c3d9dcd40942f1698cdd9424cd79c816d923933c0a3cc7f302eb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/5b8384b5713bc63dcd0cc99292969a635b114061258abd8a8b33dbf9f9f10f92.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `f5b8f0afcc81d6fcb16369de133813611d9ef4a03a2269bdfd772ed55ddecc51` (209 bytes); 5 declared files.
+  - Payload before: `718a9f0d505ca818470135f6b597622ee84b22cfb93bb6ff1c3070dd13bd9854`; after: `718a9f0d505ca818470135f6b597622ee84b22cfb93bb6ff1c3070dd13bd9854` (5 files, 6 entries, 15072 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-tiff:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `5a4ba3f3286976eab371ff5e9b0e77cf299bbe3cb47a5a471cf7b02a30432c43`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/37d9a7f34ff20687b7a774284cc380cc8d7f53ed2e1eeb21026985496b5f0ba8.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `01c5d075ccec3cd0b46e76498b05a5e42bf8e61b6767769ef9482a97e18cd440` (978 bytes); 22 declared files.
+  - Payload before: `bb2663826695b0c216f033b62cf573f290ed120c629823dbd346b04acc38ac5b`; after: `bb2663826695b0c216f033b62cf573f290ed120c629823dbd346b04acc38ac5b` (22 files, 23 entries, 618613 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-tiff:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `5a4ba3f3286976eab371ff5e9b0e77cf299bbe3cb47a5a471cf7b02a30432c43`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/f9a7bd5827daae1696224c7ae6478a0564d77f9f10ec79bfd347695fc0056d83.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `74bbbfe71b50e76dc9ff13c2ef3d7a224a4679b7307b6b79dfca8b0b03d06765` (975 bytes); 22 declared files.
+  - Payload before: `bb2663826695b0c216f033b62cf573f290ed120c629823dbd346b04acc38ac5b`; after: `bb2663826695b0c216f033b62cf573f290ed120c629823dbd346b04acc38ac5b` (22 files, 23 entries, 618613 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-md:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d6ae28cf01c2a64b8e3d39edc9a3bc79f0ccc2b055532b2692b86018dad73a73`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e079d50e63a4ada814120b74792aaef68540e3dd319b349be6d7647b636d3ed3.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `bd3442ba4a37cbdc8dd791e44d6e1679297f94f7d6722b760969ad23271277c0` (706 bytes); 16 declared files.
+  - Payload before: `3c05abe0e707b1f0fd4807d04c07f2becba5db6d91014dbbfcd069a9e0e464d4`; after: `3c05abe0e707b1f0fd4807d04c07f2becba5db6d91014dbbfcd069a9e0e464d4` (16 files, 17 entries, 312107 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-md:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d6ae28cf01c2a64b8e3d39edc9a3bc79f0ccc2b055532b2692b86018dad73a73`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/8ed96eaebf0e85b2f2804e654e330d5dcd9740c1f1664dd32aa60f6209632cf8.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4541ae5141acd3fba8723eca7218f7b9e8921d8362b1930104455e8665b20207` (703 bytes); 16 declared files.
+  - Payload before: `3c05abe0e707b1f0fd4807d04c07f2becba5db6d91014dbbfcd069a9e0e464d4`; after: `3c05abe0e707b1f0fd4807d04c07f2becba5db6d91014dbbfcd069a9e0e464d4` (16 files, 17 entries, 312107 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-xml:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `cfa71d958249839c157c9d92316e15b5f55ca5e1e320ba8e17bef27b89396a36`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/de66ceb81db0c8dda5f7c284533e0c812b1505e4ddaf61192a59691f3b045b34.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `584b10a5395f984240adef08e136f120d15239bd432b98457541f85aac5255f0` (662 bytes); 15 declared files.
+  - Payload before: `816c12c46510f48b439962e6b316a340dff877b8b2568a650c0a1d5302636e0d`; after: `816c12c46510f48b439962e6b316a340dff877b8b2568a650c0a1d5302636e0d` (15 files, 16 entries, 348962 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-xml:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `cfa71d958249839c157c9d92316e15b5f55ca5e1e320ba8e17bef27b89396a36`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/c6f94747c575efe8b6c3d804108959ff6b7764236778b9787090f3ac73c1dde0.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `e7a292fbfc9111480ffc10db79ae2088be252e92531a96d302aa26878ca196c2` (659 bytes); 15 declared files.
+  - Payload before: `816c12c46510f48b439962e6b316a340dff877b8b2568a650c0a1d5302636e0d`; after: `816c12c46510f48b439962e6b316a340dff877b8b2568a650c0a1d5302636e0d` (15 files, 16 entries, 348962 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-pptx:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `cabe91bfd9cea71c1c69299c0ea7d830bf0230f66bf5d7c29b234ba45b68b009`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/d5c40b706999b0c156074afacfbca6fb5e5e6b4fb527934c31303671cfcec54b.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `b767511838bf20912a341166a0facb914e6565008bcadeb64243859ed2d9038e` (1023 bytes); 23 declared files.
+  - Payload before: `46a71172409c2f7dc36239b36769a27dd8c7a8213e0ab3a2c4578b780d943ccb`; after: `46a71172409c2f7dc36239b36769a27dd8c7a8213e0ab3a2c4578b780d943ccb` (23 files, 24 entries, 419856 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-pptx:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `cabe91bfd9cea71c1c69299c0ea7d830bf0230f66bf5d7c29b234ba45b68b009`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/4ea05326b2f90c1201d312211b5fda9de917222251713be19e604a5799908b2b.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `c8df4e88eca1bbc3ceef8076353c86d9e0f0649b3ca24edaccfa16a9237ea25a` (1020 bytes); 23 declared files.
+  - Payload before: `46a71172409c2f7dc36239b36769a27dd8c7a8213e0ab3a2c4578b780d943ccb`; after: `46a71172409c2f7dc36239b36769a27dd8c7a8213e0ab3a2c4578b780d943ccb` (23 files, 24 entries, 419856 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-step:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `79d8a96181cd3f7d5d6695637ed8b9b6d158316f344ba5046e1ed79b958f0c02`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/db647502c0ab201e4c778c8ce44a451144eb63f9ef294cb73e44310654d00fea.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `6d2753f421762069afcfcce3bdafb84a5832d38380315c8b00dc29cdc8d4422b` (888 bytes); 20 declared files.
+  - Payload before: `be162f730c7f458fd683286936bc2abc33f30168b0ff78d74214178ff057b93b`; after: `be162f730c7f458fd683286936bc2abc33f30168b0ff78d74214178ff057b93b` (20 files, 21 entries, 315756 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-step:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `79d8a96181cd3f7d5d6695637ed8b9b6d158316f344ba5046e1ed79b958f0c02`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a18fde16abc6cb4fcd83ce648be7a1922c4cf4faf6f66f0b9972ffe889003619.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `bd95c36f12f06efaaf16026805eaaca30a526ec130849786fa254a3f1d342b3c` (885 bytes); 20 declared files.
+  - Payload before: `be162f730c7f458fd683286936bc2abc33f30168b0ff78d74214178ff057b93b`; after: `be162f730c7f458fd683286936bc2abc33f30168b0ff78d74214178ff057b93b` (20 files, 21 entries, 315756 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-ply:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `331030c3d0b10572a8b2c5443df15581a8a2a0a2abdebf8084b95c442e760079`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/5e5b24d8ff0fb2155c4b568be376600de86f8d377575bdf243895090c0270e89.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `e82bfca15c75927754f107079250bb108e2143177b4bbc32689820aa28d4adb6` (797 bytes); 18 declared files.
+  - Payload before: `83411697084d8e3c49834c832a7d53a88a73fe718df1a135c1287b6bc74bbad9`; after: `83411697084d8e3c49834c832a7d53a88a73fe718df1a135c1287b6bc74bbad9` (18 files, 19 entries, 305637 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-ply:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `331030c3d0b10572a8b2c5443df15581a8a2a0a2abdebf8084b95c442e760079`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a8bf9083b6949498fc736336a927dd5eb45db71231274621edd83f89428c6894.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `a0eda193290be793f0d90eda1365f488a23d70788ca2b644c81c4db74ecab9f1` (794 bytes); 18 declared files.
+  - Payload before: `83411697084d8e3c49834c832a7d53a88a73fe718df1a135c1287b6bc74bbad9`; after: `83411697084d8e3c49834c832a7d53a88a73fe718df1a135c1287b6bc74bbad9` (18 files, 19 entries, 305637 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-xlsx:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d4933af820fade1183f14fd041e07474279b64e5602a3217bf711c8ab5a8e799`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/b2b31dafcce20e46e6a0eb5dc60f727b1ba82b32d46678d66215887854060cb7.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `8b2b01fc9141c94fbd9c808628ad74badc20aa2d30eef748ab7c773c6b414c08` (1023 bytes); 23 declared files.
+  - Payload before: `11f30a89d6adb7fc6b0ebd548297d3c13d9b8e8278d21860e1af8274fedaec2e`; after: `11f30a89d6adb7fc6b0ebd548297d3c13d9b8e8278d21860e1af8274fedaec2e` (23 files, 24 entries, 419364 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-xlsx:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d4933af820fade1183f14fd041e07474279b64e5602a3217bf711c8ab5a8e799`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/443fb7657afd0dd67f2b89eecceb246fe69c0290636ba50ed82ce339a88076e3.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `8716c919e9140800a690e9d8bdf1813dd97ce82c594bf8d84157aa3e76536a2f` (1020 bytes); 23 declared files.
+  - Payload before: `11f30a89d6adb7fc6b0ebd548297d3c13d9b8e8278d21860e1af8274fedaec2e`; after: `11f30a89d6adb7fc6b0ebd548297d3c13d9b8e8278d21860e1af8274fedaec2e` (23 files, 24 entries, 419364 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-zip:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `3206c1c2a7836247e046954d0878d8eebc53f9b70f4ef6a39c2eb942a621dd7d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/8e2a6734463a5980b754f64fa68977bbf5353b85ef5399c84a1b623fc7da6587.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `bb5d2c5b9465733c39389ff7f300eff650d5c3893d603930b55233bec774c65f` (752 bytes); 17 declared files.
+  - Payload before: `a935ca44de0e2f1c39bac558658bfe303e9e2edc3b62864db3ae98092a2956cf`; after: `a935ca44de0e2f1c39bac558658bfe303e9e2edc3b62864db3ae98092a2956cf` (17 files, 18 entries, 322389 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-zip:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `3206c1c2a7836247e046954d0878d8eebc53f9b70f4ef6a39c2eb942a621dd7d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/a795ee726fdaf32f0e65f13d00bb4b58b890178f2b936bad1af4424412645cba.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `a62855c232cc681a42775aea5e77c2af020ed4032dfcf16f6e8a08017d633dde` (749 bytes); 17 declared files.
+  - Payload before: `a935ca44de0e2f1c39bac558658bfe303e9e2edc3b62864db3ae98092a2956cf`; after: `a935ca44de0e2f1c39bac558658bfe303e9e2edc3b62864db3ae98092a2956cf` (17 files, 18 entries, 322389 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-deflate:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `3bee44c2af17739ab78103c79c6372c1a909f9c8d73b9e8f4599cd1c41ccb6c7`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e580ec742dc3a5838424e0d783bd1201c819f084954aceed0a5dd8ae76496ac1.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `7c8f4738900bb1d1b0254e47dd48aed68f9fa09ee11d2361072da8b6d9eaa112` (216 bytes); 5 declared files.
+  - Payload before: `0aba96e029dedd8b7a8845d3065b1d3a45e0b7d1b1e2e6293845cd40e15dd4e6`; after: `0aba96e029dedd8b7a8845d3065b1d3a45e0b7d1b1e2e6293845cd40e15dd4e6` (5 files, 6 entries, 22718 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-deflate:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `3bee44c2af17739ab78103c79c6372c1a909f9c8d73b9e8f4599cd1c41ccb6c7`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/2a44c89b373eefa1a01b3014e003bf00a8e0f882f082e015e2b3696d6fb87c68.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `71f7f5a3a07ba517e176c18abe18c4c250aef0455151c0cb3db0153812ea41e8` (213 bytes); 5 declared files.
+  - Payload before: `0aba96e029dedd8b7a8845d3065b1d3a45e0b7d1b1e2e6293845cd40e15dd4e6`; after: `0aba96e029dedd8b7a8845d3065b1d3a45e0b7d1b1e2e6293845cd40e15dd4e6` (5 files, 6 entries, 22718 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-html:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `2474aeba977f4e60579a0ac080f2213b5f33ba9f9925d399d32882667fbb9cb5`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/6f6f625b6143e04ea4ad4554a4b80113304f1845031805f877aa635628755008.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `8bd41aba962aa5b74762a68d26b05fd622a7512b272225e17b705f206e60184f` (663 bytes); 15 declared files.
+  - Payload before: `67046b25e65581d5077c7de30c099d99618d11fe395a7b43b351f71e3d00f77c`; after: `67046b25e65581d5077c7de30c099d99618d11fe395a7b43b351f71e3d00f77c` (15 files, 16 entries, 241146 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-html:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `2474aeba977f4e60579a0ac080f2213b5f33ba9f9925d399d32882667fbb9cb5`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/d45e4883fdf0ce096ca8d5405e3c8bd0de774ec0d9eb8831c3e8af2b4ecd1746.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `1f8f0cea9673f2d7e830cb6ade1da68985334b2458e0daf24c9ff763a39fd324` (660 bytes); 15 declared files.
+  - Payload before: `67046b25e65581d5077c7de30c099d99618d11fe395a7b43b351f71e3d00f77c`; after: `67046b25e65581d5077c7de30c099d99618d11fe395a7b43b351f71e3d00f77c` (15 files, 16 entries, 241146 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-semio:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `011f6a3d23e32700685298cc9832de2bc77020f49c5777dd6d15b5f4f13e372c`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/1c5c683ad44ffa2f67ab095a0cc20bd5d036029de8d83b2ed6779ca1bb3f6ae6.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `029cb298deaff02d9ad613ba11a44e9e27955ec672967344550612638a33c57b` (2779 bytes); 62 declared files.
+  - Payload before: `2cfd659178beeea03e6ac5f5528d4e0d721c95b7c9746b18832472a886e2bbe0`; after: `2cfd659178beeea03e6ac5f5528d4e0d721c95b7c9746b18832472a886e2bbe0` (62 files, 63 entries, 1304112 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-semio:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `011f6a3d23e32700685298cc9832de2bc77020f49c5777dd6d15b5f4f13e372c`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/036abd503fbdf9c39b54583deb0d23bfb9cdc6bc8e0414baeb3435b6e8f1dc01.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4dc57b292132c5c42ebb86f9384ec9618507d64f6849c18596ea5e3630401d76` (2776 bytes); 62 declared files.
+  - Payload before: `2cfd659178beeea03e6ac5f5528d4e0d721c95b7c9746b18832472a886e2bbe0`; after: `2cfd659178beeea03e6ac5f5528d4e0d721c95b7c9746b18832472a886e2bbe0` (62 files, 63 entries, 1304112 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-jpg:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `f1b96c53bef0b5c9e7924ddbb589dc74f9a36aabf3ad7daccd0b2ba8853f85fb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e527301ae26081e77fd5a1c5c9d2bb2e2456f816b009e3b6d9bb3d3238b82f5d.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `08741d8ef2fae79f03e24b0316149035c14ef0b4ac7a824dfae63484c0a8f1a5` (662 bytes); 15 declared files.
+  - Payload before: `2602418651579c08fc1ad583a26e57b5d5a6b39027b484dae55ba60242584032`; after: `2602418651579c08fc1ad583a26e57b5d5a6b39027b484dae55ba60242584032` (15 files, 16 entries, 264207 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-jpg:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `f1b96c53bef0b5c9e7924ddbb589dc74f9a36aabf3ad7daccd0b2ba8853f85fb`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/78cd0215b2acdbc65cde015d5f5b08f556814176079944a95a22242946258f80.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `9e7f08ffc46f9df6cd19c7134e17812fe1c48df22869c12090501b7c504eb683` (659 bytes); 15 declared files.
+  - Payload before: `2602418651579c08fc1ad583a26e57b5d5a6b39027b484dae55ba60242584032`; after: `2602418651579c08fc1ad583a26e57b5d5a6b39027b484dae55ba60242584032` (15 files, 16 entries, 264207 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-svg:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0c8ab92a2d42aaca3276ff0c3fbafbc813869cd6f0141ca2a43b6be12f388ce1`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/529fb10a47d8118309ecd164218571c4c6a471ee4866d0174c2d9f9df617264d.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `269f367086b4c78416f8407e481eae8e73d1bcc132820588d33bbe11a35593ac` (212 bytes); 5 declared files.
+  - Payload before: `3721b5bd06ac443b6f9df1b38f006c8ae8c8940215d5d449b8260404309e9a49`; after: `3721b5bd06ac443b6f9df1b38f006c8ae8c8940215d5d449b8260404309e9a49` (5 files, 6 entries, 27576 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-svg:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0c8ab92a2d42aaca3276ff0c3fbafbc813869cd6f0141ca2a43b6be12f388ce1`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/79d277f2f70e546cda0ff18169d16b7bb7d1ad8b8a58ee5ca64ad5f30f3e3641.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `777c68a7a3613da7692a3daea7066886334b84988b854705f375bab3a9e3bde3` (209 bytes); 5 declared files.
+  - Payload before: `3721b5bd06ac443b6f9df1b38f006c8ae8c8940215d5d449b8260404309e9a49`; after: `3721b5bd06ac443b6f9df1b38f006c8ae8c8940215d5d449b8260404309e9a49` (5 files, 6 entries, 27576 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-mp3:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `802e1d3e95a6ac49ba9bc757053aa873204de432a6bc545fd696e3401b63b133`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e3b7de6208de924405a47a6ff0d0cf2ed7dcde0c6d9b2480d5f46f5b034d2518.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `d9555513e5ed96ccf609d8d3268e9061a301f18b92286196c3bac20fe4e0da9c` (752 bytes); 17 declared files.
+  - Payload before: `1689172ffa7368bb9b4f9c213284953c23dfd0356a73ae812a1fd58ca678fd5c`; after: `1689172ffa7368bb9b4f9c213284953c23dfd0356a73ae812a1fd58ca678fd5c` (17 files, 18 entries, 282886 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-mp3:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `802e1d3e95a6ac49ba9bc757053aa873204de432a6bc545fd696e3401b63b133`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/36c3f3bde5071bd30951a36178ee9fdf559cff3dfda6d89518a38ea08abfa722.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `4c62aa800a1df8cd091fb2fffee1db9270a0049dacf49b4fb644f13d129fc3c9` (749 bytes); 17 declared files.
+  - Payload before: `1689172ffa7368bb9b4f9c213284953c23dfd0356a73ae812a1fd58ca678fd5c`; after: `1689172ffa7368bb9b4f9c213284953c23dfd0356a73ae812a1fd58ca678fd5c` (17 files, 18 entries, 282886 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-bmp:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d5ac9d9a8ebc472d4c85017c29400c123f3c7e6c0fdb340f8fef7a13f6026154`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/353ed47df6e3698c8932abfe06803ad20fb4bd4c3e2740745267d48fc7bebb0f.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `d24507c248cd5eed5d7a52eeb65c4f212958ad0a19df1f7fc3a03b69e89a2e88` (1022 bytes); 23 declared files.
+  - Payload before: `84485e5b17e49f096a2151e45ae176fc03e3ace9fc291ab6640f47b6dd7da234`; after: `84485e5b17e49f096a2151e45ae176fc03e3ace9fc291ab6640f47b6dd7da234` (23 files, 24 entries, 436722 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-bmp:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `d5ac9d9a8ebc472d4c85017c29400c123f3c7e6c0fdb340f8fef7a13f6026154`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/7e3117cb5cd60201f6f870b0d3f94ec0d659efd29b2166bd783e6cd402976b88.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `5d09daefc72f1b3ac22eec9055f0350a921e3925d62c6d7702b4453463adcbe4` (1019 bytes); 23 declared files.
+  - Payload before: `84485e5b17e49f096a2151e45ae176fc03e3ace9fc291ab6640f47b6dd7da234`; after: `84485e5b17e49f096a2151e45ae176fc03e3ace9fc291ab6640f47b6dd7da234` (23 files, 24 entries, 436722 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-wav:prototype`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0753d9840490ebf362647fb0c9c671f17d808b44a461f06a634732e8828901a2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e4d64f5e40a5b140d02a3359878d79b84775a92b70a04a1ca6869e98e52b8093.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `bb1475dd41b0fdb78a00466b2be3f353b444cab812a42e6aaf71e5619fb02585` (707 bytes); 16 declared files.
+  - Payload before: `c59710d34f8502ed33ca1b00be9e3c3df6ea6e58fe4d84cf426c621eb11d047b`; after: `c59710d34f8502ed33ca1b00be9e3c3df6ea6e58fe4d84cf426c621eb11d047b` (16 files, 17 entries, 296294 bytes).
+- Old: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/stdio-wav:active`
+  - Source: `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `0753d9840490ebf362647fb0c9c671f17d808b44a461f06a634732e8828901a2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/277dc8c5a87137e724c359e9781b84d9f437fda065b0156a54cebafd72b7508a.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `5d6bc389c51a1eae7e971186086b782b4a10a842f359503360f6345ec5accdfa` (704 bytes); 16 declared files.
+  - Payload before: `c59710d34f8502ed33ca1b00be9e3c3df6ea6e58fe4d84cf426c621eb11d047b`; after: `c59710d34f8502ed33ca1b00be9e3c3df6ea6e58fe4d84cf426c621eb11d047b` (16 files, 17 entries, 296294 bytes).
+- Old: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📤️dist/prototype/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📤️dist/prototype/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/trinity-jack:prototype`
+  - Source: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b6b9f9f29a2f817d2563708b9a71ab3b33cf0a8074ac979fc0402bbdae0fe162`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📤️dist/prototype`; database `.cache/framework/leases/e9897e9c476ea1a9afd9cc4b3ba72cf4a596bc7d95e9238c6c438040355a70d8.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `cfb0d3f12fece1e387456537fbccf204508462e30c56b3599f48ee48810bdf70` (1205 bytes); 27 declared files.
+  - Payload before: `cee5687a2b0281a1b5bf678ca31545a004811c0587480b6fc5966e6135578f0a`; after: `cee5687a2b0281a1b5bf678ca31545a004811c0587480b6fc5966e6135578f0a` (27 files, 28 entries, 461415 bytes).
+- Old: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/dist/.nx-artifact.json`
+  - New: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/dist/.semio-artifact.json`
+  - Owner: `typescript:@semio-tech/trinity-jack:active`
+  - Source: `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/📜️script.ts`; SHA256 `b6b9f9f29a2f817d2563708b9a71ab3b33cf0a8074ac979fc0402bbdae0fe162`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/dist`; database `.cache/framework/leases/0cd9071fef11d953141d44d4ee4be20cffbf8792878f2d6041d4be3fb9cb81e8.sqlite`.
+  - Ownership proof: Current package name and explicit generic artifact router; exact mode/active destination and owner in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️typescript/📜️script.ts.
+  - Marker before = after: `763deba6fc0389dff0d21ca13be21aee9e4b025f5bae4705b8279e547bf0a082` (1202 bytes); 27 declared files.
+  - Payload before: `cee5687a2b0281a1b5bf678ca31545a004811c0587480b6fc5966e6135578f0a`; after: `cee5687a2b0281a1b5bf678ca31545a004811c0587480b6fc5966e6135578f0a` (27 files, 28 entries, 461415 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp:go:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod`; SHA256 `cb39ba53a141ba16b05362ecfaf468fe2e49854cc4ca343d68f003f5eeab2335`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo`; database `.cache/framework/leases/4e36008576aa6e4a8e03becea4ff7167a12ad2147b03b6482b77e5af5b683ea2.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `028255dccc2a594664e6315e2523262a8e8a924acffd6224d01a4128826ac7c5` (167 bytes); 1 declared files.
+  - Payload before: `f1ccd10b5f8befe394b1451e4de4252edf927a224e906341a7c01c94615f138d`; after: `f1ccd10b5f8befe394b1451e4de4252edf927a224e906341a7c01c94615f138d` (1 files, 1 entries, 13579970 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/client/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/client/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main:go:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main/go.mod`; SHA256 `5b0f1cc0fde87c4a6285cfac2fd08ba96f23b5b3282e6e94b754a5ecb26b31f0`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/client`; database `.cache/framework/leases/aaac131f5b07060640adced807b627b6697c4f23de5581e47baa151cb738a0b1.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `69ebfb1999b7cad35b4088c629d61a395e40e0fdbe94b46345bb60560a8f6f5f` (206 bytes); 1 declared files.
+  - Payload before: `74b7396d62082500541d926458ea3e27328e3b50de531603fa81249fab95f53a`; after: `74b7396d62082500541d926458ea3e27328e3b50de531603fa81249fab95f53a` (1 files, 1 entries, 15915266 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/coordinator/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/coordinator/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main:go:prototype`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main/go.mod`; SHA256 `0670f0cfeee95e89348bddae2becaf23693bbcb968665aabadc7849cc5af9a6d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/coordinator`; database `.cache/framework/leases/53a6299c0eda84999c7d63e38e2e381854d327f3d2e265e25f93827650c12ef3.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `5c5c4d9d92c3b1b75de96098ea1417acab4e86b999c0995dd267726d883462e3` (231 bytes); 1 declared files.
+  - Payload before: `ef5113a7b4f443cd6d08c8ca92ae7a2b14c25a0e61a41e602c065a3ce0095d69`; after: `ef5113a7b4f443cd6d08c8ca92ae7a2b14c25a0e61a41e602c065a3ce0095d69` (1 files, 1 entries, 10738466 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp:go:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod`; SHA256 `cb39ba53a141ba16b05362ecfaf468fe2e49854cc4ca343d68f003f5eeab2335`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/repo`; database `.cache/framework/leases/48dd53930b9c07076cdda5955e2e10ea9177abf119a7a6e707bbad0801a8015e.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `757946c180ce3d82a0c348f7da9a78e691285e8b8813bdd701f6479f390f6c6d` (165 bytes); 1 declared files.
+  - Payload before: `0cf700c5c45a9875676c26892353396469e7b83951b2b265df185a59780c3a72`; after: `0cf700c5c45a9875676c26892353396469e7b83951b2b265df185a59780c3a72` (1 files, 1 entries, 8855234 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/client/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/client/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main:go:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main/go.mod`; SHA256 `5b0f1cc0fde87c4a6285cfac2fd08ba96f23b5b3282e6e94b754a5ecb26b31f0`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/client`; database `.cache/framework/leases/9c17ed3b2ac6187a84b8b6d15c346718acffb881265de24b1d71f807882c59cc.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `69650d613f586c1d3c31fa1b6a198275b51b4bf30896fa8ad5563fa2732819e2` (204 bytes); 1 declared files.
+  - Payload before: `d9f33d37f57391a5aaacc27bff0226bdb6a2249758c0bd872050dd4b6dc64c28`; after: `d9f33d37f57391a5aaacc27bff0226bdb6a2249758c0bd872050dd4b6dc64c28` (1 files, 1 entries, 10495650 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/coordinator/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/coordinator/.semio-artifact.json`
+  - Owner: `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main:go:release`
+  - Source: `🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main/go.mod`; SHA256 `0670f0cfeee95e89348bddae2becaf23693bbcb968665aabadc7849cc5af9a6d`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/🗃️bin/release/coordinator`; database `.cache/framework/leases/f5ac41fedd6e88837bc0b53dc969d527eef7c206cd134365757f592fd9787ff6.sqlite`.
+  - Ownership proof: Current executable owner cwd and mode output, runCanonicalGoBuild -> buildGoArtifactsV1, canonical repository lease store.
+  - Marker before = after: `9a59965815722dffe391adca8c963e5a76cc1dcfb6a32d4ece93cf2ad9dda33d` (229 bytes); 1 declared files.
+  - Payload before: `06da34b6d08a2c608ceebdfaa7b4e6d588ce2d50eff1e858fd0e6e59941042a8`; after: `06da34b6d08a2c608ceebdfaa7b4e6d588ce2d50eff1e858fd0e6e59941042a8` (1 files, 1 entries, 6920210 bytes).
+- Old: `.🧬semio/🦑️repo/⚡️cache/tools/native-executables/semio-wgpu-native/4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/tools/native-executables/semio-wgpu-native/4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38/.semio-artifact.json`
+  - Owner: `native-execution`
+  - Source: `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts`; SHA256 `fbb69970c19b99ed499b88d0be7d1eb7a515e4d47b9bbceef3dea75323bdd423`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tools/native-executables/semio-wgpu-native/4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38`; database `.cache/framework/leases/96fa412283a6e201c442e7905f805d737d5da868395b19feb2a52c68cfc63479.sqlite`.
+  - Ownership proof: Current exact publication owner and original canonical lease; marker metadata outside pinned payload identity.
+  - Marker before = after: `31ca4664b3c564135c220c7b1db2fb7f825d842bad4a559424ea63f3f228042a` (71 bytes); 1 declared files.
+  - Payload before: `30eb20e3e2a819f66e41a5a13ee61942cf4e16546520d58a13c59fd670e881c4`; after: `30eb20e3e2a819f66e41a5a13ee61942cf4e16546520d58a13c59fd670e881c4` (1 files, 1 entries, 523920 bytes).
+  - Pinned identity: `{"kind":"executable-sha256","expected":"4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38","actual":"4913bb3cd98aab28f0cde27f3362fd9e3d2befeb0fa300864432ff2ffe1eed38"}`.
+- Old: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0/.semio-artifact.json`
+  - Owner: `@semio-tech/print:deps-tex`
+  - Source: `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts`; SHA256 `2c6fb348256e8696b0fc38ea8e253cdc0cf2d75050261b53ff271ac8ac21f2c2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0`; database `.cache/framework/leases/2bf99196a97c04af8b9c855981228910da7fca88d59680161704992ded398c86.sqlite`.
+  - Ownership proof: Current exact publication owner and original canonical lease; marker metadata outside pinned payload identity.
+  - Marker before = after: `505de25488004ed2cc3cd66af047d83393cffcb0974ee3101e5f89563ae06f99` (8814 bytes); 487 declared files.
+  - Payload before: `c0233e1e4624f3911ab2aab641ce72c987883542a0948d11e1363e87676815d5`; after: `c0233e1e4624f3911ab2aab641ce72c987883542a0948d11e1363e87676815d5` (487 files, 487 entries, 19447055 bytes).
+  - Pinned identity: `{"kind":"previous-bundle-publication-receipt","expected":"2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0","actual":"2f375cdacdf7f982138c778c3e12d8cd11e4aa3af3d854deb1467d560e8d71b0","currentSourceSelects":false}`.
+- Old: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/4eaf526eacd253559604ec9a4aaf9b4319abaff487bd7116e611e8537b36a8bf/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/4eaf526eacd253559604ec9a4aaf9b4319abaff487bd7116e611e8537b36a8bf/.semio-artifact.json`
+  - Owner: `@semio-tech/print:deps-tex`
+  - Source: `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts`; SHA256 `2c6fb348256e8696b0fc38ea8e253cdc0cf2d75050261b53ff271ac8ac21f2c2`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tools/tectonic/bundles/4eaf526eacd253559604ec9a4aaf9b4319abaff487bd7116e611e8537b36a8bf`; database `.cache/framework/leases/177c22a01d0136191cac660aa1a6bebf25cc5455a545de72b58f796853eed742.sqlite`.
+  - Ownership proof: Current exact publication owner and original canonical lease; marker metadata outside pinned payload identity.
+  - Marker before = after: `198c4bb7bc0c9ab9b424fb1883870bab4eee8439d1817803028ef8ab89a88805` (9016 bytes); 501 declared files.
+  - Payload before: `e66dcb994be0bfec2a4ee3d26a1e5e44c25dca401fa06b2e282eb0f75f49b13a`; after: `e66dcb994be0bfec2a4ee3d26a1e5e44c25dca401fa06b2e282eb0f75f49b13a` (501 files, 501 entries, 19856856 bytes).
+  - Pinned identity: `{"kind":"current-pinned-bundle","expected":"4eaf526eacd253559604ec9a4aaf9b4319abaff487bd7116e611e8537b36a8bf","actual":"4eaf526eacd253559604ec9a4aaf9b4319abaff487bd7116e611e8537b36a8bf","files":500}`.
+- Old: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/0.16.9/aarch64-apple-darwin/.nx-artifact.json`
+  - New: `.🧬semio/🦑️repo/⚡️cache/tools/tectonic/0.16.9/aarch64-apple-darwin/.semio-artifact.json`
+  - Owner: `@semio-tech/print:deps-tectonic`
+  - Source: `🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts`; SHA256 `bf991a7a2c32720c47e96bcb0ab092f738033fd13444197249e7d67fe1a51354`.
+  - Custody: `.cache/framework/leases`, exclusive `artifact:/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/tools/tectonic/0.16.9/aarch64-apple-darwin`; database `.cache/framework/leases/66c173aec796034268fc115871c5718cb69d78444e23c7c5f7852a9a1a3a93b4.sqlite`.
+  - Ownership proof: Current exact publication owner and original canonical lease; marker metadata outside pinned payload identity.
+  - Marker before = after: `6681c31042677aebf9ad1bf9345863c2289c16ebcc73a432d9794a9d366390b5` (95 bytes); 2 declared files.
+  - Payload before: `890d21190b9bbca1bf1be0f332bda2303bd221d6fb4f34c7c52a110dd561aaeb`; after: `890d21190b9bbca1bf1be0f332bda2303bd221d6fb4f34c7c52a110dd561aaeb` (2 files, 2 entries, 50593776 bytes).
+  - Pinned identity: `{"kind":"current-pinned-toolchain","version":"0.16.9","target":"aarch64-apple-darwin","archiveSha256":"edb67c61aba768289f6da441c9e6f523cfaff4f8b2a5708523ef29c543f8e88e","files":{"tectonic":"e62304878074c889e7f96d169698632c4fe695b525fb54a3473d7b2128f54512"}}`.
+
+## Preserved Products With Unproven Current Custody
+
+The bounded current-workspace scan outside private state found 387 previous-marker products. Six mutable CLI products and seven tool wrappers were identified inside private state, giving 400 candidates. Exact source/destination/owner custody was proven for 97. The remaining 303 products are preserved with concrete blockers below. A historical marker alone does not authorize adoption. These include retired native output paths and profile-qualified browser owners that differ from the current profile-independent owner. The three dashboard wrappers publish under a former owner and former directory layout; current source selects mode-qualified owners and paths. The complete common graph was not loaded to infer missing custody.
+
+- `🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/dist/build/prototype/.nx-artifact.json`; owner `@semio-tech/ui-styling-py:build:prototype`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/dist/build/release/.nx-artifact.json`; owner `@semio-tech/ui-styling-py:build:release`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/dist/build/prototype/.nx-artifact.json`; owner `@semio-tech/ui-styling-dotnet:build:prototype`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet/dist/build/release/.nx-artifact.json`; owner `@semio-tech/ui-styling-dotnet:build:release`. No exact current producer/destination/lease proof admitted.
+- `🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📏️layout/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎥️shooting/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📋️forms/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🀄️wfc/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/components/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build/.nx-artifact.json`; owner `Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`; owner `🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`; owner `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml:browser:dev`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml:browser`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml:browser`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml:browser`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml:browser`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`; owner `browser-support:preview2`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml:browser`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🧵️shard/.nx-artifact.json`; owner `browser-support:shard`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔋️energy/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔋️energy/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📖️playbook/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📖️playbook/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖍️draw/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`; owner `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏗️fem/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏗️fem/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/➗️mathematical/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏛️architect/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🪵️sourcing/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📜️imperative/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📜️imperative/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌍️gis/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎞️animate/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎞️animate/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/✒️writer/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/✒️writer/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📘️stdio-pdf/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎬️sequence/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/💡️reasoning/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🕸️dag/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🕸️dag/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧱️block/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🧱️block/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📐️cad/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📐️cad/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📕️norm/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📕️norm/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏭️process/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🏭️process/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌊️flow/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📸️remodel/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`; owner `browser-support:release:preview2`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🔱️trinity/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`; owner `🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`; owner `browser-support:release:shard`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`; owner `✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml:browser:release`. Published profile-qualified browser owner differs from current profile-independent owner; original current ownership cannot be admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/shooting/.nx-artifact.json`; owner `playground-session:shooting`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/trinity-jack/.nx-artifact.json`; owner `playground-session:trinity-jack`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/draw/.nx-artifact.json`; owner `playground-session:draw`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/sequence/.nx-artifact.json`; owner `playground-session:sequence`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/raster/.nx-artifact.json`; owner `playground-session:raster`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/mathematical/.nx-artifact.json`; owner `playground-session:mathematical`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/remodel/.nx-artifact.json`; owner `playground-session:remodel`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/vcs/.nx-artifact.json`; owner `playground-session:vcs`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/writer/.nx-artifact.json`; owner `playground-session:writer`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/block2d/.nx-artifact.json`; owner `playground-session:block2d`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio-png/.nx-artifact.json`; owner `playground-session:stdio-png`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/dag/.nx-artifact.json`; owner `playground-session:dag`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/layout/.nx-artifact.json`; owner `playground-session:layout`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/lowpoly/.nx-artifact.json`; owner `playground-session:lowpoly`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/forms/.nx-artifact.json`; owner `playground-session:forms`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/demonstrator/.nx-artifact.json`; owner `playground-session:demonstrator`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/imperative/.nx-artifact.json`; owner `playground-session:imperative`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/animate/.nx-artifact.json`; owner `playground-session:animate`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/home/.nx-artifact.json`; owner `playground-session:home`. No exact current producer/destination/lease proof admitted.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/note/.nx-artifact.json`; owner `playground-session:note`. No exact current producer/destination/lease proof admitted.
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/dist/build/.nx-artifact.json`; owner `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`; owner `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/Cargo.toml`. Current exact native publication destination and original policy custody not proven from source; do not infer ownership from a retired marker.
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/153facd59ca0d86ee619624020f6e9ace89c088ccac42251ade3c9c68fab95eb/.nx-artifact.json`; owner `dashboard-installation`. Current owner is dashboard-installation:<mode> and current path is tools/dashboard-cli/<mode>/<digest>; historical owner/path differ. Payload SHA256 `153facd59ca0d86ee619624020f6e9ace89c088ccac42251ade3c9c68fab95eb` equals directory identity `153facd59ca0d86ee619624020f6e9ace89c088ccac42251ade3c9c68fab95eb`; current owner/path still differ.
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/f708544c597708510427ccbc164da0b93fbe1decd972311b1237f427798d5d5c/.nx-artifact.json`; owner `dashboard-installation`. Current owner is dashboard-installation:<mode> and current path is tools/dashboard-cli/<mode>/<digest>; historical owner/path differ. Payload SHA256 `f708544c597708510427ccbc164da0b93fbe1decd972311b1237f427798d5d5c` equals directory identity `f708544c597708510427ccbc164da0b93fbe1decd972311b1237f427798d5d5c`; current owner/path still differ.
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/713c31dac3d246e307a554e3dfbe3c3a89f13dbdeaa2ec5a914771b64d3ae6ac/.nx-artifact.json`; owner `dashboard-installation`. Current owner is dashboard-installation:<mode> and current path is tools/dashboard-cli/<mode>/<digest>; historical owner/path differ. Payload SHA256 `713c31dac3d246e307a554e3dfbe3c3a89f13dbdeaa2ec5a914771b64d3ae6ac` equals directory identity `713c31dac3d246e307a554e3dfbe3c3a89f13dbdeaa2ec5a914771b64d3ae6ac`; current owner/path still differ.
+
+## Preserved Backend, Snapshot And Other-Chat State
+
+The earlier broader private-state scan was stopped after reaching unrelated scratch workspaces; these counts describe observed paths, not a complete private-cache inventory. Backend cached task snapshots, compiler state and unrelated scratch/validation outputs remain untouched. Source changes provide new task identities; no cached result/CAS blob was rewritten. Repaired CLI/tool wrapper paths are separately identified above.
+
+### Other chats’ scratch workspaces (1713)
+
+- `.🧬semio/🌐hub/s13-wg9-b3-puzzle/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s13-wg9-b3-puzzle/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-wg11-all-note/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-wg11-all-note/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/playbook/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/dev/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/release/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🏢️semio-tech/🎡️play/dist/pages/play/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/trinity-jack/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/fem2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/din4108/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio-csv/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/s/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle5d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/reasoning-wires/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/bitmap/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/generation3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/wfc2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/home/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/🌎️hub/📦️packages/🦀️rust/dist/build-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/playbook/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/dev/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/release/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/trinity-jack/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/fem2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/din4108/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio-csv/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/s/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle5d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/reasoning-wires/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/bitmap/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/generation3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/wfc2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/home/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-scratch/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-s20-overlay-faults/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-wg11-all-puzzle/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-wg11-all-puzzle/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🏢️semio-tech/🎡️play/dist/pages/play/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/playbook/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/dev/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/release/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/trinity-jack/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/fem2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/din4108/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio-csv/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/s/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle5d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/reasoning-wires/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/bitmap/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/generation3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/wfc2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/home/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/🌎️hub/📦️packages/🦀️rust/dist/build-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🏢️semio-tech/🎡️play/dist/pages/play/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📖️playbook/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-c13-overlay/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/➗️mathematical/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎥️shooting/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏛️architect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📋️forms/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🧱️slabs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪵️beams/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪵️sourcing/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🎮️control/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/📣️effect/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📜️imperative/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🀄️wfc/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌿️vcs/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/✒️writer/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎬️sequence/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/💡️reasoning/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📐️cad/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/dist/component/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist/wasm-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/flow/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/demonstrator/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/playbook/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/dev/imperative/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/react/release/s/extensions/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/dev/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/release/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧿️stdio-semio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💼️stdio-office/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏠️stdio-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔢️stdio-binary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📘️stdio-pdf/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖼️stdio-image/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔺️stdio-mesh/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎵️stdio-media/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🛠️stdio-cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔋️energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💠️lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📖️playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖍️draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏗️fem/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧩️puzzle/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📏️layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➗️mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎥️shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏛️architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📋️forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗒️note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪵️sourcing/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📜️imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🀄️wfc/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌍️gis/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌿️vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌀️procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪐️space/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎞️animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/✒️writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧊️flow-extension-brep/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎬️sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/💡️reasoning/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗄️stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🕸️dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧱️block/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🤖️process-extension-robotic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🎪️demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔩️process-extension-metal/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📐️cad/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📕️norm/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔷️cad-extension-spatial-shape/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏭️process/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧇️sourcing-module-slabs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🌊️flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🖨️raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📸️remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/➕️imperative-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔱️trinity/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🧵️shard/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/📚️flow-extension-dictionary/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🏘️flow-extension-bim/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🔡️imperative-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/flow/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/shooting/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/trinity-jack/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/fem2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/sequence/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/raster/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/mathematical/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/remodel/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/din4108/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/architect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/vcs/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/writer/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/stdio-csv/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/s/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/block2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/puzzle5d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/dag/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/layout/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/lowpoly/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/reasoning-wires/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/bitmap/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/energy/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/forms/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/demonstrator/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/playbook/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/imperative/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/animate/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/generation3d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/wfc2d/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/home/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions/note/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🧱️concrete/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🤖️robotic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/🧩️extensions/🔩️metal/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🏭️process/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📝️text/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📃️list/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🔤️primitive/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧠️logic/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📖️dictionary/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🌊️flow/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🕸️dag/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-release/.nx-artifact.json`
+- `.🧬semio/🌐hub/s15-ex1-overlay/🌎️hub/📦️packages/🦀️rust/dist/build-dev/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧮️flow-extension-math/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔤️flow-extension-primitive/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚙️playbook-module-procedural/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎨️flow-extension-draw/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪜️sourcing-module-beams/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏢️cad-extension-aec-building/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏟️cad-extension-aec-building-structure/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🎮️imperative-extension-control/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🏙️process-extension-concrete/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪓️process-extension-wood/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/⚖️imperative-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🔀️flow-extension-logic/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📝️flow-extension-text/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📃️flow-extension-list/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🪟️sourcing-module-windows/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/📣️imperative-extension-effect/.nx-artifact.json`
+- `.🧬semio/🌐hub/s14-p9-overlay/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/🧊️flow-extension-brep/.nx-artifact.json`
+
+### Private compiler state and snapshots (30)
+
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/5c334f9924dfa6e85b05692b/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/d61fe74517b462bc957707fd/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/f6c5a65e8a502179d69ead11/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/910fa6f7f2da07d6bbc3e730/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/81e3f6da7d9ee88b61e88040/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/9acb9aaa67447182ea00ed2a/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/1e218777cb05dafc595ffa6a/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/5046b7e60e2dd2474e843a5c/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/157e496f39353bca378fb247/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/5b400f073ce00259237f8c9f/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/c5c32d793b7f701076bdc495/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/29e22a1bf3ceedad2d06d53f/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/22a117fa3d645d8f83ea02e6/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/3dd09cb115825eb1a45677c7/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/f00820f5bce37738315fef37/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/b309a23bef0c9a89b9c19380/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/bea93a6c69cd6af4dd2267ad/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/dd193678f497475286fa9bfc/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/92281e13ee2447c14ee60423/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/915d192575ba7c23c208f8f5/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/53f9bf668fdfd15467371dc7/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/24ae365418165f43e341ec1f/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/03680ee0858995d2e08418ed/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/fbfd6b3aa4ce31204d8d0795/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/0d89eb522cb8fcc2bc435068/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/e286dd54951e33a919221be0/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/a0b4f8c8f2ffd6980e4e8f5f/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/c9d37f869ecda4e34a6349cf/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/5a9c296198b652e5132bc011/snapshot/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/compiler/darwin-arm64/prototype/7a0e6227391cf2d3e2047af3/snapshot/.nx-artifact.json`
+
+### Immutable Nx task result snapshots (21)
+
+- `.🧬semio/🦑️repo/⚡️cache/nx/16463111238141709751/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/17549016279372302734/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/3587324345719216451/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/18257481364312139553/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/801539925544058241/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/8011456856553231416/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/17211310468503816338/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/prototype/extension/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/16373147554343487004/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/12655597531503176528/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/9048750321954089081/🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/7276215188253120690/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/11303648129274075621/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/14232899828341147642/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/15955925972534775339/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/1164252299442477245/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/3701367682057925865/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/prototype/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/15203320888450937154/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/2384365031159287891/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/dist/fonts/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/14452367541324955591/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/2978814213911516882/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/dist/release/extension/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/nx/10026231121352719815/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/dist/build/release/.nx-artifact.json`
+
+### Other validation or fleet caches (15)
+
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/d-MwkdeM/owner/dist/component/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/n-zcEZKb/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/d-BJxaTf/owner/dist/component/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/c-uhqUWt/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/c-H58sV4/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/d-1pLLJp/owner/dist/component/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/d-GoGIXc/owner/dist/component/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/c-xdmUim/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/d-XBqUZP/owner/dist/component/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/n-rQV7Lt/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/play-fleet/par/t3/n-ax4573/owner/dist/build/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/playground-session-output/run-h0JGcX/variants/note/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/🧪️plugin-registry/playground-session-output/run-pozbmg/variants/note/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/tc/🗑️generated/native-direct/dist/runtime/native/dev/fixture/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/tc/🗑️generated/reg/session-catalog-SGU8Ve/portable/.nx-artifact.json`
+
+### Other validation Cargo observation outputs (7)
+
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/c145c01f-8198-4c17-8298-e29ea812490d/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/073d46a4-c973-4632-ad59-6aa411dda495/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/f71388eb-d421-488d-b656-9fa68b892523/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/3e5438e3-a8e1-4192-98e5-8a7e87d567e1/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/f0611490-df4e-4d3f-8afe-82109f956d1d/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/a1e55473-2ee0-41e0-be14-44f9c0a60325/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture/semio-cargo-observations/912d3188-e447-47bd-b658-f89aa74c9df9/.nx-artifact.json`
+
+### Repaired published CLI and tool wrappers (10)
+
+These ten mutable wrappers are included in repaired witnesses above.
+
+### Preserved foreign dashboard tool products (3)
+
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/153facd59ca0d86ee619624020f6e9ace89c088ccac42251ade3c9c68fab95eb/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/f708544c597708510427ccbc164da0b93fbe1decd972311b1237f427798d5d5c/.nx-artifact.json`
+- `.🧬semio/🦑️repo/⚡️cache/tools/dashboard-cli/713c31dac3d246e307a554e3dfbe3c3a89f13dbdeaa2ec5a914771b64d3ae6ac/.nx-artifact.json`
+

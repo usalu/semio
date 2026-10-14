@@ -4,7 +4,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `ModelMutation` to its binary op form.

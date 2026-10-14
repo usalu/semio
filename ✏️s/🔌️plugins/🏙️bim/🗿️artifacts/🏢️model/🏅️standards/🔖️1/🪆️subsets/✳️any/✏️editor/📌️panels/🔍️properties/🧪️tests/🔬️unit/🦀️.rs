@@ -79,7 +79,7 @@ fn with_roof() -> ModelSnapshot {
     for (kind, id, parent) in [("roof-type", "rf-1", ""), ("roof", "roof-1", "st-ground")] {
         let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }
@@ -98,7 +98,7 @@ async fn walls_selected_with_a_roof_offer_to_attach_and_an_attached_wall_offers_
         let with_roof = text(&snapshot, &inference, &["w-south", "roof-1"], &[], locale);
         assert!(with_roof.contains("bim-properties.action.attach") && with_roof.contains(attach), "{with_roof}");
         assert!(!with_roof.contains("bim-properties.action.free-top"), "a free top has nothing to free");
-        let attached = crate::mutations::apply_model_mutation(&snapshot, &crate::ModelMutation::SetWallTop(crate::mutations::set_wall_top::SetWallTop { id: "w-south".into(), top: crate::TopConstraint::Roof { roof: "roof-1".into(), offset: 0.0 } })).expect("attaches");
+        let attached = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &crate::standards::v1::subsets::any::schema::mutations::ModelMutation::SetWallTop(crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop { id: "w-south".into(), top: crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { roof: "roof-1".into(), offset: 0.0 } })).expect("attaches");
         let rendered = text(&attached, &inferred(&attached), &["w-south"], &[], locale);
         assert!(rendered.contains("bim-properties.action.free-top") && rendered.contains(free), "{rendered}");
     }

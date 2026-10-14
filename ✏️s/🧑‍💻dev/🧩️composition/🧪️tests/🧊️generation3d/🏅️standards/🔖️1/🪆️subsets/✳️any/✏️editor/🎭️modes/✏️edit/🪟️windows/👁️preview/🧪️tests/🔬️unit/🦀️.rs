@@ -2,7 +2,7 @@ use super::*;
 use semio_s_artifact_procedural_generation3d::editor::generation3d::commands::set_active_example;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry, drain_flow_eval_ticks, render as render_body};
 use semio_s_artifact_procedural_generation3d::editor::generation3d::Generation3dCommand;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
 use semio_framework_plugin::PluginApp;
 
 /// 🚚️ The ASSEMBLED world-3d scene a render host reads back out of the projected preview body.
@@ -70,7 +70,7 @@ async fn the_demonstrator_boot_example_renders_a_non_empty_preview_scene() {
     let mut app = app_with_registry().await;
     let (flow_view, preview_view) = context::shell_views(semio_s_artifact_procedural_generation3d::editor::generation3d::modes::edit::windows::flow::GENERATION_3D_PLAY_WINDOW_MAIN, GENERATION_3D_PLAY_WINDOW_PREVIEW);
     let action_meta = semio_framework_plugin::ActionMeta { view_state: Some(flow_view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta)
+    app.handle_action("setActiveExample", Some(&serde_json::json!({ "exampleId": semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN }).into()), &action_meta)
         .await
         .expect("the generator pane's boot dispatches setActiveExample under the flow window");
     let receipt = context::settle(&mut app).await;

@@ -1,7 +1,9 @@
 //! ↩️ Owns the original rename identifier and old name through separately granted native pages.
 
-use super::{owned::{DrawingOwnedRenamePlan, DrawingOwnedRenamePreparationCursor, DrawingOwnedRenamePreparationStep}, RenameLayer};
-use crate::{DrawingMutation, DrawingSnapshot};
+use super::owned::{DrawingOwnedRenamePlan, DrawingOwnedRenamePreparationCursor, DrawingOwnedRenamePreparationStep};
+use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
+use crate::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_value::{ValueError, ValueRefusalKind, list::PagedList, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection}};
 use std::{mem::{ManuallyDrop, size_of}, ops::{Deref, DerefMut}};
 

@@ -1,5 +1,5 @@
 //! 🧪️ Drawing presence — the sparse `Set` mutation's concrete inverse sums to exactly the negative diff.
-use super::{DrawingPresence, DrawingPresenceDiff, DrawingPresenceMutation};
+use super::{DrawingPresence, DrawingPresenceMutation};
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::Mutation;
 

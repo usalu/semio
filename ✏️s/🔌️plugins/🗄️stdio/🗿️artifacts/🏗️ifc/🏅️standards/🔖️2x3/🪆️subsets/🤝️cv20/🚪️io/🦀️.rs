@@ -4,8 +4,8 @@
 //! aggregator, and the `SubsetValidator` directly), not per-leaf `register()`.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3AnyComposer;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Composer as Ifc2x3AnyComposer;
     use crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
@@ -70,11 +70,19 @@ use semio_framework_diagnostic::TextSpan;
         }
     }
 
+    impl store::io::SnapshotSubsetValidator for Ifc2x3Cv20Validator {
+        type Snapshot = Ifc2x3Snapshot;
+
+        fn validate_snapshot(snapshot: &Ifc2x3Snapshot, _database: &semio_framework_os_kernel::sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework_os_kernel::io_schema::IoResult<()> {
+            crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance_controlled(snapshot, control).map(|diagnostics| semio_framework_os_kernel::io_schema::IoOutcome { value: (), diagnostics }).map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)
+        }
+    }
+
     static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn validator_entry() -> &'static SubsetValidatorEntry {
-        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<Ifc2x3Cv20Validator>)
+        VALIDATOR_ENTRY.get_or_init(store::io::snapshot_subset_validator_entry_of::<Ifc2x3Cv20Validator>)
     }
 
     /// 📌️ Registers this subset's `SubsetValidator`. Called from the `2x3` standard's own
@@ -100,9 +108,10 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
-    use crate::standards::v2x3::subsets::base::schema::mutations::{upsert_instance, Ifc2x3Mutation};
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::upsert_instance;
+    use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::cv20::io::check_cv20_conformance;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
@@ -243,13 +252,14 @@ use semio_framework_diagnostic::Severity;
     //#endregion 🔖️Builder
 
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
 }
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-    use crate::standards::v2x3::subsets::base::io::{Ifc2x3Analyzer as Ifc2x3AnyAnalyzer, Ifc2x3Parts};
+    use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Analyzer as Ifc2x3AnyAnalyzer;
+    use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::Ifc2x3Parts;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
@@ -346,7 +356,11 @@ use semio_framework_diagnostic::TextSpan;
     /// 🛡️ Checks the exact Coordination View rules with bounded borrowed scans.
     pub fn check_cv20_conformance_controlled(snapshot:&Ifc2x3Snapshot,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<Vec<Diagnostic>,semio_framework_os_kernel::sqlite_snapshot::ValueError>{
         use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
-        use crate::standards::v2x3::subsets::base::io::sqlite::snapshot::{mvd_header,mvd_instances,mvd_identity_index,mvd_entity,MvdDiagnostics};
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_header;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_instances;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_identity_index;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::mvd_entity;
+        use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::sqlite::snapshot::MvdDiagnostics;
         let mut out=MvdDiagnostics::default();let(schema,view)=mvd_header(snapshot,"CoordinationView",control)?;
         if !schema{let message="FILE_SCHEMA does not declare IFC2X3 -- Coordination View 2.0 is an IFC2x3 MVD";out.emit(CODE_FILE_SCHEMA,Severity::Error,format_args!("{message}"),control)?;}
         if !view{let message="FILE_DESCRIPTION's ViewDefinition tuple does not name CoordinationView";out.emit(CODE_VIEW_DEFINITION,Severity::Error,format_args!("{message}"),control)?;}
@@ -390,7 +404,7 @@ use semio_framework_diagnostic::TextSpan;
 
     //#region 🧪️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-analysis-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
 pub use derived_analysis::*;

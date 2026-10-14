@@ -18,7 +18,7 @@ use crate::standards::v1::subsets::any::schema::authored::references;
 use super::super::super::energy_envelope::{neighbour_storey, Climate, EnergyScope};
 use super::super::super::zones::counts;
 use super::{DiagnosticScope, ModelNode, NodeKind, TotalsScope};
-use crate::{ModelSnapshot, TopConstraint, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, ViewKind};
 use protocol::InferenceStep;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -59,8 +59,8 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
         steps.extend(stackings(snapshot).into_iter().map(|(id, below)| step(ModelNode::Storey(id), below.into_iter().map(ModelNode::Storey).collect())));
     }
 
-    let walls: Vec<(&String, &crate::Wall)> = snapshot.walls.iter().filter(|(_, wall)| on_storey(&wall.storey)).collect();
-    let curtains: Vec<(&String, &crate::CurtainWall)> = snapshot.curtain_walls.iter().filter(|(_, curtain)| on_storey(&curtain.storey)).collect();
+    let walls: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Wall)> = snapshot.walls.iter().filter(|(_, wall)| on_storey(&wall.storey)).collect();
+    let curtains: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::CurtainWall)> = snapshot.curtain_walls.iter().filter(|(_, curtain)| on_storey(&curtain.storey)).collect();
 
     if has(NodeKind::Band) {
         steps.extend(walls.iter().map(|(id, _)| step(ModelNode::Band((*id).clone()), Vec::new())));
@@ -127,24 +127,24 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
             steps.push(step(ModelNode::OpeningFrame(id.clone()), parents));
         }
     }
-    let stairs: Vec<(&String, &crate::Stair)> = snapshot.stairs.iter().filter(|(_, stair)| on_storey(&stair.storey)).collect();
+    let stairs: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Stair)> = snapshot.stairs.iter().filter(|(_, stair)| on_storey(&stair.storey)).collect();
     if has(NodeKind::StairRun) {
         steps.extend(stairs.iter().map(|(id, stair)| step(ModelNode::StairRun((*id).clone()), storeys_of(snapshot, &stair.storey, Some(&stair.top)))));
     }
-    let ramps: Vec<(&String, &crate::Ramp)> = snapshot.ramps.iter().filter(|(_, ramp)| on_storey(&ramp.storey)).collect();
+    let ramps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Ramp)> = snapshot.ramps.iter().filter(|(_, ramp)| on_storey(&ramp.storey)).collect();
     if has(NodeKind::RampRun) {
         steps.extend(ramps.iter().map(|(id, ramp)| step(ModelNode::RampRun((*id).clone()), storeys_of(snapshot, &ramp.storey, Some(&ramp.top)))));
     }
 
-    let walls_by_id: BTreeMap<&str, &crate::Wall> = walls.iter().map(|(id, wall)| (id.as_str(), *wall)).collect();
-    let sweeps: Vec<(&String, &crate::WallSweep)> = snapshot.wall_sweeps.iter().filter(|(_, sweep)| walls_by_id.contains_key(sweep.host.as_str())).collect();
+    let walls_by_id: BTreeMap<&str, &crate::standards::v1::subsets::any::schema::snapshot::Wall> = walls.iter().map(|(id, wall)| (id.as_str(), *wall)).collect();
+    let sweeps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::WallSweep)> = snapshot.wall_sweeps.iter().filter(|(_, sweep)| walls_by_id.contains_key(sweep.host.as_str())).collect();
     let filler = |id: &String| snapshot.openings.get(id).and_then(|opening| family_of(&opening.kind));
     let fillers: Vec<(&String, SolidFamily)> = snapshot.openings.keys().filter(|id| opening_storey(snapshot, id).is_some_and(|storey| on_storey(&storey))).filter_map(|id| filler(id).map(|family| (id, family))).collect();
     if has(NodeKind::Family) {
         steps.extend(snapshot.families.keys().map(|id| step(ModelNode::Family(id.clone()), Vec::new())));
     }
-    let components: Vec<(&String, &crate::Component)> = snapshot.components.iter().filter(|(_, component)| on_storey(&component.storey)).collect();
-    let meps: Vec<(&String, &crate::MepElement)> = snapshot.mep_elements.iter().filter(|(_, mep)| on_storey(&mep.storey)).collect();
+    let components: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::Component)> = snapshot.components.iter().filter(|(_, component)| on_storey(&component.storey)).collect();
+    let meps: Vec<(&String, &crate::standards::v1::subsets::any::schema::snapshot::MepElement)> = snapshot.mep_elements.iter().filter(|(_, mep)| on_storey(&mep.storey)).collect();
     let mut meps_by_storey: BTreeMap<&str, Vec<&String>> = BTreeMap::new();
     for (id, mep) in &meps {
         meps_by_storey.entry(mep.storey.as_str()).or_default().push(id);
@@ -349,7 +349,7 @@ pub fn build(snapshot: &ModelSnapshot, wanted: u64) -> Vec<InferenceStep<ModelNo
 
         if has(NodeKind::Zone) || has(NodeKind::Scheme) {
             let measured: BTreeSet<&str> = quantities.iter().map(|(id, _)| id.as_str()).collect();
-            let spaces_of = |counted: &dyn Fn(&crate::Space) -> bool| -> Vec<ModelNode> { snapshot.spaces.iter().filter(|(id, space)| measured.contains(id.as_str()) && counted(space)).map(|(id, _)| ModelNode::Quantity(id.clone())).collect() };
+            let spaces_of = |counted: &dyn Fn(&crate::standards::v1::subsets::any::schema::snapshot::Space) -> bool| -> Vec<ModelNode> { snapshot.spaces.iter().filter(|(id, space)| measured.contains(id.as_str()) && counted(space)).map(|(id, _)| ModelNode::Quantity(id.clone())).collect() };
             if has(NodeKind::Zone) {
                 steps.extend(snapshot.zones.keys().map(|zone| step(ModelNode::Zone(zone.clone()), spaces_of(&|space| space.zone.as_deref() == Some(zone.as_str())))));
             }
@@ -492,7 +492,7 @@ fn clash_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> 
 
 /// ⚖️ The `Rule` nodes: one per rule, the planned nodes that hold the measures of its members as parents (stair runs, opening frames, ramp runs, rooms of the storeys of its spaces or zones).
 fn rule_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>]) -> Vec<InferenceStep<ModelNode>> {
-    use crate::RuleKind::{MaxCompartmentArea, MaxRampSlope, MaxRiser, MinClearHeight, MinCorridorWidth, MinDoorWidth, MinStairWidth, MinTread};
+    use crate::standards::v1::subsets::any::schema::snapshot::RuleKind::{MaxCompartmentArea, MaxRampSlope, MaxRiser, MinClearHeight, MinCorridorWidth, MinDoorWidth, MinStairWidth, MinTread};
     let planned: BTreeSet<&ModelNode> = steps.iter().map(|planned| &planned.key).collect();
     snapshot
         .rules
@@ -580,18 +580,18 @@ pub fn element_storey(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
 }
 
 /// 🧩️ The family nodes of the profile families the given profiles name (only families that exist).
-pub fn family_parents(snapshot: &ModelSnapshot, profiles: Vec<&crate::Profile>) -> Vec<ModelNode> {
+pub fn family_parents(snapshot: &ModelSnapshot, profiles: Vec<&crate::standards::v1::subsets::any::schema::snapshot::Profile>) -> Vec<ModelNode> {
     let named: BTreeSet<&str> = profiles.into_iter().filter_map(families::family_of_profile).filter(|id| snapshot.families.contains_key(*id)).collect();
     named.into_iter().map(|id| ModelNode::Family(id.to_string())).collect()
 }
 
 /// 🛤️ The rail, post and baluster sections of a railing.
-pub fn railing_profiles(railing: &crate::Railing) -> Vec<&crate::Profile> {
+pub fn railing_profiles(railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<&crate::standards::v1::subsets::any::schema::snapshot::Profile> {
     [Some(&railing.profile), Some(&railing.post_profile), railing.baluster.as_ref().map(|row| &row.profile)].into_iter().flatten().collect()
 }
 
 /// 🪝️ The nodes the solid of a railing is computed from: the storey it stands on and, when it is hosted, the run of its stair or ramp host or the storey of its slab host.
-pub fn railing_parents(snapshot: &ModelSnapshot, railing: &crate::Railing) -> Vec<ModelNode> {
+pub fn railing_parents(snapshot: &ModelSnapshot, railing: &crate::standards::v1::subsets::any::schema::snapshot::Railing) -> Vec<ModelNode> {
     let mut parents = vec![ModelNode::Storey(railing.storey.clone())];
     let Some(host) = railing.host.as_ref() else { return parents };
     if let Some(stair) = snapshot.stairs.get(&host.element).filter(|stair| snapshot.storeys.contains_key(&stair.storey)) {

@@ -33,8 +33,10 @@ semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", p
 # own `🦀️.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/🦀️.rs`) — for
 # `store::pack_rt::{encode_wire_value,decode_wire_value}`.
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-# 🧠️ The owned interpreter and its guest runtime: the emitter runs every component under it and links no plugin host.
-semio-framework-plugin-interpreter = { workspace = true }
+# 🧠️ The owned interpreter's guest runtime and the guest contract it speaks: the emitter runs every component under it and links no
+# plugin host.
+semio-framework-plugin-guest-contract = { workspace = true }
+semio-framework-plugin-interpreter-runtime = { workspace = true }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 # ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `💾️binary/🦀️.rs`, the
@@ -42,6 +44,8 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-async = { workspace = true }
 
 [dev-dependencies]
+# 🧠️ The core interpreter, whose owned core-export set the owned core-export law reads.
+semio-framework-plugin-interpreter = { workspace = true }
 # 🐎️ The Wasmtime describe oracle of the owned differential (`🧪️tests/🔬️unit`) and nothing else: the emitter itself runs every
 # component under the owned interpreter, so the release tool links no Wasmtime. A real `wasm32-wasip2` component imports
 # `wasi:io/poll` and friends through the Rust target's runtime shim, so the oracle links `wasmtime-wasi` beside `world actor`'s

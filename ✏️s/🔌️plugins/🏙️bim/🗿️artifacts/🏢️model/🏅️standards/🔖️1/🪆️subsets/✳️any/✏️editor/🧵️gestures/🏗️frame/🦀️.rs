@@ -7,7 +7,7 @@ use super::opening::nearest_host;
 use super::plane::{angle, axis_ends, dist, P};
 use super::session::{Mark, Pointer, Preview, Step, Style, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
-use crate::{Assigned, CurtainGrid, CurtainPanel, CurtainPanelOverride, ModelMutation, Slope};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, Slope}, mutations::ModelMutation};
 
 /// 📏️ The shortest lean a tilt is written for, in metres of top offset.
 const MIN_LEAN: f64 = 1e-3;
@@ -64,7 +64,7 @@ impl Tool for Tilt {
                     return Step::default();
                 };
                 let tilt = Self::lean(ctx, &id, foot, pointer.at);
-                Step::write(ctx, ModelMutation::SetColumnTilt(crate::mutations::set_column_tilt::SetColumnTilt { id, tilt }))
+                Step::write(ctx, ModelMutation::SetColumnTilt(crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt { id, tilt }))
             }
             ToolEvent::Escape | ToolEvent::Lost => {
                 *self = Self::default();
@@ -152,7 +152,7 @@ impl Lines {
         }
         let rule = Some(Assigned::new(Some(CurtainGrid::Lines { positions: lines })));
         let (u_grid, v_grid) = if found.v.is_some() { (None, rule) } else { (rule, None) };
-        Step::write(ctx, ModelMutation::SetCurtainWallGrid(crate::mutations::set_curtain_wall_grid::SetCurtainWallGrid { id: found.wall.clone(), u_grid, v_grid }))
+        Step::write(ctx, ModelMutation::SetCurtainWallGrid(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid { id: found.wall.clone(), u_grid, v_grid }))
     }
 }
 
@@ -213,13 +213,13 @@ impl Cell {
             CurtainPanel::Empty
         };
         match existing {
-            Some((id, _)) if !door => Step::write(ctx, ModelMutation::DeleteCurtainPanelOverride(crate::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id })),
-            Some((id, current)) if current == panel => Step::write(ctx, ModelMutation::DeleteCurtainPanelOverride(crate::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id })),
-            Some((id, _)) => Step::write(ctx, ModelMutation::SetCurtainPanelOverride(crate::mutations::set_curtain_panel_override::SetCurtainPanelOverride { id, panel })),
+            Some((id, _)) if !door => Step::write(ctx, ModelMutation::DeleteCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id })),
+            Some((id, current)) if current == panel => Step::write(ctx, ModelMutation::DeleteCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id })),
+            Some((id, _)) => Step::write(ctx, ModelMutation::SetCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::SetCurtainPanelOverride { id, panel })),
             None => {
                 let id = ctx.mint("curtain-panel-override");
                 let curtain_panel_override = CurtainPanelOverride { curtain: wall.to_string(), u, v, panel };
-                Step::write(ctx, ModelMutation::CreateCurtainPanelOverride(crate::mutations::create_curtain_panel_override::CreateCurtainPanelOverride { id, curtain_panel_override }))
+                Step::write(ctx, ModelMutation::CreateCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override::CreateCurtainPanelOverride { id, curtain_panel_override }))
             }
         }
     }

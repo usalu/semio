@@ -4,7 +4,7 @@ struct OriginalToolLeaseAdmission {
     verb:ManuallyDrop<Option<String>>,
     operation:Option<semio_framework_job::Operation>,
     lease:ManuallyDrop<Option<ToolCancellationLease>>,
-    retirement:ManuallyDrop<Option<crate::typed_operation::ToolCancellationLeaseRetirement>>,
+    retirement:ManuallyDrop<Option<crate::tool_cancellation::ToolCancellationLeaseRetirement>>,
     instance:u32,
     identity:(semio_framework_job::OperationId,semio_framework_job::Generation,usize),
     keyed:bool,
@@ -82,7 +82,7 @@ impl<A:ArtifactApp,M:SpaceMember+MemberFactory+'static> VcsArtifactApp<A,M> {
             if owner.terminal_is_empty(){pending.retirement.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             return owner.close_step(self.tool_cancellations.handle().unwrap(),grant).map_err(Into::into)
         }
-        if let Some(lease)=pending.lease.take(){lease.cancel();*pending.retirement=Some(crate::typed_operation::ToolCancellationLeaseRetirement::new(lease));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+        if let Some(lease)=pending.lease.take(){lease.cancel();*pending.retirement=Some(crate::tool_cancellation::ToolCancellationLeaseRetirement::new(lease));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         if pending.verb.is_some(){drop(pending.verb.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}
         if let Some(operation)=pending.operation.take(){self.release_reserved_emit_slot(operation.operation.0);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         if let Some(source)=pending.source.as_mut(){pending.returning=true;let step=source.close_step(cx.original_source_parent()?,cx)?;if source.terminal_is_empty(){pending.source.take();}return Ok(RetainedCloneStep::Progress(step.progress()))}

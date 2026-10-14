@@ -21,7 +21,11 @@ semio_framework_plugin::history_edit_acceptance_law!("stdio/SemioAnyEditor", Sem
 
 mod edit_rules_laws {
     
-    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_in, edited, list_move, spread_item, Entries};
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::complete_in;
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::edited;
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::list_move;
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_item;
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Entries;
     use semio_framework_value::DslValue;
     use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};
 

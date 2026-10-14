@@ -1,0 +1,55 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-cad-cad-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad io: text and binary codecs, import, export and geometry bridges"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+base64_codec = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-cad-cad-inferences = { workspace = true }
+semio-s-artifact-cad-cad-model = { workspace = true }
+semio-s-artifact-cad-cad-mutations = { workspace = true }
+semio-s-artifact-cad-cad-play = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-brep = { workspace = true }
+semio-s-artifact-stdio-semio-brep-export = { workspace = true }
+semio-s-artifact-stdio-semio-brep-import = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-semio-model = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-cad-cad-host = { workspace = true }
+semio-s-artifact-cad-cad-mut-slots = { workspace = true }
+semio-s-artifact-cad-cad-testing = { workspace = true }

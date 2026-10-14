@@ -83,7 +83,7 @@ pub(crate) struct LocalInteractionQuery<C: LocalInteractionQueryCapture = LocalI
     ready: bool,
     terminal_page: bool,
     retiring_page: bool,
-    closing: bool,
+    pub(crate) closing: bool,
     retired_bytes: u64,
 }
 

@@ -6,10 +6,10 @@ use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_valu
 use crate::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
 use crate::editor::bim::panels::properties::input_row;
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::family_rules::parameters_in_order;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
 use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
 use crate::standards::v1::subsets::any::schema::inferences::families::{parameters, IssueOwner};
-use crate::{ModelSnapshot, ParameterKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ParameterKind};
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::UiAssemblyResult;

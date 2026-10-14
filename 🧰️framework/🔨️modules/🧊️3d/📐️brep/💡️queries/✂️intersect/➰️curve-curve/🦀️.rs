@@ -9,11 +9,11 @@
 //! See ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, upgraded in
 //! `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A).
 
-use semio_framework_3d_brep_representation::curve::bezier::RationalBezier3;
-use semio_framework_3d_brep_representation::curve::{Curve3, NurbsCurve3};
+use semio_framework_3d_brep_curve::bezier::RationalBezier3;
+use semio_framework_3d_brep_curve::{Curve3, NurbsCurve3};
 use semio_framework_3d_brep_representation::error::IntersectError;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -298,10 +298,10 @@ fn nurbs_to_bezier_segments(nurbs: &NurbsCurve3) -> Result<Vec<(RationalBezier3,
     }
     for u in unique {
         while knots.multiplicity(u) < p {
-            let (nk, nx) = semio_framework_3d_brep_representation::curve::bspline::insert_knot(&knots, &hx, u);
-            let (_, ny) = semio_framework_3d_brep_representation::curve::bspline::insert_knot(&knots, &hy, u);
-            let (_, nz) = semio_framework_3d_brep_representation::curve::bspline::insert_knot(&knots, &hz, u);
-            let (_, nw) = semio_framework_3d_brep_representation::curve::bspline::insert_knot(&knots, &hw, u);
+            let (nk, nx) = semio_framework_3d_brep_curve::bspline::insert_knot(&knots, &hx, u);
+            let (_, ny) = semio_framework_3d_brep_curve::bspline::insert_knot(&knots, &hy, u);
+            let (_, nz) = semio_framework_3d_brep_curve::bspline::insert_knot(&knots, &hz, u);
+            let (_, nw) = semio_framework_3d_brep_curve::bspline::insert_knot(&knots, &hw, u);
             knots = nk;
             hx = nx;
             hy = ny;

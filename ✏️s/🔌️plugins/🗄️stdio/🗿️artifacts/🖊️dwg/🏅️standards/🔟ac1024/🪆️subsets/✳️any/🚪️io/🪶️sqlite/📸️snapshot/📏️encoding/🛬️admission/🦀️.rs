@@ -104,7 +104,7 @@ impl Rows<'_,'_>{
   }
  }
 }
-pub(super) fn root(input:&RecordValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<usize,ValueError>{
+pub fn root(input:&RecordValue,native:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<usize,ValueError>{
  native.scoped_stage(|native|{
   native.begin_stage(0)?;let mut rows=Rows{count:0,maximum:limits.max_rows,native};rows.add(22)?;
   let root=Some(input);let header=child(root,5)?;

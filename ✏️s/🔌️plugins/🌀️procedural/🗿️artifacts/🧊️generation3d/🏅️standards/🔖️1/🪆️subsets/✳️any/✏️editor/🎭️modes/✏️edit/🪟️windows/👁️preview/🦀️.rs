@@ -1,10 +1,18 @@
 //! 👁️ Generation3d play app — the 3D preview window (edit mode): the tessellated evaluated geometry.
 
 use crate::editor::generation3d::config::Generation3dConfig;
-use crate::editor::generation3d::terminology::Generation3dLabels;
+use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
-use crate::editor::generation3d::{preview_camera_json, preview_payload, preview_selection_json, preview_status_json, preview_window_status_json, PreviewInteractionMarks, PreviewStatusDebug, GENERATION_3D_INTERACTION_DOMAIN, GENERATION_3D_INTERACTION_GRANULARITY};
-use crate::Generation3dSnapshot;
+use crate::editor::generation3d::preview_camera_json;
+use crate::editor::generation3d::preview_payload;
+use crate::editor::generation3d::preview_selection_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_status_json;
+use semio_s_artifact_procedural_3d_preview_eval::preview_window_status_json;
+use crate::editor::generation3d::PreviewInteractionMarks;
+use semio_s_artifact_procedural_3d_preview_eval::PreviewStatusDebug;
+use crate::editor::generation3d::GENERATION_3D_INTERACTION_DOMAIN;
+use crate::editor::generation3d::GENERATION_3D_INTERACTION_GRANULARITY;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::world3d_scene;
 use semio_framework_plugin::world3d_sun_measures;
@@ -92,11 +100,11 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, prev
     let selection_json = preview_selection_json(config, active_utility, &payload);
     let (meshes_json, instances_json) = (payload.meshes_json, payload.instances_json);
     let preview_status = preview_status_json(&eval_json, &document.host_snapshot);
-    let fit_json = crate::preview_eval::preview_fit_json(&document.host_snapshot, &meshes_json);
+    let fit_json = semio_s_artifact_procedural_3d_preview_eval::preview_fit_json(&document.host_snapshot, &meshes_json);
     let sun = config.sun();
     let status_json = preview_window_status_json(Some(session), run, preview_status, &PreviewStatusDebug { meshes_json: &meshes_json, instances_json: &instances_json }, None);
     let _ = GENERATION_3D_PLAY_APP_ID;
-    crate::accessible_scene_surface(
+    semio_s_procedural_core_semantic_ui::accessible_scene_surface(
         GENERATION_3D_PLAY_SURFACE_PREVIEW,
         semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::World3d,
         &semio_framework_ui::wgpu::World3dScene {

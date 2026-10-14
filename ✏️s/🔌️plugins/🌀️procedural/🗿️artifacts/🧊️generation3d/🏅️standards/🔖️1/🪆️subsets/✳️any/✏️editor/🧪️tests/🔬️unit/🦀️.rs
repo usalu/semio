@@ -50,7 +50,7 @@ async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_p
     let operation=semio_framework_plugin::app::AppOperationContext{ retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 },app_instance_id:1,parent_document_id:"outer-document-parity".into(),operation_id:1,generation:1,canonical_base_revision:[1;32],authoring_seed:"outer-document-parity".into()};
     let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
     let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
-    let expected=crate::standards::v1::subsets::any::io::document_io::export_document(&snapshot).unwrap();
+    let expected=semio_s_artifact_procedural_3d_io::document_io::export_document(&snapshot).unwrap();
     assert!(expected.data.len()>fixture["documentContinuation"]["capacity"]["wireBytes"].as_u64().unwrap()as usize,"an admitted document must exceed the single reply wire limit");
     let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert_eq!(work.close_step(Default::default()),semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});crate::retirement_driver::close_work::<EditorApp<Generation3dPlayApp>,_>(work,"document candidate retirement did not finish")};
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
@@ -77,8 +77,9 @@ async fn document_io_outer_text_resumes_parity_cancel_and_stale_source_without_p
 #[semio_framework_async_macros::async_test]
 async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     let _serial=crate::test_serial::lock();
-    use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-    use crate::standards::v1::subsets::any::schema::inferences::geometry::{infer_geometry, value::GeometryValue};
+    use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
+    use semio_s_artifact_procedural_3d_geometry::infer_geometry;
+    use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
     use semio_framework_artifact_playbook_playbook::FormGeneration;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let law=&fixture["documentContinuation"]["importContinuation"]["restoration"];
@@ -90,8 +91,8 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     incoming.host_snapshot.camera=semio_framework_artifact_flow_flow::CameraJson{x:law["camera"]["x"].as_f64().unwrap(),y:law["camera"]["y"].as_f64().unwrap(),zoom:law["camera"]["zoom"].as_f64().unwrap()};
     let value=semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&law["value"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let generation=incoming.generation.cold_builder_mut().unwrap();generation.generations.push(FormGeneration{id:law["generationId"].as_str().unwrap().into(),name:law["generationName"].as_str().unwrap().into(),values:[(law["questionId"].as_str().unwrap().into(),value)].into()});generation.selected_generation_id=Some(law["selectedGenerationId"].as_str().unwrap().into());generation.preview_text=Some(law["previewText"].as_str().unwrap().into());
-    let export=crate::standards::v1::subsets::any::io::document_io::export_document(&incoming).unwrap();
-    let source_bytes=crate::standards::v1::subsets::any::io::document_io::import_payload_bytes(&export.data).unwrap();assert!(matches!(source_bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(source_bytes.as_ptr(),export.data.as_ptr());assert_eq!(source_bytes.as_ref(),export.data.as_bytes());
+    let export=semio_s_artifact_procedural_3d_io::document_io::export_document(&incoming).unwrap();
+    let source_bytes=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&export.data).unwrap();assert!(matches!(source_bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(source_bytes.as_ptr(),export.data.as_ptr());assert_eq!(source_bytes.as_ref(),export.data.as_bytes());
     let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
     let actor=law["openedActor"].as_str().unwrap();let mut app=context::app_with_actor(protocol::ActorId(actor.into())).await;app.bind_actor(actor).await;
     let meta=semio_framework_plugin::artifact_app_laws::meta(actor);app.dispatch_typed(command,&meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
@@ -102,7 +103,7 @@ async fn document_io_import_extent_accounts_the_actual_incoming_graph_groups(){
     let config_files=app.config_pack().await.unwrap();let config=store::os_store::text_format::parse_document_pack::<Generation3dConfig,Generation3dConfigMutation>(&config_files.pack,&config_files.spr).await.unwrap().into_snapshot();assert_eq!(config.camera,incoming.host_snapshot.camera);assert_eq!(config.selected_generation_id,incoming.generation.selected_generation_id);
     let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut *app,&files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();app.bind_actor(actor).await;
     let loaded=context::snapshot(&app);assert_eq!(*loaded,*incoming);assert_eq!(loaded.host_snapshot.widgets.len(),before_groups+fixture["documentContinuation"]["importAdditionalGroups"].as_u64().unwrap()as usize+1);
-    let saved=app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack,"canonical load preserves every original Pack source byte");let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,crate::Generation3dMutation>(&saved.pack,&saved.spr).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty(),"natural-file import starts at its genuine empty history");let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*loaded);
+    let saved=app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack,"canonical load preserves every original Pack source byte");let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&saved.pack,&saved.spr).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty(),"natural-file import starts at its genuine empty history");let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*loaded);
     let inferred=infer_geometry(&crate::test_serial::geometry_input(&loaded));let expected=infer_geometry(&crate::test_serial::geometry_input(&incoming));assert_eq!(inferred,expected,"the imported document reaches the same original inference authority");
     let output=&inferred["original-imported-box"];assert!(output.fault.is_none());assert!(matches!(output.outputs.get("shape"),Some(GeometryValue::Shape(_))),"the loaded original box is an inferred shape");
     eprintln!("[DEBUG] original natural-file import exactIncomingGroups={} graphRosterSelectionPreview=true configCameraSelection=true openedActor={actor} exactPackBytes={} emptyGenesis=true originalShapeInference=true",loaded.host_snapshot.widgets.len(),files.pack.len());
@@ -315,7 +316,7 @@ fn production_initial_snapshot(label: &str) -> Generation3dSnapshot {
 }
 
 fn production_mutations() -> Vec<Generation3dMutation> {
-    use crate::standards::v1::subsets::any::schema::mutations::*;
+    use semio_s_artifact_procedural_3d_mutations::*;
     let params = semio_framework_artifact_flow_flow::neural::Dictionary::new().insert("integer", semio_framework_artifact_flow_flow::neural::Value::Atom(semio_framework_artifact_flow_flow::neural::Atom::Integer(7))).insert(
         "nested",
         semio_framework_artifact_flow_flow::neural::Value::Dictionary(
@@ -367,7 +368,7 @@ fn production_hex(bytes: &[u8]) -> String {
 
 fn production_semantic_digest(snapshot: &Generation3dSnapshot) -> [u8; 32] {
     let mut digest = store::ArtifactStoreInitializationDigest::new(b"generation3d.production-law.semantic");
-    digest.observe(&crate::standards::v1::subsets::any::io::binary::snapshot::encode(snapshot));
+    digest.observe(&semio_s_artifact_procedural_3d_io_binary::snapshot::encode(snapshot));
     digest.finish()
 }
 
@@ -378,16 +379,16 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
     let mut mutation_hex = Vec::new();
     mutation_hex.try_reserve_exact(mutations.len()).expect("P3 production mutation owner preflight");
     for mutation in &mutations {
-        mutation_hex.push(production_hex(&crate::standards::v1::subsets::any::io::binary::mutations::encode_op(mutation).expect("P3 production mutation encoding")));
+        mutation_hex.push(production_hex(&semio_s_artifact_procedural_3d_io_binary::mutations::encode_op(mutation).expect("P3 production mutation encoding")));
     }
     let mut expected = production_initial_snapshot(label);
-    crate::host::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
+    semio_s_artifact_procedural_3d_host::generation3d_apply_retained_mutations_for_test(&mut expected, &mutations);
     let expected_digest = production_semantic_digest(&expected);
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": GENERATION_3D_SCHEMA,
         "id": "generation3d-production-mounted-law",
         "vcs": {
-            "initialPack": production_hex(&crate::standards::v1::subsets::any::io::binary::snapshot::encode_mounted(&snapshot)),
+            "initialPack": production_hex(&semio_s_artifact_procedural_3d_io_binary::snapshot::encode_mounted(&snapshot)),
             "edits": [{
                 "id": "generation3d-production-all14-edit",
                 "actor": "generation3d-production-law",
@@ -432,7 +433,7 @@ impl Generation3dProductionLease {
             return false;
         }
         self.released = true;
-        crate::host::generation3d_release_publication_authority(self.handle.operation, self.handle.generation)
+        semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(self.handle.operation, self.handle.generation)
     }
 }
 
@@ -445,7 +446,7 @@ impl Drop for Generation3dProductionLease {
 fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, wire: &[u8]) -> Generation3dProductionLease {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
-    crate::host::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, crate::host::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: crate::host::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::GENERATION3D_MOUNTED_CONTROL_CREDITS })
+    semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_CONTROL_CREDITS })
     .expect("P3 production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
@@ -469,7 +470,7 @@ fn admit_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<Ed
 /// `📓️remaining-suite-reds-2026-09-13.md` §3.3).
 fn drive_production_envelope(app: &mut semio_framework_plugin::VcsArtifactApp<EditorApp<Generation3dPlayApp>>, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        crate::host::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
+        semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
             .expect("P3 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one P3 production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("P3 production load advancement");
@@ -506,7 +507,11 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     drop(snapshot);
     expected.retire_cold();
 
-    use crate::host::Generation3dPublicationHostile::{Missing, WrongBase, WrongGeneration, WrongOperation, WrongParent};
+    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::Missing;
+    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongBase;
+    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongGeneration;
+    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongOperation;
+    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongParent;
     for (hostile, expected_code) in [
         (Missing, "generation3d-publication.authority-missing"),
         (WrongOperation, "generation3d-publication.wrong-operation"),
@@ -522,9 +527,9 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
         candidate.retire_cold();
         let mut lease = admit_production_envelope(&mut app, &wire);
         let handle = lease.handle;
-        crate::host::generation3d_arm_publication_hostile(handle.operation, hostile);
+        semio_s_artifact_procedural_3d_host::generation3d_arm_publication_hostile(handle.operation, hostile);
         assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(crate::host::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
+        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
         assert_eq!(app.artifact_generation_now(), base_generation);
         let retained = context::snapshot(&app);
         assert_eq!(production_semantic_digest(&retained), last_valid_digest);
@@ -555,7 +560,7 @@ semio_framework_plugin::history_edit_acceptance_law!("procedural", super::Genera
 fn document_io_import_state_values_agree_with_serde_json(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let source=serde_json::to_string(&fixture["documentContinuation"]["importContinuation"]["restoration"]["value"]).unwrap();
-    let bytes=crate::standards::v1::subsets::any::io::document_io::import_payload_bytes(&source).unwrap();assert!(matches!(bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(bytes.as_ptr(),source.as_ptr());let data_url=format!("data:text/plain,{source}");let body=crate::standards::v1::subsets::any::io::document_io::import_payload_bytes(&data_url).unwrap();assert!(matches!(body,std::borrow::Cow::Borrowed(_)));assert_eq!(body.as_ptr(),data_url.as_bytes()[16..].as_ptr());assert_eq!(body.as_ref(),source.as_bytes());
+    let bytes=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&source).unwrap();assert!(matches!(bytes,std::borrow::Cow::Borrowed(_)));assert_eq!(bytes.as_ptr(),source.as_ptr());let data_url=format!("data:text/plain,{source}");let body=semio_s_artifact_procedural_3d_io::document_io::import_payload_bytes(&data_url).unwrap();assert!(matches!(body,std::borrow::Cow::Borrowed(_)));assert_eq!(body.as_ptr(),data_url.as_bytes()[16..].as_ptr());assert_eq!(body.as_ref(),source.as_bytes());
     let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
         let mut parser=semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject);let mut accepted=|_|true;
@@ -570,7 +575,7 @@ fn document_io_import_state_values_agree_with_serde_json(){
 #[semio_framework_async_macros::async_test]
 async fn document_io_import_continuation_restores_original_generation_selection_and_preview(){
     let _serial=crate::test_serial::lock();
-    use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+    use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
     use semio_framework_artifact_playbook_playbook::FormGeneration;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🧪️tests/🧫️fixtures/🎨️surface/🔣️.json")).unwrap();let law=&fixture["documentContinuation"]["importContinuation"];let state=&law["restoration"];
     assert_eq!(law["snapshotParity"],"all-semantic-fields");assert_eq!(law["rawSourceCopies"],0);assert_eq!(state["cameraLane"],"config");assert_eq!(state["publication"],"canonical-load-genesis");
@@ -583,14 +588,14 @@ async fn document_io_import_continuation_restores_original_generation_selection_
     let value_source=serde_json::to_string(&state["value"]).unwrap();let mut accepted=|_|true;let mut decode=semio_framework_value::NativeDecodeControl::new(fixture["documentContinuation"]["capacity"]["sourceAllocationBytes"].as_u64().unwrap()as usize,&mut accepted);let value=semio_framework_pack_json::from_json_str_controlled::<semio_framework_value::DslValue>(&value_source,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut decode).unwrap();
     let generation=incoming.generation.cold_builder_mut().unwrap();generation.generations.push(FormGeneration{id:state["generationId"].as_str().unwrap().into(),name:state["generationName"].as_str().unwrap().into(),values:[(state["questionId"].as_str().unwrap().into(),value)].into()});generation.selected_generation_id=Some(state["selectedGenerationId"].as_str().unwrap().into());generation.preview_text=Some(state["previewText"].as_str().unwrap().into());
     let mut config=Generation3dConfig::default();config.selected_generation_id=Some(prior_id);
-    let export=crate::standards::v1::subsets::any::io::document_io::export_document(&incoming).unwrap();
+    let export=semio_s_artifact_procedural_3d_io::document_io::export_document(&incoming).unwrap();
     let command=Generation3dCommand::ImportDocument(import_document::ImportDocument{name:export.filename,payload:export.data,widget_id:None,channel:None,texture_id:None});
     let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::default();
     let operation=semio_framework_plugin::app::AppOperationContext{ retained: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 },app_instance_id:1,parent_document_id:"original-import-state".into(),operation_id:1,generation:1,canonical_base_revision:[1;32],authoring_seed:"original-import-state".into()};
     let owner=semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());
     let inputs=ArtifactCommandInputs{ snapshot_owner: None,command:&command,snapshot:&*snapshot,config:&config,history:&history,interaction:&interaction,hover:&hover,context:None,operation:&operation};
     let close=|work:&mut Generation3dDocumentIoWork|{work.begin_close();assert_eq!(work.close_step(Default::default()),semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});crate::retirement_driver::close_work::<EditorApp<Generation3dPlayApp>,_>(work,"original import continuation must retire")};
-    let discard=|mut emit:Emit<crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation,crate::editor::generation3d::config::Generation3dConfigMutation>|{for mutation in std::mem::take(&mut emit.artifact_mutations){mutation.retire_cold();}};
+    let discard=|mut emit:Emit<semio_s_artifact_procedural_3d_mutations::Generation3dMutation,crate::editor::generation3d::config::Generation3dConfigMutation>|{for mutation in std::mem::take(&mut emit.artifact_mutations){mutation.retire_cold();}};
     let mut checks=Vec::new();
     for budget in fixture["documentContinuation"]["budgets"].as_array().unwrap(){
         let mut work=Generation3dDocumentIoWork::new("importDocument",owner.clone());let mut turns=0usize;let mut first_progress=false;
@@ -599,7 +604,7 @@ async fn document_io_import_continuation_restores_original_generation_selection_
         assert!(emit.artifact_mutations.is_empty(),"natural-file import publishes its original load/genesis effect");assert_eq!(emit.effects.len(),1);
         let Effect::LoadDocument{pack,spr}=emit.effects.pop().unwrap()else{panic!("original whole-document load")};
         let actor=state["openedActor"].as_str().unwrap();let mut restored_app=context::app_with_actor(protocol::ActorId(actor.into())).await;let files=store::os_store::serialization::ArtifactPackFiles{pack,spr,ops:String::new()};semio_framework_plugin::artifact_app_laws::load_document(&mut *restored_app,&files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();restored_app.bind_actor(actor).await;
-        let saved=restored_app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack);let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,crate::Generation3dMutation>(&saved.pack,&saved.spr).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty());let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*incoming);
+        let saved=restored_app.document_pack().await.unwrap();assert_eq!(saved.pack,files.pack);let persisted=store::os_store::text_format::parse_document_pack::<Generation3dSnapshot,semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&saved.pack,&saved.spr).await.unwrap();assert!(persisted.envelope.vcs.edits.is_empty()&&persisted.envelope.transitions.is_empty());let persisted_snapshot=Generation3dSnapshotRead::new(persisted.into_snapshot());assert_eq!(*persisted_snapshot,*incoming);
         let folded=context::snapshot(&restored_app);let mut folded_config=config.clone();let mut valid=true;
         for mutation in std::mem::take(&mut emit.config_mutations){let(delta,messages)=protocol::Mutation::diff(&mutation,&folded_config).into_parts();valid&=!messages.iter().any(|message|matches!(message.level,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal));match protocol::apply_diff(&delta,&folded_config){Ok(next)=>folded_config=next,Err(_)=>valid=false}}
         let graph=folded.host_snapshot==incoming.host_snapshot;
@@ -629,7 +634,7 @@ fn original_preview_reply_command_keeps_malformed_source_and_fault_through_paid_
   let((mut parent,input,fault),initial)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let(cancel,_)=semio_framework_job::CancelToken::admit_root(stock).unwrap().unwrap();let(authority,_)=JobPayloadAuthority::admit(OperationId(71),Generation(3),stock).unwrap().unwrap();let(parent,_)=OriginalCallerSourceParent::admit(authority,cancel,stock).ok().unwrap();(parent,source(&row["source"]),failed.then(||Fault::from("Complete original extension failure 源")))});
   let(mut born,mut freed)=(initial.requested_bytes,initial.released_bytes);let DslValue::Object(fields)=&input else{unreachable!()};let fields_pointer=fields.as_ptr();let window_pointer=input.get("windowId").and_then(DslValue::as_str).map(str::as_ptr);let output_pointer=input.get("output").and_then(DslValue::as_object).map(|fields|fields.as_ptr());let fault_pointer=fault.as_ref().map(|fault|fault.message.as_ptr());
   let mut original_args=Some(input);let mut original_fault=fault;let(command,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Generation3dPlayApp::command_from_action(row["action"].as_str().unwrap(),&mut original_args,&mut original_fault).unwrap());assert_eq!(original_args,Some(DslValue::Null));assert!(original_fault.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut command=command;
-  let mut sequence=0;let mut recipient=Default::default();let mut cx=parent.borrow_context(StepBudget::new(32768,1500,stock),||Some(1000),&mut sequence,&mut recipient).unwrap();let identity=cx.original_recipient_identity();let valid=row["valid"].as_bool().unwrap();let mut failure=None;let mut eval=crate::preview_eval::PreviewEvalReceive::new();let mut tess=crate::preview_eval::PreviewTessellateReceive::new();
+  let mut sequence=0;let mut recipient=Default::default();let mut cx=parent.borrow_context(StepBudget::new(32768,1500,stock),||Some(1000),&mut sequence,&mut recipient).unwrap();let identity=cx.original_recipient_identity();let valid=row["valid"].as_bool().unwrap();let mut failure=None;let mut eval=semio_s_artifact_procedural_3d_preview_eval::PreviewEvalReceive::new();let mut tess=semio_s_artifact_procedural_3d_preview_eval::PreviewTessellateReceive::new();
   let(custody,input_valid,moved_window,moved_output,native_fault)=match &command{Generation3dCommand::FlowEvalResolve(payload)=>(payload.original_input.as_ref().unwrap(),payload.input_valid,payload.window_id.as_str(),&payload.output,payload.fault.as_ref()),Generation3dCommand::FlowTessellateResolve(payload)=>(payload.original_input.as_ref().unwrap(),payload.input_valid,payload.window_id.as_str(),&payload.output,payload.fault.as_ref()),Generation3dCommand::FlowTessellateCancelResolve(payload)=>(payload.original_input.as_ref().unwrap(),payload.input_valid,payload.window_id.as_str(),&payload.output,payload.fault.as_ref()),_=>unreachable!()};assert_eq!(input_valid,valid);assert_eq!(custody.as_object().unwrap().as_ptr(),fields_pointer);assert_eq!(native_fault.map(|fault|fault.message.as_ptr()),fault_pointer);if valid{assert_eq!(Some(moved_window.as_ptr()),window_pointer);assert_eq!(moved_output.as_object().map(|fields|fields.as_ptr()),output_pointer)}else{assert_eq!(source(&row["source"]),*custody);assert!(moved_window.is_empty());assert_eq!(*moved_output,DslValue::Null);}
   if !valid&&row["action"]!="flowTessellateCancelResolve"{
    let before=cx.retained_progress();let fuel=cx.fuel_remaining();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(RetainedCloneGrant{maximum_items:0,..stock},|same|match &mut command{Generation3dCommand::FlowEvalResolve(payload)=>eval.receive(payload,same),Generation3dCommand::FlowTessellateResolve(payload)=>tess.receive(payload,same),_=>unreachable!()}));assert!(!result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.fuel_remaining(),fuel);

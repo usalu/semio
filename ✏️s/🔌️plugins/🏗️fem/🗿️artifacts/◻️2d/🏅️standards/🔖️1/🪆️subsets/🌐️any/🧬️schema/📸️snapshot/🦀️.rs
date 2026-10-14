@@ -1,6 +1,6 @@
 //! 🧬️ Fem2d snapshot schema — artifact-lane fields only.
 
-use crate::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -52,5 +52,5 @@ pub struct Fem2dSnapshot {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::FemAnalysisSettings;
+pub use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 //#endregion 🔁️Re-exports

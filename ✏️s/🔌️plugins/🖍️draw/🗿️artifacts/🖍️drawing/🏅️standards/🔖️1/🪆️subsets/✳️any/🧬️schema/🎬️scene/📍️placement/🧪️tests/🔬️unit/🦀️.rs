@@ -1,8 +1,8 @@
 use super::*;
-use crate::{DrawingLayerNode,DrawingImageAsset};
-use crate::schema::layer_base;
-use crate::schema::scene_booleans::DocumentBooleanLimits;
-use crate::schema::scene_trace::DocumentTraceLimits;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
+use semio_s_artifact_draw_drawing_model::layer_base;
+
+
 use semio_framework_value::paged::Utf8Text;
 use serde_json::Value;
 struct Source{roots:Vec<DrawingLayerNode>,assets:std::collections::BTreeMap<String,DrawingImageAsset>,selected:Vec<String>}

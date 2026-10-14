@@ -22,22 +22,14 @@ path = "../../📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs"
 [[test]]
 name = "component_cold_map_patch"
 path = "../../🧪️tests/🌉️component-cold-map-patch/🦀️.rs"
-required-features = ["component-receipt-acceptance"]
-
-[features]
-# 🧾️ The receipt-bound Wasmtime acceptance target (`component_cold_map_patch`). It reads the genuine
-# component through `SEMIO_GIS_COMPONENT_WASM`/`SEMIO_GIS_COMPONENT_SHA256`, which only its own
-# producer (`🧪️tests/🌉️component-cold-map-patch/🟦️.ts`) can bind, so it is gated OFF by default: a
-# plain `cargo test -p semio-hub-gis` must not pretend to run a law it cannot supply an input to.
-component-receipt-acceptance = []
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-s-artifact-gis-gismap = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-gis-gisterrain = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-s-artifact-gis-gisterrain = { workspace = true }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-hub-stdio-catalog = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }

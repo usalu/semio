@@ -35,7 +35,7 @@ use super::super::stair_runs::StairRun;
 use super::super::storey_levels::{vertical_of, StoreyLevel};
 use super::super::wall_layout::WallLayout;
 #[cfg(test)] use super::super::ModelInference;
-use crate::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
+use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 use semio_framework_value::DslValue;
@@ -260,7 +260,7 @@ fn solid_rows(snapshot: &ModelSnapshot, solid: &ElementSolid) -> Vec<LayerQuanti
     rows.into_iter().map(|((_, material), volume)| LayerQuantity { mass: volume * density(snapshot, &material), material, thickness: 0.0, area: 0.0, volume }).collect()
 }
 
-fn scale_at(axis: &crate::Axis, offset: f64) -> f64 {
+fn scale_at(axis: &crate::standards::v1::subsets::any::schema::snapshot::Axis, offset: f64) -> f64 {
     let segment = seg(axis);
     if segment.bulge == 0.0 || !segment.radius().is_finite() {
         1.0
@@ -570,17 +570,17 @@ pub fn ramp_quantity(snapshot: &ModelSnapshot, ramp: &Ramp, run: &RampRun, solid
     }
 }
 
-fn category_key(category: crate::FamilyCategory) -> &'static str {
+fn category_key(category: crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory) -> &'static str {
     match category {
-        crate::FamilyCategory::Furniture => "furniture",
-        crate::FamilyCategory::Equipment => "equipment",
-        crate::FamilyCategory::Casework => "casework",
-        crate::FamilyCategory::Plumbing => "plumbing",
-        crate::FamilyCategory::Lighting => "lighting",
-        crate::FamilyCategory::Mechanical => "mechanical",
-        crate::FamilyCategory::Electrical => "electrical",
-        crate::FamilyCategory::Generic => "generic",
-        crate::FamilyCategory::Profile => "profile",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Furniture => "furniture",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Equipment => "equipment",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Casework => "casework",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Plumbing => "plumbing",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Lighting => "lighting",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Mechanical => "mechanical",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Electrical => "electrical",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Generic => "generic",
+        crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory::Profile => "profile",
     }
 }
 

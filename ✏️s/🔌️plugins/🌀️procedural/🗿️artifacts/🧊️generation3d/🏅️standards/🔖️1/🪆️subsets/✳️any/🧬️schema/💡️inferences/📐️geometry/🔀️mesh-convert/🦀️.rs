@@ -1,11 +1,31 @@
 //! 🔀️ `mesh.convert` computes: a B-Rep shape to a triangle mesh through the shape value's resumable tessellation job, and a mesh to a faceted B-Rep shape through the kernel's retained mesh import.
 //!
 //! A mesh is turned into B-Rep as triangles: polygons are triangulated first, every triangle becomes a planar face, a closed oriented mesh becomes a solid and an open one a shell. Curved surfaces are not reconstructed.
+#![allow(clippy::result_large_err)]
 
-use super::mesh_support::{cancelled_fault, capacity_fault, mesh_output, modeling_slice, ratio, run, tessellation_slice, Flow, KernelResult, Machine, BATCH};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::cancelled_fault;
+use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
+use semio_s_artifact_procedural_3d_mesh_support::mesh_output;
+use semio_s_artifact_procedural_3d_mesh_support::modeling_slice;
+use semio_s_artifact_procedural_3d_mesh_support::ratio;
+use semio_s_artifact_procedural_3d_mesh_support::run;
+use semio_s_artifact_procedural_3d_mesh_support::tessellation_slice;
+use semio_s_artifact_procedural_3d_mesh_support::Flow;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_mesh_support::Machine;
+use semio_s_artifact_procedural_3d_mesh_support::BATCH;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::body_fault;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{MeshImportCursor, ShapeTessellationJob, ShapeValue};
-use semio_framework_3d_brep_queries::tessellation::TessellationStep;
+use semio_framework_3d_brep_tessellation::TessellationStep;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshModelingJob, MeshModelingStep, MeshTessellationJob, MeshTessellationStep};
 
 const FACE_LIMIT: usize = 100_000;
@@ -107,6 +127,8 @@ fn to_brep(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-convert", include_str!("../../../🗂️catalogue/🔣️mesh-convert.json"));
 /// 🗃️ The `mesh.convert` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[ComputeEntry { id: "mesh.convert.fromBrep", start: from_brep }, ComputeEntry { id: "mesh.convert.toBrep", start: to_brep }];
 

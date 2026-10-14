@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::export::ifc::zoning::tests::zoned;
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 fn exported(model: &ModelSnapshot) -> String {
     String::from_utf8(export_ifc2x3(model).expect("the model exports").0).expect("a text file")

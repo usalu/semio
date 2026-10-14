@@ -1,5 +1,7 @@
 //! 🎨️ Borrowed path admission, painted winding and real geometry retirement under work grants.
-use crate::{PathSegment,FillRule,StrokeCap,StrokeJoin};
+use semio_s_artifact_draw_drawing_model::PathSegment;
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
+use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
 use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour},retirement::{WorkRetirementCounter,WorkRetirementProgress}};
 type Point=[f64;2];
 #[derive(Clone,Debug)]
@@ -23,8 +25,8 @@ pub struct PaintedPathHitJob{
 }
 impl PaintedPathHitJob{
  /// 🎬️ Uses the resolved leaf's actual geometry transform and renderer stroke semantics.
- pub fn from_prepared(node:&crate::schema::scene_preparation::DocumentSceneNode,point:Point,tolerance:f64,flatness:f64)->Result<Self,String>{
-  let crate::schema::scene_preparation::DocumentSceneContent::Path{fill,fill_rule,stroke,..}=&node.content else{return Err("Painted query requires a resolved path leaf".into());};
+ pub fn from_prepared(node:&crate::preparation::DocumentSceneNode,point:Point,tolerance:f64,flatness:f64)->Result<Self,String>{
+  let crate::preparation::DocumentSceneContent::Path{fill,fill_rule,stroke,..}=&node.content else{return Err("Painted query requires a resolved path leaf".into());};
   Self::new(PaintedPathQuery{point,transform:node.transform,tolerance,flatness,fill:fill.is_some(),fill_rule:fill_rule.clone(),stroke:stroke.as_ref().map(|s|PaintedPathStroke{width:s.width,cap:s.cap.clone(),join:s.join.clone(),dash:s.dash.as_ref().map(|dash|dash.iter().copied().collect()).unwrap_or_default()})})
  }
  pub fn new(query:PaintedPathQuery)->Result<Self,String>{
@@ -39,7 +41,7 @@ impl PaintedPathHitJob{
   if !a.into_iter().chain(b).all(valid){return Err("Painted query exceeds coordinate limit".into());}
   for p in [a,b]{self.bounds[0]=self.bounds[0].min(p[0]);self.bounds[1]=self.bounds[1].min(p[1]);self.bounds[2]=self.bounds[2].max(p[0]);self.bounds[3]=self.bounds[3].max(p[1]);}
   let rounding=a.into_iter().chain(b).chain(self.query.point).fold(1.0_f64,|s,v|s.max(v.abs()))*f64::EPSILON*8.0;
-  self.boundary|=super::distance(self.query.point,a,b)<=self.query.tolerance+rounding;
+  self.boundary|=semio_s_artifact_draw_drawing_geometry::picking::distance(self.query.point,a,b)<=self.query.tolerance+rounding;
   let[x,y]=self.query.point;if (a[1]<=y&&b[1]>y)||(b[1]<=y&&a[1]>y){let t=(y-a[1])/(b[1]-a[1]);if a[0]*(1.0-t)+b[0]*t>x{self.winding+=if b[1]>a[1]{1}else{-1};}}
   Ok(())
  }
@@ -54,7 +56,7 @@ impl PaintedPathHitJob{
  }
  fn step(&mut self,source:&mut impl FnMut(usize)->Option<PathSegment>)->Result<(),String>{
   match self.phase{
-   "admitting"=>{if let Some(segment)=source(self.next){if self.next>=65536{return Err("Painted query exceeds segment limit".into());}self.segments.push(crate::schema::to_kernel_segment(&segment));self.next+=1;}else{self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.segments),transform:self.query.transform,tolerance:self.query.flatness}).map_err(|e|e.to_string())?);self.phase="flattening";}},
+   "admitting"=>{if let Some(segment)=source(self.next){if self.next>=65536{return Err("Painted query exceeds segment limit".into());}self.segments.push(semio_s_artifact_draw_drawing_geometry::to_kernel_segment(&segment));self.next+=1;}else{self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.segments),transform:self.query.transform,tolerance:self.query.flatness}).map_err(|e|e.to_string())?);self.phase="flattening";}},
    "flattening"=>{if self.flatten.as_mut().unwrap().advance(1).map_err(|e|e.to_string())?.done{let(child,output)=self.flatten.take().unwrap().into_retirement();self.flatten_retirement=Some(child);self.flat=output.unwrap();self.phase="flattenCleanup";}},
    "flattenCleanup"=>{let child=self.flatten_retirement.as_mut().unwrap();if !child.terminal_is_empty(){child.advance(1).map_err(|e|e.to_string())?;}else{self.flatten_retirement=None;self.phase="fill";}},
    "fill"=>{if let Some(contour)=self.flat.get(self.at){if !self.query.fill||contour.points.len()<2{self.at+=1;self.edge=0;}else if self.edge<contour.points.len(){let a=map(contour.points[self.edge],self.query.transform);let b=map(contour.points[(self.edge+1)%contour.points.len()],self.query.transform);self.edge+=1;self.line(a,b)?;}else{self.at+=1;self.edge=0;}}else{self.phase="contours";}},

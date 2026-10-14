@@ -40,7 +40,7 @@ enum NaturalFileImportStage {
 /// grant, checkpoints before publication, and retains every input/output owner until close. Source-byte
 /// admission is not a parser work or expansion bound; scalable formats supply a controlled decoder.
 pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
-    port: String,
+    pub(crate) port: String,
     media: Option<Media>,
     decoder: Option<NaturalFileDecodeOwner<E::Snapshot>>,
     completion: Option<ArtifactToolCompletion<EditorApp<E>>>,
@@ -51,7 +51,7 @@ pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
     pending_media_value: Option<(String, DslValue)>,
     pending_media_text: Option<(String, String)>,
     pending_port: Option<String>,
-    contract: semio_framework::ToolExecutionContract,
+    pub(crate) contract: semio_framework::ToolExecutionContract,
     byte_cursor: usize,
     byte_length: usize,
     decode_progress: NaturalFileDecodeProgress,
@@ -61,7 +61,7 @@ pub(crate) struct NaturalFileImportJob<E: ArtifactEditor> {
     fault: crate::tool_contract::BoundedFaultText,
     pending: Option<crate::tool_contract::ReservedOutcomeKind>,
     outcomes: crate::tool_contract::ReservedJobOutcomes,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<E: ArtifactEditor> NaturalFileImportJob<E> {

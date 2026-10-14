@@ -2,7 +2,7 @@
 
 use super::super::cascade;
 use super::DeleteTag;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &DeleteTag, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

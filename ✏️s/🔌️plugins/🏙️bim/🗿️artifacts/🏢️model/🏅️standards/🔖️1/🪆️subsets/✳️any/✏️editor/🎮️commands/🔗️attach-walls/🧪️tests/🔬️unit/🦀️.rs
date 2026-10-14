@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::entities::kind_of;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::TopConstraint;
+use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 use semio_framework_plugin::ArtifactEditor;
 
 fn furnished() -> ModelSnapshot {
@@ -9,7 +9,7 @@ fn furnished() -> ModelSnapshot {
     for (kind, id, parent) in [("slab-type", "sl-1", ""), ("slab", "slab-1", "st-ground"), ("roof-type", "rf-1", ""), ("roof", "roof-1", "st-ground")] {
         let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }

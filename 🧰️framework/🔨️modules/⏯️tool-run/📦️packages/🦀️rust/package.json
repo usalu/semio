@@ -9,9 +9,6 @@
     "check": "bun repo run @semio-tech/framework-tool-run-rs:check"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

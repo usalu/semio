@@ -1,8 +1,9 @@
 //! 🖼️ Drawing play app — the canvas window's render() (constitutional: was `ui`'s `Render` region).
 
-use crate::editor::drawing::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
-use crate::schema::resolve_drawing_artboard;
-use crate::{DrawingArtboard, DrawingSnapshot, PathSegment};
+use crate::commands::canvas_pointer_down::{draft_preview_segments, shape_preview_segments, DrawingGesturePreview, DrawingGesturePreviewPhase};
+use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, PathSegment};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_value::DslValue;
 use semio_framework_plugin::{scene_surface, BuiltNode, Canvas2dScene, UiAssemblyResult};
 
@@ -75,21 +76,21 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
             ("opacity".to_string(), DslValue::float(1.0)),
             ("blendMode".to_string(), DslValue::String("normal".to_string())),
             ("visible".to_string(), DslValue::Bool(true)),
-            ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(label)), ("size".to_string(), DslValue::float(label_size)), ("fontFamily".to_string(), DslValue::String(crate::DrawingFontFamily::Anta.catalog_family().to_string()))])),
+            ("text".to_string(), DslValue::object([("content".to_string(), DslValue::String(label)), ("size".to_string(), DslValue::float(label_size)), ("fontFamily".to_string(), DslValue::String(semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta.catalog_family().to_string()))])),
         ]),
     ]
 }
 
 /// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
-pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+pub fn render(prepared: Option<&semio_s_artifact_draw_drawing_scene::paint::scene::PreparedScene>, revision: u32, document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String], point_selection: &[String]) -> UiAssemblyResult<BuiltNode> {
     let plan=prepared.map(|scene|&scene.plan);
-    let mut scene_nodes=match plan{Some(plan)=>crate::schema::scene_view::nodes(plan,preview.transformation.as_ref()).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.canvas",error.to_string()))?,None=>Vec::new()};
-    let selected_bounds=if let Some(scene)=prepared{crate::schema::scene_paint::scene::query::prepared_selection_bounds(scene,selection).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
+    let mut scene_nodes=match plan{Some(plan)=>semio_s_artifact_draw_drawing_scene::view::nodes(plan,preview.transformation.as_ref()).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.canvas",error.to_string()))?,None=>Vec::new()};
+    let selected_bounds=if let Some(scene)=prepared{semio_s_artifact_draw_drawing_scene::paint::scene::query::prepared_selection_bounds(scene,selection).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.selection",error.to_string()))?.map(|[x,y,r,b]|[x,y,r-x,b-y])}else{None};
     if let Some(movement)=&preview.node_translation {
         for node in &mut scene_nodes {
-            let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|crate::schema::geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();
+            let points=movement.targets.iter().filter(|target|target.layer_id==node.id).map(|target|semio_s_artifact_draw_drawing_geometry::editing::PathPointRef {index:target.index,point:target.point}).collect::<Vec<_>>();
             if points.is_empty() {continue;}
-            if let Ok(segments)=crate::schema::geometry::editing::translate_world_path_points(node.segments.iter(),&points,node.transform,movement.delta) {node.segments=std::borrow::Cow::Owned(segments);}
+            if let Ok(segments)=semio_s_artifact_draw_drawing_geometry::editing::translate_world_path_points(node.segments.iter(),&points,node.transform,movement.delta) {node.segments=std::borrow::Cow::Owned(segments);}
         }
     }
     let artboard_records = artboard_scene_records(document);
@@ -97,16 +98,16 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
     records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
-        records.push(crate::standards::v1::subsets::any::io::image::prepared_scene_node_value(node,document).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.image-output",error))?);
+        records.push(semio_s_artifact_draw_drawing_io::image::prepared_scene_node_value(node,document).map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.geometry.image-output",error))?);
     }
     if active_utility=="editNodes" {
         let zoom=config.viewport.zoom.max(1e-6);
         for node in scene_nodes.iter().filter(|node|selection.iter().any(|id|id==node.id)) {
-            if !matches!(crate::schema::find_drawing_layer(document,&node.id),Some(crate::DrawingLayerNode::Path(_))) || crate::schema::drawing_layer_is_locked(document,&node.id) {continue;}
+            if !matches!(semio_s_artifact_draw_drawing_model::find_drawing_layer(document,&node.id),Some(semio_s_artifact_draw_drawing_model::DrawingLayerNode::Path(_))) || semio_s_artifact_draw_drawing_model::drawing_layer_is_locked(document,&node.id) {continue;}
             let [a,b,c,d,e,f]=node.transform;
             let world=|point:[f64;2]|[a*point[0]+c*point[1]+e,b*point[0]+d*point[1]+f];
-            let selected=point_selection.iter().filter_map(|id|crate::editor::drawing::interaction::points::parse_point_id(id)).filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
-            let geometry=if selected.is_empty() {None} else {match crate::schema::find_drawing_layer(document,&node.id) {Some(crate::DrawingLayerNode::Path(path))=>crate::editor::drawing::interaction::points::geometry_id(&path.segments),_=>None}};
+            let selected=point_selection.iter().filter_map(|id|crate::interaction::points::parse_point_id(id)).filter(|point|point.layer_id==node.id).collect::<Vec<_>>();
+            let geometry=if selected.is_empty() {None} else {match semio_s_artifact_draw_drawing_model::find_drawing_layer(document,&node.id) {Some(semio_s_artifact_draw_drawing_model::DrawingLayerNode::Path(path))=>crate::interaction::points::geometry_id(&path.segments),_=>None}};
             let selected_point=|index,point|selected.iter().any(|reference|reference.index==index && reference.point==point && Some(reference.geometry)==geometry.as_deref());
             let mut anchors=Vec::new();let mut controls=Vec::new();let mut stems=Vec::new();
             let mut selected_anchors=Vec::new();let mut selected_controls=Vec::new();
@@ -121,12 +122,12 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
                 };
                 match segment {
                     PathSegment::Move {..}=>start=to,
-                    PathSegment::Quad {ctrl,..}=>{control(*ctrl,previous,crate::schema::geometry::editing::PathPoint::Control1);stems.extend([PathSegment::Move {to:world(*ctrl)},PathSegment::Line {to:world(to)}]);},
-                    PathSegment::Cubic {ctrl1,ctrl2,..}=>{control(*ctrl1,previous,crate::schema::geometry::editing::PathPoint::Control1);control(*ctrl2,to,crate::schema::geometry::editing::PathPoint::Control2);},
+                    PathSegment::Quad {ctrl,..}=>{control(*ctrl,previous,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Control1);stems.extend([PathSegment::Move {to:world(*ctrl)},PathSegment::Line {to:world(to)}]);},
+                    PathSegment::Cubic {ctrl1,ctrl2,..}=>{control(*ctrl1,previous,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Control1);control(*ctrl2,to,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Control2);},
                     _=>{},
                 }
                 let [x,y]=world(to);let radius=4.0/zoom;
-                let target=if selected_point(index,crate::schema::geometry::editing::PathPoint::Anchor) {&mut selected_anchors} else {&mut anchors};
+                let target=if selected_point(index,semio_s_artifact_draw_drawing_geometry::editing::PathPoint::Anchor) {&mut selected_anchors} else {&mut anchors};
                 target.extend([PathSegment::Move {to:[x-radius,y-radius]},PathSegment::Line {to:[x+radius,y-radius]},PathSegment::Line {to:[x+radius,y+radius]},PathSegment::Line {to:[x-radius,y+radius]},PathSegment::Close]);
                 previous=to;
             }
@@ -145,7 +146,7 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
             let zoom=config.viewport.zoom.max(1e-6);
             let outline=vec![PathSegment::Move {to:[x,y]},PathSegment::Line {to:[x+w,y]},PathSegment::Line {to:[x+w,y+h]},PathSegment::Line {to:[x,y+h]},PathSegment::Close];
             records.push(overlay_record("overlay:selection-bounds",transform,&outline,None,DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
-            let points=crate::schema::geometry::handles::handle_points(bounds,zoom);
+            let points=semio_s_artifact_draw_drawing_geometry::handles::handle_points(bounds,zoom);
             let connector=vec![PathSegment::Move {to:points[1]},PathSegment::Line {to:points[8]}];
             records.push(overlay_record("overlay:rotation-stem",transform,&connector,None,DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
             for (index,point) in points.into_iter().enumerate() {
@@ -182,6 +183,6 @@ pub fn render(prepared: Option<&crate::schema::scene_paint::scene::PreparedScene
     scene_surface(
         DRAWING_PLAY_SURFACE_ID,
         semio_framework_ui_contract::SurfaceKind::Canvas2d,
-        &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_framework_plugin::Canvas2dFraming { revision,bounds: crate::schema::scene_view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
+        &Canvas2dScene { framing: (!config.framed && plan.is_some()).then(|| semio_framework_plugin::Canvas2dFraming { revision,bounds: semio_s_artifact_draw_drawing_scene::view::bounds(document.artboard.as_ref(),&scene_nodes),padding: 48.0 }), camera_x: config.viewport.x, camera_y: config.viewport.y, zoom: config.viewport.zoom, layers_json: semio_framework_pack_json::to_json_string(&records), snapshot: None, tool_run_trace: None, lanes: Vec::new() },
     )
 }

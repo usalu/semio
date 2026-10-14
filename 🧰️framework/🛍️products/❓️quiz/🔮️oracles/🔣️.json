@@ -321,9 +321,6 @@
       "tolerance": 1e-12
     }
   ],
-  "subjectFeatures": [
-    { "implementation": "rust", "features": ["sut"], "rationale": "🧪️ The quiz crate re-exports its JSON codec (serde_json) only under `sut`, so the Rust subject adapters can decode the shared vectors into the typed twins and encode their answers, while production builds of the crate stay free of it." }
-  ],
   "oracleHostPackages": [
     { "implementation": "python", "package": "numpy", "version": "2.5.0", "module": "numpy", "rationale": "🌀️ MT19937 stream of the randomness oracle and of every Python reference that draws a sheet; pair matrices of the scoring cross-checks." },
     { "implementation": "python", "package": "scipy", "version": "1.18.0", "module": "scipy", "rationale": "📊️ Kendall τ and Euclidean distances of the scoring cross-checks." },

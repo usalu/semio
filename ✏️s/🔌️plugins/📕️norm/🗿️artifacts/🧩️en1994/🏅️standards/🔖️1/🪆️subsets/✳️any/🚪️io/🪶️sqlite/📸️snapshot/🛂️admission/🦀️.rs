@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::RecordValue as R;
 use semio_framework_value::NativeDecodeControl;
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 fn count(root:&R)->Result<usize,ValueError>{let mut rows=1;for(id,actions,nested)in[(3,17,4),(4,13,1),(5,9,2)]{for owner in n::list(n::field(root,id)?)?{rows=n::add(rows,nested)?;rows=n::add(rows,n::list(n::field(n::record(owner)?,actions)?)?.len())?}}Ok(rows)}
 fn sheeting(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,r:&R)->Result<(),ValueError>{n::keyed(out,table,parent,&n::cells(r,[Text(0),Real(1),Real(2),Real(3),Boolean(4)])?,SHEETING)}
 fn actions(out:&mut RowWriter<'_,'_>,table:&str,parent:i64,r:&R,id:u16)->Result<(),ValueError>{for(index,a)in n::list(n::field(r,id)?)?.iter().enumerate(){n::entity(out,table,parent,index,&n::cells(n::record(a)?,[Text(0),Text(1),Text(2),Text(3),Real(4),Real(5),Real(6),Real(7)])?,ACTION)?;}Ok(())}

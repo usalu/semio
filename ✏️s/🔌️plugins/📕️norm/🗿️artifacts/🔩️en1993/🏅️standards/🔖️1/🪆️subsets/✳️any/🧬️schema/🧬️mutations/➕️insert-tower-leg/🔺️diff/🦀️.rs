@@ -1,8 +1,8 @@
 //! ➕️ `insert-tower-leg` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertTowerLeg;
-use crate::diff::{En1993Diff, En1993TowerLegDelta};
-use crate::En1993Snapshot;
+use crate::insert_tower_leg::InsertTowerLeg;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993TowerLegDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertTowerLeg, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.tower_legs.iter().any(|existing| existing.id == payload.tower_leg.id) {

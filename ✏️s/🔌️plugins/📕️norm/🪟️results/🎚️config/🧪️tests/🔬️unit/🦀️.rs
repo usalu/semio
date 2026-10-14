@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 #[semio_framework_async_macros::async_test]
 async fn norm_config_dsl_round_trips() {

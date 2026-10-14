@@ -1,6 +1,6 @@
 use super::testing::close;
 use super::*;
-use crate::{Axis, ModelDiff, ModelSnapshot, Point2, Profile, TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Point2, Profile, TopConstraint, Vertex}, diff::ModelDiff};
 use protocol::OutcomeCode;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;

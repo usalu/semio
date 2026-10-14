@@ -1,14 +1,14 @@
 //! 🔺️ Sparse diff builder for `SetLayerBlendMode`.
-use crate::diff::{diff_set_layer_blend_mode, DrawingDiff};
-use crate::schema::{find_drawing_layer, layer_base};
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_set_layer_blend_mode, DrawingDiff};
+use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::SetLayerBlendMode, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
     let Some(layer) = find_drawing_layer(base, &payload.layer_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer \"{}\" does not exist.", payload.layer_id), [payload.layer_id.to_string_owner()]);
     };
-    if !crate::DRAWING_BLEND_MODES.iter().any(|mode| payload.blend_mode.eq_str(mode)) {
+    if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.iter().any(|mode| payload.blend_mode.eq_str(mode)) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unsupported blend mode.", [payload.layer_id.to_string_owner()]);
     }
     if layer_base(layer).blend_mode == payload.blend_mode {

@@ -3,7 +3,7 @@
 //! only requires "at least the `📐️shape` world-3d window" for a viewer packet — Building/Energy/
 //! Structure Classic read-only windows are a follow-up, not a purity or completeness requirement.
 
-use crate::viewer::cad::modes::view::windows::shape;
+use crate::modes::view::windows::shape;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

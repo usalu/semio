@@ -46,7 +46,7 @@ function assertScriptTargets(project: JsonMap, name: string): void {
   assert.equal(project.name, name);
   for (const target of ["build", "check", "test"]) {
     const declaration = project.targets?.[target];
-    assert.equal(declaration?.executor, "nx:run-commands", `${name}:${target} must use nx:run-commands`);
+    assert.equal(declaration?.executor, "repo:script", `${name}:${target} must use the owned script executor`);
     assert.equal(declaration?.options?.command, `bun ./📜️script.ts ${target}`, `${name}:${target} must route through 📜️script.ts`);
   }
 }
@@ -74,7 +74,7 @@ export async function assertStdioArtifactSchema(contract: { schemaVersion: 1; pa
   ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addSchema(module);
   const validate = ajv.compile({ $ref: `${module.$id}#/$defs/StdioArtifactPackage` });
-  const fixture = readStdioJson(join(stdioRoot, "🧫️fixtures/📦️artifact-package/🔣️.json"));
+  const fixture = readStdioJson(join(stdioRoot, "🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json"));
   for (const value of fixture.accepted) assert(validate(value), JSON.stringify(validate.errors));
   for (const row of fixture.rejected) assert(!validate(row.value), `negative package fixture ${row.id} was accepted`);
   assert(validate(contract), JSON.stringify(validate.errors));
@@ -113,7 +113,7 @@ export async function assertStdioArtifactSourceContract(repoRoot: string, contra
     const cargoDependencies = cargoDependencyPackageNames(cargo, cargoWorkspace.workspace ?? {});
     assert(!cargoDependencies.has(CARGO_COMPOSITION_NAME), `${names.cargo} depends on the stdio composition package`);
     assert(cargoDependencies.has(CARGO_CONTRACT_NAME), `${names.cargo} misses the shared artifact contract`);
-    assertScriptTargets(readStdioJson(join(rustRoot, "📋️project.json")), names.rustNx);
+    assertScriptTargets(readStdioJson(join(rustRoot, "📋️project.json")), names.rustProject);
     assert(readFileSync(join(rustRoot, "📜️script.ts"), "utf8").includes("runArtifactRustPackageMain"), `${names.cargo} does not use the domain-neutral Rust artifact router`);
     const typescript = readStdioJson(join(repoRoot, entry.typescript.manifest));
     assert.equal(typescript.name, names.typescript);
@@ -130,8 +130,8 @@ export async function assertStdioArtifactSourceContract(repoRoot: string, contra
     assertDeclarationOnly(rustRoot, ["Cargo.toml", "package.json", "📋️project.json", "📜️script.ts"]);
     if (existsSync(join(rustRoot, "package.json"))) {
       const commands = readStdioJson(join(rustRoot, "package.json"));
-      assert.equal(commands.name, names.rustNx);
-      for (const [target, invocation] of Object.entries(commands.scripts ?? {})) assert.equal(invocation, `bun repo run ${names.rustNx}:${target}`);
+      assert.equal(commands.name, names.rustProject);
+      for (const [target, invocation] of Object.entries(commands.scripts ?? {})) assert.equal(invocation, `bun repo run ${names.rustProject}:${target}`);
     }
     assertDeclarationOnly(typescriptRoot, ["package.json", "📋️project.json", "📜️script.ts"]);
   }

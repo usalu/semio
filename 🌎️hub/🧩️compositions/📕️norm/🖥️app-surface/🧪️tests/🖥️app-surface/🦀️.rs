@@ -156,18 +156,18 @@ macro_rules! assert_norm_pair {
 async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
     let fixture: RetainedFixture = serde_json::from_str(include_str!("../../../../../../✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json")).unwrap();
     assert!(fixture.factory.shared);
-    assert_eq!(fixture.factory.payload_schema, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_PAYLOAD_SCHEMA);
-    assert_eq!(fixture.factory.maximum_raw_bytes, semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_RAW_BYTES);
+    assert_eq!(fixture.factory.payload_schema, semio_s_plugin_norm_app_surface::NORM_RETAINED_PAYLOAD_SCHEMA);
+    assert_eq!(fixture.factory.maximum_raw_bytes, semio_s_plugin_norm_app_surface::NORM_RETAINED_RAW_BYTES);
     assert_eq!(fixture.apps.len(), fixture.expected.apps);
     assert_eq!(fixture.routes.len(), fixture.expected.routes_per_app);
     assert_eq!(fixture.expected.identities, fixture.expected.apps * fixture.expected.routes_per_app);
     assert_eq!(fixture.expected.retained, fixture.expected.identities);
     assert_eq!(fixture.expected.batch_only_pending_rewrite, 0);
-    assert_eq!(fixture.routes.iter().map(|route| route.id.as_str()).collect::<Vec<_>>(), semio_s_artifact_norm_contract::app_surface::NORM_RETAINED_TOOL_IDS.to_vec());
-    assert_eq!(fixture.publication_contracts.len(), semio_s_artifact_norm_contract::app_surface::NORM_PUBLICATION_CONTRACTS.len());
-    for (row, declared) in fixture.publication_contracts.iter().zip(semio_s_artifact_norm_contract::app_surface::NORM_PUBLICATION_CONTRACTS) {
+    assert_eq!(fixture.routes.iter().map(|route| route.id.as_str()).collect::<Vec<_>>(), semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS.to_vec());
+    assert_eq!(fixture.publication_contracts.len(), semio_s_plugin_norm_app_surface::NORM_PUBLICATION_CONTRACTS.len());
+    for (row, declared) in fixture.publication_contracts.iter().zip(semio_s_plugin_norm_app_surface::NORM_PUBLICATION_CONTRACTS) {
         assert_eq!(row.tool_id, declared.tool_id);
-        assert_eq!(row.lanes, declared.lanes.iter().copied().map(semio_s_artifact_norm_contract::app_surface::publication_lane_id).collect::<Vec<_>>());
+        assert_eq!(row.lanes, declared.lanes.iter().copied().map(semio_s_plugin_norm_app_surface::publication_lane_id).collect::<Vec<_>>());
     }
     for (route, contract) in fixture.routes.iter().zip(&fixture.publication_contracts) {
         assert_eq!(route.admission, "migrated");
@@ -199,7 +199,7 @@ async fn every_norm_editor_action_is_migrated_onto_the_shared_owned_factory() {
         semio_s_artifact_norm_en1990 => (semio_s_artifact_norm_en1990::editor::en1990::En1990PlayApp, semio_s_artifact_norm_en1990::viewer::en1990::En1990Viewer),
         semio_s_artifact_norm_en1991 => (semio_s_artifact_norm_en1991::editor::en1991::En1991PlayApp, semio_s_artifact_norm_en1991::viewer::en1991::En1991Viewer),
         semio_s_artifact_norm_en1992 => (semio_s_artifact_norm_en1992::editor::en1992::En1992PlayApp, semio_s_artifact_norm_en1992::viewer::en1992::En1992Viewer),
-        semio_s_artifact_norm_en1993 => (semio_s_artifact_norm_en1993::editor::en1993::En1993PlayApp, semio_s_artifact_norm_en1993::viewer::en1993::En1993Viewer),
+        semio_s_artifact_norm_en1993 => (semio_s_artifact_norm_en1993_editor::En1993PlayApp, semio_s_artifact_norm_en1993_viewer::En1993Viewer),
         semio_s_artifact_norm_en1994 => (semio_s_artifact_norm_en1994::editor::en1994::En1994PlayApp, semio_s_artifact_norm_en1994::viewer::en1994::En1994Viewer),
         semio_s_artifact_norm_en1995 => (semio_s_artifact_norm_en1995::editor::en1995::En1995PlayApp, semio_s_artifact_norm_en1995::viewer::en1995::En1995Viewer),
         semio_s_artifact_norm_en1996 => (semio_s_artifact_norm_en1996::editor::en1996::En1996PlayApp, semio_s_artifact_norm_en1996::viewer::en1996::En1996Viewer),

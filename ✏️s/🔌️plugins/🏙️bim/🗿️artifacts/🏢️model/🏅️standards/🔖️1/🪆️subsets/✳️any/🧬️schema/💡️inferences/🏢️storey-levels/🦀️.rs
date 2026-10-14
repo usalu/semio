@@ -7,7 +7,7 @@
 //! the `Storey` nodes of the model graph (`model-graph`) call it, and so does every consumer that needs a vertical extent.
 
 use crate::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
-use crate::{ModelSnapshot, TopConstraint};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 

@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetWallTypeOf`: an absolute `SetWallTypeOf` back to the base wall type, none when the wall is absent.
 
 use super::SetWallTypeOf;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetWallTypeOf, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.walls.get(&payload.id) {

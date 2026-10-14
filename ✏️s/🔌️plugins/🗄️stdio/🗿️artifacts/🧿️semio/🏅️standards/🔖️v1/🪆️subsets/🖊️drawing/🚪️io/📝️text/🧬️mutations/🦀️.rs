@@ -6,7 +6,8 @@
 
 use crate::schema::mutations::SemioDrawingMutation;
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use crate::schema::diff::NodePath;
 use {crate::schema::mutations::change_stroke_color::ChangeStrokeColor, crate::schema::mutations::change_stroke_width::ChangeStrokeWidth, crate::schema::mutations::create_layer::CreateLayer, crate::schema::mutations::create_node::CreateNode, crate::schema::mutations::delete_layer::DeleteLayer, crate::schema::mutations::delete_node::DeleteNode, crate::schema::mutations::drag_nodes::DragNodes, crate::schema::mutations::flatten_node::FlattenNode, crate::schema::mutations::group_nodes::GroupNodes, crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::reorder_nodes::ReorderNodes, crate::schema::mutations::replace_fill::ReplaceFill, crate::schema::mutations::replace_path::ReplacePath, crate::schema::mutations::rotate_node::RotateNode, crate::schema::mutations::scale_node::ScaleNode, crate::schema::mutations::unflatten_node::UnflattenNode, crate::schema::mutations::ungroup_node::UngroupNode};
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_rgba;

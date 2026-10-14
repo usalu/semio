@@ -1,0 +1,583 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/infinite/directed/presentation/schema.json",
+  "title": "Directed Graph Presentation",
+  "$defs": {
+    "PortShape": {
+      "enum": [
+        "semicircle",
+        "triangle"
+      ]
+    },
+    "EdgeRouteStyle": {
+      "enum": [
+        "bezier",
+        "sharpSz"
+      ]
+    },
+    "IoPortSpec": {
+      "type": "object",
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "abbreviation": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "default": {},
+        "value": {},
+        "connected": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resourceKind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cardinality": {
+          "type": "string",
+          "default": "!"
+        },
+        "shape": {
+          "$ref": "#/$defs/PortShape",
+          "default": "semicircle"
+        },
+        "visible": {
+          "type": "boolean",
+          "default": true
+        },
+        "resolved": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "DagNodeKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "inputs",
+            "outputs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "computation"
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            },
+            "variadic_inputs": {
+              "type": "boolean"
+            },
+            "variadic_outputs": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "min",
+            "max",
+            "step",
+            "value",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slider"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number"
+            },
+            "output": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "options",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "select"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "selected": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "output": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "input"
+          ],
+          "properties": {
+            "kind": {
+              "const": "screen"
+            },
+            "media": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/DagMedia"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "input": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "text",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "note"
+            },
+            "text": {
+              "type": "string"
+            },
+            "output": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "image"
+            },
+            "src": {
+              "type": "string"
+            },
+            "output": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "input"
+          ],
+          "properties": {
+            "kind": {
+              "const": "preview"
+            },
+            "content": {
+              "$ref": "#/$defs/DagPreviewContent"
+            },
+            "expanded": {
+              "$ref": "#/$defs/DagExpandedPaths"
+            },
+            "input": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "label",
+            "input"
+          ],
+          "properties": {
+            "kind": {
+              "const": "action"
+            },
+            "label": {
+              "type": "string"
+            },
+            "input": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "label",
+            "format",
+            "input"
+          ],
+          "properties": {
+            "kind": {
+              "const": "export"
+            },
+            "label": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            },
+            "input": {
+              "$ref": "#/$defs/IoPortSpec"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "inputs",
+            "outputs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "cluster"
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "instanceId",
+            "pluginId",
+            "appId",
+            "inputs",
+            "outputs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "appInstance"
+            },
+            "instanceId": {
+              "type": "string"
+            },
+            "pluginId": {
+              "type": "string"
+            },
+            "appId": {
+              "type": "string"
+            },
+            "appIcon": {
+              "type": "string"
+            },
+            "inputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            },
+            "outputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IoPortSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DagNodeSpec": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/DagNodeKind"
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            },
+            "abbreviation": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "operatorKind": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "properties": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    "DagExpandedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "DagMediaKind": {
+      "enum": [
+        "image",
+        "svg",
+        "pdf",
+        "video"
+      ]
+    },
+    "DagMedia": {
+      "type": "object",
+      "required": [
+        "kind",
+        "src"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/DagMediaKind"
+        },
+        "src": {
+          "type": "string"
+        }
+      }
+    },
+    "DagPreviewContent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "variant"
+          ],
+          "properties": {
+            "variant": {
+              "const": "empty"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "variant",
+            "text"
+          ],
+          "properties": {
+            "variant": {
+              "const": "scalar"
+            },
+            "text": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "variant",
+            "src"
+          ],
+          "properties": {
+            "variant": {
+              "const": "image"
+            },
+            "src": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "variant",
+            "json"
+          ],
+          "properties": {
+            "variant": {
+              "const": "tree"
+            },
+            "json": {}
+          }
+        }
+      ]
+    },
+    "DagDrawLod": {
+      "enum": [
+        "minimap",
+        "overview",
+        "compact",
+        "normal",
+        "detail",
+        "micro"
+      ]
+    },
+    "DagCamera": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
+    },
+    "DagHostSnapshotEdge": {
+      "type": "object",
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "routeStyle": {
+          "$ref": "#/$defs/EdgeRouteStyle"
+        },
+        "properties": {
+          "type": "object"
+        }
+      }
+    },
+    "DagHostSnapshot": {
+      "type": "object",
+      "required": [
+        "schema",
+        "camera",
+        "nodes",
+        "edges"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/DagCamera"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagNodeSpec"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DagHostSnapshotEdge"
+          }
+        }
+      }
+    }
+  }
+}

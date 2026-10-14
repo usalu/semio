@@ -1,6 +1,6 @@
 //! 📚️ `create-classification-system` payload. Brings a new classification system into the model library: its name, edition and the authored table of its entries (code, title, parent). Elements are classified through `set-element-classification`.
 
-use crate::{ClassificationSystem, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationSystem, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

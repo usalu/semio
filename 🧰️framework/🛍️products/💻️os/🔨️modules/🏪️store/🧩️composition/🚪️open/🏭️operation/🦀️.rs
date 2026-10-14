@@ -84,13 +84,13 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
 impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled); }
-        crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.request, grant)
+        crate::os_store::snapshot_read::retirement_owner_close(&mut self.request, grant)
     }
     fn terminal_is_empty(&self) -> bool { self.request.is_none() }
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, 0)?.copy_bytes) }
-    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, body)?.capacity_bytes) }
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, 0)?.release_bytes) }
-    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, 0)?.depth) }
+    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.request, 0)?.copy_bytes) }
+    fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.request, body)?.capacity_bytes) }
+    fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.request, 0)?.release_bytes) }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(crate::os_store::snapshot_read::retirement_owner_demands(&self.request, 0)?.depth) }
 }
 
 impl<P> Drop for UnsupportedMemberSnapshotOpen<P> {
@@ -213,7 +213,7 @@ impl<P: semio_framework_value::retirement::RetireOwned> PackMemberSnapshotOpen<P
     fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return crate::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
         if self.snapshot.is_some() { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<P>(), depth: 2, ..Default::default() }); }
-        if self.request.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, body); }
+        if self.request.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.request, body); }
         Ok(RetirementDemand { release_bytes: self.input.capacity(), depth: usize::from(!self.terminal), ..Default::default() })
     }
 }
@@ -233,7 +233,7 @@ impl<P: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
                 Err((error, snapshot)) => { *self.snapshot = Some(snapshot); Err(error) }
             };
         }
-        if self.request.is_some() { let step = crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.request, grant)?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.request.is_some() { let step = crate::os_store::snapshot_read::retirement_owner_close(&mut self.request, grant)?; return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.input.capacity() != 0 {
             let released_bytes = self.input.capacity();
             drop(std::mem::take(&mut self.input));
@@ -407,9 +407,9 @@ where
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() { return crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant); }
         if self.constructor_error.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.constructor_error, &mut self.active, grant); }
-        if self.genesis_request.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.genesis_request, grant); }
+        if self.genesis_request.is_some() { return crate::os_store::snapshot_read::retirement_owner_close(&mut self.genesis_request, grant); }
         if self.genesis_pack.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.genesis_pack, &mut self.active, grant); }
-        if self.hydration.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.hydration, grant); }
+        if self.hydration.is_some() { return crate::os_store::snapshot_read::retirement_owner_close(&mut self.hydration, grant); }
         if let Some(member) = self.member.as_mut() {
             if crate::os_store::SpaceMember::close_owned_terminal_is_empty(member.as_ref()) {
                 let extent = size_of_val(member.as_ref());
@@ -425,7 +425,7 @@ where
         if self.decoded_history.is_some() { return crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.decoded_history, &mut self.active, grant); }
         macro_rules! close_field {
             ($field:ident) => {
-                if self.$field.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.$field, grant); }
+                if self.$field.is_some() { return crate::os_store::snapshot_read::retirement_owner_close(&mut self.$field, grant); }
             };
         }
         close_field!(witness);
@@ -472,9 +472,9 @@ where
         if let Some(receiving)=self.history_receiving.as_ref(){return receiving.demands(body)}
         if let Some(active) = self.active.as_ref() { return crate::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
         if self.constructor_error.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.constructor_error); }
-        if self.genesis_request.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.genesis_request, body); }
+        if self.genesis_request.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.genesis_request, body); }
         if self.genesis_pack.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.genesis_pack); }
-        if self.hydration.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.hydration, body); }
+        if self.hydration.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.hydration, body); }
         if let Some(member) = self.member.as_ref() {
             if crate::os_store::SpaceMember::close_owned_terminal_is_empty(member.as_ref()) { return Ok(RetirementDemand { release_bytes: size_of_val(member.as_ref()), depth: 1, ..Default::default() }); }
             let mut demand = crate::os_store::SpaceMember::close_owned_demands(member.as_ref(), body)?;
@@ -482,7 +482,7 @@ where
             return Ok(demand);
         }
         if self.decoded_history.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.decoded_history); }
-        macro_rules! child { ($field:ident) => { if self.$field.is_some() { return crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.$field, body); } }; }
+        macro_rules! child { ($field:ident) => { if self.$field.is_some() { return crate::os_store::snapshot_read::retirement_owner_demands(&self.$field, body); } }; }
         child!(witness); child!(dictionary); child!(selected); child!(rejected_history_input); child!(selection); child!(history); child!(snapshot_open);
         if self.snapshot.is_some() {
             let factory = &self.owners.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "member open lost original snapshot factory"))?.initial_snapshot_retirement;
@@ -831,7 +831,7 @@ where
                 cx.set_stage("member-open.retire-input");
                 if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }
                 let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-                let step = match crate::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.witness, child) {
+                let step = match crate::os_store::snapshot_read::retirement_owner_close(&mut self.witness, child) {
                     Ok(step) => step,
                     Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
                 };

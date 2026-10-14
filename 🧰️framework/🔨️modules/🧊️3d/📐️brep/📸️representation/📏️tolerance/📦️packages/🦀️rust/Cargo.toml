@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-tolerance"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Geometric tolerances of the 3D boundary-representation kernel"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-replication.workspace = true
+semio-framework-value.workspace = true
+semio-framework-value-derive.workspace = true
+
+[dev-dependencies]
+semio-framework-async-macros.workspace = true
+semio-framework-geometry.workspace = true

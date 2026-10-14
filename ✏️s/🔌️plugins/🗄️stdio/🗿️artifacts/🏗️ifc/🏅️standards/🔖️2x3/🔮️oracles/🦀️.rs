@@ -20,7 +20,6 @@
 //! @see 🪆️subsets/✳️sav/🦀️oracle.rs — Structural Analysis View dispatcher.
 
 //#region 🔖️Part21
-#[cfg(feature = "oracles")]
 pub(crate) mod part21 {
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use semio_repo_test_host::Json;

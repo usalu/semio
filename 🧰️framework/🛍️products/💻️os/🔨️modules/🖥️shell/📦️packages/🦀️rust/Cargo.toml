@@ -17,11 +17,6 @@ workspace = true
 name = "semio_framework_os_shell"
 path = "🦀️.rs"
 
-[features]
-default = []
-# 🧬️ Generates the TypeScript mirror from versioned owned schema metadata.
-typegen = []
-
 [dependencies]
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 schemars = "0.8.22"

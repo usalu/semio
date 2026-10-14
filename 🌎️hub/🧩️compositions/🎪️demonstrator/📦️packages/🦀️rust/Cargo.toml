@@ -55,14 +55,14 @@ semio-framework-job = { workspace = true }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 
 value_derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-s-artifact-cad-cad = { workspace = true }
 semio-s-artifact-sourcing-curation = { workspace = true }
 semio-s-artifact-process-process3d = { workspace = true }
 # 🎪️ Link only the artifact surfaces this bundle registers — not whole multi-artifact plugin crates
 # (puzzle 2d/5d, procedural 2d/assembly, gis terrain stay out of the demonstrator wasm link).
-semio-s-artifact-procedural-generation3d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-puzzle-3d = { workspace = true, features = ["component-app-assembly"] }
-semio-s-artifact-gis-gismap = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation3d = { workspace = true }
+semio-s-artifact-puzzle-3d = { workspace = true }
+semio-s-artifact-gis-gismap = { workspace = true }
+semio-s-artifact-cad-cad-editor = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

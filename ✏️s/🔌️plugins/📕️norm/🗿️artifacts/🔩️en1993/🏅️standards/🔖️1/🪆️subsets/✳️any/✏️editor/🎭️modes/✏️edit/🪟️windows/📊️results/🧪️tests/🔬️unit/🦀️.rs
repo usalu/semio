@@ -1,7 +1,7 @@
-use super::*;
-use crate::editor::en1993::commands::evaluate;
-use crate::editor::en1993::unit_tests::context;
-use crate::editor::en1993::En1993Command;
+use crate::modes::edit::windows::results::*;
+use crate::commands::evaluate;
+use crate::unit_tests::context;
+use crate::En1993Command;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_this_windows_body_key() {

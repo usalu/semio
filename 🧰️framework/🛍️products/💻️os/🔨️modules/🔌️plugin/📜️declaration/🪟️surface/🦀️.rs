@@ -159,7 +159,6 @@ use crate::sdk_fault::plugin_sdk_fault;
 use crate::store_lifecycle::ArtifactDisposal;
 use crate::store_lifecycle::ArtifactInitializationAdmission;
 use crate::app_emission::ArtifactMutationOutcome;
-use crate::store_lifecycle::ArtifactSnapshotDisposer;
 use crate::store_lifecycle::bounded_config_store_disposer;
 use crate::store_lifecycle::bounded_document_store_disposer;
 use crate::store_lifecycle::bounded_document_store_initialization_job;
@@ -348,13 +347,11 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.
-    fn build_media_export_job(_request: ArtifactMediaExportJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        Ok(None)
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
 
-    fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        None
-    }
+
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         None
@@ -1017,14 +1014,12 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🎞️ Builds an owned resumable producer for an explicitly registered viewer media-output port.
-    fn build_media_export_job(_request: ArtifactMediaExportJobRequest<ViewerApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        Ok(None)
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media surface lacks its concrete source-preserving producer").into())
     }
 
     /// 🧹️ Supplies the exact bounded disposer for snapshots retained by viewer output jobs.
-    fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        None
-    }
+
 
     /// 📬️ Grants retained one-item config preparation to this viewer adapter.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -1327,12 +1322,10 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         E::build_reserved_tool_job(request)
     }
-    fn build_media_export_job(request: ArtifactMediaExportJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        E::build_media_export_job(request)
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        E::build_media_export_job(request,body,cx)
     }
-    fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        E::build_snapshot_disposer()
-    }
+
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         E::build_envelope_decode_owner_bundle()
     }
@@ -1755,12 +1748,10 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
         V::build_reserved_tool_job(request)
     }
-    fn build_media_export_job(request: ArtifactMediaExportJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        V::build_media_export_job(request)
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        V::build_media_export_job(request,body,cx)
     }
-    fn build_snapshot_disposer() -> Option<Box<dyn ArtifactSnapshotDisposer<Self::Snapshot>>> {
-        V::build_snapshot_disposer()
-    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         V::build_config_store_one_item_preparation_factory()
     }
@@ -1932,7 +1923,7 @@ impl Editor {
 /// runtime rejection.
 pub struct ViewerBuilder {
     inner: Box<AppBuilder>,
-    dialect: ArtifactDialect,
+    pub(crate) dialect: ArtifactDialect,
 }
 
 /// ✏️ Fluent editor surface builder (contract §2.4) — every `AppBuilder` method, `.mutation(...)`
@@ -1946,7 +1937,7 @@ pub struct ViewerBuilder {
 /// `AppBuilder` value itself only ever lives in the frame of the one method that moves it.
 pub struct EditorBuilder {
     inner: Box<AppBuilder>,
-    dialect: ArtifactDialect,
+    pub(crate) dialect: ArtifactDialect,
 }
 
 impl ViewerBuilder {

@@ -3,7 +3,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{compute_element_solids, SolidFamily};
-use crate::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 
 const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
@@ -84,7 +84,7 @@ async fn a_leaning_column_is_the_sheared_prism_of_its_stretched_section() {
     snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
     let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
     let angle = 0.3_f64;
-    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::Slope { direction: 0.0, angle });
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle });
     let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
     let rise = plumb.bounds.max.z - plumb.bounds.min.z;
     assert!(close(leaning.volume, plumb.volume / angle.cos(), 1e-9), "area times rise over cos(angle)");
@@ -100,7 +100,7 @@ async fn the_lean_direction_turns_the_shift_in_plan() {
     let mut snapshot = case(CASE).snapshot;
     snapshot.columns.get_mut("c-rect").expect("column").rotation = 0.0;
     let plumb = compute_element_solids(&snapshot)["c-rect"].clone();
-    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.2 });
+    snapshot.columns.get_mut("c-rect").expect("column").tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: std::f64::consts::FRAC_PI_2, angle: 0.2 });
     let leaning = compute_element_solids(&snapshot)["c-rect"].clone();
     let rise = plumb.bounds.max.z - plumb.bounds.min.z;
     assert!(close(leaning.bounds.max.x - leaning.bounds.min.x, plumb.bounds.max.x - plumb.bounds.min.x, 1e-9), "no lean across x");
@@ -112,7 +112,7 @@ async fn the_footprint_at_a_height_follows_the_lean() {
     let mut snapshot = case(CASE).snapshot;
     let column = snapshot.columns.get_mut("c-rect").expect("column");
     column.rotation = 0.0;
-    column.tilt = Some(crate::Slope { direction: 0.0, angle: 0.25 });
+    column.tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.25 });
     let (column, profile) = (snapshot.columns["c-rect"].clone(), snapshot.column_types["ct-rect"].profile.clone());
     let centre = |ring: &[Point]| (ring.iter().map(|p| p.x).sum::<f64>() / ring.len() as f64, ring.iter().map(|p| p.y).sum::<f64>() / ring.len() as f64);
     let (base, high) = (centre(&footprint(&column, &profile, 0.0, 0.0)), centre(&footprint(&column, &profile, 0.0, 2.0)));
@@ -125,7 +125,7 @@ fn the_reach_of_a_column_grows_with_its_lean() {
     let snapshot = case(CASE).snapshot;
     let mut column = snapshot.columns["c-rect"].clone();
     let plumb = reach(&snapshot, &column).expect("a type");
-    column.tilt = Some(crate::Slope { direction: 0.0, angle: 0.3 });
+    column.tilt = Some(crate::standards::v1::subsets::any::schema::snapshot::Slope { direction: 0.0, angle: 0.3 });
     assert!(reach(&snapshot, &column).expect("a type") > plumb + 1.0, "a lean may carry the section away from the base point");
     column.column_type = "ct-none".into();
     assert_eq!(reach(&snapshot, &column), None);

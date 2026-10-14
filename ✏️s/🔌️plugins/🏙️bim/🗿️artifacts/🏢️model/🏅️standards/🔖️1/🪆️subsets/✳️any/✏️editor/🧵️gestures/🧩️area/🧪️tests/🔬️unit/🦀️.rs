@@ -1,9 +1,9 @@
 use crate::editor::bim::gestures::plane::signed_area;
 use crate::editor::bim::gestures::session::{Shape, REJECTED, TYPE_MISSING};
 use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
-use crate::{ModelMutation, RoofShape};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::RoofShape};
 
-fn ring(vertices: &[crate::Vertex]) -> Vec<[f64; 2]> {
+fn ring(vertices: &[crate::standards::v1::subsets::any::schema::snapshot::Vertex]) -> Vec<[f64; 2]> {
     vertices.iter().map(|vertex| [vertex.point.x, vertex.point.y]).collect()
 }
 
@@ -86,9 +86,9 @@ async fn the_slab_from_walls_takes_the_closed_wall_loop_around_the_click() {
     assert_eq!(rig.down(30.0, 30.0).refused, Some(REJECTED), "outside no loop is closed");
 }
 
-fn hung(mut snapshot: crate::ModelSnapshot) -> crate::ModelSnapshot {
-    let layer = crate::Layer { material: "m-concrete".into(), thickness: 0.0125, function: crate::LayerFunction::Finish };
-    snapshot.ceiling_types.insert("ct-board".into(), crate::CeilingType { name: "Board".into(), layers: vec![layer] });
+fn hung(mut snapshot: crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
+    let layer = crate::standards::v1::subsets::any::schema::snapshot::Layer { material: "m-concrete".into(), thickness: 0.0125, function: crate::standards::v1::subsets::any::schema::snapshot::LayerFunction::Finish };
+    snapshot.ceiling_types.insert("ct-board".into(), crate::standards::v1::subsets::any::schema::snapshot::CeilingType { name: "Board".into(), layers: vec![layer] });
     snapshot
 }
 

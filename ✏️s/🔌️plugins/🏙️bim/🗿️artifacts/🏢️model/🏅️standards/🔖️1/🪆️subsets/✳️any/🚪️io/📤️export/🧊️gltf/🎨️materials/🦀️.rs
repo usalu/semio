@@ -5,7 +5,7 @@
 use super::document::GltfMaterial;
 use crate::render::world::{family_color, group_color};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
-use crate::{MaterialCategory, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, ModelSnapshot};
 use std::collections::BTreeMap;
 
 /// 🔑️ What a face group is made of: a model material, glazing without a material, or nothing (the colour of its element family).

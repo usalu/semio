@@ -2,27 +2,9 @@
 //! per-instance vocabulary (`UpsertInstance`/`RemoveInstance`/`SetHeader`) matching `Ifc2x3Diff`'s
 //! own id-keyed shape.
 
-use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use protocol::os_spr::command::DiffAlgebra;
 #[cfg(test)] use protocol::Mutation;
 #[cfg(test)]
@@ -62,7 +44,6 @@ pub enum Ifc2x3Mutation {
 pub const KINDS: &[&str] = &["upsert-instance", "remove-instance", "set-header"];
 //#endregion 🔖️Mutations
 
-
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning the diff (computed against the PRE-mutation
 /// state, per `Mutation::diff`'s contract).
@@ -79,23 +60,11 @@ pub fn apply_ifc2x3_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Mut
 }
 //#endregion 🔖️Apply
 
-
 //#region OpCodecs
-
-
-
-
-
-
-
 
 //#region 🔖️OpBinaryCodec
 
-
 //#endregion 🔖️OpBinaryCodec
-
-
-
 
 //#endregion OpCodecs
 
@@ -138,9 +107,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
 //#endregion 🔖️DemoCases
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureTests

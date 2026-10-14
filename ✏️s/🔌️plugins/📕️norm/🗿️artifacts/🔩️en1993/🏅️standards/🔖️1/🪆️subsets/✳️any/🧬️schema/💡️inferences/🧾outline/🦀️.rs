@@ -1,6 +1,6 @@
 //! 🧾 Document outline for EN 1993 steel structure.
 
-use crate::En1993Snapshot;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex",

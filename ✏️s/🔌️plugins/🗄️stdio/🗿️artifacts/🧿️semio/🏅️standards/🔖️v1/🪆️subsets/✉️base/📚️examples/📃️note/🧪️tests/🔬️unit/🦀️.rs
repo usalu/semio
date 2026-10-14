@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_semio_base_examples::examples::note::*;
 #[semio_framework_async_macros::async_test]
 async fn note_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());

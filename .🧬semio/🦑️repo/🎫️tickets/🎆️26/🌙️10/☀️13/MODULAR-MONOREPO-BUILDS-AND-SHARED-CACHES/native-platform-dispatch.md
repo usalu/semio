@@ -1,0 +1,9 @@
+# Native Platform Dispatch
+
+The production repository partition opener now selects the macOS, Linux or Windows enforcing image owner through a closed platform schema. Foreign hosts are refused. It no longer sends every native host to the macOS-only opener. The root path, image usage interface and no-follow filesystem guard now belong to a platform-neutral contract leaf; 25 neutral consumers import that owner directly. The macOS owner no longer reexports neutral contracts as a compatibility facade.
+
+Linux and Windows shared image admission now receive the capped nonqueued bootstrap SQLite lease option needed to open the finite lease partition without recursive ordinary-directory queues. Linux retains real CAP_SYS_ADMIN, fixed allocated loop/ext4 and exact kernel mapping admission. Windows retains elevated system capability, fixed checksummed VHD and exact NTFS mapping admission. Missing capabilities refuse before provisioning; these remain required host setup capabilities, not a zero-touch runtime qualification.
+
+Neutral platform selection and existing loop/VHD footer laws compare the language-neutral corpus with independent SQLite and Ajv oracles. Prototype passed2 tests/27 assertions through Nx in362ms. Release passed the same2 tests/27 assertions. Strict TypeScript with unchecked-index admission for dispatch, repository opening and budget runtime proof completed with exit0.
+
+The actual repository diagnostic fixed store reran through the new default dispatcher on macOS: prototype3 tests/105 assertions,3.2seconds through Nx, including exact real Node stdout/stderr and removal of its own capture. Actual Windows/Linux mounted volume lifetime, cross-host artifact reuse and unprivileged zero-touch setup have not been verified on this macOS host. The selector gate does not prove those broader requirements.

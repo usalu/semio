@@ -6,8 +6,8 @@
 //! (modifier-driven) in the framework's model now, with no equivalent "default" setting.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{ui_label, Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
-use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, Component, HasBase, HasChildren, NumberStepperProps, Trigger};
+use {crate::editor::puzzle3d::session::ui_label, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID};
+use {semio_framework_plugin::plugin_app_close_prelude::ActionBinding, semio_framework_plugin::plugin_app_close_prelude::BuiltNode, semio_framework_plugin::plugin_app_close_prelude::Component, semio_framework_plugin::plugin_app_close_prelude::NumberStepperProps, semio_framework_plugin::plugin_app_close_prelude::Trigger};
 use semio_framework_plugin::ActionFactory;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;

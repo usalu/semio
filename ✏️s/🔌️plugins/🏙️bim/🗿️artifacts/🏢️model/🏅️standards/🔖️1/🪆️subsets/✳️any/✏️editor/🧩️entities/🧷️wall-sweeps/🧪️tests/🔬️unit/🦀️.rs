@@ -7,7 +7,7 @@ fn demo() -> ModelSnapshot {
 }
 
 fn applied(snapshot: &ModelSnapshot, mutation: &ModelMutation) -> ModelSnapshot {
-    crate::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("{mutation:?} is refused: {refusal:?}"))
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, mutation).unwrap_or_else(|refusal| panic!("{mutation:?} is refused: {refusal:?}"))
 }
 
 fn furnished() -> ModelSnapshot {
@@ -91,7 +91,7 @@ async fn the_profile_row_speaks_rect_circle_and_custom() {
 #[semio_framework_async_macros::async_test]
 async fn a_sweep_row_reads_its_inferred_length_area_and_volume() {
     let snapshot = with_sweep(&demo());
-    let inference = <crate::ModelInference as protocol::Inference<ModelSnapshot>>::infer(&snapshot).expect("infer");
+    let inference = <crate::standards::v1::subsets::any::schema::inferences::ModelInference as protocol::Inference<ModelSnapshot>>::infer(&snapshot).expect("infer");
     let row = kind_of("wall-sweep").expect("wall sweep");
     for key in ["length", "area", "volume"] {
         let shown = row.inferred.iter().find(|row| row.key == key).and_then(|row| (row.read)(&snapshot, &inference, "sw-1"));

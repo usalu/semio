@@ -1,15 +1,16 @@
 //! 🧮️ Projects window status from document counts and framework-owned selection.
-use super::{drawing_manifest_action,DrawingPlayLabels,WindowEngagement,WindowEngagementInput,WindowEngagementStatus};
+use super::{drawing_manifest_action, WindowEngagement, WindowEngagementInput, WindowEngagementStatus};
+use crate::terminology::DrawingPlayLabels;
 use std::collections::HashMap;
 
 /// 🗣️ Formats counts with the addressed view's explicit locale and terminology.
-pub(crate) fn text(layers:usize,selected:usize,labels:&DrawingPlayLabels)->String {
+pub fn text(layers:usize,selected:usize,labels:&DrawingPlayLabels)->String {
     let layer=if layers==1 {labels.layer_count_one} else {labels.layer_count_many};
     format!("{} · {}",layer.as_str().replace("{count}",&layers.to_string()),labels.selection_count.as_str().replace("{count}",&selected.to_string()))
 }
 
 /// 🪟️ Builds one addressed canvas engagement without introducing a second selection state.
-pub(crate) fn engagements(layers:usize,selected:usize,input:String,view:&semio_framework_plugin::ViewModel)->HashMap<String,WindowEngagement> {
+pub fn engagements(layers:usize,selected:usize,input:String,view:&semio_framework_plugin::ViewModel)->HashMap<String,WindowEngagement> {
     let Some(window)=view.window_id.clone() else {return HashMap::new()};
     let labels=semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view);
     HashMap::from([(window,WindowEngagement {

@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding;
-use crate::{ClashRef, IssueComment, IssuePriority, RuleKind, RuleScope};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, IssueComment, IssuePriority, RuleKind, RuleScope};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
@@ -107,7 +107,7 @@ fn with_issues() -> ModelSnapshot {
         labels: Vec::new(),
         elements: elements.iter().map(|id| id.to_string()).collect(),
         clash: Some(ClashRef { set: "cs-frame".into(), first: "b-1".into(), second: "c-1".into() }).filter(|_| viewpoint),
-        viewpoint: viewpoint.then(|| crate::IssueViewpoint { camera: crate::ViewCamera { target: crate::Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }, section: None, isolate: Vec::new() }),
+        viewpoint: viewpoint.then(|| crate::standards::v1::subsets::any::schema::snapshot::IssueViewpoint { camera: crate::standards::v1::subsets::any::schema::snapshot::ViewCamera { target: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 0.0, y: 0.0 }, target_height: 1.0, azimuth: 0.0, pitch: 0.3, distance: 10.0 }, section: None, isolate: Vec::new() }),
     };
     snapshot.issues.insert("i-1".into(), issue("Beam hits column", IssueStatus::Open, &["b-1", "c-1"], true));
     snapshot.issues.insert("i-2".into(), issue("Slab edge", IssueStatus::Closed, &[], false));

@@ -1,6 +1,6 @@
 use super::super::{kind_holding, kind_of, EntityKind, ENTITIES};
 use super::*;
-use crate::{ClassificationItem, PropertyDef, PropertyKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationItem, PropertyDef, PropertyKind};
 
 fn model() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();
@@ -17,7 +17,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 #[semio_framework_async_macros::async_test]
@@ -80,5 +80,5 @@ async fn a_new_template_and_a_new_system_are_empty_and_named() {
     assert!(matches!(&template, ModelMutation::CreatePropertyTemplate(row) if row.template.name == "Pset_New" && row.template.applies_to.is_empty() && row.template.properties.is_empty()));
     let system = create_classification_system(&snapshot, "cs-new", "", "DIN 276").expect("creates");
     assert!(matches!(&system, ModelMutation::CreateClassificationSystem(row) if row.system.name == "DIN 276" && row.system.entries.is_empty() && row.system.source.is_none()));
-    assert!(crate::mutations::apply_model_mutation(&snapshot, &template).is_ok() && crate::mutations::apply_model_mutation(&snapshot, &system).is_ok());
+    assert!(crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &template).is_ok() && crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &system).is_ok());
 }

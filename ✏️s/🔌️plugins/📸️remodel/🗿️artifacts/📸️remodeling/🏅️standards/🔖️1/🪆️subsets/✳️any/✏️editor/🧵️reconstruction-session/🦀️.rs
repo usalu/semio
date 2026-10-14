@@ -7,14 +7,45 @@
 //! provisional `append-content` ops plus one `commit-reconstruction` op; nothing reaches the document before
 //! finalize. Source of record: `🔣️.json` beside this file.
 
-use crate::editor::remodeling::engine::images::{BoundedDecodeProgress, BoundedStillDecoder, CompressedChunkRope, ImageRgba8};
-use crate::editor::remodeling::engine::reconstruction::{EngineObservation, EngineStage, EngineStatus, FrameAcceptance, ReconstructionEngine, TerminalGeoPreparation};
-use crate::editor::remodeling::engine::{build_engine_params, camera_pose_preview, geo as remodeling_geo, watertight_snapshot, RasterPngPreparation, RasterPngProgress};
-use crate::mutations::{append_content, commit_reconstruction, AppendContent, CommitReconstruction, ReconstructionAssetCommit, RemodelingMutation};
-use crate::{
-    mesh_is_within_resolution_envelope, remodeling_mesh_content_handle, CameraPosePreview, CameraTrajectory, FrameRef, GeoProducts, MeshSource, ByteBuffer, Float32Buffer, QcReportSnapshot, RemodelingContentDigest, RemodelingContentKind, RemodelingMesh,
-    RemodelingSnapshot, SparseCloud, WatertightReportSnapshot, REMODELING_DURABLE_CHUNK_RAW_BYTES,
-};
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::BoundedDecodeProgress;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::BoundedStillDecoder;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::CompressedChunkRope;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::images::ImageRgba8;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineObservation;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineStage;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::EngineStatus;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::FrameAcceptance;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::ReconstructionEngine;
+use semio_s_artifact_remodel_remodeling_reconstruct::editor::remodeling::engine::reconstruction::TerminalGeoPreparation;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::build_engine_params;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::camera_pose_preview;
+use semio_s_artifact_remodel_remodeling_geo::editor::remodeling::engine::geo as remodeling_geo;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::watertight_snapshot;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::RasterPngPreparation;
+use semio_s_artifact_remodel_remodeling_engine::editor::remodeling::engine::RasterPngProgress;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content::append_content;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::commit_reconstruction;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::CommitReconstruction;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::ReconstructionAssetCommit;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::mesh_is_within_resolution_envelope;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_mesh_content_handle;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraPosePreview;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoProducts;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshSource;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::Float32Buffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentDigest;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::WatertightReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DURABLE_CHUNK_RAW_BYTES;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPublicationKind, RetainedJobPublication, StepContext};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ValueError};
 use semio_framework_ui_locale::LocalizedLabel;
@@ -457,7 +488,7 @@ struct FrameIngestion {
 }
 
 fn frame_ingestion(scene: &RemodelingSnapshot, frame: &FrameRef) -> Option<FrameIngestion> {
-    let source = crate::remodeling_asset_chunk_source(scene, &frame.asset_id)?;
+    let source = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_asset_chunk_source(scene, &frame.asset_id)?;
     let compressed = CompressedChunkRope::from_leaves(source.leaves, MAX_STILL_INPUT_BYTES).ok()?;
     Some(FrameIngestion { frame: frame.clone(), decoder: Some(BoundedStillDecoder::new(&source.mime, compressed)), image: None, sharpness_cursor: 0, sharpness_sum: 0.0 })
 }

@@ -9,14 +9,14 @@ pub(crate) struct PrivateChildPublicationInput {
     issuer: PrivateChildMemberMetadataIssuer,
     metadata: Option<PrivateChildMemberMetadata>,
     genesis: PrivateChildGenesisInput,
-    request: ManuallyDrop<Option<store::MemberOpenRequest>>,
+    pub(crate) request: ManuallyDrop<Option<store::MemberOpenRequest>>,
     declaration: usize,
     declaration_count: Option<usize>,
     declaration_pointer: Option<usize>,
-    schema: Option<&'static str>,
+    pub(crate) schema: Option<&'static str>,
     framed: bool,
     ready: bool,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 pub(crate) struct PrivateChildPublicationInputParts {
     pub(crate) source: OwnedChildEmit,

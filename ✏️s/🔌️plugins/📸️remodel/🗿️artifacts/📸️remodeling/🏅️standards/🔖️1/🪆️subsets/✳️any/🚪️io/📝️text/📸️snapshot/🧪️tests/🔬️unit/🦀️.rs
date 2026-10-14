@@ -1,8 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{
-    default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, Float32Buffer, ByteBuffer,
-    QcReportSnapshot, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot,
-};
+use crate::standards::v1::subsets::any::schema::snapshot::{default_remodeling_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseCloud, FrameRef, GcpObservation, GroundControlPoint, ImageAsset, MediaKind, MediaStream, MeshSource, MotionTrackSummary, Float32Buffer, ByteBuffer, QcReportSnapshot, RemodelingMesh, RigExtrinsic, SparseCloud, TrackClass, VideoCodec, VideoSource, WatertightReportSnapshot};
 
 /// 🏗️ Verbatim duplicate of the `rs` crate's own private test-only fixture builder — see that
 /// crate's `populated_scene_fixture` doc comment for why this is copied rather than shared.
@@ -19,7 +16,7 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         source: Some(VideoSource { name: "front.mp4".into(), container: "mp4".into(), codec: VideoCodec::Avc, duration_ms: 6633.3, frame_count: 199, width: 1920, height: 1080 }),
     });
     let asset_one = ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 };
-    scene.assets.insert("asset-1".into(), crate::store_remodeling_asset("asset-1", &asset_one));
+    scene.assets.insert("asset-1".into(), crate::standards::v1::subsets::any::schema::snapshot::store_remodeling_asset("asset-1", &asset_one));
     scene.calibration.cameras.push(CameraCalibration {
         id: "cam-1".into(),
         label: "Front".into(),
@@ -41,7 +38,7 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
     scene.results.dense =
         Some(DenseCloud { positions: Float32Buffer::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(ByteBuffer::from_u8_slice(&[0, 0, 255])), confidence: Some(Float32Buffer::from_f32_slice(&[0.9])), classification: Some(ByteBuffer::from_u8_slice(&[2])) });
     scene.results.mesh = RemodelingMesh {
-        mesh: crate::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
+        mesh: crate::standards::v1::subsets::any::schema::snapshot::mint_and_stash_mesh(semio_framework::mesh_from_kind("box")),
         source: MeshSource::Reconstructed,
         texture_asset_id: Some("tex-1".into()),
         watertight: Some(WatertightReportSnapshot {
@@ -70,7 +67,7 @@ fn populated_scene_fixture() -> RemodelingSnapshot {
         ],
     });
     scene.results.tracks.push(MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
-    scene.results.geo = Some(crate::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
+    scene.results.geo = Some(crate::standards::v1::subsets::any::schema::snapshot::GeoProducts { dsm_asset_id: Some("asset-dsm".into()), dtm_asset_id: Some("asset-dtm".into()), ortho_asset_id: Some("asset-ortho".into()) });
     scene.results.qc = Some(QcReportSnapshot {
         reprojection_rms_px: 0.5,
         gcp_checkpoint_rmse: Some(0.02),

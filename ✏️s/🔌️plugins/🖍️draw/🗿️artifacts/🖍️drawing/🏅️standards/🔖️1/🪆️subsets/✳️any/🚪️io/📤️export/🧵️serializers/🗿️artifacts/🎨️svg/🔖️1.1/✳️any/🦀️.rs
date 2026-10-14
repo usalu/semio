@@ -1,6 +1,6 @@
 //! 🎨️ Drawing scene to typed SVG, preserving authored geometry, paint and affine transforms.
 
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -12,7 +12,7 @@ pub struct DrawingIntoSvg;
 impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
     const INTO: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::standards::v1::subsets::any::io::owned_export::SVG_FACTORY);
+    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::SVG_FACTORY);
     async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let _ = control;
         let (svg_text, _width, _height) = drawing_document_to_svg(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoSvg: {message}"))))?;
@@ -20,9 +20,10 @@ impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
     }
 }
 
-use crate::schema::{DrawingSceneNode, flatten_drawing_document_to_scene_nodes};
-use crate::{FillStyle, GradientStop, PathSegment};
-use crate::schema::fill::sampling::PreparedFill;
+use semio_s_artifact_draw_drawing_model::DrawingSceneNode;
+use semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes;
+use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, PathSegment};
+use semio_s_artifact_draw_drawing_model::fill::sampling::PreparedFill;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
@@ -106,7 +107,7 @@ fn finite_numbers(node: &DrawingSceneNode) -> bool {
         && node.image.as_ref().is_none_or(|image| finite(&[image.width,image.height]))
 }
 
-fn close_group(stack:&mut Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>)>,root:&mut Vec<SvgElement>) {
+fn close_group(stack:&mut Vec<(&semio_s_artifact_draw_drawing_model::DrawingSceneGroup,Vec<SvgElement>)>,root:&mut Vec<SvgElement>) {
     let (group,children)=stack.pop().expect("open compositing group");
     let mut common=CommonAttrs::default().with_opacity(group.opacity.to_string());
     common.extra_attrs.push(attr("data-group-id",&group.id));
@@ -117,12 +118,12 @@ fn close_group(stack:&mut Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>
 }
 
 /// 🖼️ Serializes scene-space nodes using the first-party SVG/XML vocabulary and writer.
-pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4],assets:&semio_framework_value::paged::PagedMap<crate::DrawingImageAsset,{usize::MAX}>) -> Result<String,String> {
+pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4],assets:&semio_framework_value::paged::PagedMap<semio_s_artifact_draw_drawing_model::DrawingImageAsset,{usize::MAX}>) -> Result<String,String> {
     let [x,y,width,height] = view_box;
     if !view_box.iter().all(|value| value.is_finite()) || width <= 0.0 || height <= 0.0 { return Err("SVG view box must have finite coordinates and positive dimensions".into()); }
     let mut defs = Vec::new();
     let mut children = Vec::new();
-    let mut stack:Vec<(&crate::schema::DrawingSceneGroup,Vec<SvgElement>)>=Vec::new();
+    let mut stack:Vec<(&semio_s_artifact_draw_drawing_model::DrawingSceneGroup,Vec<SvgElement>)>=Vec::new();
     let mut opened=std::collections::BTreeSet::new();
     for (index,node) in nodes.iter().enumerate().filter(|(_,node)| node.visible) {
         if !finite_numbers(node) { return Err(format!("SVG layer {} geometry and paint must be finite", node.id)); }
@@ -145,7 +146,7 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4],assets
             }).collect();
             SvgElement::Text { common,x:None,y:None,children:lines }
         } else if let Some(image) = &node.image {
-            let src=crate::standards::v1::subsets::any::io::image::drawing_image_data_uri(assets.get(&image.asset_id).ok_or_else(||format!("Missing scene image asset: {}",image.asset_id))?)?;
+            let src=semio_s_artifact_draw_drawing_io::image::drawing_image_data_uri(assets.get(&image.asset_id).ok_or_else(||format!("Missing scene image asset: {}",image.asset_id))?)?;
             SvgElement::Unknown { name:"image".into(), attrs:vec![attr("x",0),attr("y",0),attr("width",image.width),attr("height",image.height),attr("preserveAspectRatio","none"),attr("href",&src),attr("xlink:href",&src)], children:Vec::new() }
         } else { SvgElement::Path { common,d:node.segments.iter().map(path_command).collect() } };
         let [a,b,c,d,e,f] = node.transform;
@@ -165,7 +166,7 @@ pub fn drawing_scene_to_svg(nodes: &[DrawingSceneNode], view_box: [f64;4],assets
 pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String,u32,u32),String> {
     let nodes = flatten_drawing_document_to_scene_nodes(doc);
     let view_box = if let Some(board) = &doc.artboard { [0.0,0.0,board.width,board.height] } else {
-        let [x1,y1,x2,y2] = crate::schema::geometry::framing::drawing_scene_bounds(None,&nodes);
+        let [x1,y1,x2,y2] = semio_s_artifact_draw_drawing_geometry::framing::drawing_scene_bounds(None,&nodes);
         [x1,y1,(x2-x1).max(1.0),(y2-y1).max(1.0)]
     };
     let svg = drawing_scene_to_svg(&nodes,view_box,&doc.assets)?;

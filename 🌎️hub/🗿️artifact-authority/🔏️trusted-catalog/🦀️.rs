@@ -509,7 +509,7 @@ pub(crate) trait GuestResidentFootprintV1 {
     fn footprint_bytes(&self) -> u64;
 }
 
-impl GuestResidentFootprintV1 for semio_framework_plugin_interpreter::OwnedCompiledGuest {
+impl GuestResidentFootprintV1 for semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest {
     /// 🧊️ Beyond its parsed component (which its registration charges) a compiled guest holds the owned interpreter's codec
     /// origin once a codec call assembled it: the guest's linear memory right after its plugin bundle assembled.
     fn footprint_bytes(&self) -> u64 {
@@ -836,10 +836,10 @@ impl TrustedCatalogLoadProgressCellV1 {
 /// by that call, whichever comes first — so a hub serves without interpreting its whole catalog first and
 /// no codec call ever runs on a row its component did not answer as the trust record says.
 struct GuestArtifactComponent {
-    runtime: Arc<semio_framework_plugin_interpreter::OwnedRuntime>,
+    runtime: Arc<semio_framework_plugin_interpreter_runtime::OwnedRuntime>,
     package: PackageRef,
     component: TrustedCatalogAsset,
-    compiled: GuestResidencyV1<semio_framework_plugin_interpreter::OwnedCompiledGuest>,
+    compiled: GuestResidencyV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>,
     position: usize,
     component_sha256: [u8; 32],
     rows: Vec<(String, [u8; 32])>,
@@ -849,13 +849,13 @@ struct GuestArtifactComponent {
 }
 
 impl GuestArtifactComponent {
-    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_interpreter::OwnedCompiledGuest>, AuthorityError> {
+    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>, AuthorityError> {
         self.compiled
             .acquire(context, || async {
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 0, total_units: 1 })?;
                 let bytes = self.component.read(context).await?;
                 let runtime = Arc::clone(&self.runtime);
-                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&bytes).map_err(semio_framework_plugin_interpreter::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
+                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&bytes).map_err(semio_framework_plugin_guest_contract::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 1, total_units: 1 })?;
                 Ok(compiled)
             })
@@ -917,7 +917,7 @@ impl GuestArtifactComponent {
     }
 
     /// 🔐️ One row: the component's own `pack-schema-hash`, compared with the trust record and remembered for this engine.
-    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_interpreter::OwnedCompiledGuest>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.to_string());
         let observed = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation)))
@@ -1008,14 +1008,14 @@ impl GuestArtifactCodecBinding {
 /// the call at its next step, so no interpretation outlives the operation that asked for it and a
 /// runtime being dropped waits for none. The outer result is the caller's own outcome, the inner one
 /// the guest's answer. Guest codec calls belong to the hub's runtime; outside one they are refused.
-async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_interpreter::TurnFault>, AuthorityError>
+async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_guest_contract::TurnFault>, AuthorityError>
 where
     T: Send + 'static,
-    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_interpreter::GuestCallCancellation) -> Result<T, semio_framework_plugin_interpreter::TurnFault> + Send + 'static,
+    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_guest_contract::GuestCallCancellation) -> Result<T, semio_framework_plugin_guest_contract::TurnFault> + Send + 'static,
 {
     let handle = tokio::runtime::Handle::try_current().map_err(|_| catalog("guest codec calls run on the hub runtime"))?;
     let (sender, mut observations) = tokio::sync::mpsc::unbounded_channel::<u64>();
-    let released = GuestCallRelease(semio_framework_plugin_interpreter::GuestCallCancellation::default());
+    let released = GuestCallRelease(semio_framework_plugin_guest_contract::GuestCallCancellation::default());
     let (blocking, cancellation) = (handle.clone(), released.0.clone());
     let joined = handle.spawn_blocking(move || {
         call(
@@ -1034,7 +1034,7 @@ where
             Err(_) => {}
         }
     }
-    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_interpreter::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
+    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_guest_contract::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
 }
 
 /// ⏲️ How often a caller awaiting a guest call between two fuel observations (one per 25 M fuel or 5 s)
@@ -1044,7 +1044,7 @@ const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duration::f
 /// 🧯️ The awaiting side of one guest call: however its caller is released — answered, refused, cancelled or
 /// dropped mid-await — the call is cancelled, which ends its interpretation at the next step (a call that already
 /// returned is unaffected).
-struct GuestCallRelease(semio_framework_plugin_interpreter::GuestCallCancellation);
+struct GuestCallRelease(semio_framework_plugin_guest_contract::GuestCallCancellation);
 
 impl Drop for GuestCallRelease {
     fn drop(&mut self) {
@@ -1144,7 +1144,7 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
 
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
-    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter::OwnedCompiledGuest>>,
+    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter_runtime::OwnedCompiledGuest>>,
     guests: Box<[Arc<GuestArtifactComponent>]>,
     progress: Arc<TrustedCatalogLoadProgressCellV1>,
     packages: Box<[VerifiedTrustedPackage]>,
@@ -1406,7 +1406,7 @@ impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
 /// 🪪️ What a remembered verification was computed by: the owned engine's semantic identity and the
 /// fuel ceiling every guest codec call runs under.
 pub(crate) fn guest_codec_engine_identity() -> String {
-    format!("{}:fuel-{}", semio_framework_plugin_interpreter::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
+    format!("{}:fuel-{}", semio_framework_plugin_interpreter_runtime::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
 }
 
 /// 🗃️ The hub's content-addressed memory of guest codec verifications (`GuestCodecVerificationV1`),
@@ -1562,7 +1562,7 @@ impl TrustedCatalogLoader {
         context: &OperationContext<'_>,
     ) -> Result<(VerifiedTrustedCatalog, ArtifactAssemblyRegistryPlan), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
-        let guest_runtime = Arc::new(semio_framework_plugin_interpreter::OwnedRuntime::new());
+        let guest_runtime = Arc::new(semio_framework_plugin_interpreter_runtime::OwnedRuntime::new());
         let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
         let progress = context.catalog_progress().unwrap_or_default();
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
@@ -2812,7 +2812,7 @@ pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &st
 }
 
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
-#[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
+#[cfg(any(test, feature = "integration-fixtures"))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
     let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let version = dependency.version.0.to_string();
@@ -2854,10 +2854,10 @@ fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, ser
 }
 
 /// 🏗️ Feature-gated real GIS Map profile builder, reachable from every crate target (see its module doc).
-#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[cfg(feature = "integration-fixtures")]
 #[path = "../../🧪️tests/🔏️trusted-catalog-profile/🦀️.rs"]
 pub mod trusted_catalog_fixture;
-#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[cfg(feature = "integration-fixtures")]
 #[path = "../../🧪️tests/🔏️trusted-catalog-profile/🪶️count/🦀️.rs"]
 pub mod count_trusted_catalog_fixture;
 

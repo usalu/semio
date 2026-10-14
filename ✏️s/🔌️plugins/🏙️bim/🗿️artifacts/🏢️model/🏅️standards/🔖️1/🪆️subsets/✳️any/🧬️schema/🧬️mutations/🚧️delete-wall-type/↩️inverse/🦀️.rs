@@ -3,7 +3,7 @@
 use super::super::create_wall_type::CreateWallType;
 use super::super::cascade;
 use super::DeleteWallType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteWallType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.wall_types.get(&payload.id) {

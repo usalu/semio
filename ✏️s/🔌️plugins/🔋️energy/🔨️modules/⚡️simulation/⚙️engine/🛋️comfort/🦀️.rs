@@ -1,5 +1,7 @@
 //! 😌️ Thermal comfort: PMV, PPD, operative temperature, MRT, adaptive models.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+
 use crate::props::saturation_pressure_pa;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use serde::{Deserialize, Serialize};

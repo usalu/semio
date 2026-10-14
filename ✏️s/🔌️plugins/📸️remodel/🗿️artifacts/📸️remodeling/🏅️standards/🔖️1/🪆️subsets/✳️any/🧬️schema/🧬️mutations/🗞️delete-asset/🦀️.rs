@@ -2,9 +2,10 @@
 //! removes an asset today; this exists as `create-asset`'s inverse-only counterpart (a mutation kind
 //! is real even without its own command call site) and for collection completeness.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::append_content::AppendContent;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::CommitReconstruction;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +22,20 @@ pub struct DeleteAsset {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn delete_asset(key: String) -> RemodelingMutation {
-    RemodelingMutation::DeleteAsset(DeleteAsset { key })
+pub fn delete_asset<Op: From<DeleteAsset>>(key: String) -> Op {
+    Op::from(DeleteAsset { key })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for DeleteAsset {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for DeleteAsset
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<AppendContent> + From<CommitReconstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "asset", kind: "delete-asset", record: "DeletedAsset" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

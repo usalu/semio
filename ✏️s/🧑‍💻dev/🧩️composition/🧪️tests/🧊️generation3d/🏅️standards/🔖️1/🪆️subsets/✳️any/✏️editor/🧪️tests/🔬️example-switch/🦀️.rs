@@ -1,9 +1,14 @@
 use super::*;
 use crate::editor_domain::editor_laws::context::{self, app_with_registry};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{
-    example_snapshot, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE,
-    PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
-};
+use semio_s_artifact_procedural_3d_model::example_snapshot;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
 use semio_framework_plugin::app::TypedOperationResultLane;
 use semio_framework_plugin::PluginApp;
 
@@ -27,7 +32,7 @@ fn published_node_ids(graph: &str) -> std::collections::BTreeSet<String> {
 
 fn authored_node_ids(example_id: &str) -> std::collections::BTreeSet<String> {
     let read = crate::SnapshotRead::new(example_snapshot(example_id).expect("bundled example snapshot"));
-    read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_generation3d::widget_id).map(str::to_string).collect()
+    read.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).map(str::to_string).collect()
 }
 
 /// ⚖️ LAW: picking an example REPUBLISHES the flow window's graph. Boot #11 of

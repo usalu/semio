@@ -28,7 +28,7 @@ fn close(left: f64, right: f64) -> bool {
 async fn the_extents_of_the_demo_are_its_walls_grown_by_half_their_thickness() {
     let [x0, y0, x1, y1] = extents(&demo(), "bldg-1").expect("walls give extents");
     assert!(close(x0, -0.15) && close(y0, -0.15) && close(x1, 8.15) && close(y1, 6.15), "{x0} {y0} {x1} {y1}");
-    assert_eq!(extents(&crate::ModelSnapshot::default(), "bldg-1"), None);
+    assert_eq!(extents(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default(), "bldg-1"), None);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -94,7 +94,7 @@ async fn the_new_view_is_selected_and_bound_to_the_addressed_window() {
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_kind_and_a_missing_building_are_refused_with_a_stable_code() {
     assert_eq!(create("teapot", "", "", &[], false).err().map(|fault| fault.code.0), Some("bim.view.kind-unknown".to_string()));
-    let empty = crate::ModelSnapshot::default();
+    let empty = crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default();
     let mut ctx = ctx(&[]);
     let refused = run(&empty, |doc, cfg| handle(&CreateView { kind: "section".into(), parent: String::new(), name: String::new() }, doc, cfg, &mut ctx));
     assert_eq!(refused.err().map(|fault| fault.code.0), Some("bim.view.building-missing".to_string()));

@@ -3,7 +3,7 @@
 
 use super::super::cascade;
 use super::DeleteIssue;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteIssue, base: &ModelSnapshot) -> Vec<ModelMutation> {
     cascade::inverse(base, std::slice::from_ref(&payload.id))

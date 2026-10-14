@@ -18,8 +18,8 @@ use std::sync::{Mutex, MutexGuard, OnceLock};
 use semio_framework_os_flow::neural::Registry;
 use semio_framework_job::{allocate_operation_id, CancelToken, Generation, StepBudget, StepContext};
 use semio_framework_os_flow::{flow_neuron_kind_info_map, install_flow_extension, FlowExtensionSpec, FlowHost, FlowHostRetirement};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::parse_dsl;
-use semio_s_artifact_procedural_generation3d::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_io_text::snapshot::parse_dsl;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use serde::Deserialize;
 
 //#region 🔖️Fixture
@@ -866,7 +866,10 @@ fn retire_eval_session(mut session: semio_framework_os_flow::FlowEvalSession) {
 
 /// 🧩️ Resolves every painted geometry channel through the supplied Session's retained broker.
 fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_flow_flow::FlowHostSnapshot, lod_mode: &str, session: &mut semio_framework_os_flow::FlowEvalSession) {
-    use semio_s_artifact_procedural_generation3d::preview_eval::{pending_preview_tessellate_handles, preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
+    use semio_s_artifact_procedural_3d_preview_eval::pending_preview_tessellate_handles;
+    use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
     let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("preview evaluation parses");
     let tolerance = preview_tolerance(lod_mode);
     for handle in pending_preview_tessellate_handles(&eval, graph, session) {
@@ -884,7 +887,9 @@ fn resolve_preview_geometry(eval_json: &str, graph: &semio_framework_artifact_fl
 /// 🚚️ Evaluates one example and delivers its preview handle's mesh across the extension boundary
 /// exactly as the app does, counting every round trip the transfer costs.
 fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> DeliveryRun {
-    use semio_s_artifact_procedural_generation3d::preview_eval::{preview_tolerance, PREVIEW_TESSELLATE_STEP_BUDGET, PREVIEW_TESSELLATE_STEP_WALL_MICROS};
+    use semio_s_artifact_procedural_3d_preview_eval::preview_tolerance;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_BUDGET;
+    use semio_s_artifact_procedural_3d_preview_eval::PREVIEW_TESSELLATE_STEP_WALL_MICROS;
     operators_installed();
     let Generation3dSnapshot { host_snapshot: graph, generation } = parse_dsl(dsl).expect("example dsl parses");
     generation.retire_cold();
@@ -925,7 +930,7 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
         }
     }
     let pack = session.preview_mesh_pack(&handle).unwrap_or_default().to_string();
-    let mesh = semio_s_artifact_procedural_generation3d::preview_eval::decode_preview_mesh_pack(&pack);
+    let mesh = semio_s_artifact_procedural_3d_preview_eval::decode_preview_mesh_pack(&pack);
     let diagnostics = session.preview_diagnostics(&handle).map(str::to_string);
     if fixture.example == "sphere-box-fuse" {
         let data = mesh.as_ref().expect("closed preview mesh");
@@ -961,8 +966,8 @@ fn run_delivery(dsl: &str, fixture: &ExampleGeometryFixture, lod_mode: &str) -> 
     let selection_cleared_ids = editor_selection_ids(&eval_json, &host.host_snapshot, &config, &session, &[]);
     let view_selection_picked_ids = viewer_selection_ids(&eval_json, &host.host_snapshot, &view_config, &session, std::slice::from_ref(&picked_id));
     let run = DeliveryRun {
-        payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&payload.meshes_json),
-        view_payload_bounds: semio_s_artifact_procedural_generation3d::preview_eval::preview_payload_bounds(&view_payload.meshes_json),
+        payload_bounds: semio_s_artifact_procedural_3d_preview_eval::preview_payload_bounds(&payload.meshes_json),
+        view_payload_bounds: semio_s_artifact_procedural_3d_preview_eval::preview_payload_bounds(&view_payload.meshes_json),
         payload_meshes: published.len(),
         payload_instances: payload_instances.as_array().map(Vec::len).unwrap_or_default(),
         payload_edge_segments,
@@ -1052,7 +1057,7 @@ fn assert_delivery(dsl: &str, snapshot_json: &str) {
     assert_eq!(delivery.mesh_roles.values().sum::<usize>(), delivery.meshes, "{}: the committed role counts {:?} do not add up to the committed mesh count {}", fixture.example, delivery.mesh_roles, delivery.meshes);
     assert!(delivery.mesh_roles.get(&fixture.preview.kind).copied().unwrap_or_default() >= 1, "{}: the fixture's own preview kind {:?} carries no published mesh", fixture.example, fixture.preview.kind);
     for role in delivery.mesh_roles.keys() {
-        assert!(semio_s_artifact_procedural_generation3d::preview_eval::PREVIEW_MESH_ROLES.contains(&role.as_str()), "{}: {role:?} is not a declared preview mesh role", fixture.example);
+        assert!(semio_s_artifact_procedural_3d_preview_eval::PREVIEW_MESH_ROLES.contains(&role.as_str()), "{}: {role:?} is not a declared preview mesh role", fixture.example);
     }
     assert!(run.payload_triangles >= delivery.min_triangles, "{}: the published payload carries {} triangles, expected at least {}", fixture.example, run.payload_triangles, delivery.min_triangles);
     assert!(run.payload_edge_segments >= delivery.min_edge_segments, "{}: the published payload carries {} edge segments, expected at least {}", fixture.example, run.payload_edge_segments, delivery.min_edge_segments);

@@ -1,5 +1,7 @@
 pub(crate) const KEYBOARD_REACHABILITY_FIXTURE_JSON: &str = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/⌨️keyboard-reachability.json");
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::{generation3d_document_from_mesh, generation3d_mesh_from_document, merge_meshes};
+use semio_s_artifact_procedural_3d_mesh_bridge::generation3d_document_from_mesh;
+use semio_s_artifact_procedural_3d_mesh_bridge::generation3d_mesh_from_document;
+use semio_s_artifact_procedural_3d_mesh_bridge::merge_meshes;
 
 pub(crate) mod context {
     use super::super::*;
@@ -791,7 +793,7 @@ fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
     assert_eq!(offered.len(), 9, "nine bundled flow examples: {offered:?}");
     assert!(!offered.iter().any(|id| id == semio_s_artifact_procedural_generation3d::editor::generation3d::examples::demo_session::ID), "the command-replay leaf is not a document example");
     for id in &offered {
-        assert!(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::is_generation3d_example_id(id), "{id} must be a registered generation3d example id");
+        assert!(semio_s_artifact_procedural_3d_model::is_generation3d_example_id(id), "{id} must be a registered generation3d example id");
     }
     let definition = create_generation3d_app();
     let action = declared_editor_action(&definition, "setActiveExample");
@@ -802,7 +804,7 @@ fn the_example_picker_offers_the_flow_examples_and_never_the_command_session() {
 /// labels — not a second list that can drift from the formats this artifact actually writes.
 #[test]
 fn the_export_action_offers_every_declared_format_in_both_languages() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::document_io;
+    use semio_s_artifact_procedural_3d_io::document_io;
     use semio_framework_ui_locale::Locale;
     use semio_framework_ui_locale::Terminology;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
@@ -880,8 +882,8 @@ fn the_manifest_stitches_every_taxonomy_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn each_example_loads_distinct_fixture_and_preview_geometry() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::*;
-    use semio_s_artifact_procedural_generation3d::widget_id;
+    use semio_s_artifact_procedural_3d_model::*;
+    use semio_s_artifact_procedural_3d_model::widget_id;
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let examples = [
         PROCEDURAL_EXAMPLE_HEX_COLUMN,
@@ -906,10 +908,10 @@ async fn each_example_loads_distinct_fixture_and_preview_geometry() {
 async fn refresh_pending_effects_starts_the_preview_eval_run() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     let effects = app.pending_effects(Some(&preview_view)).await;
-    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(semio_framework_value::DslValue::as_str) == Some(semio_s_artifact_procedural_generation3d::preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
+    assert!(effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, args: Some(args), .. } if action == semio_framework_plugin::TOOL_RUN_START_ACTION_ID && args.get("toolId").and_then(semio_framework_value::DslValue::as_str) == Some(semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID))), "a refresh over a never-evaluated preview starts the previewEval run: {effects:?}");
     let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
     assert_eq!(receipt.state.as_deref(), Some("finalized"), "the read-only run settles and finalizes itself: {receipt:?}");
 }
@@ -923,7 +925,7 @@ async fn refresh_pending_effects_starts_the_preview_eval_run() {
 async fn a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_alias() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
     for round in 0..4 {
         let effects = app.pending_effects(Some(&preview_view)).await;
@@ -963,7 +965,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let widgets: Vec<String> = {
         let app = app().await;
-        context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect()
+        context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect()
     };
     assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
     let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
@@ -999,7 +1001,7 @@ async fn generation3d_labels_translate_catalogue_and_inspector_in_german() {
 async fn generation3d_interaction_selection_owns_its_persisted_history() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_generation3d::widget_id).expect("default fixture node").to_string();
+    let node_id = context::snapshot(&app).host_snapshot.widgets.first().map(semio_s_artifact_procedural_3d_model::widget_id).expect("default fixture node").to_string();
     context::select_graph(&mut app, "node", &[node_id.as_str()]).await;
     assert_eq!(app.interaction_state().await.selection.get("graph").map(|selection| selection.ids.as_slice()), Some([node_id].as_slice()));
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
@@ -1011,7 +1013,7 @@ async fn generation3d_interaction_selection_owns_its_persisted_history() {
 async fn context_menu_grouped_disclosure_stays_within_budget() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
-    let widgets: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
+    let widgets: Vec<String> = context::snapshot(&app).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert!(!widgets.is_empty(), "default fixture needs at least one widget for the test");
     let request = semio_framework_plugin::ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface: None, window_instance_id: None, point: None };
     let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await;
@@ -1185,7 +1187,7 @@ async fn sun_measures_are_exposed_on_preview_windows() {
 /// `PreviewPipeline`/`MeshBridge` functions above, all of which are app
 /// behavior (they construct or take a [`Generation3dConfig`]), so the tests travel with them.
 use semio_framework_ui::wgpu::kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Vec3};
-use semio_s_artifact_procedural_generation3d::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 fn test_serial() -> crate::test_serial::TestSerialGuard {
     crate::editor_domain::editor_laws::serial_execution::lock()
 }
@@ -1219,7 +1221,7 @@ fn aabb_of_positions(positions: &[f32]) -> ([f32; 3], [f32; 3]) {
 }
 
 fn preview_payload_from_evaluated_fixture(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, cfg: &Generation3dConfig) -> (String, String) {
-    let eval_json = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default());
+    let eval_json = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| host.evaluate().unwrap_or_default());
     let mut session = FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port());
     crate::flow_operators::resolve_preview_geometry(&eval_json, host_snapshot, &cfg.lod_mode, &mut session);
     let payload = preview_payload(&eval_json, host_snapshot, cfg, Some(&session), &Default::default());
@@ -1242,7 +1244,7 @@ fn geometry_media_export_uses_the_supplied_instance_owner_and_refuses_closed_aut
     let document = generation3d_document_from_mesh(&source).expect("an imported tetrahedron document");
     let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).expect("the actual imported graph");
     let owner = context::instance_operation_owner();
-    let eval_json = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates"));
+    let eval_json = semio_s_artifact_procedural_3d_model::with_host(&projection.host_snapshot, |host| host.evaluate().expect("the imported graph evaluates"));
     owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
         owner.with_session_waking(|session| {
             let previous = std::mem::replace(session, FlowEvalSession::new().with_geometry_port(crate::flow_operators::geometry_session().port()));
@@ -1284,7 +1286,7 @@ fn prepared_document_mesh(projection: &Generation3dSnapshot) -> semio_framework_
 #[test]
 fn preview_payload_has_meshes_and_instances() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     assert_ne!(meshes_json, "[]", "meshes_json was empty");
@@ -1302,7 +1304,7 @@ fn preview_payload_has_meshes_and_instances() {
                 semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, .. } => neuron_kind.clone(),
                 _ => String::new(),
             };
-            (semio_s_artifact_procedural_generation3d::widget_id(widget).to_string(), kind)
+            (semio_s_artifact_procedural_3d_model::widget_id(widget).to_string(), kind)
         })
         .collect();
     let mut surfaces = 0;
@@ -1382,7 +1384,7 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
         let mesh = semio_framework_plugin::MeshData { positions: positions.clone(), indices: indices.clone(), ..Default::default() };
         let document = generation3d_document_from_mesh(&mesh).unwrap();
         let projection = <Generation3dSnapshot as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&document)).unwrap();
-        let source_fields = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge::imported_source(&projection).map(|(kind, data)| (kind.to_owned(), data.to_owned()));
+        let source_fields = semio_s_artifact_procedural_3d_mesh_bridge::imported_source(&projection).map(|(kind, data)| (kind.to_owned(), data.to_owned()));
         let has_mesh_output = projection.host_snapshot.synapses.iter().any(|wire| wire.from_port == "meshOut");
         let prepared = prepared_document_mesh(&projection);
         projection.retire_cold();
@@ -1405,7 +1407,7 @@ fn mesh_import_preserves_fixture_coordinates_in_an_editable_graph() {
 fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
     let _serial = test_serial();
     use semio_framework_plugin::{GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter};
-    let default_projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let default_projection = semio_s_artifact_procedural_3d_model::default_snapshot();
     let document_json: Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&default_projection)).expect("projection json");
     let prepared = prepared_document_mesh(&default_projection);
     default_projection.retire_cold();
@@ -1431,7 +1433,7 @@ fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
 #[test]
 fn rectangle_wire_preview_emits_edge_only_mesh() {
     let _serial = test_serial();
-    let projection = <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+    let projection = <Generation3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_3d_io_text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -1448,18 +1450,18 @@ fn all_bundled_examples_emit_preview_meshes() {
     let _serial = test_serial();
     let config = Generation3dConfig::default();
     let cases = [
-        ("hexagonal-mushroom-column", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN),
-        ("rectangle-extrude-volume", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE),
-        ("sphere-cut-with-torus", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS),
-        ("box-fillet-preview", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET),
-        ("sphere-box-fuse", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
-        ("face-sweep-extrude", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
-        ("rectangle-wire-preview", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
-        ("mesh-workbench", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH),
-        ("box-shell-preview", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_SHELL),
+        ("hexagonal-mushroom-column", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN),
+        ("rectangle-extrude-volume", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE),
+        ("sphere-cut-with-torus", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS),
+        ("box-fillet-preview", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET),
+        ("sphere-box-fuse", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE),
+        ("face-sweep-extrude", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE),
+        ("rectangle-wire-preview", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE),
+        ("mesh-workbench", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH),
+        ("box-shell-preview", semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL),
     ];
     for (label, example_id) in cases {
-        let projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
+        let projection = semio_s_artifact_procedural_3d_model::example_snapshot(example_id).unwrap_or_else(|| panic!("{label}: missing projection"));
         let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
         assert_ne!(meshes_json, "[]", "{label}: meshes empty; eval may have failed");
         assert_ne!(instances_json, "[]", "{label}: instances empty");
@@ -1479,7 +1481,7 @@ fn preview_tolerance_follows_lod_mode() {
 #[test]
 fn wireframe_show_mode_strips_shaded_triangles() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
     let config = Generation3dConfig { show_mode: "wireframe".into(), ..Default::default() };
     let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");
@@ -1681,7 +1683,7 @@ fn graph_marks_project_instance_hover_back_onto_its_node_and_port() {
 #[test]
 fn interaction_topology_ports_match_the_node_graph_port_ids() {
     let _serial = test_serial();
-    let projection = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let projection = semio_s_artifact_procedural_3d_model::default_snapshot();
     let ports_by_node = generation3d_port_ids_by_node(&projection.host_snapshot);
     assert!(!ports_by_node.is_empty(), "default fixture should project graph nodes");
     assert!(ports_by_node.values().any(|ports| !ports.is_empty()), "default fixture should project at least one port");
@@ -1761,7 +1763,7 @@ fn every_window_and_panel_surface_fits_the_resident_surface_bound() {
     let config = Generation3dConfig::default();
     let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
-        let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
+        let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         for body_key in GENERATION3D_BODY_KEYS {
             let session = FlowEvalSession::new();
             let tree = generation3d_render_body(body_key, &snapshot, &config, None, &view_state, &PreviewInteractionMarks::default(), &session, None).expect("render");
@@ -1788,7 +1790,7 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app_with_registry().await;
 
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
     let config = Generation3dConfig::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
@@ -1806,7 +1808,7 @@ async fn the_first_turn_sequence_retires_every_flow_host_it_builds() {
         assert!(!rendered.is_empty(), "{body_key} rendered empty");
     }
 
-    for example_id in [semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_BOX_FILLET, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN] {
+    for example_id in [semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET, semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN] {
         context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() })).await;
         let rendered = context::render(&mut app, GENERATION3D_BODY_KEYS[0]).await;
         assert!(!rendered.is_empty(), "{example_id} main body rendered empty after the switch");
@@ -2130,7 +2132,7 @@ async fn extension_invocations_address_the_contributing_plugin_and_a_missing_con
     let miss = semio_framework_os_flow::flow_extension_invocation_address("not-contributed-by-anything").expect_err("an uncontributed flow extension id has no invocation address");
     let mut owner = Generation3dInstanceOperationOwner::new();
     let faulted: serde_json::Value = owner
-        .with_session_waking(|session| serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_progress_status_json_for(Some(session), None, Err(miss))).expect("preview status json"))
+        .with_session_waking(|session| serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, Err(miss))).expect("preview status json"))
         .expect("the retained evaluation-session owner lends its session");
     for _ in 0..1_000_000 {
         if matches!(semio_framework_plugin::ArtifactInstanceOperationOwner::close_step(&mut owner, usize::MAX, usize::MAX), Ok(semio_framework_plugin::PluginCloseStep::Complete)) {
@@ -2192,7 +2194,7 @@ async fn a_late_contributions_install_re_arms_the_evaluation_the_empty_registry_
     let (flow_view, preview_view) = context::shell_views("procedural-rearm-main", "procedural-rearm-preview");
     context::dispatch_with_view(
         &mut app,
-        Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_HEX_COLUMN.to_string() }),
+        Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN.to_string() }),
         flow_view.clone(),
     )
     .await
@@ -2537,7 +2539,7 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
     let config = Generation3dConfig::default();
     let view_state = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     for example_id in examples().into_iter().map(|source| source.id().to_string()) {
-        let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
+        let mut snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(&example_id).unwrap_or_else(|| panic!("{example_id}: missing projection"));
         crate::publication_authority::seed_law_generations(&mut snapshot.generation);
         for (kind_id, body_key, _) in &windows {
             let session = FlowEvalSession::new();
@@ -2592,7 +2594,7 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
         .with_session_waking(|session| {
             let mut rows = Vec::new();
             for answer in fixture["answers"].as_array().expect("answers") {
-                let resolve = semio_s_artifact_procedural_generation3d::preview_eval::FlowEvalResolve {
+                let resolve = semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve {
                     window_id: "window:procedural-preview".to_string(),
                     window_kind_id: "procedural-preview".to_string(),
                     node_hash: 1,
@@ -2602,12 +2604,12 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
                     fault_code: answer["faultCode"].as_str().expect("faultCode").to_string(),
                     fault_message: answer["faultMessage"].as_str().expect("faultMessage").to_string(),
                 };
-                semio_s_artifact_procedural_generation3d::preview_eval::resolve_eval(&resolve, session);
-                let status: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
+                semio_s_artifact_procedural_3d_preview_eval::resolve_eval(&resolve, session);
+                let status: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
                 rows.push((answer["name"].as_str().expect("name").to_string(), answer["phase"].as_str().expect("phase").to_string(), answer["publishesFault"].as_bool().expect("publishesFault"), status));
             }
             // 🧩️ The install clears the retained fault before any later tick settles.
-            let resolve = semio_s_artifact_procedural_generation3d::preview_eval::FlowEvalResolve {
+            let resolve = semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve {
                 window_id: "window:procedural-preview".to_string(),
                 window_kind_id: "procedural-preview".to_string(),
                 node_hash: 1,
@@ -2617,10 +2619,10 @@ async fn an_evaluate_fault_outranks_the_addressing_miss_and_a_contribution_insta
                 fault_code: fixture["faultCode"].as_str().expect("faultCode").to_string(),
                 fault_message: fixture["faultMessage"].as_str().expect("faultMessage").to_string(),
             };
-            semio_s_artifact_procedural_generation3d::preview_eval::resolve_eval(&resolve, session);
+            semio_s_artifact_procedural_3d_preview_eval::resolve_eval(&resolve, session);
             assert!(session.extension_evaluate_fault().is_some(), "the refused answer must be retained before the install clears it");
             assert!(session.invalidate_for_flow_extension_registry(session.flow_extension_generation() + 1), "a moved registry generation invalidates");
-            let cleared: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_generation3d::editor::generation3d::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
+            let cleared: serde_json::Value = serde_json::from_str(&semio_s_artifact_procedural_3d_preview_eval::preview_progress_status_json_for(Some(session), None, address())).expect("preview status json");
             (rows, cleared)
         })
         .expect("the retained evaluation-session owner lends its session");
@@ -2698,15 +2700,15 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
     let _serial = test_serial();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in fixture["gumball"].as_array().unwrap() {
-        let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+        let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+        semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
             let operation = case["operation"].as_str().unwrap();
-            let id = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
-            let transform = host.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == id).unwrap();
+            let id = semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::ensure_gumball_node(host, "extrude@meshOut#0", operation).unwrap();
+            let transform = host.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id).unwrap();
             assert!(matches!(transform, semio_framework_artifact_flow_flow::Widget::Neuron { neuron_kind, preview: true, .. } if neuron_kind == case["operator"].as_str().unwrap()));
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == "extrude" && wire.from_port == "meshOut" && wire.to == id && wire.to_port == case["input"].as_str().unwrap()));
             assert!(host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == case["output"].as_str().unwrap() && wire.to == "analysis"));
-            assert_eq!(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::ensure_gumball_node(host, &id, operation).unwrap(), id);
+            assert_eq!(semio_s_artifact_procedural_generation3d::editor::generation3d::transform_commands::ensure_gumball_node(host, &id, operation).unwrap(), id);
         });
         snapshot.retire_cold();
     }
@@ -2714,7 +2716,7 @@ fn mesh_gumball_splices_typed_transforms_and_preserves_analysis_consumers() {
 
 fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
     let mut snapshot = Generation3dSnapshot::default();
-    let graph = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+    let graph = semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
         let kind = if operation == "dissolveVertices" { "brep.mesh.construct" } else { "brep.mesh.box" };
         host.add_widget(&serde_json::json!({"kind":"neuron","id":"extrude","neuronKind":kind}).to_string(), 0.0, 0.0).unwrap();
         host.add_widget(r#"{"kind":"neuron","id":"analysis","neuronKind":"brep.mesh.analyze"}"#, 220.0, 0.0).unwrap();
@@ -2725,8 +2727,8 @@ fn mesh_selection_fixture_snapshot(operation: &str) -> Generation3dSnapshot {
     empty.retire_cold();
     if operation == "dissolveVertices" {
         let data = serde_json::json!({"vertices":[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0.5,0.5,0]],"faces":[[0,1,4],[1,2,4],[2,3,4],[3,0,4]]}).to_string();
-        let input = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::change_widget_input("extrude", "data", semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue::Text(data));
-        semio_s_artifact_procedural_generation3d::central_apply::apply_generation3d_mutation(&mut snapshot, &input).unwrap();
+        let input = semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input("extrude", "data", semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue::Text(data));
+        semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut snapshot, &input).unwrap();
         input.retire_cold();
     }
     snapshot
@@ -2743,15 +2745,15 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
         let payload: edit_mesh_selection::EditMeshSelection = semio_framework_pack_json::from_json_str(&case["payload"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let (id, rows) = edit_mesh_selection::edit_rows(&payload, &snapshot.host_snapshot, &ids).unwrap();
         let field = match operation { "moveVertices" => "vertices", "loopCut" | "bevel" | "dissolveEdges" => "edges", "dissolveVertices" | "mergeVertices" | "moveProportional" | "snapVertices" => "selection", _ => "faces" };
-        let inputs: Vec<&semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::ChangeWidgetInput> = rows.iter().filter_map(|row| match row { semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(input) => Some(input), _ => None }).collect();
+        let inputs: Vec<&semio_s_artifact_procedural_3d_mutations::change_widget_input::ChangeWidgetInput> = rows.iter().filter_map(|row| match row { semio_s_artifact_procedural_3d_mutations::Generation3dMutation::ChangeWidgetInput(input) => Some(input), _ => None }).collect();
         assert!(inputs.iter().all(|input| input.id == id) && inputs[0].channel == field, "{operation}: the user's inputs are absolute leaves on the inserted operator: {inputs:?}");
-        assert!(rows.iter().rev().take(inputs.len()).all(|row| matches!(row, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation::ChangeWidgetInput(_))), "{operation}: the splice precedes the inputs");
+        assert!(rows.iter().rev().take(inputs.len()).all(|row| matches!(row, semio_s_artifact_procedural_3d_mutations::Generation3dMutation::ChangeWidgetInput(_))), "{operation}: the splice precedes the inputs");
         let mut landed = snapshot.clone();
         for row in rows {
-            semio_s_artifact_procedural_generation3d::central_apply::apply_generation3d_mutation(&mut landed, &row).unwrap();
+            semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation(&mut landed, &row).unwrap();
             row.retire_cold();
         }
-        let outcome = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&landed.host_snapshot, |host| {
+        let outcome = semio_s_artifact_procedural_3d_model::with_host(&landed.host_snapshot, |host| {
             let params = host.host_snapshot.widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id: widget_id, params, preview: true, .. } if widget_id == &id => Some(semio_framework_pack_json::to_json_string(params)), _ => None });
             let feeds_analysis = host.host_snapshot.synapses.iter().any(|wire| wire.from == id && wire.from_port == "meshOut" && wire.to == "analysis" && wire.to_port == "mesh");
             let evaluation = host.evaluate().map_err(|error| error.to_string())?;
@@ -2777,14 +2779,14 @@ fn mesh_component_edits_insert_typed_widgets_and_update_downstream_analysis() {
 #[test]
 fn mesh_component_gumball_pins_the_complete_component_set() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let fixtures: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🧪️tests/🧫️fixtures/🧷️gesture/🔣️.json")).unwrap();
     for case in fixtures["cases"].as_array().unwrap() {
         let pinned: Vec<String> = serde_json::from_value(case["pinned"].clone()).unwrap();
         let selected: Vec<String> = serde_json::from_value(case["selected"].clone()).unwrap();
         assert_eq!(transform_commands::validate_component_gesture(&snapshot.host_snapshot, &pinned, &selected).is_ok(), case["valid"].as_bool().unwrap(), "{}", case["name"]);
     }
-    semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+    semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
         let pinned = vec!["extrude@meshOut#0.face.0".into(), "extrude@meshOut#0.face.1".into()];
         let mut selected = pinned.clone();
         for operation in ["translate", "rotate", "scale"] {
@@ -2809,8 +2811,8 @@ fn land_component_inputs(host: &mut semio_framework_os_flow::FlowHost, id: &str,
 #[test]
 fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
+    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
         for operation in ["translate", "rotate", "scale"] {
             let ids = ["extrude@meshOut#0.face.0".into(), "extrude@meshOut#0.face.0".into()];
             let (id, mode, components) = transform_commands::ensure_component_node(host, &ids, operation).unwrap();
@@ -2840,17 +2842,18 @@ fn mesh_component_gumball_reuses_only_the_same_selection_and_operation() {
 /// of that operator appends no row.
 #[test]
 fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{change_widget_input::WidgetInputValue, Generation3dMutation};
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+    use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
     let _serial = test_serial();
-    let committed = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let committed = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let (rows, targets, _) = transform_commands::gumball_splice(&committed.host_snapshot, &["extrude@meshOut#0.face.1".into()], "translate").expect("the first grab splices");
     let operator = targets[0].clone();
     let literal = |widget: &semio_framework_artifact_flow_flow::Widget, key: &str| match widget {
         semio_framework_artifact_flow_flow::Widget::Neuron { params, .. } => params.get(key).and_then(|value| WidgetInputValue::of_literal(&semio_framework_value::ToValue::to_value(value))),
         _ => None,
     };
-    let inserted = rows.iter().find_map(|row| match row { Generation3dMutation::CreateWidget(create) if semio_s_artifact_procedural_generation3d::widget_id(&create.widget) == operator => Some(create.widget.clone()), _ => None }).expect("the operator is inserted");
+    let inserted = rows.iter().find_map(|row| match row { Generation3dMutation::CreateWidget(create) if semio_s_artifact_procedural_3d_model::widget_id(&create.widget) == operator => Some(create.widget.clone()), _ => None }).expect("the operator is inserted");
     assert_eq!(literal(&inserted, "mode"), Some(WidgetInputValue::Text("vertex".into())), "inserted with the kind's default, never the gesture's channel");
     let channels: Vec<(String, WidgetInputValue)> = rows.iter().filter_map(|row| match row { Generation3dMutation::ChangeWidgetInput(input) if input.id == operator => Some((input.channel.clone(), input.input.clone())), _ => None }).collect();
     assert_eq!(channels, vec![("mode".to_string(), WidgetInputValue::Text("face".into())), ("selection".to_string(), WidgetInputValue::Text("[1]".into())), ("offset".to_string(), WidgetInputValue::Vector([0.0; 3]))], "one input per chosen channel, after the insert");
@@ -2859,7 +2862,7 @@ fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
         apply_generation3d_mutation(&mut landed, &row).expect("the splice folds");
         row.retire_cold();
     }
-    let record = landed.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == operator).expect("the operator landed").clone();
+    let record = landed.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == operator).expect("the operator landed").clone();
     assert_eq!((literal(&record, "mode"), literal(&record, "selection")), (Some(WidgetInputValue::Text("face".into())), Some(WidgetInputValue::Text("[1]".into()))));
     let (again, _, _) = transform_commands::gumball_splice(&landed.host_snapshot, &[format!("{operator}@meshOut#0.face.1")], "translate").expect("a re-grab reuses the operator");
     assert!(again.is_empty(), "a re-grab appends no row: {again:?}");
@@ -2872,8 +2875,8 @@ fn a_first_component_grab_inserts_defaults_then_one_input_per_chosen_channel() {
 #[test]
 fn mesh_component_gumball_projects_a_topology_pivot_and_live_dispatch() {
     let _serial = test_serial();
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
-    let evaluation = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap());
+    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let evaluation = semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap());
     let marks = PreviewInteractionMarks {
         components: selection::ComponentSelection { granularity: "face".into(), selected: vec!["extrude@meshOut#0.face.0".into()], hovered: None },
         ..Default::default()
@@ -3027,7 +3030,7 @@ async fn mesh_component_commands_reject_stale_topology_before_publication() {
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let mut app = app().await;
-    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
     context::drain_flow_eval_ticks(&mut app).await;
     context::select_domain(&mut app, selection::DOMAIN, "face", &["extrude@meshOut#0.face.999999"]).await;
     let before = semio_framework_pack_json::to_json_string(&context::snapshot(&app).host_snapshot);
@@ -3053,7 +3056,7 @@ async fn mesh_component_gumball_rejects_changed_selection_before_and_during_drag
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     for operation in ["translate", "rotate", "scale"] {
         let mut app = app().await;
-        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
         context::drain_flow_eval_ticks(&mut app).await;
         let command = || match operation {
             "translate" => Generation3dCommand::TranslateSelection(translate_selection::TranslateSelection { node_ids: vec!["extrude@meshOut#0.face.0".into()], dx: 0.1, dy: 0.0, dz: 0.0, phase: None, reason: None, window_id: None }),
@@ -3086,7 +3089,7 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     for operation in ["translate", "rotate", "scale"] {
         let mut app = app().await;
-        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+        context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
         context::drain_flow_eval_ticks(&mut app).await;
         let args: semio_framework_value::DslValue = serde_json::json!({"domainId":selection::DOMAIN,"granularityId":"face"}).into();
         let admitted = app.handle_action("setInteractionGranularity", Some(&args), &meta("local")).await.unwrap();
@@ -3112,8 +3115,8 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
             assert_eq!(app.interaction_state().await.selection.get(selection::DOMAIN).unwrap().ids, vec![format!("{id}@meshOut#0.face.0")]);
         }
         let snapshot = context::snapshot(&app);
-        semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| {
-            let widget = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::gumball_widget_json(host, &id).unwrap();
+        semio_s_artifact_procedural_3d_model::with_host(&snapshot.host_snapshot, |host| {
+            let widget = semio_s_artifact_procedural_3d_model::gumball_widget_json(host, &id).unwrap();
             let params = widget.get("params").unwrap();
             let actual = match operation {
                 "translate" => params.get("offset").unwrap().get("x").unwrap().as_f64().unwrap(),
@@ -3148,10 +3151,10 @@ async fn mesh_component_gumball_retains_selection_coalesces_drags_and_round_trip
 async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {
     let _serial = crate::publication_authority::lock();
     let mut source = app_with_registry().await;
-    context::dispatch(&mut source, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
+    context::dispatch(&mut source, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
     context::settle(&mut source).await;
     let archive = PluginApp::document_archive(&*source).await.expect("the open document exports as a framework archive");
-    let expected: Vec<String> = context::snapshot(&*source).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
+    let expected: Vec<String> = context::snapshot(&*source).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert!(!expected.is_empty(), "the exported document carries widgets to compare");
     let mut target = app_with_registry().await;
     PluginApp::begin_document_archive_load(&mut *target, 91, archive).expect("archive admission");
@@ -3167,7 +3170,7 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
     }
     let status = status.expect("the archive load reaches a terminal state");
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{}", String::from_utf8_lossy(&status.fault));
-    let loaded: Vec<String> = context::snapshot(&*target).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = context::snapshot(&*target).host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the fresh instance holds exactly the archived document");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *source);
@@ -3183,12 +3186,12 @@ async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door(
 async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
     let pair = semio_framework_plugin::artifact_app_genesis_pair::<semio_framework_plugin::EditorApp<Generation3dPlayApp>>("artifact-0123456789abcdef0123456789abcdef").await.expect("the genesis export produces a pair");
     assert!(!pair.pack.is_empty() && !pair.spr.is_empty(), "a genesis pair carries both a pack and an SPR");
-    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::Generation3dMutation>(&pair.pack, &pair.spr)
+    let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&pair.pack, &pair.spr)
         .await
         .expect("the genesis pair parses back");
     let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
-    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
-    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget).to_string()).collect();
+    let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
+    let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");
     initial.retire_cold();
     snapshot.retire_cold();
@@ -3197,13 +3200,13 @@ async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
+    use semio_s_artifact_procedural_3d_model::with_host;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let publication = &fixture["measurementPublication"];
     let mut app = app().await;
-    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         host.add_widget(&json!({"kind":"neuron","id":"solid","neuronKind":publication["kind"]}).to_string(), 0.0, 0.0).unwrap();
         let params: serde_json::Map<String, Value> = publication["params"].as_object().unwrap().iter().map(|(name, value)| (name.clone(), json!({"$schema":"number","value":value}))).collect();
@@ -3248,8 +3251,8 @@ async fn mesh_brep_measurement_outputs_are_selected_read_only_in_every_locale() 
 
 #[semio_framework_async_macros::async_test]
 async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_history() {
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::with_host;
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
+    use semio_s_artifact_procedural_3d_model::with_host;
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
     let _serial = test_serial();
     let _unlinked = crate::flow_operators::UnlinkedFlowExtensions::contributed();
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -3262,7 +3265,7 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     let mut app = app().await;
     let opened_actor = app.test_parent_store_mut().local_actor_id().0.clone();
     assert_eq!(opened_actor, live["openedActor"].as_str().unwrap());
-    let mut snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let mut snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let projected = with_host(&snapshot.host_snapshot, |host| {
         host.add_widget(&json!({"kind":"neuron","id":source,"neuronKind":publication["kind"]}).to_string(),0.0,0.0).unwrap();
         for widget in &mut host.host_snapshot.widgets {
@@ -3325,7 +3328,7 @@ async fn mesh_brep_live_scoped_selection_edits_the_evaluated_solid_and_restores_
     assert_eq!(history_row.author.as_deref(), Some(opened_actor.as_str()));
     assert_eq!(app.test_parent_store_mut().local_actor_id().0, opened_actor);
     assert_eq!(committed.host_snapshot.widgets.len(),before.host_snapshot.widgets.len()+2);
-    let source_row = committed.host_snapshot.widgets.iter().find(|widget|semio_s_artifact_procedural_generation3d::widget_id(widget)==selector).unwrap();
+    let source_row = committed.host_snapshot.widgets.iter().find(|widget|semio_s_artifact_procedural_3d_model::widget_id(widget)==selector).unwrap();
     let literal = |widget: &semio_framework_artifact_flow_flow::Widget,key: &str| match widget {
         semio_framework_artifact_flow_flow::Widget::Neuron { params,.. } => params.get(key).and_then(|value|WidgetInputValue::of_literal(&semio_framework_value::ToValue::to_value(value))),
         _ => None,

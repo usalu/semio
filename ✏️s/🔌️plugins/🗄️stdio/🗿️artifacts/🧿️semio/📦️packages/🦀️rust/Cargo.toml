@@ -23,7 +23,6 @@ semio-framework-async = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
@@ -36,7 +35,10 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-animation = { workspace = true }
 semio-s-artifact-stdio-semio-audio = { workspace = true }
+semio-s-artifact-stdio-semio-audio-model = { workspace = true }
+semio-s-artifact-stdio-semio-audio-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-base-examples = { workspace = true }
 semio-s-artifact-stdio-semio-brep = { workspace = true }
 semio-s-artifact-stdio-semio-cad = { workspace = true }
 semio-s-artifact-stdio-semio-document = { workspace = true }
@@ -50,9 +52,17 @@ semio-s-artifact-stdio-semio-model = { workspace = true }
 semio-s-artifact-stdio-semio-object = { workspace = true }
 semio-s-artifact-stdio-semio-presentation = { workspace = true }
 semio-s-artifact-stdio-semio-table = { workspace = true }
+semio-s-artifact-stdio-semio-table-model = { workspace = true }
+semio-s-artifact-stdio-semio-table-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-text = { workspace = true }
+semio-s-artifact-stdio-semio-text-model = { workspace = true }
+semio-s-artifact-stdio-semio-text-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-s-artifact-stdio-semio-value-model = { workspace = true }
+semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
 semio-s-artifact-stdio-semio-video = { workspace = true }
+semio-s-artifact-stdio-semio-video-model = { workspace = true }
+semio-s-artifact-stdio-semio-video-mutations = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

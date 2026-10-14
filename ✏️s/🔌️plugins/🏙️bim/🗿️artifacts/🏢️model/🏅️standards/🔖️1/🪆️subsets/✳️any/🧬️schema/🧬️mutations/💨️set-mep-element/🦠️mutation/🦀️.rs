@@ -1,6 +1,6 @@
 //! 💨️ `set-mep-element` payload. Sets exactly the provided fields of an MEP element: storey, system, cross-section, path and name; absent fields stay untouched. A provided path replaces the path as one field.
 
-use crate::{MepElementPatch, MepShape, MepSystem, ModelDiff, ModelMutation, ModelSnapshot, Point3};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::MepElementPatch, ModelDiff}, snapshot::{MepShape, MepSystem, ModelSnapshot, Point3}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

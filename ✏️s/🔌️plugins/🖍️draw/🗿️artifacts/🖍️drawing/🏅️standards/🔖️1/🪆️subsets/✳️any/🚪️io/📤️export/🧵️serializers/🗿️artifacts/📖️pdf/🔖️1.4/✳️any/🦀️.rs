@@ -14,8 +14,11 @@
 //! operator emission — so routing through them would lose every outline. The COS syntax needed here
 //! (object table, classic `xref`, one page tree) is small enough to state locally and exactly.
 
-use crate::schema::{flatten_drawing_document_to_scene_nodes, resolve_drawing_artboard, DrawingSceneGroup, DrawingSceneNode};
-use crate::{DrawingSnapshot, FillStyle, GradientStop, PathSegment, StrokeStyle};
+use semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes;
+use semio_s_artifact_draw_drawing_geometry::resolve_drawing_artboard;
+use semio_s_artifact_draw_drawing_model::{DrawingSceneGroup, DrawingSceneNode};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, PathSegment, StrokeStyle};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
@@ -34,7 +37,7 @@ pub struct DrawingIntoPdf;
 impl Serializer<DrawingSnapshot> for DrawingIntoPdf {
     const INTO: Dialect = PDF_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::standards::v1::subsets::any::io::owned_export::PDF_FACTORY);
+    const OWNED_FACTORY: Option<semio_framework_os_kernel::io::io_mechanism::OwnedSerializerFactory> = Some(crate::owned::PDF_FACTORY);
     async fn serialize(from: &DrawingSnapshot, _: &ArchiveChildren, control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let _ = control;
         let bytes = drawing_document_to_pdf(from).map_err(|message| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("DrawingIntoPdf: {message}"))))?;
@@ -206,14 +209,14 @@ fn fill_paints(fill: &FillStyle) -> bool {
 
 fn stroke_ops(content: &mut String, stroke: &StrokeStyle) {
     let cap = match stroke.cap {
-        crate::StrokeCap::Butt => 0,
-        crate::StrokeCap::Round => 1,
-        crate::StrokeCap::Square => 2,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Butt => 0,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round => 1,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Square => 2,
     };
     let join = match stroke.join {
-        crate::StrokeJoin::Miter => 0,
-        crate::StrokeJoin::Round => 1,
-        crate::StrokeJoin::Bevel => 2,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Miter => 0,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Round => 1,
+        semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Bevel => 2,
     };
     let _ = writeln!(content, "{} {} {} RG {} w {cap} J {join} j", num(stroke.color[0]), num(stroke.color[1]), num(stroke.color[2]), num(stroke.width));
     match stroke.dash.as_ref() {
@@ -622,7 +625,7 @@ fn zlib(data: &[u8]) -> Result<Vec<u8>, String> {
 }
 
 /// 🖼️ Resolve admitted sample ownership by semantic identity without decoding source framing.
-fn decode_image_source(doc:&DrawingSnapshot,asset_id:&str)->Option<semio_framework_pixels::RasterImage>{crate::schema::drawing_image_samples(doc.assets.get(asset_id)?)}
+fn decode_image_source(doc:&DrawingSnapshot,asset_id:&str)->Option<semio_framework_pixels::RasterImage>{semio_s_artifact_draw_drawing_model::drawing_image_samples(doc.assets.get(asset_id)?)}
 //#endregion 🔖️Writer
 
 //#region 🔖️Lexical

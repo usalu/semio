@@ -30,9 +30,6 @@
     "./typescript-check": "./🏗️build/🟦️typescript/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/schema-validator-ts": "workspace:*"
   },

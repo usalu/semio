@@ -1,6 +1,6 @@
 //! 📏️ Actual DAG literal fields bound encoded output without creating owned mirrors.
 use crate::*;
-use graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 use semio_framework_value::{DslValue,ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
 type Result<T>=std::result::Result<T,ValueError>;

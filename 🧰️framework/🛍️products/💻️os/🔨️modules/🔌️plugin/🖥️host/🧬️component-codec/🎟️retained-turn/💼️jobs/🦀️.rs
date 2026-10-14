@@ -2,7 +2,7 @@
 use super::{input_to_wit,input_from_wit,progress_from_wit,cause_from_wit};
 use super::super::{wit_jobs,wit_reactor,TurnFault};
 use semio_framework_actor::{OriginalJobBudget,OriginalJobSource,OriginalJobCallFailure,OriginalJobStartReply,OriginalJobStepReply,OriginalJobOutcome,OriginalJobOutputState,OriginalJobOutputReply,OriginalJobOutputChunk,OriginalJobOutputAckReply,OriginalJobCancelReply};
-pub(crate) fn budget_to_wit(budget:OriginalJobBudget)->wit_jobs::JobBudget{wit_jobs::JobBudget{input:input_to_wit(budget.input),fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled}}
+pub(crate) fn budget_to_wit(budget:OriginalJobBudget)->wit_jobs::JobBudget{wit_jobs::JobBudget{input:input_to_wit(budget.input),retained_policy:super::grant_to_wit(budget.retained_policy),fuel:budget.fuel,deadline_us:budget.deadline_us,cancelled:budget.cancelled}}
 pub(crate) fn source_to_wit(source:OriginalJobSource)->wit_jobs::JobSource{wit_jobs::JobSource{job:source.job,kind:source.kind,input:source.input,checkpoint:source.checkpoint}}
 fn source_from_wit(source:wit_jobs::JobSource)->OriginalJobSource{OriginalJobSource{job:source.job,kind:source.kind,input:source.input,checkpoint:source.checkpoint}}
 fn failure_from_wit(failure:wit_reactor::ActorCallFailure)->OriginalJobCallFailure{match failure{wit_reactor::ActorCallFailure::Authority(cause)=>OriginalJobCallFailure::Authority(cause_from_wit(cause)),wit_reactor::ActorCallFailure::Semantic=>OriginalJobCallFailure::Semantic}}

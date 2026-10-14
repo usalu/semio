@@ -2,8 +2,8 @@
 //! `(payload, base)` (idempotent even when `base.energy_model` is already `None`).
 
 use super::DeleteEnergyModel;
-use crate::diff::{CadDiff, CadModelSlot};
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::{diff::CadDiff, diff::CadModelSlot};
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(_payload: &DeleteEnergyModel, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {

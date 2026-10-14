@@ -25,7 +25,7 @@
 //! this file's `io: io_declaration()` back to `io: io::io()` to match the template exactly.
 
 use crate::standards::v1::subsets::any::schema;
-use crate::{Puzzle3dMutation, Puzzle3dSnapshot, PUZZLE3D_DIALECT, PUZZLE_3D_SCHEMA};
+use {crate::Puzzle3dMutation, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
 use crate::editor::puzzle3d as editor;
 use crate::viewer::puzzle3d as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, IoDeclaration, LanguagePair, NativeCodecs, SchemaDeclaration, SubsetDeclaration};

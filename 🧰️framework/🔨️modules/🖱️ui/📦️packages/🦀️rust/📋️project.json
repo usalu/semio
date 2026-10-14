@@ -10,7 +10,6 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕹️interaction/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📋️plan/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/📤️publication/🟦️.ts",
@@ -251,6 +250,38 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🖼️scene-raster-ownership/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧪️tests/🧫️fixtures/✏️editing/🔣️.json"
       ]
+    },
+    "test-crate-boundaries": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/.vscode/launch.json",
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📜️declaration/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️schema/📦️crate-boundaries/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/📦️crate-boundaries/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🧬️schema/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🪪️icon-name/🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🔤️typography/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🔤️fonts/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎭️theme/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️action/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🌳️retained/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🧭️behavior/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🖼️raster/🧵️ownership/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test crate-boundaries"
+      }
     }
   }
 }

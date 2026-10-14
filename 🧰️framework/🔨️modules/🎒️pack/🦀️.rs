@@ -49,10 +49,6 @@ pub use crate::async_::{AsyncPackSource, BoundedDemand, CancellationToken, Deman
 //#endregion 🔖️Async
 
 //#region 🔖️Http
-/// 🌐️ Native `ureq`-backed `RangeTransport` — off by default so wasm builds of this
-/// facade stay lean; enable via `pack`'s own `ureq` feature (forwards to `pack_http/ureq`).
-#[cfg(feature = "ureq")]
-pub use crate::http::UreqRangeTransport;
 pub use crate::http::{HttpPackSource, RangeRequest, RangeResponse, RangeTransport, RetryPolicy, RetryRuntime};
 //#endregion 🔖️Http
 

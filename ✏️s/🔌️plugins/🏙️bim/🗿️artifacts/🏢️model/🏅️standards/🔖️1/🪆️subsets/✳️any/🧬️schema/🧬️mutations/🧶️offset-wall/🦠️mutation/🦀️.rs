@@ -1,6 +1,6 @@
 //! 🧶️ `offset-wall` payload. Creates a wall parallel to a wall at a signed distance to the left of its axis direction (to the right when negative): a shifted line, or a concentric arc of the same sweep, with the type, location line, constraints, phase and name of the original; hosted openings stay on the original.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

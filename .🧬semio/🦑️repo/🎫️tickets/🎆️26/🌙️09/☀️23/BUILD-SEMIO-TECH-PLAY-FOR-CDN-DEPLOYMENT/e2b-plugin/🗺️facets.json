@@ -185,6 +185,8 @@
   "completion_refusal_retirement": "declaration",
   "owned_context": "declaration",
   "reserved_job_session": "ownership",
-  "host": "declaration"
+  "host": "declaration",
+  "media_operation_refusal": "declaration",
+  "action_ingress": "instance"
  }
 }

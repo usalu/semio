@@ -15,10 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
-[features]
-browser-publication = []
-
 [dependencies]
+semio-framework-3d-brep-tessellation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust" }
+semio-framework-3d-brep-validation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-mesh-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }
@@ -27,12 +26,8 @@ semio-framework-job.workspace = true
 semio-framework-os-flow = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-3d-brep-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust" }
-semio-framework-3d-brep-queries = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust" }
 semio-framework-3d-brep-representation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
-
-[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
-wasm-bindgen = "0.2.106"
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

@@ -1,16 +1,17 @@
 //! 📐️ Reads actual native retained text backing one chunk at a time.
 
 use semio_framework_value::paged::PagedUtf8;
-use crate::{DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle};
+use semio_s_artifact_draw_drawing_model::{DrawingImageAsset, DrawingLayerNode, FillStyle};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct DrawingTextFootprint {
-    pub(super) chunks: usize,
-    pub(super) backing_bytes: usize,
+pub struct DrawingTextFootprint {
+    pub chunks: usize,
+    pub backing_bytes: usize,
 }
 
 #[derive(Default)]
-pub(super) struct DrawingTextFootprintCursor {
+pub struct DrawingTextFootprintCursor {
     owner: Option<usize>,
     index: usize,
     totals: DrawingTextFootprint,
@@ -19,7 +20,7 @@ pub(super) struct DrawingTextFootprintCursor {
 
 impl DrawingTextFootprintCursor {
     /// 🧷️ The caller retains this exact immutable native text owner until completion or close.
-    pub(super) fn step<const N: usize>(&mut self, source: &PagedUtf8<N>, maximum_items: usize) -> Result<bool, &'static str> {
+    pub fn step<const N: usize>(&mut self, source: &PagedUtf8<N>, maximum_items: usize) -> Result<bool, &'static str> {
         if maximum_items == 0 { return Ok(self.phase == 2); }
         if self.phase == 3 { return Err("drawing-store.text-footprint-closed"); }
         let owner = source as *const _ as usize;
@@ -46,9 +47,9 @@ impl DrawingTextFootprintCursor {
         Ok(self.phase == 2)
     }
 
-    pub(super) fn totals(&self) -> Option<DrawingTextFootprint> { (self.phase == 2).then_some(self.totals) }
+    pub fn totals(&self) -> Option<DrawingTextFootprint> { (self.phase == 2).then_some(self.totals) }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.owner = None;
         self.index = 0;
@@ -57,17 +58,17 @@ impl DrawingTextFootprintCursor {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.index == 0 && self.totals == DrawingTextFootprint::default() }
+    pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.index == 0 && self.totals == DrawingTextFootprint::default() }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct DrawingLayerFootprint {
-    pub(super) items: usize,
-    pub(super) backing_bytes: usize,
+pub struct DrawingLayerFootprint {
+    pub items: usize,
+    pub backing_bytes: usize,
 }
 
 #[derive(Default)]
-pub(super) struct DrawingLayerFootprintCursor {
+pub struct DrawingLayerFootprintCursor {
     owner: Option<usize>,
     field: usize,
     child: usize,
@@ -89,7 +90,7 @@ impl DrawingLayerFootprintCursor {
 
     fn lists(&mut self, source: &DrawingLayerNode) -> Result<(), &'static str> {
         self.add(1, 0)?;
-        let base = crate::schema::layer_base(source);
+        let base = semio_s_artifact_draw_drawing_model::layer_base(source);
         if let Some(FillStyle::LinearGradient { stops, .. } | FillStyle::RadialGradient { stops, .. }) = base.attributes.fill.as_ref() { self.list(stops)?; }
         if let Some(dash) = base.attributes.stroke.as_ref().and_then(|stroke| stroke.dash.as_ref()) { self.list(dash)?; }
         match source {
@@ -103,7 +104,7 @@ impl DrawingLayerFootprintCursor {
     }
 
     fn field(source: &DrawingLayerNode, index: usize) -> Option<&PagedUtf8<{usize::MAX}>> {
-        let base = crate::schema::layer_base(source);
+        let base = semio_s_artifact_draw_drawing_model::layer_base(source);
         match index {
             0 => Some(&base.id),
             1 => Some(&base.name),
@@ -130,7 +131,7 @@ impl DrawingLayerFootprintCursor {
     }
 
     /// 🧷️ Reads only direct backing; the caller retains this immutable native layer until close.
-    pub(super) fn step(&mut self, source: &DrawingLayerNode, maximum_items: usize) -> Result<bool, &'static str> {
+    pub fn step(&mut self, source: &DrawingLayerNode, maximum_items: usize) -> Result<bool, &'static str> {
         if maximum_items == 0 { return Ok(self.phase == 3); }
         if self.phase == 4 { return Err("drawing-store.layer-footprint-closed"); }
         let owner = source as *const _ as usize;
@@ -157,9 +158,9 @@ impl DrawingLayerFootprintCursor {
         Ok(self.phase == 3)
     }
 
-    pub(super) fn totals(&self) -> Option<DrawingLayerFootprint> { (self.phase == 3).then_some(self.totals) }
+    pub fn totals(&self) -> Option<DrawingLayerFootprint> { (self.phase == 3).then_some(self.totals) }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.text.close_step(1);
         self.owner = None;
@@ -170,11 +171,11 @@ impl DrawingLayerFootprintCursor {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.field == 0 && self.child == 0 && self.text.terminal_is_empty() && self.totals == DrawingLayerFootprint::default() }
+    pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.field == 0 && self.child == 0 && self.text.terminal_is_empty() && self.totals == DrawingLayerFootprint::default() }
 }
 
 #[derive(Clone, Copy)]
-pub(super) enum DrawingRecordFootprintSource<'a> {
+pub enum DrawingRecordFootprintSource<'a> {
     Snapshot(&'a DrawingSnapshot),
     Asset(&'a PagedUtf8<{usize::MAX}>, &'a DrawingImageAsset),
 }
@@ -196,7 +197,7 @@ impl<'a> DrawingRecordFootprintSource<'a> {
 }
 
 #[derive(Default)]
-pub(super) struct DrawingRecordFootprintCursor {
+pub struct DrawingRecordFootprintCursor {
     owner: Option<(u8, usize, usize)>,
     field: usize,
     text: DrawingTextFootprintCursor,
@@ -212,7 +213,7 @@ impl DrawingRecordFootprintCursor {
     }
 
     /// 🧷️ The caller retains the exact immutable snapshot or key/asset pair until close.
-    pub(super) fn step(&mut self, source: DrawingRecordFootprintSource<'_>, maximum_items: usize) -> Result<bool, &'static str> {
+    pub fn step(&mut self, source: DrawingRecordFootprintSource<'_>, maximum_items: usize) -> Result<bool, &'static str> {
         if maximum_items == 0 { return Ok(self.phase == 2); }
         if self.phase == 3 { return Err("drawing-store.record-footprint-closed"); }
         let owner = source.identity();
@@ -251,9 +252,9 @@ impl DrawingRecordFootprintCursor {
         Ok(self.phase == 2)
     }
 
-    pub(super) fn totals(&self) -> Option<DrawingLayerFootprint> { (self.phase == 2).then_some(self.totals) }
+    pub fn totals(&self) -> Option<DrawingLayerFootprint> { (self.phase == 2).then_some(self.totals) }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.text.close_step(1);
         self.owner = None;
@@ -263,11 +264,11 @@ impl DrawingRecordFootprintCursor {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.field == 0 && self.text.terminal_is_empty() && self.totals == DrawingLayerFootprint::default() }
+    pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.field == 0 && self.text.terminal_is_empty() && self.totals == DrawingLayerFootprint::default() }
 }
 
 #[derive(Default)]
-pub(super) struct DrawingTextDigestCursor {
+pub struct DrawingTextDigestCursor {
     footprint: DrawingTextFootprintCursor,
     tag: Option<u16>,
     chunk: usize,
@@ -276,14 +277,14 @@ pub(super) struct DrawingTextDigestCursor {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct DrawingTextDigestStep {
-    pub(super) complete: bool,
-    pub(super) observed_bytes: usize,
+pub struct DrawingTextDigestStep {
+    pub complete: bool,
+    pub observed_bytes: usize,
 }
 
 impl DrawingTextDigestCursor {
     /// 🧷️ Retains no source copy; the caller keeps the exact native field immutable until close.
-    pub(super) fn step<const N: usize>(&mut self, source: &PagedUtf8<N>, tag: u16, maximum_items: usize, maximum_bytes: usize, mut observe: impl FnMut(&[u8])) -> Result<DrawingTextDigestStep, &'static str> {
+    pub fn step<const N: usize>(&mut self, source: &PagedUtf8<N>, tag: u16, maximum_items: usize, maximum_bytes: usize, mut observe: impl FnMut(&[u8])) -> Result<DrawingTextDigestStep, &'static str> {
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(DrawingTextDigestStep { complete: self.phase == 3, observed_bytes: 0 }); }
         if self.phase == 4 { return Err("drawing-store.text-digest-closed"); }
         if self.tag.is_some_and(|held| held != tag) || self.footprint.owner.is_some_and(|held| held != source as *const _ as usize) {
@@ -317,9 +318,9 @@ impl DrawingTextDigestCursor {
         Ok(DrawingTextDigestStep { complete: self.phase == 3, observed_bytes })
     }
 
-    pub(super) fn totals(&self) -> Option<DrawingTextFootprint> { (self.phase == 3).then(|| self.footprint.totals()).flatten() }
+    pub fn totals(&self) -> Option<DrawingTextFootprint> { (self.phase == 3).then(|| self.footprint.totals()).flatten() }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.footprint.close_step(1);
         self.tag = None;
@@ -329,17 +330,17 @@ impl DrawingTextDigestCursor {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.footprint.terminal_is_empty() && self.tag.is_none() && self.chunk == 0 && self.offset == 0 }
+    pub fn terminal_is_empty(&self) -> bool { self.footprint.terminal_is_empty() && self.tag.is_none() && self.chunk == 0 && self.offset == 0 }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct DrawingTextEqualityStep {
-    pub(super) complete: bool,
-    pub(super) compared_bytes: usize,
+pub struct DrawingTextEqualityStep {
+    pub complete: bool,
+    pub compared_bytes: usize,
 }
 
 #[derive(Default)]
-pub(super) struct DrawingTextEqualityCursor {
+pub struct DrawingTextEqualityCursor {
     owners: Option<(usize, usize)>,
     chunks: [usize; 2],
     offsets: [usize; 2],
@@ -350,7 +351,7 @@ pub(super) struct DrawingTextEqualityCursor {
 
 impl DrawingTextEqualityCursor {
     /// 🧷️ Both exact immutable native fields remain retained by the caller until completion or close.
-    pub(super) fn step<const L: usize, const R: usize>(&mut self, left: &PagedUtf8<L>, right: &PagedUtf8<R>, maximum_items: usize, maximum_bytes: usize) -> Result<DrawingTextEqualityStep, &'static str> {
+    pub fn step<const L: usize, const R: usize>(&mut self, left: &PagedUtf8<L>, right: &PagedUtf8<R>, maximum_items: usize, maximum_bytes: usize) -> Result<DrawingTextEqualityStep, &'static str> {
         if maximum_items == 0 || maximum_bytes == 0 { return Ok(DrawingTextEqualityStep::default()); }
         if self.closed { return Err("drawing-store.text-equality-closed"); }
         let owners = (left as *const _ as usize, right as *const _ as usize);
@@ -377,9 +378,9 @@ impl DrawingTextEqualityCursor {
         Ok(DrawingTextEqualityStep { complete: self.result.is_some(), compared_bytes: bytes * 2 })
     }
 
-    pub(super) fn result(&self) -> Option<bool> { self.result }
+    pub fn result(&self) -> Option<bool> { self.result }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize) -> bool {
+    pub fn close_step(&mut self, maximum_items: usize) -> bool {
         if maximum_items == 0 { return self.terminal_is_empty(); }
         self.owners = None;
         self.chunks = [0; 2];
@@ -390,29 +391,29 @@ impl DrawingTextEqualityCursor {
         true
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.chunks == [0; 2] && self.offsets == [0; 2] && self.remaining == 0 && self.result.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.owners.is_none() && self.chunks == [0; 2] && self.offsets == [0; 2] && self.remaining == 0 && self.result.is_none() }
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(super) struct DrawingDuplicateIdentityStep {
-    pub(super) complete: bool,
-    pub(super) observed_bytes: usize,
+pub struct DrawingDuplicateIdentityStep {
+    pub complete: bool,
+    pub observed_bytes: usize,
 }
 
 #[derive(Default)]
-pub(super) struct DrawingDuplicateIdentityCursor {owner:Option<usize>,chunk:usize,offset:usize,complete:bool,closed:bool}
+pub struct DrawingDuplicateIdentityCursor {owner:Option<usize>,chunk:usize,offset:usize,complete:bool,closed:bool}
 impl DrawingDuplicateIdentityCursor {
     /// 🧷️ Reads an exact immutable admitted target field without hashing or spelling it.
-    pub(super) fn step<const N:usize>(&mut self,target:&PagedUtf8<N>,maximum_items:usize,maximum_bytes:usize)->Result<DrawingDuplicateIdentityStep,&'static str>{
+    pub fn step<const N:usize>(&mut self,target:&PagedUtf8<N>,maximum_items:usize,maximum_bytes:usize)->Result<DrawingDuplicateIdentityStep,&'static str>{
       if maximum_items==0||maximum_bytes==0{return Ok(Default::default());}if self.closed{return Err("drawing-store.duplicate-identity-closed");}
       let owner=target as *const _ as usize;if self.owner.is_some_and(|held|held!=owner){return Err("drawing-store.duplicate-identity-owner-changed");}self.owner=Some(owner);
       if self.complete{return Ok(DrawingDuplicateIdentityStep{complete:true,observed_bytes:0});}
       let Some(chunk)=target.retained_chunks().get(self.chunk)else{self.complete=true;return Ok(DrawingDuplicateIdentityStep{complete:true,observed_bytes:0});};
       let end=chunk.len().min(self.offset.saturating_add(maximum_bytes));let observed_bytes=end-self.offset;self.offset=end;if self.offset==chunk.len(){self.chunk+=1;self.offset=0;}Ok(DrawingDuplicateIdentityStep{complete:false,observed_bytes})
     }
-    pub(super) fn identity<'a,const N:usize>(&self,target:&'a PagedUtf8<N>)->Option<&'a PagedUtf8<N>>{(self.complete&&self.owner==Some(target as *const _ as usize)).then_some(target)}
-    pub(super) fn close_step(&mut self,maximum_items:usize)->bool{if maximum_items==0{return self.terminal_is_empty();}self.owner=None;self.chunk=0;self.offset=0;self.complete=false;self.closed=true;true}
-    pub(super) fn terminal_is_empty(&self)->bool{self.owner.is_none()&&self.chunk==0&&self.offset==0&&!self.complete}
+    pub fn identity<'a,const N:usize>(&self,target:&'a PagedUtf8<N>)->Option<&'a PagedUtf8<N>>{(self.complete&&self.owner==Some(target as *const _ as usize)).then_some(target)}
+    pub fn close_step(&mut self,maximum_items:usize)->bool{if maximum_items==0{return self.terminal_is_empty();}self.owner=None;self.chunk=0;self.offset=0;self.complete=false;self.closed=true;true}
+    pub fn terminal_is_empty(&self)->bool{self.owner.is_none()&&self.chunk==0&&self.offset==0&&!self.complete}
 }
 
 #[cfg(test)]

@@ -49,7 +49,7 @@ impl OriginalInferencePlan{
  }
  /// ♻️ Retires at most one original scalar row or exact backing allocation, including cancelled callers.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,InferenceWorkFailure>{
-  if cx.should_yield(){return Ok(false)}
+  if cx.retirement_should_yield(){return Ok(false)}
   if !self.closing{if !metadata(cx)?{return Ok(false)}self.closing=true;return Ok(false)}
   if !self.order.terminal_is_empty(){close(&mut self.order,cx)?;return Ok(false)}
   if !self.queue.terminal_is_empty(){close(&mut self.queue,cx)?;return Ok(false)}

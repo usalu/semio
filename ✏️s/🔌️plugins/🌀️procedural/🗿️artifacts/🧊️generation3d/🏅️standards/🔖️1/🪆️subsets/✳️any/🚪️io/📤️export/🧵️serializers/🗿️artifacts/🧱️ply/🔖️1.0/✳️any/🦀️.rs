@@ -6,7 +6,7 @@
 //! Composition: caller-prepared `SemioMeshSnapshot` → `SemioMeshToPly` → ply's own `encode_ply`.
 //! PLY is the one mesh target here that also accepts a `Points` primitive, so a wire/point preview
 //! exports as a real, valid PLY point cloud with no `face` element rather than erroring.
-use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_ply::PlySnapshot;
 use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;

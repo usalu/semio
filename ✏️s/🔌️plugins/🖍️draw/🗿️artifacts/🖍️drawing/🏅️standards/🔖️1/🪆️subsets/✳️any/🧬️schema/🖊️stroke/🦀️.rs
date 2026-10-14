@@ -72,7 +72,7 @@ use semio_framework_value::ToValue;
     fn dash_pattern_fixtures() {
         let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🖊️stroke/🔣️.json")).unwrap();
         for case in cases.as_array().unwrap() {
-            let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);crate::standards::v1::subsets::any::io::text::dash::decode_dash_text(case["value"].as_str().unwrap(),&mut control)};
+            let parsed = {let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4096,&mut accepted);semio_s_artifact_draw_drawing_io::text::dash::decode_dash_text(case["value"].as_str().unwrap(),&mut control)};
             if case["error"] == true { assert!(parsed.is_err(), "{case}"); }
             else { assert_eq!(parsed.unwrap(), serde_json::from_value::<Option<Vec<f64>>>(case["dash"].clone()).unwrap(), "{case}"); }
         }

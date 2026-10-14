@@ -20,10 +20,7 @@ role = "test"
 name = "semio_s_artifact_stdio_pdf_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = ["dep:lopdf", "semio-s-plugin-stdio-document-test-oracle/oracles"]
-
 [dependencies]
-"lopdf" = { version = "0.44", optional = true, default-features = false }
+"lopdf" = { version = "0.44", default-features = false }
 "semio-repo-test-host" = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
-"semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../🔮️oracles/📃️document/📦️packages/🦀️rust", default-features = false }
+"semio-s-plugin-stdio-document-test-oracle" = { path = "../../../../../🔮️oracles/📃️document/📦️packages/🦀️rust" }

@@ -1,7 +1,7 @@
 use super::*;
-use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
 use crate::editor::puzzle3d::terminology::puzzle3d_labels;
-use crate::editor::puzzle3d::{empty_scene_snapshot, nakagin_scene_snapshot};
+use {crate::editor::puzzle3d::snapshot::empty_scene_snapshot, crate::editor::puzzle3d::snapshot::nakagin_scene_snapshot};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
 const RETIREMENT_DRAIN_STEPS: usize = 4096;
@@ -220,7 +220,7 @@ fn every_row_is_a_domain_pick_target_and_only_the_tree_binds_the_pick() {
     let mut scene_snapshot = scaled_fixture(2, 2);
     scene_snapshot.references.push(Puzzle3dReference {
         id: "reference-1".into(),
-        source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
+        source: crate::editor::puzzle3d::snapshot::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
         ..Default::default()
     });
     scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id: "volume-1".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
@@ -310,7 +310,7 @@ fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node_ceili
     for index in 0..40 {
         scene_snapshot.references.push(Puzzle3dReference {
             id: format!("reference-{index}"),
-            source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: format!("/reference/plan-{index}.png"), media_kind: Some("image".into()) },
+            source: crate::editor::puzzle3d::snapshot::Puzzle3dReferenceSource { url: format!("/reference/plan-{index}.png"), media_kind: Some("image".into()) },
             ..Default::default()
         });
         scene_snapshot.target_volumes.push(Puzzle3dTargetVolume { id: format!("volume-{index}"), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, hidden: false, locked: false });
@@ -423,7 +423,7 @@ fn outliner_hide_and_lock_rows_dispatch_the_inverse_of_the_current_flag() {
         });
         scene_snapshot.references.push(Puzzle3dReference {
             id: "reference-1".into(),
-            source: crate::editor::puzzle3d::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
+            source: crate::editor::puzzle3d::snapshot::Puzzle3dReferenceSource { url: "/reference/plan.png".into(), media_kind: Some("image".into()) },
             hidden: flagged,
             locked: flagged,
             ..Default::default()
@@ -490,11 +490,11 @@ fn an_outliner_flag_row_undoes_itself_on_the_second_click() {
         for expected in [true, false] {
             let asked = requested(&scene_snapshot, flag);
             assert_eq!(asked, expected, "the outliner's {flag} row must ask for {expected} while the object is {}", !expected);
-            let mut document = crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("the one-object fixture admits");
+            let mut document = crate::editor::puzzle3d::snapshot::puzzle3d_snapshot_from_host_snapshot(&scene_snapshot).expect("the one-object fixture admits");
             for mutation in crate::editor::puzzle3d::commands::set_selection_flag::selection_flag_mutations(&document.clone(), "object", &["object-1".to_string()], flag, asked) {
-                crate::apply_puzzle3d_mutation(&mut document, &mutation).expect("the flag kind applies");
+                crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation(&mut document, &mutation).expect("the flag kind applies");
             }
-            scene_snapshot = crate::editor::puzzle3d::puzzle3d_scene_snapshot_from_document(&document);
+            scene_snapshot = crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document(&document);
             assert_eq!(state(&scene_snapshot, flag), expected, "clicking the outliner's own {flag} row must reach {expected}");
         }
     }

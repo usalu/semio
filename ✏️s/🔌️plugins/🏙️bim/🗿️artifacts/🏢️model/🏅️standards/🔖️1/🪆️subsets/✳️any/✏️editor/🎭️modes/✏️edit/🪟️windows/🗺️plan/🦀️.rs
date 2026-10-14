@@ -11,7 +11,7 @@ use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, te
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::plan::{canvas_point, plan_point};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
-use crate::{ModelInference, ModelSnapshot, ViewKind};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, ViewKind}};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 use semio_framework_plugin::DslValue;

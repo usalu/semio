@@ -52,7 +52,7 @@ impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
 }
 
 #[path = "../../🧪️testing/🔗️dependency-contribution/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub(crate) mod mutations;
 pub use mutations::{AddValue, DependencyTestOp};
 
 #[path = "../🔗️dependency-contribution-unit/🦀️.rs"]

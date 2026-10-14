@@ -125,7 +125,7 @@ fn a_paste_gesture_is_one_create_object_per_clone_with_a_fresh_id() {
 #[test]
 fn a_duplicate_clone_is_a_create_object_and_a_painted_volume_is_a_create_target_volume() {
     let before = base();
-    let clone = create_object(crate::Puzzle3dObject { id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
+    let clone = create_object(crate::standards::v1::subsets::any::schema::Puzzle3dObject { id: "a-copy".into(), origin: [0.5, 0.5, 0.0], ..before.objects[0].clone() }, None);
     let volume = add_target_volume::add_target_volume_mutation([1.1, 2.0, 2.9], 1.0, [2, 2, 2]);
     let (after, restored) = replay(&before, &[clone, volume]);
     assert_eq!(after.objects.len(), 4);

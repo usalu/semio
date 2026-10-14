@@ -4,7 +4,7 @@
 //! for [`ModelMutation`] by delegating each variant to its payload's `protocol::MutationKind` impl; the handcrafted logic lives in
 //! the triad leaves (`<slug>/{🦠️mutation,🔺️diff,↩️inverse}`). This file is dispatch-only.
 
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 
 #[cfg(test)]
 #[path = "🧪️tests/🧰️kit/🦀️.rs"]

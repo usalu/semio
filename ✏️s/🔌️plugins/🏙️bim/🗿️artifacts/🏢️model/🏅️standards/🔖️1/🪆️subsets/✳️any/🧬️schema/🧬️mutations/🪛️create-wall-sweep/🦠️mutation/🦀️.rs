@@ -1,6 +1,6 @@
 //! 🪛️ `create-wall-sweep` payload. Brings a new sweep onto one face of a wall: a profile run along the face (a baseboard, a cornice, a drip rail) at a height above the wall base, optionally set into the wall; its solid, length and areas are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, WallSweep};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, WallSweep}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

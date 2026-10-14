@@ -1,7 +1,7 @@
 //! 🧭️ Surface algorithms that operate *on* a [`super::Surface`]: closest-point
 //! projection (with closed-form fast paths for the surfaces that admit one) and Coons-patch
 //! transfinite interpolation from four boundary curves. Kept separate from `surface.rs` for the
-//! same reason as [`crate::curve::curve_ops`] versus [`crate::curve`].
+//! same reason as [`semio_framework_3d_brep_curve::curve_ops`] versus [`semio_framework_3d_brep_curve`].
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🪡️surface-ops` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
@@ -13,9 +13,11 @@ pub type SurfaceControlStrip = (f64, f64, KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f6
 pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 
 use super::Surface;
-use crate::curve::bspline::{insert_knot, KnotVector};
-use crate::vector::matrix::Frame3;
-use crate::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_curve::bspline::{elevate_bezier_span_multi, elevate_degree, insert_knot, insert_knot_multi, KnotVector};
+use semio_framework_3d_brep_curve::curve_ops::{averaged_knot_vector, parameterize, solve_interpolation_1d, HarmonizedCurveControls, ParamMethod};
+use semio_framework_3d_brep_curve::NurbsCurve3;
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 // #region 🔖️Project
 
@@ -83,7 +85,7 @@ fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
 }
 
 /// 🧭️ Wraps an unconstrained periodic angle into `domain` (mirrors
-/// [`crate::curve::curve_ops`]'s identical fix for closed curves) — shared by every surface-of-revolution
+/// [`semio_framework_3d_brep_curve::curve_ops`]'s identical fix for closed curves) — shared by every surface-of-revolution
 /// direction (cylinder/cone/sphere `u`, torus `u` and `v`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wrap_periodic(theta: f64, param_domain: (f64, f64)) -> f64 {
@@ -134,7 +136,7 @@ fn closest_on_torus(surface: &Surface, frame: &Frame3, major_radius: f64, domain
 
 /// 🧩️ Inserts `t` into the u-direction of a rational surface control net (Boehm's algorithm
 /// applied independently to every fixed-`v` "row", the standard tensor-product generalization of
-/// [`crate::curve::bspline::insert_knot`]) — geometrically a no-op, used to raise a knot to full
+/// [`semio_framework_3d_brep_curve::bspline::insert_knot`]) — geometrically a no-op, used to raise a knot to full
 /// multiplicity for Bézier-patch extraction.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn insert_u_knot_grid(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
@@ -186,7 +188,7 @@ fn transpose_grid_w(g: &[Vec<f64>]) -> Vec<Vec<f64>> {
 type Grid = (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>);
 
 /// 🧩️ Splits a surface control grid at u-parameter `t` into two grids covering each side —
-/// the exact 2D-grid analog of [`crate::curve::curve_ops::split_nurbs`] (repeated knot insertion
+/// the exact 2D-grid analog of [`semio_framework_3d_brep_curve::curve_ops::split_nurbs`] (repeated knot insertion
 /// to full multiplicity, then slicing the u-rows at the resulting breakpoint).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn split_grid_u(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (Grid, Grid) {
@@ -224,7 +226,7 @@ fn split_grid_v(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64
 
 /// 🧩️ An axis-aligned box guaranteed to contain the patch (convex hull of a positive-weight
 /// rational tensor-product Bézier patch's control net — the 2D analog of
-/// [`crate::curve::bezier::RationalBezier3::control_hull_box`]).
+/// [`semio_framework_3d_brep_curve::bezier::RationalBezier3::control_hull_box`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hull_box(grid: &[Vec<Pnt3>]) -> (Pnt3, Pnt3) {
     let mut lo = grid[0][0];
@@ -343,7 +345,7 @@ fn newton_uv(surface: &Surface, target: Pnt3, mut u: f64, mut v: f64, domain: ((
 /// 🧭️ 2D Newton seeds within one Bézier patch `[u0,u1]×[v0,v1]` — a single (midpoint) seed can
 /// converge to the wrong stationary point of a 2D distance landscape (multiple local minima, or a
 /// saddle redirecting Newton away from the true minimum), mirroring
-/// [`crate::curve::curve_ops::span_seeds`]'s
+/// [`semio_framework_3d_brep_curve::curve_ops::span_seeds`]'s
 /// identical fix for the 1D curve case. A 5×5 interior grid (25 seeds) reliably separates the
 /// handful of basins a single bicubic-or-lower patch's distance function can have.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -421,4 +423,218 @@ pub fn coons_patch_eval(c0: &dyn Fn(f64) -> Pnt3, c1: &dyn Fn(f64) -> Pnt3, d0: 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+// #endregion 🔖️Tests
+
+// #region 🔖️SurfaceFit
+
+/// 📏️ True global tensor-product surface interpolation (NURBS Book §9.5, separable construction):
+/// `u`-parameters are the average, over every `v`-row's own centripetal parameterization, of each
+/// `u`-column's chord position (and vice versa for `v`), a single shared `(u_knots, v_knots)` is
+/// built from those averages, then interpolation runs first along every row (`v`-direction), then
+/// along every column of the intermediate result (`u`-direction) — the standard two-pass reduction
+/// to 1D global interpolation, exact (not sampled).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn interpolate_surface_grid(points: &[Vec<Pnt3>], degree_u: usize, degree_v: usize) -> Option<Surface> {
+    let nu = points.len();
+    if nu == 0 {
+        return None;
+    }
+    let nv = points[0].len();
+    if nv == 0 || points.iter().any(|row| row.len() != nv) {
+        return None;
+    }
+    let pu = degree_u.max(1).min(nu - 1);
+    let pv = degree_v.max(1).min(nv - 1);
+    let mut u_acc = vec![0.0; nu];
+    for (j, _) in points[0].iter().enumerate() {
+        let column: Vec<Pnt3> = points.iter().map(|row| row[j]).collect();
+        let p = parameterize(&column, ParamMethod::Centripetal);
+        for i in 0..nu {
+            u_acc[i] += p[i];
+        }
+    }
+    let u_params: Vec<f64> = u_acc.iter().map(|&s| s / nv as f64).collect();
+    let mut v_acc = vec![0.0; nv];
+    for row in points.iter() {
+        let p = parameterize(row, ParamMethod::Centripetal);
+        for j in 0..nv {
+            v_acc[j] += p[j];
+        }
+    }
+    let v_params: Vec<f64> = v_acc.iter().map(|&s| s / nu as f64).collect();
+    let u_knots = KnotVector::new(averaged_knot_vector(&u_params, pu), pu, nu)?;
+    let v_knots = KnotVector::new(averaged_knot_vector(&v_params, pv), pv, nv)?;
+    let mut temp: Vec<Vec<Pnt3>> = Vec::with_capacity(nu);
+    for row in points.iter() {
+        temp.push(solve_interpolation_1d(row, &v_knots, &v_params));
+    }
+    let mut controls = vec![vec![Pnt3::new(0.0, 0.0, 0.0); nv]; nu];
+    for j in 0..nv {
+        let column: Vec<Pnt3> = (0..nu).map(|i| temp[i][j]).collect();
+        let col_controls = solve_interpolation_1d(&column, &u_knots, &u_params);
+        for i in 0..nu {
+            controls[i][j] = col_controls[i];
+        }
+    }
+    let weights = vec![vec![1.0; nv]; nu];
+    Some(Surface::Nurbs { u_knots, v_knots, controls, weights })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn to_homogeneous(curve: &NurbsCurve3) -> Vec<Vec<f64>> {
+    curve.controls.iter().zip(&curve.weights).map(|(p, &w)| vec![p.x * w, p.y * w, p.z * w, w]).collect()
+}
+
+/// 📏️ Brings two boundary curves that must share a common tensor-product direction (`c0`/`c1` in
+/// [`coons_patch_nurbs`]) onto one identical `(knots, degree)` basis: degree-elevates the
+/// lower-degree one via [`elevate_degree`], then knot-inserts each up to the union of the other's
+/// interior knot multiplicities — after which their homogeneous control nets index the same basis
+/// functions, the precondition every later Coons step relies on.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn harmonize_pair(a: &NurbsCurve3, b: &NurbsCurve3) -> Option<HarmonizedCurveControls> {
+    let target_degree = a.knots.degree.max(b.knots.degree);
+    let (mut ak, mut ac) = (a.knots.clone(), to_homogeneous(a));
+    let (mut bk, mut bc) = (b.knots.clone(), to_homogeneous(b));
+    if ak.degree < target_degree {
+        let (nk, nc) = elevate_degree(&ak, &ac, target_degree - ak.degree);
+        ak = nk;
+        ac = nc;
+    }
+    if bk.degree < target_degree {
+        let (nk, nc) = elevate_degree(&bk, &bc, target_degree - bk.degree);
+        bk = nk;
+        bc = nc;
+    }
+    let (a_lo, a_hi) = ak.domain();
+    let (b_lo, b_hi) = bk.domain();
+    if (a_lo - b_lo).abs() > 1e-9 || (a_hi - b_hi).abs() > 1e-9 {
+        return None;
+    }
+    let mut values: Vec<f64> = ak.knots.iter().chain(bk.knots.iter()).copied().filter(|&k| k > a_lo && k < a_hi).collect();
+    values.sort_by(|x, y| x.partial_cmp(y).unwrap());
+    values.dedup_by(|x, y| (*x - *y).abs() < 1e-9);
+    for &kv in &values {
+        let need = ak.multiplicity(kv).max(bk.multiplicity(kv));
+        while ak.multiplicity(kv) < need {
+            let (nk, nc) = insert_knot_multi(&ak, &ac, kv);
+            ak = nk;
+            ac = nc;
+        }
+        while bk.multiplicity(kv) < need {
+            let (nk, nc) = insert_knot_multi(&bk, &bc, kv);
+            bk = nk;
+            bc = nc;
+        }
+    }
+    Some((ak, ac, bc))
+}
+
+/// 📏️ Elevates/knot-refines the 2-point linear (degree-1) curve through homogeneous points `p0`,
+/// `p1` up to exactly `target`'s basis — used to expand a Coons ruled surface's linear direction, or
+/// its bilinear corner rows, onto the shared knot vector the other direction needs. Endpoints are
+/// preserved exactly throughout (a property of both Bézier elevation and knot insertion), so
+/// `result[0] == p0` and `result.last() == p1` always.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn linear_curve_to_target(p0: &[f64], p1: &[f64], target: &KnotVector) -> Vec<Vec<f64>> {
+    let mut degree = 1usize;
+    let mut controls = vec![p0.to_vec(), p1.to_vec()];
+    while degree < target.degree {
+        controls = elevate_bezier_span_multi(&controls);
+        degree += 1;
+    }
+    let mut knots = {
+        let mut k = vec![0.0; degree + 1];
+        k.extend(std::iter::repeat_n(1.0, degree + 1));
+        KnotVector { knots: k, degree }
+    };
+    let (lo, hi) = target.domain();
+    let mut distinct: Vec<f64> = target.knots.iter().copied().filter(|&x| x > lo && x < hi).collect();
+    distinct.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    distinct.dedup_by(|a, b| (*a - *b).abs() < 1e-12);
+    for &kv in &distinct {
+        let need = target.multiplicity(kv);
+        while knots.multiplicity(kv) < need {
+            let (nk, nc) = insert_knot_multi(&knots, &controls, kv);
+            knots = nk;
+            controls = nc;
+        }
+    }
+    controls
+}
+
+/// 📏️ Bilinearly-blended Coons patch through 4 boundary curves, expressed as an *exact* NURBS
+/// surface (NURBS Book §10.5 construction, entirely in homogeneous control-point space — no
+/// sampling): `c0`/`c1` are the `v=0`/`v=1` boundaries (functions of `u`), `d0`/`d1` the `u=0`/`u=1`
+/// boundaries (functions of `v`); corners must agree within `tol`
+/// (`c0(0)≈d0(0)`, `c0(1)≈d1(0)`, `c1(0)≈d0(1)`, `c1(1)≈d1(1)`). Builds two ruled surfaces (linear
+/// blend of `c0`/`c1` in `v`, and of `d0`/`d1` in `u`) and one bilinear corner surface, all
+/// harmonized onto one shared `(u_knots, v_knots)` via [`harmonize_pair`]/[`linear_curve_to_target`],
+/// then combines `ruled1 + ruled2 - bilinear` channel-wise in homogeneous space — which, because the
+/// bilinear term's rows/columns are built from the exact same homogeneous corner values the ruled
+/// surfaces already carry, reproduces each boundary curve exactly at its edge of the patch (the
+/// classical Coons cancellation identity, verified per-channel so it holds for the weight channel
+/// too, not just position). Returns `None` on inconsistent corners, mismatched domains, or a
+/// degenerate (near-zero) combined weight.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn coons_patch_nurbs(c0: &NurbsCurve3, c1: &NurbsCurve3, d0: &NurbsCurve3, d1: &NurbsCurve3, tol: f64) -> Option<Surface> {
+    if c0.controls.first()?.distance(*d0.controls.first()?) > tol {
+        return None;
+    }
+    if c0.controls.last()?.distance(*d1.controls.first()?) > tol {
+        return None;
+    }
+    if c1.controls.first()?.distance(*d0.controls.last()?) > tol {
+        return None;
+    }
+    if c1.controls.last()?.distance(*d1.controls.last()?) > tol {
+        return None;
+    }
+    let (ku, c0h, c1h) = harmonize_pair(c0, c1)?;
+    let (kv, d0h, d1h) = harmonize_pair(d0, d1)?;
+    let nu = ku.control_point_count();
+    let nv = kv.control_point_count();
+    let mut ruled1 = vec![vec![vec![0.0; 4]; nv]; nu];
+    for i in 0..nu {
+        let row = linear_curve_to_target(&c0h[i], &c1h[i], &kv);
+        ruled1[i][..nv].clone_from_slice(&row[..nv]);
+    }
+    let mut ruled2 = vec![vec![vec![0.0; 4]; nv]; nu];
+    for j in 0..nv {
+        let col = linear_curve_to_target(&d0h[j], &d1h[j], &ku);
+        for i in 0..nu {
+            ruled2[i][j] = col[i].clone();
+        }
+    }
+    let bilinear_row_v0 = linear_curve_to_target(&c0h[0], &c0h[nu - 1], &ku);
+    let bilinear_row_v1 = linear_curve_to_target(&c1h[0], &c1h[nu - 1], &ku);
+    let mut bilinear = vec![vec![vec![0.0; 4]; nv]; nu];
+    for i in 0..nu {
+        let col = linear_curve_to_target(&bilinear_row_v0[i], &bilinear_row_v1[i], &kv);
+        bilinear[i][..nv].clone_from_slice(&col[..nv]);
+    }
+    let mut controls = vec![vec![Pnt3::new(0.0, 0.0, 0.0); nv]; nu];
+    let mut weights = vec![vec![1.0; nv]; nu];
+    for i in 0..nu {
+        for j in 0..nv {
+            let mut h = [0.0; 4];
+            for c in 0..4 {
+                h[c] = ruled1[i][j][c] + ruled2[i][j][c] - bilinear[i][j][c];
+            }
+            let w = h[3];
+            if w.abs() <= 1e-12 {
+                return None;
+            }
+            controls[i][j] = Pnt3::new(h[0] / w, h[1] / w, h[2] / w);
+            weights[i][j] = w;
+        }
+    }
+    Some(Surface::Nurbs { u_knots: ku, v_knots: kv, controls, weights })
+}
+
+// #endregion 🔖️SurfaceFit
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️fit/🦀️.rs"]
+mod fit_tests;
 // #endregion 🔖️Tests

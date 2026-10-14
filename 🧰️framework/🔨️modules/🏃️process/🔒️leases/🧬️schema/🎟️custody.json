@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "claimDirectory",
+    "resourcePrefix",
+    "maximumDatabaseBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "claimDirectory": {
+      "const": "claims"
+    },
+    "resourcePrefix": {
+      "const": "queued-original:"
+    },
+    "maximumDatabaseBytes": {
+      "const": 16384
+    }
+  }
+}

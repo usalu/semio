@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetColumnTilt`: an absolute `SetColumnTilt` back to the base tilt (plumb when none), none when the column is absent.
 
 use super::SetColumnTilt;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetColumnTilt, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.columns.get(&payload.id) {

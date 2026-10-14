@@ -1,0 +1,56 @@
+{
+ "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+  "🧊️object": {
+   "🌱create-object": "create-object",
+   "🗑️delete-object": "delete-object",
+   "🏗️change-object-kind": "change-object-kind",
+   "⚓change-object-anchor": "change-object-anchor",
+   "🧱change-object-mesh": "change-object-mesh",
+   "🖋️edit-object-label": "edit-object-label",
+   "👁️change-object-hidden": "change-object-hidden",
+   "🔒change-object-locked": "change-object-locked"
+  },
+  "🧭️pose": {
+   "📍move-object": "move-object",
+   "🔃rotate-object": "rotate-object",
+   "📏scale-object": "scale-object"
+  },
+  "🌀️vortex": {
+   "➕add-object-vortex": "add-object-vortex",
+   "➖remove-object-vortex": "remove-object-vortex",
+   "🔌replace-object-vortex": "replace-object-vortex",
+   "🪢️connect-vortices": "connect-vortices",
+   "✂️disconnect-vortices": "disconnect-vortices",
+   "🧮replace-attraction-geometry": "replace-attraction-geometry"
+  },
+  "🌍️volume": {
+   "🌍create-target-volume": "create-target-volume",
+   "🪦delete-target-volume": "delete-target-volume",
+   "🚀move-target-volume": "move-target-volume",
+   "🌀rotate-target-volume": "rotate-target-volume",
+   "📐scale-target-volume": "scale-target-volume",
+   "🙈change-target-volume-hidden": "change-target-volume-hidden",
+   "🔐change-target-volume-locked": "change-target-volume-locked"
+  },
+  "🖼️reference": {
+   "🖼️create-reference": "create-reference",
+   "🚮delete-reference": "delete-reference",
+   "🎯move-reference": "move-reference",
+   "📎resize-reference": "resize-reference",
+   "🖇️replace-reference-source": "replace-reference-source",
+   "👀change-reference-hidden": "change-reference-hidden",
+   "🗝️change-reference-locked": "change-reference-locked"
+  },
+  "📚️catalog": {
+   "🌐change-domain": "change-domain",
+   "🤝connect-kind-compatibility": "connect-kind-compatibility",
+   "💔disconnect-kind-compatibility": "disconnect-kind-compatibility",
+   "📚replace-kind-catalogs": "replace-kind-catalogs"
+  },
+  "✋️selection": {
+   "✋️drag-selection": "drag-selection",
+   "🔄️rotate-selection": "rotate-selection",
+   "🔍️scale-selection": "scale-selection"
+  }
+ }
+}

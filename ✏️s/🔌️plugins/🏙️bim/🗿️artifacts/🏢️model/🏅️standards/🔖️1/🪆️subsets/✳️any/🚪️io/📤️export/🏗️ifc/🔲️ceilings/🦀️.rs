@@ -8,7 +8,7 @@ use super::data::label;
 use super::frames::{ccw, cw};
 use super::writer::{en, real, rf, unset};
 use super::{Export, Quantity};
-use crate::Ceiling;
+use crate::standards::v1::subsets::any::schema::snapshot::Ceiling;
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored record of a sloped ceiling.
 pub const RECORD_ROW: &str = "Ceiling";

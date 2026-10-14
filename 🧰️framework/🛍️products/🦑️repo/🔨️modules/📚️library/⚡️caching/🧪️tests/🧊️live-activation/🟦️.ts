@@ -19,7 +19,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string):
   for (const [path, name] of [["🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", "surface"], ["🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", "editor"], ["🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust", "flow"], ["🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript", "renderer"]]) project(path!, name!);
   put(join(owner, "package.json"), JSON.stringify({ name: fixture.project, private: true }));
   put("component/Cargo.toml", `[package]\nname = "sample"\nversion = "0.1.0"\n[package.metadata.component]\npackage = "semio:${fixture.plugin}"\n[package.metadata.semio]\nrole = "plugin"\n[[package.metadata.semio.playground]]\nvariant = "${fixture.variant}"\n`);
-  const { cacheInternals } = await import("../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const targets = cacheInternals.playgroundPreparationTargets(["component/Cargo.toml"], root, owner);
   for (const profile of ["prototype", "release"]) assert.ok(targets[`prepare-${fixture.variant}-wgpu-${profile}`].dependsOn.includes(`renderer:wasm`), "The renderer prerequisite must select the matching compilation profile");
   for (const profile of ["prototype", "release"]) for (const command of ["serve", "dev"]) {
@@ -78,7 +78,7 @@ if (operation === "materialize") {
     const moduleRoot = join(repoRoot, "modules", profile);
     put(join(moduleRoot, fixture.plugin, MODULE_BRIDGE_FILE), fixture.payload + " " + profile);
     put(join(moduleRoot, fixture.plugin, "../🧫️fixtures/🧊️live-activation/🔣️.json"), JSON.stringify({ manifest: { pluginId: fixture.plugin } }));
-    for (const path of [join(fixture.plugin, ".nx-artifact.json"), join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) put(join(moduleRoot, path), "{}");
+    for (const path of [join(fixture.plugin, ".semio-artifact.json"), join(PREVIEW2_VENDOR_RELATIVE, ".semio-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) put(join(moduleRoot, path), "{}");
   }
   for (const variant of fixture.variants) put(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session/🟦️.ts"), "export const PLAYGROUND_SESSION = " + JSON.stringify({ variant, registryPluginId: fixture.plugin, plugins: [{ pluginId: fixture.plugin }] }));
   put(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET), "fonts");

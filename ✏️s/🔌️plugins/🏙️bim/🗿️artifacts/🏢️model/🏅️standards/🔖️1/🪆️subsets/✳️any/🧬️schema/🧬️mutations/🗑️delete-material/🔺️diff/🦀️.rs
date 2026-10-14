@@ -2,7 +2,7 @@
 //! wall type, panel override or space finish still names is refused as `mutation.target-referenced`.
 
 use super::DeleteMaterial;
-use crate::{CurtainPanel, Entry, Layer, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, Layer, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn layered(layers: &[Layer], id: &str) -> bool {

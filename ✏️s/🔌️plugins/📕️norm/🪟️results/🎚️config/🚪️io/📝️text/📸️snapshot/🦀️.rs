@@ -1,5 +1,5 @@
 //! 🚪️ Norm Results configuration physical snapshot representation.
-use crate::results_window_config::NormResultsWindowConfig;
+use crate::schema::NormResultsWindowConfig;
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl pack::snapshot::ArtifactDsl for NormResultsWindowConfig {
@@ -21,5 +21,4 @@ impl pack::snapshot::ArtifactDsl for NormResultsWindowConfig {
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
-
 

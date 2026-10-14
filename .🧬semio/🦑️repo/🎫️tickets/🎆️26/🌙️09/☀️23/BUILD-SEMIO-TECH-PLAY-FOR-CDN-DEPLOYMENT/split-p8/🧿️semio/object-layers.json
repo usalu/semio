@@ -1,0 +1,39 @@
+{
+ "order": [
+  "inferences",
+  "mutations",
+  "model",
+  "object"
+ ],
+ "allow": {},
+ "rules": [
+  [
+   "^🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "^🚪️io/(📝️text|💾️binary)/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "^🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "^🚪️io/(📝️text|💾️binary)/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "^🧬️schema/",
+   "model"
+  ],
+  [
+   "^🚪️io/(📝️text|💾️binary|🪶️sqlite)/",
+   "model"
+  ],
+  [
+   ".",
+   "object"
+  ]
+ ]
+}

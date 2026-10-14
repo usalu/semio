@@ -1,5 +1,5 @@
 use super::super::render;
-use crate::{ClassificationItem, ClassificationSystem, ModelInference, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, PropertyValue, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, PropertyValue, TemplateTarget}, inferences::ModelInference};
 use semio_framework_ui_locale::Locale;
 use std::collections::BTreeMap;
 

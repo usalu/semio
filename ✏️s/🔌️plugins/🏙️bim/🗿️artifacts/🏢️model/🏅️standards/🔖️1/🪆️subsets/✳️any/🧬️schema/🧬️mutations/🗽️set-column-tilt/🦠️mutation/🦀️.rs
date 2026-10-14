@@ -1,6 +1,6 @@
 //! 🗽️ `set-column-tilt` payload. Sets the lean of a column about its base point: the top leans towards the direction by the angle from the vertical, at most 60 degrees; leaving the tilt out makes the column plumb. The tilted solid, its volume and joins follow by inference.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Slope};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Slope}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

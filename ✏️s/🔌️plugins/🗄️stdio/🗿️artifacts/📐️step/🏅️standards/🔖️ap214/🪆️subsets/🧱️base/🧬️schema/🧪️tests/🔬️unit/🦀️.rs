@@ -25,7 +25,7 @@ async fn codec_round_trip() {
 /// — same shape as every P1-P3 pilot's own `conformance_laws` module.
 mod conformance_laws {
     use super::*;
-    use crate::schema::{diff, mutations, snapshot};
+    use crate::standards::v_ap214::subsets::base::schema::{diff, mutations, snapshot};
     use protocol::{DiffBinary,DiffCodec,DiffText, OpBinary, OpText};
 
     /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files

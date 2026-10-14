@@ -1,6 +1,6 @@
 //! 🔑️ `set-door-type` payload. Changes exactly the provided fields of a door type; every element of the type follows by inference.
 
-use crate::{DoorLeaves, DoorTypePatch, ModelDiff, ModelMutation, ModelSnapshot, Swing};
+use crate::standards::v1::subsets::any::schema::{snapshot::{DoorLeaves, ModelSnapshot, Swing}, diff::{patches::DoorTypePatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

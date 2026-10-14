@@ -26,7 +26,7 @@ const NUDGE_TOOL: &str = "s.test.time-travel@1/*#editor#nudge";
 /// 🧮️ The law's streamed tool: every tick replaces its ONE absolute leaf, the release commits it, and its persisted form is
 /// the framework's `GestureState`.
 struct NudgeTool {
-    verb: String,
+    pub(crate) verb: String,
     authoring_seed: String,
     base_revision: String,
     transaction: Option<protocol::TransactionRef>,

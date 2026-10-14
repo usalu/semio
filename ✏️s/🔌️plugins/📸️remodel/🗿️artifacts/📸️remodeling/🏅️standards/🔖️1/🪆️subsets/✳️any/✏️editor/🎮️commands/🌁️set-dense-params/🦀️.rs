@@ -1,9 +1,11 @@
 //! ⚙️ ⚙️ Remodeling play app commands command — `set-dense-params`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::mutations::update_dense_params;
-use crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
-use crate::{DenseParams, DenseResolution, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_mut_params::standards::v1::subsets::any::schema::mutations::update_dense_params::update_dense_params;
+use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseResolution;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

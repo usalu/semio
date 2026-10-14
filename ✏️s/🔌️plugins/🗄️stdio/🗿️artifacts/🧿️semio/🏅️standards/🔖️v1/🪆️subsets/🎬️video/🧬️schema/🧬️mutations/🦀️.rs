@@ -9,7 +9,14 @@
 
 
 
-use crate::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_insert_sample;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_insert_stream;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_remove_sample;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_remove_stream;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_set_sample_data;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_set_sample_flags;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::diff_set_stream_meta;
+use semio_s_artifact_stdio_semio_video_model::schema::diff::SemioVideoDiff;
 
 
 
@@ -27,7 +34,11 @@ use crate::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sa
 
 
 
-use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioRational;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSample;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
 
 use protocol::{Mutation};
 

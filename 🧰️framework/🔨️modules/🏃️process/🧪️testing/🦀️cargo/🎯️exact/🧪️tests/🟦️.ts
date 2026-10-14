@@ -17,6 +17,12 @@ function originalInvocation(): ScriptInvocation {
 
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 
+test("exact Cargo refuses missing or invented storage before any capture or output",async()=>{
+ const invocation=originalInvocation();let calls=0;const port:ExactCargoLawPort={probe:async()=>{calls++;throw Error("Compiler reached");},fingerprint:()=>{throw Error("Fingerprint reached");}};
+ for(const storage of [undefined,null,{}])await expect(runExactCargoLaws({invocation,policy:configuredExactCargoLawPolicyV1(),cwd:process.cwd(),groups:[],manifestPaths:{},cargoTargetDir:join(process.cwd(),"denied"),storage} as any,port)).rejects.toThrow("Original issued native storage reservation required");
+ expect(calls).toBe(0);console.log("[DEBUG] Missing and invented exact Cargo storage refused before compiler or output writes");
+});
+
 test("generated cleanup preserves fresh live managed owners and admits terminal, dead or stale output", () => {
   const law = JSON.parse(readFileSync(new URL("🧫️fixtures/📨️managed-output.json", import.meta.url), "utf8"));
   const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!, "managed-output-protection-"));

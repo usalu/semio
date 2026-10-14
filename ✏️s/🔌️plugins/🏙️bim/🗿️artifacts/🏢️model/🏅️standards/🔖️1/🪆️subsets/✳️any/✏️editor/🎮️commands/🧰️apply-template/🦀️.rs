@@ -6,7 +6,7 @@ use crate::editor::bim::commands::set_property::elements_of;
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
 use crate::standards::v1::subsets::any::schema::inferences::effective_properties::target_of;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 
@@ -32,7 +32,7 @@ pub fn handle(payload: &ApplyTemplate, doc: &ArtifactView<'_, ModelSnapshot>, _c
         for definition in &template.properties {
             let stated = snapshot.properties.get(id).and_then(|sets| sets.get(&template.name)).is_some_and(|properties| properties.contains_key(&definition.name));
             if let (false, Some(value)) = (stated, &definition.default_value) {
-                mutations.push(ModelMutation::SetElementProperty(crate::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: template.name.clone(), property: definition.name.clone(), value: value.clone() }));
+                mutations.push(ModelMutation::SetElementProperty(crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty { id: id.clone(), pset: template.name.clone(), property: definition.name.clone(), value: value.clone() }));
             }
         }
     }

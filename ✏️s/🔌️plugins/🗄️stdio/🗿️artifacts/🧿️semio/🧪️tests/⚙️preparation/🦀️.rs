@@ -10,10 +10,15 @@ use {semio_s_artifact_stdio_semio_document::schema::mutations::set_block_content
 use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use {semio_s_artifact_stdio_semio_flow::schema::mutations::set_node_label::SetNodeLabel, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
-use {semio_s_artifact_stdio_semio_text::schema::mutations::edit_run::EditRun, semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation};
-use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
-use {semio_s_artifact_stdio_semio_value::schema::mutations::set_node::SetNode, semio_s_artifact_stdio_semio_value::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value::schema::mutations::{SemioValueMutation, SemioValuePathSegment}};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+use {semio_s_artifact_stdio_semio_text_mutations::schema::mutations::edit_run::EditRun, semio_s_artifact_stdio_semio_text_mutations::schema::mutations::SemioTextMutation};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_node::SetNode, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::{SemioValueMutation, SemioValuePathSegment}};
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueNode;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::ValueId;
 use std::fmt::Debug;
 
 fn grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {

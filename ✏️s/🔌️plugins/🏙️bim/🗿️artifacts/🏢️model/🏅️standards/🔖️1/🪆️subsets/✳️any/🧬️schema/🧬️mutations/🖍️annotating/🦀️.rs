@@ -1,7 +1,7 @@
 //! 🖍️ The rules every annotation leaf shares: what makes a dimension, a tag, a text note, a leader and an annotation style valid in a base. Pure; a leaf prefixes the field of the
 //! [`Fault`] with the record name on create (`["dimension", "anchors"]`) and uses it as is on set (`["anchors"]`).
 
-use crate::{AnnotationAnchor, AnnotationStyle, Dimension, Leader, ModelSnapshot, Point2, Tag, TextNote};
+use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, AnnotationStyle, Dimension, Leader, ModelSnapshot, Point2, Tag, TextNote};
 use protocol::OutcomeCode;
 
 /// 🚫️ A rule broken: the outcome code, the message and the field of the record that breaks it.

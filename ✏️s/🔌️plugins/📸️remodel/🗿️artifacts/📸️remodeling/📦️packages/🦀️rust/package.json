@@ -4,9 +4,6 @@
   "type": "module",
   "private": true,
   "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-remodel-window-ownership": "bun repo run @semio-tech/remodel-remodeling-rs:verify-remodel-window-ownership"
   },

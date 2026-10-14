@@ -1,0 +1,21 @@
+{"order": ["root","schema","snapshot","diff","mutroot","mutkinds","inferences","io-root","io-bridge","io-text","io-binary","io-sqlite","fieldmeta","editor","viewer","examples"],
+ "allow": {},
+ "rules": [
+  ["^🦀️\\.rs$", "root"],
+  ["🧬️schema/🦀️\\.rs$", "schema"],
+  ["🧬️schema/📸️snapshot/", "snapshot"],
+  ["🧬️schema/🔺️diff/", "diff"],
+  ["🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules)", "mutroot"],
+  ["🧬️schema/🧬️mutations/", "mutkinds"],
+  ["🧬️schema/💡️inferences/", "inferences"],
+  ["🚪️io/🌉️", "io-bridge"],
+  ["🚪️io/📝️text/", "io-text"],
+  ["🚪️io/💾️binary/", "io-binary"],
+  ["🚪️io/🪶️sqlite/", "io-sqlite"],
+  ["🚪️io/", "io-root"],
+  ["✏️editor/🏷️field-meta/", "fieldmeta"],
+  ["🏷️field-meta/", "fieldmeta"],
+  ["✏️editor/", "editor"],
+  ["👁️viewer/", "viewer"],
+  ["📚️examples/", "examples"]
+ ]}

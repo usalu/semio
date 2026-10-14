@@ -1,0 +1,3 @@
+{"artifact": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d", "mutations": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+ "union": "Process3dMutation", "snapshot": "Process3dSnapshot", "diff": "crate::standards::v1::subsets::any::schema::diff::Process3dDiff",
+ "union_module": "crate::standards::v1::subsets::any::schema::mutations"}

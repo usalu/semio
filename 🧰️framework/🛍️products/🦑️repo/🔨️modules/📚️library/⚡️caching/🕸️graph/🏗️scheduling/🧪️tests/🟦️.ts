@@ -20,6 +20,9 @@ import schema from "../🧬️schema/🔣️.json";
 import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from "node:fs";
 import {join,dirname} from "node:path";
 import {createHash} from "node:crypto";
+import {createScriptProcessEnvelope,withScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {captureOwnedCommandV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 
 test("original SDK full roster supplies complete immutable metadata through full and incremental scheduling",async()=>{
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
@@ -31,13 +34,13 @@ test("original SDK full roster supplies complete immutable metadata through full
   const files=Object.fromEntries(Object.keys(projects).map(name=>[name,fixture.cases.filter(row=>row.file.startsWith(name+"/")).map(row=>({file:row.file,hash:createHash("sha256").update(row.source).digest("hex")}))]));
   writeFileSync(join(root,"📜️script.ts"),"import './process/core.ts';");
   projects.workspace={root:".",targets:{build:{}}};files.workspace=[{file:"📜️script.ts",hash:"original-sdk-root-hash"}];
-  const {cacheInternals}=await import("../../../../🟨️.mjs");
+  const {cacheInternals}=await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const context={workspaceRoot:root,projects,fileMap:{projectFileMap:files},filesToProcess:{projectFileMap:files}};
   const edges=await cacheInternals.createDependenciesImplementation({},context);
   expect(edges.map(edge=>[edge.source,edge.target,edge.sourceFile]).sort()).toEqual([["app","process","app/core.ts"],["app","process","app/types.d.ts"],["app","validator","app/core.ts"]].sort());
   const graph={nodes:Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{type:"lib",data:{...data,metadata:{semio:{authored:true}}}}]))};
   const metadata=cacheInternals.createMetadataImplementation(graph,{},context),validate=new Ajv().compile(schema);
-  for(const [name,entry]of Object.entries(metadata)){expect(validate(entry.metadata.semio.moduleGraph)).toBe(true);expect(entry.metadata.semio.authored).toBe(true);expect(entry.metadata.semio.moduleGraph.files.length).toBe(files[name].length);for(const row of entry.metadata.semio.moduleGraph.files)expect(row.trackedHash).toBe(files[name].find(file=>file.file===row.file).hash);}
+  for(const [name,entry]of Object.entries(metadata)){expect(validate(entry.metadata.semio.moduleGraph)).toBe(true);expect(entry.metadata.semio.authored).toBe(true);expect(entry.metadata.semio.moduleGraph.files.length).toBe(files[name].length);for(const row of entry.metadata.semio.moduleGraph.files)expect(Object.keys(row).sort()).toEqual(["file","imports","productionImports"]);}
   expect(metadata.workspace.metadata.semio.moduleGraph.files[0].imports).toEqual(["./process/core.ts"]);
   expect(metadata.workspace.metadata.semio.moduleGraph.files[0].productionImports).toEqual([]);
   expect(metadata.validator.metadata.semio.moduleGraph.files[0].imports).toEqual(["../process/core.ts"]);
@@ -51,7 +54,33 @@ test("original SDK full roster supplies complete immutable metadata through full
   const snapshot=full.app.metadata.semio.moduleGraph.files.find(row=>row.file==="app/core.ts");
   writeFileSync(join(root,"app/core.ts"),"export const changed=1;");
   expect(cacheInternals.createMetadataImplementation(graph,{},context).app.metadata.semio.moduleGraph.files.find(row=>row.file==="app/core.ts")).toEqual(snapshot);
-  expect(snapshot.hash).not.toBe(createHash("sha256").update(readFileSync(join(root,"app/core.ts"))).digest("hex"));
-  console.log("[DEBUG] Original full/incremental SDK facts preserve command/test metadata and captured byte identities; production DAG has no command cycles");
+  expect(snapshot.imports).toEqual(fixture.cases.find(row=>row.file==="app/core.ts").all);
+  console.log("[DEBUG] Original full/incremental SDK facts preserve command/test metadata and captured structural imports; production DAG has no command cycles");
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+
+test("structural source analyses preserve body edits and invalidate dependency edits",async()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Original ticket artifact directory required");
+ const root=mkdtempSync(join(output,"sem-"));
+ try{
+  const {cacheInternals,libraryBootstrap}=await import("../../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");await libraryBootstrap;
+  const {captureObservedSourceInputsV1,observationsHold,observedFs,observeInference}=await import("../../../../🏗️build/👁️observation/🟨️.mjs");
+  await observeInference({cachePath:join(root,"sealed.json"),key:"structural-analysis"},()=>null);
+  const module=fixture.analysis.module,file=join(root,module.file);mkdirSync(dirname(file),{recursive:true});writeFileSync(file,module.initial);
+  const projects={app:{root:"app"},leaf:{root:"leaf"},other:{root:"other"}},context={workspaceRoot:root,projects,fileMap:{projectFileMap:{app:[{file:module.file}]}}};
+  const captured=await captureObservedSourceInputsV1(()=>cacheInternals.createDependenciesImplementation({},context));
+  expect(captured.observations.some(row=>row.kind==="analysis"&&row.path===file)).toBe(true);
+  writeFileSync(file,module.body);expect(await observationsHold(captured.observations.filter(row=>row.path.startsWith(root)))).toBe(true);
+  const imports=new Set<string>();await build({stdin:{contents:module.body,sourcefile:module.file,loader:"ts"},write:false,bundle:true,format:"esm",logLevel:"silent",plugins:[{name:"semantic-module-oracle",setup(builder){builder.onResolve({filter:/^\./},args=>{imports.add(args.path);return{path:args.path,external:true};});}}]});
+  expect([...imports]).toEqual(module.imports);
+  writeFileSync(file,module.changed);expect(await observationsHold(captured.observations.filter(row=>row.path.startsWith(root)))).toBe(false);
+  writeFileSync(file,module.initial);const raw=await captureObservedSourceInputsV1(()=>{observedFs.readFileSync(file);return cacheInternals.createDependenciesImplementation({},context);});writeFileSync(file,module.body);expect(await observationsHold(raw.observations.filter(row=>row.path.startsWith(root)))).toBe(false);
+  const rust=fixture.analysis.rust,entry=join(root,rust.entry);mkdirSync(dirname(entry),{recursive:true});for(const[path,content]of Object.entries(rust.files))writeFileSync(join(root,path),content);writeFileSync(entry,rust.initial);
+  const references=await captureObservedSourceInputsV1(()=>cacheInternals.rustSourceFiles([entry],root));expect(references.value.map(path=>path.slice(root.length+1)).sort()).toEqual(rust.inputs);
+  writeFileSync(entry,rust.body);expect(await observationsHold(references.observations.filter(row=>row.path.startsWith(root)))).toBe(true);
+  await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"build:structural-analysis-oracle",maximumElapsedMilliseconds:30000},{},Date.now()),invocation=>captureOwnedCommandV1("rustc",["--crate-type=lib","--emit=dep-info","-o","oracle.d",rust.entry],root,{control:scriptCompilerAdmissionControlV1(invocation,"rustc:structural-analysis",30000)}));
+  expect(readFileSync(join(root,"oracle.d"),"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).sort()).toEqual(rust.inputs);
+  writeFileSync(entry,rust.changed);expect(await observationsHold(references.observations.filter(row=>row.path.startsWith(root)))).toBe(false);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

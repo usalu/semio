@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetSpace`: an absolute `SetSpace` restoring the base value of exactly the fields the forward really changes, none when the space is absent or nothing changes.
 
 use super::SetSpace;
-use crate::{ModelMutation, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
 
 pub fn inverse(payload: &SetSpace, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(record) = base.spaces.get(&payload.id) else {

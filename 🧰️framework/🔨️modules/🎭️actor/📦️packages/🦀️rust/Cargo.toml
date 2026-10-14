@@ -20,10 +20,6 @@ path = "🦀️.rs"
 name = "original-retained-receiving"
 path = "../../🎟️retained-turn/🫴️receiving/🧪️tests/📬️public/🦀️.rs"
 
-[features]
-# 🧬️ Generates the TypeScript mirror from the crate-owned versioned schema metadata.
-typegen = []
-
 [dependencies]
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.228", features = ["derive"] }

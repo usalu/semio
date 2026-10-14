@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
-use crate::{Assigned, AreaSchemePatch, Entry, ModelDiff, SpacePatch, ZonePatch};
+use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{AreaSchemePatch, SpacePatch, ZonePatch}, Entry, ModelDiff};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

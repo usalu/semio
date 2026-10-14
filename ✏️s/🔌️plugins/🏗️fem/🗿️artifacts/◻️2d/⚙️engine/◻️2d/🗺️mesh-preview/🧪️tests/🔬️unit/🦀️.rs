@@ -1,5 +1,12 @@
 use super::*;
-use crate::{FemAnalysisSettings, FemDof, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSupport};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
 /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
 /// document nodes.
@@ -36,7 +43,7 @@ fn fem2d_mesh_preview_returns_region_triangles() {
 /// 🎨️ `fem2d_nodal_von_mises` returns one value per mesh node, and a uniform area-pressure load
 /// (biaxial-ish but still smoothly varying membrane stress) produces FINITE values at every node —
 /// not a tight numeric benchmark (the region isn't a pure patch-test field), just a wiring check that
-/// the document-bridge correctly plumbs `crate::analyses::nodal_averaged_scalar`.
+/// the document-bridge correctly plumbs `semio_s_fem_analyses::nodal_averaged_scalar`.
 #[test]
 fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
     let mut doc = rectangle_region_doc();

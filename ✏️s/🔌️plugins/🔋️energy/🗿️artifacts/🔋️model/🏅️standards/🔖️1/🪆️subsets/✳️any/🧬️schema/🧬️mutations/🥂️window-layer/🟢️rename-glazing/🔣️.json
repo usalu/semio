@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥂️window-layer/🟢️rename-glazing",
+  "semanticKind": "rename-glazing-material",
+  "displayName": "Rename Glazing Material",
+  "emoji": "🟢️",
+  "aggregateVariant": "RenameGlazingMaterial",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "rename-glazing-material",
+  "binaryTag": 282,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

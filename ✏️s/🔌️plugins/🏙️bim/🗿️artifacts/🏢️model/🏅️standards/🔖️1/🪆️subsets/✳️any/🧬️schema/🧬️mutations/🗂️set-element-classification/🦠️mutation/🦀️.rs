@@ -1,6 +1,6 @@
 //! 🗂️ `set-element-classification` payload. Sets the code of an element or type in one classification system; an element without classifications gets its first, another system adds a classification and the same system replaces the code. The code need not be an entry of the system (a diagnostic reports it).
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

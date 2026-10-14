@@ -5,7 +5,8 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation, ViewModel};
-pub use semio_s_artifact_fem_2d::editor::fem2d::commands::result_animation_tick::{result_animation_tick_step, ResultAnimationTick};
+pub use semio_s_artifact_fem_2d::editor::fem2d::commands::result_animation_tick::result_animation_tick_step;
+pub use semio_s_artifact_fem_2d::editor::fem2d::commands::result_animation_tick::ResultAnimationTick;
 
 type Fem3dSnapshot = crate::Fem3dSnapshot;
 

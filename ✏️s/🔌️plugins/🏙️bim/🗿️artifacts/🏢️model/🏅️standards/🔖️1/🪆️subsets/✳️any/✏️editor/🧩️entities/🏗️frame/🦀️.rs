@@ -6,7 +6,7 @@
 use super::ceilings::parse_slope;
 use super::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{Assigned, CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWallType, ModelMutation, ModelSnapshot, Profile};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWallType, ModelSnapshot, Profile}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 //#region 🔖️Text
@@ -84,36 +84,36 @@ pub fn material_choices(snapshot: &ModelSnapshot, _: &BimLabels) -> Vec<(String,
 //#region 🔖️Writes
 /// 📐️ Sets the tilt of a column: `direction, angle` in radians, empty for a plumb column.
 pub fn write_tilt(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetColumnTilt(crate::mutations::set_column_tilt::SetColumnTilt { id: id.into(), tilt: parse_slope(value)? }))
+    Some(ModelMutation::SetColumnTilt(crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt { id: id.into(), tilt: parse_slope(value)? }))
 }
 
 /// 📐️ Sets the axis of a beam: `x, y → x, y` for a line, `x, y → x, y ⌒ bulge` for an arc.
 pub fn write_beam_axis(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetBeamAxis(crate::mutations::set_beam_axis::SetBeamAxis { id: id.into(), axis: super::parse_axis(value)? }))
+    Some(ModelMutation::SetBeamAxis(crate::standards::v1::subsets::any::schema::mutations::set_beam_axis::SetBeamAxis { id: id.into(), axis: super::parse_axis(value)? }))
 }
 
 /// 📐️ Sets the top offset of the end of a beam: empty makes the beam level again.
 pub fn write_end_offset(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::mutations::set_beam::SetBeam, _>(id, "end_top_offset", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetBeam)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam, _>(id, "end_top_offset", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetBeam)
 }
 
 /// 🏬️ Builds a curtain wall as another curtain wall type.
 pub fn write_curtain_wall_type(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetCurtainWallTypeOf(crate::mutations::set_curtain_wall_type_of::SetCurtainWallTypeOf { id: id.into(), curtain_wall_type: value.trim().to_string() }))
+    Some(ModelMutation::SetCurtainWallTypeOf(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type_of::SetCurtainWallTypeOf { id: id.into(), curtain_wall_type: value.trim().to_string() }))
 }
 
 /// 🕸️ Sets the grid override along the wall; `type` or nothing follows the type again.
 pub fn write_u_grid(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::mutations::set_curtain_wall_grid::SetCurtainWallGrid, _>(id, "u_grid", &Assigned::new(parse_override(value)?)).map(ModelMutation::SetCurtainWallGrid)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid, _>(id, "u_grid", &Assigned::new(parse_override(value)?)).map(ModelMutation::SetCurtainWallGrid)
 }
 
 /// 🕸️ Sets the grid override up the wall; `type` or nothing follows the type again.
 pub fn write_v_grid(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::mutations::set_curtain_wall_grid::SetCurtainWallGrid, _>(id, "v_grid", &Assigned::new(parse_override(value)?)).map(ModelMutation::SetCurtainWallGrid)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid, _>(id, "v_grid", &Assigned::new(parse_override(value)?)).map(ModelMutation::SetCurtainWallGrid)
 }
 
 fn type_field<T: semio_framework_value::ToValue + ?Sized>(id: &str, field: &str, value: &T) -> Option<ModelMutation> {
-    partial::<crate::mutations::set_curtain_wall_type::SetCurtainWallType, _>(id, field, value).map(ModelMutation::SetCurtainWallType)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType, _>(id, field, value).map(ModelMutation::SetCurtainWallType)
 }
 
 fn write_type_name(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
@@ -149,7 +149,7 @@ fn write_type_mullion_material(_: &ModelSnapshot, id: &str, value: &str) -> Opti
 }
 
 fn write_override_panel(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetCurtainPanelOverride(crate::mutations::set_curtain_panel_override::SetCurtainPanelOverride { id: id.into(), panel: parse_panel(value)? }))
+    Some(ModelMutation::SetCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::SetCurtainPanelOverride { id: id.into(), panel: parse_panel(value)? }))
 }
 //#endregion 🔖️Writes
 
@@ -164,9 +164,9 @@ pub static CURTAIN_WALL_TYPE_FIELDS: &[FieldRow] = &[
     FieldRow { key: "panel", label: |labels| labels.field_panel, input: InputKind::Text, read: |s, id| s.curtain_wall_types.get(id).map(|row| panel_text(&row.panel)), write: Some(write_type_panel), choices: None },
     FieldRow { key: "panel_material", label: |labels| labels.field_panel_material, input: InputKind::Text, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.panel_material.clone()), write: Some(write_type_glass), choices: Some(material_choices) },
     FieldRow { key: "mullion_material", label: |labels| labels.field_mullion_material, input: InputKind::Text, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.mullion_material.clone()), write: Some(write_type_mullion_material), choices: Some(material_choices) },
-    FieldRow { key: "u_value", label: |labels| labels.field_u_value, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.u_value.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "u_value", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
-    FieldRow { key: "g_value", label: |labels| labels.field_g_value, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.g_value.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "g_value", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
-    FieldRow { key: "frame_fraction", label: |labels| labels.field_frame_fraction, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.frame_fraction.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "frame_fraction", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
+    FieldRow { key: "u_value", label: |labels| labels.field_u_value, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.u_value.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "u_value", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
+    FieldRow { key: "g_value", label: |labels| labels.field_g_value, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.g_value.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "g_value", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
+    FieldRow { key: "frame_fraction", label: |labels| labels.field_frame_fraction, input: InputKind::Number, read: |s, id| s.curtain_wall_types.get(id).map(|row| row.frame_fraction.map_or_else(String::new, number)), write: Some(|_, id, value| partial::<crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData, _>(id, "frame_fraction", &Assigned::new(parse_optional_number(value)?)).map(ModelMutation::SetTypeThermalData)), choices: None },
 ];
 
 /// 🧾️ The authored parameters of a curtain panel override: the cell it addresses is fixed, the panel is not.
@@ -185,7 +185,7 @@ pub static CURTAIN_WALL_TYPE_INFERRED: &[InferredRow] = &[InferredRow { key: "us
 /// 🏬️ A new curtain wall type: equal cells of 1.5 m, 5 cm by 10 cm interior and 8 cm by 10 cm border mullions, glass in every cell, in the first material of the model.
 pub fn create_curtain_wall_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
-    Ok(ModelMutation::CreateCurtainWallType(crate::mutations::create_curtain_wall_type::CreateCurtainWallType {
+    Ok(ModelMutation::CreateCurtainWallType(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall_type::CreateCurtainWallType {
         id: id.into(),
         curtain_wall_type: CurtainWallType {
             name: name.into(),
@@ -208,7 +208,7 @@ pub fn create_curtain_panel_override(snapshot: &ModelSnapshot, id: &str, parent:
     let curtain = snapshot.curtain_walls.contains_key(parent).then(|| parent.to_string()).ok_or("bim.create.curtain-wall-missing")?;
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     let u = (0..).find(|u| !snapshot.curtain_panel_overrides.values().any(|row| row.curtain == curtain && row.u == *u && row.v == 0)).unwrap_or(0);
-    Ok(ModelMutation::CreateCurtainPanelOverride(crate::mutations::create_curtain_panel_override::CreateCurtainPanelOverride {
+    Ok(ModelMutation::CreateCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override::CreateCurtainPanelOverride {
         id: id.into(),
         curtain_panel_override: CurtainPanelOverride { curtain, u, v: 0, panel: CurtainPanel::Solid { material } },
     }))
@@ -232,7 +232,7 @@ pub const CURTAIN_WALL_TYPE: EntityKind = EntityKind {
     ids: |snapshot| snapshot.curtain_wall_types.keys().cloned().collect(),
     name: |snapshot, id| snapshot.curtain_wall_types.get(id).map(|row| row.name.clone()),
     parent: |_, _| None,
-    delete: Some(|id| ModelMutation::DeleteCurtainWallType(crate::mutations::delete_curtain_wall_type::DeleteCurtainWallType { id: id.into() })),
+    delete: Some(|id| ModelMutation::DeleteCurtainWallType(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall_type::DeleteCurtainWallType { id: id.into() })),
     rename: Some(|_, id, name| type_field(id, "name", &name.to_string())),
     create: Some(create_curtain_wall_type),
     fields: CURTAIN_WALL_TYPE_FIELDS,
@@ -249,7 +249,7 @@ pub const CURTAIN_PANEL_OVERRIDE: EntityKind = EntityKind {
     ids: |snapshot| snapshot.curtain_panel_overrides.keys().cloned().collect(),
     name: |snapshot, id| snapshot.curtain_panel_overrides.get(id).map(override_name),
     parent: |snapshot, id| snapshot.curtain_panel_overrides.get(id).map(|row| row.curtain.clone()),
-    delete: Some(|id| ModelMutation::DeleteCurtainPanelOverride(crate::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id: id.into() })),
+    delete: Some(|id| ModelMutation::DeleteCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride { id: id.into() })),
     rename: None,
     create: Some(create_curtain_panel_override),
     fields: CURTAIN_PANEL_OVERRIDE_FIELDS,

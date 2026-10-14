@@ -445,14 +445,22 @@ export type InferenceRetainedAuthority = {
   readonly "maximumDepth": number;
 };
 
+export type InferenceOriginalWork = {
+  readonly "clockBinding": number;
+  readonly "absoluteDeadlineUs": number;
+  readonly "fuel": number;
+};
+
 export type InferenceRetainedTurnInput = {
   readonly "operation": number;
   readonly "generation": number;
   readonly "epoch": number;
   readonly "grant": InferenceRetainedAuthority;
+  readonly "work": InferenceOriginalWork;
 };
 
 export type InferenceRunInput = {
+  readonly "retainedPolicy": InferenceRetainedAuthority;
   readonly "artifactId"?: string;
   readonly "artifactKind": string;
   readonly "cancellationId": string;
@@ -478,6 +486,7 @@ export type InferenceRunOutput = {
 };
 
 export type InferenceSubmitInput = {
+  readonly "retainedPolicy": InferenceRetainedAuthority;
   readonly "documentId": string;
   readonly "lifetimeMs"?: number;
   readonly "requestId"?: string;

@@ -27,10 +27,13 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_ifc::part21::{parse_part21, write_part21};
-    use semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::mutations::IfcMutation;
-    use semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::snapshot::{from_part21_document, to_part21_document, IfcSnapshot};
-    use semio_s_artifact_stdio_ifc::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, STDIO_IFC_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
+    use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::from_part21_document;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::to_part21_document;
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+    use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json};
+    use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_ifc_test_oracle::standards::v4::subsets::any::project_ifc_4_any;
 

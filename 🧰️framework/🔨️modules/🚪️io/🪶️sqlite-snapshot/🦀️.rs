@@ -8,6 +8,9 @@ pub mod artifact;
 
 #[path = "🔁️transfer/🦀️.rs"]
 pub mod transfer;
+
+#[path = "🧵️composition/🦀️.rs"]
+pub mod composition;
 pub use transfer::{export_controlled as export_sqlite_database_controlled,import_controlled as import_sqlite_database_controlled,validate_database_controlled as validate_sqlite_database_schema_controlled,validate_table_controlled as validate_sqlite_table_schema_controlled};
 
 pub const SQLITE_SNAPSHOT_APPLICATION_ID: u32 = 0x534d534e;

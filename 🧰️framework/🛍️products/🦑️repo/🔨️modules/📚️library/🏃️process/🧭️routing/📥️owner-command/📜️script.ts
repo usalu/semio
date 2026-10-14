@@ -3,7 +3,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, scriptInvocationBudget, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-import { consumeOwnerArgumentsV1 } from "../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
+import { consumeOwnerArgumentsV1 } from "../../../🏗️build/📤️arguments/🟨️.mjs";
 import { devToolingEnv } from "../../🌿️environment/🟦️.ts";
 import { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1 } from "../../📋️context/🔣️policy/🟦️.ts";
 

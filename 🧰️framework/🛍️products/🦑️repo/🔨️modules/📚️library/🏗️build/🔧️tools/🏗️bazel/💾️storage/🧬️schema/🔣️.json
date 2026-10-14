@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "executable", "install", "modules", "workspace", "outputs", "actions", "temporary"],
+  "properties": {
+    "version": {"const": 1},
+    "executable": {"type": "string", "minLength": 1, "maxLength": 256},
+    "install": {"type": "string", "minLength": 1, "maxLength": 256},
+    "modules": {"type": "string", "minLength": 1, "maxLength": 256},
+    "workspace": {"type": "string", "minLength": 1, "maxLength": 256},
+    "outputs": {"type": "string", "minLength": 1, "maxLength": 256},
+    "actions": {"type": "string", "minLength": 1, "maxLength": 256},
+    "temporary": {"type": "string", "minLength": 1, "maxLength": 256}
+  }
+}

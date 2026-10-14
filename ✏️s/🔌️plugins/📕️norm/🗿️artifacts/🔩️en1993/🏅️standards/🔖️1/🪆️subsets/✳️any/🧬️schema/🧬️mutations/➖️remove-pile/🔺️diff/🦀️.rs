@@ -1,8 +1,8 @@
 //! ➖️ `remove-pile` diff — removes the row at the index.
 
-use super::RemovePile;
-use crate::diff::{En1993Diff, En1993PileDelta};
-use crate::En1993Snapshot;
+use crate::remove_pile::RemovePile;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993PileDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemovePile, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.piles.len() {

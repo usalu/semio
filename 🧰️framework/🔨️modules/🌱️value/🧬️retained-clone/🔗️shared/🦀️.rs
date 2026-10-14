@@ -8,6 +8,7 @@ pub struct SharedCloneCursor<T:Send+Sync+'static>{state:ManuallyDrop<State<T>>}
 impl<T:Send+Sync+'static> Default for SharedCloneCursor<T>{fn default()->Self{Self{state:ManuallyDrop::new(State{output:None,source:None,close:Default::default(),closing:false,spent:false})}}}
 impl<T:Send+Sync+'static> RetainedClone for SealedShared<T>{type Cursor=SharedCloneCursor<T>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 impl<T:Send+Sync+'static> RetainedCloneCursor<SealedShared<T>> for SharedCloneCursor<T>{
+    fn output_ready(&self)->bool{self.state.output.is_some()}
  fn advance_demands(&self,source:RetainedCloneRef<'_,SealedShared<T>>,_body:usize)->Result<RetirementDemand,ValueError>{if self.state.closing||self.state.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}Ok(RetirementDemand{copy_bytes:if self.state.source.is_none(){source.binding_copy_bytes()}else if self.state.output.is_none(){0}else{0},depth:1,..Default::default()})}
  fn advance(&mut self,source:RetainedCloneRef<'_,SealedShared<T>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let state=&mut *self.state;if state.closing||state.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}

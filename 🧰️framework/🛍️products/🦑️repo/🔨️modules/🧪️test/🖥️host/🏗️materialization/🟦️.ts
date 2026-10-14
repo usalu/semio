@@ -1,7 +1,7 @@
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectFeaturesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { repoToolCacheEnv, runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
@@ -75,21 +75,19 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
   const dir = hostDirFor(repoRoot, discovered, role, "rust");
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
   const sut = rustSubjectPackage(repoRoot, discovered.owner);
-  const subjectFeatures = subjectFeaturesFor(loadOracleRegistry(repoRoot), discovered.owner, "rust");
   const subjectPackages = sut === null ? [] : subjectHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, "rust").filter((entry) => entry.package !== sut.name);
   const declared = contributedOraclePackages(repoRoot, discovered, "rust");
   // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
   // be an unreviewed third-party dependency of the generated host, which is what the local-crate
   // rule exists to prevent.
   // 🧩️Two ancestors may contribute the same crate (a plugin root and one of its subsets); Cargo accepts
-  // one key per package, so identical contributions merge their features and a divergent path is a problem.
+  // one key per package, so identical contributions merge and a divergent path is a problem.
   const merged = new Map<string, OracleHostPackage>();
   const problems = declared.filter((entry) => entry.path === undefined).map((entry) => `${discovered.caseDir}: rust oracle host package ${entry.package} declares no path — a Rust host links contributed crates by path`);
   for (const entry of declared.filter((candidate) => candidate.path !== undefined)) {
     const previous = merged.get(entry.package);
     if (previous === undefined) merged.set(entry.package, entry);
     else if (previous.path !== entry.path) problems.push(`${discovered.caseDir}: rust oracle host package ${entry.package} is contributed from two paths (${previous.path} and ${entry.path})`);
-    else merged.set(entry.package, { ...previous, features: [...new Set([...(previous.features ?? []), ...(entry.features ?? [])])] });
   }
   const oraclePackages = [...merged.values()];
   for (const entry of subjectPackages) if (merged.has(entry.package)) problems.push(`${discovered.caseDir}: rust subject host package ${entry.package} is also contributed as an oracle package`);
@@ -119,10 +117,10 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, REPO_TEST_RUST_PACKAGE_REL))} }`,
       // 🧩️Whatever the owner contributed, exactly as the owner declared it.
       ...oraclePackages.map(
-        (entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`,
+        (entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))} }`,
       ),
-      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(join(repoRoot, sut.path))}, default-features = false${subjectFeatures.length > 0 ? `, features = [${subjectFeatures.map((feature) => JSON.stringify(feature)).join(", ")}]` : ""}, optional = true }`]),
-      ...subjectPackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""}, optional = true }`),
+      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(join(repoRoot, sut.path))}, optional = true }`]),
+      ...subjectPackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path))}, optional = true }`),
       "",
     ].join("\n"),
   );

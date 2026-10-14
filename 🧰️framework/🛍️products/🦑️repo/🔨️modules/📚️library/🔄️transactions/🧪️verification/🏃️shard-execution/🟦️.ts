@@ -96,7 +96,6 @@ export async function runTransactionV2Shards(options: TransactionV2ShardOptions)
       detached: process.platform !== "win32",
       env: {
         ...process.env,
-        NX_DAEMON: "false",
         SEMIO_TRANSACTION_V2_BOUNDARY_REGISTRY: boundaryRegistry,
         SEMIO_TRANSACTION_V2_MODULE: options.normalizationBundle,
         SEMIO_TRANSACTION_V2_SCHEMA: options.schemaSnapshot,

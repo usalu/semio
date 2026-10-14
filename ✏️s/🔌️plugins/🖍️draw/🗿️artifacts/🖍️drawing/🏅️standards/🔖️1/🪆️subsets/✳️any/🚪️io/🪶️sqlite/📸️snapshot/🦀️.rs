@@ -1,9 +1,11 @@
 //! 🖍️ Authored Draw forest entities, paint relationships and exact scalar words.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::*;
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, DrawingAttributes, DrawingBooleanBody, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingImageBody, DrawingLayerBase, DrawingLayerNode, DrawingLine, DrawingPathBody, DrawingPolygon, DrawingRect, DrawingShapeBody, DrawingTextBody, DrawingTraceBody, FillStyle, GradientStop, PathSegment, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
-use crate::standards::v1::subsets::any::schema::snapshot::{DrawingSnapshot, retire_decoded_drawing_snapshot};
+use semio_s_artifact_draw_drawing_model::snapshot::{DrawingSnapshot, retire_decoded_drawing_snapshot};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,Projection,Reconstruction,FloatColumn,FloatRow,insert_ieee754}};
 use std::collections::BTreeMap;
 const SCHEMA:&str=include_str!("🗄️.sql");

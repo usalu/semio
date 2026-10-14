@@ -1,10 +1,10 @@
-use super::RemoveSiloShell;
-use crate::mutations::{insert_silo_shell, En1993Mutation};
-use crate::En1993Snapshot;
-pub fn inverse(payload: &RemoveSiloShell, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+use crate::remove_silo_shell::RemoveSiloShell;
+use crate::insert_silo_shell;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+pub fn inverse<Op>(payload: &RemoveSiloShell, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_silo_shell::InsertSiloShell> {
     Ok((|| {
     if payload.index >= base.silo_shells.len() { return Vec::new(); }
-    vec![En1993Mutation::InsertSiloShell(insert_silo_shell::InsertSiloShell { index: Some(payload.index), silo_shell: base.silo_shells[payload.index].clone() })]
+    vec![Op::from(insert_silo_shell::InsertSiloShell { index: Some(payload.index), silo_shell: base.silo_shells[payload.index].clone() })]
 
     })())
 }

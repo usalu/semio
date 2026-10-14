@@ -30,7 +30,6 @@ use semio_repo_test_host::Json;
 /// `Data::Int`/`Data::Float` split `calamine` draws collapses to one numeric case here since XLSX
 /// itself stores every number as an IEEE-754 double (ECMA-376 §18.17.2, ST_Xstring numeric literal),
 /// never a real reader/writer distinction.
-#[cfg(feature = "oracles")]
 #[derive(Clone, Debug, PartialEq)]
 enum GridValue {
     Number(f64),
@@ -42,13 +41,11 @@ enum GridValue {
 /// `rust_xlsxwriter`'s own native convention (the subset's OWN `XlsxCell::row` is 1-based; the JSON
 /// spec this module reads carries the subset's 1-based convention, converted at the boundary below,
 /// so one wire contract serves both this module and the subject's own mutation code).
-#[cfg(feature = "oracles")]
 type GridSheet = (String, Vec<(u32, u32, GridValue)>);
 
 /// 📥️ Independent read: every sheet, every non-empty cell, through `calamine`'s resolved
 /// `Data` — this IS the reader's own semantic view; it cannot and does not distinguish a
 /// shared-string reference from an inline string (see module doc comment).
-#[cfg(feature = "oracles")]
 fn read_workbook_grid(input: &[u8]) -> Result<Vec<GridSheet>, String> {
     use calamine::{Data, Reader, Xlsx};
     let mut workbook: Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(input)).map_err(|error| format!("independent reader could not open the workbook: {error}"))?;
@@ -78,7 +75,6 @@ fn read_workbook_grid(input: &[u8]) -> Result<Vec<GridSheet>, String> {
 /// 📤️ Independent write: assembles a BRAND-NEW package from `sheets` — `rust_xlsxwriter` has no
 /// "open and patch" path (see module doc comment), so every oracle mutation below rebuilds the
 /// entire workbook from its post-mutation grid rather than editing the original bytes.
-#[cfg(feature = "oracles")]
 fn write_workbook_grid(sheets: &[GridSheet]) -> Result<Vec<u8>, String> {
     use rust_xlsxwriter::Workbook;
     let mut workbook = Workbook::new();
@@ -103,18 +99,15 @@ fn write_workbook_grid(sheets: &[GridSheet]) -> Result<Vec<u8>, String> {
 /// 🔀️ Every spec's `params` is the leaf's own wire payload (`XlsxMutation::payload_value()`). A cell's `row` is 1-based
 /// (the subset's `XlsxCell::row`, ECMA-376's own `<row r="N">` index) and its `col` 0-based, converted to this module's
 /// 0-based grid at the boundary below.
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn string(value: &Json, key: &str) -> String {
     match value.get(key) {
         Some(Json::String(text)) => text.clone(),
@@ -124,7 +117,6 @@ fn string(value: &Json, key: &str) -> String {
 /// 🔢️ A wire `XlsxCellValue` (`{kind, value}`) as a grid value — the three kinds a `calamine` read and a `rust_xlsxwriter`
 /// write both reproduce. A pool reference, an error or a formula is outside what this pairing can write back, and is
 /// refused rather than approximated.
-#[cfg(feature = "oracles")]
 fn cell_value(value: &Json) -> Result<GridValue, String> {
     match (value.str("kind").as_str(), value.get("value")) {
         ("number", Some(Json::Number(n))) => Ok(GridValue::Number(*n)),
@@ -134,7 +126,6 @@ fn cell_value(value: &Json) -> Result<GridValue, String> {
     }
 }
 /// 🔁️ One-based (`XlsxCell::row` convention) -> zero-based (this module's/`calamine`'s convention).
-#[cfg(feature = "oracles")]
 fn row0(one_based_row: f64) -> Result<u32, String> {
     let row = one_based_row as i64;
     if row < 1 {
@@ -143,7 +134,6 @@ fn row0(one_based_row: f64) -> Result<u32, String> {
     Ok((row - 1) as u32)
 }
 /// 📄️ One wire `XlsxSheet` (`{name, cells: [{row, col, value}]}`) as a grid sheet.
-#[cfg(feature = "oracles")]
 fn sheet_of(sheet: &Json) -> Result<GridSheet, String> {
     let cells = sheet
         .array("cells")
@@ -164,7 +154,6 @@ fn sheet_of(sheet: &Json) -> Result<GridSheet, String> {
 /// the addressed `c` element (every element, text run, CDATA section, comment and processing instruction is one child),
 /// and that element's own `r` reference names the cell; the part's sheet name is read out of the main part and its
 /// relationships. The lineage `revision` is the subject's own staleness guard and plays no part in a reference edit.
-#[cfg(feature = "oracles")]
 mod cell_address {
     use semio_s_plugin_stdio_document_test_oracle::ooxml::{main_part, part_bytes, read_parts, relationships_part_path};
     use quick_xml::events::{BytesStart, Event};
@@ -328,7 +317,6 @@ mod cell_address {
 /// model and unreachable by index through the second's write API. They go through the `zip` +
 /// `quick-xml` pairing instead (see the [`shared_strings`] module), which reads and rewrites
 /// `xl/sharedStrings.xml` as the OPC PART it is.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -405,7 +393,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// the real workbook's pool is referenced, so for that kind this is the real package after the reference has appended one
 /// unreferenced entry — the removal under test is still the reference's own, on genuine OPC. Every other kind reads the
 /// committed bytes untouched.
-#[cfg(feature = "oracles")]
 pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
     match forward.str("kind").as_str() {
         "remove-shared-string" => {
@@ -418,16 +405,10 @@ pub fn oracle_arrange(input: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
 }
 
 /// 🧾️ The pool entry [`oracle_arrange`] appends: text no cell of the real workbook carries.
-#[cfg(feature = "oracles")]
 const UNREFERENCED_ENTRY: &str = "Nicht referenzierter Eintrag";
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_arrange(_input: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ✍️ Writes (`Some`) or clears (`None`) one grid cell of the named sheet.
-#[cfg(feature = "oracles")]
 fn put_cell(sheets: &mut [GridSheet], sheet_name: &str, row: u32, col: u32, value: Option<GridValue>) -> Result<(), String> {
     let (_, cells) = sheets.iter_mut().find(|(name, _)| name == sheet_name).ok_or_else(|| format!("no sheet named {sheet_name:?}"))?;
     cells.retain(|(r, c, _)| !(*r == row && *c == col));
@@ -437,7 +418,6 @@ fn put_cell(sheets: &mut [GridSheet], sheet_name: &str, row: u32, col: u32, valu
     Ok(())
 }
 
-#[cfg(feature = "oracles")]
 fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> Result<T, String> {
     step(&mut value)?;
     Ok(value)
@@ -447,7 +427,6 @@ fn applied<T>(mut value: T, step: impl FnOnce(&mut T) -> Result<(), String>) -> 
 /// the algebra `XlsxMutation::inverse` defines, computed independently by the reference pairing. A cell address is
 /// lineage-bound to `original`, so it is resolved there and the undo applied to the rebuilt grid by coordinate; the three pool kinds go through
 /// [`shared_string_inverse_spec`].
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(forward);
     let kind = forward.str("kind");
@@ -486,30 +465,16 @@ pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> 
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_inverse(_original: &[u8], _mutated: &[u8], _forward: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🔁️ The oracle's own decode/re-encode, through the SAME independent `calamine` + `rust_xlsxwriter`
 /// pairing every grid mutation above uses — proves the reference pairing itself is stable on the real
 /// fixture before the subject's own codec is asked to be. Genuinely rebuilds the package (never a
 /// literal byte passthrough): `rust_xlsxwriter` cannot reproduce another writer's object layout.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     write_workbook_grid(&read_workbook_grid(input)?)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️SharedStringPool
@@ -532,7 +497,6 @@ pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
 /// cell references into the pool and `uniqueCount` the number of items; a rewrite here can only know
 /// the second, so it writes `uniqueCount` and leaves `count` equal to it — an ECMA-376-legal
 /// declaration, and the same one every writer that rebuilds a pool from scratch emits.
-#[cfg(feature = "oracles")]
 pub mod shared_strings {
     use semio_s_plugin_stdio_document_test_oracle::ooxml::{part_bytes, read_parts, set_part, write_parts};
     use quick_xml::events::Event;
@@ -682,7 +646,6 @@ pub mod shared_strings {
 /// workbook), and the grid kinds run through `rust_xlsxwriter`, which legitimately renormalises the
 /// pool while preserving every cell value. Holding a grid mutation to a pool it never claimed to
 /// preserve would report a false divergence; holding a pool mutation to the pool is the real test.
-#[cfg(feature = "oracles")]
 pub fn project_shared_string_pool(input: &[u8]) -> Result<Json, String> {
     let pool = shared_strings::read_pool(input)?;
     Ok(Json::Object(vec![
@@ -691,10 +654,6 @@ pub fn project_shared_string_pool(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_shared_string_pool(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ↩️ The undo of one of the three pool kinds, read out of `base` by the independent implementation
 /// alone.
@@ -707,7 +666,6 @@ pub fn project_shared_string_pool(_input: &[u8]) -> Result<Json, String> {
 /// row addresses index 228 of the real 229-entry pool. Reported rather than worked around; the
 /// production `inverse()` at that file's line 173 answers `SetSharedString`, which restores neither
 /// the length nor the element that shifted into the hole.
-#[cfg(feature = "oracles")]
 pub fn shared_string_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, String> {
     let pool = shared_strings::read_pool(base)?;
     let params = mutation_params(forward);
@@ -737,17 +695,12 @@ pub fn shared_string_inverse_spec(base: &[u8], forward: &Json) -> Result<Json, S
     })
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn shared_string_inverse_spec(_base: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️SharedStringPool
 
 //#region 🔖️Plumbing
 /// 🪢️ The four OPC-plumbing kinds (`set-relationship`, `remove-relationship`, `set-content-type`, `remove-content-type`), performed on `[Content_Types].xml` and the `*.rels`
 /// parts through the `zip` + `quick-xml` pairing the six OOXML conformance subsets already run on -- the rows of these parts are flat, so each is read into its
 /// ordered rows, edited, and written back; every other part is carried verbatim. `calamine`/`rust_xlsxwriter` never see the plumbing.
-#[cfg(feature = "oracles")]
 mod plumbing {
     use quick_xml::events::{BytesStart, Event};
     use quick_xml::reader::Reader;
@@ -1037,15 +990,10 @@ mod plumbing {
 }
 
 /// 🪢️ The package plumbing of `bytes`, in the order the package states it. @see [`plumbing::project`].
-#[cfg(feature = "oracles")]
 pub fn project_xlsx_plumbing(bytes: &[u8]) -> Result<Json, String> {
     plumbing::project(bytes)
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_xlsx_plumbing(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Plumbing
 
 //#region 🔖️Projection
@@ -1056,7 +1004,6 @@ pub fn project_xlsx_plumbing(_bytes: &[u8]) -> Result<Json, String> {
 /// comment); the caller computes the oracle side by arithmetic and reads the subject side from its
 /// own real `XlsxWorkbook::shared_strings.len()`, so the two are still genuinely compared, just not
 /// both independently derived from bytes.
-#[cfg(feature = "oracles")]
 pub fn project_xlsx_workbook(bytes: &[u8], expected_shared_string_count: usize) -> Result<Json, String> {
     let sheets = read_workbook_grid(bytes)?;
     Ok(Json::Object(vec![
@@ -1100,14 +1047,10 @@ pub fn project_xlsx_workbook(bytes: &[u8], expected_shared_string_count: usize) 
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_xlsx_workbook(_bytes: &[u8], _expected_shared_string_count: usize) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

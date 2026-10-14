@@ -1,0 +1,10 @@
+{"source": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs",
+ "drop": ["1-14", "3296-3300"],
+ "pieces": [
+  {"name": "model", "crate": "semio_s_fem_analyses_model", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🗂️model/🦀️.rs", "ranges": ["15-461", "690-871"],
+   "doc": ["//! 🗂️ Analysis model: load cases, combinations, the owned and mounted analysis models with their bounded close,", "//! modal and buckling result records, the DOF map, reference validation and the RCM equation permutation."]},
+  {"name": "assembly", "crate": "semio_s_fem_analyses_assembly", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🧩️assembly/🦀️.rs", "ranges": ["872-2888"],
+   "doc": ["//! 🧩️ Deterministic sparse stiffness assembly: the bounded construction, the checkpointed assembly job, the CSR", "//! build and the one-shot assembled system with its load-case right-hand sides."]},
+  {"name": "top", "crate": "semio_s_fem_analyses", "out": "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️.rs", "ranges": ["462-689", "2889-3295"],
+   "doc": ["//! 📈️ Multi-case/combination linear-static analysis, self-weight load generation, modal analysis (frequencies and", "//! shapes), linear buckling and nodal-averaged stress recovery for contour rendering — sparse-backed (RCM-ordered,", "//! one LDLT factorization shared across every load case and eigen-solve) — plus the FEM job graph that stages them."]}
+ ]}

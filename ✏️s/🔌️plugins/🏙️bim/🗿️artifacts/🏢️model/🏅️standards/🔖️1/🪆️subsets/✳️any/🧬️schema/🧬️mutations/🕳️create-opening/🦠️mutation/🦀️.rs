@@ -1,6 +1,6 @@
 //! 🕳️ `create-opening` payload. Brings a window, door or void into a wall or curtain wall; only its centre offset along the host axis and its optional sill override are stored, the frame follows the host by inference.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Opening};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Opening}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

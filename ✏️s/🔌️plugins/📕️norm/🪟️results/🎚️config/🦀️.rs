@@ -1,11 +1,20 @@
 //! 📊️ Shared persisted-local configuration for every concrete Norm Results window.
 
-pub use super::mutations::{change_selected_check_index::ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
-pub use super::diff::NormResultsWindowConfigDiff;
-pub use super::schema::NormResultsWindowConfig;
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_os_kernel as vcs;
+extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
+
+pub use crate::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
+pub use crate::mutations::NormResultsWindowConfigMutation;
+pub use crate::diff::NormResultsWindowConfigDiff;
+pub use crate::schema::NormResultsWindowConfig;
 
 //#region 🔖️Config
-
 
 impl store::ConfigRecord for NormResultsWindowConfig {}
 
@@ -21,8 +30,8 @@ macro_rules! norm_results_window_config_owner {
             const WINDOW_KIND_ID: &'static str = $window_kind_id;
             const SCHEMA: &'static str = "s.norm.results-window.config";
             const MAXIMUM_PUBLICATION_BYTES: usize = 4_096;
-            type State = $crate::results_window_config::NormResultsWindowConfig;
-            type Mutation = $crate::results_window_config::NormResultsWindowConfigMutation;
+            type State = $crate::schema::NormResultsWindowConfig;
+            type Mutation = $crate::mutations::NormResultsWindowConfigMutation;
             type Edit = semio_framework_plugin::app::WindowConfigApplyEdit<Self::State, Self::Mutation>;
             const MAXIMUM_PREPARATION_DEPTH: usize = 64;
 
@@ -83,3 +92,29 @@ where
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️Mounts
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+#[path = "."]
+pub mod io {
+    #[path = "."]
+    pub mod binary {
+        #[path = "🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+        pub mod mutations;
+        #[path = "🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+    #[path = "."]
+    pub mod text {
+        #[path = "🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+        pub mod mutations;
+        #[path = "🚪️io/📝️text/📸️snapshot/🦀️.rs"]
+        pub mod snapshot;
+    }
+}
+//#endregion 🪢️Mounts

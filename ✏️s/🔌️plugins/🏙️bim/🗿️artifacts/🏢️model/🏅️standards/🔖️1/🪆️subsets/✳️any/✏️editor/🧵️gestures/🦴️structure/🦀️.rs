@@ -2,7 +2,7 @@
 use super::plane::P;
 use super::session::{Mark, Pointer, Preview, Step, Style, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
-use crate::{ModelMutation, StructuralLocation, StructuralSupport, StructuralLoad, LoadCase, Point3, Restraints};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{StructuralLocation, StructuralSupport, StructuralLoad, LoadCase, Point3, Restraints}};
 
 /// 🖱️ The four structural authoring gestures; line loads retain their first station until the second click.
 pub struct Structure { kind: &'static str, anchor: Option<(String, f64, P)>, hover: Option<P> }
@@ -42,16 +42,16 @@ impl Tool for Structure {
                 if self.kind=="support" {
                     let id=ctx.mint("support");
                     let fixed=!pointer.modifiers.shift;
-                    return Step::write(ctx,ModelMutation::CreateSupport(crate::mutations::create_support::CreateSupport{id,support:StructuralSupport{name:member.clone(),member,location,offset:zero,restraints:Restraints{x:true,y:true,z:true,rx:fixed,ry:fixed,rz:fixed}}}));
+                    return Step::write(ctx,ModelMutation::CreateSupport(crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport{id,support:StructuralSupport{name:member.clone(),member,location,offset:zero,restraints:Restraints{x:true,y:true,z:true,rx:fixed,ry:fixed,rz:fixed}}}));
                 }
                 let mut mutations=Vec::new();
                 let load_case=match ctx.library_type(&ctx.snapshot.load_cases) {
                     Some(case)=>case,
-                    None=>{let id=ctx.mint("load-case");mutations.push(ModelMutation::CreateLoadCase(crate::mutations::create_load_case::CreateLoadCase{id:id.clone(),load_case:LoadCase{name:id.clone(),category:"gravity".into(),factor:1.0}}));id}
+                    None=>{let id=ctx.mint("load-case");mutations.push(ModelMutation::CreateLoadCase(crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase{id:id.clone(),load_case:LoadCase{name:id.clone(),category:"gravity".into(),factor:1.0}}));id}
                 };
-                if crate::location_problem(ctx.snapshot,&member,&location).is_some(){return Step::refuse(REJECTED);}
+                if crate::standards::v1::subsets::any::schema::snapshot::location_problem(ctx.snapshot,&member,&location).is_some(){return Step::refuse(REJECTED);}
                 let id=ctx.mint("load");
-                mutations.push(ModelMutation::CreateLoad(crate::mutations::create_load::CreateLoad{id,load:StructuralLoad{name:member.clone(),load_case,member,location,force:Point3{x:0.0,y:0.0,z:-1000.0},moment:zero}}));
+                mutations.push(ModelMutation::CreateLoad(crate::standards::v1::subsets::any::schema::mutations::create_load::CreateLoad{id,load:StructuralLoad{name:member.clone(),load_case,member,location,force:Point3{x:0.0,y:0.0,z:-1000.0},moment:zero}}));
                 Step::mutate(mutations)
             }
             ToolEvent::Escape | ToolEvent::Lost => { self.anchor=None;self.hover=None;Step::default() }

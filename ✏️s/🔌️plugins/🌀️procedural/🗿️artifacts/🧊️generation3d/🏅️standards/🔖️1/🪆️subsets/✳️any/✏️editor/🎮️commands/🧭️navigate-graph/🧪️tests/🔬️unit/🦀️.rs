@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-use crate::standards::v1::subsets::any::schema::{PROCEDURAL_EXAMPLE_HEX_COLUMN};
-use crate::standards::v1::subsets::any::io::text::snapshot::{example_snapshot};
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
 
 const GRAPH_KEYBOARD_FIXTURE_JSON: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧭️graph-keyboard-navigation.json");
 

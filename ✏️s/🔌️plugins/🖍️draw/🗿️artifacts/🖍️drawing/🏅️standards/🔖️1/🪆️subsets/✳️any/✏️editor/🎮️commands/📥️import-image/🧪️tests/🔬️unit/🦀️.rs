@@ -9,7 +9,7 @@ fn imported_image_semantics_are_reversible() {
   let snapshot=DrawingSnapshot::default();let original=snapshot.clone();let asset:DrawingImageAsset=serde_json::from_value(row["expected"].clone()).unwrap();
   let emit=publish(&snapshot,&operation,&ImportImage {payload:row["input"]["payload"].as_str().unwrap().into(),name:Some("Artwork.png".into()),parent_id:None,index:None},asset.clone()).unwrap();assert_eq!(emit.artifact_mutations.len(),2);assert_eq!(emit.interaction_writes.len(),1);
   let mut after=snapshot.clone();let mut inverses=Vec::new();for mutation in emit.artifact_mutations {inverses.push(mutation.inverse(&after).unwrap());crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
-  let crate::DrawingLayerNode::Image(image)=after.layers.get(0).unwrap() else{unreachable!()};assert_eq!(image.width,asset.width as f64);assert_eq!(image.height,asset.height as f64);assert_eq!(after.assets.get(&image.image_key.to_string_owner()),Some(&asset));
+  let semio_s_artifact_draw_drawing_model::DrawingLayerNode::Image(image)=after.layers.get(0).unwrap() else{unreachable!()};assert_eq!(image.width,asset.width as f64);assert_eq!(image.height,asset.height as f64);assert_eq!(after.assets.get(&image.image_key.to_string_owner()),Some(&asset));
   for inverse in inverses.into_iter().rev(){crate::mutations::apply_drawing_mutation(&mut after,&inverse).unwrap();}assert_eq!(after,original);assert_eq!(snapshot,original);
  }
 }

@@ -517,7 +517,7 @@ fn apply_brush_placement_to_snapshot_rejects_duplicate_attraction_target() {
 /// ⏯️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C — the brush candidate search is a read-only
 /// tool run: every candidate it tests is a trace record, every verdict reaches the instance's link, and the job
 /// follows the link's target. The scene and the laws are read from `🧫️fixtures/🎞️brush-suggestions-run.json`.
-use crate::editor::puzzle3d::Puzzle3dInstanceOperationOwner;
+use crate::editor::puzzle3d::session::Puzzle3dInstanceOperationOwner;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunStep, ToolRunTick, ToolRunTraceOp, ToolRunTraceStore};
 
@@ -543,7 +543,7 @@ fn brush_search_kind(id: &str, url: &str) -> ObjectKind {
 
 /// 📦️ Half height of the app's fallback box, the host's collision body while its own mesh is unregistered.
 fn brush_search_host_half_height() -> f64 {
-    f64::from(crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
+    f64::from(crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers().0.chunks(3).map(|vertex| vertex[2]).fold(f32::MIN, f32::max))
 }
 
 /// 🧪️ The scene_snapshot scene: one host vortex on the bottom face of the host's (fallback box) body, two compatible kinds that
@@ -602,7 +602,7 @@ fn brush_run_link<R>(owner: &ArtifactInstanceOperationOwnerHandle, apply: impl F
 }
 
 fn brush_run_job(owner: &ArtifactInstanceOperationOwnerHandle, port: &ToolRunJobPort, scene: SceneConfig, lane: Vec<String>, meshes: BrushSuggestionsMeshSource, generation: u32) -> BrushSuggestionsRunJob<Puzzle3dInstanceOperationOwner> {
-    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
+    BrushSuggestionsRunJob::new(owner.clone(), port.clone(), brush_run_identity(generation), Arc::new(scene), lane, meshes, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers()).expect("fallback body")
 }
 
 fn brush_run_never() -> Option<u64> {
@@ -821,10 +821,10 @@ fn brush_run_example_scene(document: &str) -> (SceneConfig, Vec<String>, Vec<Str
         other => panic!("unknown example document {other}"),
     };
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(text).expect("example parses");
-    let envelope = crate::editor::puzzle3d::scene_from_snapshot(&snapshot, Default::default(), "brush");
-    let scene = crate::editor::puzzle3d::scene_config(&envelope).expect("scene config");
+    let envelope = crate::editor::puzzle3d::snapshot::scene_from_snapshot(&snapshot, Default::default(), "brush");
+    let scene = crate::editor::puzzle3d::session::scene_config(&envelope).expect("scene config");
     let targets = scene.scene_snapshot.objects.iter().flat_map(|object| object.vortices.iter().map(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id))).collect();
-    (scene, crate::editor::puzzle3d::modes::edit::windows::main::mesh_lane(&envelope.scene_snapshot), targets)
+    (scene, crate::editor::puzzle3d::session::mesh_lane(&envelope.scene_snapshot), targets)
 }
 
 fn brush_run_no_meshes(_url: &str) -> Option<(Vec<f32>, Vec<u32>)> {
@@ -848,7 +848,7 @@ fn brush_suggestions_run_collision_verdicts_agree_with_the_parry3d_oracle() {
     for document in law["documents"].as_array().expect("documents") {
         let (scene, lane, targets) = brush_run_example_scene(document["document"].as_str().expect("document"));
         let tolerance = scene.contact_tolerance;
-        let (positions, _) = crate::editor::puzzle3d::puzzle3d_fallback_mesh_buffers();
+        let (positions, _) = crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers();
         let hull = |pose: &Pose3d| {
             let points: Vec<parry3d::math::Point<f32>> = positions.chunks(3).map(|vertex| pose.transform_point(&crate::editor::puzzle3d::precompute::geometry::Point3d::new(vertex[0], vertex[1], vertex[2]))).map(|world| parry3d::math::Point::new(world.x(), world.y(), world.z())).collect();
             parry3d::shape::ConvexPolyhedron::from_convex_hull(&points).expect("box hull")

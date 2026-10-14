@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::gestures::session::{Modifiers, Pick, Shape, Surface, ToolEvent};
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
-use crate::{Opening, OpeningKind, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind, Point2};
 
 fn target(kind: &str, id: &str) -> (String, String) {
     (kind.to_string(), id.to_string())
@@ -164,7 +164,7 @@ fn room_with_outlines() -> ModelSnapshot {
     for (kind, id) in [("slab", "slab-1"), ("roof", "roof-1")] {
         let create = crate::editor::bim::entities::kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
         let mutation = create(&snapshot, id, "st-ground", "Sample").expect("creates");
-        snapshot = crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
+        snapshot = crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies");
     }
     snapshot
 }
@@ -221,8 +221,8 @@ async fn a_drag_that_ends_where_it_began_or_a_press_away_from_the_corners_writes
 fn room_with_duct() -> ModelSnapshot {
     let mut snapshot = room();
     let storey = snapshot.walls["w-south"].storey.clone();
-    let vertex = |x: f64, y: f64, z: f64| crate::Point3 { x, y, z };
-    snapshot.mep_elements.insert("m-1".into(), crate::MepElement { storey, system: crate::MepSystem::Supply, shape: crate::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
+    let vertex = |x: f64, y: f64, z: f64| crate::standards::v1::subsets::any::schema::snapshot::Point3 { x, y, z };
+    snapshot.mep_elements.insert("m-1".into(), crate::standards::v1::subsets::any::schema::snapshot::MepElement { storey, system: crate::standards::v1::subsets::any::schema::snapshot::MepSystem::Supply, shape: crate::standards::v1::subsets::any::schema::snapshot::MepShape::Duct { width: 0.3, height: 0.2 }, path: vec![vertex(2.0, 3.0, 2.5), vertex(5.0, 3.0, 2.5), vertex(5.0, 3.0, 3.1)], name: "Duct 1".into() });
     snapshot
 }
 
@@ -239,7 +239,7 @@ async fn the_vertices_of_the_selected_mep_element_are_handles_and_dragging_one_r
     let ModelMutation::SetMepElement(leaf) = only_mutation(&step) else { panic!("a set-mep-element") };
     let path = leaf.path.clone().expect("the new path");
     assert_eq!((path.len(), path[1].x, path[1].y, path[1].z), (3, 5.0, 4.5, 2.5), "the first of the two vertices on that point moves, keeping its own elevation");
-    assert_eq!(rig.snapshot.mep_elements["m-1"].path[0], crate::Point3 { x: 2.0, y: 3.0, z: 2.5 });
+    assert_eq!(rig.snapshot.mep_elements["m-1"].path[0], crate::standards::v1::subsets::any::schema::snapshot::Point3 { x: 2.0, y: 3.0, z: 2.5 });
 }
 
 #[semio_framework_async_macros::async_test]

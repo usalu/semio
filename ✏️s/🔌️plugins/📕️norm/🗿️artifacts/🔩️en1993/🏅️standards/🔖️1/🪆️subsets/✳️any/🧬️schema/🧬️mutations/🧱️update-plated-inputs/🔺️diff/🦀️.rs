@@ -1,8 +1,8 @@
 //! 🧱️ `update-plated-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdatePlatedInputs;
-use crate::diff::{En1993Diff, En1993PlatedPanelDelta};
-use crate::En1993Snapshot;
+use crate::update_plated_inputs::UpdatePlatedInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993PlatedPanelDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdatePlatedInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.plated_panels.iter().position(|row| row.id == payload.plated_panel.id) {

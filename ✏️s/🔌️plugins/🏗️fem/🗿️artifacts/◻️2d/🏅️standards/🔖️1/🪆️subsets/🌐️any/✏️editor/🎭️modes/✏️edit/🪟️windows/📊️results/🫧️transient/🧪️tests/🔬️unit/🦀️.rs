@@ -1,5 +1,5 @@
 use super::*;
-use crate::app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_TICK_SECONDS};
+use semio_s_fem_app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_TICK_SECONDS};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use std::collections::BTreeMap;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};

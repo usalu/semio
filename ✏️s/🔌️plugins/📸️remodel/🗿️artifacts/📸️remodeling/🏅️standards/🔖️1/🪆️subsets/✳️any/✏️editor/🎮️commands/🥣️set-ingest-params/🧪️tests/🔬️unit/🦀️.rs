@@ -1,8 +1,17 @@
-use super::*;
-use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_dense_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_feature_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_geo_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_match_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_mesh_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_motion_params;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_sfm_params;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch};
-use crate::editor::remodeling::RemodelingCommand;
-use crate::{DenseResolution, FeatureDetector, MatcherKind, RobustLossKind};
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseResolution;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureDetector;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MatcherKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RobustLossKind;
 
 #[semio_framework_async_macros::async_test]
 async fn set_sfm_params_command_materializes_typed_fields_into_operations() {

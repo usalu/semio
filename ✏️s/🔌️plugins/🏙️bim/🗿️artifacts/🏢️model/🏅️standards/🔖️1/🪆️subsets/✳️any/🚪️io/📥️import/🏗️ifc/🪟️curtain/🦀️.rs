@@ -8,7 +8,7 @@ use super::data::label;
 use super::reader::{text, Doc};
 use super::spatial::authoring_of;
 use super::Import;
-use crate::{CurtainPanelOverride, CurtainWall, CurtainWallType};
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, CurtainWall, CurtainWallType};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeMap;
 

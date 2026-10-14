@@ -1,8 +1,8 @@
 //! 🌐 Schema-addressed owner contributions over bounded document HTTP transport.
 
 use semio_framework_schema_validator::OwnedJsonSchemaValidator;
-use crate::os_directory::client::{DirectoryClient, DirectoryTransport, DocumentHttpOperationV1, DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, DocumentHttpRequestV1, HttpMethod, DOCUMENT_HTTP_PORT_TOPIC, DOCUMENT_HTTP_REQUEST_MAX_BYTES, DOCUMENT_HTTP_RESPONSE_MAX_BYTES};
-use crate::{DslValue, os_directory::DocumentScope};
+use crate::client::{DirectoryClient, DirectoryTransport, DocumentHttpOperationV1, DocumentHttpPortCodeV1, DocumentHttpPortDeclarationV1, DocumentHttpRequestV1, HttpMethod, DOCUMENT_HTTP_PORT_TOPIC, DOCUMENT_HTTP_REQUEST_MAX_BYTES, DOCUMENT_HTTP_RESPONSE_MAX_BYTES};
+use crate::{DslValue, DocumentScope};
 use semio_framework_async::OperationContext;
 
 /// 🔐 Compiled schemas remain bound to one installed owner and one declared service.

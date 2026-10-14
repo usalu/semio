@@ -4,7 +4,7 @@
 use super::super::place_elements::PlaceElements;
 use super::diff::changes;
 use super::AlignElements;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &AlignElements, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match changes(payload, base) {

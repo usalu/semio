@@ -1,14 +1,13 @@
 //! ↩️ Inverse for `ChangeReferenceHidden` — recovers the pre-mutation `hidden` from `base`.
 use super::ChangeReferenceHidden;
-use crate::mutations::CadMutation;
-use crate::CadSnapshot;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::change_reference_hidden::ChangeReferenceHidden>>(payload: &ChangeReferenceHidden, base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok(base.references_by_model_definition_id
         .get(&payload.model_definition_id)
         .and_then(|references| references.iter().find(|reference| reference.id == payload.reference_id))
-        .map(|reference| vec![CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden: reference.hidden })])
+        .map(|reference| vec![Op::from(ChangeReferenceHidden { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_hidden: reference.hidden })])
         .unwrap_or_default())
 }
 //#endregion 🔖️Inverse

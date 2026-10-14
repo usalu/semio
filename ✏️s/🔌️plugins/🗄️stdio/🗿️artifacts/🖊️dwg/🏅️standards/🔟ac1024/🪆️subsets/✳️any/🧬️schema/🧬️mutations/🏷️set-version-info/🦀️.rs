@@ -19,7 +19,7 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
     fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
         let Self { version, maintenance_version, codepage } = self;
         let next = diff::version_info_next(base, version, *maintenance_version, *codepage);
-        match crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(&next) {
+        match semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(&next) {
             Some((_, message)) => protocol::MutationOutcome::fatal("mutation.invariant", message, Vec::<String>::new()),
             None => protocol::MutationOutcome::new(diff::diff_set_version_info(base, version, *maintenance_version, *codepage)),
         }

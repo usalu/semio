@@ -28,7 +28,7 @@
       "additionalProperties": false,
       "required": [
         "cargoName",
-        "nxName",
+        "projectName",
         "manifest"
       ],
       "properties": {
@@ -36,7 +36,7 @@
           "type": "string",
           "pattern": "^semio-s-artifact-stdio-[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
-        "nxName": {
+        "projectName": {
           "type": "string",
           "pattern": "^@semio-tech/stdio-[a-z0-9]+(?:-[a-z0-9]+)*-rs$"
         },
@@ -50,7 +50,7 @@
       "additionalProperties": false,
       "required": [
         "name",
-        "nxName",
+        "projectName",
         "manifest",
         "entry"
       ],
@@ -59,7 +59,7 @@
           "type": "string",
           "pattern": "^@semio-tech/stdio-[a-z0-9]+(?:-[a-z0-9]+)*$"
         },
-        "nxName": {
+        "projectName": {
           "type": "string",
           "pattern": "^@semio-tech/stdio-[a-z0-9]+(?:-[a-z0-9]+)*$"
         },

@@ -21,9 +21,6 @@
     "directory": "framework/product/os/module/plugin/registry"
   },
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

@@ -364,7 +364,7 @@ fn exact_layout_out_media_factory_dispatches_a_real_reserved_job() {
     bus.register(LayoutMediaExportJobFactory::new("layout-media-test")).expect("media factory registration");
     let request = request(LayoutExportKind::Svg);
     let snapshot_owner = Arc::clone(&request.snapshot);
-    let payload = ArtifactReservedToolJob::new(LayoutExportJob::new(operation, request).expect("media payload job"));
+    let payload = ArtifactReservedToolJob::new(fixture_export_job(operation, request));
     let spec = semio_framework::ToolOperationSpec::new("layout-media-test", LAYOUT_MEDIA_EXPORT_TOOL_ID, LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA, payload, operation);
     let dispatch = bus.dispatch(spec).expect("exact media factory dispatch");
     assert_eq!(bus.dispatch_count(), 1);
@@ -381,7 +381,7 @@ fn exact_layout_out_media_factory_dispatches_a_real_reserved_job() {
 
 #[test]
 fn reserved_close_disposes_every_export_buffer_in_bounded_slices_and_rejects_an_unwitnessed_snapshot() {
-    let mut job = LayoutExportJob::new(operation(), request(LayoutExportKind::Svg)).expect("job");
+    let mut job = fixture_export_job(operation(), request(LayoutExportKind::Svg));
     job.json_validation = Some(JsonValidationCursor::new("[]", true).expect("json cursor"));
     job.json_validation.as_mut().expect("json cursor").stack.push(JsonContainer::Array(JsonArrayState::FirstValueOrEnd));
     job.typed_validation = Some(TypedJsonCursor { stack: vec![TypedJsonNode::Scalar { bytes: vec![1; 256], cursor: 0 }], emitted_nodes: 0, fragment_bytes: None });
@@ -428,7 +428,7 @@ fn reserved_close_disposes_every_export_buffer_in_bounded_slices_and_rejects_an_
 
 #[test]
 fn reserved_close_zero_budget_preserves_the_exact_cursor_and_owner() {
-    let mut job = LayoutExportJob::new(operation(), request(LayoutExportKind::Svg)).expect("job");
+    let mut job = fixture_export_job(operation(), request(LayoutExportKind::Svg));
     job.output.append(&vec![1; OUTPUT_CHUNK_BYTES]).expect("raw chunk");
     job.close_stage = LayoutExportCloseStage::Output;
     assert_eq!(ArtifactReservedJob::close_step(&mut job, 0, OUTPUT_CHUNK_BYTES).expect("zero item slice"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -441,7 +441,7 @@ fn reserved_close_zero_budget_preserves_the_exact_cursor_and_owner() {
 
 #[test]
 fn reserved_close_releases_the_witness_after_snapshot_handback() {
-    let mut job = LayoutExportJob::new(operation(), request(LayoutExportKind::Svg)).expect("job");
+    let mut job = fixture_export_job(operation(), request(LayoutExportKind::Svg));
     job.close_stage = LayoutExportCloseStage::SnapshotOwner;
     assert_eq!(ArtifactReservedJob::close_step(&mut job, 1, OUTPUT_CHUNK_BYTES).expect("witness handback"), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
     assert_eq!(job.close_stage, LayoutExportCloseStage::Complete);
@@ -644,7 +644,7 @@ fn dynamic_json_validation_never_scans_more_than_its_input_credit() {
 #[test]
 fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
     let operation = operation();
-    let job = LayoutExportJob::new(operation, request(LayoutExportKind::Png)).expect("job");
+    let job = fixture_export_job(operation, request(LayoutExportKind::Png));
     let snapshot_owner = Arc::clone(&job.request.snapshot);
     let chunks = job.output_chunks.clone();
     let params = BatchJobParams {
@@ -684,7 +684,7 @@ fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
 #[test]
 fn one_unit_budget_forces_multiple_yields_and_stale_context_faults() {
     let operation = operation();
-    let mut job = LayoutExportJob::new(operation, request(LayoutExportKind::Svg)).expect("job");
+    let mut job = fixture_export_job(operation, request(LayoutExportKind::Svg));
     let mut sequence = 0;
     for _ in 0..2 {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
@@ -701,7 +701,7 @@ fn one_unit_budget_forces_multiple_yields_and_stale_context_faults() {
 fn checkpoint_is_lossless_bounded_and_authority_qualified() {
     let operation = operation();
     let request_value = request(LayoutExportKind::Package);
-    let mut job = LayoutExportJob::new(operation, request_value.clone()).expect("job");
+    let mut job = fixture_export_job(operation, request_value.clone());
     let cancel = semio_framework_job::root_cancel_token();
     let mut sequence = 0;
     let mut checkpoint = loop {
@@ -757,7 +757,7 @@ fn checkpoint_is_lossless_bounded_and_authority_qualified() {
 fn the_reserved_close_ladder_leaves_the_publication_stage_in_bounded_slices() {
     let request = request(LayoutExportKind::Svg);
     let snapshot_owner = Arc::clone(&request.snapshot);
-    let mut job = LayoutExportJob::new(operation(), request).expect("job");
+    let mut job = fixture_export_job(operation(), request);
     InteractiveJob::begin_close(&mut job);
     assert_eq!(job.close_stage, LayoutExportCloseStage::Publication, "begin_close parks the job on the publication stage");
     for slice in 0..64 {
@@ -921,7 +921,8 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
 
 #[test]
 fn pdf_export_prints_the_background_drawing() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -960,7 +961,9 @@ fn pdf_export_prints_the_background_drawing() {
 
 #[test]
 fn pdf_export_prints_a_styled_plan_stroke() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -1011,7 +1014,9 @@ fn pdf_export_prints_a_styled_plan_stroke() {
 
 #[test]
 fn pdf_export_prints_a_filled_plan_path() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -1060,7 +1065,8 @@ fn pdf_export_prints_a_filled_plan_path() {
 
 #[test]
 fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -1099,7 +1105,8 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
 
 #[test]
 fn pdf_export_prints_drawing_text() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -1145,7 +1152,8 @@ fn pdf_export_prints_drawing_text() {
 
 #[test]
 fn pdf_export_prints_an_embedded_drawing_png() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
@@ -1187,7 +1195,8 @@ fn pdf_export_prints_an_embedded_drawing_png() {
 
 #[test]
 fn pdf_export_prints_a_rotated_drawing_png() {
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
@@ -1234,7 +1243,8 @@ fn pdf_export_prints_edited_drawing_text() {
     use crate::mutations::set_drawing_text::SetDrawingText;
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
     use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
@@ -1300,4 +1310,9 @@ fn dictionary_at_json_bytes(count:usize)->crate::FormDictionary{
  let base=semio_framework_pack_json::to_json_string(&dictionary).len();let mut remaining=count.checked_sub(base).expect("dictionary wrapper fits byte witness");
  for entry in &mut dictionary.entries{let bytes=remaining.min(MAX_LAYOUT_EXPORT_STRING_BYTES);entry.value=semio_framework_value::DslValue::String("a".repeat(bytes));remaining-=bytes;}
  assert_eq!(remaining,0);assert_eq!(semio_framework_pack_json::to_json_string(&dictionary).len(),count);dictionary
+}
+
+
+fn fixture_export_job(operation:Operation,request:LayoutExportRequest)->LayoutExportJob{
+ LayoutExportJob::from_admitted(operation,(operation.operation,operation.generation),request,ArtifactOutputChunks::new(MAX_LAYOUT_EXPORT_OUTPUT_BYTES))
 }

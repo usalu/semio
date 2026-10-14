@@ -1,7 +1,7 @@
 use super::fixtures::{case, CASES};
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::{Entry, MaterialPatch, ModelDiff, StoreyPatch, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::TopConstraint};
 use semio_framework_geometry::placement::ZPlane;
 
 fn square_prism(side: f64, height: f64) -> TriMesh {
@@ -79,7 +79,7 @@ async fn every_element_with_geometry_has_one_placed_solid() {
 #[semio_framework_async_macros::async_test]
 async fn the_placement_carries_the_building_origin_rotation_and_datum() {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.buildings.get_mut("bldg-1").expect("building").origin = crate::Point2 { x: 20.0, y: -4.0 };
+    snapshot.buildings.get_mut("bldg-1").expect("building").origin = crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 20.0, y: -4.0 };
     snapshot.buildings.get_mut("bldg-1").expect("building").rotation = 0.5;
     snapshot.buildings.get_mut("bldg-1").expect("building").elevation = 2.0;
     snapshot.sites.get_mut("site-1").expect("site").elevation = 100.0;
@@ -93,7 +93,7 @@ async fn the_placement_carries_the_building_origin_rotation_and_datum() {
 async fn the_model_inference_carries_the_solids_of_the_house_walls() {
     use protocol::Inference;
     let (snapshot, _) = case("straight-openings");
-    let inferred = crate::ModelInference::infer(&snapshot).expect("infers");
+    let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred.element_solids, compute_element_solids(&snapshot));
 }
 
@@ -103,14 +103,14 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
     snapshot.openings.clear();
     for index in 0..count {
         let (column, row) = ((index % 25) as f64, (index / 25) as f64);
-        let wall = crate::Wall {
+        let wall = crate::standards::v1::subsets::any::schema::snapshot::Wall {
             storey: "st-1".into(),
             wall_type: if index % 3 == 0 { "wt-300".into() } else { "wt-200".into() },
-            axis: crate::Axis::Line { start: crate::Point2 { x: column * 6.0, y: row * 6.0 }, end: crate::Point2 { x: column * 6.0 + 4.0, y: row * 6.0 } },
-            location: crate::LocationLine::Center,
+            axis: crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: column * 6.0, y: row * 6.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: column * 6.0 + 4.0, y: row * 6.0 } },
+            location: crate::standards::v1::subsets::any::schema::snapshot::LocationLine::Center,
             base_offset: 0.0,
             top: TopConstraint::StoreyTop { offset: 0.0 },
-            phase: crate::Phase::New,
+            phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New,
             start_join: None,
             end_join: None,
             name: String::new(),
@@ -118,7 +118,7 @@ fn grid_of_walls(count: usize) -> ModelSnapshot {
         };
         snapshot.walls.insert(format!("w-{index:04}"), wall);
         if index % 4 == 0 {
-            let opening = crate::Opening { host: format!("w-{index:04}"), kind: crate::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
+            let opening = crate::standards::v1::subsets::any::schema::snapshot::Opening { host: format!("w-{index:04}"), kind: crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Window { window_type: "wn-1".into() }, offset: 2.0, sill_override: Some(0.9), width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: String::new() };
             snapshot.openings.insert(format!("o-{index:04}"), opening);
         }
     }
@@ -211,7 +211,7 @@ async fn the_plan_puts_storeys_first_and_gives_elements_their_layouts_frames_and
 #[semio_framework_async_macros::async_test]
 async fn a_wall_constrained_to_another_storey_depends_on_both() {
     let (mut snapshot, _) = case("straight-openings");
-    snapshot.storeys.insert("st-2".into(), crate::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
+    snapshot.storeys.insert("st-2".into(), crate::standards::v1::subsets::any::schema::snapshot::Storey { building: "bldg-1".into(), name: "Upper".into(), level: 1, height: 3.0, cut_height: None });
     snapshot.walls.get_mut("w-plain").expect("wall").top = TopConstraint::Storey { storey: "st-2".into(), offset: -0.5 };
     let steps = plan::build(&snapshot, kinds::closure(kinds::SOLIDS));
     let parents = steps.iter().find(|step| step.key == ModelNode::WallLayout("w-plain".into())).expect("planned").parents.clone();
@@ -249,7 +249,7 @@ async fn a_warm_cache_equals_a_cold_recompute() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_opening_edit_re_infers_its_host_and_its_filler_but_a_door_type_edit_leaves_windows_alone() {
-    use crate::{DoorTypePatch, OpeningPatch};
+    use crate::standards::v1::subsets::any::schema::diff::patches::{DoorTypePatch, OpeningPatch};
     let (snapshot, _) = case("straight-openings");
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).element_solids.clone();

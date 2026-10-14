@@ -1,0 +1,327 @@
+{
+ "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs",
+ "crate": "semio_s_artifact_puzzle_3d",
+ "aggregator": "semio-s-artifact-puzzle-3d",
+ "crates": [
+  {
+   "package": "semio-s-plugin-puzzle-jobs",
+   "module": "puzzle_job",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🦀️.rs",
+   "files": [
+    "🧩️puzzle/🎮️commands/📤️jobs/"
+   ]
+  },
+  {
+   "package": "semio-s-plugin-puzzle-retained",
+   "module": "retained_command",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🎮️commands/🧵️retained/🦀️.rs",
+   "files": [
+    "🧩️puzzle/🎮️commands/🧵️retained/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-model",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🦀️\\.rs$",
+    "✳️any/🧬️schema/📸️snapshot/",
+    "✳️any/🧬️schema/🧪️tests/",
+    "✳️any/🚪️io/(📝️text|💾️binary|🪶️sqlite)/📸️snapshot/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-diff",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🔺️diff/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/🔺️diff/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-object",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🧊️object/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-pose",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🧭️pose/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-vortex",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🌀️vortex/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-volume",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🌍️volume/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-reference",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/🖼️reference/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-catalog",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/📚️catalog/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations-selection",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/✋️selection/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-mutations",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/🧬️mutations/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/🧬️mutations/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-inferences",
+   "module": "standards::v1::subsets::any",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "files": [
+    "✳️any/🧬️schema/💡️inferences/",
+    "✳️any/🚪️io/(📝️text|💾️binary)/💡️inferences/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-io",
+   "module": "standards::v1::subsets::any::io",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "files": [
+    "✳️any/🚪️io/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-examples",
+   "module": "examples::puzzle3d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "files": [
+    "✳️any/📚️examples/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-precompute-geometry",
+   "module": "editor::puzzle3d::precompute::geometry",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs",
+   "files": [
+    "⏳️precompute/📐️geometry/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-precompute-brush",
+   "module": "editor::puzzle3d::precompute::brush",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🖌️brush/🦀️.rs",
+   "files": [
+    "⏳️precompute/🖌️brush/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-precompute-fill",
+   "module": "editor::puzzle3d::precompute::fill",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️.rs",
+   "files": [
+    "⏳️precompute/🪣️fill/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-precompute",
+   "module": "editor::puzzle3d::precompute",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️.rs",
+   "files": [
+    "⏳️precompute/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-snapshot",
+   "module": "editor::puzzle3d::snapshot",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📸️snapshot/🦀️.rs",
+   "files": [
+    "✏️editor/📸️snapshot/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-config",
+   "module": "editor::puzzle3d::config",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+   "files": [
+    "✏️editor/🎚️config/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-presence",
+   "module": "editor::puzzle3d::presence",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs",
+   "files": [
+    "✏️editor/👥️presence/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-window",
+   "module": "editor::puzzle3d::window",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+   "files": [
+    "✏️editor/🪟️window/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-terminology",
+   "module": "editor::puzzle3d::terminology",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs",
+   "files": [
+    "✏️editor/🗣️terminology/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-transform",
+   "module": "editor::puzzle3d::modes::edit::windows::main::utilities::transform",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🔄️transform/🦀️.rs",
+   "files": [
+    "🪛️utilities/🔄️transform/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-session",
+   "module": "editor::puzzle3d::session",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️.rs",
+   "files": [
+    "✏️editor/🧵️session/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-commands-document",
+   "module": "editor::puzzle3d::commands",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🧊️document/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-commands-runtime",
+   "module": "editor::puzzle3d::commands",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🎛️runtime/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-dispatch",
+   "module": "editor::puzzle3d::dispatch",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs",
+   "files": [
+    "✏️editor/🎮️commands/🦀️\\.rs$"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-modes",
+   "module": "editor::puzzle3d::modes::edit",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs",
+   "files": [
+    "✏️editor/🎭️modes/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor-panels",
+   "module": "editor::puzzle3d::panels",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs",
+   "files": [
+    "✏️editor/📌️panels/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-retained-action",
+   "module": "editor::puzzle3d::retained_action",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🎬️action/🦀️.rs",
+   "files": [
+    "✏️editor/🧵️retained/🎬️action/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-retained-document",
+   "module": "editor::puzzle3d::retained_document",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🗂️document/🦀️.rs",
+   "files": [
+    "✏️editor/🧵️retained/🗂️document/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-editor",
+   "module": "editor::puzzle3d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "files": [
+    "✳️any/✏️editor/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-puzzle-3d-viewer",
+   "module": "viewer::puzzle3d",
+   "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+   "files": [
+    "✳️any/👁️viewer/"
+   ]
+  }
+ ],
+ "moves": [
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-1-model.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-2-mutation-helpers.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-3-editor-config.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-4-editor-snapshot.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-5-editor-session.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-6-editor-dispatch.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-7-world-lane.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-8-retained.json",
+  ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/split-p4/🧊️3d/move-9-snapshot-fixes.json"
+ ],
+ "facade_files": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"
+ ],
+ "facade_import_files": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"
+ ],
+ "header": [
+  "#![allow(clippy::result_large_err)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_os_kernel as vcs;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "consumers": [
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d",
+  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d",
+  "🌎️hub/🧩️compositions/🧩️puzzle",
+  "🌎️hub/🧩️compositions/🎪️demonstrator",
+  "✏️s/🔌️plugins/🧩️puzzle/🏭️bridge",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ]
+}

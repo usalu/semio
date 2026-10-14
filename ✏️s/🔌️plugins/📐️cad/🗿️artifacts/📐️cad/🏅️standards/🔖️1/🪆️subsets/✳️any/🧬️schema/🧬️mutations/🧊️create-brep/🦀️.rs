@@ -1,5 +1,5 @@
 //! 🧊️ Inserts an exact owned topology sibling at its declared document position.
-use crate::{CadSnapshot, mutations::CadMutation, diff::{CadDiff, CadBrepsDelta}};
+use semio_s_artifact_cad_cad_model::{snapshot::CadSnapshot, diff::CadDiff, diff::CadBrepsDelta};
 use protocol::MutationKind;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -13,10 +13,13 @@ pub struct CreateBrep {
     pub index: u32,
 }
 
-impl MutationKind<CadSnapshot, CadMutation> for CreateBrep {
+impl<Op> MutationKind<CadSnapshot, Op> for CreateBrep
+where
+    Op: protocol::Mutation<CadSnapshot, Diff = semio_s_artifact_cad_cad_model::diff::CadDiff> + From<crate::delete_brep::DeleteBrep>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "brep", kind: "create-brep", record: "CreatedBrep" };
     fn diff(&self, base: &CadSnapshot) -> protocol::MutationOutcome<CadDiff> {
-        let child = match crate::cad_brep_child(&self.child_id, &self.target) {
+        let child = match semio_s_artifact_cad_cad_model::snapshot::cad_brep_child(&self.child_id, &self.target) {
             Ok(child) => child,
             Err(reason) => return protocol::MutationOutcome::fatal("mutation.invariant", reason, [self.child_id.clone()]),
         };
@@ -25,8 +28,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateBrep {
         }
         protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta::insertion(self.index as usize, child)), ..Default::default() })
     }
-    fn inverse(&self, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-        Ok(vec![CadMutation::DeleteBrep(super::delete_brep::DeleteBrep { child_id: self.child_id.clone() })])
+    fn inverse(&self, _base: &CadSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(vec![Op::from(super::delete_brep::DeleteBrep { child_id: self.child_id.clone() })])
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Create topology child", "Topologie-Kind erstellen") }
     fn target(&self) -> Vec<String> { vec![self.child_id.clone()] }

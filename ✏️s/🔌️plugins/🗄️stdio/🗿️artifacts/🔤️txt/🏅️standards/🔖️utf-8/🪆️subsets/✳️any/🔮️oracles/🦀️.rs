@@ -84,7 +84,6 @@ pub fn non_canonical_reason(lines: &[String], trailing_newline: bool) -> Option<
 /// CRLF once one `\r\n` occurs) while bstr reads it as a boundary. An empty document is zero lines.
 ///
 /// @see https://docs.rs/bstr/1.13.1/bstr/trait.ByteSlice.html#method.lines_with_terminator
-#[cfg(feature = "oracles")]
 pub fn bstr_split(input: &[u8]) -> Result<(Vec<String>, bool, bool), String> {
     use bstr::ByteSlice;
     let terminated: Vec<&[u8]> = input.lines_with_terminator().collect();
@@ -172,7 +171,6 @@ fn apply_splices(body: &[char], splices: &[(usize, usize, String)]) -> Result<St
 /// the join rule alone (see [`non_canonical_reason`]), and the subset's own vocabulary refuses the
 /// same states under `stdio.txt.mutation-not-representable` — two independent statements of one
 /// format rule, not one implementation consulted twice.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let (mut lines, mut trailing_newline, mut is_crlf) = bstr_split(input)?;
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -221,7 +219,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// 🏠️ Lives HERE, in the reference module, rather than in the case adapter, because it is reference
 /// SEMANTICS and not test plumbing: the adapter drives it, and this module's own unit tests below
 /// exercise it against the real committed fixture.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     let (lines, trailing_newline, is_crlf) = bstr_split(original)?;
     let params = forward.get("params").cloned().unwrap_or(Json::Null);
@@ -271,16 +268,7 @@ pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, Stri
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_original: &[u8], _forward: &Json) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️CsvCrossCheck
@@ -293,7 +281,6 @@ pub fn oracle_inverse_spec(_original: &[u8], _forward: &Json) -> Result<Json, St
 /// which terminator style was used (CR/LF/CRLF collapse to one undifferentiated boundary) or
 /// whether the input ends with one — see the manifest's `noOracleDecisions` rationale for why
 /// this is a partial, not a full, substitute.
-#[cfg(feature = "oracles")]
 pub fn csv_independent_line_count(body: &str) -> Result<usize, String> {
     let mut reader = csv::ReaderBuilder::new().has_headers(false).quoting(false).flexible(true).delimiter(0x1F).terminator(csv::Terminator::CRLF).from_reader(body.as_bytes());
     let mut count = 0usize;
@@ -307,7 +294,6 @@ pub fn csv_independent_line_count(body: &str) -> Result<usize, String> {
 
 //#region 🧪️Tests
 #[cfg(test)]
-#[cfg(feature = "oracles")]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

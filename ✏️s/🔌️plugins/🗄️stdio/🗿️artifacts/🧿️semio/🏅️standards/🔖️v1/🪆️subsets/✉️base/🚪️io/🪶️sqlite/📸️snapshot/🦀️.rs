@@ -4,11 +4,12 @@ mod semantic;
 
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::{native, native_decoding};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding;
 
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
@@ -21,10 +22,10 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
-use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
-use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
 const SQL:&str=concat!(include_str!("🗄️.sql"),include_str!("../../../../🧊️brep/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔺️mesh/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🏛️model/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔢️value/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📐️cad/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🖼️image/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🎬️video/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔊️audio/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🎞️animation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📊️table/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../📦️object/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"),include_str!("../../../../🧰️kit/🚪️io/🪶️sqlite/📸️snapshot/🗄️.sql"));
 fn selection(tag:&str)->Result<(usize,&'static str),ValueError>{match tag{"brep"=>Ok((3,"semio_brep_")),"mesh"=>Ok((4,"semio_mesh_")),"model"=>Ok((5,"semio_model_")),"value"=>Ok((6,"semio_value_")),"document"=>Ok((7,"semio_document_")),"cad"=>Ok((8,"semio_cad_")),"drawing"=>Ok((9,"semio_drawing_")),"image"=>Ok((10,"semio_image_")),"video"=>Ok((11,"semio_video_")),"audio"=>Ok((12,"semio_audio_")),"animation"=>Ok((13,"semio_animation_")),"presentation"=>Ok((14,"semio_presentation_")),"flow"=>Ok((15,"semio_flow_")),"text"=>Ok((16,"semio_text_")),"table"=>Ok((17,"semio_table_")),"graph"=>Ok((18,"semio_graph_")),"object"=>Ok((19,"semio_object_")),"kit"=>Ok((20,"semio_kit_")),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"unknown Semio subset discriminator"))}}
@@ -64,7 +65,7 @@ pub(crate)fn admit_sqlite_values(&self,c:&mut SqliteSnapshotControl<'_>,phase:Sq
 fn visit_rows(snapshot:&SemioSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let tag=subset_tag(&snapshot.subset);let(column,_)=selection(tag)?;
  let mut cells=[Cell::Null;20];cells[0]=Cell::Text(&snapshot.schema);cells[1]=Cell::Text(tag);cells[column-1]=Cell::Integer(1);out.insert_key("semio_base_document",1,&cells)?;
- match &snapshot.subset{SemioSubsetSnapshot::Brep(value)=>semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Mesh(value)=>semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Model(value)=>semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Value(value)=>semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Document(value)=>semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Cad(value)=>semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Drawing(value)=>semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Image(value)=>semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Video(value)=>semio_s_artifact_stdio_semio_video::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Audio(value)=>semio_s_artifact_stdio_semio_audio::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Animation(value)=>semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Presentation(value)=>semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Flow(value)=>semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Text(value)=>semio_s_artifact_stdio_semio_text::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Table(value)=>semio_s_artifact_stdio_semio_table::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Graph(value)=>semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Object(value)=>semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Kit(value)=>semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::visit_rows(value,out)}
+ match &snapshot.subset{SemioSubsetSnapshot::Brep(value)=>semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Mesh(value)=>semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Model(value)=>semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Value(value)=>semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Document(value)=>semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Cad(value)=>semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Drawing(value)=>semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Image(value)=>semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Video(value)=>semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Audio(value)=>semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Animation(value)=>semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Presentation(value)=>semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Flow(value)=>semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Text(value)=>semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Table(value)=>semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Graph(value)=>semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Object(value)=>semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::visit_rows(value,out),SemioSubsetSnapshot::Kit(value)=>semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::visit_rows(value,out)}
 }
 
 #[cfg(test)]
@@ -92,18 +93,18 @@ fn binary_snapshot(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlite
  0=>S::Brep(semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  1=>S::Mesh(semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  2=>S::Model(semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 3=>{let body=control.borrow_text(body)?;S::Value(semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_decoding::document(body,control,limits)?)},
+ 3=>{let body=control.borrow_text(body)?;S::Value(semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?)},
  4=>S::Document(semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  5=>S::Cad(semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  6=>S::Drawing(semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  7=>S::Image(semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 8=>S::Video(semio_s_artifact_stdio_semio_video::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 9=>S::Audio(semio_s_artifact_stdio_semio_audio::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 8=>S::Video(semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 9=>S::Audio(semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  10=>S::Animation(semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  11=>S::Presentation(semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  12=>S::Flow(semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 13=>S::Text(semio_s_artifact_stdio_semio_text::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
- 14=>S::Table(semio_s_artifact_stdio_semio_table::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 13=>S::Text(semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
+ 14=>S::Table(semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  15=>S::Graph(semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  16=>S::Object(semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
  17=>S::Kit(semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::native_decoding::binary(body,control,limits)?),
@@ -118,18 +119,18 @@ fn text_snapshot(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDat
  "brep"=>S::Brep(semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "mesh"=>S::Mesh(semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "model"=>S::Model(semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "value"=>S::Value(semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ "value"=>S::Value(semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "document"=>S::Document(semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "cad"=>S::Cad(semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "drawing"=>S::Drawing(semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "image"=>S::Image(semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "video"=>S::Video(semio_s_artifact_stdio_semio_video::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "audio"=>S::Audio(semio_s_artifact_stdio_semio_audio::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ "video"=>S::Video(semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ "audio"=>S::Audio(semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "animation"=>S::Animation(semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "presentation"=>S::Presentation(semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "flow"=>S::Flow(semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "text"=>S::Text(semio_s_artifact_stdio_semio_text::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
- "table"=>S::Table(semio_s_artifact_stdio_semio_table::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ "text"=>S::Text(semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
+ "table"=>S::Table(semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "graph"=>S::Graph(semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "object"=>S::Object(semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
  "kit"=>S::Kit(semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::native_decoding::document(body,control,limits)?),
@@ -151,18 +152,18 @@ fn subset(value:&crate::schema::snapshot::SemioSubsetSnapshot,w:&mut Writer<'_,'
  S::Brep(v)=>semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Mesh(v)=>semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Model(v)=>semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Value(v)=>semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_encoding::fields(v,w),
+ S::Value(v)=>semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_encoding::fields(v,w),
  S::Document(v)=>semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Cad(v)=>semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Drawing(v)=>semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Image(v)=>semio_s_artifact_stdio_semio_image::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Video(v)=>semio_s_artifact_stdio_semio_video::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Audio(v)=>semio_s_artifact_stdio_semio_audio::io::sqlite::snapshot::native_encoding::fields(v,w,e),
+ S::Video(v)=>semio_s_artifact_stdio_semio_video_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
+ S::Audio(v)=>semio_s_artifact_stdio_semio_audio_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Animation(v)=>semio_s_artifact_stdio_semio_animation::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Presentation(v)=>semio_s_artifact_stdio_semio_presentation::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Flow(v)=>semio_s_artifact_stdio_semio_flow::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Text(v)=>semio_s_artifact_stdio_semio_text::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Table(v)=>semio_s_artifact_stdio_semio_table::io::sqlite::snapshot::native_encoding::fields(v,w,e),
+ S::Text(v)=>semio_s_artifact_stdio_semio_text_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
+ S::Table(v)=>semio_s_artifact_stdio_semio_table_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Graph(v)=>semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Object(v)=>semio_s_artifact_stdio_semio_object::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Kit(v)=>semio_s_artifact_stdio_semio_kit::io::sqlite::snapshot::native_encoding::fields(v,w,e)

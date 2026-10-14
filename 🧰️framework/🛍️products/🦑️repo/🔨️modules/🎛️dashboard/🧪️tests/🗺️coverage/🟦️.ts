@@ -11,6 +11,7 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import {buildGraphPathV1} from "../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 import { dashboard, pool, repository, semio, type Run } from "../🧭️journeys/🧰️support/🟦️.ts";
 import { Oracle, compare, runArguments, type Json, type Launch, type Selection } from "./🔮️oracle/🟦️.ts";
 
@@ -52,7 +53,7 @@ describe("the registry covers the whole monorepo", () => {
   });
 
   test("The published project graph has no errors and no fixture manifest is a project", () => {
-    const graph = JSON.parse(readFileSync(join(repository, ".🧬semio/🦑️repo/⚡️cache/build/graph.json"), "utf8")) as { errors?: unknown[]; projects: Record<string, { root: string }> };
+    const graph = JSON.parse(readFileSync(buildGraphPathV1(repository), "utf8")) as { errors?: unknown[]; projects: Record<string, { root: string }> };
     expect(graph.errors ?? [], `the graph carries ${(graph.errors ?? []).length} errors`).toEqual([]);
     const fixtureRoots = Object.entries(graph.projects).filter(([, node]) => node.root.split("/").some((part) => /^[^\p{L}\p{N}]*fixtures$/u.test(part))).map(([name]) => name);
     expect(fixtureRoots, "fixture manifests became build projects (add them to .nxignore, and never name a fixture project like a real one)").toEqual([]);

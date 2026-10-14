@@ -1,6 +1,6 @@
 //! 🧭️ Pure placement arithmetic shared by every IFC family: loop orientation, vertical extents under a top constraint, axis frames and profile measures.
 
-use crate::{Point2, Profile, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Profile, Vertex};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::{loops, Point};
 

@@ -3,7 +3,7 @@ use std::f64::consts::PI;
 
 use crate::primitives::{make_box, make_cylinder};
 use semio_framework_3d_brep_queries::mass_properties::{solid_signed_volume, solid_surface_area, solid_volume};
-use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_validation::validate_body;
 
 /// 🧪 Chord tolerance for a solid whose boundary is a FULL circle: the mass-properties integrator
 /// polygonises such a boundary, so its own bias dominates every measurement there and refining it

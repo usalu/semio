@@ -2,7 +2,7 @@
 //! none), none when the storey is absent.
 
 use super::SetStoreyCutHeight;
-use crate::{Assigned, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetStoreyCutHeight, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.storeys.get(&payload.id) {

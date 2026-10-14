@@ -106,7 +106,7 @@ class DeletionProofScript extends BundleScript {
     const artifactsAbsent = !existsSync(join(workspaceRoot, relative(this.repoRoot, core), "🗿️artifacts"));
     if (!artifactsAbsent) throw new Error("deletion-proof copied concrete Stdio artifacts");
     const env = devToolingEnv({ CARGO_TARGET_DIR: join(workspaceRoot, "target"), CARGO_BUILD_BUILD_DIR: join(workspaceRoot, "cargo-build"), CARGO_INCREMENTAL: "0" });
-    const checkedPackages = [...new Set(["semio-s-plugin-stdio", ...["semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine"].filter((name) => closure.has(name)), ...requestedOwners])];
+    const checkedPackages = [...new Set(["semio-s-plugin-stdio", ...["semio-framework-3d", "semio-framework-3d-brep-polynomial", "semio-framework-3d-brep-vector", "semio-framework-3d-brep-tolerance", "semio-framework-3d-brep-curve", "semio-framework-3d-brep-surface", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-intersect", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-tessellation", "semio-framework-3d-brep-validation", "semio-framework-3d-brep-analysis", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine"].filter((name) => closure.has(name)), ...requestedOwners])];
     await runRepositoryCommand(this.invocation,"cargo",["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"],workspaceRoot,"stdio-deletion-proof",{version:1,maximumElapsedMilliseconds:0,output:null},{env});
     const probeRoot = join(workspaceRoot, "🧪️sqlite-required");
     mkdirSync(probeRoot);

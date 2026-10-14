@@ -1,8 +1,8 @@
 //! 🧲️ `update-weld-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateWeldInputs;
-use crate::diff::{En1993Diff, En1993MemberActionDelta};
-use crate::En1993Snapshot;
+use crate::update_weld_inputs::UpdateWeldInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MemberActionDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateWeldInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.member_actions.iter().position(|row| row.id == payload.member_action.id) {

@@ -3,7 +3,7 @@
 //! mutation kind is one row (or one `write` on a field row) here and nowhere else.
 
 use crate::editor::bim::terminology::BimLabels;
-use crate::{Axis, ModelInference, ModelMutation, ModelSnapshot, OpeningKind, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, OpeningKind, TopConstraint}, inferences::ModelInference, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_ui_locale::LabelText;
 
@@ -46,7 +46,7 @@ pub struct EntityKind {
 //#endregion 🔖️Types
 
 //#region 🔖️Helpers
-use crate::{Assigned, Baluster, DoorLeaves, EndJoin, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{Baluster, DoorLeaves, EndJoin, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex}};
 use semio_framework_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -367,7 +367,7 @@ pub fn parse_roof_shape(text: &str) -> Option<RoofShape> {
 pub fn flight_text(flight: &StairFlight) -> String {
     match flight {
         StairFlight::Straight => "straight".to_string(),
-        StairFlight::LTurn { split, turn } => format!("l-turn {} {}", number(*split), if matches!(turn, crate::Turn::Left) { "left" } else { "right" }),
+        StairFlight::LTurn { split, turn } => format!("l-turn {} {}", number(*split), if matches!(turn, crate::standards::v1::subsets::any::schema::snapshot::Turn::Left) { "left" } else { "right" }),
         StairFlight::UTurn { gap } => format!("u-turn {}", number(*gap)),
         StairFlight::Spiral { radius, sweep } => format!("spiral {} {}", number(*radius), number(*sweep)),
     }
@@ -378,7 +378,7 @@ pub fn parse_flight(text: &str) -> Option<StairFlight> {
     let (name, words) = words_of(text)?;
     match (name.as_str(), words.as_slice()) {
         ("straight", []) => Some(StairFlight::Straight),
-        ("l-turn", [split, turn]) => Some(StairFlight::LTurn { split: split.parse().ok().filter(|value: &f64| value.is_finite())?, turn: match turn.as_str() { "left" => crate::Turn::Left, "right" => crate::Turn::Right, _ => return None } }),
+        ("l-turn", [split, turn]) => Some(StairFlight::LTurn { split: split.parse().ok().filter(|value: &f64| value.is_finite())?, turn: match turn.as_str() { "left" => crate::standards::v1::subsets::any::schema::snapshot::Turn::Left, "right" => crate::standards::v1::subsets::any::schema::snapshot::Turn::Right, _ => return None } }),
         ("u-turn", [gap]) => Some(StairFlight::UTurn { gap: gap.parse().ok().filter(|value: &f64| value.is_finite())? }),
         ("spiral", [radius, sweep]) => Some(StairFlight::Spiral { radius: radius.parse().ok().filter(|value: &f64| value.is_finite())?, sweep: sweep.parse().ok().filter(|value: &f64| value.is_finite())? }),
         _ => None,
@@ -392,13 +392,13 @@ fn partial<L: FromValue, V: ToValue + ?Sized>(id: &str, field: &str, value: &V) 
 
 macro_rules! set {
     ($module:ident :: $leaf:ident, $id:expr, $field:literal, $value:expr) => {
-        partial::<crate::mutations::$module::$leaf, _>($id, $field, $value).map(ModelMutation::$leaf)
+        partial::<crate::standards::v1::subsets::any::schema::mutations::$module::$leaf, _>($id, $field, $value).map(ModelMutation::$leaf)
     };
 }
 
 macro_rules! delete {
     ($module:ident :: $leaf:ident) => {
-        Some(|id| ModelMutation::$leaf(crate::mutations::$module::$leaf { id: id.into() }))
+        Some(|id| ModelMutation::$leaf(crate::standards::v1::subsets::any::schema::mutations::$module::$leaf { id: id.into() }))
     };
 }
 
@@ -409,7 +409,7 @@ macro_rules! renaming {
 }
 
 fn rename_element(_: &ModelSnapshot, id: &str, name: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::RenameElement(crate::mutations::rename_element::RenameElement { id: id.into(), name: name.into() }))
+    Some(ModelMutation::RenameElement(crate::standards::v1::subsets::any::schema::mutations::rename_element::RenameElement { id: id.into(), name: name.into() }))
 }
 
 macro_rules! field {
@@ -536,7 +536,7 @@ static STOREY_FIELDS: &[FieldRow] = &[
     field!("building", field_building, Text, |s, id| s.storeys.get(id).map(|row| row.building.clone())),
     field!("level", field_level, Number, |s, id| s.storeys.get(id).map(|row| row.level.to_string()), parse_int => set_storey_level::SetStoreyLevel),
     field!("height", field_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.height)), parse_number => set_storey_height::SetStoreyHeight),
-    field!("cut_height", field_cut_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.cut_height.unwrap_or(crate::DEFAULT_CUT_HEIGHT))), |_, id, value| set!(set_storey_cut_height::SetStoreyCutHeight, id, "cut_height", &Assigned::new(parse_optional_number(value)?))),
+    field!("cut_height", field_cut_height, Number, |s, id| s.storeys.get(id).map(|row| number(row.cut_height.unwrap_or(crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT))), |_, id, value| set!(set_storey_cut_height::SetStoreyCutHeight, id, "cut_height", &Assigned::new(parse_optional_number(value)?))),
 ];
 
 static GRID_FIELDS: &[FieldRow] = &[
@@ -557,8 +557,8 @@ static WALL_FIELDS: &[FieldRow] = &[
     field!("top", field_top, Text, |s, id| s.walls.get(id).map(|row| top_text(&row.top)), parse_top => set_wall_top::SetWallTop),
     field!("top_attach", field_top_attach, Text, |s, id| wall_sweeps::top_attach_text(s, id), choices: wall_sweeps::surface_choices, write: wall_sweeps::write_top_attach),
     field!("base_slab", field_base_slab, Text, |s, id| wall_sweeps::base_slab_text(s, id), choices: wall_sweeps::slab_choices, write: wall_sweeps::write_base_slab),
-    field!("start_join",field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
-    field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
+    field!("start_join",field_start_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.start_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd::Start, join: parse_join(value)? }))),
+    field!("end_join", field_end_join, Text, |s, id| s.walls.get(id).map(|row| join_text(row.end_join)), |_, id, value| Some(ModelMutation::SetWallEndJoin(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin { id: id.into(), end: crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd::End, join: parse_join(value)? }))),
 ];
 
 static CURTAIN_WALL_FIELDS: &[FieldRow] = &[
@@ -601,8 +601,8 @@ static SLAB_FIELDS: &[FieldRow] = &[
     field!("phase", field_phase, Text, |s, id| s.slabs.get(id).map(|row| format!("{:?}", row.phase)), choices: phasing::phase_choices, write: phasing::write_phase),
     field!("slab_type", field_slab_type, Text, |s, id| s.slabs.get(id).map(|row| row.slab_type.clone()), parse_text => set_slab::SetSlab),
     field!("offset", field_offset, Number, |s, id| s.slabs.get(id).map(|row| number(row.offset)), parse_number => set_slab::SetSlab),
-    field!("boundary", field_boundary, Text, |s, id| s.slabs.get(id).map(|row| loop_text(&row.boundary)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: parse_loop(value)?, holes: s.slabs.get(id)?.holes.clone() }))),
-    field!("holes", field_holes, Text, |s, id| s.slabs.get(id).map(|row| holes_text(&row.holes)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: s.slabs.get(id)?.boundary.clone(), holes: parse_holes(value)? }))),
+    field!("boundary", field_boundary, Text, |s, id| s.slabs.get(id).map(|row| loop_text(&row.boundary)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: parse_loop(value)?, holes: s.slabs.get(id)?.holes.clone() }))),
+    field!("holes", field_holes, Text, |s, id| s.slabs.get(id).map(|row| holes_text(&row.holes)), |s, id, value| Some(ModelMutation::SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary { id: id.into(), boundary: s.slabs.get(id)?.boundary.clone(), holes: parse_holes(value)? }))),
 ];
 
 static ROOF_FIELDS: &[FieldRow] = &[
@@ -630,7 +630,7 @@ fn opening_kind(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<Model
 
 static OPENING_FIELDS: &[FieldRow] = &[
     field!("name", field_name, Text, |s, id| s.openings.get(id).map(|row| row.name.clone()), rename),
-    field!("host", field_host, Text, |s, id| s.openings.get(id).map(|row| row.host.clone()), |s, id, value| Some(ModelMutation::MoveOpening(crate::mutations::move_opening::MoveOpening { id: id.into(), offset: s.openings.get(id)?.offset, host: Some(value.trim().into()) }))),
+    field!("host", field_host, Text, |s, id| s.openings.get(id).map(|row| row.host.clone()), |s, id, value| Some(ModelMutation::MoveOpening(crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening { id: id.into(), offset: s.openings.get(id)?.offset, host: Some(value.trim().into()) }))),
     field!("kind", field_kind, Text, |s, id| s.openings.get(id).map(|row| opening_text(&row.kind)), |s, id, value| opening_kind(s, id, value)),
     field!("offset", field_offset, Number, |s, id| s.openings.get(id).map(|row| number(row.offset)), parse_number => move_opening::MoveOpening),
     field!("sill_override", field_sill, Number, |s, id| s.openings.get(id).map(|row| number(row.sill_override.unwrap_or_else(|| type_sill(s, &row.kind)))), |_, id, value| set!(set_opening::SetOpening, id, "sill_override", &Assigned::new(parse_optional_number(value)?))),
@@ -809,27 +809,27 @@ fn along(row: f64) -> (Point2, Point2) {
 }
 
 fn create_site(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateSite(crate::mutations::create_site::CreateSite { id: id.into(), site: crate::Site { name: name.into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() } }))
+    Ok(ModelMutation::CreateSite(crate::standards::v1::subsets::any::schema::mutations::create_site::CreateSite { id: id.into(), site: crate::standards::v1::subsets::any::schema::snapshot::Site { name: name.into(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north: 0.0, boundary: Vec::new() } }))
 }
 
 fn create_building(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let site = snapshot.sites.contains_key(parent).then(|| parent.to_string()).or_else(|| first(&snapshot.sites)).ok_or("bim.create.site-missing")?;
-    Ok(ModelMutation::CreateBuilding(crate::mutations::create_building::CreateBuilding { id: id.into(), building: crate::Building { site, name: name.into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 } }))
+    Ok(ModelMutation::CreateBuilding(crate::standards::v1::subsets::any::schema::mutations::create_building::CreateBuilding { id: id.into(), building: crate::standards::v1::subsets::any::schema::snapshot::Building { site, name: name.into(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 } }))
 }
 
 fn create_storey(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let building = snapshot.buildings.contains_key(parent).then(|| parent.to_string()).or_else(|| first(&snapshot.buildings)).ok_or("bim.create.building-missing")?;
-    let levels: Vec<&crate::Storey> = snapshot.storeys.values().filter(|storey| storey.building == building).collect();
+    let levels: Vec<&crate::standards::v1::subsets::any::schema::snapshot::Storey> = snapshot.storeys.values().filter(|storey| storey.building == building).collect();
     let level = levels.iter().map(|storey| storey.level).max().map_or(0, |highest| highest + 1);
     let height = levels.iter().max_by_key(|storey| storey.level).map_or(3.0, |top| top.height);
-    Ok(ModelMutation::CreateStorey(crate::mutations::create_storey::CreateStorey { id: id.into(), storey: crate::Storey { building, name: name.into(), level, height, cut_height: None } }))
+    Ok(ModelMutation::CreateStorey(crate::standards::v1::subsets::any::schema::mutations::create_storey::CreateStorey { id: id.into(), storey: crate::standards::v1::subsets::any::schema::snapshot::Storey { building, name: name.into(), level, height, cut_height: None } }))
 }
 
 fn create_grid(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let building = container(&snapshot.buildings, parent, "bim.create.building-missing")?;
     let column = snapshot.grids.values().filter(|grid| grid.building == building).count() as f64;
     let (start, end) = (Point2 { x: column * 3.0, y: 0.0 }, Point2 { x: column * 3.0, y: 10.0 });
-    Ok(ModelMutation::CreateGridLine(crate::mutations::create_grid_line::CreateGridLine { id: id.into(), grid_line: crate::GridLine { building, label: name.into(), start, end } }))
+    Ok(ModelMutation::CreateGridLine(crate::standards::v1::subsets::any::schema::mutations::create_grid_line::CreateGridLine { id: id.into(), grid_line: crate::standards::v1::subsets::any::schema::snapshot::GridLine { building, label: name.into(), start, end } }))
 }
 
 fn create_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
@@ -837,9 +837,9 @@ fn create_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let wall_type = first(&snapshot.wall_types).ok_or("bim.create.wall-type-missing")?;
     let row = snapshot.walls.values().filter(|wall| wall.storey == storey).count() as f64;
     let (start, end) = along(row);
-    Ok(ModelMutation::CreateWall(crate::mutations::create_wall::CreateWall {
+    Ok(ModelMutation::CreateWall(crate::standards::v1::subsets::any::schema::mutations::create_wall::CreateWall {
         id: id.into(),
-        wall: crate::Wall { storey, wall_type, axis: Axis::Line { start, end }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name: name.into() },
+        wall: crate::standards::v1::subsets::any::schema::snapshot::Wall { storey, wall_type, axis: Axis::Line { start, end }, location: LocationLine::Center, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, start_join: None, end_join: None, base_slab: None, name: name.into() },
     }))
 }
 
@@ -847,9 +847,9 @@ fn create_curtain_wall(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let curtain_wall_type = first(&snapshot.curtain_wall_types).ok_or("bim.create.curtain-wall-type-missing")?;
     let (start, end) = along(snapshot.curtain_walls.values().filter(|wall| wall.storey == storey).count() as f64);
-    Ok(ModelMutation::CreateCurtainWall(crate::mutations::create_curtain_wall::CreateCurtainWall {
+    Ok(ModelMutation::CreateCurtainWall(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall {
         id: id.into(),
-        curtain_wall: crate::CurtainWall { storey, curtain_wall_type, axis: Axis::Line { start, end }, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: Phase::New, name: name.into() },
+        curtain_wall: crate::standards::v1::subsets::any::schema::snapshot::CurtainWall { storey, curtain_wall_type, axis: Axis::Line { start, end }, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, u_grid: None, v_grid: None, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -857,9 +857,9 @@ fn create_column(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let column_type = first(&snapshot.column_types).ok_or("bim.create.column-type-missing")?;
     let position = Point2 { x: snapshot.columns.values().filter(|column| column.storey == storey).count() as f64 * 3.0, y: 0.0 };
-    Ok(ModelMutation::CreateColumn(crate::mutations::create_column::CreateColumn {
+    Ok(ModelMutation::CreateColumn(crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn {
         id: id.into(),
-        column: crate::Column { storey, column_type, position, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
+        column: crate::standards::v1::subsets::any::schema::snapshot::Column { storey, column_type, position, rotation: 0.0, tilt: None, base_offset: 0.0, top: TopConstraint::StoreyTop { offset: 0.0 }, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -867,24 +867,24 @@ fn create_beam(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let beam_type = first(&snapshot.beam_types).ok_or("bim.create.beam-type-missing")?;
     let (start, end) = along(snapshot.beams.values().filter(|beam| beam.storey == storey).count() as f64);
-    Ok(ModelMutation::CreateBeam(crate::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: name.into() } }))
+    Ok(ModelMutation::CreateBeam(crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBeam { id: id.into(), beam: crate::standards::v1::subsets::any::schema::snapshot::Beam { storey, beam_type, axis: Axis::Line { start, end }, top_offset: 0.0, end_top_offset: None, phase: Phase::New, name: name.into() } }))
 }
 
 fn create_slab(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let slab_type = first(&snapshot.slab_types).ok_or("bim.create.slab-type-missing")?;
-    Ok(ModelMutation::CreateSlab(crate::mutations::create_slab::CreateSlab {
+    Ok(ModelMutation::CreateSlab(crate::standards::v1::subsets::any::schema::mutations::create_slab::CreateSlab {
         id: id.into(),
-        slab: crate::Slab { storey, slab_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: name.into() },
+        slab: crate::standards::v1::subsets::any::schema::snapshot::Slab { storey, slab_type, boundary: rectangle(4.0, 4.0), holes: Vec::new(), offset: 0.0, slope: None, phase: Phase::New, name: name.into() },
     }))
 }
 
 fn create_roof(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let roof_type = first(&snapshot.roof_types).ok_or("bim.create.roof-type-missing")?;
-    Ok(ModelMutation::CreateRoof(crate::mutations::create_roof::CreateRoof {
+    Ok(ModelMutation::CreateRoof(crate::standards::v1::subsets::any::schema::mutations::create_roof::CreateRoof {
         id: id.into(),
-        roof: crate::Roof { storey, roof_type, footprint: rectangle(4.0, 4.0), shape: RoofShape::Flat, overhang: 0.3, base_offset: 0.0, phase: Phase::New, name: name.into() },
+        roof: crate::standards::v1::subsets::any::schema::snapshot::Roof { storey, roof_type, footprint: rectangle(4.0, 4.0), shape: RoofShape::Flat, overhang: 0.3, base_offset: 0.0, phase: Phase::New, name: name.into() },
     }))
 }
 
@@ -895,17 +895,17 @@ fn create_opening(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) 
         (None, Some(door_type)) => OpeningKind::Door { door_type },
         (None, None) => OpeningKind::Void { width: 0.9, height: 2.1 },
     };
-    Ok(ModelMutation::CreateOpening(crate::mutations::create_opening::CreateOpening {
+    Ok(ModelMutation::CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening {
         id: id.into(),
-        opening: crate::Opening { host, kind, offset: 1.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: name.into() },
+        opening: crate::standards::v1::subsets::any::schema::snapshot::Opening { host, kind, offset: 1.0, sill_override: None, width: None, height: None, flip_hand: false, flip_facing: false, reveal_depth: None, reveal_material: None, name: name.into() },
     }))
 }
 
 fn create_stair(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
-    Ok(ModelMutation::CreateStair(crate::mutations::create_stair::CreateStair {
+    Ok(ModelMutation::CreateStair(crate::standards::v1::subsets::any::schema::mutations::create_stair::CreateStair {
         id: id.into(),
-        stair: crate::Stair {
+        stair: crate::standards::v1::subsets::any::schema::snapshot::Stair {
             storey,
             start: Point2 { x: 0.0, y: 0.0 },
             direction: 0.0,
@@ -914,10 +914,10 @@ fn create_stair(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) ->
             top: TopConstraint::StoreyTop { offset: 0.0 },
             max_riser: 0.18,
             min_tread: 0.27,
-            stringer: crate::STANDARD_STRINGER,
+            stringer: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_STRINGER,
             nosing: 0.0,
-            tread_thickness: crate::STANDARD_TREAD_THICKNESS,
-            riser: crate::STANDARD_RISER,
+            tread_thickness: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_TREAD_THICKNESS,
+            riser: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_RISER,
             landing_depth: 1.2,
             phase: Phase::New,
             name: name.into(),
@@ -929,25 +929,25 @@ fn create_railing(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) 
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
     let (start, end) = along(snapshot.railings.values().filter(|railing| railing.storey == storey).count() as f64);
-    Ok(ModelMutation::CreateRailing(crate::mutations::create_railing::CreateRailing {
+    Ok(ModelMutation::CreateRailing(crate::standards::v1::subsets::any::schema::mutations::create_railing::CreateRailing {
         id: id.into(),
-        railing: crate::Railing { storey, path: vec![start, end], height: 1.0, post_spacing: 1.2, profile: crate::standard_rail_profile(), post_profile: crate::standard_post_profile(), baluster: None, infill: crate::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name: name.into() },
+        railing: crate::standards::v1::subsets::any::schema::snapshot::Railing { storey, path: vec![start, end], height: 1.0, post_spacing: 1.2, profile: crate::standards::v1::subsets::any::schema::snapshot::standard_rail_profile(), post_profile: crate::standards::v1::subsets::any::schema::snapshot::standard_post_profile(), baluster: None, infill: crate::standards::v1::subsets::any::schema::snapshot::STANDARD_INFILL, material, base_offset: 0.0, host: None, phase: Phase::New, name: name.into() },
     }))
 }
 
 fn create_space(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let storey = container(&snapshot.storeys, parent, "bim.create.storey-missing")?;
     let number = (snapshot.spaces.values().filter(|space| space.storey == storey).count() + 1).to_string();
-    Ok(ModelMutation::CreateSpace(crate::mutations::create_space::CreateSpace {
+    Ok(ModelMutation::CreateSpace(crate::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace {
         id: id.into(),
-        space: crate::Space { storey, number, name: name.into(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: 1.0, y: 1.0 } }, usage: String::new(), phase: Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None },
+        space: crate::standards::v1::subsets::any::schema::snapshot::Space { storey, number, name: name.into(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: 1.0, y: 1.0 } }, usage: String::new(), phase: Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None },
     }))
 }
 
 fn create_material(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateMaterial(crate::mutations::create_material::CreateMaterial {
+    Ok(ModelMutation::CreateMaterial(crate::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial {
         id: id.into(),
-        material: crate::Material { name: name.into(), category: MaterialCategory::Other, color: Rgb { r: 0.7, g: 0.7, b: 0.7 }, density: 1000.0, conductivity: 1.0, specific_heat: 1000.0 },
+        material: crate::standards::v1::subsets::any::schema::snapshot::Material { name: name.into(), category: MaterialCategory::Other, color: Rgb { r: 0.7, g: 0.7, b: 0.7 }, density: 1000.0, conductivity: 1.0, specific_heat: 1000.0 },
     }))
 }
 
@@ -957,46 +957,46 @@ fn layers(snapshot: &ModelSnapshot) -> Result<Vec<Layer>, &'static str> {
 }
 
 fn create_wall_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateWallType(crate::mutations::create_wall_type::CreateWallType { id: id.into(), wall_type: crate::WallType { name: name.into(), layers: layers(snapshot)? } }))
+    Ok(ModelMutation::CreateWallType(crate::standards::v1::subsets::any::schema::mutations::create_wall_type::CreateWallType { id: id.into(), wall_type: crate::standards::v1::subsets::any::schema::snapshot::WallType { name: name.into(), layers: layers(snapshot)? } }))
 }
 
 fn create_slab_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateSlabType(crate::mutations::create_slab_type::CreateSlabType { id: id.into(), slab_type: crate::SlabType { name: name.into(), layers: layers(snapshot)? } }))
+    Ok(ModelMutation::CreateSlabType(crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType { id: id.into(), slab_type: crate::standards::v1::subsets::any::schema::snapshot::SlabType { name: name.into(), layers: layers(snapshot)? } }))
 }
 
 fn create_roof_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateRoofType(crate::mutations::create_roof_type::CreateRoofType { id: id.into(), roof_type: crate::RoofType { name: name.into(), layers: layers(snapshot)? } }))
+    Ok(ModelMutation::CreateRoofType(crate::standards::v1::subsets::any::schema::mutations::create_roof_type::CreateRoofType { id: id.into(), roof_type: crate::standards::v1::subsets::any::schema::snapshot::RoofType { name: name.into(), layers: layers(snapshot)? } }))
 }
 
 fn create_column_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
-    Ok(ModelMutation::CreateColumnType(crate::mutations::create_column_type::CreateColumnType {
+    Ok(ModelMutation::CreateColumnType(crate::standards::v1::subsets::any::schema::mutations::create_column_type::CreateColumnType {
         id: id.into(),
-        column_type: crate::ColumnType { name: name.into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material },
+        column_type: crate::standards::v1::subsets::any::schema::snapshot::ColumnType { name: name.into(), profile: Profile::Rectangle { width: 0.3, depth: 0.3 }, material },
     }))
 }
 
 fn create_beam_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
-    Ok(ModelMutation::CreateBeamType(crate::mutations::create_beam_type::CreateBeamType {
+    Ok(ModelMutation::CreateBeamType(crate::standards::v1::subsets::any::schema::mutations::create_beam_type::CreateBeamType {
         id: id.into(),
-        beam_type: crate::BeamType { name: name.into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material },
+        beam_type: crate::standards::v1::subsets::any::schema::snapshot::BeamType { name: name.into(), profile: Profile::Rectangle { width: 0.2, depth: 0.4 }, material },
     }))
 }
 
 fn create_window_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
-    Ok(ModelMutation::CreateWindowType(crate::mutations::create_window_type::CreateWindowType {
+    Ok(ModelMutation::CreateWindowType(crate::standards::v1::subsets::any::schema::mutations::create_window_type::CreateWindowType {
         id: id.into(),
-        window_type: crate::WindowType { name: name.into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material, u_value: None, g_value: None, frame_fraction: None },
+        window_type: crate::standards::v1::subsets::any::schema::snapshot::WindowType { name: name.into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 2, material, u_value: None, g_value: None, frame_fraction: None },
     }))
 }
 
 fn create_door_type(snapshot: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
     let material = first(&snapshot.materials).ok_or("bim.create.material-missing")?;
-    Ok(ModelMutation::CreateDoorType(crate::mutations::create_door_type::CreateDoorType {
+    Ok(ModelMutation::CreateDoorType(crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType {
         id: id.into(),
-        door_type: crate::DoorType { name: name.into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material, u_value: None },
+        door_type: crate::standards::v1::subsets::any::schema::snapshot::DoorType { name: name.into(), width: 0.9, height: 2.1, frame_width: 0.06, frame_depth: 0.08, leaves: DoorLeaves::Single, swing: Swing::Left, material, u_value: None },
     }))
 }
 //#endregion 🔖️Create
@@ -1099,8 +1099,8 @@ pub static ENTITIES: &[EntityKind] = &[
 /// 📇️ The id the project record answers to in `setField`: the project is no entity of the table, so its parameters are rows of their own.
 pub const PROJECT_ID: &str = "project";
 
-fn project_info(edit: impl FnOnce(&mut crate::mutations::set_project_info::SetProjectInfo)) -> Option<ModelMutation> {
-    let mut info = crate::mutations::set_project_info::SetProjectInfo { name: None, description: None, author: None, organization: None, phase_names: None };
+fn project_info(edit: impl FnOnce(&mut crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo)) -> Option<ModelMutation> {
+    let mut info = crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo { name: None, description: None, author: None, organization: None, phase_names: None };
     edit(&mut info);
     Some(ModelMutation::SetProjectInfo(info))
 }
@@ -1133,8 +1133,8 @@ pub fn fields_of(row: &EntityKind) -> impl Iterator<Item = &'static FieldRow> {
 pub const PROPERTY_TYPES: &[&str] = &["text", "real", "integer", "boolean", "length", "area", "volume", "angle"];
 
 /// 🏷️ The kind name of a property value.
-pub fn property_type(value: &crate::PropertyValue) -> &'static str {
-    use crate::PropertyValue::*;
+pub fn property_type(value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue) -> &'static str {
+    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
     match value {
         Text { .. } => "text",
         Real { .. } => "real",
@@ -1148,8 +1148,8 @@ pub fn property_type(value: &crate::PropertyValue) -> &'static str {
 }
 
 /// 🏷️ The text of a property value, without its kind.
-pub fn property_text(value: &crate::PropertyValue) -> String {
-    use crate::PropertyValue::*;
+pub fn property_text(value: &crate::standards::v1::subsets::any::schema::snapshot::PropertyValue) -> String {
+    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
     match value {
         Text { value } => value.clone(),
         Real { value } | Length { value } | Area { value } | Volume { value } | Angle { value } => number(*value),
@@ -1159,8 +1159,8 @@ pub fn property_text(value: &crate::PropertyValue) -> String {
 }
 
 /// 🏷️ The property value a text names: of the given kind, else inferred (`true` and `false` are flags, whole numbers are integers, other numbers are reals, anything else is text).
-pub fn property_value(text: &str, kind: Option<&str>) -> Option<crate::PropertyValue> {
-    use crate::PropertyValue::*;
+pub fn property_value(text: &str, kind: Option<&str>) -> Option<crate::standards::v1::subsets::any::schema::snapshot::PropertyValue> {
+    use crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::*;
     let text = text.trim();
     let measure = || text.parse::<f64>().ok().filter(|value| value.is_finite());
     match kind.map(str::to_lowercase).as_deref() {

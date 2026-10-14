@@ -10,6 +10,8 @@
 //! into one file in `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, and rewritten/split back
 //! into files in `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2 (W2-A) — see
 //! `📓️w2a-intersections.md` for the case table, p-curve conventions, and open items.
+//!
+//! Crate cut of `semio-framework-3d-brep-queries` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
 
 // #region 🔖️Submodules
 

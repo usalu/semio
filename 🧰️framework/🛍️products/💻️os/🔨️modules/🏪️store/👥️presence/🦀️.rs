@@ -7,28 +7,13 @@ use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotR
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::ValueError;
 use std::sync::Arc;
-use super::snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
-#[cfg(target_arch = "wasm32")]
-use super::serialization::{ArtifactCodecApplyFuture};
-use crate::os_pack::pack_rt;
-#[cfg(target_arch = "wasm32")]
-use super::codec_registry::{ComponentDocumentCodecFuture};
-#[cfg(target_arch = "wasm32")]
-use super::backbone::resolve_backbone;
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use super::backbone::local_storage_backbone_key;
+use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands};
 
 /// 🧬️ Exact witness returned after one, and only one, lane item changes a live root.
 /// 🌉️ Carries serde alongside `ToValue`/`FromValue`: `TypedOperationResultPage::try_serialize`
 /// (`🔌️plugin/🦀️.rs`) is bound on `serde::Serialize`, and both fields are `u64`, so the derives add
 /// no bound fan-out. `rename_all` is mirrored so the two encodings emit the same keys.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize)]
-#[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
-pub struct LaneItemReceipt {
-    pub generation_before: u64,
-    pub generation_after: u64,
-}
+pub use semio_framework_os_store_one_item::LaneItemReceipt;
 
 pub const PRESENCE_PEER_SLOTS: usize = 64;
 

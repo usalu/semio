@@ -3,7 +3,7 @@
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
 use super::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 #[derive(value_derive::ToValue)]

@@ -3,7 +3,7 @@
 //! by an independent encoder (Python's hashlib, `wp-wg10/gen-canonical-pair-fixture.py`), never by this decoder.
 
 use super::*;
-use crate::os_directory::schema::{DocumentOpenCheckpointV1, RebootstrapRequired};
+use crate::schema::{DocumentOpenCheckpointV1, RebootstrapRequired};
 
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../../../../🧪️tests/🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture")
@@ -15,7 +15,7 @@ fn hex_bytes(value: &serde_json::Value) -> Vec<u8> {
 }
 
 fn hash(value: &serde_json::Value) -> ArtifactHash {
-    crate::os_directory::io::binary::artifact_hash::parse_artifact_hash_hex(value.as_str().expect("hex32")).expect("hash")
+    crate::io::binary::artifact_hash::parse_artifact_hash_hex(value.as_str().expect("hex32")).expect("hash")
 }
 
 fn frontier(value: &serde_json::Value) -> ArtifactFrontier {

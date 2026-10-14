@@ -33,7 +33,6 @@ async fn primary_asset_preserves_neutral_document_and_child_identities() {
 /// `MapFeature`'s `deny_unknown_fields` rejects (`0.unknown field ‹lon›`) — the app then opened
 /// empty with a refused `dispatch-failed` on every boot, so the payload shape is pinned here and
 /// the renderer's descriptor projection is required to still find a coordinate on it.
-#[cfg(feature = "component-app-assembly")]
 #[semio_framework_async_macros::async_test]
 async fn default_example_document_carries_addressable_features() {
     use crate::editor::gis2d::commands::example::{example_document, DEFAULT_EXAMPLE_ID};

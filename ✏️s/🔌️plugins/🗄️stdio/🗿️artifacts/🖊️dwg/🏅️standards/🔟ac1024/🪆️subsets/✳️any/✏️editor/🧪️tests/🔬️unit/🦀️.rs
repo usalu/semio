@@ -23,7 +23,7 @@ semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DwgAc1024Ed
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     
-    let base = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot();
+    let base = semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::demo_dwg_snapshot();
     let title = editing::SnapshotEditEvent::SetValue { path: "/summary/title".into(), value: semio_framework_value::DslValue::String("renamed".into()) };
     let emit = <DwgAc1024Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&title, &base).expect("a summary edit resolves");
     let [mutation @ DwgMutation::SetSummary(_)] = emit.artifact_mutations.as_slice() else { panic!("a summary edit raises the summary kind") };

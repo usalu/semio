@@ -14,7 +14,9 @@
     "wasmPack",
     "searchPath",
     "leaseDirectory",
-    "sourceOwner"
+    "sourceOwner",
+    "workspaceRoot",
+    "sourceBoundary"
   ],
   "properties": {
     "version": {
@@ -110,6 +112,38 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "sourceBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "maxSourceBytes",
+        "maxSourceFiles",
+        "maxActiveLines"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "maxSourceBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxSourceFiles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxActiveLines": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   },
   "$id": "https://semio.tech/framework/process/wasm-build/policy/v1",

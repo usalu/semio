@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/architect/program/mutation/delete-register-row/schema.json",
+  "title": "DeleteRegisterRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "register",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "deleteRegisterRow"
+    },
+    "register": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/registers.json#/$defs/RegisterKey",
+      "x-semio-ui": {
+        "widget": "enum",
+        "role": "target",
+        "label": {
+          "en": "Register",
+          "de": "Register"
+        },
+        "description": {
+          "en": "The register the row belongs to.",
+          "de": "Register, zu dem die Zeile gehört."
+        },
+        "group": "target",
+        "order": 5
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Row",
+          "de": "Zeile"
+        },
+        "description": {
+          "en": "The register row to delete.",
+          "de": "Zu löschende Registerzeile."
+        },
+        "ref": {
+          "kind": "registerRow",
+          "domain": "program",
+          "granularity": "entity"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

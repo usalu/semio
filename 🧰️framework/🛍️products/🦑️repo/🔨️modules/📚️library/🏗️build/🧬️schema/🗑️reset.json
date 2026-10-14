@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device", "entries"],
+  "properties": {
+    "device": {"type": "integer", "minimum": 0},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/Entry"}}
+  },
+  "$defs": {
+    "OwnedName": {"type": "string", "pattern": "^(?:canonical|authority)\\.json(?:\\.[a-f0-9-]{36})?$"},
+    "Entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "kind", "links", "bytes", "device"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "kind": {"enum": ["file", "directory", "symlink", "other"]},
+        "links": {"type": "integer", "minimum": 0},
+        "bytes": {"type": "integer", "minimum": 0},
+        "device": {"type": "integer", "minimum": 0}
+      }
+    },
+    "OwnedEntry": {
+      "allOf": [{"$ref": "#/$defs/Entry"}],
+      "type": "object",
+      "properties": {
+        "kind": {"const": "file"}, "links": {"const": 1},
+        "bytes": {"type": "integer", "maximum": 536870912}
+      }
+    }
+  }
+}

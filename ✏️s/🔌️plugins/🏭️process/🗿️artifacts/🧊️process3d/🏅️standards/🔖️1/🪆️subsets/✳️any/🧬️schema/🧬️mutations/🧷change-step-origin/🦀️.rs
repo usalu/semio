@@ -2,7 +2,6 @@
 //! (machine/capability the step was built from) to an explicit new value, or clears it.
 
 use crate::diff::Process3dDiff;
-use crate::mutations::Process3dMutation;
 use crate::{Process3dSnapshot, StepOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -16,14 +15,17 @@ pub struct ChangeStepOrigin {
     pub new_origin: Option<StepOrigin>,
 }
 
-impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeStepOrigin {
+impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ChangeStepOrigin
+where
+    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_step_origin::ChangeStepOrigin>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "step", kind: "change-step-origin", record: "ChangedStepOrigin" };
 
     fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

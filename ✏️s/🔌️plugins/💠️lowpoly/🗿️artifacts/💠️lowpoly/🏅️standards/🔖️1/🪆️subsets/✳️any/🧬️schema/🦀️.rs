@@ -326,7 +326,7 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ExportConcreteForestMeshTests
-#[cfg(all(test, feature = "cad-fixtures"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs"]
 mod export_concrete_forest_mesh_tests;
 //#endregion 🔖️ExportConcreteForestMeshTests

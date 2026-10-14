@@ -35,18 +35,6 @@ pub mod standards {
                         pub use component::*;
                     }
                     #[path = "."]
-                    pub mod inferences {
-                        #[path = "../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod structure {
-                            #[path = "../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗂️structure/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
                     pub mod mutations {
                         #[path = "../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
@@ -73,38 +61,6 @@ pub mod standards {
                     #[path = "../../🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "../../📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "../../🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "../../💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod structure {
-                            #[path = "../../💡️inferences/🗂️structure/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "../../🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "../../🧮️geometry/🦀️.rs"]
-                    pub mod geometry;
                 }
                 #[path = "."]
                 pub mod io {

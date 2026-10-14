@@ -331,9 +331,9 @@ pub fn puzzle2d_handle_position(document: &Puzzle2dSnapshot, handle_id: &PagedUt
     let (node, handle) = document.nodes.iter().find_map(|node| node.handles.iter().find(|handle| &handle.id == handle_id).map(|handle| (node, handle)))?;
     let centre = semio_framework_geometry::Point::new(node.x, node.y);
     let point = if node.shape.as_ref().is_some_and(|shape| shape.eq_str("rectangle")) {
-        semio_framework_graph::drawing::routing::handle_position_on_rectangle(centre, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
+        semio_framework_graph_drawing::routing::handle_position_on_rectangle(centre, node.width.unwrap_or(48.0), node.height.unwrap_or(48.0), handle.angle)
     } else {
-        semio_framework_graph::drawing::routing::handle_position_on_circle(centre, node.radius.unwrap_or(24.0), handle.angle)
+        semio_framework_graph_drawing::routing::handle_position_on_circle(centre, node.radius.unwrap_or(24.0), handle.angle)
     };
     Some((point.x, point.y))
 }

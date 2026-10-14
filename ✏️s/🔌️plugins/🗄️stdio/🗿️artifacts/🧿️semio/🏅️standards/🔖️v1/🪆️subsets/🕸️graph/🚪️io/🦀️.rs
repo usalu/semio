@@ -136,7 +136,7 @@ pub mod derived_construction {
     use crate::schema::diff::SemioGraphDiff;
     use crate::schema::mutations::SemioGraphMutation;
     use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
-    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -201,7 +201,7 @@ pub mod derived_construction {
 
     //#region 🔖️Tests
     #[cfg(test)]
-    include!("../🧬️schema/🧪️tests/🔬️derived-construction-unit/🦀️.rs");
+    include!("🧪️tests/🔬️derived-construction-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
 pub use derived_construction::*;

@@ -3,7 +3,9 @@ mod original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 use semio_framework::kernel::Budget;
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash}; use semio_framework_plugin_interpreter::{OwnedRuntime,GuestCallCancellation,sqlite_wire};
+use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
+use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
+use semio_framework_plugin_guest_contract::{GuestCallCancellation,sqlite_wire};
 use std::path::PathBuf;
 fn repo_root()->PathBuf {PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path|path.join("nx.json").exists()).unwrap().to_path_buf()}
 fn plugin_wasm()->PathBuf {

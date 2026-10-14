@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::unit_tests::support::{applied, ctx, demo, run};
-use crate::{ColumnType, Material, MaterialCategory, Profile, Rgb};
+use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, Material, MaterialCategory, Profile, Rgb};
 
 fn line(label: &str, building: &str, start: (f64, f64), end: (f64, f64)) -> GridLine {
     GridLine { building: building.into(), label: label.into(), start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }

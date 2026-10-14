@@ -125,7 +125,7 @@ async fn only_a_viewer_preview_addressed_tick_passes_the_retained_preflight() {
         let mut app = app().await;
         let view = roster(&fixture, &case.attached).for_window_instance(&case.current_window_id).expect("the current window is attached");
         let kind = fixture.window_kinds.get(&case.payload_window_kind).cloned().unwrap_or_default();
-        let args = semio_s_artifact_procedural_generation3d::preview_eval::window_args(&case.payload_window_id, &kind);
+        let args = semio_s_artifact_procedural_3d_preview_eval::window_args(&case.payload_window_id, &kind);
         let action_meta = ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
         let outcome = match context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await {
             Ok(()) => match semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await {
@@ -148,7 +148,7 @@ async fn a_viewer_tick_emits_extension_work_or_re_arms_but_never_settles_silentl
     let mut app = app().await;
     let view = context::view_shell_view("view-preview");
     let action_meta = ActionMeta { view_state: Some(view.clone()), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    let args = semio_s_artifact_procedural_generation3d::preview_eval::window_args("view-preview", preview::WINDOW_KIND_ID);
+    let args = semio_s_artifact_procedural_3d_preview_eval::window_args("view-preview", preview::WINDOW_KIND_ID);
     context::dispatch_effect_command(&mut app, "flowEvalTick", Some(&args), &action_meta).await.expect("viewer preview tick");
     let tick = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut *app, action_meta.instance_id).await.expect("retained publication");
     assert!(!tick.lanes.contains(&TypedOperationResultLane::Fault), "viewer preview tick faulted: {:?}", tick.lanes);

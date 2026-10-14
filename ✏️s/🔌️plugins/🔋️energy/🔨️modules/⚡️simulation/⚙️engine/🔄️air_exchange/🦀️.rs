@@ -1,5 +1,8 @@
 //! 💨️ Infiltration, ventilation, interzone mixing, and hybrid air exchange controls.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::{latent_heat_vaporization, moist_air_density, moist_air_enthalpy_j_per_kg};
 use crate::units::{CP_DRY_AIR, GRAVITY, RHO_AIR_REF};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

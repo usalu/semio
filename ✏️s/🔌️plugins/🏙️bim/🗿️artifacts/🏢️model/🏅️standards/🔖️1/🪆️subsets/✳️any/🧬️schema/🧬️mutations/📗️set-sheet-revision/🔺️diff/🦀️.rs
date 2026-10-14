@@ -2,7 +2,7 @@
 //! `mutation.no-op`.
 
 use super::SetSheetRevision;
-use crate::{revision_problem, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{revision_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetSheetRevision, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

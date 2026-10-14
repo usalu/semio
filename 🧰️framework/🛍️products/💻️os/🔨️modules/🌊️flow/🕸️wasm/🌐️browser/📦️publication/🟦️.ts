@@ -101,7 +101,7 @@ export async function publishFlowBrowserPackage(familyPackageRoot: string, invoc
     writeFlowBrowserDeclaration();
     const files = await collectArtifactFiles(staging, signal);
     {
-      const owner = JSON.parse(readFileSync(join(canonical, ".nx-artifact.json"), "utf8")).owner;
+      const owner = JSON.parse(readFileSync(join(canonical, ".semio-artifact.json"), "utf8")).owner;
       await stageRepositoryArtifacts(canonical, owner, files, signal ? { signal } : {});
       await stageRepositoryArtifacts(packageRoot, "flow-browser:active", files, signal ? { signal } : {});
       rmSync(transactionRoot, { recursive: true, force: true });

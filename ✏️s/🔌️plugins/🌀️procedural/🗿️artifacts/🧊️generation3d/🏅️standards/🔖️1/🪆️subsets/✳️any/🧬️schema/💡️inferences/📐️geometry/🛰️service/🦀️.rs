@@ -1,6 +1,6 @@
 //! 📤️ Typed progress, cursors and widget results of semantic geometry evaluation.
 use super::{Generation3dFaultRecord, Generation3dOutputRecord};
-use crate::standards::v1::subsets::any::schema::catalogue::Quality;
+use semio_s_artifact_procedural_3d_model::catalogue::Quality;
 
 pub const GEOMETRY_INFERENCE_SCHEMA: &str = "s.procedural.generation3d.inference";
 pub const GEOMETRY_ARTIFACT_KIND: &str = "s.procedural.generation3d";

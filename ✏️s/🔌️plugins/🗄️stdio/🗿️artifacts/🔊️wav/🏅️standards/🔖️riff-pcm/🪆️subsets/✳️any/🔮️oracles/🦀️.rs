@@ -22,7 +22,6 @@ use semio_repo_test_host::Json;
 /// `params` is the leaf's wire payload (`payload_value()`), read by the same field names the schema declares.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
     match spec.str("kind").as_str() {
@@ -39,7 +38,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// format block, the decoded samples, and every other retained chunk. PCM is lossless, so exact
 /// sample values are the legitimate comparison — no bucket/histogram approximation, unlike the
 /// lossy raster oracles in `🔮️oracles/🖼️raster/🦀️.rs`.
-#[cfg(feature = "oracles")]
 pub fn project_wav_mutation(input: &[u8]) -> Result<Json, String> {
     reference::project(input)
 }
@@ -49,7 +47,6 @@ pub fn project_wav_mutation(input: &[u8]) -> Result<Json, String> {
 /// inverse is "restore `base`'s own value for the facet this kind replaced"
 /// (`../🧬️schema/🧬️mutations/🦀️.rs`), reimplemented here over the independent owned
 /// PCM model, never by calling that trait.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -60,35 +57,16 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
 
 /// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: decode the `fmt `/`data`
 /// pair, retain opaque chunks, and write a fresh file from that model alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     reference::rewrite(input)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_wav_mutation(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Reference
-#[cfg(feature = "oracles")]
 mod reference {
     use semio_s_plugin_stdio_audio_test_oracle::{PcmWav, PcmWavFormat};
     use riff::{Chunk, ChunkContents, ChunkId, RIFF_ID};

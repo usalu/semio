@@ -3,6 +3,19 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -238,3 +251,42 @@ opt-level = 2
 # 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
 [profile.wasm-prototype.package.semio-framework-pack]
 opt-level = 2
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-descriptor]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-inferences]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-mutations]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-model]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-descriptor]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-inferences]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-mutations]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-model]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-cobie]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-cv20]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-sav]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust"

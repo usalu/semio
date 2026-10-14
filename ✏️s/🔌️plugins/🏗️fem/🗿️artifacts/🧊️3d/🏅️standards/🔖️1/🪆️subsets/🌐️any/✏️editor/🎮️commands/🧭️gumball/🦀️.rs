@@ -15,7 +15,8 @@ use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactView, ConfigView, EditorApp, Emit, EphemeralEmit, Fault, NoConfig, NoConfigMutation, ViewModel};
 use semio_framework_tool_machine::GesturePhase;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_fem_2d::editor::fem2d::transient::{fem_gumball_drive, FemGumballTransientMutation};
+use semio_s_artifact_fem_2d::editor::fem2d::transient::fem_gumball_drive;
+use semio_s_artifact_fem_2d::editor::fem2d::transient::FemGumballTransientMutation;
 
 type Fem3dSnapshot = crate::Fem3dSnapshot;
 

@@ -3,7 +3,7 @@
 
 use super::super::elements;
 use super::RemoveElementProperty;
-use crate::{Entry, ModelDiff, ModelSnapshot, PropertySetPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, PropertySetPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

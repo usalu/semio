@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_ifc::part21::{write_part21, Part21Document, Part21Header};
+use semio_s_artifact_stdio_contract::part21::{write_part21, Part21Document, Part21Header};
 
 fn finished(ifc: Ifc) -> Part21Document {
     ifc.finish(Part21Header::iso_10303_21_minimum())
@@ -115,7 +115,7 @@ fn the_document_text_survives_a_reparse() {
     let mut ifc = Ifc::new("a", "o", 0.0);
     ifc.rooted("IFCWALL", "w-1", "Quote's wall", "", vec![unset()]);
     let document = finished(ifc);
-    let reparsed = semio_s_artifact_stdio_ifc::part21::parse_part21(&write_part21(&document)).expect("the text parses");
+    let reparsed = semio_s_artifact_stdio_contract::part21::parse_part21(&write_part21(&document)).expect("the text parses");
     assert_eq!(reparsed.instances, document.instances);
 }
 

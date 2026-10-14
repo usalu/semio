@@ -1,0 +1,21 @@
+# 🧭️ Own workspace root, like the plugin-level bridges: a tool binary that reads this artifact's production dispatch aggregates.
+[workspace]
+
+[package]
+name = "semio-s-artifact-wfc-3d-mutation-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Owner-local production mutation inventory of `semio-s-artifact-wfc-3d`."
+
+[package.metadata.semio]
+role = "tool"
+
+[[bin]]
+name = "semio-wfc-3d-mutation-bridge"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-wfc-3d = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-test-mutation-inventory = { path = "../../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust" }

@@ -118,6 +118,8 @@ impl RenderSnapshotSink {
         let Ok(current)=self.current.try_lock()else{return Ok(None)};cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
         Ok(Some(RenderSnapshotOutputLoan{original:ManuallyDrop::new(Some(Arc::clone(current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original snapshot output source is closed"))?)))}))
     }
+    /// 🏞️ Published stationary snapshots remain resident while their event's incoming and displaced bodies close.
+    pub(crate) fn original_event_terminal_is_empty(&self)->bool{self.original_incoming.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_displaced.try_lock().is_ok_and(|owner|owner.is_none())&&self.original_refused.try_lock().is_ok_and(|owner|owner.is_none())}
     /// 🪙️ The genuine snapshot Arc birth and displaced original close are separately paid events.
     pub(crate) fn publish_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
@@ -132,7 +134,7 @@ impl RenderSnapshotSink {
         if source.is_none(){return Ok(true)}let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}let Ok(mut incoming)=self.original_incoming.try_lock()else{return Ok(false)};if incoming.is_some(){return Ok(false)}**incoming=source.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
     pub(crate) fn close_on_original_caller(&self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         let Ok(mut incoming)=self.original_incoming.try_lock()else{return Ok(false)};let Ok(mut displaced)=self.original_displaced.try_lock()else{return Ok(false)};let Ok(mut refused)=self.original_refused.try_lock()else{return Ok(false)};
         if let Some(owner)=refused.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*refused=None;return Ok(false)}
         if let Some(owner)=displaced.as_mut(){if !owner.terminal_is_empty(){close_shared(owner,cx)?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*displaced=None;return Ok(false)}

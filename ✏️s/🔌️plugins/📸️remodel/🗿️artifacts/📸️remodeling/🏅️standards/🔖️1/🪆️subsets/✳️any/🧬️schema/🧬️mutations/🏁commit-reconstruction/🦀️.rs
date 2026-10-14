@@ -2,9 +2,13 @@
 //! lane together and binds raster products into `assets`, naming durable content by id only. The
 //! content itself lands earlier in the same edit through `append-content`.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{CameraTrajectory, GeoProducts, QcReportSnapshot, RemodelingMesh, RemodelingSnapshot, SparseCloud};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoProducts;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -41,18 +45,21 @@ pub struct CommitReconstruction {
 }
 
 /// 🏗️ Builds the single typed result dispatch variant.
-pub fn commit_reconstruction(payload: CommitReconstruction) -> RemodelingMutation {
-    RemodelingMutation::CommitReconstruction(payload)
+pub fn commit_reconstruction<Op: From<CommitReconstruction>>(payload: CommitReconstruction) -> Op {
+    Op::from(payload)
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CommitReconstruction {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for CommitReconstruction
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<CommitReconstruction>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "commit", entity: "reconstruction", kind: "commit-reconstruction", record: "CommittedReconstruction" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     
@@ -66,7 +73,7 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CommitRe
 //#endregion 🔖️Mutation
 
 /// 🔗️ The commit that rebinds asset `id` to durable content `content_id` (or unbinds it) and leaves every result lane exactly as `base` holds it — the absolute setter the asset kinds' inverses restore a handle with.
-pub fn rebind_asset(base: &RemodelingSnapshot, id: &str, content_id: Option<&str>) -> RemodelingMutation {
+pub fn rebind_asset<Op: From<CommitReconstruction>>(base: &RemodelingSnapshot, id: &str, content_id: Option<&str>) -> Op {
     commit_reconstruction(CommitReconstruction {
         sparse: base.results.sparse.clone(),
         trajectory: base.results.trajectory.clone(),

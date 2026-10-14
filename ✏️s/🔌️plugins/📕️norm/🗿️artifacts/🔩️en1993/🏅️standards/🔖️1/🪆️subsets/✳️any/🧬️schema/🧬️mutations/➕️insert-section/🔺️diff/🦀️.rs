@@ -1,8 +1,8 @@
 //! ➕️ `insert-section` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertSection;
-use crate::diff::{En1993Diff, En1993SectionDelta};
-use crate::En1993Snapshot;
+use crate::insert_section::InsertSection;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993SectionDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertSection, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.sections.iter().any(|existing| existing.id == payload.section.id) {

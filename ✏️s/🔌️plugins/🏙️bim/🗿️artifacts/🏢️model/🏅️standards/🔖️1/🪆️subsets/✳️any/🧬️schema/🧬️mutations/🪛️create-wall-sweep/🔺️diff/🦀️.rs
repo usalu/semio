@@ -4,7 +4,7 @@
 use super::super::elements;
 use super::super::wall_depth::sweep_flaw;
 use super::CreateWallSweep;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateWallSweep, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

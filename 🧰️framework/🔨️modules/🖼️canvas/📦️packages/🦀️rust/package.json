@@ -4,9 +4,6 @@
   "scripts": {
     "test": "bun repo run semio-framework-canvas:test"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

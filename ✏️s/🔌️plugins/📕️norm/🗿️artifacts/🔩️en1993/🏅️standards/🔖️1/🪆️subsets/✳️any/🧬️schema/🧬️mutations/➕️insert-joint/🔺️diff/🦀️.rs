@@ -1,8 +1,8 @@
 //! ➕️ `insert-joint` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertJoint;
-use crate::diff::{En1993Diff, En1993JointDelta};
-use crate::En1993Snapshot;
+use crate::insert_joint::InsertJoint;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993JointDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertJoint, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.joints.iter().any(|existing| existing.id == payload.joint.id) {

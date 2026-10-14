@@ -4,7 +4,7 @@
 //! SDK) is the sole runtime adapter, so this file can never structurally emit an artifact or draft
 //! mutation. MUST NOT import anything from the sibling editor module (`policyViewerPurityBreaches`).
 
-use crate::{Puzzle3dMutation, Puzzle3dSnapshot, PUZZLE3D_DIALECT, PUZZLE_3D_SCHEMA};
+use {crate::Puzzle3dMutation, crate::Puzzle3dSnapshot, crate::standards::v1::subsets::any::schema::PUZZLE3D_DIALECT, crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA};
 use crate::viewer::puzzle3d::modes::view;
 use crate::viewer::puzzle3d::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

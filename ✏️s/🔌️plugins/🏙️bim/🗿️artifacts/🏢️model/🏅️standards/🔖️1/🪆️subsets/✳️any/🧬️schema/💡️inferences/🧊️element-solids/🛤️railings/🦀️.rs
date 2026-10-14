@@ -14,7 +14,7 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::colu
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed, point, rectangle};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{Infill, MaterialCategory, ModelSnapshot, Railing};
+use crate::standards::v1::subsets::any::schema::snapshot::{Infill, MaterialCategory, ModelSnapshot, Railing};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::mesh::{extrude_loops, sweep_profile, TriMesh};
 use semio_framework_geometry::placement::ZPlane;
@@ -118,7 +118,7 @@ pub fn railing_geometry(railing: &Railing, own: &StoreyLevel) -> RailingGeometry
     let underside = top_z - extents_of(&railing.profile).1;
     let positions = post_positions(&segments, railing.post_spacing);
     let posts: Vec<Point> = positions.iter().map(|row| row.0).collect();
-    let column = |profile: &crate::Profile, at: Point, angle: f64| extrude_loops(&placed(&profile_loop(profile), at, angle), &[], CHORD_TOLERANCE, ZPlane::flat(base_z), ZPlane::flat(underside));
+    let column = |profile: &crate::standards::v1::subsets::any::schema::snapshot::Profile, at: Point, angle: f64| extrude_loops(&placed(&profile_loop(profile), at, angle), &[], CHORD_TOLERANCE, ZPlane::flat(base_z), ZPlane::flat(underside));
     if underside - base_z <= 1e-9 {
         return RailingGeometry { rail_mesh, ..empty(posts) };
     }

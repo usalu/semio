@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::instanc
 fn with(snapshot: ModelSnapshot, kind: &str, id: &str, parent: &str) -> ModelSnapshot {
     let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-    crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn office() -> ModelSnapshot {
@@ -23,7 +23,7 @@ fn field(kind: &str, key: &str) -> &'static FieldRow {
 
 fn written(snapshot: &ModelSnapshot, kind: &str, key: &str, id: &str, value: &str) -> Option<ModelSnapshot> {
     let mutation = (field(kind, key).write.expect("editable"))(snapshot, id, value)?;
-    crate::mutations::apply_model_mutation(snapshot, &mutation).ok()
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(snapshot, &mutation).ok()
 }
 
 fn surface(kind: SurfaceKind, boundary: Boundary, area: f64) -> EnvelopeSurface {

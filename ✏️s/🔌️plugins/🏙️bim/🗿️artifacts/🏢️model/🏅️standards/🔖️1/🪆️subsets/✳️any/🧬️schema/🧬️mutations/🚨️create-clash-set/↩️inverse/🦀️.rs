@@ -2,7 +2,7 @@
 
 use super::super::delete_clash_set::DeleteClashSet;
 use super::CreateClashSet;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateClashSet, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.clash_sets.contains_key(&payload.id) {

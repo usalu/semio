@@ -6,7 +6,7 @@ use super::super::set_component_override::SetComponentOverride;
 use super::super::set_element_classification::SetElementClassification;
 use super::super::set_element_property::SetElementProperty;
 use super::super::set_space_conditions::SetSpaceConditions;
-use crate::{Entry, KeyedDelta, ModelDiff, ModelMutation, ModelSnapshot, Patch, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, Patch}, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeSet;
 

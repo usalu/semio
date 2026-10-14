@@ -336,13 +336,13 @@ const CANCELLATION_SLOT_SPAN: usize = TOOL_CANCELLATION_SLOTS + ARTIFACT_LIVE_OU
 /// 🧺️ One owner of a fixed registry that the close ladder drains in place: its next turn quote, its granted turn and its terminal witness.
 trait ClosingOwner {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure>;
+    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure>;
     fn closing_terminal_is_empty(&self) -> bool;
 }
 
 impl ClosingOwner for ArtifactSnapshotCloseRetention {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.retirement_demands(body) }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { self.close_step(grant).map_err(Into::into) }
+    fn closing_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { self.close_step(cx,grant).map_err(Into::into) }
     fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
 }
 
@@ -351,7 +351,7 @@ impl<A: ArtifactApp> ClosingOwner for PeerRosterPublication<A> {
         let demand = self.close_demands(body)?;
         Ok(if demand == RetirementDemand::default() && !self.fault.terminal_is_empty() { RetirementDemand { copy_bytes: size_of::<Option<Fault>>(), depth: 1, ..Default::default() } } else { demand })
     }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> {
+    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> {
         match self.close_step(grant)? {
             PluginLifecycleStep::Complete(_) if !self.fault.terminal_is_empty() => {
                 let (fault, progress) = self.take_original_fault(grant).map_err(plugin_retirement_fault)?;
@@ -366,13 +366,13 @@ impl<A: ArtifactApp> ClosingOwner for PeerRosterPublication<A> {
 
 impl ClosingOwner for PeerPresenceRootRetirement {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.retirement_demands(body) }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { self.close_step(grant).map_err(Into::into) }
+    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { self.close_step(grant).map_err(Into::into) }
     fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
 }
 
 impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::PresencePeersRetirement<P> {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { envelope_ladder::erased_demand(self, body) }
-    fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { envelope_ladder::erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
+    fn closing_step(&mut self, _cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,PluginLifecycleFailure> { envelope_ladder::erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
     fn closing_terminal_is_empty(&self) -> bool { store::os_store::presence::PresencePeersRetirement::terminal_is_empty(self) }
 }
 
@@ -385,14 +385,14 @@ fn registry_demands<T: ClosingOwner>(registry: &ArtifactFixedRegistry<T>, cursor
 }
 
 /// 🎟️ Advances the registry owner at `cursor` by one granted turn and removes it at its terminal-empty witness; answers the removed id.
-fn registry_step<T: ClosingOwner>(registry: &mut ArtifactFixedRegistry<T>, cursor: &mut usize, grant: RetainedCloneGrant) -> Result<(PluginLifecycleStep, Option<u64>),PluginLifecycleFailure> {
+fn registry_step<T: ClosingOwner>(registry: &mut ArtifactFixedRegistry<T>, cursor: &mut usize, cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<(PluginLifecycleStep, Option<u64>),PluginLifecycleFailure> {
     let idle = RetainedCloneProgress::default();
     let Some((index, id)) = registry.next_id_from(*cursor) else { return Ok((PluginLifecycleStep::Complete(idle), None)) };
     let owner = registry.get_mut(id).ok_or_else(|| plugin_sdk_fault("closing registry owner changed during one fixed step"))?;
     let progress = if owner.closing_terminal_is_empty() {
         idle
     } else {
-        match owner.closing_step(grant)? {
+        match owner.closing_step(cx,grant)? {
             PluginLifecycleStep::Progress(progress) => {
                 if !owner.closing_terminal_is_empty() {
                     *cursor = index;
@@ -736,16 +736,16 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             CloseRung::MediaClosures=>self.close_media_step(true,cx,grant),
             CloseRung::Segments=>Self::close_segment_step(&mut self.segmented_downloads,grant).map_err(PluginLifecycleFailure::from),
             CloseRung::SegmentClosures=>Self::close_segment_step(&mut self.segmented_closures,grant).map_err(PluginLifecycleFailure::from),
-            CloseRung::SnapshotRetentions=>registry_step(&mut self.snapshot_retirements,&mut self.close_snapshot_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::SnapshotRetentions=>registry_step(&mut self.snapshot_retirements,&mut self.close_snapshot_cursor,cx,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
             CloseRung::ChildMemberRetirements=>{let progress=self.child_member_retirement_step(grant)?;if progress==idle&&!self.child_content_retirements.is_empty(){return Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?))}Ok(RetainedCloneStep::Progress(progress))}
             CloseRung::ChildRootRetirements=>Ok(RetainedCloneStep::Progress(self.child_root_retirement_step(grant)?)),
             CloseRung::DetachChildRoot=>self.detach_child_root_step().map_err(PluginLifecycleFailure::from),
             CloseRung::ClosingChildMember=>{let Some(retirement)=self.close_child_member.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};let step=retirement.close_step(grant)?;if let RetainedCloneStep::Complete(progress)=step{if !retirement.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"child member retirement reported Complete without its exact terminal-empty witness").with_retained_progress(progress).into())}drop(self.close_child_member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:progress.copied_items.max(1),..progress}))}Ok(step)}
             CloseRung::DetachChildren=>{if self.close_child_member_cursor>=CHILD_CONTENT_SLOTS{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"fixed child-member close cursor exhausted before every exact owner was detached").into())}let index=self.close_child_member_cursor;self.close_child_member_cursor+=1;if let Some(entry)=self.children.take_at(index){*self.close_child_member=Some(ChildMemberRetirement::new(entry))}Ok(RetainedCloneStep::Progress(handoff()))}
-            CloseRung::PeerRoster=>{let(step,removed)=registry_step(&mut self.peer_roster_publications,&mut self.close_peer_roster_cursor,grant)?;if let Some(generation)=removed{let slot=Self::peer_roster_slot(generation);if self.peer_roster_reservations[slot].is_some_and(|(reserved,_)|reserved==generation){self.peer_roster_reservations[slot]=None}}Ok(Self::lifecycle_retained(step))}
+            CloseRung::PeerRoster=>{let(step,removed)=registry_step(&mut self.peer_roster_publications,&mut self.close_peer_roster_cursor,cx,grant)?;if let Some(generation)=removed{let slot=Self::peer_roster_slot(generation);if self.peer_roster_reservations[slot].is_some_and(|(reserved,_)|reserved==generation){self.peer_roster_reservations[slot]=None}}Ok(Self::lifecycle_retained(step))}
             CloseRung::PeerRosterOutcomes=>{if let Some((index,generation))=self.peer_roster_outcomes.next_id_from(self.close_peer_roster_cursor){drop(self.peer_roster_outcomes.remove(generation).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"peer roster outcome changed before exact removal"))?);self.close_peer_roster_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS}Ok(RetainedCloneStep::Progress(handoff()))}
-            CloseRung::PeerPresenceRetirements=>registry_step(&mut self.peer_presence_retirements,&mut self.close_peer_presence_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
-            CloseRung::PresencePeerRetirements=>registry_step(&mut self.presence_peer_retirements,&mut self.close_presence_peer_cursor,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::PeerPresenceRetirements=>registry_step(&mut self.peer_presence_retirements,&mut self.close_peer_presence_cursor,cx,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
+            CloseRung::PresencePeerRetirements=>registry_step(&mut self.presence_peer_retirements,&mut self.close_presence_peer_cursor,cx,grant).map(|(step,_)|Self::lifecycle_retained(step)).map_err(PluginLifecycleFailure::from),
             CloseRung::DetachPeerPresence=>self.detach_peer_presence_step().map_err(PluginLifecycleFailure::from),
             CloseRung::EnvelopeIngress=>self.drive_envelope_ingress(grant,true).map(Self::lifecycle_retained).map_err(PluginLifecycleFailure::from),
             CloseRung::EnvelopeDecode=>self.envelope_decode_close_step(cx,grant).map(Self::lifecycle_retained),

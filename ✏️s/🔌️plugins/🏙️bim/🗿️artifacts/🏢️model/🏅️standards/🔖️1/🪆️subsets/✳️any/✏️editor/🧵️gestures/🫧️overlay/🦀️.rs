@@ -4,7 +4,7 @@
 use super::plane::P;
 use super::select;
 use super::session::{Preview, Shape, Style};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
 use semio_framework_plugin::DslValue;
 use std::f64::consts::TAU;

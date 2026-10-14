@@ -1,6 +1,6 @@
 //! 🎐️ `set-ceiling-type` payload. Patches exactly the provided fields of a ceiling type; the layer stack is one field and replaces the whole stack.
 
-use crate::{CeilingTypePatch, Layer, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::CeilingTypePatch, ModelDiff}, snapshot::{Layer, ModelSnapshot}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

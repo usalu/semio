@@ -1,9 +1,9 @@
 //! 🔺️ `change-schema` sparse diff construction.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
 
-use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
-use crate::Generation3dSnapshot;
+use crate::change_schema::ChangeSchema;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// 🏗️ Builds the sparse fixture delta touching only the schema field. Whole-artifact scope —
 /// there is exactly one schema field, so no missing-target case exists here.

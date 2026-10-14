@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-procedural-3d-brep-surface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Procedural generation3d operator facet brep-surface"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-engine = { workspace = true }
+semio-s-artifact-procedural-3d-brep-curve = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-value = { workspace = true }
+semio-s-artifact-procedural-3d-model = { workspace = true }
+semio-s-artifact-procedural-3d-phased-job = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-procedural-generation3d = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-analysis = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-3d-brep-sources = { workspace = true }
+serde_json = { workspace = true }

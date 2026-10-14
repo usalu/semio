@@ -32,7 +32,8 @@ semio-framework-schema-composition = { path = "../../../../../../../🧰️frame
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-ui-contract.workspace = true
-semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -55,7 +56,7 @@ semio-framework = { path = "../../../../../../../🧰️framework/📦️package
 semio-framework-job = { workspace = true }
 # 🛠️ The Transform utility is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework-tool-machine = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true

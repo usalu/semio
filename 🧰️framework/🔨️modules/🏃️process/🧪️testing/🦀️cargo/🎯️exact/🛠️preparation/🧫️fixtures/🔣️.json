@@ -39,6 +39,14 @@
         "captured": 0,
         "refused": true
       }
+    },
+    {
+      "id": "namespace-override",
+      "expected": {
+        "prepared": 1,
+        "captured": 1,
+        "refused": false
+      }
     }
   ]
 }

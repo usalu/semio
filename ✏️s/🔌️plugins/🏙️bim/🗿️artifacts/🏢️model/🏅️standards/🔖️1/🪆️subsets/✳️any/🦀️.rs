@@ -27,7 +27,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 /// 🌳️ The complete declaration of subset `any`.
 pub fn subset<A: crate::BimApplication>() -> SubsetDeclaration<A> {
     SubsetDeclaration {
-        dialect: crate::BIM_MODEL_DIALECT,
+        dialect: crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::bim_model_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
         viewer: viewer_surface::<viewer::BimModelViewer, A>(viewer::create_bim_viewer()),

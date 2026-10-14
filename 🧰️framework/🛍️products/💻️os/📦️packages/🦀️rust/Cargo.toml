@@ -11,6 +11,11 @@ channel-version-consumers = "🔨️modules/🧑‍💻dev/🔖️channel-versio
 role = "framework"
 id = "os-kernel"
 
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 1048576
+maxSourceFiles = 128
+maxActiveLines = 12000
+
 [lints]
 workspace = true
 
@@ -28,16 +33,16 @@ path = "../../🔨️modules/🏪️store/📬️command/♻️retirement/🧪�
 
 [features]
 protocol-laws = ["record-codec-laws"]
-record-codec-laws = ["semio-framework-pack/corruption-testing"]
+record-codec-laws = ["semio-framework-os-pack/record-codec-laws"]
 durable-group-testing = []
-mutation-testing = []
+mutation-testing = ["semio-framework-os-command/mutation-testing"]
 default = ["deflate"]
-deflate = ["semio-framework-replication/deflate", "semio-framework-pack/deflate"]
+deflate = ["semio-framework-os-history/deflate", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
 # `📇️directory/🔌️client`'s `NativeDirectoryTransport` routes its HTTP calls through
 # `semio-framework-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware).
 # The services edge now belongs to `sync` as the shared host boundary for Store file watching too.
-ureq = ["dep:ureq", "dep:semio-framework-actor"]
+ureq = ["semio-framework-os-directory-client/ureq"]
 # 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is now a
 # `not(all(target_arch = "wasm32", target_env = "p2"))`-gated dependency (presentation on native and
 # browser wasm32, absent from wasip2), so a feature-flag `tokio/net` would still unify onto browser
@@ -46,7 +51,7 @@ ureq = ["dep:ureq", "dep:semio-framework-actor"]
 # the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
 # never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️.rs`'s
 # `native_actor` vs `wasm_actor` split — so `net` has no business reaching wasm32 at all.
-sync = ["dep:tokio-tungstenite", "dep:semio-framework-os-services", "dep:ureq", "tokio/rt", "tokio/time"]
+sync = ["semio-framework-os-directory-client/sync", "dep:tokio-tungstenite", "dep:semio-framework-os-services", "dep:ureq", "tokio/rt", "tokio/time"]
 worker = ["sync"]
 # 🧬️ Keeps the boundary/protocol type-generation capability explicit at this layer. The current
 # wire declarations are owned by `semio-framework`, so enabling this feature adds no dependency.
@@ -58,6 +63,27 @@ typegen = []
 native-bin = []
 
 [dependencies]
+semio-framework-pack-json-retained-schema = { path = "../../../../🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-ephemeral = { path = "../../🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-one-item = { path = "../../🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-read = { path = "../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-framework-os-store-envelope = { path = "../../🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust" }
+semio-framework-os-store-command = { path = "../../🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust" }
+semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust" }
+semio-framework-os-store-projection = { path = "../../🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-message-ledger = { path = "../../🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust" }
+semio-framework-value-retirement-owner = { path = "../../../../🔨️modules/🌱️value/♻️retirement/📦️owner/📦️packages/🦀️rust" }
+
+semio-framework-os-directory-client = { path = "../../🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust" }
+semio-framework-os-history = { path = "../../🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust", default-features = false }
+semio-framework-os-pack = { path = "../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-os-vcs = { path = "../../🔨️modules/🌿️vcs/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-os-inference = { path = "../../🔨️modules/💡️inference/📦️packages/🦀️rust" }
+semio-framework-os-identity = { path = "../../🔨️modules/🪪️identity/📦️packages/🦀️rust" }
+semio-framework-os-channel = { path = "../../🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust" }
+semio-framework-plugin-component-receipt = { path = "../../🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-directory = { path = "../../🔨️modules/📇️directory/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-io-sqlite-snapshot = { path = "../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
@@ -70,7 +96,7 @@ semio-framework-ui-locale = { path = "../../../../🔨️modules/🖱️ui/🌐�
 semio-framework-schema-state = { path = "../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-validator = { workspace = true }
-semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { path = "../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -167,6 +193,7 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework-os-store-cursor = { path = "../../🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework = { workspace = true }
 semio-framework-schema = { workspace = true }

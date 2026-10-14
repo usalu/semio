@@ -23,15 +23,15 @@ struct CleanupOutcomes {
 }
 
 impl CleanupOutcomes {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { publication: RetainedJobPublication::new(), delivered: false }
     }
 
-    fn is_delivered(&self) -> bool {
+    pub(crate) fn is_delivered(&self) -> bool {
         self.delivered
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.publication.terminal_is_empty()
     }
 
@@ -58,7 +58,7 @@ impl CleanupOutcomes {
         Ok(original)
     }
 
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+    pub(crate) fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
             JobOutcomeKind::Yield => descriptor.yielded(),
             JobOutcomeKind::Cancelled => descriptor.cancelled(),
@@ -67,14 +67,14 @@ impl CleanupOutcomes {
         }
     }
 
-    fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         if !self.publication.terminal_is_empty() {
             return self.publication.retirement_demands();
         }
         Ok(RetirementDemand::default())
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.publication.terminal_is_empty() {
             return self.publication.close_step(grant);
         }

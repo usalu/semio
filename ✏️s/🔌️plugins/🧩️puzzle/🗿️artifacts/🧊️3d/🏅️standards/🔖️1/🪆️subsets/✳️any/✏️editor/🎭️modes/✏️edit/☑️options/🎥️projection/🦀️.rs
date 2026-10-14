@@ -4,7 +4,7 @@
 //! kind; each instance keeps its own `Puzzle3dCamera::projection` (see `🦀️config.rs`).
 
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
-use crate::editor::puzzle3d::puzzle3d_action;
+use crate::editor::puzzle3d::snapshot::puzzle3d_action;
 use semio_framework_plugin::{world3d_projection_measures, WindowMeasure};
 
 /// 🧭️ The projection select + its parameter sliders for the materialized window's camera.

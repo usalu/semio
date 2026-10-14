@@ -19,7 +19,6 @@ use semio_repo_test_host::Json;
 /// the bytes, exactly as `../🧬️schema/📸️snapshot/🦀️.rs` documents its own codec.
 /// `flexible(true)` because field COUNT is real per-record information, not a rectangular grid the
 /// format guarantees.
-#[cfg(feature = "oracles")]
 pub fn read_grid(input: &[u8]) -> Result<Vec<Vec<String>>, String> {
     let mut reader = csv::ReaderBuilder::new().has_headers(false).flexible(true).from_reader(input);
     reader.records().map(|result| result.map(|record| record.iter().map(|cell| cell.to_string()).collect())).collect::<Result<Vec<_>, _>>().map_err(|error| format!("independent reader could not read a CSV record: {error}"))
@@ -27,7 +26,6 @@ pub fn read_grid(input: &[u8]) -> Result<Vec<Vec<String>>, String> {
 
 /// 📤️ Independent RFC 4180 write: the reference writer decides its own minimal quoting, so a
 /// mutated grid round-trips through it rather than through any hand-rolled escaping.
-#[cfg(feature = "oracles")]
 pub fn write_grid(grid: &[Vec<String>]) -> Result<Vec<u8>, String> {
     let mut writer = csv::WriterBuilder::new().flexible(true).from_writer(Vec::new());
     for record in grid {
@@ -38,11 +36,9 @@ pub fn write_grid(grid: &[Vec<String>]) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Grid
 
 //#region 🔖️SpecReaders
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
@@ -51,7 +47,6 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 }
 /// 📄️ One `CsvRecord` wire value (`{"fields": [{"value", "quoted"}]}`) as a plain row. `quoted` is writer freedom here:
 /// the reference writer decides its own minimal quoting, and the projection compares values only.
-#[cfg(feature = "oracles")]
 fn record_from_wire(record: &Json) -> Vec<String> {
     record.array("fields").iter().map(|field| field.str("value")).collect()
 }
@@ -63,7 +58,6 @@ fn record_from_wire(record: &Json) -> Vec<String> {
 /// reports as a passing test. `set-has-header` deliberately returns `input` unchanged — RFC 4180
 /// carries no header/data distinction on the wire, so toggling the convention never touches a byte;
 /// the caller (this case's adapter) carries the toggled flag into the comparison projection instead.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -102,18 +96,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
 /// 👁️ Projects CSV bytes plus the caller-tracked `has_header` flag (pure metadata the bytes alone
 /// never carry, see `read_grid`) with the INDEPENDENT reader onto the `semantic-tabular-v1` shape
 /// this case's oracle and subject are both compared through.
-#[cfg(feature = "oracles")]
 pub fn project_csv_grid(bytes: &[u8], has_header: bool) -> Result<Json, String> {
     let grid = read_grid(bytes)?;
     Ok(Json::Object(vec![
@@ -124,14 +112,10 @@ pub fn project_csv_grid(bytes: &[u8], has_header: bool) -> Result<Json, String> 
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_csv_grid(_bytes: &[u8], _has_header: bool) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

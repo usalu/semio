@@ -1411,7 +1411,6 @@ async fn close_engine(engine: &mut ArtifactEngine) {
 /// (the runner writes them after replying) — the state a crash after the Ack and before the index write leaves. The
 /// reopened document refills its backlog from the WAL, its maintenance writes every full run, and later commits continue
 /// the same runs: every indexed seq resolves to its WAL position, nothing twice, nothing missing.
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn index_runs_follow_the_receipt_and_a_reopen_refills_them_from_the_wal() {
     let (storage, dir) = fs_storage("index_follows_receipt").await;
@@ -1455,7 +1454,6 @@ async fn index_runs_follow_the_receipt_and_a_reopen_refills_them_from_the_wal() 
 
 /// ⚖️ The engine keeps the receipts of its newest `APPLIED_RECEIPTS_MAX` batches only; a whole-batch resend inside the window
 /// answers its original receipt, an older one is answered by the per-envelope dedupe without a new commit.
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn applied_receipts_keep_a_bounded_window_and_older_resends_stay_idempotent() {
     let (storage, dir) = fs_storage("receipt_window").await;
@@ -1482,7 +1480,6 @@ async fn applied_receipts_keep_a_bounded_window_and_older_resends_stay_idempoten
 /// ⚖️ A document stays writable far past the old 4 096-run listing ceiling (4 runs per 64 single-envelope commits: every
 /// commit failed after ~65.5 k of them): 70 016 single-envelope commits on the filesystem backend, each followed by the
 /// runner's index maintenance, all commit; the four kinds hold a few hundred runs, every indexed seq resolves.
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn seventy_thousand_single_envelope_commits_stay_writable_with_bounded_index_runs() {
     const COMMITS: u64 = 70_016;

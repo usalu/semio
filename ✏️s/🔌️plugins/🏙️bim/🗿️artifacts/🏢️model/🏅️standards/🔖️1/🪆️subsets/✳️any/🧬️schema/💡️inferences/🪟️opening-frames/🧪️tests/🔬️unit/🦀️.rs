@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::{Entry, ModelDiff, OpeningPatch, StoreyPatch, WallPatch};
+use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::{OpeningPatch, StoreyPatch, WallPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const PLACED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json");

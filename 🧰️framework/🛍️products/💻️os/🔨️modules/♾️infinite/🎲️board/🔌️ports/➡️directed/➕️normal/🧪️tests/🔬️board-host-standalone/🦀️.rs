@@ -1,6 +1,6 @@
 #[cfg(test)]
-    fn board_property_retirement_credits(properties: &graph::PropertyBag) -> Result<(usize, usize), BoardEventFault> {
-        let mut stack: Box<[Option<(&graph::manifest::PropertyValue, u16)>; BOARD_POINTER_ITEM_CAPACITY]> = Box::new(std::array::from_fn(|_| None));
+    fn board_property_retirement_credits(properties: &semio_framework_graph_manifest::PropertyBag) -> Result<(usize, usize), BoardEventFault> {
+        let mut stack: Box<[Option<(&semio_framework_graph_manifest::PropertyValue, u16)>; BOARD_POINTER_ITEM_CAPACITY]> = Box::new(std::array::from_fn(|_| None));
         let mut stack_len = 0usize;
         let mut nodes = 0usize;
         let mut bytes = 0usize;
@@ -20,10 +20,10 @@
                 return Err(BoardEventFault::ItemCredits);
             }
             match value {
-                graph::manifest::PropertyValue::String(value) => {
+                semio_framework_graph_manifest::PropertyValue::String(value) => {
                     bytes = bytes.checked_add(value.len()).ok_or(BoardEventFault::ByteCredits)?;
                 }
-                graph::manifest::PropertyValue::Array(values) => {
+                semio_framework_graph_manifest::PropertyValue::Array(values) => {
                     for value in values {
                         if stack_len == BOARD_POINTER_ITEM_CAPACITY {
                             return Err(BoardEventFault::ItemCredits);
@@ -32,7 +32,7 @@
                         stack_len += 1;
                     }
                 }
-                graph::manifest::PropertyValue::Object(values) => {
+                semio_framework_graph_manifest::PropertyValue::Object(values) => {
                     for (key, value) in values {
                         bytes = bytes.checked_add(key.len()).ok_or(BoardEventFault::ByteCredits)?;
                         if stack_len == BOARD_POINTER_ITEM_CAPACITY {
@@ -42,7 +42,7 @@
                         stack_len += 1;
                     }
                 }
-                graph::manifest::PropertyValue::Null | graph::manifest::PropertyValue::Bool(_) | graph::manifest::PropertyValue::Number(_) => {}
+                semio_framework_graph_manifest::PropertyValue::Null | semio_framework_graph_manifest::PropertyValue::Bool(_) | semio_framework_graph_manifest::PropertyValue::Number(_) => {}
             }
             if bytes > BOARD_POINTER_BYTE_CAPACITY {
                 return Err(BoardEventFault::ByteCredits);
@@ -493,7 +493,7 @@
     #[test]
     fn delete_property_pre_admission_rejects_hostile_nodes_without_transfer_or_mutation() {
         let mut host = deletion_fixture("node-a");
-        host.nodes.get_mut("node-a").unwrap().properties.insert("hostile".into(), graph::manifest::PropertyValue::Array((0..=BOARD_POINTER_ITEM_CAPACITY).map(|_| graph::manifest::PropertyValue::Null).collect()));
+        host.nodes.get_mut("node-a").unwrap().properties.insert("hostile".into(), semio_framework_graph_manifest::PropertyValue::Array((0..=BOARD_POINTER_ITEM_CAPACITY).map(|_| semio_framework_graph_manifest::PropertyValue::Null).collect()));
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
         for _ in 0..BOARD_POINTER_ITEM_CAPACITY * 4 {
@@ -507,7 +507,7 @@
         assert!(host.event_terminal_faulted());
 
         let mut node = host.nodes.remove("node-a").unwrap();
-        let Some(graph::manifest::PropertyValue::Array(mut values)) = node.properties.remove("hostile") else { panic!("hostile property remains retained") };
+        let Some(semio_framework_graph_manifest::PropertyValue::Array(mut values)) = node.properties.remove("hostile") else { panic!("hostile property remains retained") };
         while values.pop().is_some() {}
         drop(values);
         drop(node);
@@ -517,7 +517,7 @@
     #[test]
     fn delete_property_derivation_is_one_node_per_turn_and_cancel_restores_exact_owner() {
         let mut host = deletion_fixture("node-a");
-        host.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), graph::manifest::PropertyValue::Array((0..32).map(|index| graph::manifest::PropertyValue::String(format!("value-{index}"))).collect()));
+        host.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), semio_framework_graph_manifest::PropertyValue::Array((0..32).map(|index| semio_framework_graph_manifest::PropertyValue::String(format!("value-{index}"))).collect()));
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
         let mut observed_audit = false;
@@ -542,7 +542,7 @@
             assert!(turns <= 256);
         }
         assert!(host.nodes.contains_key("node-a"));
-        let Some(graph::manifest::PropertyValue::Array(values)) = host.nodes.get("node-a").unwrap().properties.get("nested") else { panic!("cancelled property audit restored the original root") };
+        let Some(semio_framework_graph_manifest::PropertyValue::Array(values)) = host.nodes.get("node-a").unwrap().properties.get("nested") else { panic!("cancelled property audit restored the original root") };
         assert_eq!(values.len(), 32);
         assert!(host.event_authority_terminal_is_empty());
     }
@@ -570,7 +570,7 @@
         assert_eq!(retained_order, legacy_order);
 
         let mut stale = deletion_fixture("node-a");
-        stale.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), graph::manifest::PropertyValue::Array(vec![graph::manifest::PropertyValue::String("retained".into())]));
+        stale.nodes.get_mut("node-a").unwrap().properties.insert("nested".into(), semio_framework_graph_manifest::PropertyValue::Array(vec![semio_framework_graph_manifest::PropertyValue::String("retained".into())]));
         stale.delete_selection();
         for _ in 0..128 {
             let _ = with_board_step_context(1, live.clone(), |context| stale.step_event_authority(context));
@@ -595,7 +595,7 @@
     fn delete_property_key_overflow_faults_after_bounded_restore_without_mutation() {
         let mut host = deletion_fixture("node-a");
         let hostile = "k".repeat(BOARD_POINTER_BYTE_CAPACITY + 1);
-        host.nodes.get_mut("node-a").unwrap().properties.insert(hostile.clone(), graph::manifest::PropertyValue::Null);
+        host.nodes.get_mut("node-a").unwrap().properties.insert(hostile.clone(), semio_framework_graph_manifest::PropertyValue::Null);
         host.delete_selection();
         let live = semio_framework_job::root_cancel_token();
         for _ in 0..128 {

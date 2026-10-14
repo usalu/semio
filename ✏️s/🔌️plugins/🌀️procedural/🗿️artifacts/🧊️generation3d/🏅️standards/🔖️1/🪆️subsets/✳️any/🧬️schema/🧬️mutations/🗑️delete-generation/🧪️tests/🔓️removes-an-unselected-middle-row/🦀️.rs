@@ -2,12 +2,14 @@
 //!
 //! 📍️ The removed generation sits in the MIDDLE of the list and is NOT the selected one, so the inverse must restore both its index and the previous selection.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dDiffRead};
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation, Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiffRead;
+use crate::inverse_generation3d_mutation;
+use crate::Generation3dMutation;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-use crate::Generation3dSnapshot;
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use crate::central_apply::apply_generation3d_mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-generation/🔓️removes-an-unselected-middle-row/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🗑️delete-generation/🔓️removes-an-unselected-middle-row/📸️snapshot/➡️after/🔣️.json");

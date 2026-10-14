@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "claimDirectory": "claims",
+  "resourcePrefix": "queued-original:",
+  "maximumDatabaseBytes": 16384,
+  "cases": [
+    {
+      "pidAlive": true,
+      "kernelHeld": true,
+      "retired": false
+    },
+    {
+      "pidAlive": false,
+      "kernelHeld": true,
+      "retired": false
+    },
+    {
+      "pidAlive": true,
+      "kernelHeld": false,
+      "retired": true
+    },
+    {
+      "pidAlive": false,
+      "kernelHeld": false,
+      "retired": true
+    }
+  ]
+}

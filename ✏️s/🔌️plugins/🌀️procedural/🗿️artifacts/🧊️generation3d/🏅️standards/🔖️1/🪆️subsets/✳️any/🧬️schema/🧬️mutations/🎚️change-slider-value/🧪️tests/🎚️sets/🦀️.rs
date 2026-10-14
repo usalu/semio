@@ -6,12 +6,14 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`), authored from the independent Python oracle
 //! (`🧪️tests/🧊️mutate-procedural-3d-1/🐍️.py`), never from this implementation.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dDiffRead};
-use crate::standards::v1::subsets::any::schema::mutations::{inverse_generation3d_mutation, Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiffRead;
+use crate::inverse_generation3d_mutation;
+use crate::Generation3dMutation;
 
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
-use crate::Generation3dSnapshot;
-use crate::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use crate::central_apply::apply_generation3d_mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎚️change-slider-value/🎚️sets/📸️snapshot/➡️after/🔣️.json");

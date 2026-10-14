@@ -5,8 +5,10 @@
 //! reference. It is the only `delete-` besides `delete-node` that carries no
 //! `mutation.target-referenced` branch, and for a structural rather than a specified reason.
 use super::DeleteSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportRemoval, Fem2dSupportsDelta};
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportRemoval;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dSupportsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &DeleteSupport, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

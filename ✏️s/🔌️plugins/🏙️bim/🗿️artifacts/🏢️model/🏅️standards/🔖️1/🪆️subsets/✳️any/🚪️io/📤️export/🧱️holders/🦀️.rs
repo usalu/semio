@@ -4,7 +4,7 @@
 //! 📎 https://www.iso.org/standard/65708.html
 
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSurface, SurfaceKind};
-use crate::{Layer, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot};
 
 /// 🧱️ The element a surface belongs to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]

@@ -16,7 +16,7 @@ test("native publication and launch read the completed variant catalog", async (
   put(`${registryPath}/🤖️generated/🔌️plugins.json`,[]);put(`${registryPath}/🤖️generated/🎠️playgrounds.json`,[]);
   put(`${scoped}/🔌️plugins.json`,[corpus.entry]);put(`${scoped}/🎠️playgrounds.json`,[corpus.playground]);
   put(`${scoped}/🎮️playground-session/🟦️.ts`,`export const PLAYGROUND_SESSION=${JSON.stringify({variant:corpus.variant,plugins:[{pluginId:corpus.entry.pluginId}]})};`);
-  put("runtime/🔣️runtime.json",{version:1,variant:corpus.variant,profile:"prototype"});put("runtime/.nx-artifact.json",{});
+  put("runtime/🔣️runtime.json",{version:1,variant:corpus.variant,profile:"prototype"});put("runtime/.semio-artifact.json",{});
   const declarations=(file:string,names:string[])=>{const source=ts.createSourceFile(file,readFileSync(file,"utf8"),ts.ScriptTarget.Latest,true);return names.map(name=>source.statements.find((node:any)=>node.name?.text===name||node.declarationList?.declarations.some((row:any)=>row.name?.text===name)).getText(source)).join("\n");};
   let published:any,launched:any,built:any;
   const originalController=new AbortController();

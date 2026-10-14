@@ -1,7 +1,7 @@
-use super::*;
-use crate::editor::remodeling::commands::set_ingest_params::SetIngestParams;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::parameters::*;
+use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params::SetIngestParams;
 use crate::editor::remodeling::unit_tests::context::{app, dispatch, render as render_body};
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn the_parameters_panel_reflects_a_live_param_edit() {

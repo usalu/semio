@@ -112,7 +112,7 @@ pub fn equation_io() -> semio_framework_plugin::AppIo {
 //#region 🔖️GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
 pub fn algorithm_overlay(graph: &EquationGraph) -> std::collections::HashMap<String, String> {
-    use graph::algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
+    use semio_framework_graph_algorithms::{adjacency, bfs_distances, connected_components, strongly_connected_components, topo_sort, IdIndex};
 
     let index = IdIndex::from_ids(graph.nodes.iter().map(|n| n.id.as_str()));
     let edge_pairs: Vec<(usize, usize)> = graph.edges.iter().filter_map(|e| Some((index.index_of(&e.source)?, index.index_of(&e.target)?))).collect();

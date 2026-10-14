@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::standards::v1::subsets::any::io::text::snapshot as generation3d_dsl;
+use crate::snapshot::*;
+use semio_s_artifact_procedural_3d_io_text::snapshot as generation3d_dsl;
 use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_os_kernel::os_store::test_support;
 
@@ -10,7 +10,7 @@ fn dsl_pack_equivalence_empty_projection() {
 
 #[test]
 fn dsl_pack_equivalence_example_fixture() {
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀️default.generation3d fixture"));
+    let projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀️default.generation3d fixture"));
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
@@ -28,7 +28,7 @@ fn dsl_pack_equivalence_with_generation_state() {
         preview_text: Some("42".into()),
     }
     .into();
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection);
+    let projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(projection);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
@@ -44,16 +44,16 @@ fn dsl_pack_equivalence_covers_every_widget_kind() {
         Widget::Cluster { id: "cluster".into(), name: "Group".into(), tree: Default::default(), flow: Default::default() },
     ];
     projection.host_snapshot.synapses = vec![];
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(projection);
+    let projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(projection);
     test_support::assert_dsl_pack_equivalence_cold(&*projection, Generation3dSnapshot::retire_cold);
 }
 
 #[test]
 fn pack_round_trips() {
-    let projection = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture"));
+    let projection = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(generation3d_dsl::parse_dsl(generation3d_dsl::GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse fixture"));
     let bytes = encode(&projection);
     assert!(bytes.starts_with(&semio_framework_os_kernel::os_semio::BINARY_MAGIC), "a whole-document `ArtifactPack` encode carries the semio binary container magic, not the mounted streaming prefix");
-    let decoded = crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead::new(decode(&bytes).expect("decode"));
+    let decoded = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(decode(&bytes).expect("decode"));
     assert_eq!(*decoded, *projection, "pack round trip diverged");
     let mut wrong = bytes;
     wrong[..semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()].copy_from_slice(&[0; semio_framework_os_kernel::os_semio::BINARY_MAGIC.len()]);

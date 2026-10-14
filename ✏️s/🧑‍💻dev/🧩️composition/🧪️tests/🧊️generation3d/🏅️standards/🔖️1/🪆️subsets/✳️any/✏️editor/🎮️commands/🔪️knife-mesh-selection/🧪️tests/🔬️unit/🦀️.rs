@@ -1,6 +1,6 @@
 //! 🧪️ Selected-face cuts preserve geometry, downstream measurements, and document history.
 use super::*;
-use semio_s_artifact_procedural_generation3d::central_apply::{apply_generation3d_mutation};
+use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_mutation;
 
 fn fixtures() -> serde_json::Value { serde_json::from_str(include_str!("../../../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn payload() -> KnifeMeshSelection { KnifeMeshSelection { start: [0.0, -1.0, 0.0], end: [0.0, 1.0, 0.0] } }
@@ -29,9 +29,9 @@ fn knife_selection_parameters_match_shared_fixtures() {
 #[test]
 fn knife_selection_splices_a_typed_widget_and_preserves_analysis() {
     let _serial = crate::test_serial::lock();
-    use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::mutations::{Generation3dMutation};
+    use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::example_snapshot(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
+    let snapshot = semio_s_artifact_procedural_3d_model::example_snapshot(semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH).unwrap();
     let (id, rows) = cut_rows(&payload(), &snapshot.host_snapshot, &["extrude@meshOut#0.face.0".into()]).unwrap();
     let channels: Vec<&str> = rows.iter().filter_map(|row| match row { Generation3dMutation::ChangeWidgetInput(input) if input.id == id => Some(input.channel.as_str()), _ => None }).collect();
     assert_eq!(channels, ["face", "start", "end"], "the cut's inputs are absolute leaves after the default-params splice");
@@ -66,7 +66,7 @@ async fn knife_selection_undo_redo_restores_the_graph_and_analysis_connection() 
     use semio_s_artifact_procedural_generation3d::editor::generation3d::{Generation3dCommand, commands::set_active_example};
     let _serial = crate::test_serial::lock();
     let mut app = context::app().await;
-    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_MESH_WORKBENCH.into() })).await;
     context::drain_flow_eval_ticks(&mut app).await;
     context::select_domain(&mut app, DOMAIN, "face", &["extrude@meshOut#0.face.0"]).await;
     let probe = |app: &context::Generation3dApp| {

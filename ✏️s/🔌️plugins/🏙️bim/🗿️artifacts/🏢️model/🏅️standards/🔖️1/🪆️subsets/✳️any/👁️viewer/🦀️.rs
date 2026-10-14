@@ -10,7 +10,7 @@
 use crate::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
 use crate::viewer::bim::modes::view;
 use crate::viewer::bim::modes::view::windows::{plan, world};
-use crate::{ModelMutation, ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;

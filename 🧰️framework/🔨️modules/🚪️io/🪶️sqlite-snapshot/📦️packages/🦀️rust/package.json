@@ -10,9 +10,6 @@
     "test-operation": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-operation",
     "test-ownership": "bun repo run @semio-tech/framework-sqlite-snapshot-rs:test-ownership"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

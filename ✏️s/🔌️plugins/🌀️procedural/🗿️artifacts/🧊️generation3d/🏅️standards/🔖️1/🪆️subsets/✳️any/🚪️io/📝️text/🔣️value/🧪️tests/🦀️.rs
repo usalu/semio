@@ -1,6 +1,8 @@
 //! 🧪️ Portable representation witnesses and independent serde JSON comparison.
 
-use crate::standards::v1::subsets::any::schema::{catalogue::Localized, mutations::{change_widget_input::WidgetInputValue, select_generation::SelectGeneration}};
+use semio_s_artifact_procedural_3d_model::catalogue::Localized;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::select_generation::SelectGeneration;
 use semio_framework_value::{FromValue, ToValue};
 
 #[test]
@@ -20,22 +22,23 @@ fn value_codec_portable_witnesses() {
     for key in ["inputMissing", "inputForged", "inputShortVector"] {
         assert!(WidgetInputValue::from_value(value(key)).is_err(), "{key}");
     }
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot();
     let encoded = snapshot.to_value();
-    let decoded = crate::Generation3dSnapshot::from_value(encoded).unwrap();
+    let decoded = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::from_value(encoded).unwrap();
     assert_eq!(decoded, snapshot);
     decoded.retire_cold();
     snapshot.retire_cold();
-    assert!(crate::Generation3dSnapshot::from_value(value("snapshotMissingGeneration")).is_err());
+    assert!(semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot::from_value(value("snapshotMissingGeneration")).is_err());
     eprintln!("[DEBUG] generation3d IO value codecs verified against portable serde witnesses");
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[test]
 fn widget_descriptor_io_admission_precedes_native_creation() {
-    use crate::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, with_host, GraphEditor};
+    use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
+    use semio_s_artifact_procedural_3d_model::with_host;
+    use semio_s_artifact_procedural_3d_mutations::GraphEditor;
     use semio_framework_artifact_flow_flow::WidgetDescriptor;
-    let _serial = crate::test_serial::lock();
+    let _serial = semio_s_artifact_procedural_generation3d::test_serial::lock();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let base = empty_generation3d_snapshot();
     for row in fixture["descriptors"].as_array().unwrap() {

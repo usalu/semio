@@ -1,8 +1,9 @@
 //! ♻️ Drawing mutation — `ReplaceLayerStroke`: whole-value swap of one layer's structured `stroke`
 //! sub-payload.
-use crate::diff::DrawingDiff;
-use crate::mutations::DrawingMutation;
-use crate::{DrawingSnapshot, StrokeStyle};
+use semio_s_artifact_draw_drawing_diff::DrawingDiff;
+
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::StrokeStyle;
 
 //#region 🔖️Mutation
 /// ♻️ `replace-layer-stroke` payload.
@@ -22,17 +23,17 @@ pub struct ReplaceLayerStroke {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_layer_stroke(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, stroke: Option<StrokeStyle>) -> DrawingMutation {
-    DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id, stroke })
+pub fn replace_layer_stroke<Op: From<ReplaceLayerStroke>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, stroke: Option<StrokeStyle>) -> Op {
+    Op::from(ReplaceLayerStroke { layer_id, stroke })
 }
 
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for ReplaceLayerStroke {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for ReplaceLayerStroke where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<ReplaceLayerStroke> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "layer", kind: "replace-layer-stroke", record: "ReplacedLayerStroke" };
 
     fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

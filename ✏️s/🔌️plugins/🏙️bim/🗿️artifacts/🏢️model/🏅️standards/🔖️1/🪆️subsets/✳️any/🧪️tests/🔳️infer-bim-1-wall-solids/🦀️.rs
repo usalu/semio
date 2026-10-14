@@ -38,7 +38,7 @@ mod subject {
         let rows: Vec<String> = snapshot
             .walls
             .iter()
-            .filter(|(_, wall)| matches!(wall.axis, semio_s_artifact_bim_model::Axis::Line { .. }))
+            .filter(|(_, wall)| matches!(wall.axis, semio_s_artifact_bim_model::standards::v1::subsets::any::schema::snapshot::Axis::Line { .. }))
             .filter_map(|(id, _)| solids.get(id).map(|solid| format!("\"{id}\":{{\"volume\":{:?},\"z_min\":{:?},\"z_max\":{:?}}}", solid.volume, solid.bounds.min.z, solid.bounds.max.z)))
             .collect();
         let text = format!("{{{}}}", rows.join(","));

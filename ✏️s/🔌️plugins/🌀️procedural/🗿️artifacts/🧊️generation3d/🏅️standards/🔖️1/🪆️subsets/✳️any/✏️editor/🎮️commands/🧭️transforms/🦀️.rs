@@ -5,14 +5,19 @@
 
 use crate::editor::generation3d::config::Generation3dConfigMutation;
 use crate::editor::generation3d::selection::{component_group, ComponentTarget, DOMAIN};
-use crate::standards::v1::subsets::any::schema::mutations::drag_transforms::drag_transforms;
-use crate::standards::v1::subsets::any::schema::mutations::rotate_transforms::rotate_transforms;
-use crate::standards::v1::subsets::any::schema::mutations::scale_transforms::scale_transforms;
-use crate::standards::v1::subsets::any::schema::transforms::{compose_scale, AxisAngle};
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::WidgetInputValue;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{gumball_identity, record_input_leaves, with_host, GraphEditor, GumballRefusal};
-use crate::standards::v1::subsets::any::io::text::snapshot::{ensure_gumball_node};
+use semio_s_artifact_procedural_3d_mutations::drag_transforms::drag_transforms;
+use semio_s_artifact_procedural_3d_mutations::rotate_transforms::rotate_transforms;
+use semio_s_artifact_procedural_3d_mutations::scale_transforms::scale_transforms;
+use semio_s_artifact_procedural_3d_model::transforms::compose_scale;
+use semio_s_artifact_procedural_3d_model::transforms::AxisAngle;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::GraphEditor;
+
+use semio_s_artifact_procedural_3d_io_text::snapshot::widget_id_from_instance_id;
+use semio_s_artifact_procedural_3d_model::widget_id;
+use semio_framework_value::DslValue;
 use machine::Command;
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, Widget};
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, InteractionWrite};
@@ -69,7 +74,7 @@ pub fn validate_component_gesture(snapshot: &FlowHostSnapshot, pinned: &[String]
     let mut visited = std::collections::BTreeSet::new();
     while visited.insert(widget_id) {
         if origin.widget == widget_id && origin.channel == channel { return Ok(()); }
-        let Some(Widget::Neuron { neuron_kind, params, .. }) = snapshot.widgets.iter().find(|widget| crate::widget_id(widget) == widget_id) else { break };
+        let Some(Widget::Neuron { neuron_kind, params, .. }) = snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id) else { break };
         if !matches!(neuron_kind.as_str(), "brep.mesh.translateComponents" | "brep.mesh.rotateComponents" | "brep.mesh.scaleComponents") || channel != "meshOut" { break; }
         let text = |key| params.get(key).and_then(|value| value.as_dictionary()).and_then(|value| value.get("value")).and_then(|value| value.as_atom()).and_then(|value| value.as_str());
         if text("mode") != Some(target.granularity) || text("selection").and_then(|value| serde_json::from_str::<Vec<u32>>(value).ok()).as_ref() != Some(&components) { break; }
@@ -449,10 +454,10 @@ pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operatio
         wanted.extend(gumball_identity(operation));
         let mut inputs = Vec::new();
         for target in &targets {
-            if host_snapshot.widgets.iter().any(|widget| crate::widget_id(widget) == target.as_str()) {
+            if host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == target.as_str()) {
                 continue;
             }
-            if let Some(record) = editor.snapshot().widgets.iter().find(|widget| crate::widget_id(widget) == target.as_str()) {
+            if let Some(record) = editor.snapshot().widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == target.as_str()) {
                 inputs.extend(record_input_leaves(record, &wanted));
             }
         }
@@ -571,7 +576,7 @@ pub fn gumball_ids(snapshot: &FlowHostSnapshot, explicit: &[String], components:
 
 /// 🕹️ ONE one-shot gumball transaction of `ids` — the entry a view without a retained instance (the marks-free handler)
 /// takes; a view without command authority publishes the rows plainly.
-pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion, doc: &semio_framework_plugin::ArtifactView<'_, crate::Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+pub fn gumball_once(verb: &'static str, ids: Vec<String>, motion: GumballMotion, doc: &semio_framework_plugin::ArtifactView<'_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
     if ids.is_empty() {
         return Ok(Emit::default());
     }
@@ -597,7 +602,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     }
     let next_kind = format!("brep.mesh.{operation}Components");
     let selection = serde_json::to_string(&components).map_err(|error| GumballRefusal::ComponentSelection(error.to_string()))?;
-    let current = crate::standards::v1::subsets::any::io::text::snapshot::gumball_widget_json(editor.host(), target.widget);
+    let current = crate::editor::generation3d::transform_commands::gumball_widget_json(editor.host(), target.widget);
     let params = current.as_ref().and_then(|value| value.get("params"));
     let parameter = |name| params.and_then(|value| value.get(name)).and_then(|value| value.get("value")).and_then(semio_framework_value::DslValue::as_str);
     let inputs = editor.snapshot().synapses.iter().filter(|wire| wire.to == target.widget).collect::<Vec<_>>();
@@ -608,7 +613,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     let base = format!("{}__{operation}Components", target.widget);
     let mut id = base.clone();
     let mut suffix = 2;
-    while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
+    while editor.snapshot().widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y).map_err(GumballRefusal::HostEdit)?;
     editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name).map_err(GumballRefusal::HostEdit)?;
@@ -622,3 +627,155 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🔖️GumballTransforms
+
+
+
+
+
+/// 🚫️ Why a gumball refuses its selection — each a NAMED fault code `generation3d.gumball.*` that a shell localizes; the
+/// English [`GumballRefusal::detail`] is only the developer detail.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum GumballRefusal {
+    UnknownOperation,
+    NoShapeSource,
+    KindUnavailable(String),
+    NoShapeOutput,
+    ListOutput,
+    IdentifierOccupied,
+    TransformUnavailable(String),
+    MeshMissing,
+    NotIndexedMesh,
+    SelectionChanged,
+    ComponentSelection(String),
+    HostEdit(String),
+}
+
+impl GumballRefusal {
+    /// 🏷️ The named fault code.
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::UnknownOperation => "generation3d.gumball.unknown-operation",
+            Self::NoShapeSource => "generation3d.gumball.no-shape-source",
+            Self::KindUnavailable(_) => "generation3d.gumball.kind-unavailable",
+            Self::NoShapeOutput => "generation3d.gumball.no-shape-output",
+            Self::ListOutput => "generation3d.gumball.list-output",
+            Self::IdentifierOccupied => "generation3d.gumball.identifier-occupied",
+            Self::TransformUnavailable(_) => "generation3d.gumball.transform-unavailable",
+            Self::MeshMissing => "generation3d.gumball.mesh-missing",
+            Self::NotIndexedMesh => "generation3d.gumball.not-indexed-mesh",
+            Self::SelectionChanged => "generation3d.gumball.selection-changed",
+            Self::ComponentSelection(_) => "generation3d.gumball.component-selection",
+            Self::HostEdit(_) => "generation3d.gumball.host-edit",
+        }
+    }
+
+    /// 🧑‍💻️ The English developer detail of the refusal.
+    pub fn detail(&self) -> String {
+        match self {
+            Self::UnknownOperation => "unknown transform operation".into(),
+            Self::NoShapeSource => "select a shape-producing widget".into(),
+            Self::KindUnavailable(kind) => format!("widget kind {kind} is unavailable"),
+            Self::NoShapeOutput => "the selected output does not contain a shape".into(),
+            Self::ListOutput => "extract a single shape from the list before transforming it".into(),
+            Self::IdentifierOccupied => "the generated transform identifier is already occupied".into(),
+            Self::TransformUnavailable(kind) => format!("transform {kind} is unavailable"),
+            Self::MeshMissing => "the selected mesh no longer exists".into(),
+            Self::NotIndexedMesh => "select a single indexed mesh output; convert B-Rep geometry to a mesh first".into(),
+            Self::SelectionChanged => "the component selection changed during the transform".into(),
+            Self::ComponentSelection(detail) | Self::HostEdit(detail) => detail.clone(),
+        }
+    }
+}
+
+
+/// 🎚️ The literals a gumball composes from on an operator it inserts: a translate's zero offset, a rotate's zero turn about
+/// +z, a scale's unit factors — the inserted record holds its kind's declared defaults (design §20.9), which need not be the
+/// identity, so the gesture's relative leaf only composes correctly after these land.
+pub fn gumball_identity(operation: &str) -> Vec<(&'static str, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue)> {
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+    match operation {
+        "translate" => vec![("offset", WidgetInputValue::Vector([0.0; 3]))],
+        "rotate" => vec![("axis", WidgetInputValue::Vector([0.0, 0.0, 1.0])), ("angle", WidgetInputValue::Number(0.0))],
+        "scale" => vec![("factor", WidgetInputValue::Vector([1.0; 3]))],
+        _ => Vec::new(),
+    }
+}
+
+/// 🧾️ The `change-widget-input` leaves an inserted operator's record needs to hold `wanted` (design §19.4): one per wanted
+/// channel the record holds with another literal, typed like the record's own literal (a point stays a point); a channel
+/// the record does not hold is not one of its inputs and is skipped.
+pub fn record_input_leaves(record: &Widget, wanted: &[(&str, semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue)]) -> Vec<semio_s_artifact_procedural_3d_mutations::Generation3dMutation> {
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
+    use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+    let Widget::Neuron { id, params, .. } = record else { return Vec::new() };
+    wanted
+        .iter()
+        .filter_map(|(channel, value)| {
+            let stored = WidgetInputValue::of_neural_value(params.get(channel)?)?;
+            let typed = match (value, &stored) {
+                (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Point(_)) => WidgetInputValue::Point(*axes),
+                (WidgetInputValue::Point(axes) | WidgetInputValue::Vector(axes), WidgetInputValue::Vector(_)) => WidgetInputValue::Vector(*axes),
+                (value, stored) if value.schema() == stored.schema() => value.clone(),
+                _ => return None,
+            };
+            (typed != stored).then(|| change_widget_input(id.clone(), *channel, typed))
+        })
+        .collect()
+}
+//#endregion 🔖️GumballTransforms
+
+/// 🧭️ Maps a gumball drag operation to the flow-graph transform neuron kind that persists it.
+pub fn gumball_xform_kind(operation: &str) -> &'static str {
+    match operation {
+        "rotate" => "brep.xform.rotate",
+        "scale" => "brep.xform.scale",
+        _ => "brep.xform.translate",
+    }
+}
+
+/// 🪪️ Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.
+pub fn gumball_widget_id(source_id: &str, operation: &str) -> String {
+    format!("{source_id}__gumball_{operation}")
+}
+
+/// 🔀️ Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for
+/// `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what
+/// actually evaluates and exports.
+pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, operation: &str) -> Result<String, GumballRefusal> {
+    if !matches!(operation, "translate" | "rotate" | "scale") { return Err(GumballRefusal::UnknownOperation); }
+    let selected_port = selected_id.split_once('@').map(|(_, channel)| channel.split('#').next().unwrap_or(channel));
+    let selected_id = widget_id_from_instance_id(selected_id);
+    let infos = semio_framework_os_flow::flow_neuron_kind_info_map();
+    let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind.clone()), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
+    let source_info = infos.get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
+    let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
+    let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
+    let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
+    if source_port.cardinality.is_collection() { return Err(GumballRefusal::ListOutput); }
+    let own_suffix = format!("__gumball_{operation}");
+    if selected_id.ends_with(&own_suffix) && source_kind == transform_kind { return Ok(selected_id.to_string()); }
+    let transform_id = gumball_widget_id(selected_id, operation);
+    if let Some(widget) = editor.snapshot().widgets.iter().find(|widget| widget_id(widget) == transform_id) {
+        if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && editor.snapshot().synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
+        return Err(GumballRefusal::IdentifierOccupied);
+    }
+    let transform_output = infos.get(&transform_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(transform_kind.clone()))?;
+    let (source_x, source_y) = editor.snapshot().layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
+    let descriptor = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
+        ("kind".to_string(), semio_framework_value::DslValue::String("neuron".into())),
+        ("id".to_string(), semio_framework_value::DslValue::String(transform_id.clone())),
+        ("neuronKind".to_string(), semio_framework_value::DslValue::String(transform_kind)),
+    ]));
+    editor.add_widget_json(&descriptor, source_x + 220.0, source_y).map_err(GumballRefusal::HostEdit)?;
+    editor.insert_between(selected_id, &source_port.name, &transform_id, if mesh { "mesh" } else { "geometry" }, &transform_output.name).map_err(GumballRefusal::HostEdit)?;
+    editor.set_preview(&transform_id, true);
+    editor.set_preview(selected_id, false);
+    Ok(transform_id)
+}
+
+/// 🔎️ Projects the live widget at the gumball IO boundary.
+pub fn gumball_widget_json(host: &semio_framework_os_flow::FlowHost, widget_id_str: &str) -> Option<DslValue> {
+    host.host_snapshot.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id_str).map(semio_framework_value::ToValue::to_value)
+}

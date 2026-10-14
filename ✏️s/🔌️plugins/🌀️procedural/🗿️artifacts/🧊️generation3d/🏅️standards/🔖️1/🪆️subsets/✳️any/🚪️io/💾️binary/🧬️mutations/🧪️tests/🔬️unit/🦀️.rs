@@ -1,5 +1,6 @@
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::{Generation3dSnapshot, GENERATION_3D_SCHEMA};
+use crate::mutations::*;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_os_kernel::os_store::test_support;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
@@ -71,9 +72,9 @@ fn op_text_parse_rejects_unknown_operation() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trip_with_operation_applied() {
-    let mut store = crate::store_fixture::document_store(Generation3dSnapshot::default()).await;
+    let mut store = semio_s_artifact_procedural_generation3d::store_fixture::document_store(Generation3dSnapshot::default()).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![Generation3dMutation::CreateWidget(CreateWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
-    crate::store_fixture::close(store);
+    semio_s_artifact_procedural_generation3d::store_fixture::close(store);
 }

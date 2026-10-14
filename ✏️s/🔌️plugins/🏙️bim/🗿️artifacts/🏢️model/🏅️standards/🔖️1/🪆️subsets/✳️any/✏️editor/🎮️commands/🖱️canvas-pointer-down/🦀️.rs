@@ -10,7 +10,7 @@ use crate::editor::bim::kit::select_effect;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::editor::bim::utilities::DEFAULT_UTILITY;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 
 /// 🎯️ The pick radius around a press, in canvas pixels.

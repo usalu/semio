@@ -3,7 +3,7 @@
 use super::super::create_beam_type::CreateBeamType;
 use super::super::cascade;
 use super::DeleteBeamType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteBeamType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.beam_types.get(&payload.id) {

@@ -3,8 +3,8 @@
 //! `editTemplate` and `editClassification` commands, row by row; the classification browser assigns codes.
 
 use super::{partial, Created, FieldRow, InferredRow};
-use crate::mutations::set_classification_system::SetClassificationSystem;
-use crate::{Assigned, ClassificationSystem, ClassificationSystemPatch, ModelMutation, ModelSnapshot, PropertyTemplate, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch}, snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate, TemplateTarget}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 //#region 🔖️Targets
@@ -54,7 +54,7 @@ pub static CLASSIFICATION_SYSTEM_FIELDS: &[FieldRow] = &[
 
 //#region 🔖️Inferred
 /// 🏷️ How many holders a template reaches: the holders with an effective property it defines.
-pub fn template_holders(inference: &crate::ModelInference, id: &str) -> usize {
+pub fn template_holders(inference: &crate::standards::v1::subsets::any::schema::inferences::ModelInference, id: &str) -> usize {
     inference.effective_properties.values().filter(|effective| effective.values.values().any(|set| set.values().any(|value| value.template.as_deref() == Some(id)))).count()
 }
 
@@ -79,12 +79,12 @@ pub static CLASSIFICATION_SYSTEM_INFERRED: &[InferredRow] = &[
 //#region 🔖️Create
 /// 🏷️ A new property set template: named, applying to nothing yet, with no definition.
 pub fn create_property_template(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreatePropertyTemplate(crate::mutations::create_property_template::CreatePropertyTemplate { id: id.into(), template: PropertyTemplate { name: name.into(), applies_to: Vec::new(), properties: Vec::new() } }))
+    Ok(ModelMutation::CreatePropertyTemplate(crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate { id: id.into(), template: PropertyTemplate { name: name.into(), applies_to: Vec::new(), properties: Vec::new() } }))
 }
 
 /// 🗂️ A new classification system: named, with no edition, no source and an empty entry table.
 pub fn create_classification_system(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateClassificationSystem(crate::mutations::create_classification_system::CreateClassificationSystem { id: id.into(), system: ClassificationSystem { name: name.into(), edition: String::new(), source: None, entries: Vec::new() } }))
+    Ok(ModelMutation::CreateClassificationSystem(crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem { id: id.into(), system: ClassificationSystem { name: name.into(), edition: String::new(), source: None, entries: Vec::new() } }))
 }
 //#endregion 🔖️Create
 

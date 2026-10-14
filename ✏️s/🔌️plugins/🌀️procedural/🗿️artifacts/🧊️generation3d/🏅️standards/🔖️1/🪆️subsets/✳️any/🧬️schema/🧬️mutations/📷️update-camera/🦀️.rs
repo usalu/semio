@@ -2,9 +2,9 @@
 //! single inseparable viewport facet, never meaningfully set one-field-at-a-time
 //! (`📓️derivation-rules.md` rule 1's `update-<facet>` exception).
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
 //#region 🔖️UpdateCamera
 /// 🔁 Whole-artifact scope — the fixture has exactly one camera.
@@ -18,12 +18,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Upda
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "camera", kind: "update-camera", record: "UpdatedCamera" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        crate::standards::v1::subsets::any::schema::mutations::update_camera::diff::diff(self, base)
+        crate::update_camera::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        crate::standards::v1::subsets::any::schema::mutations::update_camera::inverse::inverse(self, base)?
+        crate::update_camera::inverse::inverse(self, base)?
     
     })
 }

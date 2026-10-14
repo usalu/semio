@@ -2,7 +2,7 @@
 
 use super::super::set_element_property::SetElementProperty;
 use super::RemoveElementProperty;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &RemoveElementProperty, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.properties.get(&payload.id).and_then(|sets| sets.get(&payload.pset)).and_then(|properties| properties.get(&payload.property)) {

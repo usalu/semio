@@ -1,0 +1,187 @@
+[
+ {
+  "package": "semio-framework-os-infinite",
+  "feature": "typegen",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework-os-infinite",
+  "feature": "session-bindgen",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework-os-kernel-db",
+  "feature": "cluster",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework-os-kernel-db",
+  "feature": "otel",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework-pack",
+  "feature": "ureq",
+  "mode": "off"
+ },
+ {
+  "package": "semio-hub-animate",
+  "feature": "preview-window",
+  "mode": "off"
+ },
+ {
+  "package": "semio-hub-animate",
+  "feature": "winit",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-animate-presentation",
+  "feature": "preview-window",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-animate-presentation",
+  "feature": "winit",
+  "mode": "off"
+ },
+ {
+  "package": "semio-hub-norm",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-din16798",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-din18599",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-din4108",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1990",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1991",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1992",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1993",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1994",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1995",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1996",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1997",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1998",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-en1999",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-iso16757",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-norm-vdi3805",
+  "feature": "cross-fem",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-block-2d",
+  "feature": "test-serde",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework-machine",
+  "feature": "testing",
+  "mode": "off"
+ },
+ {
+  "package": "semio-s-artifact-remodel-remodeling",
+  "feature": "video-containers",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-remodel-remodeling",
+  "feature": "video-avi",
+  "mode": "on"
+ },
+ {
+  "package": "semio-s-artifact-remodel-remodeling",
+  "feature": "video-mp4",
+  "mode": "on"
+ },
+ {
+  "package": "semio-hub-procedural",
+  "feature": "guest-heap-witness",
+  "mode": "off"
+ },
+ {
+  "package": "semio-framework",
+  "feature": "typegen",
+  "mode": "test"
+ },
+ {
+  "package": "semio-framework-actor",
+  "feature": "typegen",
+  "mode": "test"
+ },
+ {
+  "package": "semio-framework-async",
+  "feature": "typegen",
+  "mode": "test"
+ },
+ {
+  "package": "semio-framework-os-shell",
+  "feature": "typegen",
+  "mode": "test"
+ },
+ {
+  "package": "semio-s-artifact-lowpoly-lowpoly",
+  "feature": "cad-fixtures",
+  "mode": "test"
+ },
+ {
+  "package": "semio-hub-lowpoly",
+  "feature": "cad-fixtures",
+  "mode": "off"
+ }
+]

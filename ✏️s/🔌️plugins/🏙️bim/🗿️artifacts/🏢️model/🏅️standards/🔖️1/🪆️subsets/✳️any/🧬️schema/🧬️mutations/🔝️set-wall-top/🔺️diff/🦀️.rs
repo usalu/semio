@@ -4,7 +4,7 @@
 
 use super::super::wall_depth::attach_flaw;
 use super::SetWallTop;
-use crate::{Entry, ModelDiff, ModelSnapshot, TopConstraint, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallTop, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

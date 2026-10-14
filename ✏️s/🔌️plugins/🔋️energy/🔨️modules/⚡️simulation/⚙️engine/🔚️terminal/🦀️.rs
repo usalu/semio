@@ -1,5 +1,9 @@
 //! 🌬️ Air terminals: VAV, CAV, reheat, fan-powered, and dual-duct.
 
+extern crate semio_s_plugin_energy_engine_coils as coils;
+extern crate semio_s_plugin_energy_engine_fans as fans;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::coils::{heating_coil_output_w, CoilAirState, HeatingCoil};
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::units::RHO_AIR_REF;

@@ -55,7 +55,7 @@ impl RouteFindings {
 struct RouteMutation {
     id: String,
     label: (String, String),
-    superseded: bool,
+    pub(crate) superseded: bool,
     withdrawn: bool,
     editable: bool,
     worst: Option<semio_framework_diagnostic::Severity>,

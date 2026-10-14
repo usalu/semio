@@ -1,0 +1,21 @@
+{
+  "name": "⚖️test-native-mesh-receiving-source📦️runtime🦀️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run @semio-tech/ui-runtime-rs:test-native-mesh-receiving-source --skip-nx-cache --excludeTaskDependencies --parallel=1 --configuration=prototype",
+  "cwd": "/Users/ueli/Documents/semio",
+  "env": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "CARGO_NET_OFFLINE": "true",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/enduser-2026-10-13",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"/Users/ueli/Documents/semio\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/ui-runtime-rs:test-native-mesh-receiving-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"selection\":[\"nx\",\"run\",\"@semio-tech/ui-runtime-rs:test-native-mesh-receiving-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"buildMode\":\"prototype\",\"native\":{\"artifactDirectory\":\"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"launches\":[[\"nx\",\"run\",\"@semio-tech/ui-runtime-rs:test-native-mesh-receiving-source\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--parallel=1\",\"--configuration=prototype\"]]}",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"procedural:Enduser:native-mesh-receiving-source\",\"maximumElapsedMilliseconds\":3600000}",
+    "NX_TUI": "false",
+    "NX_DAEMON": "false",
+    "NX_ISOLATE_PLUGINS": "false"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.0561005
+  }
+}

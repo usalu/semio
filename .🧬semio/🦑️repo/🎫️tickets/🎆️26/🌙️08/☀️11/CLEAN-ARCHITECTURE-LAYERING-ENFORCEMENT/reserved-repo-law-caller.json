@@ -1,0 +1,19 @@
+{
+  "name": "🎟️Original Reserved Producer Native 🦀️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun repo run @semio-tech/framework-plugin:test-reserved-producer-native --skip-cache --exclude-dependencies --parallel=1 --configuration=prototype",
+  "cwd": "${workspaceFolder}",
+  "env": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"plugin:reserved-producer:native\",\"maximumElapsedMilliseconds\":3600000}",
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+    "CARGO_NET_OFFLINE": "true",
+    "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"repo\",\"run\",\"@semio-tech/framework-plugin:test-reserved-producer-native\",\"--skip-cache\",\"--exclude-dependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"repo\",\"run\",\"@semio-tech/framework-plugin:test-reserved-producer-native\",\"--skip-cache\",\"--exclude-dependencies\",\"--parallel=1\",\"--configuration=prototype\"],\"launches\":[[\"repo\",\"run\",\"@semio-tech/framework-plugin:test-reserved-producer-native\",\"--skip-cache\",\"--exclude-dependencies\",\"--parallel=1\",\"--configuration=prototype\"]],\"buildMode\":\"prototype\"}"
+  },
+  "presentation": {
+    "group": "4_gate",
+    "order": 900.8415
+  }
+}

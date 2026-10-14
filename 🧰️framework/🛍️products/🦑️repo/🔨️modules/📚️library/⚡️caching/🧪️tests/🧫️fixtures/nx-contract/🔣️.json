@@ -955,7 +955,11 @@
   },
   "commandDependencyOracle": {
     "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
-    "dynamicExternalDependencies": [],
+    "dynamicExternalDependencies": [
+      "npm:@iarna/toml",
+      "npm:nx",
+      "npm:typescript"
+    ],
     "sameGraphPasses": 2,
     "expectedMemoizedClosures": 1
   },

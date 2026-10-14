@@ -1,8 +1,8 @@
 //! ✅️ Remodeling play app panel — the Quality tab: the whole-run QC report, including the watertight
 //! sub-report.
 
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -55,8 +55,8 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
     }
     let indexed: Vec<_> = warnings.iter().enumerate().collect();
     PanelTreeBuilder::new("remodeling-qc")?
-        .window_section(windows, "remodeling-qc.report", Some(crate::editor::remodeling::ui_label(labels.panel_qc.as_str())?), true, &rows, |(id, text)| tree_item(id.as_str(), text.as_str()))?
-        .window_section(windows, "remodeling-qc.warnings", Some(crate::editor::remodeling::ui_label(labels.panel_qc.as_str())?), true, &indexed, |(index, warning)| {
+        .window_section(windows, "remodeling-qc.report", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.panel_qc.as_str())?), true, &rows, |(id, text)| tree_item(id.as_str(), text.as_str()))?
+        .window_section(windows, "remodeling-qc.warnings", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.panel_qc.as_str())?), true, &indexed, |(index, warning)| {
             tree_item(format!("remodeling-qc.warning.{index}"), format!("⚠️ {warning}"))
         })?
         .build()
@@ -64,7 +64,4 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

@@ -1,0 +1,148 @@
+{
+ "artifact": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+ "crate": "semio_s_artifact_process_process3d",
+ "consumers": [
+  "✏️s",
+  "🌎️hub"
+ ],
+ "aliases": {
+  "dsl": "semio_framework_os_kernel",
+  "protocol": "semio_framework_os_kernel",
+  "store": "semio_framework_os_kernel",
+  "framework_schema": "semio_framework_schema"
+ },
+ "header": [],
+ "crates": [
+  {
+   "package": "semio-s-artifact-process-process3d-model",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "description": "process3d model: artifact schema, workshop and document records, diff and converters"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-mutations",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/[^/]+/🧪️tests/"
+   ],
+   "flatten": [
+    "/🧬️mutations/[^/]+/🧪️tests/"
+   ],
+   "description": "process3d mutation vocabulary: the dispatch enum and every leaf's fixture laws"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-mut-machines",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️machines",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🏭️ Process3d workshop machine mutations: create, delete, rename, re-icon and re-capability machines.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(🏭create-machine|❌delete-machine|🔖rename-machine|🎨change-machine-icon|🔁replace-machine)/(?!🧪️tests/)"
+   ],
+   "description": "process3d machine mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-mut-steps",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️steps",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🪜️ Process3d step mutations: create, delete, rename, reorder, enable, re-origin and re-measure steps.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(🌱create-step|🗑️delete-step|🏷️rename-step|🔀reorder-steps|🔘change-step-enabled|🧷change-step-origin|📐replace-step-measure)/(?!🧪️tests/)"
+   ],
+   "description": "process3d step mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-mut-stock",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️stock",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🪵️ Process3d stock mutations: move, relabel and replace the stock solid.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(📍move-stock|🔤change-stock-label|🧊replace-stock-solid)/(?!🧪️tests/)"
+   ],
+   "description": "process3d stock mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-inferences",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "description": "process3d inference owners"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-io",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "description": "process3d io: text and binary codecs, import and export"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-io-sqlite",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
+   "description": "process3d SQLite snapshot codec"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-examples",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/"
+   ],
+   "description": "process3d demo and concrete-forest examples"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-host",
+   "owner": "🔨️modules/🏠️host/🧰️owned",
+   "description": "process3d document store and publication authorities"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-config",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "description": "process3d editor config"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-presence",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "description": "process3d editor presence"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-kit",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/"
+   ],
+   "description": "process3d editor kit"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-modes",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "description": "process3d edit mode and workpiece window"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-commands",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "module": "editor::process3d::commands",
+   "create_root": "//! 🎮️ Process3d editor command handlers.",
+   "description": "process3d editor command handlers"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-panels",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "module": "editor::process3d::panels",
+   "create_root": "//! 📌️ Process3d editor panels: catalogue, artifact, inspection and workshop.",
+   "description": "process3d editor panels"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-wasm",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm",
+   "description": "process3d editor wasm bridge"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-editor",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "description": "process3d editor app"
+  },
+  {
+   "package": "semio-s-artifact-process-process3d-viewer",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "description": "process3d viewer"
+  }
+ ],
+ "tests": [],
+ "moves_files": [
+  "🚚️domain.moved.json",
+  "🚚️editor-kit.moved.json"
+ ]
+}

@@ -34,8 +34,8 @@ fn id(value: u32) -> crate::model::EntityId {
     crate::model::EntityId(value)
 }
 
-fn schedule(value: u32) -> crate::model::ScheduleId {
-    crate::model::ScheduleId(value)
+fn schedule(value: u32) -> crate::schedule::ScheduleId {
+    crate::schedule::ScheduleId(value)
 }
 
 fn zone(id: u32) -> crate::model::Zone {
@@ -129,8 +129,8 @@ fn people(id: u32) -> crate::model::PeopleGain {
     crate::model::PeopleGain {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        schedule_id: crate::model::ScheduleId(1),
-        activity_schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
+        activity_schedule_id: crate::schedule::ScheduleId(1),
         people_per_area: 1.0,
         sensible_fraction: 0.5,
         latent_fraction: 0.5,
@@ -143,7 +143,7 @@ fn lighting(id: u32) -> crate::model::LightingGain {
     crate::model::LightingGain {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
         watts_per_area: 1.0,
         radiant_fraction: 0.5,
         visible_fraction: 0.5,
@@ -156,7 +156,7 @@ fn equipment(id: u32) -> crate::model::EquipmentGain {
     crate::model::EquipmentGain {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
         watts_per_area: 1.0,
         radiant_fraction: 0.5,
         latent_fraction: 0.5,
@@ -168,8 +168,8 @@ fn thermostat(id: u32) -> crate::model::Thermostat {
     crate::model::Thermostat {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        heating_setpoint_schedule_id: crate::model::ScheduleId(1),
-        cooling_setpoint_schedule_id: crate::model::ScheduleId(1),
+        heating_setpoint_schedule_id: crate::schedule::ScheduleId(1),
+        cooling_setpoint_schedule_id: crate::schedule::ScheduleId(1),
         heating_throttle_range_k: 1.0,
         cooling_throttle_range_k: 1.0,
     }
@@ -180,8 +180,8 @@ fn humidistat(id: u32) -> crate::model::Humidistat {
     crate::model::Humidistat {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        humidifying_setpoint_schedule_id: crate::model::ScheduleId(1),
-        dehumidifying_setpoint_schedule_id: crate::model::ScheduleId(1),
+        humidifying_setpoint_schedule_id: crate::schedule::ScheduleId(1),
+        dehumidifying_setpoint_schedule_id: crate::schedule::ScheduleId(1),
         humidifying_throttle_range: 1.0,
         dehumidifying_throttle_range: 1.0,
     }
@@ -263,7 +263,7 @@ fn infiltration(id: u32) -> crate::model::Infiltration {
     crate::model::Infiltration {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
         method: crate::air_exchange::InfiltrationMethod::ScheduledAch,
         design_flow_ach: 1.0,
         flow_per_exterior_area_m3_s_m2: 1.0,
@@ -282,7 +282,7 @@ fn mechanical(id: u32) -> crate::model::MechanicalVentilation {
     crate::model::MechanicalVentilation {
         id: crate::model::EntityId(id),
         zone_id: crate::model::EntityId(1),
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
         design_flow_m3_s: 1.0,
         fan_total_efficiency: 0.5,
         fan_delta_pressure_pa: 1.0,
@@ -359,7 +359,7 @@ fn shw(id: u32) -> crate::model::ShwSystemConfig {
         heater_capacity_w: 1.0,
         storage_volume_m3: 1.0,
         setpoint_c: 1.0,
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
     }
 }
 
@@ -381,7 +381,7 @@ fn refrigeration(id: u32) -> crate::model::RefrigerationConfig {
         id: crate::model::EntityId(id),
         case_count: 1,
         design_load_w: 1.0,
-        defrost_schedule_id: crate::model::ScheduleId(1),
+        defrost_schedule_id: crate::schedule::ScheduleId(1),
     }
 }
 
@@ -391,7 +391,7 @@ fn water(id: u32) -> crate::model::WaterSystemConfig {
         id: crate::model::EntityId(id),
         fixture_count: 1,
         peak_flow_l_s: 1.0,
-        schedule_id: crate::model::ScheduleId(1),
+        schedule_id: crate::schedule::ScheduleId(1),
     }
 }
 
@@ -402,7 +402,7 @@ fn fault(id: u32) -> crate::model::FaultDefinition {
         target_equipment_id: crate::model::EntityId(1),
         fault_type: crate::model::FaultType::SensorBias,
         severity: 1.0,
-        start_schedule_id: crate::model::ScheduleId(1),
+        start_schedule_id: crate::schedule::ScheduleId(1),
     }
 }
 
@@ -438,7 +438,7 @@ fn room_air(id: u32) -> crate::model::RoomAirModelAssignment {
 fn constant(id: u32) -> crate::schedule::ConstantSchedule {
     const LABEL: &str = "CONSTANT";
     crate::schedule::ConstantSchedule {
-        id: crate::model::ScheduleId(id),
+        id: crate::schedule::ScheduleId(id),
         value: 1.0,
     }
 }
@@ -446,7 +446,7 @@ fn constant(id: u32) -> crate::schedule::ConstantSchedule {
 fn daily(id: u32) -> crate::schedule::DailySchedule {
     const LABEL: &str = "DAILY";
     crate::schedule::DailySchedule {
-        id: crate::model::ScheduleId(id),
+        id: crate::schedule::ScheduleId(id),
         hourly_values: [0.0; 24],
         interpolation: crate::schedule::ScheduleInterpolation::Continuous,
         limits: None,
@@ -456,17 +456,17 @@ fn daily(id: u32) -> crate::schedule::DailySchedule {
 fn weekly(id: u32) -> crate::schedule::WeeklySchedule {
     const LABEL: &str = "WEEKLY";
     crate::schedule::WeeklySchedule {
-        id: crate::model::ScheduleId(id),
-        daily_schedule_ids: [crate::model::ScheduleId(1); 7],
+        id: crate::schedule::ScheduleId(id),
+        daily_schedule_ids: [crate::schedule::ScheduleId(1); 7],
     }
 }
 
 fn annual(id: u32) -> crate::schedule::AnnualSchedule {
     const LABEL: &str = "ANNUAL";
     crate::schedule::AnnualSchedule {
-        id: crate::model::ScheduleId(id),
+        id: crate::schedule::ScheduleId(id),
         rules: Vec::new(),
-        default_daily_schedule_id: crate::model::ScheduleId(1),
+        default_daily_schedule_id: crate::schedule::ScheduleId(1),
         holiday_daily_schedule_id: None,
         holiday_dates: Vec::new(),
     }
@@ -475,7 +475,7 @@ fn annual(id: u32) -> crate::schedule::AnnualSchedule {
 fn time_series(id: u32) -> crate::schedule::TimeSeriesSchedule {
     const LABEL: &str = "TIME SERIES";
     crate::schedule::TimeSeriesSchedule {
-        id: crate::model::ScheduleId(id),
+        id: crate::schedule::ScheduleId(id),
         values: vec![1.0],
         timestep_seconds: 3600,
     }

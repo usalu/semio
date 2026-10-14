@@ -1,7 +1,9 @@
 //! 🏛️ Writes explicitly owned model placements, geometry references, property sets and relations.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioTransform, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use crate::schema::snapshot::{SemioModelSnapshot, SpatialNode, SpatialKind, SemioModelElement, ElementClass, GeometryRef, PropertySet, Property, PsetValue, ModelRelation, RelationKind};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(snapshot:&SemioModelSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.model.dsl v1\n","stdio.semio.model.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}

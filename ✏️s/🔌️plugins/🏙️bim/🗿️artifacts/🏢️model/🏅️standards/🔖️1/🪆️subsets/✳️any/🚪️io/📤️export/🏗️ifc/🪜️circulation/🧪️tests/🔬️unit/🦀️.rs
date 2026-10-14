@@ -45,16 +45,16 @@ fn a_railing_is_a_brep_with_a_length_and_height_quantity_set() {
     assert_eq!(quantities, [4.0, 1.0]);
 }
 
-fn built() -> crate::ModelSnapshot {
+fn built() -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let mut model = house();
-    model.stairs.get_mut("s-1").expect("stair").stringer = crate::StairStringer { kind: crate::StringerKind::Closed, width: 0.06, depth: 0.24 };
+    model.stairs.get_mut("s-1").expect("stair").stringer = crate::standards::v1::subsets::any::schema::snapshot::StairStringer { kind: crate::standards::v1::subsets::any::schema::snapshot::StringerKind::Closed, width: 0.06, depth: 0.24 };
     let rail = model.railings.get_mut("rl-1").expect("railing");
-    rail.baluster = Some(crate::Baluster { profile: crate::Profile::Rectangle { width: 0.02, depth: 0.02 }, spacing: 0.12 });
-    rail.infill = crate::Infill::Panel { thickness: 0.02 };
+    rail.baluster = Some(crate::standards::v1::subsets::any::schema::snapshot::Baluster { profile: crate::standards::v1::subsets::any::schema::snapshot::Profile::Rectangle { width: 0.02, depth: 0.02 }, spacing: 0.12 });
+    rail.infill = crate::standards::v1::subsets::any::schema::snapshot::Infill::Panel { thickness: 0.02 };
     model
 }
 
-fn aggregated(document: &semio_s_artifact_stdio_ifc::part21::Part21Document, class: &str, tag: &str) -> Option<usize> {
+fn aggregated(document: &semio_s_artifact_stdio_contract::part21::Part21Document, class: &str, tag: &str) -> Option<usize> {
     let (instance, _) = rows(document, class).into_iter().find(|(_, args)| string(args, 7).as_deref() == Some(tag))?;
     rows(document, "IFCRELAGGREGATES").into_iter().find(|(_, relation)| relation[4].as_ref_id() == Some(instance.id)).and_then(|(_, relation)| relation[5].as_list().map(<[_]>::len))
 }

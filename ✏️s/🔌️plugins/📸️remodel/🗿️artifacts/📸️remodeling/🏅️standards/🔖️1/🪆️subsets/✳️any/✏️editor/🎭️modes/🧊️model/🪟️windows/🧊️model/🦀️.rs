@@ -3,9 +3,11 @@
 
 use crate::editor::remodeling::modes::model::windows::model::config::RemodelingModelWindowConfig;
 use crate::editor::remodeling::modes::model::windows::model::options::layers;
-use crate::editor::remodeling::reconstruction_session::{RECONSTRUCTION_TRACE_CAMERA_MESH, RECONSTRUCTION_TRACE_MESH_LANE, RECONSTRUCTION_TRACE_POINT_MESH};
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::RECONSTRUCTION_TRACE_CAMERA_MESH;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::RECONSTRUCTION_TRACE_MESH_LANE;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::RECONSTRUCTION_TRACE_POINT_MESH;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::world3d_scene;
 use semio_framework_plugin::world3d_selection_json;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -69,7 +71,7 @@ fn world_meshes_json(scene: &RemodelingSnapshot) -> String {
         json!({ "id": RECONSTRUCTION_TRACE_MESH_LANE[RECONSTRUCTION_TRACE_POINT_MESH as usize], "data": mesh_data_json(&trace_point_marker()) }),
         json!({ "id": RECONSTRUCTION_TRACE_MESH_LANE[RECONSTRUCTION_TRACE_CAMERA_MESH as usize], "data": mesh_data_json(&trace_camera_marker()) }),
     ];
-    if let Some(mesh) = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) {
+    if let Some(mesh) = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &scene.results.mesh.mesh) {
         meshes.push(json!({ "id": REMODELING_MESH_ID, "data": mesh_data_json(&mesh) }));
     }
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
@@ -194,7 +196,4 @@ pub fn render(scene: &RemodelingSnapshot, config: &RemodelingModelWindowConfig) 
 //#endregion 🔖️Scene
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

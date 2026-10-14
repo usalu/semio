@@ -7,7 +7,7 @@
 //! profile is `Profile::Family` have that node as a parent and read its outline through [`FamilyProfiles`]. See `r11-decision-families.md` and `r12-exec-w2-f1-expression.md` in the BIM-PLUGIN ticket.
 
 use super::super::element_solids::{dep_object, dep_value, SolidBounds};
-use crate::{FamilyCategory, ModelSnapshot, ParameterKind, Profile, Railing, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, ParameterKind, Profile, Railing, Vertex};
 use semio_framework_value::DslValue;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -96,7 +96,7 @@ impl FamilyValue {
 //#region 🔖️Evaluation
 /// 🔷️ The snapshot form of a geometry loop.
 fn marked(outline: &[semio_framework_geometry::loops::Vertex]) -> Vec<Vertex> {
-    outline.iter().map(|vertex| Vertex { point: crate::Point2 { x: vertex.point.x, y: vertex.point.y }, bulge: vertex.bulge }).collect()
+    outline.iter().map(|vertex| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: vertex.point.x, y: vertex.point.y }, bulge: vertex.bulge }).collect()
 }
 
 /// ▶️ The inferred value of family `id` with the override formulas of an instance (empty for the family itself). A family that does not exist is the default (empty) value.

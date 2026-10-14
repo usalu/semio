@@ -59,6 +59,8 @@ impl<T:Send+Sync+'static> SealedShared<T>{
   drop(self.source.take());Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
  }
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
+ /// 🕊️ Observes the genuine strong source after all issued aliases have returned.
+ pub fn original_aliases_are_returned(&self)->bool{self.source.as_ref().is_none_or(|source|Arc::strong_count(source)==1)}
  pub fn return_slot(&self,grant:RetainedCloneGrant)->Result<(SharedAliasReturn<T>,RetainedCloneProgress),ValueError>{
   if self.source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"transferred alias cannot issue a return slot"));}
   if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<SharedAliasReturn<T>>()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"fixed original return slot is not funded"));}

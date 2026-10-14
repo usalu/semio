@@ -36,17 +36,13 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️Container
 /// 🧊️ glTF binary container magic (`glTF`, little-endian).
-#[cfg(feature = "oracles")]
 const GLB_MAGIC: u32 = 0x4654_6C67;
 /// 🧊️ `JSON` chunk type tag, little-endian.
-#[cfg(feature = "oracles")]
 const CHUNK_JSON: u32 = 0x4E4F_534A;
 /// 🧊️ `BIN\0` chunk type tag, little-endian.
-#[cfg(feature = "oracles")]
 const CHUNK_BIN: u32 = 0x004E_4942;
 
 /// 🔢️ Little-endian `u32` at `offset`, independent of any shared byte-reading helper.
-#[cfg(feature = "oracles")]
 fn read_u32(bytes: &[u8], offset: usize) -> Result<u32, String> {
     bytes.get(offset..offset + 4).map(|slice| u32::from_le_bytes(slice.try_into().expect("4-byte slice"))).ok_or_else(|| "unexpected end of GLB header".to_string())
 }
@@ -54,7 +50,6 @@ fn read_u32(bytes: &[u8], offset: usize) -> Result<u32, String> {
 /// 📥️ Independent GLB/`.gltf` read: 12-byte header plus `JSON`/`BIN\0` chunk iteration for a real
 /// binary container, or a bare UTF-8 JSON parse for plain-text `.gltf` input — its own loop, its own
 /// chunk bounds checks, never a call into `decode_glb`/`parse_gltf_document`.
-#[cfg(feature = "oracles")]
 fn read_glb(input: &[u8]) -> Result<(json::JsonValue, Option<Vec<u8>>), String> {
     if input.len() < 12 || read_u32(input, 0)? != GLB_MAGIC {
         let text = std::str::from_utf8(input).map_err(|error| format!("independent reader: input is neither a GLB container nor UTF-8 JSON text: {error}"))?;
@@ -92,7 +87,6 @@ fn read_glb(input: &[u8]) -> Result<(json::JsonValue, Option<Vec<u8>>), String> 
 /// 📤️ Independent GLB write: `JSON` chunk space-padded to a 4-byte boundary (§the format's own
 /// padding rule), `BIN\0` chunk copied byte-for-byte from whatever `read_glb` extracted and
 /// zero-padded the same way — its own header/length arithmetic, never a call into `encode_glb`.
-#[cfg(feature = "oracles")]
 fn write_glb(doc: &json::JsonValue, bin: Option<&[u8]>) -> Vec<u8> {
     let mut json_text = doc.dump().into_bytes();
     while json_text.len() % 4 != 0 {
@@ -120,7 +114,6 @@ fn write_glb(doc: &json::JsonValue, bin: Option<&[u8]>) -> Vec<u8> {
 
 //#region 🔖️Tree
 /// 🔎️ Object member lookup, `None` for a non-object or an absent key.
-#[cfg(feature = "oracles")]
 fn obj_get<'a>(value: &'a json::JsonValue, key: &str) -> Option<&'a json::JsonValue> {
     match value {
         json::JsonValue::Object(object) => object.get(key),
@@ -129,7 +122,6 @@ fn obj_get<'a>(value: &'a json::JsonValue, key: &str) -> Option<&'a json::JsonVa
 }
 
 /// 🔧️ Object member upsert; a no-op on a non-object value.
-#[cfg(feature = "oracles")]
 fn obj_set(value: &mut json::JsonValue, key: &str, item: json::JsonValue) {
     if let json::JsonValue::Object(object) = value {
         object.insert(key, item);
@@ -137,7 +129,6 @@ fn obj_set(value: &mut json::JsonValue, key: &str, item: json::JsonValue) {
 }
 
 /// 🔎️ A cloned array member, or an empty `Vec` for a non-array or an absent key.
-#[cfg(feature = "oracles")]
 fn arr(value: &json::JsonValue, key: &str) -> Vec<json::JsonValue> {
     match obj_get(value, key) {
         Some(json::JsonValue::Array(items)) => items.clone(),
@@ -146,7 +137,6 @@ fn arr(value: &json::JsonValue, key: &str) -> Vec<json::JsonValue> {
 }
 
 /// 🔧️ The array member's own mutable `Vec`, or `None` when `key` is not an array on this object.
-#[cfg(feature = "oracles")]
 fn arr_mut<'a>(value: &'a mut json::JsonValue, key: &str) -> Option<&'a mut Vec<json::JsonValue>> {
     match value {
         json::JsonValue::Object(object) => match object.get_mut(key) {
@@ -160,7 +150,6 @@ fn arr_mut<'a>(value: &'a mut json::JsonValue, key: &str) -> Option<&'a mut Vec<
 /// 🔧️ The array member's mutable `Vec`, inserting an empty array first if `key` is absent or holds
 /// something else — the same "created on first write" shape `skip_serializing_if = "Vec::is_empty"`
 /// gives this subset's own `children`/`nodes` fields.
-#[cfg(feature = "oracles")]
 fn ensure_array<'a>(value: &'a mut json::JsonValue, key: &str) -> &'a mut Vec<json::JsonValue> {
     if !matches!(obj_get(value, key), Some(json::JsonValue::Array(_))) {
         obj_set(value, key, json::JsonValue::Array(Vec::new()));
@@ -170,33 +159,28 @@ fn ensure_array<'a>(value: &'a mut json::JsonValue, key: &str) -> &'a mut Vec<js
 
 /// 🔎️ `document/nodes`, `document/scenes` and `document/materials` lengths, addressed by name so
 /// every kind's bounds check reads identically to its production counterpart's `checked_index`.
-#[cfg(feature = "oracles")]
 fn top_level_len(doc: &json::JsonValue, key: &str) -> usize {
     arr(doc, key).len()
 }
 
 /// 🔎️ `document/nodes/{index}/children`, resolved indices only (a non-numeric entry is skipped
 /// rather than treated as a fatal error, matching how index resolution reads a real document).
-#[cfg(feature = "oracles")]
 fn node_children(doc: &json::JsonValue, index: usize) -> Vec<usize> {
     arr(doc, "nodes").get(index).map(|node| arr(node, "children").iter().filter_map(json::JsonValue::as_usize).collect()).unwrap_or_default()
 }
 
 /// 🔎️ `document/scenes/{index}/nodes`, resolved indices only.
-#[cfg(feature = "oracles")]
 fn scene_nodes(doc: &json::JsonValue, index: usize) -> Vec<usize> {
     arr(doc, "scenes").get(index).map(|scene| arr(scene, "nodes").iter().filter_map(json::JsonValue::as_usize).collect()).unwrap_or_default()
 }
 
 /// 🔎️ `document/scene`, the default scene index, `None` when the document declares none.
-#[cfg(feature = "oracles")]
 fn default_scene_index(doc: &json::JsonValue) -> Option<usize> {
     obj_get(doc, "scene").and_then(json::JsonValue::as_usize)
 }
 //#endregion 🔖️Tree
 
 //#region 🔖️Params
-#[cfg(feature = "oracles")]
 fn usize_param(params: &Json, key: &str) -> Result<usize, String> {
     match params.get(key) {
         Some(Json::Number(number)) => Ok(*number as usize),
@@ -204,7 +188,6 @@ fn usize_param(params: &Json, key: &str) -> Result<usize, String> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn str_param(params: &Json, key: &str) -> Result<String, String> {
     match params.get(key) {
         Some(Json::String(value)) => Ok(value.clone()),
@@ -212,7 +195,6 @@ fn str_param(params: &Json, key: &str) -> Result<String, String> {
     }
 }
 
-#[cfg(feature = "oracles")]
 fn bool_param(params: &Json, key: &str) -> Result<bool, String> {
     match params.get(key) {
         Some(Json::Bool(value)) => Ok(*value),
@@ -221,7 +203,6 @@ fn bool_param(params: &Json, key: &str) -> Result<bool, String> {
 }
 
 /// 🔎️ `usize` elements of an array param — `reorder-cameras`'s own `order` shape.
-#[cfg(feature = "oracles")]
 fn usize_array_param(params: &Json, key: &str) -> Result<Vec<usize>, String> {
     match params.get(key) {
         Some(Json::Array(items)) => items
@@ -238,7 +219,6 @@ fn usize_array_param(params: &Json, key: &str) -> Result<Vec<usize>, String> {
 /// 🔎️ An object param, handed back as this host's own `Json`, for `create-camera`'s `projection`
 /// (a small tagged-union object this reader never needs domain knowledge of — see
 /// [`from_host_json`]).
-#[cfg(feature = "oracles")]
 fn object_param<'a>(params: &'a Json, key: &str) -> Result<&'a Json, String> {
     match params.get(key) {
         Some(value @ Json::Object(_)) => Ok(value),
@@ -248,7 +228,6 @@ fn object_param<'a>(params: &'a Json, key: &str) -> Result<&'a Json, String> {
 
 /// 🔎️ An optional string param (shard G2) — `None` for an absent or non-string key, matching an
 /// `Option<String>` payload field like `generator`/`copyright`/`minVersion`.
-#[cfg(feature = "oracles")]
 fn optional_str_param(params: &Json, key: &str) -> Option<String> {
     match params.get(key) {
         Some(Json::String(value)) => Some(value.clone()),
@@ -258,7 +237,6 @@ fn optional_str_param(params: &Json, key: &str) -> Option<String> {
 
 /// 🔎️ An optional object param — `None` for an absent, `null`, or non-object key, matching an
 /// `Option<GltfJson>` payload field like `change-{asset,document}-{extension,extra}-data`'s `data`.
-#[cfg(feature = "oracles")]
 fn optional_object_param<'a>(params: &'a Json, key: &str) -> Option<&'a Json> {
     match params.get(key) {
         Some(value @ Json::Object(_)) => Some(value),
@@ -267,7 +245,6 @@ fn optional_object_param<'a>(params: &'a Json, key: &str) -> Option<&'a Json> {
 }
 
 /// 🔎️ String elements of an array param — `reorder-{required,used}-extensions`'s own `order`.
-#[cfg(feature = "oracles")]
 fn string_array_param(params: &Json, key: &str) -> Result<Vec<String>, String> {
     match params.get(key) {
         Some(Json::Array(items)) => items
@@ -286,7 +263,6 @@ fn string_array_param(params: &Json, key: &str) -> Result<Vec<String>, String> {
 /// 🌉️ This host's own `Json` → the independent `json`-crate tree — domain-blind, structural only,
 /// used solely to carry `create-camera`'s `projection` param into the parsed document without this
 /// reader ever having to know the camera schema's own field names.
-#[cfg(feature = "oracles")]
 fn from_host_json(value: &Json) -> json::JsonValue {
     match value {
         Json::Null => json::JsonValue::Null,
@@ -308,7 +284,6 @@ fn from_host_json(value: &Json) -> json::JsonValue {
 /// [`from_host_json`], used only to project `document/cameras` (a small self-contained object with
 /// no cross-references of its own, unlike `nodes`/`scenes`) onto the comparison shape without
 /// hand-listing every one of `GltfPerspective`/`GltfOrthographic`'s own field names here.
-#[cfg(feature = "oracles")]
 fn to_host_json(value: &json::JsonValue) -> Json {
     match value {
         json::JsonValue::Null => Json::Null,
@@ -325,7 +300,6 @@ fn to_host_json(value: &json::JsonValue) -> Json {
 /// 🦠️ `bind-node-child` — validated exactly as `../🧬️schema/🧬️mutations/bind-node-child/
 /// 🧬️operation/🦀️.rs` documents (index bounds, no self-parenting, no duplicate link, no
 /// cycle through the independently-walked `children` graph), reimplemented against the parsed tree.
-#[cfg(feature = "oracles")]
 fn bind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "nodes");
     if parent >= total {
@@ -359,7 +333,6 @@ fn bind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize, posit
 }
 
 /// 🦠️ `unbind-node-child` — removes a real, currently-present link.
-#[cfg(feature = "oracles")]
 fn unbind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize) -> Result<(), String> {
     let total = top_level_len(doc, "nodes");
     if parent >= total {
@@ -379,7 +352,6 @@ fn unbind_node_child(doc: &mut json::JsonValue, parent: usize, child: usize) -> 
 /// already a root of. Mirrors production in NOT checking whether the node is already someone's
 /// child elsewhere: `../🧬️schema/🧬️mutations/bind-scene-root-node/🧬️operation/🦀️.rs`'s own
 /// `validate` only rejects an out-of-range index or an already-present root.
-#[cfg(feature = "oracles")]
 fn bind_scene_root_node(doc: &mut json::JsonValue, scene: usize, node: usize, position: usize) -> Result<(), String> {
     if scene >= top_level_len(doc, "scenes") {
         return Err(format!("bind-scene-root-node: scene {scene} out of range"));
@@ -400,7 +372,6 @@ fn bind_scene_root_node(doc: &mut json::JsonValue, scene: usize, node: usize, po
 }
 
 /// 🦠️ `unbind-scene-root-node` — removes a real, currently-present scene root.
-#[cfg(feature = "oracles")]
 fn unbind_scene_root_node(doc: &mut json::JsonValue, scene: usize, node: usize) -> Result<(), String> {
     if scene >= top_level_len(doc, "scenes") {
         return Err(format!("unbind-scene-root-node: scene {scene} out of range"));
@@ -417,14 +388,12 @@ fn unbind_scene_root_node(doc: &mut json::JsonValue, scene: usize, node: usize) 
 
 /// 🔎️ `document/materials/{index}/alphaMode`, defaulted to `OPAQUE` exactly as
 /// `GltfAlphaMode::default()` and its `skip_serializing_if = "is_opaque"` field attribute do.
-#[cfg(feature = "oracles")]
 fn material_alpha_mode(doc: &json::JsonValue, index: usize) -> String {
     arr(doc, "materials").get(index).and_then(|material| obj_get(material, "alphaMode")).and_then(json::JsonValue::as_str).unwrap_or("OPAQUE").to_string()
 }
 
 /// 🔎️ `document/materials/{index}/doubleSided`, defaulted to `false` exactly as
 /// `GltfMaterial::default()` and its `skip_serializing_if = "is_false"` field attribute do.
-#[cfg(feature = "oracles")]
 fn material_double_sided(doc: &json::JsonValue, index: usize) -> bool {
     arr(doc, "materials").get(index).and_then(|material| obj_get(material, "doubleSided")).and_then(json::JsonValue::as_bool).unwrap_or(false)
 }
@@ -432,7 +401,6 @@ fn material_double_sided(doc: &json::JsonValue, index: usize) -> bool {
 /// 🦠️ `change-material-alpha-mode` — rejects an out-of-range material, an invalid enum spelling and
 /// a no-observable-change identity, exactly as `../🧬️schema/🧬️mutations/change-material-alpha-mode/
 /// 🧬️operation/🦀️.rs` does.
-#[cfg(feature = "oracles")]
 fn change_material_alpha_mode(doc: &mut json::JsonValue, material: usize, alpha_mode: &str) -> Result<(), String> {
     if material >= top_level_len(doc, "materials") {
         return Err(format!("change-material-alpha-mode: material {material} out of range"));
@@ -451,7 +419,6 @@ fn change_material_alpha_mode(doc: &mut json::JsonValue, material: usize, alpha_
 /// 🦠️ `change-material-double-sided` — rejects an out-of-range material and a no-observable-change
 /// identity, exactly as `../🧬️schema/🧬️mutations/change-material-double-sided/🧬️operation/
 /// 🦀️.rs` does.
-#[cfg(feature = "oracles")]
 fn change_material_double_sided(doc: &mut json::JsonValue, material: usize, double_sided: bool) -> Result<(), String> {
     if material >= top_level_len(doc, "materials") {
         return Err(format!("change-material-double-sided: material {material} out of range"));
@@ -468,7 +435,6 @@ fn change_material_double_sided(doc: &mut json::JsonValue, material: usize, doub
 /// and, if `document/scene` names a scene at or after `position`, bumps it by one so it still names
 /// the same scene — the same `default_after` remap `../🧬️schema/🧬️mutations/create-scene/🔒️private/
 /// 🦀️.rs` performs, reimplemented independently against the parsed tree.
-#[cfg(feature = "oracles")]
 fn create_scene(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "scenes") {
         return Err("create-scene: position out of range".to_string());
@@ -489,7 +455,6 @@ fn create_scene(doc: &mut json::JsonValue, position: usize) -> Result<(), String
 /// current `document/scene` (if any) is `> position` only when it was bumped, so subtracting one
 /// recovers the pre-mutation value; `<= position` (impossible to equal `position` itself, since that
 /// slot now holds the freshly created scene) means it was never touched.
-#[cfg(feature = "oracles")]
 pub fn undo_create_scene(input: &[u8], position: usize) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(input)?;
     if position >= top_level_len(&doc, "scenes") {
@@ -508,10 +473,6 @@ pub fn undo_create_scene(input: &[u8], position: usize) -> Result<Vec<u8>, Strin
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_create_scene(_input: &[u8], _position: usize) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ↩️ `delete-skin`'s own inverse — deliberately NOT dispatched through `create-skin` (whose own
 /// payload, `../🧬️schema/🧬️mutations/🦴️skin/🌱️create/🦀️.rs`'s `GltfCreateSkinPayload { position }`,
@@ -522,7 +483,6 @@ pub fn undo_create_scene(_input: &[u8], _position: usize) -> Result<Vec<u8>, Str
 /// back — the same "restore the exact removed content, not a same-shaped substitute" rule
 /// `undo_create_scene` above follows for its own kind, applied to the one other kind in this
 /// catalog whose forward mutation is not exactly invertible through a sibling kind's own payload.
-#[cfg(feature = "oracles")]
 pub fn undo_delete_skin(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
@@ -542,26 +502,17 @@ pub fn undo_delete_skin(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, Stri
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_skin(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// ↩️ `delete-animation`'s own inverse — the identical reasoning as [`undo_delete_skin`] above:
 /// `create-animation`'s own payload (`GltfCreateAnimationPayload { position }`) carries no field
 /// content, so it can only ever recreate an EMPTY animation. Restores `document/animations`
 /// straight off the ORIGINAL (pre-mutation) document; no node reference to splice back (see
 /// `create_animation`'s own doc comment — `Animations` is the one family `repair` never touches).
-#[cfg(feature = "oracles")]
 pub fn undo_delete_animation(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
     obj_set(&mut doc, "animations", json::JsonValue::Array(arr(&source, "animations")));
     Ok(write_glb(&doc, bin.as_deref()))
-}
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_animation(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 
 /// 🔀️ The four remap shapes a single-parent top-level collection's own `repair`/`family_ops!`
@@ -569,7 +520,6 @@ pub fn undo_delete_animation(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8
 /// scalar `nodes/{i}/<field>` reference into it (`camera` for `document/cameras`, `skin` for
 /// `document/skins` — the only two top-level families a bare node scalar field points at),
 /// reimplemented independently here — this reader never calls into that production module.
-#[cfg(feature = "oracles")]
 enum IndexChange<'a> {
     Insert(usize),
     Delete(usize),
@@ -581,7 +531,6 @@ enum IndexChange<'a> {
 /// exact four-branch arithmetic `top_level_collections::remap` documents for a `Change`, re-derived
 /// from the format's own rule (an index list shrinks/grows/moves/permutes, every reference to it
 /// must track the same motion) rather than copied from that private helper.
-#[cfg(feature = "oracles")]
 fn remap_index(change: &IndexChange, value: usize) -> Option<usize> {
     match change {
         IndexChange::Insert(at) => Some(if value >= *at { value + 1 } else { value }),
@@ -602,7 +551,6 @@ fn remap_index(change: &IndexChange, value: usize) -> Option<usize> {
 /// 🔧️ Applies one [`IndexChange`] to every `nodes/{i}/<field>` reference in place — `field` is
 /// `"camera"` (§5.7.2, `document/cameras`) or `"skin"` (§5.7.3, `document/skins`), the only two
 /// top-level families a bare node scalar field points at.
-#[cfg(feature = "oracles")]
 fn apply_node_ref_change(doc: &mut json::JsonValue, field: &str, change: &IndexChange) {
     if let Some(nodes) = arr_mut(doc, "nodes") {
         for node in nodes.iter_mut() {
@@ -625,7 +573,6 @@ fn apply_node_ref_change(doc: &mut json::JsonValue, field: &str, change: &IndexC
 /// out-of-range position, exactly as `../🧬️schema/🧬️mutations/🎥️camera/🌱️create/🦀️.rs`'s own
 /// `validate` does. `projection`'s own field names (`type`/`perspective`/`orthographic`/…) are never
 /// inspected here — [`from_host_json`] carries the param through structurally.
-#[cfg(feature = "oracles")]
 fn create_camera(doc: &mut json::JsonValue, position: usize, projection: &Json) -> Result<(), String> {
     if position > top_level_len(doc, "cameras") {
         return Err(format!("create-camera: position {position} out of range"));
@@ -638,7 +585,6 @@ fn create_camera(doc: &mut json::JsonValue, position: usize, projection: &Json) 
 /// 🦠️ `delete-camera` — removes a real, currently-present camera and clears every `node.camera`
 /// reference that pointed at it, exactly as `../🧬️schema/🧬️mutations/🎥️camera/🗑️delete/🦀️.rs`'s
 /// own `validate`/`cameras_op` do.
-#[cfg(feature = "oracles")]
 fn delete_camera(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "cameras") {
         return Err(format!("delete-camera: index {index} out of range"));
@@ -651,7 +597,6 @@ fn delete_camera(doc: &mut json::JsonValue, index: usize) -> Result<(), String> 
 /// 🦠️ `move-camera` — relocates a real camera to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🎥️camera/🚚️move/🦀️.rs`'s own `validate` does (both indices in range,
 /// source and destination distinct — a no-observable-change rejection otherwise).
-#[cfg(feature = "oracles")]
 fn move_camera(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "cameras");
     if index >= total || position >= total {
@@ -670,7 +615,6 @@ fn move_camera(doc: &mut json::JsonValue, index: usize, position: usize) -> Resu
 /// 🦠️ `reorder-cameras` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as `../🧬️schema/🧬️mutations/🎥️camera/🔀️reorder/🦀️.rs`'s
 /// own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_cameras(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "cameras");
     let mut seen = std::collections::BTreeSet::new();
@@ -690,7 +634,6 @@ fn reorder_cameras(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), Str
 /// 🦠️ `create-skin` — inserts one canonical empty skin (`{}`, matching `GltfSkin::default()`) at
 /// `position` into `document/skins`; rejects an out-of-range position, exactly as
 /// `../🧬️schema/🧬️mutations/🦴️skin/🌱️create/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn create_skin(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "skins") {
         return Err(format!("create-skin: position {position} out of range"));
@@ -703,7 +646,6 @@ fn create_skin(doc: &mut json::JsonValue, position: usize) -> Result<(), String>
 /// 🦠️ `delete-skin` — removes a real, currently-present skin and clears every `node.skin` reference
 /// that pointed at it, exactly as `../🧬️schema/🧬️mutations/🦴️skin/🗑️delete/🦀️.rs`'s own
 /// `validate`/`skins_op` do.
-#[cfg(feature = "oracles")]
 fn delete_skin(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "skins") {
         return Err(format!("delete-skin: index {index} out of range"));
@@ -715,7 +657,6 @@ fn delete_skin(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
 
 /// 🦠️ `move-skin` — relocates a real skin to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🦴️skin/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_skin(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "skins");
     if index >= total || position >= total {
@@ -734,7 +675,6 @@ fn move_skin(doc: &mut json::JsonValue, index: usize, position: usize) -> Result
 /// 🦠️ `reorder-skins` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as `../🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🦀️.rs`'s own
 /// `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_skins(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "skins");
     let mut seen = std::collections::BTreeSet::new();
@@ -758,7 +698,6 @@ fn reorder_skins(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), Strin
 /// for (`GltfTopLevelFamily::Animations => {}`) — no node scalar field, nor any other family, ever
 /// points at an animation by index (only the reverse: `animations[i].channels[j].target.node`
 /// points AT a node) — so no `apply_node_ref_change` call belongs here at all.
-#[cfg(feature = "oracles")]
 fn create_animation(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "animations") {
         return Err(format!("create-animation: position {position} out of range"));
@@ -769,7 +708,6 @@ fn create_animation(doc: &mut json::JsonValue, position: usize) -> Result<(), St
 
 /// 🦠️ `delete-animation` — removes a real, currently-present animation, exactly as
 /// `../🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🦀️.rs`'s own `validate`/`animations_op` do.
-#[cfg(feature = "oracles")]
 fn delete_animation(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "animations") {
         return Err(format!("delete-animation: index {index} out of range"));
@@ -780,7 +718,6 @@ fn delete_animation(doc: &mut json::JsonValue, index: usize) -> Result<(), Strin
 
 /// 🦠️ `move-animation` — relocates a real animation to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🎞️animation/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_animation(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "animations");
     if index >= total || position >= total {
@@ -798,7 +735,6 @@ fn move_animation(doc: &mut json::JsonValue, index: usize, position: usize) -> R
 /// 🦠️ `reorder-animations` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as `../🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🦀️.rs`'s
 /// own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_animations(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "animations");
     let mut seen = std::collections::BTreeSet::new();
@@ -824,7 +760,6 @@ fn reorder_animations(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), 
 /// not re-derive that second-array cross-check, since every committed fixture this reader is run
 /// against already satisfies it (the same scope camera/skin's own oracle functions keep: index
 /// bounds and permutation validity, not every domain invariant the production leaf enforces).
-#[cfg(feature = "oracles")]
 fn add_extension(doc: &mut json::JsonValue, key: &str, extension: &str, position: usize) -> Result<(), String> {
     let list = ensure_array(doc, key);
     if position > list.len() {
@@ -837,7 +772,6 @@ fn add_extension(doc: &mut json::JsonValue, key: &str, extension: &str, position
 /// 🧩️ `remove-required-extension`/`remove-used-extension` — removes a real, currently-declared
 /// extension name, exactly as the sibling `✅️required-extension/➖️remove`/`📣️used-extension/➖️remove`
 /// leaves' own `validate` does (the name must be present).
-#[cfg(feature = "oracles")]
 fn remove_extension(doc: &mut json::JsonValue, key: &str, extension: &str) -> Result<(), String> {
     let list = ensure_array(doc, key);
     let index = list.iter().position(|value| value.as_str() == Some(extension)).ok_or_else(|| format!("{key}: extension {extension:?} is not declared"))?;
@@ -848,7 +782,6 @@ fn remove_extension(doc: &mut json::JsonValue, key: &str, extension: &str) -> Re
 /// 🧩️ `move-required-extension`/`move-used-extension` — relocates a real, currently-declared
 /// extension name to a real, different position, exactly as the sibling
 /// `✅️required-extension/🚚️move`/`📣️used-extension/🚚️move` leaves' own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_extension(doc: &mut json::JsonValue, key: &str, extension: &str, position: usize) -> Result<(), String> {
     let list = ensure_array(doc, key);
     let index = list.iter().position(|value| value.as_str() == Some(extension)).ok_or_else(|| format!("{key}: extension {extension:?} is not declared"))?;
@@ -867,7 +800,6 @@ fn move_extension(doc: &mut json::JsonValue, key: &str, extension: &str, positio
 /// permutation of every currently-declared name and must actually move at least one, exactly as the
 /// sibling `✅️required-extension/🔀️reorder`/`📣️used-extension/🔀️reorder` leaves' own `validate`
 /// does.
-#[cfg(feature = "oracles")]
 fn reorder_extensions(doc: &mut json::JsonValue, key: &str, order: &[String]) -> Result<(), String> {
     let current: Vec<String> = arr(doc, key).iter().filter_map(json::JsonValue::as_str).map(str::to_string).collect();
     let mut seen = std::collections::BTreeSet::new();
@@ -885,7 +817,6 @@ fn reorder_extensions(doc: &mut json::JsonValue, key: &str, order: &[String]) ->
 /// 🧩️ `document/asset`, read as a cloned object — mutated off-tree and written back with
 /// [`obj_set`] rather than held as a live `&mut` borrow, so every asset-block function below shares
 /// one simple shape instead of juggling nested-borrow lifetimes against `doc`.
-#[cfg(feature = "oracles")]
 fn asset_object(doc: &json::JsonValue) -> json::JsonValue {
     match obj_get(doc, "asset") {
         Some(value @ json::JsonValue::Object(_)) => value.clone(),
@@ -900,7 +831,6 @@ fn asset_object(doc: &json::JsonValue) -> json::JsonValue {
 /// this subset's own `skip_serializing_if = "Option::is_none"` encodes as the KEY BEING ABSENT, not
 /// present with a `null` value (confirmed by grepping a committed fixture for the literal key
 /// substring before writing this).
-#[cfg(feature = "oracles")]
 fn without_key(container: &json::JsonValue, key: &str) -> json::JsonValue {
     match container {
         json::JsonValue::Object(object) => {
@@ -918,7 +848,6 @@ fn without_key(container: &json::JsonValue, key: &str) -> json::JsonValue {
 
 /// 🧩️ Sets or clears an optional string member in role: `Some` upserts, `None` removes the key
 /// entirely via [`without_key`] — never writes a literal `null`.
-#[cfg(feature = "oracles")]
 fn set_optional_string(container: &mut json::JsonValue, key: &str, value: Option<&str>) {
     match value {
         Some(text) => obj_set(container, key, json::JsonValue::String(text.to_string())),
@@ -929,7 +858,6 @@ fn set_optional_string(container: &mut json::JsonValue, key: &str, value: Option
 /// 🧩️ Sets or clears an optional object member in role — the same law as
 /// [`set_optional_string`], for `change-{asset,document}-{extension,extra}-data`'s own
 /// `Option<GltfJson>` payload shape.
-#[cfg(feature = "oracles")]
 fn set_optional_json(container: &mut json::JsonValue, key: &str, value: Option<json::JsonValue>) {
     match value {
         Some(item) => obj_set(container, key, item),
@@ -941,7 +869,6 @@ fn set_optional_json(container: &mut json::JsonValue, key: &str, value: Option<j
 /// `../🧬️schema/🧬️mutations/🪪️asset/📝️change-description/🦀️.rs`'s own `apply` writes
 /// together (`generator`/`copyright`/`minVersion`), rejecting a call that changes none of them
 /// exactly as that leaf's own `validate` does.
-#[cfg(feature = "oracles")]
 fn change_asset_descriptive_metadata(doc: &mut json::JsonValue, generator: Option<&str>, copyright: Option<&str>, min_version: Option<&str>) -> Result<(), String> {
     let mut asset = asset_object(doc);
     let unchanged = obj_get(&asset, "generator").and_then(json::JsonValue::as_str) == generator && obj_get(&asset, "copyright").and_then(json::JsonValue::as_str) == copyright && obj_get(&asset, "minVersion").and_then(json::JsonValue::as_str) == min_version;
@@ -958,7 +885,6 @@ fn change_asset_descriptive_metadata(doc: &mut json::JsonValue, generator: Optio
 /// 🧩️ `change-asset-version` — `document/asset/version`, the one REQUIRED scalar of the asset
 /// block, exactly as `../🧬️schema/🧬️mutations/🪪️asset/🔖️version/🦀️.rs`'s own `validate`
 /// does (non-empty, observably different).
-#[cfg(feature = "oracles")]
 fn change_asset_version(doc: &mut json::JsonValue, version: &str) -> Result<(), String> {
     let mut asset = asset_object(doc);
     if version.trim().is_empty() {
@@ -977,7 +903,6 @@ fn change_asset_version(doc: &mut json::JsonValue, version: &str) -> Result<(), 
 /// `projection` param already is, exactly as
 /// `../🧬️schema/🧬️mutations/🪪️asset/🧩️change-extensions/🦀️.rs`'s own `validate` does
 /// (observably different).
-#[cfg(feature = "oracles")]
 fn change_asset_extension_data(doc: &mut json::JsonValue, data: Option<&Json>) -> Result<(), String> {
     let mut asset = asset_object(doc);
     let next = data.map(from_host_json);
@@ -991,7 +916,6 @@ fn change_asset_extension_data(doc: &mut json::JsonValue, data: Option<&Json>) -
 
 /// 🧩️ `change-asset-extra-data` — `document/asset/extras`, the same shape as
 /// [`change_asset_extension_data`] for the sibling `extras` member.
-#[cfg(feature = "oracles")]
 fn change_asset_extra_data(doc: &mut json::JsonValue, data: Option<&Json>) -> Result<(), String> {
     let mut asset = asset_object(doc);
     let next = data.map(from_host_json);
@@ -1007,7 +931,6 @@ fn change_asset_extra_data(doc: &mut json::JsonValue, data: Option<&Json>) -> Re
 /// `change-asset-extension-data` (no `asset` wrapper — this one sits directly on the document
 /// root), exactly as `../🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🦀️.rs`'s own
 /// `validate` does.
-#[cfg(feature = "oracles")]
 fn change_document_extension_data(doc: &mut json::JsonValue, data: Option<&Json>) -> Result<(), String> {
     let next = data.map(from_host_json);
     if obj_get(doc, "extensions").cloned() == next {
@@ -1019,7 +942,6 @@ fn change_document_extension_data(doc: &mut json::JsonValue, data: Option<&Json>
 
 /// 🧩️ `change-document-extra-data` — `document/extras`, the same shape as
 /// [`change_document_extension_data`] for the sibling `extras` member.
-#[cfg(feature = "oracles")]
 fn change_document_extra_data(doc: &mut json::JsonValue, data: Option<&Json>) -> Result<(), String> {
     let next = data.map(from_host_json);
     if obj_get(doc, "extras").cloned() == next {
@@ -1048,7 +970,6 @@ fn change_document_extra_data(doc: &mut json::JsonValue, data: Option<&Json>) ->
 /// `("textures", "source")` for `document/images`, `("textures", "sampler")` for
 /// `document/samplers`, the two other top-level families a bare scalar field on a SIBLING top-level
 /// array (not `nodes`) points at.
-#[cfg(feature = "oracles")]
 fn apply_ref_change_in(doc: &mut json::JsonValue, container_key: &str, field: &str, change: &IndexChange) {
     if let Some(items) = arr_mut(doc, container_key) {
         for item in items.iter_mut() {
@@ -1069,7 +990,6 @@ fn apply_ref_change_in(doc: &mut json::JsonValue, container_key: &str, field: &s
 
 /// 🔀️ `meshes[].primitives[].material` — the ONE reference site `document/materials` owns, nested
 /// two levels deep (unlike `nodes[].camera`/`nodes[].skin`, a bare top-level scalar).
-#[cfg(feature = "oracles")]
 fn apply_primitive_material_ref_change(doc: &mut json::JsonValue, change: &IndexChange) {
     if let Some(meshes) = arr_mut(doc, "meshes") {
         for mesh in meshes.iter_mut() {
@@ -1096,7 +1016,6 @@ fn apply_primitive_material_ref_change(doc: &mut json::JsonValue, change: &Index
 /// `Insert`/`Move`/`Reorder`, but under a `Delete` that drops the reference entirely CLEARS THE
 /// WHOLE OBJECT, not just `.index` — the cascading-clear `repair`'s own `Textures` arm documents
 /// (`pbr.base_color_texture = None`, never a partial edit), reimplemented independently here.
-#[cfg(feature = "oracles")]
 fn remap_texture_info_site(container: &mut json::JsonValue, key: &str, change: &IndexChange) {
     let Some(info) = obj_get(container, key).cloned() else { return };
     let Some(index) = obj_get(&info, "index").and_then(json::JsonValue::as_usize) else { return };
@@ -1116,7 +1035,6 @@ fn remap_texture_info_site(container: &mut json::JsonValue, key: &str, change: &
 
 /// 🔀️ All five `TextureInfo` reference sites across every material, for `document/textures`'
 /// `create`/`delete`/`move`/`reorder`.
-#[cfg(feature = "oracles")]
 fn apply_texture_info_ref_change(doc: &mut json::JsonValue, change: &IndexChange) {
     if let Some(materials) = arr_mut(doc, "materials") {
         for material in materials.iter_mut() {
@@ -1136,7 +1054,6 @@ fn apply_texture_info_ref_change(doc: &mut json::JsonValue, change: &IndexChange
 /// 🦠️ `create-material` — inserts one canonical empty material (`{}`, matching
 /// `GltfMaterial::default()`) at `position` into `document/materials`; rejects an out-of-range
 /// position, exactly as `../🧬️schema/🧬️mutations/💎️material/🌱️create/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn create_material(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "materials") {
         return Err(format!("create-material: position {position} out of range"));
@@ -1149,7 +1066,6 @@ fn create_material(doc: &mut json::JsonValue, position: usize) -> Result<(), Str
 /// 🦠️ `delete-material` — removes a real, currently-present material and clears every
 /// `meshes[].primitives[].material` reference that pointed at it, exactly as
 /// `../🧬️schema/🧬️mutations/💎️material/🗑️delete/🦀️.rs`'s own `validate`/`materials_op` do.
-#[cfg(feature = "oracles")]
 fn delete_material(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "materials") {
         return Err(format!("delete-material: index {index} out of range"));
@@ -1161,7 +1077,6 @@ fn delete_material(doc: &mut json::JsonValue, index: usize) -> Result<(), String
 
 /// 🦠️ `move-material` — relocates a real material to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/💎️material/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_material(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "materials");
     if index >= total || position >= total {
@@ -1180,7 +1095,6 @@ fn move_material(doc: &mut json::JsonValue, index: usize, position: usize) -> Re
 /// 🦠️ `reorder-materials` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as
 /// `../🧬️schema/🧬️mutations/💎️material/🔀️reorder/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_materials(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "materials");
     let mut seen = std::collections::BTreeSet::new();
@@ -1201,7 +1115,6 @@ fn reorder_materials(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), S
 /// `create-material`'s own payload carries no field content, so it can only ever recreate an EMPTY
 /// material. Restores `document/materials` and every `meshes[].primitives[].material` reference
 /// straight off the ORIGINAL (pre-mutation) document.
-#[cfg(feature = "oracles")]
 pub fn undo_delete_material(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
@@ -1226,15 +1139,10 @@ pub fn undo_delete_material(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, 
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_material(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🦠️ `create-image` — inserts one canonical empty image (`{}`) at `position` into
 /// `document/images`; rejects an out-of-range position, exactly as
 /// `../🧬️schema/🧬️mutations/🖼️image/🌱️create/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn create_image(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "images") {
         return Err(format!("create-image: position {position} out of range"));
@@ -1247,7 +1155,6 @@ fn create_image(doc: &mut json::JsonValue, position: usize) -> Result<(), String
 /// 🦠️ `delete-image` — removes a real, currently-present image and clears every `textures[].source`
 /// reference that pointed at it, exactly as
 /// `../🧬️schema/🧬️mutations/🖼️image/🗑️delete/🦀️.rs`'s own `validate`/`images_op` do.
-#[cfg(feature = "oracles")]
 fn delete_image(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "images") {
         return Err(format!("delete-image: index {index} out of range"));
@@ -1259,7 +1166,6 @@ fn delete_image(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
 
 /// 🦠️ `move-image` — relocates a real image to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🖼️image/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_image(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "images");
     if index >= total || position >= total {
@@ -1278,7 +1184,6 @@ fn move_image(doc: &mut json::JsonValue, index: usize, position: usize) -> Resul
 /// 🦠️ `reorder-images` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as
 /// `../🧬️schema/🧬️mutations/🖼️image/🔀️reorder/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_images(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "images");
     let mut seen = std::collections::BTreeSet::new();
@@ -1298,7 +1203,6 @@ fn reorder_images(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), Stri
 /// ↩️ `delete-image`'s own inverse — the identical reasoning [`undo_delete_material`] documents.
 /// Restores `document/images` and every `textures[].source` reference straight off the ORIGINAL
 /// (pre-mutation) document.
-#[cfg(feature = "oracles")]
 pub fn undo_delete_image(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
@@ -1318,15 +1222,10 @@ pub fn undo_delete_image(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, Str
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_image(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🦠️ `create-sampler` — inserts one canonical empty sampler (`{}`) at `position` into
 /// `document/samplers`; rejects an out-of-range position, exactly as
 /// `../🧬️schema/🧬️mutations/🎛️sampler/🌱️create/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn create_sampler(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "samplers") {
         return Err(format!("create-sampler: position {position} out of range"));
@@ -1339,7 +1238,6 @@ fn create_sampler(doc: &mut json::JsonValue, position: usize) -> Result<(), Stri
 /// 🦠️ `delete-sampler` — removes a real, currently-present sampler and clears every
 /// `textures[].sampler` reference that pointed at it, exactly as
 /// `../🧬️schema/🧬️mutations/🎛️sampler/🗑️delete/🦀️.rs`'s own `validate`/`samplers_op` do.
-#[cfg(feature = "oracles")]
 fn delete_sampler(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "samplers") {
         return Err(format!("delete-sampler: index {index} out of range"));
@@ -1351,7 +1249,6 @@ fn delete_sampler(doc: &mut json::JsonValue, index: usize) -> Result<(), String>
 
 /// 🦠️ `move-sampler` — relocates a real sampler to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🎛️sampler/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_sampler(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "samplers");
     if index >= total || position >= total {
@@ -1370,7 +1267,6 @@ fn move_sampler(doc: &mut json::JsonValue, index: usize, position: usize) -> Res
 /// 🦠️ `reorder-samplers` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as
 /// `../🧬️schema/🧬️mutations/🎛️sampler/🔀️reorder/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_samplers(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "samplers");
     let mut seen = std::collections::BTreeSet::new();
@@ -1390,7 +1286,6 @@ fn reorder_samplers(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), St
 /// ↩️ `delete-sampler`'s own inverse — the identical reasoning [`undo_delete_image`] documents.
 /// Restores `document/samplers` and every `textures[].sampler` reference straight off the ORIGINAL
 /// (pre-mutation) document.
-#[cfg(feature = "oracles")]
 pub fn undo_delete_sampler(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
@@ -1410,15 +1305,10 @@ pub fn undo_delete_sampler(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, S
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_sampler(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🦠️ `create-texture` — inserts one canonical empty texture (`{}`) at `position` into
 /// `document/textures`; rejects an out-of-range position, exactly as
 /// `../🧬️schema/🧬️mutations/🎨️texture/🌱️create/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn create_texture(doc: &mut json::JsonValue, position: usize) -> Result<(), String> {
     if position > top_level_len(doc, "textures") {
         return Err(format!("create-texture: position {position} out of range"));
@@ -1431,7 +1321,6 @@ fn create_texture(doc: &mut json::JsonValue, position: usize) -> Result<(), Stri
 /// 🦠️ `delete-texture` — removes a real, currently-present texture and clears every one of the five
 /// `TextureInfo` reference sites (whole object, not just `.index`) that pointed at it, exactly as
 /// `../🧬️schema/🧬️mutations/🎨️texture/🗑️delete/🦀️.rs`'s own `validate`/`textures_op` do.
-#[cfg(feature = "oracles")]
 fn delete_texture(doc: &mut json::JsonValue, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, "textures") {
         return Err(format!("delete-texture: index {index} out of range"));
@@ -1443,7 +1332,6 @@ fn delete_texture(doc: &mut json::JsonValue, index: usize) -> Result<(), String>
 
 /// 🦠️ `move-texture` — relocates a real texture to a real, different position, exactly as
 /// `../🧬️schema/🧬️mutations/🎨️texture/🚚️move/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn move_texture(doc: &mut json::JsonValue, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, "textures");
     if index >= total || position >= total {
@@ -1462,7 +1350,6 @@ fn move_texture(doc: &mut json::JsonValue, index: usize, position: usize) -> Res
 /// 🦠️ `reorder-textures` — `order` must be a genuine permutation of every existing index and must
 /// actually move at least one, exactly as
 /// `../🧬️schema/🧬️mutations/🎨️texture/🔀️reorder/🦀️.rs`'s own `validate` does.
-#[cfg(feature = "oracles")]
 fn reorder_textures(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), String> {
     let total = top_level_len(doc, "textures");
     let mut seen = std::collections::BTreeSet::new();
@@ -1483,7 +1370,6 @@ fn reorder_textures(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), St
 /// restoring the FULL `TextureInfo` object at each of the five sites (never just `.index`) straight
 /// off the ORIGINAL (pre-mutation) document, mirroring [`apply_texture_info_ref_change`]'s own
 /// cascading-clear shape in reverse.
-#[cfg(feature = "oracles")]
 pub fn undo_delete_texture(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, _) = read_glb(original)?;
@@ -1522,10 +1408,6 @@ pub fn undo_delete_texture(mutated: &[u8], original: &[u8]) -> Result<Vec<u8>, S
     }
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn undo_delete_texture(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Kinds
 
 //#region 🔖️StructureKinds
@@ -1537,7 +1419,6 @@ pub fn undo_delete_texture(_mutated: &[u8], _original: &[u8]) -> Result<Vec<u8>,
 /// matrices and animation sampler input/output point at accessors; accessor and image buffer views
 /// point at buffer views; buffer views point at buffers. A dropped optional reference is removed, a
 /// dropped required one (sampler input/output, sparse views, a view's buffer) refuses the change.
-#[cfg(feature = "oracles")]
 fn remap_optional_field(item: &mut json::JsonValue, key: &str, change: &IndexChange) {
     if let Some(value) = obj_get(item, key).and_then(json::JsonValue::as_usize) {
         match remap_index(change, value) {
@@ -1548,7 +1429,6 @@ fn remap_optional_field(item: &mut json::JsonValue, key: &str, change: &IndexCha
 }
 
 /// 🔀️ A required index field: a change that drops its target refuses instead of detaching it.
-#[cfg(feature = "oracles")]
 fn remap_required_field(item: &mut json::JsonValue, key: &str, change: &IndexChange, path: &str) -> Result<(), String> {
     if let Some(value) = obj_get(item, key).and_then(json::JsonValue::as_usize) {
         let mapped = remap_index(change, value).ok_or_else(|| format!("{path}: the change would break a required reference"))?;
@@ -1558,7 +1438,6 @@ fn remap_required_field(item: &mut json::JsonValue, key: &str, change: &IndexCha
 }
 
 /// 🔀️ An index list field (`children`, scene `nodes`, skin `joints`): dropped entries leave the list.
-#[cfg(feature = "oracles")]
 fn remap_list_field(item: &mut json::JsonValue, key: &str, change: &IndexChange) {
     if let Some(items) = arr_mut(item, key) {
         *items = items.iter().filter_map(json::JsonValue::as_usize).filter_map(|value| remap_index(change, value)).map(json::JsonValue::from).collect();
@@ -1567,7 +1446,6 @@ fn remap_list_field(item: &mut json::JsonValue, key: &str, change: &IndexChange)
 
 /// 🔀️ A semantic → accessor map (`attributes`, one morph target): dropped entries leave the map,
 /// every other entry keeps its position.
-#[cfg(feature = "oracles")]
 fn remap_semantic_map(map: &mut json::JsonValue, change: &IndexChange) {
     if let json::JsonValue::Object(object) = map {
         let mut next = json::object::Object::new();
@@ -1581,7 +1459,6 @@ fn remap_semantic_map(map: &mut json::JsonValue, change: &IndexChange) {
 }
 
 /// ✂️ Removes one object member; a no-op when absent.
-#[cfg(feature = "oracles")]
 fn remove_key(item: &mut json::JsonValue, key: &str) {
     if let json::JsonValue::Object(object) = item {
         object.remove(key);
@@ -1589,7 +1466,6 @@ fn remove_key(item: &mut json::JsonValue, key: &str) {
 }
 
 /// 🔀️ Every reference site of one top-level family, moved with `change`.
-#[cfg(feature = "oracles")]
 fn remap_family_references(doc: &mut json::JsonValue, family: &str, change: &IndexChange) -> Result<(), String> {
     match family {
         "scenes" => remap_optional_field(doc, "scene", change),
@@ -1673,7 +1549,6 @@ fn remap_family_references(doc: &mut json::JsonValue, family: &str, change: &Ind
 }
 
 /// 🔢️ `order` is a genuine permutation of `0..total` that moves at least one entry.
-#[cfg(feature = "oracles")]
 fn checked_permutation(kind: &str, order: &[usize], total: usize) -> Result<(), String> {
     let mut seen = std::collections::BTreeSet::new();
     if order.len() != total || order.iter().any(|index| *index >= total || !seen.insert(*index)) {
@@ -1686,7 +1561,6 @@ fn checked_permutation(kind: &str, order: &[usize], total: usize) -> Result<(), 
 }
 
 /// 🌱️ Inserts `value` at `position` of top-level `family`, moving every reference first.
-#[cfg(feature = "oracles")]
 fn family_insert(doc: &mut json::JsonValue, kind: &str, family: &str, position: usize, value: json::JsonValue) -> Result<(), String> {
     if position > top_level_len(doc, family) {
         return Err(format!("{kind}: position {position} out of range"));
@@ -1697,7 +1571,6 @@ fn family_insert(doc: &mut json::JsonValue, kind: &str, family: &str, position: 
 }
 
 /// 🗑️ Removes entry `index` of top-level `family`, dropping or refusing every reference to it.
-#[cfg(feature = "oracles")]
 fn family_delete(doc: &mut json::JsonValue, kind: &str, family: &str, index: usize) -> Result<(), String> {
     if index >= top_level_len(doc, family) {
         return Err(format!("{kind}: index {index} out of range"));
@@ -1708,7 +1581,6 @@ fn family_delete(doc: &mut json::JsonValue, kind: &str, family: &str, index: usi
 }
 
 /// 🚚️ Moves entry `index` of top-level `family` to `position`, moving every reference with it.
-#[cfg(feature = "oracles")]
 fn family_move(doc: &mut json::JsonValue, kind: &str, family: &str, index: usize, position: usize) -> Result<(), String> {
     let total = top_level_len(doc, family);
     if index >= total || position >= total {
@@ -1725,7 +1597,6 @@ fn family_move(doc: &mut json::JsonValue, kind: &str, family: &str, index: usize
 }
 
 /// 🔀️ Permutes top-level `family` by `order`, moving every reference with it.
-#[cfg(feature = "oracles")]
 fn family_reorder(doc: &mut json::JsonValue, kind: &str, family: &str, order: &[usize]) -> Result<(), String> {
     checked_permutation(kind, order, top_level_len(doc, family))?;
     remap_family_references(doc, family, &IndexChange::Reorder(order))?;
@@ -1736,27 +1607,23 @@ fn family_reorder(doc: &mut json::JsonValue, kind: &str, family: &str, order: &[
 }
 
 /// 🔎️ `document/<family>/<index>`, mutable, or a range error.
-#[cfg(feature = "oracles")]
 fn entry_mut<'a>(doc: &'a mut json::JsonValue, kind: &str, family: &str, index: usize) -> Result<&'a mut json::JsonValue, String> {
     arr_mut(doc, family).and_then(|items| items.get_mut(index)).ok_or_else(|| format!("{kind}: {family} {index} out of range"))
 }
 
 /// 🔎️ `document/meshes/<mesh>/primitives/<primitive>`, mutable, or a range error.
-#[cfg(feature = "oracles")]
 fn primitive_mut<'a>(doc: &'a mut json::JsonValue, kind: &str, mesh: usize, primitive: usize) -> Result<&'a mut json::JsonValue, String> {
     let mesh_value = entry_mut(doc, kind, "meshes", mesh)?;
     arr_mut(mesh_value, "primitives").and_then(|items| items.get_mut(primitive)).ok_or_else(|| format!("{kind}: primitive {primitive} of mesh {mesh} out of range"))
 }
 
 /// 🔎️ One morph target of one primitive, mutable, or a range error.
-#[cfg(feature = "oracles")]
 fn target_mut<'a>(doc: &'a mut json::JsonValue, kind: &str, mesh: usize, primitive: usize, target: usize) -> Result<&'a mut json::JsonValue, String> {
     let primitive_value = primitive_mut(doc, kind, mesh, primitive)?;
     arr_mut(primitive_value, "targets").and_then(|items| items.get_mut(target)).ok_or_else(|| format!("{kind}: target {target} out of range"))
 }
 
 /// 🔧️ Sets `key` to `value`, or removes it when `value` is `None`.
-#[cfg(feature = "oracles")]
 fn set_or_remove(item: &mut json::JsonValue, key: &str, value: Option<json::JsonValue>) {
     match value {
         Some(value) => obj_set(item, key, value),
@@ -1765,7 +1632,6 @@ fn set_or_remove(item: &mut json::JsonValue, key: &str, value: Option<json::Json
 }
 
 /// 🧩️ A `{state: present, value}` / `{state: absent}` payload member, as the tree value to store.
-#[cfg(feature = "oracles")]
 fn presence_param(params: &Json) -> Result<Option<json::JsonValue>, String> {
     let data = object_param(params, "data")?;
     match data.get("state") {
@@ -1776,7 +1642,6 @@ fn presence_param(params: &Json) -> Result<Option<json::JsonValue>, String> {
 }
 
 /// 📝️ A nullable string payload member.
-#[cfg(feature = "oracles")]
 fn nullable_str_param(params: &Json, key: &str) -> Result<Option<String>, String> {
     match params.get(key) {
         Some(Json::String(value)) => Ok(Some(value.clone())),
@@ -1786,7 +1651,6 @@ fn nullable_str_param(params: &Json, key: &str) -> Result<Option<String>, String
 }
 
 /// 🔢️ A number array payload member.
-#[cfg(feature = "oracles")]
 fn f64_array_param(params: &Json, key: &str) -> Result<Vec<f64>, String> {
     match params.get(key) {
         Some(Json::Array(items)) => items
@@ -1801,19 +1665,16 @@ fn f64_array_param(params: &Json, key: &str) -> Result<Vec<f64>, String> {
 }
 
 /// 🔢️ `weights` as the tree stores it: an empty list is no member at all.
-#[cfg(feature = "oracles")]
 fn weights_value(weights: &[f64]) -> Option<json::JsonValue> {
     (!weights.is_empty()).then(|| json::JsonValue::Array(weights.iter().map(|value| json::JsonValue::from(*value)).collect()))
 }
 
 /// 🔢️ Every primitive of `mesh` carries exactly `count` morph targets.
-#[cfg(feature = "oracles")]
 fn mesh_target_arity_is(doc: &json::JsonValue, mesh: usize, count: usize) -> bool {
     arr(doc, "meshes").get(mesh).is_some_and(|mesh_value| arr(mesh_value, "primitives").iter().all(|primitive| arr(primitive, "targets").len() == count))
 }
 
 /// 🚚️ Moves one key of a semantic map to `position`, keeping every other key's order.
-#[cfg(feature = "oracles")]
 fn move_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str, position: usize) -> Result<(), String> {
     let json::JsonValue::Object(object) = map else { return Err(format!("{kind}: not a semantic map")) };
     let mut entries: Vec<(String, json::JsonValue)> = object.iter().map(|(key, value)| (key.to_string(), value.clone())).collect();
@@ -1835,7 +1696,6 @@ fn move_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str, position
 }
 
 /// 🔀️ Rebuilds a semantic map in `order`, which must name every bound semantic once.
-#[cfg(feature = "oracles")]
 fn reorder_semantics(map: &mut json::JsonValue, kind: &str, order: &[String]) -> Result<(), String> {
     let json::JsonValue::Object(object) = map else { return Err(format!("{kind}: not a semantic map")) };
     let unique: std::collections::BTreeSet<&String> = order.iter().collect();
@@ -1851,7 +1711,6 @@ fn reorder_semantics(map: &mut json::JsonValue, kind: &str, order: &[String]) ->
 }
 
 /// 🔗️ Appends `semantic → accessor` to a semantic map; the semantic must be new and non-blank.
-#[cfg(feature = "oracles")]
 fn bind_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str, accessor: usize) -> Result<(), String> {
     if semantic.trim().is_empty() || obj_get(map, semantic).is_some() {
         return Err(format!("{kind}: semantic must be non-empty and unique"));
@@ -1864,7 +1723,6 @@ fn bind_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str, accessor
 }
 
 /// ✂️ Removes a bound semantic from a semantic map.
-#[cfg(feature = "oracles")]
 fn unbind_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str) -> Result<(), String> {
     if obj_get(map, semantic).is_none() {
         return Err(format!("{kind}: semantic {semantic} is not bound"));
@@ -1875,7 +1733,6 @@ fn unbind_semantic(map: &mut json::JsonValue, kind: &str, semantic: &str) -> Res
 
 /// 🧮️ The node transform a `{kind: trs | matrix, …}` payload writes: a matrix clears TRS and
 /// TRS clears the matrix, each absent TRS component removed.
-#[cfg(feature = "oracles")]
 fn change_node_transform(doc: &mut json::JsonValue, node: usize, transform: &Json) -> Result<(), String> {
     let kind = "change-node-transform";
     let numbers = |key: &str, length: usize| -> Result<Option<json::JsonValue>, String> {
@@ -1907,7 +1764,6 @@ fn change_node_transform(doc: &mut json::JsonValue, node: usize, transform: &Jso
 
 /// 🌿️ `move-node-parent` — detaches the child from every parent and every scene root, then
 /// inserts it under the new parent at `position`, refusing a cycle.
-#[cfg(feature = "oracles")]
 fn move_node_parent(doc: &mut json::JsonValue, parent: usize, child: usize, position: usize) -> Result<(), String> {
     let kind = "move-node-parent";
     let total = top_level_len(doc, "nodes");
@@ -1945,7 +1801,6 @@ fn move_node_parent(doc: &mut json::JsonValue, parent: usize, child: usize, posi
 }
 
 /// 🚚️ Moves one element of an index list (`children`, scene `nodes`) to `position`.
-#[cfg(feature = "oracles")]
 fn move_in_index_list(list: &mut Vec<json::JsonValue>, kind: &str, value: usize, position: usize) -> Result<(), String> {
     let index = list.iter().position(|item| item.as_usize() == Some(value)).ok_or_else(|| format!("{kind}: {value} is not linked"))?;
     if position >= list.len() {
@@ -1960,7 +1815,6 @@ fn move_in_index_list(list: &mut Vec<json::JsonValue>, kind: &str, value: usize,
 }
 
 /// 🔀️ Replaces an index list with `order`, which must name every current member once and differ.
-#[cfg(feature = "oracles")]
 fn reorder_index_list(list: &mut Vec<json::JsonValue>, kind: &str, order: &[usize]) -> Result<(), String> {
     let current: Vec<usize> = list.iter().filter_map(json::JsonValue::as_usize).collect();
     let mut sorted_order = order.to_vec();
@@ -1979,7 +1833,6 @@ fn reorder_index_list(list: &mut Vec<json::JsonValue>, kind: &str, order: &[usiz
 }
 
 /// 🔀️ Permutes a nested array (`primitives`, `targets`) by `order`.
-#[cfg(feature = "oracles")]
 fn reorder_nested(list: &mut Vec<json::JsonValue>, kind: &str, order: &[usize], require_change: bool) -> Result<(), String> {
     let total = list.len();
     let mut seen = std::collections::BTreeSet::new();
@@ -1995,7 +1848,6 @@ fn reorder_nested(list: &mut Vec<json::JsonValue>, kind: &str, order: &[usize], 
 }
 
 /// 🚚️ Moves one element of a nested array to `position`.
-#[cfg(feature = "oracles")]
 fn move_nested(list: &mut Vec<json::JsonValue>, kind: &str, index: usize, position: usize) -> Result<(), String> {
     if index >= list.len() || position >= list.len() {
         return Err(format!("{kind}: index {index} or position {position} out of range"));
@@ -2009,7 +1861,6 @@ fn move_nested(list: &mut Vec<json::JsonValue>, kind: &str, index: usize, positi
 }
 
 /// 🔤️ RFC 4648 base64 with padding, the encoding a `data:` buffer URI carries.
-#[cfg(feature = "oracles")]
 fn base64_encode(bytes: &[u8]) -> String {
     const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
@@ -2027,7 +1878,6 @@ fn base64_encode(bytes: &[u8]) -> String {
 }
 
 /// 🔤️ RFC 4648 base64 decode, padding optional; `None` on any foreign character.
-#[cfg(feature = "oracles")]
 fn base64_decode(text: &str) -> Option<Vec<u8>> {
     let value = |byte: u8| -> Option<u32> {
         match byte {
@@ -2052,7 +1902,6 @@ fn base64_decode(text: &str) -> Option<Vec<u8>> {
 }
 
 /// 🦠️ Dispatches one of the 76 structure kinds; `None` when `kind` is not one of them.
-#[cfg(feature = "oracles")]
 fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Option<Result<(), String>> {
     let run = || -> Result<(), String> {
         match kind {
@@ -2366,7 +2215,6 @@ fn apply_structure(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Opti
 }
 
 /// 🧾️ The 76 kinds [`apply_structure`] performs.
-#[cfg(feature = "oracles")]
 const STRUCTURE_KINDS: &[&str] = &[
     "bind-default-scene", "bind-node-camera", "bind-node-child", "bind-node-mesh", "bind-node-skin", "bind-scene-root-node", "change-node-extension-data", "change-node-extra-data", "change-node-morph-weights", "change-node-name", "change-node-transform", "change-scene-extension-data", "change-scene-extra-data", "change-scene-name", "create-node", "create-scene", "delete-node", "delete-scene", "move-node", "move-node-child", "move-node-parent", "move-scene", "move-scene-root-node", "reorder-node-children", "reorder-nodes", "reorder-scene-root-nodes", "reorder-scenes", "unbind-default-scene", "unbind-node-camera", "unbind-node-child", "unbind-node-mesh", "unbind-node-skin", "unbind-scene-root-node",
     "create-buffer", "create-buffer-view", "delete-buffer", "delete-buffer-view", "move-buffer", "move-buffer-view", "reorder-buffer-views", "reorder-buffers",
@@ -2377,7 +2225,6 @@ const STRUCTURE_KINDS: &[&str] = &[
 /// weight override, a new morph target): restores the named top-level members straight off the
 /// ORIGINAL document, removing any member the original lacked — `buffers` also restores the
 /// binary chunk, which a buffer change can shift.
-#[cfg(feature = "oracles")]
 pub fn restore_members(mutated: &[u8], original: &[u8], members: &[String]) -> Result<Vec<u8>, String> {
     let (mut doc, bin) = read_glb(mutated)?;
     let (source, source_bin) = read_glb(original)?;
@@ -2387,14 +2234,9 @@ pub fn restore_members(mutated: &[u8], original: &[u8], members: &[String]) -> R
     let bin = if members.iter().any(|member| member == "buffers") { source_bin } else { bin };
     Ok(write_glb(&doc, bin.as_deref()))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn restore_members(_mutated: &[u8], _original: &[u8], _members: &[String]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️StructureKinds
 
 //#region 🔖️Dispatch
-#[cfg(feature = "oracles")]
 fn apply(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), String> {
     if let Some(result) = apply_structure(doc, kind, params) {
         return result;
@@ -2451,7 +2293,6 @@ fn apply(doc: &mut json::JsonValue, kind: &str, params: &Json) -> Result<(), Str
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op — a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -2464,34 +2305,23 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     Ok(write_glb(&doc, bin.as_deref()))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
 /// 🔁️ The oracle's own decode/re-encode, entirely through the independent GLB codec above — the
 /// identity-round-trip scenario's oracle side.
-#[cfg(feature = "oracles")]
 pub fn round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     let (doc, bin) = read_glb(input)?;
     Ok(write_glb(&doc, bin.as_deref()))
-}
-#[cfg(not(feature = "oracles"))]
-pub fn round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
 /// 🧾️ One tree object as a fixed member list: every listed member present, a missing one at its
 /// declared default, so a writer that spells a default out and one that omits it project the same.
-#[cfg(feature = "oracles")]
 fn normalized(item: &json::JsonValue, members: &[(&str, Json)]) -> Json {
     Json::Object(members.iter().map(|(key, default)| ((*key).to_string(), obj_get(item, key).map(to_host_json).unwrap_or_else(|| default.clone()))).collect())
 }
 
 /// 🔤️ A semantic → accessor map as ordered `[semantic, accessor]` pairs, so key order is observed.
-#[cfg(feature = "oracles")]
 fn semantic_pairs(map: Option<&json::JsonValue>) -> Json {
     match map {
         Some(json::JsonValue::Object(object)) => Json::Array(object.iter().map(|(key, value)| Json::Array(vec![Json::String(key.to_string()), to_host_json(value)])).collect()),
@@ -2501,7 +2331,6 @@ fn semantic_pairs(map: Option<&json::JsonValue>) -> Json {
 
 /// 💾️ One buffer's bytes as lowercase hex: a `data:` URI decoded, the binary chunk for a
 /// URI-less first buffer, `null` for an external URI this reader does not follow.
-#[cfg(feature = "oracles")]
 fn buffer_bytes(buffer: &json::JsonValue, index: usize, bin: Option<&[u8]>) -> Json {
     let bytes = match obj_get(buffer, "uri").and_then(json::JsonValue::as_str) {
         Some(uri) => uri.strip_prefix("data:").and_then(|rest| rest.split_once(";base64,")).and_then(|(_, payload)| base64_decode(payload)),
@@ -2517,7 +2346,6 @@ fn buffer_bytes(buffer: &json::JsonValue, index: usize, bin: Option<&[u8]>) -> J
 /// plus the camera, skin, animation, asset, extension and material-family members. Each object is
 /// normalized to a fixed member list with the format's defaults, so a writer that spells a default
 /// out and one that omits it project identically.
-#[cfg(feature = "oracles")]
 pub fn project_gltf(bytes: &[u8]) -> Result<Json, String> {
     let (doc, bin) = read_glb(bytes)?;
     let default_scene = match default_scene_index(&doc) {
@@ -2674,14 +2502,10 @@ pub fn project_gltf(bytes: &[u8]) -> Result<Json, String> {
         ("buffers".to_string(), Json::Array(buffers)),
     ]))
 }
-#[cfg(not(feature = "oracles"))]
-pub fn project_gltf(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Projection
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

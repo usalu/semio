@@ -38,7 +38,7 @@ test("parameter values remain raw arguments and never enter shell command text",
  const commands=ticketLaunchCommands(fixture.ticket,{tools:[tool]});
  const result=projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},commands,fixture.ticket);
  expect(result.configurations[0].env[name]).toContain("${input:");
- expect(result.inputs[0].type).toBe("promptString");
+ expect(result.inputs![0].type).toBe("promptString");
  for(const id of fixture.unsafeIds)expect(()=>projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},[{...commands[0],id}],fixture.ticket)).toThrow();
  console.log(`[DEBUG] dashboard launch raw parameter vectors=${fixture.values.length} unsafeIds=${fixture.unsafeIds.length} shellInterpolation=false`);
 });

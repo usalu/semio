@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::run_of;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
 use std::f64::consts::{FRAC_PI_2, PI};
 
 const EPS: f64 = 1e-9;
@@ -11,7 +11,7 @@ fn level() -> StoreyLevel {
 }
 
 fn vertex(x: f64, y: f64, bulge: f64) -> Vertex {
-    Vertex { point: crate::Point2 { x, y }, bulge }
+    Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge }
 }
 
 fn ramp(path: Vec<Vertex>, rise: f64) -> Ramp {

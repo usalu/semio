@@ -1,7 +1,7 @@
 //! 🧬️ Rewriting diff schema — sparse typed delta over the artifact: field patches for the rule's two sides, a sparse
 //! working-graph document diff and keyed map deltas for the parameter bindings and the rule layout.
 
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 use crate::standards::v1::subsets::any::schema::{Assignment, Lhs, ParameterSpec, Pattern, Rhs};
 use crate::{LayoutPoint, RewritingSnapshot};
@@ -221,7 +221,7 @@ trait MapView<V> {
     fn view_keys(&self) -> Vec<&String>;
 }
 
-impl MapView<PropertyValue> for semio_framework_graph::manifest::PropertyBag {
+impl MapView<PropertyValue> for semio_framework_graph_manifest::PropertyBag {
     fn view_get(&self, key: &str) -> Option<&PropertyValue> {
         self.get(key)
     }

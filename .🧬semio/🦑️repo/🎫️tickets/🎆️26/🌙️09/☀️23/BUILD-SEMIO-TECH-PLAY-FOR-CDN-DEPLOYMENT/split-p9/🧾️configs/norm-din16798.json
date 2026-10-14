@@ -1,0 +1,502 @@
+{
+ "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🦀️.rs",
+ "crate": "semio_s_artifact_norm_din16798",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-norm-din16798-model",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "DIN EN 16798 model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-norm-din16798-diff",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "DIN EN 16798 diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-norm-din16798-mutations",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-norm-din16798-schema",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "DIN EN 16798 artifact schema and descriptor"
+  },
+  "checks": {
+   "package": "semio-s-artifact-norm-din16798-checks",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks",
+   "prefix": "standards::v1::subsets::any::schema::checks",
+   "description": "DIN EN 16798 compliance checks"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-norm-din16798-inferences",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "DIN EN 16798 inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-norm-din16798-io",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "DIN EN 16798 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-norm-din16798-examples",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "",
+   "description": "DIN EN 16798 example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-norm-din16798-editor",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::din16798",
+   "description": "DIN EN 16798 editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-norm-din16798-viewer",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::din16798",
+   "description": "DIN EN 16798 viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-norm-din16798",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798",
+   "prefix": "",
+   "description": "Norm din16798 artifact",
+   "role": "artifact"
+  },
+  "mut-building": {
+   "package": "semio-s-artifact-norm-din16798-mut-building",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️building",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 building mutation leaves"
+  },
+  "mut-zones": {
+   "package": "semio-s-artifact-norm-din16798-mut-zones",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️zones",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 zones mutation leaves"
+  },
+  "mut-thermal": {
+   "package": "semio-s-artifact-norm-din16798-mut-thermal",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermal",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 thermal mutation leaves"
+  },
+  "mut-indoor": {
+   "package": "semio-s-artifact-norm-din16798-mut-indoor",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️indoor",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 indoor mutation leaves"
+  },
+  "mut-ventilation": {
+   "package": "semio-s-artifact-norm-din16798-mut-ventilation",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️ventilation",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 ventilation mutation leaves"
+  },
+  "mut-air-hygiene": {
+   "package": "semio-s-artifact-norm-din16798-mut-air-hygiene",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️air-hygiene",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN EN 16798 air hygiene mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌍️change\\-annex/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔄️change\\-theta\\-rm/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌫️change\\-outdoor\\-co2/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏠️change\\-envelope\\-n50/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📦️change\\-envelope\\-volume/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏚️change\\-cellar\\-area/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌀change\\-cellar\\-ventilation/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌙️change\\-night\\-setback/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️insert\\-zone/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-zone/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏢️change\\-zone\\-usage\\-type/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-zone\\-floor\\-area/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/👥️change\\-zone\\-occupants/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🛋️change\\-zone\\-comfort\\-category/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏭️change\\-zone\\-pollution\\-class/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔗change\\-zone\\-vent\\-system\\-id/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-zone\\-vent\\-method/",
+   "mut-zones"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧭️change\\-zone\\-comfort\\-model/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❄️change\\-zone\\-t\\-op\\-winter/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/☀️change\\-zone\\-t\\-op\\-summer/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💨change\\-zone\\-air\\-speed/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/👔change\\-zone\\-clothing/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏃️change\\-zone\\-metabolic\\-rate/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💧️change\\-zone\\-rh/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💨change\\-zone\\-turbulence/",
+   "mut-thermal"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💨️change\\-zone\\-outdoor\\-air/",
+   "mut-indoor"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🫧change\\-zone\\-co2/",
+   "mut-indoor"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💡change\\-zone\\-illuminance/",
+   "mut-indoor"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔊️change\\-zone\\-noise/",
+   "mut-indoor"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🆕️insert\\-vent\\-system/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🗑️remove\\-vent\\-system/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/⚙️change\\-vent\\-system\\-type/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌀️change\\-vent\\-sfp/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎓️change\\-vent\\-sfp\\-class/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/♻️change\\-vent\\-heat\\-recovery/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌬️change\\-vent\\-design\\-airflow/",
+   "mut-ventilation"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏞️change\\-vent\\-oda\\-class/",
+   "mut-air-hygiene"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧽change\\-vent\\-filter\\-sup/",
+   "mut-air-hygiene"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📅️change\\-vent\\-inspection/",
+   "mut-air-hygiene"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-vent\\-duct\\-class/",
+   "mut-air-hygiene"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🕳️change\\-vent\\-duct\\-leakage/",
+   "mut-air-hygiene"
+  ],
+  [
+   "🧬️schema/💡️inferences/⚖️checks/",
+   "checks"
+  ],
+  [
+   "🧬️schema/🧪️tests/⚖️compliance/",
+   "checks"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "🌬️din16798/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️building/🦀️.rs",
+   "text": "//! 🏠️ DIN EN 16798 building mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️zones/🦀️.rs",
+   "text": "//! 🗺️ DIN EN 16798 zones mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️thermal/🦀️.rs",
+   "text": "//! 🌡️ DIN EN 16798 thermal mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️indoor/🦀️.rs",
+   "text": "//! 🔆️ DIN EN 16798 indoor mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️ventilation/🦀️.rs",
+   "text": "//! 🌀️ DIN EN 16798 ventilation mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️air-hygiene/🦀️.rs",
+   "text": "//! 🧹️ DIN EN 16798 air hygiene mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ DIN EN 16798 example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ DIN EN 16798's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_din16798_model::Din16798Snapshot, semio_s_artifact_norm_din16798_mutations::Din16798Mutation>(&root).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  }
+ ],
+ "generic_leaves": {
+  "enum": "Din16798Mutation",
+  "snapshot": "Din16798Snapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::Din16798Diff",
+  "mutations_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "🌍️change-annex",
+   "🔄️change-theta-rm",
+   "🌫️change-outdoor-co2",
+   "🏠️change-envelope-n50",
+   "📦️change-envelope-volume",
+   "🏚️change-cellar-area",
+   "🌀change-cellar-ventilation",
+   "🌙️change-night-setback",
+   "➕️insert-zone",
+   "➖️remove-zone",
+   "🏢️change-zone-usage-type",
+   "📐️change-zone-floor-area",
+   "👥️change-zone-occupants",
+   "🛋️change-zone-comfort-category",
+   "🏭️change-zone-pollution-class",
+   "🔗change-zone-vent-system-id",
+   "📐️change-zone-vent-method",
+   "🧭️change-zone-comfort-model",
+   "❄️change-zone-t-op-winter",
+   "☀️change-zone-t-op-summer",
+   "💨change-zone-air-speed",
+   "👔change-zone-clothing",
+   "🏃️change-zone-metabolic-rate",
+   "💧️change-zone-rh",
+   "💨change-zone-turbulence",
+   "💨️change-zone-outdoor-air",
+   "🫧change-zone-co2",
+   "💡change-zone-illuminance",
+   "🔊️change-zone-noise",
+   "🆕️insert-vent-system",
+   "🗑️remove-vent-system",
+   "⚙️change-vent-system-type",
+   "🌀️change-vent-sfp",
+   "🎓️change-vent-sfp-class",
+   "♻️change-vent-heat-recovery",
+   "🌬️change-vent-design-airflow",
+   "🏞️change-vent-oda-class",
+   "🧽change-vent-filter-sup",
+   "📅️change-vent-inspection",
+   "🧱change-vent-duct-class",
+   "🕳️change-vent-duct-leakage"
+  ]
+ },
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "from_marker": "//#region 🔖️ComplianceHelpers",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🦀️.rs",
+   "doc": "//! ⚖️ DIN EN 16798 compliance checks: the clause-by-clause verification behind the compliance report.",
+   "mount": "checks"
+  }
+ ],
+ "move_mods": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "name": "mutation_bridge",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "source_reexport": "pub use crate::standards::v1::subsets::any::schema::mutations::mutation_bridge;\npub use mutation_bridge::*;",
+   "drop_in_target": [
+    "^pub use crate::standards::v1::subsets::any::io::mutation_bridge::\\{[^}]*\\};\\n"
+   ]
+  }
+ ],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798",
+  "✏️s/🔌️plugins/📕️norm/🏭️bridge",
+  "🌎️hub/🧩️compositions/📕️norm",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-plugin-norm-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-norm-din16798-model"
+    ]
+   }
+  ]
+ }
+}

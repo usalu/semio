@@ -1,7 +1,6 @@
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use super::*;
 use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
-#[cfg(feature = "native-artifact-execution")]
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundlePluginModuleV1, TrustedBundleProfileOpenTargetV1};
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
@@ -388,14 +387,14 @@ fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
         let relayed: Vec<u64> = control.progress.lock().unwrap().iter().filter(|progress| progress.stage == AuthorityProgressStage::GuestCodecExecuting).map(|progress| progress.completed_units).collect();
         assert_eq!(relayed, vec![10, 20, 30]);
         let observed = |observes: Arc<AtomicBool>| {
-            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_interpreter::GuestCallCancellation| -> Result<u32, semio_framework_plugin_interpreter::TurnFault> {
+            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_guest_contract::GuestCallCancellation| -> Result<u32, semio_framework_plugin_guest_contract::TurnFault> {
                 progress(1);
                 let started = std::time::Instant::now();
                 while !cancellation.is_cancelled() && started.elapsed() < std::time::Duration::from_secs(10) {
                     std::thread::sleep(std::time::Duration::from_millis(1));
                 }
                 observes.store(cancellation.is_cancelled(), Ordering::SeqCst);
-                Err(semio_framework_plugin_interpreter::TurnFault::Cancelled)
+                Err(semio_framework_plugin_guest_contract::TurnFault::Cancelled)
             }
         };
         let settled = |observes: Arc<AtomicBool>| async move {
@@ -974,7 +973,6 @@ async fn assert_linked_fixture_denied(fixture: &FixtureDirectory) {
 }
 
 /// 🧪️ Loads real GIS assembly metadata and native receipts around synthetic component bytes; component execution is outside this fixture.
-#[cfg(feature = "native-artifact-execution")]
 async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> FixtureDirectory {
     let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().expect("GIS assembly"));
@@ -1041,13 +1039,11 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     fixture
 }
 
-#[cfg(feature = "native-artifact-execution")]
 struct RecordingLinkedProvider {
     previews: Mutex<Vec<String>>,
     fail_gis: bool,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl NativeCodecProviderSourceV1 for RecordingLinkedProvider {
     fn preview(&self, package: NativeCodecProviderPackageV1<'_>, descriptor: &PackageDescriptor, context: &OperationContext<'_>) -> Result<Vec<NativeCodecBinding>, AuthorityError> {
         if self.fail_gis && package.plugin_id == "gis" {
@@ -1117,7 +1113,6 @@ async fn selected_native_providers_are_descriptor_verified_dependency_first_and_
     assert!(document_codec(&format!("{}.base", pair.schema)).await.expect("registry").is_some());
 }
 
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn gis_native_provider_selection_binds_literal_owner_version_and_cancellation_without_publication() {
     struct SelectionControl {
@@ -1201,7 +1196,6 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
             assert!(existing.is_none(), "{hostile} published second provider");
         }
     }
-    #[cfg(feature = "native-artifact-execution")]
     {
         let fixture = prepared_fixture();
         let control = TestControl::new();
@@ -1776,19 +1770,19 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
         body.push(0x0b);
         body
     };
-    let exports = semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::ALL;
+    let exports = semio_framework_plugin_interpreter::OwnedSemioExport::ALL;
     let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = exports
         .iter()
         .map(|export| match export {
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::PackSchemaHash => match hash {
+            semio_framework_plugin_interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
+            semio_framework_plugin_interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
+            semio_framework_plugin_interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
+            semio_framework_plugin_interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
+            semio_framework_plugin_interpreter::OwnedSemioExport::PackSchemaHash => match hash {
                 OwnedTestHash::Answers(_) => (3, returning(1024, &hash_output)),
                 OwnedTestHash::Spins => (3, vec![0x00, 0x03, 0x40, 0x0c, 0x00, 0x0b, 0x42, 0x00, 0x0b]),
             },
-            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
+            semio_framework_plugin_interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
             _ => (3, vec![0x00, 0x42, 0x00, 0x0b]),
         })
         .unzip();
@@ -1903,7 +1897,6 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
 /// and vcs (puzzle's own law covers a third): the same pack-schema hash, the NATIVE codec decodes the table's genesis
 /// pair, and both print the same op log of it (the `dsl` renderings differ by design: document text vs the kind's DSL). A schema the bundle declares without owning is
 /// refused as unowned. Every plugin contributes at least one owned comparison.
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn guest_codec_tables_answer_like_the_linked_native_codecs() {
     macro_rules! compare_plugin {
@@ -2217,7 +2210,6 @@ fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rul
 mod long {
     use super::*;
 
-    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn gis_map_binding_constructs_from_loaded_catalog_and_refuses_tampered_retained_bytes() {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;
@@ -2247,7 +2239,6 @@ mod long {
         }
     }
 
-    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
         let _registry = crate::artifact_authority::REAL_LINKED_CODEC_REGISTRY.lock().await;

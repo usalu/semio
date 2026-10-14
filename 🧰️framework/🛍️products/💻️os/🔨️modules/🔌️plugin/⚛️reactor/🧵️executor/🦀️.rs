@@ -49,11 +49,11 @@ pub trait ReactorTask {
 struct ReactorTaskSlot {
     generation: u32,
     instance: u32,
-    operation: u64,
+    pub(crate) operation: u64,
     authority_generation: u64,
     cancellation_generation: u64,
     task: std::mem::ManuallyDrop<Option<Box<dyn ReactorTask>>>,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl Drop for ReactorTaskSlot {
@@ -69,11 +69,11 @@ struct ReactorInner {
     shutdown_cursor: usize,
     shutdown: bool,
     live: usize,
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl ReactorInner {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { slots: VecDeque::new(), free: VecDeque::new(), scan_cursor: 0, shutdown_cursor: 0, shutdown: false, live: 0, allocation_admitted: false }
     }
 }
@@ -362,11 +362,11 @@ struct Inner {
     ready_tail: Option<usize>,
     ready_len: usize,
     live: usize,
-    allocation_admitted: bool,
+    pub(crate) allocation_admitted: bool,
 }
 
 impl Inner {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut slots = Vec::new();
         let slots_admitted = slots.try_reserve_exact(LOCAL_EXECUTOR_TASK_SLOTS).is_ok();
         if slots_admitted {

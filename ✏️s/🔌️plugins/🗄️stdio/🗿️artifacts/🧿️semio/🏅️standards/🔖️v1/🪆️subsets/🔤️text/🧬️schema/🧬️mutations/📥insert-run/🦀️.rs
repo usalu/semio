@@ -2,7 +2,8 @@
 //! intrinsically ordered, anonymous collection — no stable id on `SemioTextRun`).
 
 use crate::schema::mutations::SemioTextMutation;
-use crate::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextRun;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

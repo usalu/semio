@@ -99,7 +99,6 @@ async fn memory_storage_satisfies_wal_storage_laws() {
     exercise_wal_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_wal_storage_laws() {
     exercise_wal_storage(&fs_scratch("wal_laws").await).await;
@@ -130,7 +129,6 @@ async fn memory_storage_satisfies_snapshot_storage_laws() {
     exercise_snapshot_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_snapshot_storage_laws() {
     exercise_snapshot_storage(&fs_scratch("snapshot_laws").await).await;
@@ -163,7 +161,6 @@ async fn memory_storage_satisfies_payload_storage_laws() {
     exercise_payload_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_payload_storage_laws() {
     exercise_payload_storage(&fs_scratch("payload_laws").await).await;
@@ -193,7 +190,6 @@ async fn memory_storage_satisfies_catalog_storage_laws() {
     exercise_catalog_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_catalog_storage_laws() {
     exercise_catalog_storage(&fs_scratch("catalog_laws").await).await;
@@ -218,7 +214,6 @@ async fn memory_storage_satisfies_index_storage_laws() {
     exercise_index_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_index_storage_laws() {
     exercise_index_storage(&fs_scratch("index_laws").await).await;
@@ -265,7 +260,6 @@ async fn memory_storage_satisfies_lease_storage_laws() {
     exercise_lease_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_satisfies_lease_storage_laws() {
     exercise_lease_storage(&fs_scratch("lease_laws").await).await;
@@ -291,7 +285,6 @@ async fn memory_storage_db_backend_accessors_and_capabilities() {
     assert!(capabilities.supports_cas);
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_db_backend_accessors_and_capabilities() {
     let storage: DbBackend = DbBackend::Fs(fs_scratch("umbrella").await);
@@ -307,18 +300,15 @@ async fn fs_storage_db_backend_accessors_and_capabilities() {
 //#endregion 🔖️DbBackend
 
 //#region 🔖️Fs
-#[cfg(feature = "fs")]
 static SCRATCH_COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
 /// 🎲️ A fresh `FsStorage` rooted at a unique scratch directory under
 /// `std::env::temp_dir()` — no external `tempfile` crate dependency, mirroring `pack_io`'s own
 /// test helper convention. The test-owned process pool drives the same retained operation path.
-#[cfg(feature = "fs")]
 async fn fs_scratch(name: &str) -> FsStorage {
     fs_scratch_at(name).await.0
 }
 
-#[cfg(feature = "fs")]
 async fn fs_scratch_at(name: &str) -> (FsStorage, std::path::PathBuf) {
     let pid = std::process::id();
     let counter = SCRATCH_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -326,7 +316,6 @@ async fn fs_scratch_at(name: &str) -> (FsStorage, std::path::PathBuf) {
     (poll_once(FsStorage::open(db_io_test_pool(), &dir)).await.unwrap(), dir)
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_stale_seal_marker_does_not_resurrect_missing_segment() {
     let (storage, root) = fs_scratch_at("stale_wal_marker").await;
@@ -340,7 +329,6 @@ async fn fs_storage_stale_seal_marker_does_not_resurrect_missing_segment() {
     storage.close().await.unwrap();
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_canonical_alias_writer_fences_all_six_mutations() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -383,7 +371,6 @@ async fn fs_storage_canonical_alias_writer_fences_all_six_mutations() {
     assert_eq!(std::fs::read_dir(root.join(".semio-wal-writer")).unwrap().count(), sidecars);
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_rejects_unsafe_path_components() {
     let storage = fs_scratch("path_safety").await;
@@ -402,7 +389,6 @@ async fn fs_storage_rejects_unsafe_path_components() {
     storage.close().await.unwrap();
 }
 
-#[cfg(feature = "fs")]
 #[semio_framework_async_macros::async_test]
 async fn fs_storage_write_atomic_survives_reopen_across_instances() {
     let pid = std::process::id();

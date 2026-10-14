@@ -1,0 +1,12 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["version","widgets","wires","expected","rootLabelsPreserved","labelCounterPreserved","sourceOwnersClosed","unsupportedArenaBodiesRefuse"],
+ "properties":{
+  "version":{"const":1},
+  "widgets":{"type":"array","minItems":6,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["id","kind","params"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["brep.curve.line","brep.surface.plane","brep.transform.translate","brep.evaluate.curvePoint","brep.evaluate.surfacePoint"]},"params":{"type":"object","additionalProperties":false,"properties":{"end":{"$ref":"#/definitions/triple"},"plane":{"type":"object","additionalProperties":false,"required":["origin","normal"],"properties":{"origin":{"$ref":"#/definitions/triple"},"normal":{"$ref":"#/definitions/triple"}}},"offset":{"$ref":"#/definitions/triple"},"parameter":{"type":"number"},"u":{"type":"number"},"v":{"type":"number"}}}}}},
+  "wires":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"object","additionalProperties":false,"required":["from","fromPort","to","toPort"],"properties":{"from":{"type":"string","minLength":1},"fromPort":{"const":"shape"},"to":{"type":"string","minLength":1},"toPort":{"enum":["shape","curve","surface"]}}}},
+  "expected":{"type":"object","additionalProperties":false,"required":["translated curve point","translated surface point"],"properties":{"translated curve point":{"const":[2.5,4,3]},"translated surface point":{"const":[-3,2,0]}}},
+  "rootLabelsPreserved":{"const":true},"labelCounterPreserved":{"const":true},"sourceOwnersClosed":{"const":true},"unsupportedArenaBodiesRefuse":{"const":true}
+ },
+ "definitions":{"triple":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}}}
+}

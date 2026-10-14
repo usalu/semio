@@ -14375,3 +14375,26 @@ Actual registered Nx exit: 1. Log SHA256: bfbda9993f03d13bb472aaec252c264d094663
 error: "nx" exited with code 1
 
 ```
+
+
+## Fresh Original Nx Metadata 3D Native Replay
+
+Actual registered Nx exit: 1. Log SHA256: 0a7da26f9890a5186063b791750e6d3694c134685abfeaec23199fd6ddcc14e5.
+
+
+
+```text
+[script] {"owner":"procedural.generation3d.widget-inputs.native","command":"nx","stage":"loading"}
+[script] {"owner":"procedural.generation3d.widget-inputs.native","command":"nx","stage":"running"}
+[nx] Admitting structural source membership (1024 directories)
+[nx] Admitted 0 structural collection manifests
+[nx] Graph and hash preparation running elapsedMs=10002
+[nx] Graph and hash preparation running elapsedMs=20003
+
+ NX   Failed to process project graph.
+
+The "@repo/emoji-project-json" plugin threw an error while creating dependencies: Source file "👴️leutwiler/💤️realparts-of-powers-z-n/🧘️lean/.lake/packages/proofwidgets/widget/package.json" does not exist in the workspace.
+
+[script] {"owner":"procedural.generation3d.widget-inputs.native","command":"nx","stage":"complete"}
+
+```

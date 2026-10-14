@@ -1,9 +1,9 @@
 //! ⚙️ Remodeling mutation — `UpdateIngestParams`: full-record replace of `ReconstructionParams.ingest` (always
 //! set wholesale from the palette form's flat field list — genuinely inseparable).
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{IngestParams, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -21,17 +21,20 @@ pub struct UpdateIngestParams {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn update_ingest_params(params: IngestParams) -> RemodelingMutation {
-    RemodelingMutation::UpdateIngestParams(UpdateIngestParams { params })
+pub fn update_ingest_params<Op: From<UpdateIngestParams>>(params: IngestParams) -> Op {
+    Op::from(UpdateIngestParams { params })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for UpdateIngestParams {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for UpdateIngestParams
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<UpdateIngestParams>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "ingest-params", kind: "update-ingest-params", record: "UpdatedIngestParams" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

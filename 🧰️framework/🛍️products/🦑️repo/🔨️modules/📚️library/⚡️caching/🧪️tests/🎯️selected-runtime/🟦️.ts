@@ -26,11 +26,12 @@ export async function testSelectedFontDependencies(workspace: string): Promise<v
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🎯️selected-runtime/🔣️.json"), "utf8")).fontTool;
   const manifest = require("@iarna/toml").parse(readFileSync(join(workspace, fixture.root, "Cargo.toml"), "utf8"));
   assert.equal(manifest.package.name, fixture.project);
-  const {repositoryCargoPreparationStorageV1, runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
+  const {runTool}=await import("../../🚀️bootstrap/📦️dependencies/🟦️.ts");
+  const {repositoryCargoPreparationStorageV1}=await import("../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts");
   const result = await runTool("cargo",["tree", "--locked", "--offline", "-p", fixture.project, "--edges", "normal,build", "--prefix", "none", "--format", "{p}"],workspace,AbortSignal.timeout(60_000),true,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
   const crates = [...new Set(result.trim().split("\n").map(line => line.split(" ")[0]))].sort();
   assert.deepEqual(crates, fixture.crates);
-  const { cacheInternals } = await import("../../../🟨️.mjs");
+  const { cacheInternals } = await import("../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const inputs = cacheInternals.relativeScriptInputs(fixture.commands.map((path: string) => join(workspace, path)), workspace);
   const { build } = require("esbuild");
   const bundled = await build({ entryPoints: fixture.commands, absWorkingDir: workspace, outdir: "dist", bundle: true, packages: "external", platform: "node", format: "esm", write: false, metafile: true, logLevel: "silent" });

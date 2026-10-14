@@ -6,11 +6,11 @@ import Ajv from "ajv";
 import {createRequire} from "node:module";
 import {dirname,resolve} from "node:path";
 const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
-const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8"));
+const schema=JSON.parse(readFileSync(new URL("../../../🏗️build/📤️arguments/🧬️schema/🔣️.json",import.meta.url),"utf8"));
 test("owner arguments are admitted then transported literally and consumed exactly once",async()=>{
  const admit=new Ajv({strict:true}).compile(schema);
  for(const row of fixture.cases)expect(admit({version:1,arguments:row.arguments})).toBe(true);
- const api=await import(new URL("../🟨️.mjs",import.meta.url).href);
+ const api={...await import(new URL("../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../🟨️.mjs",import.meta.url).href)};
  for(const row of fixture.cases){
   const encoded=api.encodeOwnerArgumentsV1(row.arguments),env={KEEP:"original",SEMIO_OWNER_ARGUMENTS:encoded};
   const consumed=api.consumeOwnerArgumentsV1(env);
@@ -23,7 +23,7 @@ test("owner arguments are admitted then transported literally and consumed exact
  for(const row of fixture.invalid){expect(admit(row)).toBe(false);expect(()=>api.consumeOwnerArgumentsV1({SEMIO_OWNER_ARGUMENTS:JSON.stringify(row)})).toThrow();}
 });
 test("Nx delegates the unchanged static owner command while literal argv stays outside shell interpolation",async()=>{
- const api=await import(new URL("../🟨️.mjs",import.meta.url).href);
+ const api={...await import(new URL("../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../🟨️.mjs",import.meta.url).href)};
  for(const row of fixture.cases){
   let observed:any;
   const native=fixture.nativeOriginal,root=process.cwd(),require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json"));
@@ -32,7 +32,7 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
   const projects={"literal-owner":{name:"literal-owner",root:".",targets:{probe:{executor:"@semio-tech/repo-lib:owner-command",options:{command:options.command,cwd:options.cwd,forwardAllArgs:true,nativeOwnerCommand:structuredClone(native.command)}}}}};
   const projectGraph={nodes:{"literal-owner":{name:"literal-owner",type:"lib",data:projects["literal-owner"]}},dependencies:{"literal-owner":[]}};
   const taskGraph=createTaskGraph(projectGraph,{},["literal-owner"],["probe"],undefined,{__overrides_unparsed__:row.arguments,E:"parsed-duplicate"},false);
-  const capabilities={workspaceRoot:root,arguments:["nx","run",native.selected,"--",...row.arguments],selection:["nx","run",native.selected,"--",...row.arguments],native:structuredClone(native.resources)};
+  const capabilities={buildMode:native.buildMode,workspaceRoot:root,arguments:["nx","run",native.selected,"--",...row.arguments],selection:["nx","run",native.selected,"--",...row.arguments],native:structuredClone(native.resources)};
   const original={version:1,policy:{version:1,owner:native.owner,maximumElapsedMilliseconds:native.maximumElapsedMilliseconds},deadlineEpochMilliseconds:Date.now()+native.maximumElapsedMilliseconds,capabilities};
   const callerSchema=JSON.parse(readFileSync(new URL("../🧬️schema/📥️native-caller.json",import.meta.url),"utf8"));
   const nativeSchema=JSON.parse(readFileSync(new URL("../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",import.meta.url),"utf8"));
@@ -52,7 +52,7 @@ test("Nx delegates the unchanged static owner command while literal argv stays o
 });
 
 test("the current Nx process executor returns literal envelope values without executing their shell syntax",async()=>{
- const api=await import(new URL("../🟨️.mjs",import.meta.url).href);
+ const api={...await import(new URL("../../../🏗️build/📤️arguments/🟨️.mjs",import.meta.url).href),...await import(new URL("../🟨️.mjs",import.meta.url).href)};
  const context={root:process.cwd(),projectName:"literal-owner",targetName:"probe",projectsConfigurations:{projects:{"literal-owner":{root:"."}}}};
  for(const row of fixture.cases){
   const result=await api.default({command:'node -e "console.log(JSON.stringify(JSON.parse(process.env.SEMIO_OWNER_ARGUMENTS).arguments))"',cwd:".",usePty:false,streamOutput:false,__unparsed__:row.arguments},context);
@@ -72,10 +72,10 @@ test("the actual Nx schema admits every original CLI argument into the owner bou
  console.log("[DEBUG] actual Nx schema CLI admission originals=preserved filterAndPositionalScope=exact");
 });
 
-test("the canonical Nx bootstrap preserves the complete literal filter and positional scope",async()=>{
+test("the canonical build dispatcher preserves the complete literal filter and positional scope",async()=>{
  const arguments_=fixture.cases.flatMap((row:any)=>row.arguments);
- const bootstrap=fileURLToPath(new URL("../../../⚡️caching/🚀️bootstrap/📜️script.ts",import.meta.url));
- const child=Bun.spawn([process.execPath,bootstrap,"nx","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--excludeTaskDependencies","--skip-nx-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
+ const bootstrap=fileURLToPath(new URL("../../../🏗️build/📜️script.ts",import.meta.url));
+ const child=Bun.spawn([process.execPath,bootstrap,"repo","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--exclude-dependencies","--skip-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
  const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
  expect(status,stderr+stdout).toBe(0);
  const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
@@ -83,12 +83,12 @@ test("the canonical Nx bootstrap preserves the complete literal filter and posit
  console.log(`[DEBUG] actual Nx CLI -> declared owner -> child arguments=${arguments_.length} exact=true envelopeConsumed=true nativePreparation=unchanged`);
 },180000);
 
-test("bun nx retains both original Nextest filter and positional selections",async()=>{
+test("bun repo retains both original Nextest filter and positional selections",async()=>{
  const arguments_=fixture.cases.filter((row:any)=>row.id.startsWith("nextest-")).flatMap((row:any)=>row.arguments);
- const child=Bun.spawn([process.execPath,"nx","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--excludeTaskDependencies","--skip-nx-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
+ const child=Bun.spawn([process.execPath,"repo","run","@semio-tech/repo-lib:probe-nx-owner-arguments","--exclude-dependencies","--skip-cache","--",...arguments_],{cwd:process.cwd(),stdout:"pipe",stderr:"pipe"});
  const [stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
  expect(status,stderr+stdout).toBe(0);
  const marker="[DEBUG] ownerArgumentReceipt=",line=stdout.split(/\r?\n/).find(line=>line.startsWith(marker));
  expect(line).toBeDefined();const receipt=JSON.parse(line!.slice(marker.length));expect(receipt.arguments).toEqual(arguments_);expect(receipt.carrierPresent).toBe(false);
- console.log(`[DEBUG] bun nx -> declared owner -> child Nextest arguments=${arguments_.length} exact=true selections=unchanged envelopeConsumed=true`);
+ console.log(`[DEBUG] bun repo -> declared owner -> child Nextest arguments=${arguments_.length} exact=true selections=unchanged envelopeConsumed=true`);
 },180000);

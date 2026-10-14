@@ -1,12 +1,35 @@
 //! 📏️ DWG 2D constraint nodes retain tagged geometry, dependency state and optional coordinates.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::number::Projection;
-use super::drawing::optional_words;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAssoc2dConstraintGroup;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgAxisConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedBoundedLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedDatumLine;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstrainedImplicitPoint;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgDistanceConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgExplicitConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
 use super::associativity::{project_action,reconstruct_action};
-use super::blocks::{project_handles,reconstruct_handles};
-use super::evaluation::{project_coordinates as coords,reconstruct_coordinates as read_coords};
-use super::reader::{boolean,byte,full_unsigned,high,low,optional_unsigned,ordinal,signed_integer,unsigned,Reader};
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks::project_handles;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::blocks::reconstruct_handles;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation::project_coordinates as coords;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::evaluation::reconstruct_coordinates as read_coords;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::boolean;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::byte;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::signed_integer;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell::{Integer as I,Text as T,Real as R};
 
 fn core(v:&DwgConstraintNode)->(&'static str,&DwgConstraintNodeCore){match v{
@@ -30,7 +53,7 @@ fn geometry(p:&mut Projection<'_,'_>,id:i64,v:&DwgConstraintGeometry)->Result<()
 fn project_vectors(p:&mut Projection<'_,'_>,id:i64,values:&[(&str,&[f64])])->Result<(),ValueError>{
  let mut order=0;for(name,values)in values{for(index,v)in values.iter().enumerate(){p.insert("dwg_constraint_coordinate",&[I(id),T(name),I(order),I(ordinal(index)?),R(*v)])?;order+=1;}}Ok(())
 }
-pub(super) fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGroup)->Result<(),ValueError>{
+pub fn project(p:&mut Projection<'_,'_>,id:i64,v:&DwgAssoc2dConstraintGroup)->Result<(),ValueError>{
  project_action(p,id,&v.action)?;p.insert_key("dwg_assoc_2d_constraint_group",id,&[I(i64::from(v.do_not_check_newly_added_constraints))])?;
  for(index,values)in v.work_plane.iter().enumerate(){let vector=p.insert("dwg_constraint_work_plane_vector",&[I(id),I(ordinal(index)?)])?;coords(p,"dwg_constraint_work_plane_coordinate",vector,values)?;}project_handles(p,"dwg_constraint_group_member_handle",id,&v.member_action_handles)?;
  for(index,v)in v.nodes.iter().enumerate(){
@@ -75,7 +98,7 @@ fn read_node(r:&mut Reader<'_,'_,'_>,row:super::number::Row<'_>)->Result<DwgCons
  _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG constraint node kind is unknown"))
  })
 }
-pub(super) fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssoc2dConstraintGroup,ValueError>{
+pub fn reconstruct(r:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgAssoc2dConstraintGroup,ValueError>{
  let row=r.component("dwg_assoc_2d_constraint_group",id)?;
  let work_plane=r.list("dwg_constraint_work_plane_vector",1,id,2)?.into_iter().map(|row|read_coords(r,"dwg_constraint_work_plane_coordinate",row.rowid)).collect::<Result<_,_>>()?;
  let nodes=r.list("dwg_constraint_node",1,id,2)?.into_iter().map(|row|read_node(r,row)).collect::<Result<_,_>>()?;

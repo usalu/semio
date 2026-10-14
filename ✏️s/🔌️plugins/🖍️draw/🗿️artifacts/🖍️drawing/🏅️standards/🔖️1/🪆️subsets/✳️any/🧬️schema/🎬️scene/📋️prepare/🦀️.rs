@@ -1,9 +1,12 @@
 //! 📋️ Complete authored documents become private typed plans under work grants.
 use semio_framework_value::paged::Utf8Text;
-use crate::{DrawingSnapshot,DrawingLayerNode,FillStyle,StrokeStyle,PathSegment,FillRule};
-use crate::schema::{layer_base,shape_path_segment,drawing_transform_to_matrix,DrawingSceneGroup};
-use crate::schema::scene_raster::{RasterSceneAsset,RasterSceneNode,RasterSceneContent,RasterSceneInput};
-use crate::schema::scene_retirement::ScenePlanCloseJob;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, StrokeStyle, PathSegment};
+use semio_s_artifact_draw_drawing_model::{layer_base, DrawingSceneGroup};
+use semio_s_artifact_draw_drawing_geometry::shape_path_segment;
+use semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix;
+use crate::raster::{RasterSceneAsset, RasterSceneNode, RasterSceneContent, RasterSceneInput};
+use crate::retirement::ScenePlanCloseJob;
 use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentSceneRetirementProgress=WorkRetirementProgress;
 pub type DocumentVectorRetirementProgress=WorkRetirementProgress;
@@ -11,30 +14,30 @@ use std::{collections::VecDeque,sync::Arc};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,controlled::ControlledRetirement};
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
-pub(crate) struct OwnedTable<K:RetireOwned+Eq,V:RetireOwned>{values:Vec<(K,V)>,retired_keys:Vec<K>,retired_values:Vec<V>}
+pub struct OwnedTable<K:RetireOwned+Eq,V:RetireOwned>{values:Vec<(K,V)>,retired_keys:Vec<K>,retired_values:Vec<V>}
 impl<K:RetireOwned+Eq,V:RetireOwned> OwnedTable<K,V>{
- pub(crate) fn new()->Self{Self{values:Vec::new(),retired_keys:Vec::new(),retired_values:Vec::new()}}
- pub(crate) fn get<Q:Eq+?Sized>(&self,key:&Q)->Option<&V>where K:std::borrow::Borrow<Q>{self.values.iter().find(|(id,_)|id.borrow()==key).map(|(_,value)|value)}
- pub(crate) fn contains_key<Q:Eq+?Sized>(&self,key:&Q)->bool where K:std::borrow::Borrow<Q>{self.get(key).is_some()}
- pub(crate) fn insert(&mut self,key:K,value:V){if let Some(at)=self.values.iter().position(|(id,_)|id==&key){self.retired_keys.push(key);self.retired_values.push(std::mem::replace(&mut self.values[at].1,value));}else{self.values.push((key,value));}}
- pub(crate) fn remove<Q:Eq+?Sized>(&mut self,key:&Q)->Option<V>where K:std::borrow::Borrow<Q>{let at=self.values.iter().position(|(id,_)|id.borrow()==key)?;let(key,value)=self.values.swap_remove(at);self.retired_keys.push(key);Some(value)}
+ pub fn new()->Self{Self{values:Vec::new(),retired_keys:Vec::new(),retired_values:Vec::new()}}
+ pub fn get<Q:Eq+?Sized>(&self,key:&Q)->Option<&V>where K:std::borrow::Borrow<Q>{self.values.iter().find(|(id,_)|id.borrow()==key).map(|(_,value)|value)}
+ pub fn contains_key<Q:Eq+?Sized>(&self,key:&Q)->bool where K:std::borrow::Borrow<Q>{self.get(key).is_some()}
+ pub fn insert(&mut self,key:K,value:V){if let Some(at)=self.values.iter().position(|(id,_)|id==&key){self.retired_keys.push(key);self.retired_values.push(std::mem::replace(&mut self.values[at].1,value));}else{self.values.push((key,value));}}
+ pub fn remove<Q:Eq+?Sized>(&mut self,key:&Q)->Option<V>where K:std::borrow::Borrow<Q>{let at=self.values.iter().position(|(id,_)|id.borrow()==key)?;let(key,value)=self.values.swap_remove(at);self.retired_keys.push(key);Some(value)}
 }
 impl<K:RetireOwned+Eq+std::borrow::Borrow<Q>,V:RetireOwned,Q:Eq+?Sized> std::ops::Index<&Q> for OwnedTable<K,V>{type Output=V;fn index(&self,key:&Q)->&V{self.get(key).expect("admitted scene key")}}
 #[derive(Clone,Debug,semio_framework_value::RetireOwned)]
-pub(crate) struct OwnedSet<T:RetireOwned+Eq>{values:Vec<T>,retired:Vec<T>,generations:Vec<Vec<T>>}
+pub struct OwnedSet<T:RetireOwned+Eq>{values:Vec<T>,retired:Vec<T>,generations:Vec<Vec<T>>}
 impl<T:RetireOwned+Eq> OwnedSet<T>{
- pub(crate) fn new()->Self{Self{values:Vec::new(),retired:Vec::new(),generations:Vec::new()}}
- pub(crate) fn contains(&self,value:&T)->bool{self.values.contains(value)}
- pub(crate) fn insert(&mut self,value:T)->bool{if self.contains(&value){self.retired.push(value);false}else{self.values.push(value);true}}
- pub(crate) fn remove(&mut self,value:&T)->bool{if let Some(at)=self.values.iter().position(|item|item==value){self.retired.push(self.values.swap_remove(at));true}else{false}}
- pub(crate) fn reset(&mut self){self.generations.push(std::mem::take(&mut self.values));}
+ pub fn new()->Self{Self{values:Vec::new(),retired:Vec::new(),generations:Vec::new()}}
+ pub fn contains(&self,value:&T)->bool{self.values.contains(value)}
+ pub fn insert(&mut self,value:T)->bool{if self.contains(&value){self.retired.push(value);false}else{self.values.push(value);true}}
+ pub fn remove(&mut self,value:&T)->bool{if let Some(at)=self.values.iter().position(|item|item==value){self.retired.push(self.values.swap_remove(at));true}else{false}}
+ pub fn reset(&mut self){self.generations.push(std::mem::take(&mut self.values));}
 }
 #[path="🧭️selection/🦀️.rs"]
 pub mod selection;
 pub use selection::{scene_selection_relation,SceneSelectionRelation};
-use crate::schema::scene_booleans::{DocumentBooleanInput,DocumentBooleanJob,DocumentBooleanLimits,DocumentBooleanProgress,DocumentBooleanRetirement};
-use crate::schema::scene_text::{DocumentTextJob,DocumentTextRetirement};
-use crate::schema::scene_trace::{DocumentTraceInput,DocumentTraceJob,DocumentTraceLimits,DocumentTraceProgress,DocumentTraceRetirement};
+use crate::booleans::{DocumentBooleanInput, DocumentBooleanJob, DocumentBooleanProgress, DocumentBooleanRetirement};
+use crate::text::{DocumentTextJob, DocumentTextRetirement};
+use crate::trace::{DocumentTraceInput, DocumentTraceJob, DocumentTraceProgress, DocumentTraceRetirement};
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentSceneLimits{pub max_nodes:usize,pub max_depth:usize,pub max_segments:usize,pub max_references:usize,pub max_source_bytes:usize}
 impl Default for DocumentSceneLimits{fn default()->Self{Self{max_nodes:1024,max_depth:32,max_segments:65536,max_references:32768,max_source_bytes:268439552}}}
@@ -75,23 +78,23 @@ fn text_scalar(source:&(impl Utf8Text + ?Sized),chunk:&mut usize,offset:&mut usi
  *offset+=character.len_utf8();Ok(Some(character))
 }
 fn color(c:[f64;4])->Result<[f64;4],DocumentSceneError>{for n in c{unit(n)?;}Ok(c)}
-fn matrix(a:[f64;6],b:[f64;6])->Result<[f64;6],DocumentSceneError>{let mut m=crate::schema::geometry::multiply(a,b);for n in &mut m{coordinate(*n)?;if *n==0.0{*n=0.0;}}Ok(m)}
+fn matrix(a:[f64;6],b:[f64;6])->Result<[f64;6],DocumentSceneError>{let mut m=semio_s_artifact_draw_drawing_geometry::multiply(a,b);for n in &mut m{coordinate(*n)?;if *n==0.0{*n=0.0;}}Ok(m)}
 fn validate_segment(s:&PathSegment)->Result<(),DocumentSceneError>{let p=|v:[f64;2]|{coordinate(v[0])?;coordinate(v[1])?;Ok::<(),DocumentSceneError>(())};match s{PathSegment::Move{to}|PathSegment::Line{to}=>p(*to)?,PathSegment::Quad{ctrl,to}=>{p(*ctrl)?;p(*to)?},PathSegment::Cubic{ctrl1,ctrl2,to}=>{p(*ctrl1)?;p(*ctrl2)?;p(*to)?},PathSegment::Arc{rx,ry,rotation,to,..}=>{coordinate(*rx)?;coordinate(*ry)?;coordinate(*rotation)?;p(*to)?},PathSegment::Close=>{}}Ok(())}
 /// 👁️ Scene preparation borrows actual root and asset owners separately in each turn.
 pub trait DrawingSceneSource{
  fn root_count(&self)->usize;
  fn root(&self,index:usize)->Option<&DrawingLayerNode>;
  fn asset_count(&self)->usize;
- fn asset_at(&self,index:usize)->Option<(&dyn Utf8Text,&crate::DrawingImageAsset)>;
- fn asset(&self,key:&str)->Option<&crate::DrawingImageAsset>;
+ fn asset_at(&self,index:usize)->Option<(&dyn Utf8Text,&semio_s_artifact_draw_drawing_model::DrawingImageAsset)>;
+ fn asset(&self,key:&str)->Option<&semio_s_artifact_draw_drawing_model::DrawingImageAsset>;
  fn root_visible(&self,_index:usize)->bool{true}
 }
 impl DrawingSceneSource for DrawingSnapshot{
  fn root_count(&self)->usize{self.layers.len()}
  fn root(&self,index:usize)->Option<&DrawingLayerNode>{self.layers.get(index)}
  fn asset_count(&self)->usize{self.assets.len()}
- fn asset_at(&self,index:usize)->Option<(&dyn Utf8Text,&crate::DrawingImageAsset)>{self.assets.retained_entries().get(index).map(|(key,asset)|(key as &dyn Utf8Text,asset))}
- fn asset(&self,key:&str)->Option<&crate::DrawingImageAsset>{self.assets.get(key)}
+ fn asset_at(&self,index:usize)->Option<(&dyn Utf8Text,&semio_s_artifact_draw_drawing_model::DrawingImageAsset)>{self.assets.retained_entries().get(index).map(|(key,asset)|(key as &dyn Utf8Text,asset))}
+ fn asset(&self,key:&str)->Option<&semio_s_artifact_draw_drawing_model::DrawingImageAsset>{self.assets.get(key)}
 }
 fn scene_layer_at<'d>(document:&'d impl DrawingSceneSource,path:&[usize])->Result<&'d DrawingLayerNode,DocumentSceneError>{let mut node=document.root(*path.first().ok_or_else(||invalid("Missing scene cursor path"))?).ok_or_else(||invalid("Captured scene root disappeared"))?;for at in &path[1..]{let DrawingLayerNode::Group(group)=node else{return Err(invalid("Captured scene group changed"));};node=group.children.get(*at).ok_or_else(||invalid("Captured scene layer disappeared"))?;}Ok(node)}
 fn scene_layer_count(document:&impl DrawingSceneSource,path:&[usize])->Result<usize,DocumentSceneError>{if path.is_empty(){return Ok(document.root_count());}let DrawingLayerNode::Group(group)=scene_layer_at(document,path)? else{return Err(invalid("Captured scene group changed"));};Ok(group.children.len())}
@@ -116,14 +119,14 @@ impl DocumentSceneCursor{
   let source_path=path.iter().map(|index|u16::try_from(*index).map_err(|_|invalid("Scene source index exceeds limit"))).collect::<Result<Vec<_>,_>>()?;
   let b=layer_base(layer);let locked_ancestors=locks|if b.locked{1u32<<(path.len()-1)}else{0};id(&b.id)?;let authored_id=b.id.to_string_owner();if self.layers>=self.limits.max_nodes||self.ids.contains_key(&authored_id){return Err(invalid("Duplicate scene identity or layer limit"));}
   for n in [b.transform.x,b.transform.y,b.transform.scale_x,b.transform.scale_y,b.transform.shear,b.transform.rotation]{coordinate(n)?;}
-  let transform=matrix(parent,drawing_transform_to_matrix(&b.transform))?;let opacity=unit(b.opacity)?;if !crate::DRAWING_BLEND_MODES.iter().any(|mode| b.blend_mode.eq_str(mode)){return Err(invalid("Invalid authored scene blend"));}
+  let transform=matrix(parent,drawing_transform_to_matrix(&b.transform))?;let opacity=unit(b.opacity)?;if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.iter().any(|mode| b.blend_mode.eq_str(mode)){return Err(invalid("Invalid authored scene blend"));}
   let rule=b.attributes.fill_rule.clone();
   let content=match layer{
    DrawingLayerNode::Path(_)|DrawingLayerNode::Shape(_)=>DocumentSceneContent::Path{segments:Vec::new(),fill_rule:rule,fill:None,stroke:None},
    DrawingLayerNode::Image(v)=>{id(&v.image_key)?;DocumentSceneContent::Image{asset:v.image_key.to_string_owner(),width:positive(v.width)?,height:positive(v.height)?}},
    DrawingLayerNode::Group(v)=>{if v.children.len()>1024{return Err(invalid("Invalid scene group"));}DocumentSceneContent::Group{children:Vec::new(),isolation:v.isolation}},
    DrawingLayerNode::Text(v)=>{if v.content.len()>262144{return Err(invalid("Scene text exceeds limit"));}DocumentSceneContent::Text{content:String::new(),x:coordinate(v.x)?,y:coordinate(v.y)?,size:positive(v.size)?,font_family:v.font_family,fill_rule:rule,fill:None,stroke:None}},
-   DrawingLayerNode::Boolean(v)=>{if !crate::DRAWING_BOOLEAN_OPERATIONS.iter().any(|operation| v.operation.eq_str(operation))||v.children.len()>1024{return Err(invalid("Invalid boolean scene work"));}DocumentSceneContent::Boolean{operation:v.operation.to_string_owner(),children:Vec::new(),reference_transform:parent,fill_rule:rule,fill:None,stroke:None}},
+   DrawingLayerNode::Boolean(v)=>{if !semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS.iter().any(|operation| v.operation.eq_str(operation))||v.children.len()>1024{return Err(invalid("Invalid boolean scene work"));}DocumentSceneContent::Boolean{operation:v.operation.to_string_owner(),children:Vec::new(),reference_transform:parent,fill_rule:rule,fill:None,stroke:None}},
    DrawingLayerNode::Trace(v)=>{id(&v.source_key)?;let epsilon=coordinate(v.params.simplify_epsilon)?;if epsilon<0.0{return Err(invalid("Invalid trace epsilon"));}DocumentSceneContent::Trace{source:v.source_key.to_string_owner(),threshold:unit(v.params.threshold)?,simplify_epsilon:epsilon,fill_rule:rule,fill:None,stroke:None}},
   };
   self.ids.insert(authored_id.clone(),self.plan.nodes.len());self.layers+=1;self.node=Some(DocumentSceneNode{source_path,locked_ancestors,id:authored_id,groups,transform,opacity,blend_mode:b.blend_mode.to_string_owner(),visible:visible&&b.visible,content});self.current=Some(path);self.at=0;self.stroke_at=0;self.text_at=0;self.text_chars=0;self.text_chunk=0;self.text_chunk_offset=0;self.phase="paint";Ok(())
@@ -136,7 +139,7 @@ impl DocumentSceneCursor{
     *out_fill=match source{None=>None,Some(FillStyle::Solid{color:c})=>Some(FillStyle::Solid{color:color(*c)?}),Some(FillStyle::LinearGradient{x1,y1,x2,y2,stops})=>{if stops.is_empty()||stops.len()>64{return Err(invalid("Invalid scene gradient stops"));}Some(FillStyle::LinearGradient{x1:coordinate(*x1)?,y1:coordinate(*y1)?,x2:coordinate(*x2)?,y2:coordinate(*y2)?,stops:Default::default()})},Some(FillStyle::RadialGradient{cx,cy,r,stops})=>{if stops.is_empty()||stops.len()>64{return Err(invalid("Invalid scene gradient stops"));}Some(FillStyle::RadialGradient{cx:coordinate(*cx)?,cy:coordinate(*cy)?,r:positive(*r)?,stops:Vec::new().into()})}};self.at+=1;return Ok(());
    }
    let stops=match source{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>Some(stops),_=>None};
-   if let Some(stop)=stops.and_then(|v|v.get(self.at-1)){let stop=crate::GradientStop{offset:unit(stop.offset)?,color:color(stop.color)?};match out_fill{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>stops.push(stop),_=>unreachable!()}self.at+=1;return Ok(());}
+   if let Some(stop)=stops.and_then(|v|v.get(self.at-1)){let stop=semio_s_artifact_draw_drawing_model::GradientStop{offset:unit(stop.offset)?,color:color(stop.color)?};match out_fill{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>stops.push(stop),_=>unreachable!()}self.at+=1;return Ok(());}
    let stroke=b.attributes.stroke.as_ref();
    if self.stroke_at==0{if let Some(s)=stroke{coordinate(s.width)?;if s.width<0.0||s.dash.as_ref().is_some_and(|d|d.len()>1024){return Err(invalid("Invalid scene stroke"));}*out_stroke=Some(StrokeStyle{color:color(s.color)?,width:s.width,cap:s.cap.clone(),join:s.join.clone(),dash:s.dash.as_ref().map(|_|Default::default())});}self.stroke_at+=1;return Ok(());}
    if let Some(value)=stroke.and_then(|s|s.dash.as_ref()).and_then(|v|v.get(self.stroke_at-1)){coordinate(*value)?;if *value<0.0{return Err(invalid("Invalid scene dash"));}out_stroke.as_mut().unwrap().dash.as_mut().unwrap().push(*value);self.stroke_at+=1;return Ok(());}
@@ -212,12 +215,12 @@ pub fn resolved_scene_input(plan:DocumentScenePlan,viewport:DocumentSceneViewpor
 }
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+pub mod tests;
 #[derive(Clone,Debug)]
 pub struct DocumentSceneViewport{pub width:u32,pub height:u32,pub origin:[f64;2],pub tolerance:f64,pub max_pixels:usize,pub max_source_bytes:usize}
 impl DocumentSceneViewport{fn input(&self,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>)->RasterSceneInput{RasterSceneInput{width:self.width,height:self.height,origin:self.origin,tolerance:self.tolerance,max_pixels:self.max_pixels,max_source_bytes:self.max_source_bytes,assets,nodes}}}
 #[derive(Clone,Debug)]
-pub struct DocumentRasterProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub raster:Option<crate::schema::scene_raster::RasterSceneProgress>,pub nodes:usize,pub work:u64,pub done:bool}
+pub struct DocumentRasterProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub raster:Option<crate::raster::RasterSceneProgress>,pub nodes:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentAlgorithmLimits{pub booleans:DocumentBooleanLimits,pub trace:DocumentTraceLimits,pub max_work:u64}
 impl Default for DocumentAlgorithmLimits{fn default()->Self{Self{max_work:1000000000,trace:DocumentTraceLimits{max_pixels:16777216,max_admitted_pixels:67108864,max_source_bytes:268439552,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:1000000000},booleans:DocumentBooleanLimits{tolerance:0.05,epsilon:1e-8,max_depth:32,max_references:32768,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:1000000000}}}}
@@ -333,8 +336,8 @@ semio_framework_2d::physical_work_retirement!(DocumentVectorPreparationRetiremen
 /// 📷️ Resolves each raster record after the common document vector producer completes.
 pub struct DocumentRasterJob<'a>{
  vector:Option<DocumentVectorJob<'a>>,prepared:DocumentVectorProgress,source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,at:usize,work:u64,phase:&'static str,
- raster:Option<crate::schema::scene_raster::RasterSceneJob>,rendered:Option<crate::schema::scene_raster::RasterSceneProgress>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>,cancelled:bool,viewport:DocumentSceneViewport,max_work:u64,
- vector_retirement:Option<DocumentVectorRetirement<'a>>,raster_retirement:Option<crate::schema::scene_raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,
+ raster:Option<crate::raster::RasterSceneJob>,rendered:Option<crate::raster::RasterSceneProgress>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>,cancelled:bool,viewport:DocumentSceneViewport,max_work:u64,
+ vector_retirement:Option<DocumentVectorRetirement<'a>>,raster_retirement:Option<crate::raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,
  pixel_scale:[f64;2],
 }
 impl<'a> DocumentRasterJob<'a>{
@@ -342,12 +345,12 @@ impl<'a> DocumentRasterJob<'a>{
   Self::from_vector(DocumentVectorJob::new(document,limits,resolution_limits)?,viewport,resolution_limits.max_work)
  }
  fn from_vector(vector:DocumentVectorJob<'a>,viewport:DocumentSceneViewport,max_work:u64)->Result<Self,DocumentSceneError>{
-  let mut check=crate::schema::scene_raster::RasterSceneJob::new(viewport.input(Vec::new(),Vec::new())).map_err(|e|invalid(e.to_string()))?;check.cancel();
+  let mut check=crate::raster::RasterSceneJob::new(viewport.input(Vec::new(),Vec::new())).map_err(|e|invalid(e.to_string()))?;check.cancel();
   Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]})
  }
  /// 🔐️ Retains the actual immutable store read through every raster and output handoff.
  pub fn from_snapshot_read(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,algorithms:DocumentAlgorithmLimits)->DocumentRasterJob<'static>{
-  let failure=crate::schema::scene_raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(|error|invalid(error.to_string()));
+  let failure=crate::raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(|error|invalid(error.to_string()));
   DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]}
  }
  /// 🔍️ Maps the immutable artboard extent to the exact requested pixel extent.
@@ -357,7 +360,7 @@ impl<'a> DocumentRasterJob<'a>{
   
   if let Some(vector)=&mut self.vector{self.prepared=vector.advance(1)?;if self.prepared.done{let(close,plan)=self.vector.take().unwrap().into_retirement();self.vector_retirement=Some(close);self.handoff=plan;self.phase="resolving";}else{self.phase=self.prepared.phase;}return Ok(());}
   match self.phase{
-   "resolving"=>{if let Some(n)=self.source.pop_front(){self.at+=1;if !n.visible||matches!(&n.content,DocumentSceneContent::Group{..}){self.retired_nodes.push(n);return Ok(());}if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Image{..}){let error=invalid(format!("Unresolved scene layer: {}",n.id));self.retired_nodes.push(n);return Err(error);}let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Glyphs{content,segments,fill_rule,fill,stroke,..}=>{self.retired_texts.push(content);RasterSceneContent::Path{segments,fill_rule,fill,stroke}},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};self.retired_paths.push(n.source_path);let m=n.transform;let [x,y]=self.pixel_scale;self.nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}else{self.raster=Some(crate::schema::scene_raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))).map_err(|e|invalid(e.to_string()))?);self.phase="raster";}}
+   "resolving"=>{if let Some(n)=self.source.pop_front(){self.at+=1;if !n.visible||matches!(&n.content,DocumentSceneContent::Group{..}){self.retired_nodes.push(n);return Ok(());}if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Image{..}){let error=invalid(format!("Unresolved scene layer: {}",n.id));self.retired_nodes.push(n);return Err(error);}let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Glyphs{content,segments,fill_rule,fill,stroke,..}=>{self.retired_texts.push(content);RasterSceneContent::Path{segments,fill_rule,fill,stroke}},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};self.retired_paths.push(n.source_path);let m=n.transform;let [x,y]=self.pixel_scale;self.nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}else{self.raster=Some(crate::raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))).map_err(|e|invalid(e.to_string()))?);self.phase="raster";}}
    "raster"=>{let p=self.raster.as_mut().unwrap().advance(1).map_err(|e|invalid(e.to_string()))?;let done=p.done;self.rendered=Some(p);if done{let(close,image)=self.raster.take().unwrap().into_retirement();self.output=image;self.raster_retirement=Some(close);self.phase="complete";}}
    _=>{}
   }Ok(())
@@ -378,7 +381,7 @@ impl<'a> DocumentRasterJob<'a>{
 }
 /// 🧺️ Source handback follows actual vector, raster and private candidate retirement.
 #[derive(semio_framework_value::RetireOwned)]
-struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,raster:Option<crate::schema::scene_raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
+struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,raster:Option<crate::raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
 pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>,work:u64}
 impl DocumentRasterRetirement<'_>{
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.vector.as_ref().is_none_or(DocumentVectorRetirement::terminal_is_empty)}

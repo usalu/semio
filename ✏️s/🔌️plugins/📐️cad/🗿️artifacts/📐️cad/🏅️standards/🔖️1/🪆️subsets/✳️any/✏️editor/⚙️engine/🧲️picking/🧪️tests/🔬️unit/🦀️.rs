@@ -5,7 +5,7 @@
 //! `applyModelDiff`.
 
 use super::*;
-use crate::standards::v1::subsets::any::schema::geometry::{CadEdgeCurve, CadPlaneSurface, CadPrimitiveSlot};
+use semio_s_artifact_cad_cad_model::{geometry::CadEdgeCurve, geometry::CadPlaneSurface, geometry::CadPrimitiveSlot};
 
 //#region 🧫️Fixtures
 fn vertex(id: &str, position: [f64; 3]) -> CadVertex {

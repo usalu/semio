@@ -1,9 +1,18 @@
 //! 🎯️ The `brep.evaluate` widgets: points, tangents, curvature, domains, normals and closest points of curves, edges, wires, surfaces and faces.
 //!
 //! Every evaluation reads the value directly through its curve or surface source, so it is as cheap as the formula and never opens a kernel session. A parameter outside the domain of the curve or surface is refused instead of being clamped silently.
+#![allow(clippy::result_large_err)]
 
-use super::brep_sources::{curve_input, surface_input};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_sources::curve_input;
+use semio_s_artifact_procedural_3d_brep_sources::surface_input;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 
 const PARAMETER_RANGE: &str = "generation3d.geometry.parameter-range";
 const UNBOUNDED: &str = "generation3d.geometry.domain-unbounded";
@@ -99,6 +108,8 @@ fn surface_closest_uv(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })())
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-evaluate", include_str!("../../../🗂️catalogue/🔣️brep-evaluate.json"));
 /// 🗃️ Every `brep.evaluate` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.evaluate.curvePoint", start: curve_point },

@@ -11,7 +11,7 @@ import { createTaxonomyPathMatcher } from "../../🔍️discovery/🟦️.ts";
 
 type Fixture = { schemaVersion: number; utf8Order: { left: string; right: string; sign: number }[]; literalLeafPaths: string[]; markdownReferenceDefinitions: { content: string; values: string[] }[] };
 const library = resolve(import.meta.dir, "../..");
-const fixture = JSON.parse(readFileSync(resolve(library, "🧫️fixtures/⏱️taxonomy-scaling-laws/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(library, "🧪️tests/🧫️fixtures/⏱️taxonomy-scaling-laws/🔣️.json"), "utf8")) as Fixture;
 const taxonomy = JSON.parse(readFileSync(resolve(library, "🔣️taxonomy.json"), "utf8")) as { fixedFilenameContracts: Record<string, { pathPattern: string }>; fixedDirectoryContracts: Record<string, { pathPattern: string }> };
 const syntax = ts.createSourceFile("normalization.ts", readFileSync(resolve(library, "🧹️normalization/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
 

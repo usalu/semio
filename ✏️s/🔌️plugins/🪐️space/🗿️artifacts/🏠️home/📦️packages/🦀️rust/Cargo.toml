@@ -15,18 +15,7 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[bin]]
-name = "semio-space-home-mutation-bridge"
-path = "../../🏭️bridge/🦀️.rs"
-required-features = ["mutation-inventory"]
-
-[features]
-default = []
-mutation-inventory = ["dep:semio-framework-test-mutation-inventory"]
-component-app-assembly = ["semio-s-space-core/component-app-assembly", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
-
 [dependencies]
-semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }
 semio-s-space-core = { path = "../../../../🫀️core/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -41,8 +30,8 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { workspace = true, optional = true }
-semio-framework-artifact-space-space = { workspace = true, optional = true }
+semio-framework = { workspace = true }
+semio-framework-artifact-space-space = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -54,11 +43,11 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true, optional = true }
-semio-framework-os-infinite = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-scene = { workspace = true, optional = true }
-semio-framework-os = { workspace = true, optional = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-os-infinite = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
+semio-framework-os = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

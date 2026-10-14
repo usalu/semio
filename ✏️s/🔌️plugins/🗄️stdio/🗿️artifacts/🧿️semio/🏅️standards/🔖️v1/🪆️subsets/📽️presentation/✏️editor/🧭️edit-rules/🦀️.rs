@@ -1,6 +1,11 @@
 //! 🧭️ The presentation editor's edit rules: which snapshot pointer raises which ONE concrete presentation mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, ins, keyed, named, rem, INDEX};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ins;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::INDEX;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector};
 
 const SLIDE: Selector = Selector::Index("slide_index");

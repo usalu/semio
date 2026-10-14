@@ -1,6 +1,6 @@
 //! 🚚️ `move-elements` payload. Translates placed elements by a vector: walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and grid lines each get one sparse patch of exactly their placement fields; hosted openings follow their host by inference.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -4,10 +4,10 @@
 
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::BimDispatchCtx;
-use crate::mutations::remove_component_override::RemoveComponentOverride;
-use crate::mutations::set_component_override::SetComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

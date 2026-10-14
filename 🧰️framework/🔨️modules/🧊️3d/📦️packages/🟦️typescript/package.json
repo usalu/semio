@@ -22,8 +22,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"
   },
-  "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  }
+  "bundleKind": "library"
 }

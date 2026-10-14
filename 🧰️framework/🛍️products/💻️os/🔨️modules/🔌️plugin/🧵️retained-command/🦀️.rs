@@ -220,7 +220,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
 }
 
 pub struct BoundedArtifactCommandWork<A: ArtifactApp> {
-    tool_id: &'static str,
+    pub(crate) tool_id: &'static str,
     reducer: ArtifactCommandReducer<A>,
     extent: ArtifactCommandExtent<A>,
     consumed: bool,
@@ -342,7 +342,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     interaction_hover: Option<Arc<InteractionHoverState>>,
     context: Option<ArtifactOwnedContextHandle<A>>,
     operation: Option<AppOperationContext>,
-    completion: Option<ArtifactToolCompletion<A>>,
+    pub(crate) completion: Option<ArtifactToolCompletion<A>>,
     command_id: fn(&A::Command) -> &'static str,
     maximum_raw_bytes: usize,
     maximum_work_items: usize,
@@ -375,7 +375,7 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     phase: ArtifactRetainedCommandPhase,
     checkpoint_pending: bool,
     work_progress: u64,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {

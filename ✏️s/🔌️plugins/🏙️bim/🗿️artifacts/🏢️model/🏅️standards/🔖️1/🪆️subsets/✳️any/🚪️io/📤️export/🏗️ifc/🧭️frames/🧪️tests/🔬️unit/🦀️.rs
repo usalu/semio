@@ -1,5 +1,5 @@
 use super::*;
-use crate::Vertex;
+use crate::standards::v1::subsets::any::schema::snapshot::Vertex;
 
 fn corner(x: f64, y: f64) -> Vertex {
     Vertex { point: Point2 { x, y }, bulge: 0.0 }

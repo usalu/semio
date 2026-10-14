@@ -28,7 +28,8 @@ pub(crate) fn enc_semio_value_snapshot(s: &SemioValueSnapshot) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_semio_value_snapshot(s: &str) -> Result<SemioValueSnapshot, String> {
-    use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+    use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+    use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
     use crate::io::text::diff::dec_semio_value_node;
     use crate::io::text::diff::dec_semio_value;
     use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;

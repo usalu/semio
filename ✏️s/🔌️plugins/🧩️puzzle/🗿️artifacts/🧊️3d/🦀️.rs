@@ -14,761 +14,95 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(feature = "component-app-assembly")]
 pub use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
 
 #[path = "../../🎮️commands/📤️jobs/🦀️.rs"]
 pub mod puzzle_job;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "../../🎮️commands/🧵️retained/🦀️.rs"]
 pub mod retained_command;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
+#[cfg(test)]
 fn retained_command_test_catalog() -> (&'static str, &'static str, &'static [&'static str], &'static str) {
     ("puzzle3d", "puzzle.3d", editor::puzzle3d::PUZZLE3D_RETAINED_TOOL_IDS, include_str!("🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🗄️retained-jobs/🔣️.json"))
 }
 
 //#region ⚠️ Errors
-/// 🧯️ Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state
-/// failures. `Json` wraps `semio_framework_value::ValueError` (not `serde_json::Error`) since every production
-/// (de)serialization call site now routes text through `dsl::os_pack::json::{from_json_str,
-/// to_json_string}`, which are `ToValue`/`FromValue`-based, not `serde`-based.
-#[derive(Debug)]
-pub enum Puzzle3dError {
-    Json(semio_framework_value::ValueError),
-    FillSessionUnavailable,
-}
 
-impl std::fmt::Display for Puzzle3dError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Json(error) => write!(formatter, "{error}"),
-            Self::FillSessionUnavailable => formatter.write_str("fill session unavailable"),
-        }
-    }
-}
 
-impl std::error::Error for Puzzle3dError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::Json(error) => std::error::Error::source(error),
-            Self::FillSessionUnavailable => None,
-        }
-    }
-}
 
-impl From<semio_framework_value::ValueError> for Puzzle3dError {
-    fn from(error: semio_framework_value::ValueError) -> Self {
-        Self::Json(error)
-    }
-}
+
+
+
+
 //#endregion ⚠️ Errors
 
-pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
-/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
-/// surface (`✏️editor`, `👁️viewer`) of the `✳️any` subset binds `ArtifactEditor::DIALECT`/
-/// `ArtifactViewer::DIALECT` to — `"s.puzzle.puzzle3d"` matches the artifact-kind id this subset's
-/// own mutation/inference descriptors already key off (see `definition()`'s own
-/// `"s.puzzle3d.schema.artifact"` row), standard `"1"` and subset `"*"` match this file's own
-/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location. Lives at the artifact level (not under the two
-/// surfaces) so a viewer file can read it without ever importing through the sibling editor module.
-pub const PUZZLE3D_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.puzzle.puzzle3d", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
+
+
 
 //#region 📐️Scale
-/// 📐️ A placed object's / target volume's freeform pose scale: either a single scalar broadcast
-/// to all three axes, or an explicit per-axis `[x, y, z]` triple — the ONLY two shapes the engine
-/// crate's `vec3_scale`/`volume_scale_vec` ever interpret (see that crate's implementation and its
-/// `vec3_scale_variants` test), so this is a small closed union rather than genuinely heterogeneous
-/// JSON. Replaces the former `serde_json::Value` passthrough with the actual shape.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Puzzle3dScale {
-    Uniform(f64),
-    Vec3([f64; 3]),
-}
 
-semio_framework_value::artifact_retire_leaf!(Puzzle3dScale);
 
-impl semio_framework_value::retained_clone::RetainedClone for Puzzle3dScale {
-    type Cursor = semio_framework_value::retained_clone::ScalarCursor<Self>;
-    fn retained_clone_cursor() -> Self::Cursor {
-        Default::default()
-    }
-}
 
-/// 🌲️ The canonical tree keeps the wire shape: a bare number for `Uniform`, an `[x, y, z]` array for `Vec3`.
-impl semio_framework_pack_json::ArtifactCanonicalJsonTree for Puzzle3dScale {
-    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
-        Ok(match self {
-            Self::Uniform(value) => semio_framework_pack_json::ArtifactCanonicalJsonNode::F64(*value),
-            Self::Vec3(_) => semio_framework_pack_json::ArtifactCanonicalJsonNode::Array(3),
-        })
-    }
 
-    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
-        match self {
-            Self::Vec3(axes) => axes.get(ordinal).map(|axis| axis as &dyn semio_framework_pack_json::ArtifactCanonicalJsonTree).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical scale axis ordinal is absent")),
-            Self::Uniform(_) => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical uniform scale has no child")),
-        }
-    }
-}
 
-/// 🔗️ Wire shape stays identical to the former `serde_json::Value` passthrough (a bare number or
-/// an `[x, y, z]` array) so every JSON-boundary consumer (the engine/ui wasm crates' own mirror
-/// structs, which bind `scale` as `Option<serde_json::Value>` and are out of this derive's scope)
-/// keeps parsing it exactly as before.
-#[cfg(test)]
-impl serde::Serialize for Puzzle3dScale {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        match self {
-            Puzzle3dScale::Uniform(scale) => serializer.serialize_f64(*scale),
-            Puzzle3dScale::Vec3(vec3) => serde::Serialize::serialize(vec3, serializer),
-        }
-    }
-}
 
-#[cfg(test)]
-impl<'de> serde::Deserialize<'de> for Puzzle3dScale {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        match <serde_json::Value as serde::Deserialize>::deserialize(deserializer)? {
-            serde_json::Value::Number(n) => Ok(Puzzle3dScale::Uniform(n.as_f64().unwrap_or(1.0))),
-            serde_json::Value::Array(items) if items.len() >= 3 => {
-                let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
-                Ok(Puzzle3dScale::Vec3([axis(0), axis(1), axis(2)]))
-            }
-            other => Err(serde::de::Error::custom(format!("expected scale to be a number or an [x, y, z] array, found {other}"))),
-        }
-    }
-}
 
-/// 🔁️ Hand-written (mirrors the `Serialize`/`Deserialize` pair directly above): same bare-number-or-
-/// `[x, y, z]`-array wire shape.
-impl semio_framework_value::ToValue for Puzzle3dScale {
-    fn to_value(&self) -> semio_framework_value::DslValue {
-        match self {
-            Puzzle3dScale::Uniform(scale) => semio_framework_value::ToValue::to_value(scale),
-            Puzzle3dScale::Vec3(vec3) => semio_framework_value::ToValue::to_value(vec3),
-        }
-    }
-    fn to_value_controlled(&self,c:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_value::DslValue,semio_framework_value::ValueError>{match self{Self::Uniform(v)=><f64 as semio_framework_value::ToValue>::to_value_controlled(v,c),Self::Vec3(v)=><[f64;3] as semio_framework_value::ToValue>::to_value_controlled(v,c)}}
 
-}
-impl semio_framework_value::FromValue for Puzzle3dScale {
-    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
-        match value {
-            semio_framework_value::DslValue::Array(items) if items.len() >= 3 => {
-                let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
-                Ok(Puzzle3dScale::Vec3([axis(0), axis(1), axis(2)]))
-            }
-            other => f64::from_value(other).map(Puzzle3dScale::Uniform),
-        }
-    }
-    fn from_value_controlled(value:&semio_framework_value::DslValue,c:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{c.charge(size_of::<Self>())?;match value{semio_framework_value::DslValue::Array(_)=><[f64;3] as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Vec3),_=><f64 as semio_framework_value::FromValue>::from_value_controlled(value,c).map(Self::Uniform)}}
 
-}
 
-/// 🔗️ Hand `DslField` bridge for `Puzzle3dScale`: `objects`/`targetVolumes` are `#[dsl(table)]`
-/// collections, so this field prints as a BARE positional table column — the unbounded
-/// `Shape::Tuple(Float, None)` the sibling `puzzle_5d::Puzzle5dScale` uses (its `scale` is reached
-/// through a nested keyed record field, not a bare column) is rejected there at parse time
-/// (`table column 'scale' has a non-self-delimiting shape (TUPLE) and cannot be a table column`,
-/// per the engine's own `validate_table_columns`), so this binds through the bracketed
-/// `Shape::List(Float)` instead: `scale=[2]` (uniform) / `scale=[2 3 4]` (per-axis) — the brackets
-/// make it self-delimiting regardless of item count.
-impl semio_framework_dsl_record::BorrowedDslField for Puzzle3dScale {
-    const SHAPE: semio_framework_dsl_record::BorrowedShape = <Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE;
-}
 
-impl semio_framework_dsl_record::DslField for Puzzle3dScale {
-    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> {
-        <Vec<f64> as semio_framework_dsl_record::DslField>::shape_controlled(control)
-    }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> {
-        let axes = match self { Self::Uniform(v) => std::slice::from_ref(v), Self::Vec3(v) => v.as_slice() };
-        control.scoped_stage(|control| {
-            control.begin_stage(axes.len())?;
-            let mut values = control.allocate_vec::<semio_framework_dsl_record::FieldValue>(axes.len())?;
-            for value in axes { values.push(<f64 as semio_framework_dsl_record::DslField>::to_value_controlled(value, control)?); }
-            Ok(semio_framework_dsl_record::FieldValue::List(values))
-        })
-    }
-    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
-        control.checkpoint()?;
-        let semio_framework_dsl_record::FieldValue::List(items) = value else { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Puzzle3d Scale requires one or three scalars")) };
-        if items.len() != 1 && items.len() != 3 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Puzzle3d Scale requires one or three scalars")) }
-        control.scoped_stage(|control| {
-            control.begin_stage(items.len())?;
-            control.charge(size_of::<Self>())?;
-            let x = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[0], control)?;
-            if items.len() == 1 { return Ok(Self::Uniform(x)) }
-            let y = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[1], control)?;
-            let z = <f64 as semio_framework_dsl_record::DslField>::from_value_controlled(&items[2], control)?;
-            Ok(Self::Vec3([x,y,z]))
-        })
-    }
 
-    fn shape() -> semio_framework_dsl_record::Shape {
-        semio_framework_dsl_record::Shape::List(Box::new(semio_framework_dsl_record::Shape::Float))
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        match self {
-            Puzzle3dScale::Uniform(scale) => semio_framework_dsl_record::FieldValue::List(vec![semio_framework_dsl_record::FieldValue::Float(*scale)]),
-            Puzzle3dScale::Vec3(vec3) => semio_framework_dsl_record::FieldValue::List(vec3.iter().map(|axis| semio_framework_dsl_record::FieldValue::Float(*axis)).collect()),
-        }
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::List(items) if items.len() == 1 => match &items[0] {
-                semio_framework_dsl_record::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
-                other => Err(format!("expected Float, found {other:?}")),
-            },
-            semio_framework_dsl_record::FieldValue::List(items) if items.len() >= 3 => {
-                let axis = |i: usize| match &items[i] {
-                    semio_framework_dsl_record::FieldValue::Float(v) => Ok(*v),
-                    other => Err(format!("expected Float, found {other:?}")),
-                };
-                Ok(Puzzle3dScale::Vec3([axis(0)?, axis(1)?, axis(2)?]))
-            }
-            other => Err(format!("expected a 1- or 3-item List, found {other:?}")),
-        }
-    }
-}
+
+
+
+
+
+
 //#endregion 📐️Scale
 
-// #region 🔖️Document
-/// ⚓️ Whether a root object keeps its stored plane (`Fixed`) or resets to default XY (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub enum Puzzle3dObjectAnchor {
-    #[default]
-    Fixed,
-    Derived,
-}
 
-/// 🔘️ One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
-/// `direction` place and orient it, `radius` sizes its brush-fill collision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dVortex {
-    pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(refs = "vortex_kind")]
-    pub vortex_kind: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub position: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(dir)]
-    pub direction: Option<[f64; 3]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub locked: bool,
-}
 
-/// 🧱️ One placed object — `origin`/`orientation`/`scale` (a scalar-or-`[x,y,z]` `Puzzle3dScale`,
-/// see that type and `vec3_scale`) pose it, `anchor` gates flatten-root plane retention, `vortices`
-/// are its rim attraction ports.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dObject {
-    pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(refs = "object_kind")]
-    pub object_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub anchor: Puzzle3dObjectAnchor,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<Puzzle3dScale>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mesh_url: Option<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub vortices: Vec<Puzzle3dVortex>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub locked: bool,
-}
 
-/// 🔗️ One attraction between two full vortex ids (`object_id:vortex_id`), with the eight compose
-/// connection parameters (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` plus diagram `x`/`y`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dAttraction {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub id: String,
-    pub attracting: String,
-    pub attracted: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub gap: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub shift: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub rise: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub rotation: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub turn: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub tilt: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub x: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub y: f64,
-}
 
-/// 🧊️ A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
-/// edited volumes). `scale` is a scalar-or-`[x,y,z]` `Puzzle3dScale` — see that type and
-/// `volume_scale_vec`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dTargetVolume {
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub orientation: Option<[f64; 4]>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<Puzzle3dScale>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub hidden: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub locked: bool,
-}
 
-/// 🌐️ Where a reference image/media's bytes live and what kind of media it is.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dReferenceSource {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub url: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub media_kind: Option<String>,
-}
 
-/// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dReference {
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub source: Puzzle3dReferenceSource,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub origin: [f64; 3],
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(unit = "m")]
-    pub width_world: f64,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub locked: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub hidden: bool,
-}
 
-/// 🔗️ How specifically two vortex/cable kinds are allowed to attract.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "lowercase"))]
-#[value(rename_all = "lowercase")]
-pub enum Puzzle3dCompatSpecificity {
-    General,
-    Object,
-    Attraction,
-    Cable,
-    #[default]
-    Vortex,
-}
 
-/// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two vortex/cable kind ids.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dKindCompatibility {
-    #[dsl(refs = "vortex_kind")]
-    pub source: String,
-    #[dsl(refs = "vortex_kind")]
-    pub target: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub bidirectional: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub important: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub specificity: Puzzle3dCompatSpecificity,
-}
 
-/// 🏷️ One freeform attribute on a catalog object-kind (compose `Attribute` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dAttribute {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub key: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub value: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub definition: Option<String>,
-}
 
-/// ✍️ One author credit on a catalog object-kind (compose `Author` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dAuthor {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub email: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub role: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub rank: Option<i32>,
-}
 
-/// 🖼️ One tagged representation/LOD URL on a catalog object-kind (compose `Representation` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dRepresentation {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub url: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub mime: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub tags: Vec<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub lod: Option<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub description: String,
-}
 
-/// 🌱️ One rim-vortex template on a `Puzzle3dCatalogObjectKind` — compose connector analogue with
-/// `point`/`direction`/`t`/`mandatory`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dCatalogVortexTemplate {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub label: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub description: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub icon: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    #[dsl(refs = "vortex_kind")]
-    pub vortex_kind: Option<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(coord)]
-    pub point: [f64; 3],
-    #[cfg_attr(test, serde(default = "puzzle3d_default_direction"))]
-    #[value(default = "puzzle3d_default_direction")]
-    #[dsl(dir)]
-    pub direction: [f64; 3],
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub t: Option<f64>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mandatory: Option<bool>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub radius: Option<f64>,
-}
 
-fn puzzle3d_default_direction() -> [f64; 3] {
-    [0.0, 0.0, 1.0]
-}
 
-impl Default for Puzzle3dCatalogVortexTemplate {
-    fn default() -> Self {
-        Self { id: String::new(), name: String::new(), label: String::new(), description: String::new(), icon: String::new(), vortex_kind: None, point: [0.0, 0.0, 0.0], direction: puzzle3d_default_direction(), t: None, mandatory: None, radius: None }
-    }
-}
 
-/// 🧱️ One object-kind catalog row — type-like (compose `Type` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dCatalogObjectKind {
-    #[dsl(defines = "object_kind")]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub label: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub description: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub icon: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub image: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub unit: String,
-    #[cfg_attr(test, serde(default, rename = "abstract"))]
-    #[value(default, rename = "abstract")]
-    pub is_abstract: bool,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub base_kinds: Vec<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub representations: Vec<Puzzle3dRepresentation>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub vortices: Vec<Puzzle3dCatalogVortexTemplate>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub attributes: Vec<Puzzle3dAttribute>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub authors: Vec<Puzzle3dAuthor>,
-}
 
-/// 🔘️ One vortex-kind catalog row — port-like (compose `Port` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dCatalogVortexKind {
-    #[dsl(defines = "vortex_kind")]
-    pub id: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub code: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub label: Option<String>,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub order: Option<i32>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub compatible_with: Vec<String>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub description: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub icon: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub color: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(refs = "cable_kind")]
-    pub default_cable_kind: String,
-}
 
-/// 🧵️ One cable-kind catalog row (mirrors `CableKindCatalog`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dCatalogCableKind {
-    #[dsl(defines = "cable_kind")]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub label: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(refs = "attraction_kind")]
-    pub default_attraction_kind: String,
-}
 
-/// 🔗️ One attraction-kind catalog row.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dCatalogAttractionKind {
-    #[dsl(defines = "attraction_kind")]
-    pub id: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub label: String,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    pub name: String,
-}
 
-/// 🗂️ The compile-time-catalog side of a self-contained scene_snapshot export: object/vortex/cable/
-/// attraction kind rows — see `puzzle/3d/manifest/*.manifest.json` for the same schema at the
-/// manifest layer.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dKindCatalogs {
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub objects: Vec<Puzzle3dCatalogObjectKind>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub vortices: Vec<Puzzle3dCatalogVortexKind>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub cables: Vec<Puzzle3dCatalogCableKind>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub attractions: Vec<Puzzle3dCatalogAttractionKind>,
-}
 
-/// 🗂️ EngineSceneSnapshot-carried metadata: the explicit link-compatibility table plus the object/vortex/cable/
-/// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct Puzzle3dMeta {
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
-    #[value(default, skip_serializing_if = "Option::is_none")]
-    pub kind_catalogs: Option<Puzzle3dKindCatalogs>,
-    #[cfg_attr(test, serde(default))]
-    #[value(default)]
-    #[dsl(table)]
-    pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //#region 🔖️Snapshot
 //#endregion 🔖️Snapshot
@@ -834,7 +168,6 @@ pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
 /// stays wired through `🧩️puzzle/🦀️.rs`'s own `.setup()`, not here.
-#[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
     + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::puzzle3d::Puzzle3dPlayApp>>>
@@ -842,7 +175,6 @@ pub trait ArtifactApps:
 {
 }
 
-#[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
         + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::puzzle3d::Puzzle3dPlayApp>>>
@@ -851,6 +183,7 @@ impl<PA> ArtifactApps for PA where
 }
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+use crate::standards::v1::subsets::any::schema::PUZZLE_3D_SCHEMA;
 use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[semio_framework_plugin::ArtifactCapabilityRow<'_>] = &[
@@ -893,7 +226,6 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-#[cfg(feature = "component-app-assembly")]
 pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use {semio_framework_artifact_reference::ArtifactKindId};
@@ -978,20 +310,16 @@ mod design_parity_schema_tests;
         pub mod standards {
             #[path = "."]
             pub mod v1 {
-                #[cfg(feature = "component-app-assembly")]
                 #[path = "🏅️standards/🔖️1/🦀️.rs"]
                 mod component;
-                #[cfg(feature = "component-app-assembly")]
                 pub use component::*;
 
                 #[path = "."]
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[cfg(feature = "component-app-assembly")]
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
                         mod component;
-                        #[cfg(feature = "component-app-assembly")]
                         pub use component::*;
 
                         #[path = "."]
@@ -1036,536 +364,536 @@ mod design_parity_schema_tests;
                                 pub use component::*;
                                 #[path = "."]
                                 pub mod create_object {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-object/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🌱create-object/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-object/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🌱create-object/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🌱create-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-object/🧪️tests/🌱️appends-object-c/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🌱create-object/🧪️tests/🌱️appends-object-c/🦀️.rs"]
                                     mod tests_appends_object_c;
                                 }
                                 #[path = "."]
                                 pub mod delete_object {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🗑️delete-object/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🗑️delete-object/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🗑️delete-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🗑️delete-object/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_object_a_and_severs_attraction;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🗑️removes-middle-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🗑️delete-object/🧪️tests/🗑️removes-middle-object/🦀️.rs"]
                                     mod tests_removes_the_middle_object_and_its_attractions;
                                 }
                                 #[path = "."]
                                 pub mod move_object {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-object/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-object/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-object/🧪️tests/📍️moves-object-a/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📍move-object/🧪️tests/📍️moves-object-a/🦀️.rs"]
                                     mod tests_moves_object_a;
                                 }
                                 #[path = "."]
                                 pub mod rotate_object {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🔃rotate-object/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🔃rotate-object/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🔃rotate-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃rotate-object/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/🔃rotate-object/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
                                     mod tests_half_turn_about_z;
                                 }
                                 #[path = "."]
                                 pub mod scale_object {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-object/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-object/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-object/🧪️tests/📐️uniform-to-per-axis/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️pose/📏scale-object/🧪️tests/📐️uniform-to-per-axis/🦀️.rs"]
                                     mod tests_uniform_to_per_axis;
                                 }
                                 #[path = "."]
                                 pub mod change_object_mesh {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🧱change-object-mesh/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🧱change-object-mesh/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🧱change-object-mesh/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🧪️tests/🕸️repoints/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🧱change-object-mesh/🧪️tests/🕸️repoints/🦀️.rs"]
                                     mod tests_repoints_object_a_mesh;
                                 }
                                 #[path = "."]
                                 pub mod edit_object_label {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-object-label/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🖋️edit-object-label/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-object-label/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🖋️edit-object-label/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-object-label/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🖋️edit-object-label/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-object-label/🧪️tests/🔤️relabels-object-a/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🖋️edit-object-label/🧪️tests/🔤️relabels-object-a/🦀️.rs"]
                                     mod tests_relabels_object_a;
                                 }
                                 #[path = "."]
                                 pub mod change_object_kind {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🏗️change-object-kind/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🏗️change-object-kind/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🏗️change-object-kind/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🏗️change-object-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
                                     mod tests_reassigns_object_a_kind;
                                 }
                                 #[path = "."]
                                 pub mod change_object_anchor {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-object-anchor/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/⚓change-object-anchor/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-object-anchor/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/⚓change-object-anchor/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-object-anchor/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/⚓change-object-anchor/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-object-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/⚓change-object-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
                                     mod tests_fixed_to_derived;
                                 }
                                 #[path = "."]
                                 pub mod change_object_hidden {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-object-hidden/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/👁️change-object-hidden/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-object-hidden/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/👁️change-object-hidden/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-object-hidden/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/👁️change-object-hidden/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-object-hidden/🧪️tests/🙈️hides-object-a/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/👁️change-object-hidden/🧪️tests/🙈️hides-object-a/🦀️.rs"]
                                     mod tests_hides_object_a;
                                 }
                                 #[path = "."]
                                 pub mod change_object_locked {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🔒change-object-locked/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🔒change-object-locked/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🔒change-object-locked/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-object-locked/🧪️tests/🔒️locks-object-a/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️object/🔒change-object-locked/🧪️tests/🔒️locks-object-a/🦀️.rs"]
                                     mod tests_locks_object_a;
                                 }
                                 #[path = "."]
                                 pub mod add_object_vortex {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➕add-object-vortex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➕add-object-vortex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➕add-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➕add-object-vortex/🧪️tests/🌀️appends/🦀️.rs"]
                                     mod tests_appends_vortex_3_to_object_b;
                                 }
                                 #[path = "."]
                                 pub mod remove_object_vortex {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➖remove-object-vortex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➖remove-object-vortex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➖remove-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➖remove-object-vortex/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_2_and_severs_attraction;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/➖removes-middle-vortex/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/➖remove-object-vortex/🧪️tests/➖removes-middle-vortex/🦀️.rs"]
                                     mod tests_removes_the_middle_vortex_and_its_attraction;
                                 }
                                 #[path = "."]
                                 pub mod replace_object_vortex {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🔌replace-object-vortex/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🔌replace-object-vortex/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🔌replace-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🧪️tests/⏸️rekind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🔌replace-object-vortex/🧪️tests/⏸️rekind/🦀️.rs"]
                                     mod tests_rekind_vortex_1_is_noop;
                                 }
                                 #[path = "."]
                                 pub mod connect_vortices {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🪢️connect-vortices/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🪢️connect-vortices/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🪢️connect-vortices/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🧪️tests/🧲️adds/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🪢️connect-vortices/🧪️tests/🧲️adds/🦀️.rs"]
                                     mod tests_adds_second_attraction;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_vortices {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/✂️disconnect-vortices/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/✂️disconnect-vortices/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/✂️disconnect-vortices/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/🚫️removes/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/✂️disconnect-vortices/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_attraction_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/✂️severs-middle-attraction/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/✂️disconnect-vortices/🧪️tests/✂️severs-middle-attraction/🦀️.rs"]
                                     mod tests_severs_the_middle_attraction;
                                 }
                                 #[path = "."]
                                 pub mod replace_attraction_geometry {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🧮replace-attraction-geometry/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🧮replace-attraction-geometry/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🧮replace-attraction-geometry/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️vortex/🧮replace-attraction-geometry/🧪️tests/📍️repositions/🦀️.rs"]
                                     mod tests_repositions_attraction_1;
                                 }
                                 #[path = "."]
                                 pub mod create_target_volume {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌍create-target-volume/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌍create-target-volume/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌍create-target-volume/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🧊️appends-volume-2/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌍create-target-volume/🧪️tests/🧊️appends-volume-2/🦀️.rs"]
                                     mod tests_appends_volume_2;
                                 }
                                 #[path = "."]
                                 pub mod delete_target_volume {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
                                     mod tests_removes_volume_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🪦️removes-middle-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🪦delete-target-volume/🧪️tests/🪦️removes-middle-volume/🦀️.rs"]
                                     mod tests_removes_the_middle_volume;
                                 }
                                 #[path = "."]
                                 pub mod move_target_volume {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🚀move-target-volume/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🚀move-target-volume/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🚀move-target-volume/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/⬆️lifts-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🚀move-target-volume/🧪️tests/⬆️lifts-volume-1/🦀️.rs"]
                                     mod tests_lifts_volume_1;
                                 }
                                 #[path = "."]
                                 pub mod rotate_target_volume {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌀rotate-target-volume/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌀rotate-target-volume/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌀rotate-target-volume/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
                                     mod tests_half_turn_about_z;
                                 }
                                 #[path = "."]
                                 pub mod scale_target_volume {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/📐scale-target-volume/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/📐scale-target-volume/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/📐scale-target-volume/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/📏️per-axis-to-uniform/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/📐scale-target-volume/🧪️tests/📏️per-axis-to-uniform/🦀️.rs"]
                                     mod tests_per_axis_to_uniform;
                                 }
                                 #[path = "."]
                                 pub mod change_target_volume_hidden {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🙈change-target-volume-hidden/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🙈change-target-volume-hidden/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🙈change-target-volume-hidden/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🙈change-target-volume-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                                     mod tests_hides_volume_1;
                                 }
                                 #[path = "."]
                                 pub mod change_target_volume_locked {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🔐change-target-volume-locked/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🔐change-target-volume-locked/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🔐change-target-volume-locked/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️volume/🔐change-target-volume-locked/🧪️tests/🔒️locks/🦀️.rs"]
                                     mod tests_locks_volume_1;
                                 }
                                 #[path = "."]
                                 pub mod create_reference {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️create-reference/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖼️create-reference/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️create-reference/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖼️create-reference/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️create-reference/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖼️create-reference/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️create-reference/🧪️tests/🖼️appends-reference-2/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖼️create-reference/🧪️tests/🖼️appends-reference-2/🦀️.rs"]
                                     mod tests_appends_reference_2;
                                 }
                                 #[path = "."]
                                 pub mod delete_reference {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🚮delete-reference/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🚮delete-reference/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🚮delete-reference/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🧪️tests/🚫️removes-reference-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🚮delete-reference/🧪️tests/🚫️removes-reference-1/🦀️.rs"]
                                     mod tests_removes_reference_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮delete-reference/🧪️tests/🚮️removes-middle-reference/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🚮delete-reference/🧪️tests/🚮️removes-middle-reference/🦀️.rs"]
                                     mod tests_removes_the_middle_reference;
                                 }
                                 #[path = "."]
                                 pub mod move_reference {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯move-reference/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🎯move-reference/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯move-reference/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🎯move-reference/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯move-reference/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🎯move-reference/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯move-reference/🧪️tests/↔️slides-reference-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🎯move-reference/🧪️tests/↔️slides-reference-1/🦀️.rs"]
                                     mod tests_slides_reference_1;
                                 }
                                 #[path = "."]
                                 pub mod resize_reference {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎resize-reference/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/📎resize-reference/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎resize-reference/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/📎resize-reference/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎resize-reference/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/📎resize-reference/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎resize-reference/🧪️tests/↔️widens-reference-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/📎resize-reference/🧪️tests/↔️widens-reference-1/🦀️.rs"]
                                     mod tests_widens_reference_1;
                                 }
                                 #[path = "."]
                                 pub mod replace_reference_source {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖇️replace-reference-source/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖇️replace-reference-source/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖇️replace-reference-source/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🖇️replace-reference-source/🧪️tests/🖇️repoints/🦀️.rs"]
                                     mod tests_repoints_reference_1_source;
                                 }
                                 #[path = "."]
                                 pub mod change_reference_hidden {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/👀change-reference-hidden/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/👀change-reference-hidden/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/👀change-reference-hidden/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/👀change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                                     mod tests_hides_reference_1;
                                 }
                                 #[path = "."]
                                 pub mod change_reference_locked {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🗝️change-reference-locked/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🗝️change-reference-locked/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🗝️change-reference-locked/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🧪️tests/🔒️locks/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️reference/🗝️change-reference-locked/🧪️tests/🔒️locks/🦀️.rs"]
                                     mod tests_locks_reference_1;
                                 }
                                 #[path = "."]
                                 pub mod change_domain {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🌐change-domain/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🌐change-domain/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🌐change-domain/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/⚙️architecture/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🌐change-domain/🧪️tests/⚙️architecture/🦀️.rs"]
                                     mod tests_architecture_to_engineering;
                                 }
                                 #[path = "."]
                                 pub mod connect_kind_compatibility {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
                                     mod tests_adds_vortex_kind_pair;
                                 }
                                 #[path = "."]
                                 pub mod disconnect_kind_compatibility {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_kind_pair;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-middle-row/🦀️.rs"]
                                     mod tests_withdraws_the_middle_row;
                                 }
                                 #[path = "."]
                                 pub mod replace_kind_catalogs {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚️catalog/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
                                     mod tests_installs_vortex_kind_catalog;
                                 }
                                 #[path = "."]
                                 pub mod drag_selection {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/✋️drags-two-objects/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/✋️drags-two-objects/🦀️.rs"]
                                     mod tests_drags_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🎯️drags/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🎯️drags/🦀️.rs"]
                                     mod tests_drags_object_and_volume;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                                     mod tests_skips_locked_ghost;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                                     mod tests_rejects_ghosts;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
                                     mod tests_keeps_a_zero_offset;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
                                     mod tests_no_targets;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⛓️follow/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/⛓️follow/🦀️.rs"]
                                     mod tests_follow;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🪢️cross/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/✋️drag-selection/🧪️tests/🪢️cross/🦀️.rs"]
                                     mod tests_cross;
                                 }
                                 #[path = "."]
                                 pub mod rotate_selection {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🔄️turns-two-objects/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🔄️turns-two-objects/🦀️.rs"]
                                     mod tests_turns_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🎯️turns/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🎯️turns/🦀️.rs"]
                                     mod tests_turns_object_and_volume;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                                     mod tests_skips_locked_ghost;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                                     mod tests_rejects_ghosts;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
                                     mod tests_keeps_a_zero_angle;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
                                     mod tests_repeated_targets;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⛓️orbits/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔄️rotate-selection/🧪️tests/⛓️orbits/🦀️.rs"]
                                     mod tests_orbits;
                                 }
                                 #[path = "."]
                                 pub mod scale_selection {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️scales-two-objects/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🔍️scales-two-objects/🦀️.rs"]
                                     mod tests_scales_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🎯️scales/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🎯️scales/🦀️.rs"]
                                     mod tests_scales_object_and_volume;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
                                     mod tests_skips_locked_ghost;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
                                     mod tests_rejects_ghosts;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
                                     mod tests_keeps_unit_factors;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🧱️zero-factor/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/🧱️zero-factor/🦀️.rs"]
                                     mod tests_zero_factor;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
                                     mod tests_negative_factor;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛓️stays/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️selection/🔍️scale-selection/🧪️tests/⛓️stays/🦀️.rs"]
                                     mod tests_stays;
                                 }
                             }
@@ -1650,19 +978,13 @@ mod design_parity_schema_tests;
                 pub use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle3dMutation;
 
-/// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.
-pub fn apply_puzzle3d_mutation(projection: &mut Puzzle3dSnapshot, mutation: &Puzzle3dMutation) -> protocol::MutationApplyResult<()> {
-    let (next, _) = vcs::apply_mutation(projection, mutation)?;
-    *projection = next;
-    Ok(())
-}
+
 pub use crate::standards::v1::subsets::any::schema::snapshot::Puzzle3dSnapshot;
 /// 🧩️ Cross-artifact solver inputs and outcomes used by Puzzle 2D and Puzzle 5D.
 pub use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 /// 📐️ Cross-artifact flattening primitives used by Puzzle 2D and Puzzle 5D.
 pub use crate::standards::v1::subsets::any::schema::inferences::flatten::{flatten_objects, FlattenPlane, FlattenPose, DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS, DIAGRAM_VERTICAL_V_EXTRA};
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod examples {
     #[path = "."]
@@ -1680,7 +1002,6 @@ pub mod examples {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -1748,99 +1069,99 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕️add-target-volume/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/➕️add-target-volume/🦀️.rs"]
             pub mod add_target_volume;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️apply-sun/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/☀️apply-sun/🦀️.rs"]
             pub mod apply_sun;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔒️close-vortex-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔒️close-vortex-suggestions/🦀️.rs"]
             pub mod close_vortex_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔁️cycle-candidate/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔁️cycle-candidate/🦀️.rs"]
             pub mod cycle_candidate;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💔️delete-attraction/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/💔️delete-attraction/🦀️.rs"]
             pub mod delete_attraction;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🗑️delete-selection/🦀️.rs"]
             pub mod delete_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪦️delete-target-volume/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🪦️delete-target-volume/🦀️.rs"]
             pub mod delete_target_volume;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👯️duplicate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/👯️duplicate-selection/🦀️.rs"]
             pub mod duplicate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛑️engagement-abort/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🛑️engagement-abort/🦀️.rs"]
             pub mod engagement_abort;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️engagement-control-select/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🎛️engagement-control-select/🦀️.rs"]
             pub mod engagement_control_select;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/⌨️engagement-input/🦀️.rs"]
             pub mod engagement_input;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔂️engagement-repeat-last/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔂️engagement-repeat-last/🦀️.rs"]
             pub mod engagement_repeat_last;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📨️engagement-submit/🦀️.rs"]
             pub mod engagement_submit;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📤️export-snapshot/🦀️.rs"]
             pub mod export_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️focus-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🎯️focus-selection/🦀️.rs"]
             pub mod focus_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️hover-suggestion/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🖱️hover-suggestion/🦀️.rs"]
             pub mod hover_suggestion;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📥️import-snapshot/🦀️.rs"]
             pub mod import_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔓️open-vortex-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🔓️open-vortex-suggestions/🦀️.rs"]
             pub mod open_vortex_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️open-import-snapshot/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🗂️open-import-snapshot/🦀️.rs"]
             pub mod open_import_snapshot;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️register-brush-mesh/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📋️register-brush-mesh/🦀️.rs"]
             pub mod register_brush_mesh;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚚️relocate-target-volume/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚚️relocate-target-volume/🦀️.rs"]
             pub mod relocate_target_volume;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️rotate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🔄️rotate-selection/🦀️.rs"]
             pub mod rotate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️scale-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/📏️scale-selection/🦀️.rs"]
             pub mod scale_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️select-same-kind/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🧬️select-same-kind/🦀️.rs"]
             pub mod select_same_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤖️set-automatic/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🤖️set-automatic/🦀️.rs"]
             pub mod set_automatic;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🚧️set-brush-placement-contact-tolerance/🦀️.rs"]
             pub mod set_brush_placement_contact_tolerance;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-chunk-size/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧩️set-chunk-size/🦀️.rs"]
             pub mod set_chunk_size;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📉️set-depth-variable/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📉️set-depth-variable/🦀️.rs"]
             pub mod set_depth_variable;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-fill-count/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧮️set-fill-count/🦀️.rs"]
             pub mod set_fill_count;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⚖️set-kind-weight/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/⚖️set-kind-weight/🦀️.rs"]
             pub mod set_kind_weight;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✋️set-manual/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/✋️set-manual/🦀️.rs"]
             pub mod set_manual;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📽️set-projection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📽️set-projection/🦀️.rs"]
             pub mod set_projection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📡️set-proximity-radius/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📡️set-proximity-radius/🦀️.rs"]
             pub mod set_proximity_radius;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☑️set-selectable-kind/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/☑️set-selectable-kind/🦀️.rs"]
             pub mod set_selectable_kind;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔖️set-selection-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🔖️set-selection-flag/🦀️.rs"]
             pub mod set_selection_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️set-snap-enabled/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧲️set-snap-enabled/🦀️.rs"]
             pub mod set_snap_enabled;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️set-spacing/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/↔️set-spacing/🦀️.rs"]
             pub mod set_spacing;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚩️set-target-volume-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚩️set-target-volume-flag/🦀️.rs"]
             pub mod set_target_volume_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🕹️set-transform-gumball-flag/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🕹️set-transform-gumball-flag/🦀️.rs"]
             pub mod set_transform_gumball_flag;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-visible/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/👁️set-visible/🦀️.rs"]
             pub mod set_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️set-vortex-direction/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🧭️set-vortex-direction/🦀️.rs"]
             pub mod set_vortex_direction;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌀️set-vortex-show/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🌀️set-vortex-show/🦀️.rs"]
             pub mod set_vortex_show;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📐️set-voxel-dims/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/📐️set-voxel-dims/🦀️.rs"]
             pub mod set_voxel_dims;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎣️target-brush-suggestions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎛️runtime/🎣️target-brush-suggestions/🦀️.rs"]
             pub mod target_brush_suggestions;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚀️translate-selection/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🚀️translate-selection/🦀️.rs"]
             pub mod translate_selection;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world-relocate/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧊️document/🌍️world-relocate/🦀️.rs"]
             pub mod world_relocate;
         }
 
@@ -1912,7 +1233,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

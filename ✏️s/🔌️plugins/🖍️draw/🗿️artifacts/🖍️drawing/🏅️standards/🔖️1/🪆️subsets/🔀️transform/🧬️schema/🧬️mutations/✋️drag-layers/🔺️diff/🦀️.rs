@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `DragLayers` — every surviving layer's origin moves by the offset mapped into its parent's
 //! axes, read off the BASE transform, so the leaf replays on any base.
-use crate::diff::{diff_set_layer_transforms, DrawingDiff};
-use crate::mutations::{drawing_dragged_transform, drawing_placed_layers, drawing_selection_partial, drawing_targets_invariant};
-use crate::schema::layer_base;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_set_layer_transforms, DrawingDiff};
+use semio_s_artifact_draw_drawing_geometry::{drawing_dragged_transform, drawing_placed_layers, drawing_selection_partial, drawing_targets_invariant};
+use semio_s_artifact_draw_drawing_model::layer_base;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::DragLayers, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

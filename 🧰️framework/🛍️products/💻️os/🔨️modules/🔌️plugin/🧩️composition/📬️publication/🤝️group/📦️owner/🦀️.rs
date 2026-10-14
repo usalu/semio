@@ -19,14 +19,14 @@ pub(crate) struct PrivateChildGroupSource {
 
 #[derive(Clone,Copy)]
 pub(crate) struct PrivateChildPreparedReceiptIdentity {
-    index: usize,
+    pub(crate) index: usize,
     publication: usize,
     edit: (usize,usize),
     group: (usize,usize),
 }
 
 struct PrivateChildPreparedReceipt<'a> {
-    index: usize,
+    pub(crate) index: usize,
     edit_id: &'a str,
     reference: &'a ArtifactRef,
     key: Option<MemberKeyRef<'a>>,
@@ -37,7 +37,7 @@ struct PrivateChildGroupRow<M: SpaceMember + MemberFactory> {
     input: PrivateChildPublicationInput,
     source: ManuallyDrop<Option<OwnedChildEmit>>,
     metadata: Option<PrivateChildMemberMetadata>,
-    request: ManuallyDrop<Option<store::MemberOpenRequest>>,
+    pub(crate) request: ManuallyDrop<Option<store::MemberOpenRequest>>,
     opening_source: ManuallyDrop<Option<store::MemberOpenSourceAdmission>>,
     open: ManuallyDrop<Option<M::Open>>,
     member: ManuallyDrop<Option<M>>,
@@ -53,11 +53,11 @@ struct PrivateChildGroupRow<M: SpaceMember + MemberFactory> {
 }
 
 impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
-    fn new(source: OwnedChildEmit) -> Self {
+    pub(crate) fn new(source: OwnedChildEmit) -> Self {
         let new_member = source.metadata().is_some_and(|metadata| metadata.genesis.is_some());
         Self { input: PrivateChildPublicationInput::new(source), source: ManuallyDrop::new(None), metadata: None, request: ManuallyDrop::new(None), opening_source: ManuallyDrop::new(None), open: ManuallyDrop::new(None), member: ManuallyDrop::new(None), raw: ManuallyDrop::new(None), lane: None, identity: None, entry: None, slot: None, admission: None, input_ready: false, new_member, receipt_copied: false }
     }
-    fn key(&self) -> MemberKeyRef<'_> {
+    pub(crate) fn key(&self) -> MemberKeyRef<'_> {
         if let Some(parts) = self.metadata.as_ref().and_then(PrivateChildMemberMetadata::parts) { return parts.key.borrowed(); }
         let source = self.input.source().expect("private row retains its original child address");
         MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }
@@ -141,7 +141,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         Ok(false)
     }
     fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.opening_source.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
-    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
         let release = |release_bytes| RetirementDemand { release_bytes, depth: 1, ..Default::default() };
         let mut demand = if !self.input.terminal_is_empty() { self.input.retirement_demands(body)? }
@@ -243,8 +243,8 @@ pub(crate) struct PrivateChildPublicationGroup<M: SpaceMember + MemberFactory> {
     projection_ready: bool,
     future: ManuallyDrop<Option<ChildContentView>>,
     displaced: ManuallyDrop<[Option<ChildContentView>; PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN]>,
-    committed: bool,
-    closing: bool,
+    pub(crate) committed: bool,
+    pub(crate) closing: bool,
     complete: bool,
 }
 
@@ -252,7 +252,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     pub(crate) fn parent_touched(&self) -> bool { self.parent_touched }
 
 
-    fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
     fn row_birth_bytes() -> usize { size_of::<PrivateChildGroupRow<M>>() }
     /// 📦️ Moves exact source backing and original transaction owners into one inline private group.
     pub(crate) fn try_new(source: PrivateChildGroupSource) -> Result<Self, PrivateChildGroupSource> {

@@ -28,7 +28,7 @@ use super::super::stair_runs::StairRun;
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
 use super::super::element_solids::{dep_object, dep_records, dep_types, dep_value};
-use crate::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::Vertex as Corner;
 use semio_framework_geometry::Point;

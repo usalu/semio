@@ -1,7 +1,8 @@
-use crate::host::owned::new_cad_store;
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::mutations::create_shape_model::CreateShapeModel;
-use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_cad_cad_host::new_cad_store;
+use crate::binary::mutations::*;
+use semio_s_artifact_cad_cad_mut_slots::create_shape_model::CreateShapeModel;
+use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_cad_cad_testing::sample_model_child;
 use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]

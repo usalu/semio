@@ -1,0 +1,8 @@
+{
+ "ident": "semio_s_artifact_stdio_dwg_model",
+ "source": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+ "target": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+ "from": "standards::v_ac1024::subsets::any::schema",
+ "to": "standards::v_ac1024::subsets::any::schema::snapshot",
+ "items": ["STDIO_DWG_DOCUMENT_SCHEMA", "DWG_ARTIFACT_SCHEMA_ID", "empty_dwg_snapshot", "demo_dwg_snapshot"]
+}

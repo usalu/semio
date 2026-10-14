@@ -1,9 +1,9 @@
 //! 🔁 Remodeling mutation — `ReplaceSparse`: whole-value swap of `ReconstructionResults.sparse`, a large
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{RemodelingSnapshot, SparseCloud};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -23,17 +23,20 @@ pub struct ReplaceSparse {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_sparse(sparse: Option<SparseCloud>) -> RemodelingMutation {
-    RemodelingMutation::ReplaceSparse(ReplaceSparse { sparse })
+pub fn replace_sparse<Op: From<ReplaceSparse>>(sparse: Option<SparseCloud>) -> Op {
+    Op::from(ReplaceSparse { sparse })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceSparse {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ReplaceSparse
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ReplaceSparse>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "sparse", kind: "replace-sparse", record: "ReplacedSparse" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

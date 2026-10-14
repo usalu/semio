@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️construction/➕️add-layer",
+  "semanticKind": "add-construction-layer",
+  "displayName": "Add Construction Layer",
+  "emoji": "➕️",
+  "aggregateVariant": "AddConstructionLayer",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-construction-layer",
+  "binaryTag": 73,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

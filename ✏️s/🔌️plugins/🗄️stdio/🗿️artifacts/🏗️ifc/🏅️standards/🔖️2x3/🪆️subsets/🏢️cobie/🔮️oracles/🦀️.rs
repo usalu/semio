@@ -40,7 +40,6 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️Oracles
-#[cfg(feature = "oracles")]
 mod oracles {
     use crate::standards::v2x3::reference::part21;
     use ruststep::ast::{Exchange, Name, Parameter};
@@ -196,7 +195,6 @@ mod oracles {
 //#region 🔖️Dispatch
 /// 🦠️ Applies one declared `ifc-2x3-cobie` kind to a real artifact and returns the re-serialized
 /// bytes. An unrecognised kind is an error, never a silent no-op.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -207,32 +205,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 /// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's own semantic projection, read back through the independent `ruststep` parser.
-#[cfg(feature = "oracles")]
 pub fn project_ifc_2x3_cobie(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_ifc_2x3_cobie(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
@@ -240,7 +223,7 @@ pub fn project_ifc_2x3_cobie(_bytes: &[u8]) -> Result<Json, String> {
 /// real `CoordinationView_V2.0` export, not a native FM handover file — no real `FMHandOverView`
 /// document exists in this repository — so `set-view-definition` performs the real stamping step an
 /// FM handover extraction begins with, and every other kind edits real handover data.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -1,13 +1,13 @@
 //! 🔀️ Complete prepared documents resolve referenced filled geometry under grants.
-use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent,DocumentSceneError};
-use crate::PathSegment as DrawingSegment;
+use crate::preparation::{DocumentScenePlan, DocumentSceneNode, DocumentSceneContent, DocumentSceneError};
+use semio_s_artifact_draw_drawing_model::PathSegment as DrawingSegment;
 use semio_framework_2d::{PathSegment,Vec2};
 use semio_framework_2d::booleans::{BooleanOperation,BooleanFillRule};
 use semio_framework_2d::booleans::paths::{PathBooleanInput,PathBooleanOperand,PathBooleanJob,PathBooleanProgress,PathBooleanRetirement};
 use semio_framework_2d::retirement::WorkRetirementProgress;
-#[cfg(test)] use crate::schema::scene_retirement::ScenePlanCloseJob;
+
 pub type DocumentBooleanRetirementProgress=WorkRetirementProgress;
-use crate::schema::scene_preparation::{OwnedTable,OwnedSet};
+
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentBooleanLimits{pub tolerance:f64,pub epsilon:f64,pub max_depth:usize,pub max_references:usize,pub max_edges:usize,pub max_parameters:usize,pub max_atomic_edges:usize,pub max_segments:usize,pub max_retained_segments:usize,pub max_work:u64}
@@ -47,7 +47,7 @@ impl DocumentBooleanJob{
  }
  fn push(&mut self,index:usize)->Result<(),DocumentSceneError>{if self.stack.len()>=self.input.limits.max_depth{return Err(invalid("Boolean document dependency depth exceeded"));}if !self.visiting.insert(index){return Err(invalid("Cyclic Boolean document operands"));}self.stack.push(Frame{index,at:0});Ok(())}
  fn index(&mut self)->Result<(),DocumentSceneError>{
-  let Some(n)=self.input.plan.nodes.get(self.nodes)else{self.phase="validation";return Ok(());};if n.id.is_empty()||n.id.len()>4096||self.ids.contains_key(&n.id){return Err(invalid("Invalid or duplicate Boolean document node"));}crate::schema::scene_preparation::validate_scene_source_address(&n.source_path,n.locked_ancestors)?;matrix(n.transform)?;
+  let Some(n)=self.input.plan.nodes.get(self.nodes)else{self.phase="validation";return Ok(());};if n.id.is_empty()||n.id.len()>4096||self.ids.contains_key(&n.id){return Err(invalid("Invalid or duplicate Boolean document node"));}crate::preparation::validate_scene_source_address(&n.source_path,n.locked_ancestors)?;matrix(n.transform)?;
   if let DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=&n.content{if segments.len()>65536{return Err(invalid("Invalid Boolean document path"));}self.source_segments+=segments.len();if self.source_segments>65536{return Err(invalid("Boolean document source segment cap exceeded"));}}
   let children=refs(n);if children.len()>1024{return Err(invalid("Invalid Boolean document references"));}self.references+=children.len();if self.references>self.input.limits.max_references{return Err(invalid("Boolean document reference cap exceeded"));}
   if let DocumentSceneContent::Boolean{operation,reference_transform,..}=&n.content{BooleanOperation::parse(operation).map_err(|e|invalid(e.to_string()))?;matrix(*reference_transform)?;}
@@ -73,10 +73,10 @@ impl DocumentBooleanJob{
   let factor=self.quality.get(&self.current).copied().unwrap_or(1.0);let mut limits=self.input.limits;limits.tolerance/=factor;limits.epsilon/=factor;if limits.tolerance<1e-6||limits.epsilon<1e-12{return Err(invalid("Boolean document precision exceeds supported tolerance"));}
   if self.operand.is_none(){
    if self.operand_at==count{if self.operands.is_empty(){self.operands.push(PathBooleanOperand{segments:Vec::new(),transform:IDENTITY,tolerance:limits.tolerance,fill_rule:BooleanFillRule::Nonzero});}let operation=if let DocumentSceneContent::Boolean{operation,..}=&n.content{BooleanOperation::parse(operation).map_err(|e|invalid(e.to_string()))?}else{BooleanOperation::Union};let operands=std::mem::take(&mut self.operands);self.child=Some(PathBooleanJob::new(config(limits,operation,operands)).map_err(|e|invalid(e.to_string()))?);self.phase="geometry";return Ok(());}
-   let(transform,fill_rule)=if let DocumentSceneContent::Path{fill_rule,..}|DocumentSceneContent::Glyphs{fill_rule,..}=&n.content{(n.transform,if *fill_rule==crate::FillRule::Evenodd{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero})}else{(IDENTITY,BooleanFillRule::Nonzero)};
+   let(transform,fill_rule)=if let DocumentSceneContent::Path{fill_rule,..}|DocumentSceneContent::Glyphs{fill_rule,..}=&n.content{(n.transform,if *fill_rule==semio_s_artifact_draw_drawing_model::fill_rule::FillRule::Evenodd{BooleanFillRule::Evenodd}else{BooleanFillRule::Nonzero})}else{(IDENTITY,BooleanFillRule::Nonzero)};
    self.operand=Some(PathBooleanOperand{segments:Vec::new(),transform,tolerance:limits.tolerance,fill_rule});self.copy_at=0;return Ok(());
   }
-  let next=if let DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=&n.content{segments.get(self.copy_at).map(crate::standards::v1::subsets::any::schema::component::to_kernel_segment)}else{self.cache[&self.ids[&children[self.operand_at]]].get(self.copy_at).cloned()};
+  let next=if let DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=&n.content{segments.get(self.copy_at).map(semio_s_artifact_draw_drawing_geometry::to_kernel_segment)}else{self.cache[&self.ids[&children[self.operand_at]]].get(self.copy_at).cloned()};
   if let Some(next)=next{if self.copied>=self.input.limits.max_edges{return Err(invalid("Boolean document operand segment budget exceeded"));}self.operand.as_mut().unwrap().segments.push(next);self.copied+=1;self.copy_at+=1;return Ok(());}
   self.operands.push(self.operand.take().unwrap());self.operand_at+=1;Ok(())
  }

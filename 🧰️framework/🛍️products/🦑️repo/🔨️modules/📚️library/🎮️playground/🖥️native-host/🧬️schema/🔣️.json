@@ -158,6 +158,18 @@
           }
         }
       }
+    },
+    "NativeHostScriptAdmissionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "withinLimit"
+      ],
+      "properties": {
+        "withinLimit": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "$ref": "#/$defs/NativeHostV1"

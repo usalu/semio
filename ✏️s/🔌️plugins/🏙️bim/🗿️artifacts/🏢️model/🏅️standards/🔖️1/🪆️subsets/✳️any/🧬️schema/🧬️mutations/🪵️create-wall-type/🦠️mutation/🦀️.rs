@@ -1,6 +1,6 @@
 //! 🪵️ `create-wall-type` payload. Brings a new layered wall type into the library; every layer names an existing material and has a positive thickness.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, WallType};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, WallType}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

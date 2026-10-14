@@ -8,7 +8,7 @@ pub(crate) struct PrivateChildGenesisInput{
     encoder:store::MemberGenesisEnvelopeEncoder,
     pages:PrivateChildInputPages,
     ready:bool,
-    closing:bool,
+    pub(crate) closing:bool,
 }
 impl PrivateChildGenesisInput{
     pub(crate) fn next_capacity_byte_demand(&self,source:store::MemberGenesisEnvelopeSource<'_>)->Result<usize,semio_framework_value::ValueError>{
@@ -55,7 +55,7 @@ struct PrivateChildInputPages{
     output_finished:bool,
     lent_output_bytes:usize,
     ready:bool,
-    closing:bool,
+    pub(crate) closing:bool,
 }
 impl PrivateChildInputPages{
     fn prepare_output(&mut self,maximum_bytes:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,OwnedSchemaDecodeAdmissionFault>{

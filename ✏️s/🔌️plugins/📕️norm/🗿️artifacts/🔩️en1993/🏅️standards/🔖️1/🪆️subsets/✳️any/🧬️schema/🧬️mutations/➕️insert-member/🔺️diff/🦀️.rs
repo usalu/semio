@@ -1,8 +1,8 @@
 //! ➕️ `insert-member` diff — inserts the row at its position, clamped to the end of the collection.
 
-use super::InsertMember;
-use crate::diff::{En1993Diff, En1993MemberDelta};
-use crate::En1993Snapshot;
+use crate::insert_member::InsertMember;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993MemberDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &InsertMember, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if base.members.iter().any(|existing| existing.id == payload.member.id) {

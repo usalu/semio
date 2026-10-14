@@ -18,7 +18,7 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchElement) -> Result<Emit<Fem2dMut
 #[semio_framework_async_macros::async_test]
 async fn patch_element_repoints_a_section_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchElement(PatchElement { id: "e3".into(), field: "sectionId".into(), value: "post140".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let element = snapshot.elements.iter().find(|element| element_id(element) == "e3").expect("e3 survives the patch");

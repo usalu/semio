@@ -264,7 +264,7 @@ pub struct ModelSnapshot {
 impl Default for ModelSnapshot {
     fn default() -> Self {
         Self {
-            schema: crate::BIM_MODEL_DOCUMENT_SCHEMA.into(),
+            schema: crate::standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.into(),
             supports: BTreeMap::new(),
             load_cases: BTreeMap::new(),
             loads: BTreeMap::new(),

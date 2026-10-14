@@ -1,0 +1,52 @@
+{
+ "order": [
+  "normal",
+  "ports",
+  "operators",
+  "traversal",
+  "model",
+  "inferences",
+  "mutations",
+  "io",
+  "graph"
+ ],
+ "allow": {},
+ "rules": [
+  [
+   "^🧬️schema/➕️normal-internals/",
+   "normal"
+  ],
+  [
+   "^🧬️schema/🔌️ports-internals/",
+   "ports"
+  ],
+  [
+   "^🧬️schema/🔧️operators-internals/",
+   "operators"
+  ],
+  [
+   "^🧬️schema/🚶️traversal-internals/",
+   "traversal"
+  ],
+  [
+   "^🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "^🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "^🧬️schema/",
+   "model"
+  ],
+  [
+   "^🚪️io/",
+   "io"
+  ],
+  [
+   ".",
+   "graph"
+  ]
+ ]
+}

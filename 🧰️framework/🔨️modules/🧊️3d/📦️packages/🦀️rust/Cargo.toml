@@ -16,7 +16,7 @@ role = "framework"
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-3d-brep-representation.workspace = true
+semio-framework-3d-brep-vector.workspace = true
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-engine.workspace = true
@@ -28,7 +28,7 @@ semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value
 semio-framework-replication = { workspace = true }
 
 [dev-dependencies]
-semio-framework-replication = { workspace = true, features = ["history-index-serde"] }
+semio-framework-replication = { workspace = true }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
 # `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.

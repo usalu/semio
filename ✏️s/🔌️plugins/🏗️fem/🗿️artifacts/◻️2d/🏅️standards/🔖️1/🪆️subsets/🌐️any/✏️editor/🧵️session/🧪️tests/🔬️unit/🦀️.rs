@@ -48,7 +48,7 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
 #[test]
 fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_without_partial_credit() {
     let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
-    let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
     let mut census = SnapshotAdmissionCursor::new();
     let mut units = 0;
     while census.step_one(&snapshot) == Ok(false) {
@@ -111,7 +111,7 @@ fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {
 #[test]
 fn interrupted_model_close_releases_one_retained_root_per_grant() {
     let mut build = MountedModelBuild::new(None);
-    build.model.nodes.push(crate::model::Node { id: "deep-node".repeat(128), pos: [0.0; 3] });
+    build.model.nodes.push(semio_s_fem_model::Node { id: "deep-node".repeat(128), pos: [0.0; 3] });
     build.region_node_ids.push("deep-region-node".repeat(128));
     let first = build.close_step(4_096);
     assert!(!first.0);

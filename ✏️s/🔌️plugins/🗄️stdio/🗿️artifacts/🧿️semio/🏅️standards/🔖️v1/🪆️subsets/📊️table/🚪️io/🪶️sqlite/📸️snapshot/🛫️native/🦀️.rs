@@ -1,6 +1,9 @@
 //! 📊️ Writes declared columns and ordered cells using the actual shared typed value vocabulary.
-use crate::schema::snapshot::{SemioTableSnapshot, SemioTableColumn, SemioTableCellKind, SemioTableRow};
-use {semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer}, semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_encoding as values};
+use crate::schema::snapshot::SemioTableSnapshot;
+use crate::schema::snapshot::SemioTableColumn;
+use crate::schema::snapshot::SemioTableCellKind;
+use crate::schema::snapshot::SemioTableRow;
+use {semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer}, semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_encoding as values};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(snapshot:&SemioTableSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.table.dsl v1\n","s.stdio.semio.table.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn column(column:&SemioTableColumn,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.string(&column.name,encoding)?;writer.delimiter(b",",encoding)?;writer.byte(if encoding==SnapshotEncoding::Binary{match column.kind{SemioTableCellKind::Null=>0,SemioTableCellKind::Bool=>1,SemioTableCellKind::Int=>2,SemioTableCellKind::Float=>3,SemioTableCellKind::Str=>4,SemioTableCellKind::Bytes=>5}}else{crate::io::text::snapshot::enc_cell_kind(column.kind) as u8})?;writer.delimiter(b"]",encoding)}

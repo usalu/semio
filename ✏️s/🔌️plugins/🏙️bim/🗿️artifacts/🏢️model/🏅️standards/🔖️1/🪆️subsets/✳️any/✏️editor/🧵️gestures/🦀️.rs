@@ -57,7 +57,7 @@ use crate::editor::bim::kit::{fault, select_effect};
 use crate::editor::bim::modes::edit::windows::{plan, section, sheet, world};
 use crate::editor::bim::transient::BimWindowTransient;
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::{ArtifactInstanceOperationOwner, ArtifactView, Effect, Emit, Fault, NoConfigMutation, PluginLifecycleStep};
 use std::collections::BTreeMap;
 

@@ -2,8 +2,8 @@
 mod original_owners;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::*;
-use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate};
 use standards::v1::subsets::any::io::{binary::snapshot::{decode_din18599_pack,encode_din18599_pack},text::snapshot::{decode_din18599_dsl,encode_din18599_dsl,decode_din18599_snapshot_json,encode_din18599_snapshot_json}};
 

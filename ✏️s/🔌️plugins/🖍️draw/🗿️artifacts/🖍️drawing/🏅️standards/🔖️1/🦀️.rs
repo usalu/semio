@@ -15,3 +15,11 @@ use {semio_framework_artifact_reference::StandardId};
 pub fn standard<A: crate::DrawingApplication>() -> StandardDeclaration<A> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.drawing+json"], extensions: &["drawing"] }, subsets: vec![subsets::any::subset()] }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod subsets {
+    #[path = "🪆️subsets/✳️any/🦀️.rs"]
+    pub mod any;
+}
+//#endregion 🪢️TaxonomyMounts

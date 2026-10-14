@@ -1,7 +1,10 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::op::CadMutation;
-use crate::CadSnapshot;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_cad_cad_mutations::CadMutation;
+use semio_s_artifact_cad_cad_model::snapshot::CadSnapshot;
 use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 

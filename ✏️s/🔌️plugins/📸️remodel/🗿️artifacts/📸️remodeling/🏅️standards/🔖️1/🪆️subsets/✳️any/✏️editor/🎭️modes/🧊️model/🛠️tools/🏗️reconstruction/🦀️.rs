@@ -3,7 +3,7 @@
 //! reserved actions and chords; the tool only declares its run and the app supplies the run and revalidate
 //! jobs (`crate::editor::remodeling::reconstruction_session`).
 
-use crate::editor::remodeling::reconstruction_session::reconstruction_run_definition;
+use semio_s_artifact_remodel_remodeling_session::editor::remodeling::reconstruction_session::reconstruction_run_definition;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 

@@ -1,7 +1,7 @@
 use super::compute::{take_computed, take_hashed};
 use super::*;
 use protocol::Inference;
-use crate::{Axis, Entry, ModelDiff, Opening, Point2, Wall, WallPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Opening, Point2, Wall}, diff::{Entry, ModelDiff, patches::WallPatch}};
 use std::time::Instant;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
@@ -70,7 +70,7 @@ fn one_wall_move_in_511_walls_and_64_windows_updates_in_under_15_ms() {
     samples.sort();
     let median = samples[samples.len() / 2];
     let start = Instant::now();
-    let fresh = crate::ModelInference::infer(&snapshot).expect("infers");
+    let fresh = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     let fresh_time = start.elapsed();
     assert_eq!(session.inference(), &fresh, "the incremental result equals a fresh inference");
     println!("bench one wall move: nodes {nodes}, first update {first:?}, move min {:?} median {median:?} max {:?}, fresh infer {fresh_time:?}, last report {last:?}", samples[0], samples[samples.len() - 1]);
@@ -85,7 +85,7 @@ mod annotations {
     use super::super::compute::take_hashed;
     use super::super::*;
     use protocol::Inference;
-    use crate::{AnnotationStylePatch, ColumnPatch, DimensionPatch, Entry, ModelDiff, OpeningPatch, Point2, ProjectPatch, StoreyPatch, TextNotePatch, WallTypePatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, DimensionPatch, OpeningPatch, ProjectPatch, StoreyPatch, TextNotePatch, WallTypePatch}, Entry, ModelDiff}, snapshot::Point2};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
@@ -190,7 +190,7 @@ mod ceilings {
     use super::super::compute::take_hashed;
     use super::super::*;
     use protocol::Inference;
-    use crate::{Ceiling, CeilingPatch, CeilingType, CeilingTypePatch, Entry, Layer, LayerFunction, ModelDiff, Point2, ProjectPatch, Vertex};
+    use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex}, diff::{patches::{CeilingPatch, CeilingTypePatch, ProjectPatch}, Entry, ModelDiff}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
@@ -288,7 +288,7 @@ mod wall_depth {
     use super::super::compute::take_hashed;
     use super::super::*;
     use protocol::Inference;
-    use crate::{Assigned, Entry, ModelDiff, ProjectPatch, RoofPatch, RoofShape, SlabPatch, Slope, WallPatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::{ProjectPatch, RoofPatch, SlabPatch, WallPatch}}, snapshot::{RoofShape, Slope}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     const ATTIC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
@@ -394,7 +394,7 @@ mod sheets {
     use super::super::compute::take_hashed;
     use super::super::*;
     use protocol::Inference;
-    use crate::{Entry, ModelDiff, Point2, ProjectPatch, Sheet, SheetPatch, StoreyPatch, Viewport, ViewportPatch};
+    use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{ProjectPatch, SheetPatch, StoreyPatch, ViewportPatch}}, snapshot::{Point2, Sheet, Viewport}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
     const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
@@ -505,7 +505,7 @@ mod sheets {
 
 mod coordination {
     use super::super::*;
-    use crate::{Axis, BeamPatch, ClashSetPatch, Entry, Issue, IssuePriority, IssueStatus, ModelDiff, Point2, ProjectPatch, Rule, RuleKind, RuleScope, RuleSeverity};
+    use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Issue, IssuePriority, IssueStatus, Point2, Rule, RuleKind, RuleScope, RuleSeverity}, diff::{patches::{BeamPatch, ClashSetPatch, ProjectPatch}, Entry, ModelDiff}};
     use protocol::Inference;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 

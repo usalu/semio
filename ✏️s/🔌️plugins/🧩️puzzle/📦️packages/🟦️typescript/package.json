@@ -42,8 +42,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript"
   },
-  "bundleKind": "repo",
-  "nx": {
-    "includedScripts": []
-  }
+  "bundleKind": "repo"
 }

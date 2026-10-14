@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{compute_storey_levels, target_of};
-use crate::{Entry, ModelDiff, StoreyPatch, TopConstraint, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{StoreyPatch, WallPatch}}, snapshot::TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
@@ -221,7 +221,7 @@ async fn changing_one_wall_type_thickness_moves_its_neighbours_footprints_but_no
 #[semio_framework_async_macros::async_test]
 async fn degenerate_walls_get_no_footprint() {
     let mut snapshot = joins();
-    snapshot.walls.get_mut("w-loc-center").expect("wall").axis = Axis::Line { start: crate::Point2 { x: 1.0, y: 1.0 }, end: crate::Point2 { x: 1.0, y: 1.0 } };
+    snapshot.walls.get_mut("w-loc-center").expect("wall").axis = Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 1.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 1.0, y: 1.0 } };
     snapshot.walls.get_mut("w-loc-interior").expect("wall").wall_type = "no-such-type".into();
     let layouts = compute_wall_layout(&snapshot);
     let flat = &layouts["w-loc-center"];
@@ -254,7 +254,7 @@ async fn moving_a_wall_into_contact_makes_its_band_a_parent_of_the_other() {
     let before = joins();
     let mut after = before.clone();
     let wall = after.walls.get_mut("w-loc-center").expect("wall");
-    wall.axis = Axis::Line { start: crate::Point2 { x: 4.0, y: 0.0 }, end: crate::Point2 { x: 4.0, y: -3.0 } };
+    wall.axis = Axis::Line { start: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: 0.0 }, end: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: 4.0, y: -3.0 } };
     wall.storey = "st-ground".into();
     let parents = |snapshot: &ModelSnapshot, wall: &str| plan::build(snapshot, kinds::closure(kinds::LAYOUTS)).into_iter().find(|step| step.key == ModelNode::WallLayout(wall.into())).expect("planned").parents;
     let band = ModelNode::Band("w-loc-center".into());

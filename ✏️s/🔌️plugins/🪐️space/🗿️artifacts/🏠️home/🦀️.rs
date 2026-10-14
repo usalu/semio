@@ -95,7 +95,6 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 }
 
 /// 🔖️ Assembles s.home's typed runtime declaration.
-#[cfg(feature = "component-app-assembly")]
 pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
@@ -106,16 +105,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 }
 //#endregion 🔖️Declaration
 
-/// 🏠️ Register the same authored document capability without an app assembly.
-#[cfg(not(feature = "component-app-assembly"))]
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
-    semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(standards::v1::subsets::any::schema::home_artifact_schema_descriptor())
-        .inferences([standards::v1::subsets::any::schema::inferences::home_artifact_inference_descriptor()])
-        .composers(standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec_bare::<SHomeSnapshot,SHomeMutation>(S_HOME_DOCUMENT_SCHEMA,HOME_DIALECT)
-        .try_build()
-}
 
 #[path = "."]
         pub mod standards {
@@ -290,7 +279,6 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
             }
         }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -406,7 +394,6 @@ pub mod editor {
     }
 }
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod viewer {
     #[path = "."]

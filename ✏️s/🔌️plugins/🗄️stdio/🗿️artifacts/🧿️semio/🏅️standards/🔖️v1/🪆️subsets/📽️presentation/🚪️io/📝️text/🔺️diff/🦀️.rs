@@ -10,8 +10,13 @@ use crate::io::binary::diff::{encode_option, decode_option};
 use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_added, enc_named_added};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_added;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_added;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec

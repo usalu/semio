@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-fenestration"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `fenestration`: Fenestration physics"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-props = { workspace = true }
+semio-s-plugin-energy-engine-units = { workspace = true }
+serde = { workspace = true }

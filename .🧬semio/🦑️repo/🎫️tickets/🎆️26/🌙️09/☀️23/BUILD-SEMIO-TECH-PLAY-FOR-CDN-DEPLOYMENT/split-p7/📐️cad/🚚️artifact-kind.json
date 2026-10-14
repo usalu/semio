@@ -1,0 +1,6 @@
+{"moves": [
+ {"from": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs", "from_module": "crate",
+  "to": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs", "to_module": "crate::standards::v1::subsets::any::schema::snapshot",
+  "root_relative": ["standards", "schema", "mutations", "diff", "snapshot", "editor", "viewer", "host", "interaction_spec"],
+  "items": ["artifact_kind"]}
+]}

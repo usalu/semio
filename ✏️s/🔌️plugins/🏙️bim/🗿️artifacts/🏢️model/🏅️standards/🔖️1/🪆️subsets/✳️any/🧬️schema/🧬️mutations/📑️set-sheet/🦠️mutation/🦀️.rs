@@ -1,8 +1,8 @@
 //! 📑️ `set-sheet` payload. Sparsely changes a sheet: number, name, paper, orientation and the authored fields of the title block. The title block, the frame and the revision table are inferred and follow.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{Orientation, Paper, SheetPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Orientation, Paper}, diff::patches::SheetPatch};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

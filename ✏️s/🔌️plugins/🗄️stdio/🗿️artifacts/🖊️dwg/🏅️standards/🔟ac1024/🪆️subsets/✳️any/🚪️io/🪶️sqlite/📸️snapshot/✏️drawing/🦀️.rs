@@ -1,16 +1,33 @@
 //! ✏️ Ordered DWG layers, logical objects, handles, drawing bounds and extended data.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::reader::{byte,document,full_unsigned,high,low,optional_unsigned,ordinal,real,word,Reader};
-use super::xrecord;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgExtendedEntityData;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgObjectCategory;
+use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg_snapshot_drawing::standards::v_ac1024::subsets::any::schema::snapshot::drawing::geometry::DwgLogicalLayer;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::byte;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::document;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::full_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::high;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::low;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_unsigned;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::optional_words;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::ordinal;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::real;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::word;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::reader::Reader;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::xrecord;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
-use super::number::Projection;
+use semio_s_artifact_stdio_dwg_sqlite_objects::standards::v_ac1024::subsets::any::io::sqlite::snapshot::number::Projection;
 use Cell::{Integer as I,Real as R,Text as T};
 
-pub(super) fn body_kind(value:&DwgLogicalObjectBody)->&'static str{match value{
+pub fn body_kind(value:&DwgLogicalObjectBody)->&'static str{match value{
     DwgLogicalObjectBody::Dictionary(_)=>"dictionary",DwgLogicalObjectBody::TableControl(_)=>"table_control",DwgLogicalObjectBody::TableRecord(_)=>"table_record",DwgLogicalObjectBody::XRecord(_)=>"xrecord",DwgLogicalObjectBody::Entity(_)=>"entity",DwgLogicalObjectBody::AssociativeDependency(_)=>"associative_dependency",DwgLogicalObjectBody::AssociativeValueDependency(_)=>"associative_value_dependency",DwgLogicalObjectBody::AssociativeGeometryDependency(_)=>"associative_geometry_dependency",DwgLogicalObjectBody::BlockGripLocationComponent(_)=>"block_grip_location_component",DwgLogicalObjectBody::DynamicBlockProxyNode(_)=>"dynamic_block_proxy_node",DwgLogicalObjectBody::AssociativeVariable(_)=>"associative_variable",DwgLogicalObjectBody::AssociativeDimensionDependencyBody(_)=>"associative_dimension_dependency_body",DwgLogicalObjectBody::VisualStyle(_)=>"visual_style",DwgLogicalObjectBody::BlockParameterDependencyBody(_)=>"block_parameter_dependency_body",DwgLogicalObjectBody::BlockRepresentationData(_)=>"block_representation_data",DwgLogicalObjectBody::DynamicBlockPurgePreventer(_)=>"dynamic_block_purge_preventer",DwgLogicalObjectBody::EvaluationGraph(_)=>"evaluation_graph",DwgLogicalObjectBody::BlockFlipParameter(_)=>"block_flip_parameter",DwgLogicalObjectBody::BlockVisibilityParameter(_)=>"block_visibility_parameter",DwgLogicalObjectBody::Placeholder(_)=>"placeholder",DwgLogicalObjectBody::DictionaryVariable(_)=>"dictionary_variable",DwgLogicalObjectBody::AnnotationScale(_)=>"annotation_scale",DwgLogicalObjectBody::SortEntitiesTable(_)=>"sort_entities_table",DwgLogicalObjectBody::TableStyle(_)=>"table_style",DwgLogicalObjectBody::MlineStyle(_)=>"mline_style",DwgLogicalObjectBody::MLeaderStyle(_)=>"mleader_style",DwgLogicalObjectBody::Material(_)=>"material",DwgLogicalObjectBody::BlockMoveAction(_)=>"block_move_action",DwgLogicalObjectBody::AssocNetwork(_)=>"assoc_network",DwgLogicalObjectBody::Assoc2dConstraintGroup(_)=>"assoc_2d_constraint_group",DwgLogicalObjectBody::BlockLinearParameter(_)=>"block_linear_parameter",DwgLogicalObjectBody::BlockLinearGrip(_)=>"block_linear_grip",DwgLogicalObjectBody::BlockFlipGrip(_)=>"block_flip_grip",DwgLogicalObjectBody::BlockVisibilityGrip(_)=>"block_visibility_grip",DwgLogicalObjectBody::BlockAlignmentParameter(_)=>"block_alignment_parameter",DwgLogicalObjectBody::BlockAlignmentGrip(_)=>"block_alignment_grip",DwgLogicalObjectBody::BlockStretchAction(_)=>"block_stretch_action",DwgLogicalObjectBody::BlockScaleAction(_)=>"block_scale_action",DwgLogicalObjectBody::BlockFlipAction(_)=>"block_flip_action",DwgLogicalObjectBody::BlockBasePointParameter(_)=>"block_base_point_parameter",DwgLogicalObjectBody::BlockVerticalConstraintParameter(_)=>"block_vertical_constraint_parameter",DwgLogicalObjectBody::BlockHorizontalConstraintParameter(_)=>"block_horizontal_constraint_parameter",DwgLogicalObjectBody::Layout(_)=>"layout"
 }}
-pub(super) fn project(projection:&mut Projection<'_,'_>,drawing:&DwgLogicalDrawing,project_body:fn(&mut Projection<'_,'_>,i64,&DwgLogicalObjectBody)->Result<(),ValueError>)->Result<(),ValueError>{
+pub fn project(projection:&mut Projection<'_,'_>,drawing:&DwgLogicalDrawing,project_body:fn(&mut Projection<'_,'_>,i64,&DwgLogicalObjectBody)->Result<(),ValueError>)->Result<(),ValueError>{
     projection.insert("dwg_drawing",&[I(1)])?;
     for(index,value)in drawing.layers.iter().enumerate(){projection.insert("dwg_drawing_layer",&[I(1),I(ordinal(index)?),T(&value.name),I(i64::from(value.color))])?;}
     for(table,values)in [("dwg_drawing_extmin",&drawing.extmin),("dwg_drawing_extmax",&drawing.extmax)]{for(index,value)in values.iter().enumerate(){projection.insert(table,&[I(1),I(ordinal(index)?),R(*value)])?;}}
@@ -25,7 +42,7 @@ pub(super) fn project(projection:&mut Projection<'_,'_>,drawing:&DwgLogicalDrawi
     }
     Ok(())
 }
-pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>,reconstruct_body:fn(&mut Reader<'_,'_,'_>,i64,&str)->Result<DwgLogicalObjectBody,ValueError>)->Result<DwgLogicalDrawing,ValueError>{
+pub fn reconstruct(reader:&mut Reader<'_,'_,'_>,reconstruct_body:fn(&mut Reader<'_,'_,'_>,i64,&str)->Result<DwgLogicalObjectBody,ValueError>)->Result<DwgLogicalDrawing,ValueError>{
     document(reader.one("dwg_drawing")?)?;
     let mut layers=Vec::new();for r in reader.list("dwg_drawing_layer",1,1,2)?{layers.push(DwgLogicalLayer{name:r.text(3)?.into(),color:byte(r,4)?});}
     let extmin=reader.list("dwg_drawing_extmin",1,1,2)?.into_iter().map(|r|real(r,3)).collect::<Result<_,_>>()?;
@@ -40,4 +57,3 @@ pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>,reconstruct_body:fn(&mut 
     }
     Ok(DwgLogicalDrawing{layers,objects,extmin,extmax})
 }
-pub(super) fn optional_words(value:Option<u64>)->[Cell<'static>;2]{match value{Some(value)=>[I(high(value)),I(low(value))],None=>[Cell::Null,Cell::Null]}}

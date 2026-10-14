@@ -1,0 +1,56 @@
+# Current Original Actor Work Constructor Inventory
+
+Read-only source inventory; not a compiler or runtime validation. Full input constructors without a work field or struct-update donor require an explicit original issued work source. Production definitions must borrow actual issuer work; fixture definitions must author one finite initial declaration and carry returned remaining fuel. Shared core/WIT/context belongs to Enduser, genuine Native/RDS issuance belongs to Host, other concrete constructors and neutral fixtures belong to Root.
+
+| Source | Lines | Scope |
+|---|---|---|
+| `🧰️framework/🔨️modules/🎭️actor/🦀️.rs` | 4045 | Production |
+| `🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs` | 7,8 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎠️activation-reservation/🧪️tests/🎠️activation-reservation/🦀️.rs` | 5 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/📥️source/🧪️tests/🦀️.rs` | 10 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/⏸️park/🧪️tests/🦀️.rs` | 24,35,42,49 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/📋️arguments/🦀️.rs` | 8 | Production |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/📦️transport/📥️source/🧪️tests/🦀️.rs` | 5 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/🖥️execution/🧪️tests/🦀️.rs` | 6 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🦀️.rs` | 18 | Production |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📦️batch/🦀️.rs` | 22,69 | Production |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🤝️admission/🧪️tests/🦀️.rs` | 8,11 | Fixture |
+| `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🦀️.rs` | 7,14,21 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs` | 220,220 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🦀️.rs` | 1679 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🧪️tests/🔬️quick/🦀️.rs` | 887 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🐚️channel/🧪️tests/🔬️quick/🦀️.rs` | 288 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🔀️dispatch/🧪️tests/🔬️quick/🦀️.rs` | 688,710 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs` | 333,334 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🦀️.rs` | 23 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🧪️tests/🦀️.rs` | 13,14,14 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🧪️tests/🔬️owned-runtime/🦀️.rs` | 24,58 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🧪️tests/🔬️owned-instance-open/🦀️.rs` | 20,25 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🏗️startup/🧪️tests/🦀️.rs` | 14,20,20,20,20 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏗️instance/🧪️tests/🦀️.rs` | 26,46,46,46,53,53,53 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️ui-patch/🧪️tests/🧪️component/🦀️.rs` | 21 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/🧪️tests/🦀️.rs` | 18,19,31,33,38,38,45,46,46,47,48,49,49 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/📃️policy/🦀️.rs` | 34,40,54,59 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎠️activation/🧪️tests/🎠️activation/🦀️.rs` | 59,119 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🏗️instance/🧪️tests/🦀️.rs` | 22,23 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs` | 14 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️mock-guest-runtime/🦀️.rs` | 19,28,30,44,45,59,61,75,78,99 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️artifact-mutation-router/🦀️.rs` | 67 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs` | 301,333 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️unit/🦀️.rs` | 141,160,179,196,212,237,291,325 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️owned-instance-open/🦀️.rs` | 25,63,68,81,245 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️wasmtime-runtime/🦀️.rs` | 16 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io/🎛️operation/🧪️tests/🐎️wasmtime/🦀️.rs` | 30 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧵️executor/🧪️tests/🔬️unit/🦀️.rs` | 53,127,165,201,251,323,425,475,535 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🧪️tests/🔬️unit/🦀️.rs` | 100,114,161,211,255,344,404,441,492,531,574,627,678,837,868,923,973,1125,1141,1192,1455,1466,1515,1518,1532,1538,1555,1586 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🪪️identity/🧪️tests/🦀️.rs` | 6,14 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/👶️child/🦀️.rs` | 31 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs` | 1587,1589 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🎭️exports/🦀️.rs` | 18 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🔌️registry/🦀️.rs` | 10 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/🧪️tests/🤝️admission/🦀️.rs` | 14 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️output/🧪️tests/🦀️.rs` | 19,20 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs` | 13 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🦀️.rs` | 7,11 | Fixture |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🛂️descriptor-emission/🦀️.rs` | 278 | Production |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs` | 1631 | Production |

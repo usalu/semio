@@ -296,7 +296,6 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     let prepared_events = reopened.events(&receipt.job_id, &reader(&selected), 0, 1007).unwrap().events.into_iter().filter(|event| event.kind == "approval-prepared").count();
     assert_eq!(prepared_events, 1, "reviving the exact abandoned row never fabricates a second prepared event");
     assert!(matches!(reopened.read(&receipt.job_id, &reader(&selected), receipt.expires_at_ms), Err(InferenceErrorV1::Expired)));
-    #[cfg(feature = "native-artifact-execution")]
     {
         let (witness, fence) = super::super::wal::tests::committed_fixture_witness().await;
         let frontier = directory::os_directory::EditedArtifactFrontierV1 {

@@ -1,6 +1,6 @@
 //! 🗾️ `create-zone` payload. Brings a new zone into the model: a named group of spaces with a purpose and an occupancy density; the spaces join it through `set-space`.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Zone};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Zone}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

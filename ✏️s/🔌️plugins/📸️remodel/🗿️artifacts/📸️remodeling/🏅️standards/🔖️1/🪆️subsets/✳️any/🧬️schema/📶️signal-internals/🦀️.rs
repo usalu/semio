@@ -1,7 +1,8 @@
 //! 📡️ Signal processing: FFT, windows, spectra, correlation, smoothing and peak analysis for time-series and modal analysis.
 //! Moved wholesale from `🧮️math/📶️signal` — 📸️remodeling is its sole repo-wide consumer (verified: symbol-level grep of every exported type/fn across the whole tree outside math and remodeling returned zero hits), per `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS` wave M3d.
 
-use crate::algebra::{MatD, VecD};
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::MatD;
+use semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::VecD;
 use std::f64::consts::PI;
 
 // #region 🔖️Fft

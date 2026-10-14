@@ -132,9 +132,9 @@ fn ports(node:i64,read:&mut Read<'_,'_,'_>)->Result<Ports,ValueError>{
  }
  Ok(result)
 }
-fn bag(table:&'static str,owner:i64,read:&mut Read<'_,'_,'_>)->Result<graph::manifest::PropertyBag,ValueError>{
+fn bag(table:&'static str,owner:i64,read:&mut Read<'_,'_,'_>)->Result<semio_framework_graph_manifest::PropertyBag,ValueError>{
  let rows=read.relations(table,1,owner)?;
- let mut result=semio_framework_value::DecodedValue::new(graph::manifest::PropertyBag::from_admitted(super::values::reserve(rows.len(),read.control)?),<graph::manifest::PropertyBag as FromValue>::retire_decoded);
+ let mut result=semio_framework_value::DecodedValue::new(semio_framework_graph_manifest::PropertyBag::from_admitted(super::values::reserve(rows.len(),read.control)?),<semio_framework_graph_manifest::PropertyBag as FromValue>::retire_decoded);
  for row in rows{let key=read.text(row,2)?;if result.get_mut().contains_key(&key){return Err(invalid("DAG property bag keys must be unique"))}let value=property(row.integer(3)?,read)?;result.get_mut().insert_controlled(key,value,&mut||read.step())?;read.step()?;}
  Ok(result.take())
 }

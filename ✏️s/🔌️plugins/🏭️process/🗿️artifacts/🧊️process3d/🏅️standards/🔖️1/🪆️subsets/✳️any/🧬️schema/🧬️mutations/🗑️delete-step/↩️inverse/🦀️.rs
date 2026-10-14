@@ -2,13 +2,12 @@
 //! + full payload); a step already absent from `base` has nothing to undo.
 
 use crate::mutations::create_step::CreateStep;
-use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteStep, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<crate::standards::v1::subsets::any::schema::mutations::create_step::CreateStep>>(payload: &super::DeleteStep, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.step_payloads.iter().position(|step| step.id == payload.id).map(|index| vec![Process3dMutation::CreateStep(CreateStep { index, step: base.step_payloads[index].clone() })]).unwrap_or_default()
+    base.step_payloads.iter().position(|step| step.id == payload.id).map(|index| vec![Op::from(CreateStep { index, step: base.step_payloads[index].clone() })]).unwrap_or_default()
 
     })())
 }

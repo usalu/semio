@@ -1,6 +1,6 @@
 use super::*;
 use crate::editor::bim::panels::outliner::{render, BODY_KEY};
-use crate::{ModelInference, View};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::View};
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 

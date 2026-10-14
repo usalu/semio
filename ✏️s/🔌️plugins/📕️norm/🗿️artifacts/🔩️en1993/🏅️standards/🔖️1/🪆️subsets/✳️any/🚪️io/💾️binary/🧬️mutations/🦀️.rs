@@ -1,5 +1,5 @@
 //! OpBinary for En1993Mutation — tag + full JSON body.
-use crate::artifact_schema::mutations::En1993Mutation;
+use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 fn write_str_bin(out: &mut Vec<u8>, s: &str) { store::pack_rt::write_varint_u64(out, s.len() as u64); out.extend_from_slice(s.as_bytes()); }

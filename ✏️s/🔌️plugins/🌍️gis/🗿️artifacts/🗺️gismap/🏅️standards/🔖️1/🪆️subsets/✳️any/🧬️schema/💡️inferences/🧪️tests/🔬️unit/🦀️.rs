@@ -20,7 +20,7 @@ async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_im
     use crate::schema::gis_map_snapshot_to_drawing;
 use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
     use {semio_s_artifact_stdio_semio_drawing::schema::mutations::{diff_semio_drawing_mutation, SemioDrawingMutation as AppliedDrawingMutation}, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as AppliedDrawingSnapshot};
-    use {semio_s_artifact_stdio_semio_value::schema::mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot as AppliedValueSnapshot};
+    use {semio_s_artifact_stdio_semio_value_mutations::schema::mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot as AppliedValueSnapshot};
         let apply_semio_drawing_mutation = |content: &mut AppliedDrawingSnapshot, mutation: &AppliedDrawingMutation| {
             let outcome = diff_semio_drawing_mutation(mutation, content);
             *content = semio_framework_os_kernel::apply_diff(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");

@@ -1,5 +1,9 @@
 //! 🏭️ Plant loops: pumps, boilers, chillers, heat pumps, towers, HX, GSHP, thermal storage.
 
+extern crate semio_s_plugin_energy_engine_curves as curves;
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::curves::PerformanceCurve;
 use crate::props::{glycol_cp_j_per_kg_k, glycol_density, water_cp_j_per_kg_k, water_density};
 use crate::units::RHO_WATER;

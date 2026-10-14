@@ -28,23 +28,9 @@ fn video_container_provider_callbacks_v1() {
     assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { id: "other", ..selected }], b"future"), Err(VideoError::InvalidProbe));
 }
 
-/// 📼️Refuses AVI bytes when its source capability is not linked.
-#[cfg(not(feature = "video-avi"))]
-#[test]
-fn video_container_provider_absent_avi_v1() {
-    assert_eq!(probe(b"RIFF\0\0\0\0AVI "), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::MissingProvider)));
-}
 
-/// 🎥️Refuses ISO-BMFF bytes when its source capability is not linked.
-#[cfg(not(feature = "video-mp4"))]
-#[test]
-fn video_container_provider_absent_mp4_v1() {
-    assert_eq!(probe(b"\0\0\0\x18ftypisom\0\0\0\0"), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::MissingProvider)));
-}
 
-#[cfg(feature = "video-mp4")]
 use semio_s_artifact_stdio_mp4::{standards::isobmff::subsets::any::{io as mp4_engine, schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track}}, STDIO_MP4_DOCUMENT_SCHEMA};
-#[cfg(feature = "video-avi")]
 use semio_s_artifact_stdio_avi::{standards::v1_0::subsets::any::{io as avi_engine, schema::snapshot::{AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader}}, STDIO_AVI_DOCUMENT_SCHEMA};
 
 /// 🔌️Checks every provider record vector before accepting extension-owned samples.
@@ -138,7 +124,6 @@ fn h264_error_display_messages() {
 // #region 🔖️ContainerTests
 /// 🔬Checks owned MP4 timing against the linked provider's real demux/mux implementation.
 #[test]
-#[cfg(feature = "video-mp4")]
 fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..5).map(|i| remodeling_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
     let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
@@ -153,7 +138,6 @@ fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
     let (sps_nal, pps_nal) = h264_enc_sps_pps_nals(1, 1);
     let mp4 = container_providers::mp4::write_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_nal, &pps_nal, 5.0);
@@ -166,14 +150,12 @@ fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
 
 /// 🧯Preserves the linked container implementation's actual decode refusal.
 #[test]
-#[cfg(feature = "video-mp4")]
 fn mp4_probe_wraps_stdio_decode_errors_as_container() {
     assert!(matches!(container_providers::mp4::probe(&[]), Err(VideoError::Container(_))));
     assert!(matches!(container_providers::mp4::probe(b"not an mp4 at all"), Err(VideoError::Container(_))));
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn mp4_probe_reports_no_video_track_when_none_present() {
     let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![] };
     let bytes = mp4_engine::encode_mp4(&snapshot);
@@ -181,7 +163,6 @@ fn mp4_probe_reports_no_video_track_when_none_present() {
 }
 
 #[test]
-#[cfg(feature = "video-avi")]
 fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..4).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
     let avi = container_providers::avi::write_mjpeg(&frames, 8.0);
@@ -197,13 +178,11 @@ fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
 }
 
 #[test]
-#[cfg(feature = "video-avi")]
 fn avi_probe_rejects_non_riff_bytes() {
     assert!(matches!(container_providers::avi::probe(b"not an avi at all!!"), Err(VideoError::Container(_))));
 }
 
 #[test]
-#[cfg(feature = "video-avi")]
 fn avi_probe_reports_no_video_track_when_only_audio_present() {
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
@@ -243,7 +222,6 @@ fn avi_probe_reports_no_video_track_when_only_audio_present() {
 }
 
 #[test]
-#[cfg(all(feature = "video-mp4", feature = "video-avi"))]
 fn probe_selects_present_container_providers() {
     let frames: Vec<Vec<u8>> = (0..2).map(|i| remodeling_image::encode_jpeg(&synth_rgba(4, 4, 900 + i), 80)).collect();
     let avi = container_providers::avi::write_mjpeg(&frames, 5.0);
@@ -265,7 +243,6 @@ fn codec_fourcc_hint_maps_each_codec_variant() {
 
 // #region 🔖️ExtractTests
 #[test]
-#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
     let frames: Vec<Vec<u8>> = (0..10).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 500 + i), 85)).collect();
     let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
@@ -277,7 +254,6 @@ fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
     let mut frames: Vec<Vec<u8>> = (0..6).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 600 + i), 85)).collect();
     for i in [1usize, 2, 4, 5] {
@@ -293,7 +269,6 @@ fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn extract_frames_applies_max_long_edge_downscale() {
     let frames = vec![remodeling_image::encode_jpeg(&synth_rgba(32, 16, 700), 90)];
     let mp4 = container_providers::mp4::write_mjpeg(&frames, 5.0);
@@ -305,7 +280,6 @@ fn extract_frames_applies_max_long_edge_downscale() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn extract_frames_rejects_unsupported_codec_with_provenance() {
     let track =
         Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::hevc(Mp4CodecFormat::Hvc1, Default::default(), 4), width: 4, height: 4, metadata: Default::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }] };
@@ -318,7 +292,6 @@ fn extract_frames_rejects_unsupported_codec_with_provenance() {
 }
 
 #[test]
-#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_propagates_jpeg_decode_error() {
     let frames = vec![vec![0xDE, 0xAD, 0xBE, 0xEF]];
     let mp4 = container_providers::mp4::write_mjpeg(&frames, 5.0);
@@ -328,7 +301,6 @@ fn extract_frames_mjpeg_propagates_jpeg_decode_error() {
 }
 
 #[test]
-#[cfg(feature = "video-avi")]
 fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
@@ -984,7 +956,6 @@ mod long {
     use super::*;
 
     #[test]
-    #[cfg(feature = "video-mp4")]
     fn video_in_contract_i_pcm_then_p_skip_chain_via_full_mp4_pipeline() {
         let (mb_w, mb_h) = (3, 2);
         let (width, height) = (mb_w * 16, mb_h * 16);

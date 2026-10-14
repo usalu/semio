@@ -2,7 +2,7 @@
 
 use super::super::elements;
 use super::CreateMaterial;
-use crate::{Entry, ModelDiff, ModelSnapshot, Rgb};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Rgb}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn unit(color: &Rgb) -> bool {

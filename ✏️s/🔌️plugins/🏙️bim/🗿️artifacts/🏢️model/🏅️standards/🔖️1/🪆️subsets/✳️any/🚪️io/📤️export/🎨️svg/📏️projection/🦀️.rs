@@ -9,7 +9,7 @@ use super::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
 /// 🪧️ What the oracle measures of one kind of annotation primitive: how many paths or texts of the kind a view draws and the straight length of its paths in metres.

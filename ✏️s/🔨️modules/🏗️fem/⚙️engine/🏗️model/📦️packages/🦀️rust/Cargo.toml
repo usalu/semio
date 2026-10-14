@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-fem-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM element contract: DOFs, nodes, loads, the Element trait and result records"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dispatch-macros = { workspace = true }
+semio-s-fem-algebra = { workspace = true }

@@ -3,7 +3,7 @@
 
 use super::writer::{en, flag, int, opt_text, real, refs, rf, text, typed, unset, Schema, V};
 use super::{Export, Quantity};
-use crate::{ClassificationSystem, Layer, Profile, PropertyValue};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, Layer, Profile, PropertyValue};
 use std::collections::BTreeMap;
 
 /// 🏷️ The property set of the project that records the parent column of the classification tables.
@@ -122,11 +122,11 @@ fn profiled_type(x: &mut Export<'_>, kind: &'static str, entity: &str, id: &str,
 }
 
 /// 🚪️ The `IfcDoorTypeOperationEnum` literal of a door type: leaves and swing.
-pub fn door_operation(kind: &crate::DoorType) -> &'static str {
+pub fn door_operation(kind: &crate::standards::v1::subsets::any::schema::snapshot::DoorType) -> &'static str {
     match (kind.leaves, kind.swing) {
-        (crate::DoorLeaves::Single, crate::Swing::Left) => "SINGLE_SWING_LEFT",
-        (crate::DoorLeaves::Single, crate::Swing::Right) => "SINGLE_SWING_RIGHT",
-        (crate::DoorLeaves::Double, _) => "DOUBLE_DOOR_SINGLE_SWING",
+        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Single, crate::standards::v1::subsets::any::schema::snapshot::Swing::Left) => "SINGLE_SWING_LEFT",
+        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Single, crate::standards::v1::subsets::any::schema::snapshot::Swing::Right) => "SINGLE_SWING_RIGHT",
+        (crate::standards::v1::subsets::any::schema::snapshot::DoorLeaves::Double, _) => "DOUBLE_DOOR_SINGLE_SWING",
     }
 }
 

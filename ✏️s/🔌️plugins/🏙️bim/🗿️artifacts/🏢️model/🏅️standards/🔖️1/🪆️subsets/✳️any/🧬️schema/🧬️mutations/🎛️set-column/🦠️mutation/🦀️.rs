@@ -1,6 +1,6 @@
 //! 🎛️ `set-column` payload. Edits a column sparsely: type, position, rotation, base offset, authored top constraint and name; absent fields stay untouched.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Point2, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2, TopConstraint}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

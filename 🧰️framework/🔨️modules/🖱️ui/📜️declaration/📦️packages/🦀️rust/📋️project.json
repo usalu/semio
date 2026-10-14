@@ -1,0 +1,5 @@
+{
+  "name": "@semio-tech/ui-declaration-rs",
+  "$schema": "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "tags": ["lang:rust", "role:framework", "family:ui-declaration"]
+}

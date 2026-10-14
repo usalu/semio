@@ -22,7 +22,6 @@ semio-framework-schema-composition = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
-semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
@@ -34,7 +33,8 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-s-artifact-stdio-semio-base-examples = { workspace = true }
+semio-s-artifact-stdio-semio-value-model = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

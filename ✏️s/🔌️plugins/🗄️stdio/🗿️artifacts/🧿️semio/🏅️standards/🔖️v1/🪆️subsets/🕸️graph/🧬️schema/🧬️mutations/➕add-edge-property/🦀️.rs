@@ -3,7 +3,7 @@
 
 use crate::schema::mutations::SemioGraphMutation;
 use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 /// ➕ `add-edge-property` payload — the edge, the index the entry lands at and the entry.

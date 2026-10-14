@@ -8,8 +8,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod diff_codec {
 use super::*;
 use crate::schema::diff::*;
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexedTripleDiff, Replace};
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_indexed_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_opt;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
 use crate::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;

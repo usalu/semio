@@ -3,10 +3,30 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🧱️records/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔣️json/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🧾️code/📦️packages/🦀️rust",
     "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -110,14 +130,74 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packa
 [workspace.dependencies.semio-s-artifact-stdio-dwg-editor]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-dwg-examples]
+path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-editor-ac1018]
+path = "🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-dwg-model]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-code]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🧾️code/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-graphql]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔗️graphql/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-json]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🔣️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-exports-proto]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📤️exports/🛰️proto/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-objects]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-drawing]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-document]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-objects]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📦️objects/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-sqlite-drawing]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-diff]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-mutations]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-inferences]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-dwg-read]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-dwg-read-records]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🧱️records/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-read-objects]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️objects/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-dwg-write]
 path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-write-records]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/🧱️records/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-write-objects]
+path = "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️objects/📦️packages/🦀️rust"
 
 [workspace.dependencies.serde_json]
 version = "1.0.149"

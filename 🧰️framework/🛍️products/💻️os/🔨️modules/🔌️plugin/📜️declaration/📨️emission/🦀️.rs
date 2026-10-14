@@ -358,18 +358,18 @@ fn serialize_child_genesis_reference<S: serde::Serializer>(reference: &ArtifactR
 }
 
 impl ChildEmitGenesis {
-    fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub(crate) fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         let release_bytes = if self.initial_pack.capacity() != 0 { self.initial_pack.capacity() } else {
             [&self.reference.artifact_id, &self.reference.dialect.artifact_kind, &self.reference.dialect.standard, &self.reference.dialect.subset].into_iter().find_map(|value| (value.capacity() != 0).then_some(value.capacity())).unwrap_or(0)
         };
         Ok(RetirementDemand { release_bytes, depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.initial_pack.capacity() == 0 && [&self.reference.artifact_id, &self.reference.dialect.artifact_kind, &self.reference.dialect.standard, &self.reference.dialect.subset].into_iter().all(|value| value.capacity() == 0)
     }
 
-    fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(crate) fn close_one(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let demand = self.retirement_demands()?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "original child genesis release exceeds supplied depth")); }

@@ -50,7 +50,7 @@ impl semio_framework_dsl_record::BorrowedDslField for MeshAttributeInterpolation
 }
 
 /// 📦️ First-party owned values permit numeric channels and structured custom metadata.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::pack::value")]
 pub struct MeshAttribute {
@@ -74,7 +74,7 @@ impl MeshAttribute {
 }
 
 /// 🖼️ Texture bytes are owned by the same mesh payload as their material references.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(crate = "::pack::value")]
 pub struct MeshTexture { pub mime: String, pub bytes: Vec<u8> }

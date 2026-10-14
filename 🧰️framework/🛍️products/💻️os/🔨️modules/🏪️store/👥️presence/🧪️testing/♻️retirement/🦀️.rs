@@ -80,7 +80,7 @@ pub(crate) fn observed_step(grant: RetainedCloneGrant, close: impl FnOnce() -> R
 pub(crate) fn observed_close(owner: &mut (impl ErasedSnapshotRetirement + ?Sized), grant: RetainedCloneGrant) -> RetainedCloneStep { observed_step(grant, || owner.close_step(grant)) }
 
 pub(crate) fn observed_box_close(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedCloneStep {
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::os_store::snapshot_read::artifact_retirement_box_close_step(owner, grant).unwrap());
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value_snapshot_read::artifact_retirement_box_close_step(owner, grant).unwrap());
     assert!(step.progress().fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     step
@@ -96,7 +96,7 @@ pub(crate) fn finish(owner: &mut (impl ErasedSnapshotRetirement + ?Sized)) -> us
     panic!("Presence test owner exhausted its original bounded close turns")
 }
 
-pub(crate) fn admit_returned_string(registry: &crate::os_store::SnapshotReadRegistryHandle, expected: &str) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+pub(crate) fn admit_returned_string(registry: &semio_framework_value_snapshot_read::SnapshotReadRegistryHandle, expected: &str) -> Option<Box<dyn ErasedSnapshotRetirement>> {
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.try_admit_one_returned::<String, _>(CLOSE_GRANT, |original, grant| {
         assert_eq!(original.as_str(), expected);
         assert_eq!(Arc::strong_count(&original), 1);
@@ -104,7 +104,7 @@ pub(crate) fn admit_returned_string(registry: &crate::os_store::SnapshotReadRegi
     }));
     match result {
         Ok((owner, receipt)) => { assert!(receipt.fits(CLOSE_GRANT)); assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes)); owner }
-        Err(crate::os_store::snapshot_read::SnapshotReadLeaseRefusal::Busy) => { assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); None }
+        Err(semio_framework_value_snapshot_read::SnapshotReadLeaseRefusal::Busy) => { assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); None }
         Err(_) => panic!("original returned String admission failed"),
     }
 }
@@ -119,10 +119,10 @@ pub(crate) fn finish_box(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>) 
     panic!("original Presence test frame exhausted funded close turns")
 }
 
-pub(crate) fn finish_registry(registry: crate::os_store::SnapshotReadRegistryHandle) {
-    let mut original = Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(registry));
+pub(crate) fn finish_registry(registry: semio_framework_value_snapshot_read::SnapshotReadRegistryHandle) {
+    let mut original = Some(semio_framework_value_snapshot_read::SnapshotReadRegistryAliasRetirement::new(registry));
     for _ in 0..4096 {
-        observed_step(CLOSE_GRANT, || crate::os_store::snapshot_registry_alias_close_step(&mut original, CLOSE_GRANT));
+        observed_step(CLOSE_GRANT, || semio_framework_value_snapshot_read::snapshot_registry_alias_close_step(&mut original, CLOSE_GRANT));
         if original.is_none() { return; }
     }
     panic!("original Presence registry failed funded physical closure")

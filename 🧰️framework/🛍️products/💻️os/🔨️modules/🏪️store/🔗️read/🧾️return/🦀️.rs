@@ -24,7 +24,7 @@ impl super::ErasedSnapshotRead {
 }
 
 struct SnapshotReadReturnRetirement {
- registry:ManuallyDrop<Option<crate::os_store::SnapshotReadRegistryHandle>>,
+ registry:ManuallyDrop<Option<crate::SnapshotReadRegistryHandle>>,
  last_registry:ManuallyDrop<Option<SnapshotReadLeaseRegistry>>,
  index:u16,
  generation:u64,

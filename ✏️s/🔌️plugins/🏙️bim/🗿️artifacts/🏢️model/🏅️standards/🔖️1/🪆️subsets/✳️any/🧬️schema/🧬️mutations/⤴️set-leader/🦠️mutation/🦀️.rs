@@ -1,6 +1,6 @@
 //! ⤴️ `set-leader` payload. Sets exactly the provided fields of a leader: anchor, offset of the text from the anchor, text and style; absent fields stay untouched.
 
-use crate::{AnnotationAnchor, LeaderPatch, ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnnotationAnchor, ModelSnapshot, Point2}, diff::{patches::LeaderPatch, ModelDiff}, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -1,9 +1,10 @@
 //! 🔗️ Static rename preparation retains the native root and reborrows original payloads each turn.
 
 use super::DrawingRenameDisposition;
-use super::super::mutation::RenameLayer;
-use crate::{DrawingLayerNode, DrawingSnapshot};
-use crate::standards::v1::subsets::any::schema::snapshot::lookup::owned::{DrawingOwnedLayerLookupCursor, DrawingOwnedLayerLookupStep};
+use semio_s_artifact_draw_drawing_metadata::rename_layer::mutation::RenameLayer;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::snapshot::lookup::owned::{DrawingOwnedLayerLookupCursor, DrawingOwnedLayerLookupStep};
 use semio_framework_value::{list::PagedList, paged::PagedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, RetainedOwnedProjection, paged::PagedUtf8BoundedOrdCursor, ordered_map::{BoundedOrdCursor, BoundedOrdGrant, BoundedOrdStep}};
 
@@ -27,7 +28,7 @@ impl DrawingOwnedRenamePlan {
     /// ↩️ Borrows the original old name without copying native text or retaining an original payload.
     pub fn inverse_name(&self) -> Result<Option<RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>>, ValueError> {
         if self.closing { return Ok(None); }
-        self.node.as_ref().map(|node| node.borrow().map(|node| node.project(2, |node| &crate::schema::layer_base(node).name))).transpose()
+        self.node.as_ref().map(|node| node.borrow().map(|node| node.project(2, |node| &semio_s_artifact_draw_drawing_model::layer_base(node).name))).transpose()
     }
 
     /// 🧭️ Reads one actual saved ordinal without reconstructing the root path.
@@ -137,7 +138,7 @@ impl DrawingOwnedRenamePreparationCursor {
             return Ok(pending(step.progress()));
         }
         if self.phase == 2 {
-            let old_name = self.node.as_ref().expect("owned found Drawing rename layer").borrow()?.project(2, |node| &crate::schema::layer_base(node).name);
+            let old_name = self.node.as_ref().expect("owned found Drawing rename layer").borrow()?.project(2, |node| &semio_s_artifact_draw_drawing_model::layer_base(node).name);
             let new_name = payload.project(2, |payload| &payload.new_name);
             let step = self.comparison.compare(old_name, new_name, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
             let (ordering, progress) = match step {

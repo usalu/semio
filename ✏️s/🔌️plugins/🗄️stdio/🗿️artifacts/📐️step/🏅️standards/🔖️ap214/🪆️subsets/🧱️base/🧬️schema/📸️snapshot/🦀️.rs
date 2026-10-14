@@ -6,12 +6,11 @@
 //! `w0-recon-report.md` §7 — step does not repeat it for itself).
 
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
-use crate::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 //#region 🔖️BrepModelReexport
 /// 🧱 The BrepMesh analyzer types live with the derived view in `engine::brep`, not here — the
 /// snapshot only stores the generic graph. Re-exported for pre-existing call sites' convenience.
-pub use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};
+pub use crate::standards::v_ap214::subsets::base::io::brep::{BrepFace, BrepMesh, BrepVertex};
 //#endregion 🔖️BrepModelReexport
 
 //#region 🔖️Value
@@ -179,7 +178,7 @@ pub struct StepEntity {
 /// FORMAT SPEC: nothing about a real AP214 exchange file is silently dropped (undecoded header
 /// positions default gracefully; complex instances retain every constituent type via
 /// `StepEntity::complex`). BrepMesh is a derived analyzer view
-/// (`crate::engine::brep::analyze_brep_mesh`), not stored here.
+/// (`crate::standards::v_ap214::subsets::base::io::brep::analyze_brep_mesh`), not stored here.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]
@@ -403,3 +402,9 @@ mod tests;
 
 #[path = "🔗️references/🦀️.rs"]
 pub mod references;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_STEP_DOCUMENT_SCHEMA: &str = "stdio.step";
+
+/// 🧬️ Artifact schema descriptor id.
+pub const STEP_ARTIFACT_SCHEMA_ID: &str = "s.stdio.step";

@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::gestures::session::Shape;
 use crate::editor::bim::gestures::tests::fixture::{room, Rig};
-use crate::{Axis, Beam, ModelMutation, Phase, Point2, Slab, Vertex, Wall};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall}, mutations::ModelMutation};
 
 fn only(mutations: &[ModelMutation]) -> &ModelMutation {
     match mutations {
@@ -14,7 +14,7 @@ fn line(start: (f64, f64), end: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: start.0, y: start.1 }, end: Point2 { x: end.0, y: end.1 } }
 }
 
-fn wall_on(snapshot: &crate::ModelSnapshot, id: &str, axis: Axis) -> Wall {
+fn wall_on(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str, axis: Axis) -> Wall {
     Wall { axis, name: id.into(), ..snapshot.walls["w-south"].clone() }
 }
 
@@ -116,9 +116,9 @@ async fn split_parts_a_beam_where_it_is_pressed() {
     let step = rig.down(2.0, 2.0);
     let ModelMutation::SplitBeam(split) = only(&step.mutations) else { panic!("a split-beam") };
     assert_eq!((split.id.as_str(), split.t), ("b-1", 0.25));
-    let crate::Axis::Line { end, .. } = rig.snapshot.beams["b-1"].axis else { panic!("a straight beam") };
+    let crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { end, .. } = rig.snapshot.beams["b-1"].axis else { panic!("a straight beam") };
     assert_eq!(end, Point2 { x: 2.0, y: 2.0 });
-    let crate::Axis::Line { start, .. } = rig.snapshot.beams[&split.new_id].axis else { panic!("a straight beam") };
+    let crate::standards::v1::subsets::any::schema::snapshot::Axis::Line { start, .. } = rig.snapshot.beams[&split.new_id].axis else { panic!("a straight beam") };
     assert_eq!(start, Point2 { x: 2.0, y: 2.0 });
 }
 

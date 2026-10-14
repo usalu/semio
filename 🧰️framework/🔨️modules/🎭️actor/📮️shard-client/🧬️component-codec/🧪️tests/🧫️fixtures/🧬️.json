@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/fixtures.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "scope", "refusals", "invalidAnswers", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "scope": { "const": "actor-component-codec-lane" },
+    "refusals": { "const": { "unexported": "actor-codec.unexported", "operation": "actor-codec.operation" } },
+    "invalidAnswers": {
+      "const": [
+        { "ok": 42 },
+        { "okHex": "00", "faultHex": "ff" },
+        { "okPair": { "packHex": "00" } },
+        { "okMirror": ["one"] },
+        { "okMirror": ["one", "two", "three"] },
+        { "okHex": "AB" },
+        { "faultHex": "f" },
+        { "okHex": "00", "extra": true }
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "request", "component", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "request": {
+            "oneOf": [
+              { "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json#/$defs/ShardCodecRequest" },
+              { "const": { "operation": "apply-ops", "artifactKind": "note.document" } }
+            ]
+          },
+          "component": {
+            "oneOf": [
+              { "type": "object", "additionalProperties": false, "required": ["bytesHex"], "properties": { "bytesHex": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json#/$defs/Hex" } } },
+              { "type": "object", "additionalProperties": false, "required": ["pair"], "properties": { "pair": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json#/$defs/DocumentPair" } } },
+              { "type": "object", "additionalProperties": false, "required": ["mirror"], "properties": { "mirror": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string" } } } },
+              { "type": "object", "additionalProperties": false, "required": ["faultHex"], "properties": { "faultHex": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json#/$defs/Hex" } } },
+              { "const": { "exported": false } },
+              { "type": "object", "additionalProperties": false, "required": ["throws"], "properties": { "throws": { "type": "string", "minLength": 1 } } }
+            ]
+          },
+          "expected": { "$ref": "https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/component-codec/schema.json#/$defs/ShardCodecOutcomeProjection" }
+        }
+      }
+    }
+  }
+}

@@ -43,7 +43,6 @@
 
 use semio_repo_test_host::Json;
 
-#[cfg(feature = "oracles")]
 mod live {
     use semio_repo_test_host::Json;
     use std::borrow::Cow;
@@ -507,20 +506,17 @@ mod live {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     live::apply_mutation(input, spec)
 }
 
 /// ↩️ Applies the independently computed inverse of `spec` — relative to the document as it stood BEFORE that
 /// mutation — on top of `mutated`, without calling into the subject's own `GifMutation::inverse`.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_bytes: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     live::apply_mutation_inverse(original_bytes, spec, mutated)
 }
 
 /// 🔁️ The `@id-identity-round-trip` computation: a full `gif` decode re-encoded from the independent model alone.
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     live::rewrite(input)
 }
@@ -529,29 +525,11 @@ pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
 /// `mutate-<kind>`/`inverse-<kind>`/`identity-round-trip` scenario compares under
 /// `@comparison-semantic-raster-v1`. @see `live::project`'s own doc comment for why this subset
 /// carries its own projection instead of the shared `raster::project_gif`.
-#[cfg(feature = "oracles")]
 pub fn project_gif_87a(bytes: &[u8]) -> Result<Json, String> {
     live::project(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_bytes: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_gif_87a(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch

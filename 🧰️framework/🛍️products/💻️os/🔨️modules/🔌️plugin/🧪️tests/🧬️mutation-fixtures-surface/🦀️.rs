@@ -451,13 +451,13 @@ struct SurfaceEditorFixture;
 struct SurfaceNaturalDecodeCursor {
     bytes: Option<Vec<u8>>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    offset: usize,
-    decoded_items: usize,
+    pub(crate) offset: usize,
+    pub(crate) decoded_items: usize,
     maximum_work_units_per_step:usize,
     word: [u8; 4],
     sum: i64,
     complete: bool,
-    closing: bool,
+    pub(crate) closing: bool,
 }
 
 impl SurfaceNaturalDecodeCursor {

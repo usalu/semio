@@ -1,6 +1,6 @@
 //! ▭️ `profile`: the outline of an authored profile in `(across, depth)` coordinates and its extents, the one definition frames, solids, rooms, bodies, plan and the sweep rules share.
 
-use crate::Profile;
+use crate::standards::v1::subsets::any::schema::snapshot::Profile;
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
 

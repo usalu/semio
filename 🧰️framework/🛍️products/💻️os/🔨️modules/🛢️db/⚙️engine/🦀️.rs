@@ -7592,7 +7592,7 @@ impl DatabaseOpenAtRejected {
             Self::Storage(rejected) => rejected.retry_close().await.map_err(Self::Storage),
             Self::Database { cause, cleanup_error: _, storage } => {
                 let result = match storage.as_ref() {
-                    #[cfg(all(feature = "fs", not(target_arch = "wasm32")))]
+                    #[cfg(not(target_arch = "wasm32"))]
                     db_storage::DbBackend::Fs(storage) => storage.close().await,
                     _ => Err(DbError::Internal("database open-at rejection lost its filesystem storage".to_string())),
                 };

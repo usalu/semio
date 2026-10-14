@@ -112,7 +112,7 @@ pub fn mep_solid(value: &MepValue) -> ElementSolid {
     if !value.buildable() {
         return builder.build();
     }
-    let at = |point: &crate::Point3| [point.x, point.y, point.z];
+    let at = |point: &crate::standards::v1::subsets::any::schema::snapshot::Point3| [point.x, point.y, point.z];
     let directions: Vec<Xyz> = value.segments.iter().map(|segment| normalize3(sub3(at(&segment.to), at(&segment.from)))).collect();
     let frames = frames(&directions);
     let normals: Vec<Xyz> = (0..=directions.len())

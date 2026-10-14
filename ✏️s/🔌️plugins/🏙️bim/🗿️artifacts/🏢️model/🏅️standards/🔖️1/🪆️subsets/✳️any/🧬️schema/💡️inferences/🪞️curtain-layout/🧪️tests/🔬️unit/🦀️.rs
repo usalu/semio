@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
-use crate::{CurtainGrid, CurtainPanel, Entry, ModelDiff, StoreyPatch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel}, diff::{Entry, ModelDiff, patches::StoreyPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
@@ -98,7 +98,7 @@ async fn a_curtain_wall_depends_on_its_storey_and_the_storey_its_top_targets() {
 }
 
 fn with_override(snapshot: &mut ModelSnapshot, id: &str, curtain: &str, u: u32, v: u32, panel: CurtainPanel) {
-    snapshot.curtain_panel_overrides.insert(id.into(), crate::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
+    snapshot.curtain_panel_overrides.insert(id.into(), crate::standards::v1::subsets::any::schema::snapshot::CurtainPanelOverride { curtain: curtain.into(), u, v, panel });
 }
 
 #[semio_framework_async_macros::async_test]

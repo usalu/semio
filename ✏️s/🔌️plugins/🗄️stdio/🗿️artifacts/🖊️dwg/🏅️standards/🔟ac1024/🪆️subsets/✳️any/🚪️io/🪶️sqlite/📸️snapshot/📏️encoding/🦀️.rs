@@ -1,6 +1,34 @@
 //! 📏️ Borrowed DWG domain bounds before native Binary/Text ownership and printing.
 use semio_framework_value::ValueError;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgAssociativeDependency;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpression;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgEvaluationExpressionValue;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::associativity::DwgNamedEvaluationNodeReference;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockAction;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockActionConnection;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockElement;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockGrip;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockParameterProperty;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::blocks::DwgBlockTwoPointParameter;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellBorder;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgCellStyle;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::styles::DwgMaterialMap;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgComplexColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableControlBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgConstraintNodeCore;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::constraints::DwgGeometricConstraint;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgDimensionEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_document::standards::v_ac1024::subsets::any::schema::snapshot::document::header::DwgHeaderSpaceGeometry;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::xrecord::DwgXRecordValue;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,artifact::NativeEncodingBound};
 type Bound<'c,'p>=NativeEncodingBound<'c,'p>;
 fn text(value:&str,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(64)?;b.repeated(value.len(),6)}
@@ -98,7 +126,7 @@ fn body(value:&DwgLogicalObjectBody,b:&mut Bound<'_,'_>)->Result<(),ValueError>{
  DwgLogicalObjectBody::Layout(v)=>{b.add(12288)?;for value in [&v.page_setup_name,&v.printer_configuration,&v.canonical_media_name,&v.stylesheet,&v.name]{text(value,b)?;}for values in [&v.margins,&v.paper_size,&v.plot_origin,&v.plot_window_lower_left,&v.plot_window_upper_right,&v.paper_image_origin,&v.insertion_base,&v.limits_minimum,&v.limits_maximum,&v.ucs_origin,&v.ucs_x_axis,&v.ucs_y_axis,&v.extents_minimum,&v.extents_maximum]{reals(values,b)?;}handles(&v.viewport_handles,b)}
 }}
 fn space(value:&DwgHeaderSpaceGeometry,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.add(2048)?;for values in [&value.insertion_base,&value.extents_minimum,&value.extents_maximum,&value.limits_minimum,&value.limits_maximum,&value.ucs_origin,&value.ucs_x_axis,&value.ucs_y_axis,&value.ucs_origin_top,&value.ucs_origin_bottom,&value.ucs_origin_left,&value.ucs_origin_right,&value.ucs_origin_front,&value.ucs_origin_back]{reals(values,b)?;}Ok(())}
-pub(super) fn preflight(value:&DwgSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+pub fn preflight(value:&DwgSnapshot,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let mut b=Bound::new(control)?;b.add(1024)?;text(&value.schema,&mut b)?;text(&value.version,&mut b)?;
  for layer in &value.drawing.layers{b.add(256)?;text(&layer.name,&mut b)?;}reals(&value.drawing.extmin,&mut b)?;reals(&value.drawing.extmax,&mut b)?;
  for object in &value.drawing.objects{b.add(2048)?;text(&object.class_name,&mut b)?;handles(&object.reactor_handles,&mut b)?;handles(&object.referenced_handles,&mut b)?;for data in &object.extended_data{b.add(256)?;for field in &data.values{xrecord(field,&mut b)?;}}if let Some(value)=&object.body{body(value,&mut b)?;}}

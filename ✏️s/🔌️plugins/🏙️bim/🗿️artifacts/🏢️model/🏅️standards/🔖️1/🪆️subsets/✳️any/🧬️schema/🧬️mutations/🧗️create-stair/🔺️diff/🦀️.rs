@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::placement::{refuse_stair, stair_issue};
 use super::CreateStair;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateStair, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

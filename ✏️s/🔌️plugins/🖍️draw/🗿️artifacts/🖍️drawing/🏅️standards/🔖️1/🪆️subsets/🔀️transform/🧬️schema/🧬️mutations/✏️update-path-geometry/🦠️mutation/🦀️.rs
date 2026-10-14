@@ -1,6 +1,7 @@
 //! ✏️ Atomic semantic replacement of one path's geometry, preserving its identity and appearance.
-use crate::{DrawingSnapshot, PathSegment};
-use crate::mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::PathSegment;
+
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
@@ -13,13 +14,13 @@ pub struct UpdatePathGeometry {
     #[dsl(statements, block)]
     pub segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>,
 }
-pub fn update_path_geometry(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> DrawingMutation {
-    DrawingMutation::UpdatePathGeometry(UpdatePathGeometry { layer_id, segments })
+pub fn update_path_geometry<Op: From<UpdatePathGeometry>>(layer_id: semio_framework_value::paged::PagedUtf8<{usize::MAX}>, segments: semio_framework_value::list::PagedList<PathSegment, {usize::MAX}>) -> Op {
+    Op::from(UpdatePathGeometry { layer_id, segments })
 }
-impl protocol::MutationKind<DrawingSnapshot, DrawingMutation> for UpdatePathGeometry {
+impl<Op> protocol::MutationKind<DrawingSnapshot, Op> for UpdatePathGeometry where Op: protocol::Mutation<DrawingSnapshot, Diff = semio_s_artifact_draw_drawing_diff::DrawingDiff> + From<UpdatePathGeometry> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "path", kind: "update-path-geometry", record: "UpdatedPathGeometry" };
-    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<crate::diff::DrawingDiff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<DrawingMutation>, semio_framework_value::ValueError> {
+    fn diff(&self, base: &DrawingSnapshot) -> protocol::MutationOutcome<semio_s_artifact_draw_drawing_diff::DrawingDiff> { super::diff::diff(self, base) }
+    fn inverse(&self, base: &DrawingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Edit path", "Pfad bearbeiten") }

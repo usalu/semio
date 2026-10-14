@@ -7,7 +7,6 @@ use store::{os_store::serialization::ArtifactSqliteSnapshotHost, sqlite_snapshot
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
-
 const DOCUMENT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(3), FloatColumn::Binary64(4), FloatColumn::Binary64(7), FloatColumn::Binary64(10), FloatColumn::Binary64(11), FloatColumn::Binary64(13), FloatColumn::Binary64(14), FloatColumn::Binary64(15), FloatColumn::Binary64(16), FloatColumn::Binary64(17), FloatColumn::Binary64(18), FloatColumn::Binary64(19), FloatColumn::Binary64(20), FloatColumn::Binary64(23), FloatColumn::Binary64(27), FloatColumn::Binary64(28), FloatColumn::Binary64(29), FloatColumn::Binary64(30), FloatColumn::Binary64(31), FloatColumn::Binary64(32), FloatColumn::Binary64(33), FloatColumn::Binary64(35), FloatColumn::Binary64(36), FloatColumn::Binary64(38), FloatColumn::Binary64(41), FloatColumn::Binary64(42), FloatColumn::Binary64(43), FloatColumn::Binary64(44), FloatColumn::Binary64(45), FloatColumn::Binary64(46), FloatColumn::Binary64(47), FloatColumn::Binary64(48), FloatColumn::Binary64(53), FloatColumn::Binary64(54), FloatColumn::Binary64(55), FloatColumn::Binary64(58), FloatColumn::Binary64(59), FloatColumn::Binary64(60), FloatColumn::Binary64(61), FloatColumn::Binary64(62), FloatColumn::Binary64(63), FloatColumn::Binary64(64), FloatColumn::Binary64(65)];
 const FLOOR_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(5), FloatColumn::Binary64(6), FloatColumn::Binary64(7), FloatColumn::Binary64(8)];
 const SELF_WEIGHT_FLOATS: &[FloatColumn] = &[FloatColumn::Binary64(5), FloatColumn::Binary64(6)];
@@ -54,7 +53,6 @@ fn ordinal(value: usize) -> Result<Cell<'static>, ValueError> { Ok(Cell::Integer
 fn flag(value: bool) -> Cell<'static> { Cell::Integer(i64::from(value)) }
 fn read_flag(row: FloatRow<'_>, column: usize) -> Result<bool, ValueError> { match row.integer(column)? { 0 => Ok(false), 1 => Ok(true), _ => Err(invalid("EN1991 boolean requires exactly zero or one")) } }
 fn read_u8(row: FloatRow<'_>, column: usize) -> Result<u8, ValueError> { u8::try_from(row.integer(column)?).map_err(|error| invalid(error.to_string())) }
-
 
 impl En1991Snapshot {
     fn write_sqlite_rows(&self, out: &mut RowWriter<'_,'_>) -> Result<(), ValueError> {

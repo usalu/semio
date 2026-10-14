@@ -1,7 +1,7 @@
 use super::*;
 use crate::arena::ArenaId;
-use crate::vector::matrix::Frame3;
-use crate::vector::Vec3;
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::Vec3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn null_coedge() -> CoedgeId {

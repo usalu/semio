@@ -9,7 +9,7 @@ use super::frames::{ccw, profile_top};
 use super::writer::{en, V};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
-use crate::{Axis, Profile, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Profile, Vertex};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored column record of a tilted column.
 pub const COLUMN_ROW: &str = "Column";
@@ -36,7 +36,7 @@ fn associate(x: &mut Export<'_>, material: &str, element: u64) {
     }
 }
 
-fn column(x: &mut Export<'_>, id: &str, row: &crate::Column) {
+fn column(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Column) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.column_types.get(&row.column_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("column", id, "its storey, type or inferred solid is missing");
@@ -63,7 +63,7 @@ fn column(x: &mut Export<'_>, id: &str, row: &crate::Column) {
     let solid = match leaning {
         None => x.ifc.extrusion(section, x.ifc.origin, [0.0, 0.0, 1.0], height),
         Some(tilt) => {
-            let ring: Vec<Vertex> = footprint(row, &kind.profile, base, base).iter().map(|p| Vertex { point: crate::Point2 { x: p.x - row.position.x, y: p.y - row.position.y }, bulge: 0.0 }).collect();
+            let ring: Vec<Vertex> = footprint(row, &kind.profile, base, base).iter().map(|p| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x: p.x - row.position.x, y: p.y - row.position.y }, bulge: 0.0 }).collect();
             if ring.len() < 3 {
                 x.skip("column", id, "its tilted section is not a polygon");
                 return;
@@ -90,7 +90,7 @@ fn column(x: &mut Export<'_>, id: &str, row: &crate::Column) {
     x.quantify(element, "Qto_ColumnBaseQuantities", id, |row| vec![Quantity::Length("Length", row.length), Quantity::Area("CrossSectionArea", row.gross_area), Quantity::Volume("GrossVolume", row.gross_volume), Quantity::Volume("NetVolume", row.net_volume)]);
 }
 
-fn beam(x: &mut Export<'_>, id: &str, row: &crate::Beam) {
+fn beam(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Beam) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.beam_types.get(&row.beam_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("beam", id, "its storey, type or inferred solid is missing");

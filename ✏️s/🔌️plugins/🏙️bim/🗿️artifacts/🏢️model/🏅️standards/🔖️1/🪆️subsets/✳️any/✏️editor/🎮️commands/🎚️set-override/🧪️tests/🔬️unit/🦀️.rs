@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::bim::entities::components::tests::placed;
 use crate::editor::bim::unit_tests::support::{applied, ctx, run};
-use crate::ComponentOverride;
+use crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
 
 fn call(snapshot: &ModelSnapshot, name: &str, value: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {
     let mut ctx = ctx(&[]);
@@ -59,5 +59,5 @@ async fn a_formula_naming_an_unknown_parameter_parses_here_and_is_refused_by_the
     let snapshot = placed();
     let emit = call(&snapshot, "width", "nothing * 2").expect("it parses");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("one mutation") };
-    assert!(crate::mutations::apply_model_mutation(&snapshot, mutation).is_err(), "the mutation knows the family and refuses the unknown name");
+    assert!(crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, mutation).is_err(), "the mutation knows the family and refuses the unknown name");
 }

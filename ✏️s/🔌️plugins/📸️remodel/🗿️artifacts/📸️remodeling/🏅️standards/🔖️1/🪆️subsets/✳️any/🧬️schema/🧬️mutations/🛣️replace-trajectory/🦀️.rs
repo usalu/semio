@@ -1,9 +1,9 @@
 //! 🔁 Remodeling mutation — `ReplaceTrajectory`: whole-value swap of `ReconstructionResults.trajectory`, a large
 //! structured sub-payload swapped wholesale by the reconstruction engine or a clear/reset command.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{CameraTrajectory, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -23,17 +23,20 @@ pub struct ReplaceTrajectory {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_trajectory(trajectory: Option<CameraTrajectory>) -> RemodelingMutation {
-    RemodelingMutation::ReplaceTrajectory(ReplaceTrajectory { trajectory })
+pub fn replace_trajectory<Op: From<ReplaceTrajectory>>(trajectory: Option<CameraTrajectory>) -> Op {
+    Op::from(ReplaceTrajectory { trajectory })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceTrajectory {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ReplaceTrajectory
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ReplaceTrajectory>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "trajectory", kind: "replace-trajectory", record: "ReplacedTrajectory" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

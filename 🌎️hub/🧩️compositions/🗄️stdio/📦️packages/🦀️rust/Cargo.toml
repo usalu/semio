@@ -80,8 +80,10 @@ semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-ifc = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dwg-editor = { workspace = true }
+semio-s-artifact-stdio-dwg-editor-ac1018 = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+semio-s-artifact-stdio-dwg-mutations = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }

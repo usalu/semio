@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/os-pack-rs",
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:os-pack"
+  ]
+}

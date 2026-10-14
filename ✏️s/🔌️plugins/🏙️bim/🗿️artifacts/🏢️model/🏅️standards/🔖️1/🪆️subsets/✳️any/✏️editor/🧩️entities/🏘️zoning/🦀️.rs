@@ -3,8 +3,8 @@
 
 use super::{number, parse_number, parse_text, partial, rename_element, variant, Created, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
-use crate::mutations::set_space::SetSpace;
-use crate::{AreaMeasure, AreaScheme, Assigned, ModelInference, ModelMutation, ModelSnapshot, SpacePatch, Zone};
+use crate::standards::v1::subsets::any::schema::mutations::set_space::SetSpace;
+use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, diff::{Assigned, patches::SpacePatch}, inferences::ModelInference, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 pub use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
@@ -75,14 +75,14 @@ fn distinct(items: Vec<String>) -> Vec<String> {
 
 /// 🗃️ The mutation that sets the usages an area scheme counts to the comma separated list a text holds (duplicates dropped, empty counts every usage).
 pub fn write_scheme_usages(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    partial::<crate::mutations::set_area_scheme::SetAreaScheme, _>(id, "usages", &distinct(list(value))).map(ModelMutation::SetAreaScheme)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "usages", &distinct(list(value))).map(ModelMutation::SetAreaScheme)
 }
 
 /// 🗃️ The mutation that sets the zones an area scheme counts to the comma separated zone ids or zone names a text holds; a token that names no zone refuses the whole edit.
 pub fn write_scheme_zones(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
     let resolve = |token: String| snapshot.zones.get(&token).map(|_| token.clone()).or_else(|| snapshot.zones.iter().find(|(_, zone)| zone.name.to_lowercase() == token.to_lowercase()).map(|(zone, _)| zone.clone()));
     let zones = list(value).into_iter().map(resolve).collect::<Option<Vec<String>>>()?;
-    partial::<crate::mutations::set_area_scheme::SetAreaScheme, _>(id, "zones", &distinct(zones)).map(ModelMutation::SetAreaScheme)
+    partial::<crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme, _>(id, "zones", &distinct(zones)).map(ModelMutation::SetAreaScheme)
 }
 //#endregion 🔖️Writes
 
@@ -151,12 +151,12 @@ pub static AREA_SCHEME_INFERRED: &[InferredRow] = &[
 //#region 🔖️Create
 /// 🏘️ A new zone: named, with no category and no occupancy.
 pub fn create_zone(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateZone(crate::mutations::create_zone::CreateZone { id: id.into(), zone: Zone { name: name.into(), category: String::new(), occupancy_density: 0.0 } }))
+    Ok(ModelMutation::CreateZone(crate::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone { id: id.into(), zone: Zone { name: name.into(), category: String::new(), occupancy_density: 0.0 } }))
 }
 
 /// 🗃️ A new area scheme: a net area counting every space.
 pub fn create_area_scheme(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateAreaScheme(crate::mutations::create_area_scheme::CreateAreaScheme { id: id.into(), area_scheme: AreaScheme { name: name.into(), measure: AreaMeasure::Net, usages: Vec::new(), zones: Vec::new() } }))
+    Ok(ModelMutation::CreateAreaScheme(crate::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme { id: id.into(), area_scheme: AreaScheme { name: name.into(), measure: AreaMeasure::Net, usages: Vec::new(), zones: Vec::new() } }))
 }
 //#endregion 🔖️Create
 

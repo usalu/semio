@@ -1,7 +1,7 @@
 //! 📛️ Direct rename payload and behavior for the miniature registry fixture.
 
 use super::super::{MiniDiff, MiniDoc, MiniMutation};
-use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor};
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🧬️Payload
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::MutationLeaf, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

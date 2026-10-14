@@ -1,6 +1,6 @@
-use super::ChangeSelectedCheckIndex;
-use crate::results_window_config::diff::{NormResultsWindowConfigDiff, SelectedCheck};
-use crate::results_window_config::NormResultsWindowConfig;
+use crate::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
+use crate::diff::{NormResultsWindowConfigDiff, SelectedCheck};
+use crate::schema::NormResultsWindowConfig;
 
 pub fn diff(payload: &ChangeSelectedCheckIndex, base: &NormResultsWindowConfig) -> protocol::MutationOutcome<NormResultsWindowConfigDiff> {
     if base.selected_check_index == payload.index {

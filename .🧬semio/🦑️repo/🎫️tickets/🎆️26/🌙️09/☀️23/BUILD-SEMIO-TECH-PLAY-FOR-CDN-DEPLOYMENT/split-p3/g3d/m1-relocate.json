@@ -1,0 +1,116 @@
+{
+ "base": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+ "steps": [
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "text": "use crate::widget_id;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "after": "use ::semio_framework_schema::ArtifactSchema;\n",
+   "text": "use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "start": "//#region 🧭️GraphEditor",
+   "end": "//#endregion 🧭️GraphEditor"
+  },
+  {
+   "op": "delete",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "text": "//#region 🧪️Tests\n#[cfg(test)]\n#[path = \"🧪️tests/🧭️graph-editor/🦀️.rs\"]\nmod graph_editor_tests;\n//#endregion 🧪️Tests\n"
+  },
+  {
+   "op": "insert",
+   "file": "🦀️.rs",
+   "after": "#[path = \"🧪️tests/🔬️publication-authority/🦀️.rs\"]\npub(crate) mod publication_authority;\n",
+   "text": "\n#[cfg(test)]\n#[path = \"🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧭️graph-editor/🦀️.rs\"]\nmod graph_editor_tests;\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🦀️.rs",
+   "start": "pub fn split_endpoint(endpoint: &str)",
+   "end": "    (nodes, edges)\n}"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🦀️.rs",
+   "start": "//#region 🔖️GumballTransforms",
+   "end": "//#endregion 🔖️GumballTransforms"
+  },
+  {
+   "op": "move",
+   "from": "🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "start": "pub const GENERATION_3D_SCHEMA: &str",
+   "end": "//#endregion 🔖️ArtifactKind",
+   "before": "//#region 🔁️Re-exports"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "use semio_framework_artifact_flow_flow::Widget;\n"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};\n"
+  },
+  {
+   "op": "insert",
+   "file": "🦀️.rs",
+   "after": "pub(crate) use semantic_ui::*;\n",
+   "text": "pub use crate::standards::v1::subsets::any::schema::{GENERATION_3D_SCHEMA, GENERATION3D_DIALECT, widget_id, widget_previews, GENERATION3D_CHILD_PROJECTION, GENERATION3D_IO_EXPORT, GENERATION3D_IO_IMPORT_ACCEPT, GENERATION3D_WIDGET_ADD, generation3d_document_fault_notices, artifact_kind};\n"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🦀️.rs",
+   "start": "/// 🧭️ Maps a gumball drag operation",
+   "end": "    Ok(transform_id)\n}"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🦀️.rs",
+   "start": "/// 🔎️ Projects the live widget at the gumball IO boundary.",
+   "end": "semio_framework_value::ToValue::to_value)\n}"
+  },
+  {
+   "op": "move",
+   "from": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+   "to": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "start": "impl crate::standards::v1::subsets::any::schema::GraphEditor<'_> {",
+   "end": "        self.add_widget(&descriptor, x, y)\n    }\n}"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/🦀️.rs",
+   "after": "use crate::standards::v1::subsets::any::io::text::snapshot::{ensure_gumball_node};\n",
+   "text": "use crate::standards::v1::subsets::any::io::text::snapshot::widget_id_from_instance_id;\nuse crate::widget_id;\nuse semio_framework_value::DslValue;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "after": "use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};\n",
+   "text": "use semio_framework_artifact_flow_flow::Widget;\nuse semio_framework_os_flow::FlowHost;\n"
+  },
+  {
+   "op": "delete",
+   "file": "🦀️.rs",
+   "text": "#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod tests;\n"
+  },
+  {
+   "op": "insert",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "after": "//#endregion 🔖️ArtifactKind\n",
+   "text": "\n#[cfg(test)]\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\nmod tests;\n"
+  }
+ ]
+}

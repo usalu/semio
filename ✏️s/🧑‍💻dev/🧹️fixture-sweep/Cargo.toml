@@ -58,6 +58,9 @@ path = "../../🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️pack
 [workspace.dependencies.semio-s-artifact-cad-cad]
 path = "../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-cad-cad-model]
+path = "../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-dag-dag]
 path = "../../🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust"
 
@@ -186,6 +189,9 @@ path = "../../🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packa
 
 [workspace.dependencies.semio-s-artifact-writer-writer]
 path = "../../🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-procedural-3d-model]
+path = "../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

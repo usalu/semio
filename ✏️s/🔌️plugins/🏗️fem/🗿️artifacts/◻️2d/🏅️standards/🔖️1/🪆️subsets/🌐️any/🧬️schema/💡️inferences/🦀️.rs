@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`).
 
 use super::bounds::compute_fem2d_bounds;
-use crate::Fem2dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference

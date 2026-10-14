@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-stdio-dwg-sqlite-objects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dwg SQLite object projections"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-schema-state = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot-objects = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

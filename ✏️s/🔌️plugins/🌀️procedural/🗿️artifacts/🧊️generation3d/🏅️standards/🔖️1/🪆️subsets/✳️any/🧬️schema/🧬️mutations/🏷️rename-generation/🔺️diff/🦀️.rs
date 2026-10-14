@@ -1,9 +1,12 @@
 //! 🔺️ `rename-generation` sparse diff construction. `FormGeneration.name` is a plain display
 //! label, not a key (`id` is the only key), so no name-collision Fatal check applies here.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationPatch, Generation3dGenerationModification, Generation3dGenerationsDelta};
-use crate::standards::v1::subsets::any::schema::mutations::rename_generation::RenameGeneration;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationModification;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationsDelta;
+use crate::rename_generation::RenameGeneration;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 pub fn diff(payload: &RenameGeneration, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let Some(existing) = base.generation.generations.iter().find(|entry| entry.id == payload.id) else {

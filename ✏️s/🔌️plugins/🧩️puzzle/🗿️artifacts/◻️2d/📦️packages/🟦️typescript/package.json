@@ -10,8 +10,5 @@
   "dependencies": {
     "@semio-tech/framework-renderer-react": "workspace:*"
   },
-  "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  }
+  "bundleKind": "library"
 }

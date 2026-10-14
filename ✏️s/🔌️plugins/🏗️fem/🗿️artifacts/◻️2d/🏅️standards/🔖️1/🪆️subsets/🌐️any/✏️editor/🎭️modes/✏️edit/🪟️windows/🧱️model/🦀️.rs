@@ -10,8 +10,13 @@ pub mod config;
 /// 🔺️ Region mesh element identity, screen coordinates and node identities.
 pub(crate) type Fem2dRegionMeshTriangle = (String, [(f64, f64); 3], [String; 3]);
 
-use crate::model::Dof;
-use crate::{element_id, Fem2dSnapshot, Viewport2d, FemDof, FemElement, FemLoad};
+use semio_s_fem_model::Dof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::element_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 #[cfg(test)]
 use semio_framework_ui_scene::canvas2d_snapshot_with_page;
@@ -979,7 +984,7 @@ pub(crate) fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-pub(crate) fn find_node_2d<'a>(nodes: &'a [crate::FemNode], id: &str) -> Option<&'a crate::FemNode> {
+pub(crate) fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
@@ -1088,7 +1093,7 @@ fn emphasis_ring_layer(id: &str, center: (f64, f64), radius: f64, color: &str, s
 /// 🎯️ A stroked emphasis path over a member axis, a region outline or a load arrow — a `segments`
 /// layer because only that shape honours an explicit `stroke.width`.
 fn emphasis_path_layer(id: &str, points: &[(f64, f64)], close: bool, color: &str, width: f64) -> semio_framework_pack_json::Value {
-    let (r, g, b) = crate::app_surface::hex_to_rgb01(color);
+    let (r, g, b) = semio_s_fem_app_surface::hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (index, &(x, y)) in points.iter().enumerate() {
         segments.push(if index == 0 { semio_framework_pack_json::json!({ "kind": "move", "to": [x, y] }) } else { semio_framework_pack_json::json!({ "kind": "line", "to": [x, y] }) });
@@ -1159,7 +1164,7 @@ pub(crate) fn fem2d_structure_layers_with(doc: &Fem2dSnapshot, node_color: &str,
 /// mesh failure for one region silently yields fewer triangles rather than failing the whole render.
 pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
-    let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
+    let Ok(meshes) = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
         for (tri_index, tri) in mesh.tris.iter().enumerate() {
             let id = format!("{}_t{}", mesh.region_id, tri_index);
@@ -1177,7 +1182,7 @@ pub(crate) fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64,
 /// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
 pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<Fem2dRegionMeshTriangle> {
     let mut out = Vec::new();
-    let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
+    let Ok(meshes) = semio_s_artifact_fem_2d_engine::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
         for (tri_index, tri) in mesh.tris.iter().enumerate() {
             let id = format!("{}_t{}", mesh.region_id, tri_index);
@@ -1230,7 +1235,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &Viewport2d) -> semio_framework_plugi
         }));
     }
     let layers_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(layers));
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
 /// 👁️ Renders the document's own structure (nodes, members, supports, loads — a projection of the
@@ -1248,7 +1253,7 @@ pub fn render_with_progress(
     let layers = fem2d_structure_layers_with(doc, "#38bdf8", "#94a3b8", "#f97316", interaction);
     let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
     let layers_json = crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta);
-    crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
+    semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: progress.map(Fem2dMountedVisualLease::snapshot), tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render
 

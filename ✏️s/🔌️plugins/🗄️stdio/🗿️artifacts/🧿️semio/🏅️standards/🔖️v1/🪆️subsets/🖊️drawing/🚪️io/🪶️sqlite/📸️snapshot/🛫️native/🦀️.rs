@@ -1,7 +1,10 @@
 //! 🖊️ Emits typed drawing scene nodes, path commands, colors and optional fields under cumulative admission.
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioTransform, SemioRgba};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawNode, PathSegment, SemioPoint2};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
 pub(crate) fn encode(value:&SemioDrawingSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.drawing.dsl v1\n","stdio.semio.drawing.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}

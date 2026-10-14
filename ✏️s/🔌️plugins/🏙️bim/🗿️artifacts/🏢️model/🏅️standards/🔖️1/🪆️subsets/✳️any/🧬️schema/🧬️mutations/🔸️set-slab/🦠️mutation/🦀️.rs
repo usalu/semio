@@ -1,6 +1,6 @@
 //! 🔸️ `set-slab` payload. Sets exactly the provided fields of a slab: type, offset, slope (set or cleared) and name; absent fields stay untouched.
 
-use crate::{Assigned, ModelDiff, ModelMutation, ModelSnapshot, Slope};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Slope}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

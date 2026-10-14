@@ -6,7 +6,7 @@ use crate::editor::bim::entities::{fields_of, kind_of, ordered_storeys, EntityKi
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use semio_framework_plugin::Buildable;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::HasBase;
@@ -141,7 +141,7 @@ fn movable_item(builder: semio_framework_ui_contract::TreeItemBuilder, labels: &
 fn sheet_children(snapshot: &ModelSnapshot, sheet: &str) -> Vec<(&'static EntityKind, String)> {
     let (Some(viewport), Some(revision)) = (kind_of("viewport"), kind_of("sheet-revision")) else { return Vec::new() };
     let viewports = snapshot.viewports.iter().filter(|(_, row)| row.sheet == sheet).map(|(id, _)| (viewport, id.clone()));
-    let revisions = crate::revisions_of(snapshot, sheet).into_iter().map(|(id, _)| (revision, id.clone()));
+    let revisions = crate::standards::v1::subsets::any::schema::snapshot::revisions_of(snapshot, sheet).into_iter().map(|(id, _)| (revision, id.clone()));
     viewports.chain(revisions).collect()
 }
 

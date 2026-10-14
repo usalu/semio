@@ -9,7 +9,7 @@ fn svg_transform_fixtures_retain_editable_affines() {
         let before=operations.clone();
         assert_eq!(result,super::editable_svg_transform_operations(&operations));
         assert_eq!(operations,before);
-        let matrix=crate::schema::drawing_transform_to_matrix(&result.unwrap());
+        let matrix=semio_s_artifact_draw_drawing_model::affine::drawing_transform_to_matrix(&result.unwrap());
         for (actual,expected) in matrix.iter().zip(case["matrix"].as_array().unwrap()) {assert!((actual-expected.as_f64().unwrap()).abs()<1e-10,"{}",case["name"]);}
     }
     eprintln!("[DEBUG] native SVG decoded transform operations preserve exact neutral matrices and immutable inputs");

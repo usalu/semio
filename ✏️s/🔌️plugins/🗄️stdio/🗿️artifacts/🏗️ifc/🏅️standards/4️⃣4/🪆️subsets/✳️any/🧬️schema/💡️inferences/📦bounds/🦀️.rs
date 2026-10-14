@@ -8,8 +8,8 @@
 //! uses for honestly-2D placements. A pure whole-snapshot scalar (one min/max fold) — no
 //! `InferredField` needed.
 
-use crate::schema::snapshot::IfcValue;
-use crate::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ IFC4's `IFCCARTESIANPOINT`-derived spatial bounding box.

@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "version": 1,
+      "live": true,
+      "accepted": true
+    },
+    {
+      "version": 1,
+      "live": false,
+      "accepted": false
+    },
+    {
+      "version": 2,
+      "live": true,
+      "accepted": false
+    },
+    {
+      "version": 1,
+      "live": "true",
+      "accepted": false
+    }
+  ]
+}

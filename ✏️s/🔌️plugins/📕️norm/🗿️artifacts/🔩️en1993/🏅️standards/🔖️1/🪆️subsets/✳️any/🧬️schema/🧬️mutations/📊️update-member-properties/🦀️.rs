@@ -1,6 +1,6 @@
 //! `upsert-member` — upsert a `SteelMember` by id into `members`.
 
-use crate::{SteelMember, En1993Mutation, En1993Snapshot};
+use semio_s_artifact_norm_en1993_model::{SteelMember, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,15 +13,15 @@ pub struct UpdateMemberProperties {
     pub member: SteelMember,
 }
 
-impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProperties {
+impl<Op> protocol::MutationKind<En1993Snapshot, Op> for UpdateMemberProperties where Op: protocol::Mutation<En1993Snapshot, Diff = semio_s_artifact_norm_en1993_diff::En1993Diff> + From<crate::update_member_properties::UpdateMemberProperties> + From<crate::remove_member::RemoveMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "member", kind: "update-member-properties", record: "UpdatedMember" };
 
-    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
-        super::diff::diff(self, base)
+    fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<Op as protocol::Mutation<En1993Snapshot>>::Diff> {
+        crate::update_member_properties::diff::diff(self, base)
     }
-    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<En1993Mutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::update_member_properties::inverse::inverse(self, base)?
     
     })
 }
@@ -36,3 +36,10 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProp
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

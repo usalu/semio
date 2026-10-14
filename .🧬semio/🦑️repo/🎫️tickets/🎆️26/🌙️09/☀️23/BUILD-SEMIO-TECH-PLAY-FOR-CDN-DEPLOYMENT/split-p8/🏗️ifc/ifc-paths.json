@@ -1,0 +1,40 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🦀️.rs",
+ "crate": "semio_s_artifact_stdio_ifc",
+ "barrels": {
+  "": [
+   "standards::v4::subsets::any::schema::snapshot",
+   "standards::v4::subsets::any::schema::diff",
+   "standards::v4::subsets::any::schema::mutations",
+   "standards::v4::subsets::any::schema",
+   "standards::v2x3::subsets::base::io",
+   "standards::v2x3::subsets::cv20::io",
+   "standards::v2x3::subsets::sav::io"
+  ],
+  "schema": [
+   "standards::v4::subsets::any::schema"
+  ],
+  "engine": [
+   "standards::v4::subsets::any::io",
+   "standards::v4::subsets::any::schema"
+  ],
+  "standards::v4::engine": [
+   "standards::v4::subsets::any::io",
+   "standards::v4::subsets::any::schema"
+  ],
+  "standards::v2x3::engine": [
+   "standards::v2x3::subsets::base::io",
+   "standards::v2x3::subsets::base::schema"
+  ]
+ },
+ "aliases": {
+  "semio_s_artifact_stdio_contract": [
+   "apply_mutation_checked",
+   "mutation_from_payload_json",
+   "mutation_inverse",
+   "mutation_payload_json",
+   "MutationRefusal",
+   "part21"
+  ]
+ }
+}

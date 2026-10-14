@@ -1,4 +1,4 @@
-import { observedFs } from "../../../../../🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
+import { observedFs } from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🟨️.mjs";
 import { isAbsolute, relative, resolve } from "node:path";
 
 const { readFileSync, realpathSync } = observedFs;

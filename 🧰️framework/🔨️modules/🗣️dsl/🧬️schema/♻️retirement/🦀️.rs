@@ -54,10 +54,10 @@ impl RetireOwned for RecordSpec{
     fn controlled_retirement_supported()->bool{true}
 }
 /// 📋️ Retains the original writer planning buffer until its physical backing is admitted.
-pub(super) struct RecordPlanningRetirement<T:Copy+Send+'static>(std::mem::ManuallyDrop<Vec<T>>);
+pub struct RecordPlanningRetirement<T:Copy+Send+'static>(std::mem::ManuallyDrop<Vec<T>>);
 impl<T:Copy+Send+'static> RecordPlanningRetirement<T> {
-    pub(super) fn new(indices:Vec<T>)->Box<dyn RetirementCursor>{Box::new(Self(std::mem::ManuallyDrop::new(indices)))}
-    pub(super) const fn birth_bytes()->usize{size_of::<Self>()}
+    pub fn new(indices:Vec<T>)->Box<dyn RetirementCursor>{Box::new(Self(std::mem::ManuallyDrop::new(indices)))}
+    pub const fn birth_bytes()->usize{size_of::<Self>()}
 }
 impl<T:Copy+Send+'static> RetirementCursor for RecordPlanningRetirement<T> {
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{

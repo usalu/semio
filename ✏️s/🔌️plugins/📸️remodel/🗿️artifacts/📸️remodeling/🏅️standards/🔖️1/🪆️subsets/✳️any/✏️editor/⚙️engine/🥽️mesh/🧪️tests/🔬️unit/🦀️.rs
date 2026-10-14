@@ -1,4 +1,4 @@
-use crate::editor::remodeling::engine::step_ceiling;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 fn lcg_next(state: &mut u64) -> f64 {
@@ -15,9 +15,9 @@ fn look_at_pose(eye: [f64; 3], target: [f64; 3]) -> remodeling_camera::CameraPos
     let world_up = if forward[1].abs() > 0.95 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
     let right = normalize3(cross3(forward, world_up));
     let up = cross3(right, forward);
-    let rotation = crate::algebra::Mat3d::from_axes(right, up, forward).transpose();
+    let rotation = semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d::from_axes(right, up, forward).transpose();
     let translation = scale3(rotation.mul_vec3(eye), -1.0);
-    remodeling_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(rotation), t: translation })
+    remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3(rotation), t: translation })
 }
 
 fn checkerboard_image(width: u32, height: u32, cell: u32) -> remodeling_image::ImageRgba8 {
@@ -744,7 +744,7 @@ fn image_gradient_magnitude_detects_vertical_edge() {
 #[test]
 fn face_projected_area_none_behind_camera_some_in_front() {
     let intr = intrinsics_for(64, 64);
-    let identity_pose = remodeling_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
+    let identity_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3 { r: semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::So3(semio_s_artifact_remodel_remodeling_algebra::standards::v1::subsets::any::schema::algebra_internals::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
     let behind = TriMesh { positions: vec![[-0.1, -0.1, -1.0], [0.1, -0.1, -1.0], [0.0, 0.1, -1.0]], triangles: vec![[0, 1, 2]] };
     assert!(face_projected_area(&behind, 0, &intr, &identity_pose).is_none());
     let front = TriMesh { positions: vec![[-0.1, -0.1, 2.0], [0.1, -0.1, 2.0], [0.0, 0.1, 2.0]], triangles: vec![[0, 1, 2]] };

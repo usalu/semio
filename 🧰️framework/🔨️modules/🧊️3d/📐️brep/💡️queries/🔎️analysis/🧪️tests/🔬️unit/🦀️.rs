@@ -1,12 +1,12 @@
 use super::*;
 use semio_framework_3d_brep_operations::primitives::{make_box, make_cone, make_cylinder, make_sphere, make_torus};
-use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_curve::bspline::KnotVector;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Shell;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🔎️analysis/🔣️.json");

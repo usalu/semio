@@ -129,6 +129,12 @@ features = [ "derive" ]
 version = "1.0.149"
 features = [ "raw_value" ]
 
+[workspace.dependencies.semio-s-procedural-core-semantic-ui]
+path = "../../🫀️core/🖼️semantic-ui/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-procedural-core-generation-sqlite]
+path = "../../🫀️core/🧬️generation/🪶️sqlite/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

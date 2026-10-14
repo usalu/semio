@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Actor Semantic Loan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "input",
+    "loan",
+    "spent",
+    "workUnitsSpent",
+    "remainingLoan",
+    "totalRemainingWork",
+    "rawLoanWorkRefused",
+    "words"
+  ],
+  "properties": {
+    "contract": {
+      "const": "actor.original-semantic-loan/v1"
+    },
+    "input": {
+      "const": {
+        "operation": 71,
+        "generation": 3,
+        "epoch": 19,
+        "work": {
+          "clockBinding": 711,
+          "absoluteDeadlineUs": 1500,
+          "fuel": 128
+        },
+        "grant": {
+          "maximumItems": 32,
+          "maximumCopyBytes": 4096,
+          "maximumCapacityBytes": 4096,
+          "maximumReleaseBytes": 4096,
+          "maximumDepth": 256
+        }
+      }
+    },
+    "loan": {
+      "const": {
+        "retainedPolicy": {
+          "maximumItems": 16,
+          "maximumCopyBytes": 1024,
+          "maximumCapacityBytes": 512,
+          "maximumReleaseBytes": 1024,
+          "maximumDepth": 64
+        },
+        "workFuel": 48,
+        "deadlineUs": 1300
+      }
+    },
+    "spent": {
+      "const": {
+        "copiedItems": 3,
+        "copiedBytes": 73,
+        "retainedCapacityBytes": 83,
+        "releasedBytes": 19
+      }
+    },
+    "workUnitsSpent": {
+      "const": 7
+    },
+    "remainingLoan": {
+      "const": {
+        "retainedPolicy": {
+          "maximumItems": 13,
+          "maximumCopyBytes": 951,
+          "maximumCapacityBytes": 429,
+          "maximumReleaseBytes": 1005,
+          "maximumDepth": 64
+        },
+        "workFuel": 41,
+        "deadlineUs": 1300
+      }
+    },
+    "totalRemainingWork": {
+      "const": 121
+    },
+    "rawLoanWorkRefused": {
+      "const": 49
+    },
+    "words": {
+      "const": 7
+    }
+  }
+}

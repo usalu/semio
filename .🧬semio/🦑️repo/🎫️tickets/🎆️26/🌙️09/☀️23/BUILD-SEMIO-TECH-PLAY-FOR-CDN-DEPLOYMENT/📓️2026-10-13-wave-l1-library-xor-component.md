@@ -21,7 +21,7 @@ Rules kept:
 | Nx detection | `metadata.component` lives only on component crates. `componentBuildTargets` now refuses any component crate that is not cdylib-only. Measured graph: 71 `component` targets, all on `🧩️component` crates (70 plugin/extension components + the host test fixture); **0 on libraries**. Playground site targets (156, one per playground row) moved with the playground rows to the component projects. |
 | Generators | The stdio composition generator (`🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🟦️.ts`) emits the 10 stdio component roots and publishes the playground regions into the component manifests; a second run changes 0 files. |
 | Taxonomy | New kinds `component-crate` (🧩️ `^component$`, scoped to the owner kinds that carry a component facet) and `hub-compositions` (🧩️ `^compositions$` under `hub`), plus the registry `members-of-hub-compositions` (35 owners). 76 of 78 new facets resolve to `component-crate`; 0 of the 62 existing `🧩️component` directories change kind (§4). |
-| G2 (L5 gate) | Added to `os-hub:unit-census-check`: `cargoNonComponentCdylibsV1` over the unit graphs plus a `cargo metadata` oracle. Live run: **0 non-component cdylibs**, 467 keys / 467 units at both profiles, no feature variance. |
+| G2 (L5 gate) | Added to `os-hub:unit-census-check`: `cargoNonComponentCdylibsV1` over the unit graphs plus a `cargo metadata` oracle. Live run: **0 non-component cdylibs**, 467 keys / 467 units at both profiles, no feature variance (2026-10-13), and 511 / 511 again on 2026-10-14. |
 | L4 | 79 component crates: longest package name 46 (`semio-s-spatial-kernel-semio-session-component`), longest source path 193 UTF-16 units, worst-case uplifted path 233 (≤ 240). |
 
 ## 2. Design
@@ -98,7 +98,42 @@ Measured with `l1-library-xor-component/🔎️component-kind-impact.ts` against
 
 ## 5. Verification
 
-VERIFICATION_PLACEHOLDER
+Every row below was run. "13th" rows ran on 2026-10-13 right after the codemods; "14th" rows re-ran on 2026-10-14 against the tree after about 24 h of peer work.
+
+| Check | When | Result |
+|---|---|---|
+| `os-hub:unit-census-check` (`bun test 🌎️hub/🧪️tests/🌳️unit-census/🟦️.ts`, private dirs, slot-gated) | 14th | **3 pass / 0 fail, 148 expects.** 511 unit keys = 511 compile units at `wasm-prototype` and at `wasm-release`, feature variance in none, G2 (`cargoNonComponentCdylibsV1` + `cargo metadata` oracle): 0 non-component cdylibs. On the 13th: 467 / 467. |
+| Hub lockfile | 14th | The census first refused `--locked`: the Codex fleet and the owned-runtime lane had added first-party crates (fonts, `icon-contract`, `ui-*`, `os-store-*`, `plugin-guest-contract`, `plugin-interpreter-runtime`, …) without resyncing `🌎️hub/Cargo.lock`. Resynced offline with `cargo metadata --offline` three times; each diff had 0 `registry`/`checksum` lines, so no third-party version moved. |
+| Hub workspace `cargo check --target wasm32-wasip2 --keep-going` | 13th | rc 0, 405 units. |
+| Same | 14th | **Blocked upstream of every hub crate**: 7 framework crates fail, none from this wave: `semio-framework-ui-theme`, `-ui-layout`, `-os-pack`, `-os-command`, `-os-store-message-ledger` (new Codex crates with missing dependencies such as `serde_json`, `ui_contract`, `ToValue`), `-canvas` (foreign impl after `IconName` moved to `icon-contract`) and `-job` (borrow error in a file edited at 16:01). 154 units checked, 0 `semio-hub-*` reached. The Codex report says these leaves are not compiler-qualified yet. |
+| Hub workspace native check | 13th | rc 0 right after the codemod. Later runs on the 13th were red only in peer in-flight crates (`os-kernel` store seams, `plugin-host` owned-runtime split, artifact `host/owned` traits). |
+| nx graph | 13th | 71 `component` targets, all on `🧩️component` crates, 0 on libraries; 156 playground site targets on component projects. |
+| Registry source discovery | 13th | 70 components found in their facets. |
+| Hub compositions ownership law | 13th | 32 pass (component crate cdylib-only + rlib library). |
+| Stdio production-preparation, distribution output, wasm-build (cwd = component dir) | 13th | 2, 1 and 9 pass. |
+| Stdio composition generator | 13th | Second run changes 0 files. |
+| Editor browser module through its component crate | 13th | wasm-bindgen exports survive the `extern crate … as _;` root (3,699 exports). Framework module components and the spatial session component: `cargo check --target wasm32-unknown-unknown` rc 0. |
+| L4 budget (`📏️path-budget.ts`) | 13th | 79 component crates, longest name 46, longest source path 193, worst uplifted path 233. Each component crate is one source file of one line, far below the new 4,000-line / 262,144-byte / 32-file admission ceiling. |
+| Taxonomy impact | 13th | 76/78 facets admitted as `component-crate`, 0 existing directories re-classified. |
+
+Not completed. Each was attempted, and each was blocked by peer breakage, not by this wave:
+
+- `cargo test -p semio-hub-stdio --test editor_catalog --test shipped_fleet`: on the 13th the build reached the stdio crates once, then hit a rustc ICE (exit 101 under `-Z threads=8`), then the `os-kernel` store and plugin crate broke mid-edit (8 retries, 16:11–16:37). The run on the 13th (lane-c split, before L1) was 177/177.
+- Plugin manifest sweep (`🔎️manifest-sweep.py`): 4 of 320 rows ran before the same breakage.
+- Small `workspace:release` driver run (`📜️script.ts demo note stdio-binary stdio-media imperative-extension-math`): the cold chunk compiled 131 units in a private generation. The resume then failed in `os-kernel`. The generation was deleted with the private dirs.
+
+Fallout fixed on the 14th:
+
+- A peer rewrite of the plugin manifest had restored `component-guest = []` and `component-extension-guest = []`. Both were deleted again; nothing enables them.
+- The scale fixture's dead `[features] component-guest` was deleted too.
+- Two doc comments that still named `component-guest` were reworded.
+
+Open follow-ups for L2/WS1:
+
+- `browser-publication` (spatial session) and `session-bindgen` (surface) are still consumer-selected first-party features. Per L2 they become adapter crates.
+- The renderer's `🧩️component` facet resolves as `members-of-wgpu-target`.
+- The spatial-session facet stays unadmitted until `🧠️semio/🌊️session` is admitted.
+- The `🏗️native-build` fixture uses `component-guest` only as the name of a synthetic test feature. It is unrelated to the plugin crate and is unchanged.
 
 ## 6. Inputs (kept in `l1-library-xor-component/`)
 

@@ -6,7 +6,7 @@ use super::super::component_rules;
 use super::super::elements;
 use super::super::family_rules;
 use super::SetComponentOverride;
-use crate::{ComponentOverride, ComponentOverridePatch, Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ComponentOverride, ModelSnapshot}, diff::{patches::ComponentOverridePatch, Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetComponentOverride, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

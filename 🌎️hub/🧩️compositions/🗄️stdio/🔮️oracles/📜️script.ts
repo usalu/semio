@@ -35,7 +35,7 @@ class PrivateReaderTestScript extends BundleScript {
   }
 }
 
-/** 🖊️ Executes the complete additive lower Drawing cohort with its original oracle feature and budget. */
+/** 🖊️ Executes the complete additive lower Drawing cohort with its original budget. */
 class NativeDrawingReaderTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -44,7 +44,7 @@ class NativeDrawingReaderTestScript extends BundleScript {
     const family = contract.families.find(({ module }) => module === "drawing");
     if (!family) throw new Error("The original lower Drawing cohort is not registered.");
     const root = resolve(this.root, "../../../..");
-    await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, family.package.path, "Cargo.toml"), "--features", "oracles"], { cwd: root, budgetMs: 900_000 });
+    await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, family.package.path, "Cargo.toml")], { cwd: root, budgetMs: 900_000 });
   }
 }
 
@@ -58,8 +58,7 @@ class NativeOracleTestScript extends BundleScript {
     const packages = [contract.neutralLaw.source.replace(/\/🦀️\.rs$/u, "/📦️packages/🦀️rust"), ...contract.providers.map(({ package: pkg }) => pkg.path), ...contract.families.map(({ package: pkg }) => pkg.path), contract.grammar.package.path, contract.package.path];
     for (const path of packages) {
       console.info(`🦀️ Oracle unit cohort: ${path}`);
-      const features = path === packages[0] ? [] : ["--features", "oracles"];
-      await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, path, "Cargo.toml"), ...features], { cwd: root, budgetMs: 900_000 });
+      await runRepositoryTestCommand("cargo", ["test", "--manifest-path", resolve(root, path, "Cargo.toml")], { cwd: root, budgetMs: 900_000 });
     }
   }
 }

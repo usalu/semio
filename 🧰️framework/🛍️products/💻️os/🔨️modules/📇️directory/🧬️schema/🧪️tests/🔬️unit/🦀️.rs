@@ -1,8 +1,8 @@
-use crate::os_directory::io::binary::artifact_hash::hex_lower;
-use crate::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
-use crate::os_directory::io::text::directory_command_sha256;
-use crate::os_directory::io::text::valid_user_preference_record_v1;
-use crate::os_directory::io::text::validate_directory_event_page_event;
+use crate::io::binary::artifact_hash::hex_lower;
+use crate::io::binary::descriptor_digest::descriptor_digest_v1;
+use crate::io::text::directory_command_sha256;
+use crate::io::text::valid_user_preference_record_v1;
+use crate::io::text::validate_directory_event_page_event;
 use super::*;
 
 #[test]
@@ -306,12 +306,12 @@ fn document_authority_json_integer_tokens_never_coerce() {
         }
         let expiry = serde_json::from_str::<i64>(raw);
         let grant_json = format!(r#"{{"schema":"fixture","protocol":"fixture","grant":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#);
-        let grant = semio_framework_pack_json::from_json_str::<crate::os_directory::client::SocketGrantReceiptV1>(&grant_json, semio_framework_pack_json::JsonMemberPolicy::Reject);
+        let grant = semio_framework_pack_json::from_json_str::<crate::client::SocketGrantReceiptV1>(&grant_json, semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(grant.is_ok(), expiry.is_ok(), "socket expiry integer {raw}");
         if let (Ok(grant), Ok(expiry)) = (grant, expiry) {
             assert_eq!(grant.expires_at_ms, expiry, "socket expiry exact {raw}");
         }
-        let document_grant = semio_framework_pack_json::from_json_str::<crate::os_directory::client::DocumentSocketGrantReceiptV1>(&format!(r#"{{"schema":"fixture","protocol":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#), semio_framework_pack_json::JsonMemberPolicy::Reject);
+        let document_grant = semio_framework_pack_json::from_json_str::<crate::client::DocumentSocketGrantReceiptV1>(&format!(r#"{{"schema":"fixture","protocol":"fixture","actorId":"fixture","expiresAtMs":{raw}}}"#), semio_framework_pack_json::JsonMemberPolicy::Reject);
         assert_eq!(document_grant.as_ref().map(|grant| grant.expires_at_ms).ok(), serde_json::from_str::<i64>(raw).ok(), "document socket expiry exact {raw}");
     }
 }

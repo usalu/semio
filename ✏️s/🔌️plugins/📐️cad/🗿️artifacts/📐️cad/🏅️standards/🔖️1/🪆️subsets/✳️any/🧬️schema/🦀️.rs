@@ -1,15 +1,33 @@
 //! 🧬️ Cad artifact schema — every field of the artifact with its state class.
 
-use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadSnapshot};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+//#region 🧩️Modules
+#[path = "📐️geometry/🦀️.rs"]
+pub mod geometry;
+#[path = "."]
+pub mod snapshot {
+    #[path = "📸️snapshot/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+#[path = "."]
+pub mod diff {
+    #[path = "🔺️diff/🦀️.rs"]
+    mod component;
+    pub use component::*;
+}
+//#endregion 🧩️Modules
+
+use crate::{snapshot::CadBrepChild, snapshot::CadDrawingChild, snapshot::CadModelChild, snapshot::CadSnapshot};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[path = "📎️references/🦀️.rs"]
 pub mod references;
 pub use references::CadReferenceIndex;
 
-#[cfg(test)]
-#[path = "🧪️tests/🪪️document/🦀️.rs"]
-mod document_contract_tests;
 
 //#region 🔖️Artifact
 /// 🧬️ cad document artifact state.
@@ -62,7 +80,7 @@ pub struct CadArtifact {
 //#region 🔖️Conversions
 impl Default for CadArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::empty_cad_snapshot())
+        Self::from_snapshot(crate::snapshot::empty_cad_snapshot())
     }
 }
 
@@ -158,8 +176,8 @@ pub fn cad_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔁️Re-exports
-pub use crate::CadCamera;
+pub use crate::snapshot::CadCamera;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::CadNode;
-pub use crate::CadReferenceList;
+pub use crate::snapshot::CadNode;
+pub use crate::snapshot::CadReferenceList;
 //#endregion 🔁️Re-exports

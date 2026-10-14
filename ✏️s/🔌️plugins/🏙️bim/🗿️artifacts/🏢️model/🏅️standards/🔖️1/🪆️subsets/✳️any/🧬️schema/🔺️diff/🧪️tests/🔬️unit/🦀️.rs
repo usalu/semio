@@ -184,7 +184,7 @@ async fn a_minimal_patch_drops_exactly_the_fields_that_restate_the_base() {
     assert_eq!(both.minimal(&base), heightened(3.4));
     assert!(StoreyPatch { name: Some("Ground".into()), level: Some(0), height: Some(3.0), ..Default::default() }.minimal(&base).is_empty());
     assert!(StoreyPatch::default().minimal(&base).is_empty());
-    let slab = Slab { phase: crate::Phase::New, storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
+    let slab = Slab { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st".into(), slab_type: "t".into(), boundary: Vec::new(), holes: Vec::new(), offset: 0.0, slope: None, name: "Slab".into() };
     assert!(SlabPatch { slope: Some(Assigned::new(None)), ..Default::default() }.minimal(&slab).is_empty());
     let sloped = SlabPatch { slope: Some(Assigned::new(Some(Slope { direction: 0.0, angle: 0.1 }))), ..Default::default() };
     assert_eq!(sloped.minimal(&slab), sloped);

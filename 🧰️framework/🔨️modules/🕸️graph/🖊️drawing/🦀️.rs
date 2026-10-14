@@ -5,9 +5,9 @@ pub mod force {
     use geometry::Vec2;
 
     /// ⚙️ Force-directed layout parameters (geometry-free).
-    // 🧬️ `value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
+    // 🧬️ `semio_framework_value_derive::{ToValue, FromValue}` additive (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS,
     // 26/09/01) — never had `serde`, so no `#[value(...)]` rename is needed: field names are the wire shape.
-    #[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
+    #[derive(Clone, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
     pub struct ForceLayoutOptions {
         pub iterations: u32,
         pub ideal_edge_length: f64,
@@ -191,7 +191,7 @@ pub mod force {
 
 // #region 📐️Routing
 pub mod routing {
-    use crate::NodeShape;
+    use semio_framework_graph_engine::NodeShape;
     use geometry::clamp_f64;
     use geometry::{append_shape_to_path, distance_between, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge, Arc, BezPath, Circle, CubicBez, Point, Rect, Vec2};
 

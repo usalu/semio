@@ -1,8 +1,8 @@
 //! ➖️ `remove-cold-formed-member` diff — removes the row at the index.
 
-use super::RemoveColdFormedMember;
-use crate::diff::{En1993Diff, En1993ColdFormedMemberDelta};
-use crate::En1993Snapshot;
+use crate::remove_cold_formed_member::RemoveColdFormedMember;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993ColdFormedMemberDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &RemoveColdFormedMember, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     if payload.index >= base.cold_formed_members.len() {

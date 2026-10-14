@@ -1,0 +1,11 @@
+import {mkdir,writeFile} from "node:fs/promises";
+import {join} from "node:path";
+const root=process.env.SEMIO_WORKSPACE_ROOT!,generated=process.env.SEMIO_TEST_ARTIFACT_DIR!;
+if(!root||!generated)throw Error("Workspace and ticket outputs required");
+const directory=join(generated,"cold-custom-rule"),output=join(generated,"cold-custom-base");await mkdir(directory,{recursive:true});
+await writeFile(join(directory,"MODULE.bazel"),'module(name="semio_cold",version="0.0.0")\n');
+await writeFile(join(directory,"BUILD.bazel"),'load(":defs.bzl","probe")\nprobe(name="probe")\n');
+await writeFile(join(directory,"defs.bzl"),'def _impl(ctx):\n    output=ctx.actions.declare_file("proof.txt")\n    ctx.actions.write(output,"local")\n    return [DefaultInfo(files=depset([output]))]\nprobe=rule(implementation=_impl)\n');
+const command=[join(root,".🧬semio/🦑️repo/⚡️cache/tools/bazel/45e9388abf21d110/bazel"),"--batch","--output_base="+output,"--install_base="+join(root,".cache/bazel/install/8.4.2",process.platform+"-"+process.arch),"--nosystem_rc","--nohome_rc","--noworkspace_rc","build","//:probe","--incompatible_autoload_externally=","--lockfile_mode=off","--registry=http://127.0.0.1:1","--repository_cache="+join(generated,"cold-empty-repositories"),"--repository_disable_download","--http_connector_attempts=1","--experimental_repository_downloader_retries=0"];
+const child=Bun.spawn(command,{cwd:directory,env:{...process.env,LANG:"en_US.UTF-8",LC_ALL:"en_US.UTF-8"},stdout:"pipe",stderr:"pipe",timeout:20000}),[status,stdout,stderr]=await Promise.all([child.exited,new Response(child.stdout).text(),new Response(child.stderr).text()]);
+await writeFile(join(generated,"cold-custom-rule.txt"),stdout+stderr);console.log("[DEBUG] Cold custom rule without external autoloads "+JSON.stringify({status,stdout,stderr}));if(status!==0)process.exitCode=1;

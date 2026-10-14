@@ -1,0 +1,26 @@
+{
+ "keep": "sfm",
+ "layers": {
+  "geometry": {
+   "regions": [
+    "🔖️Mat3Helpers",
+    "🔖️Error",
+    "🔖️TwoView",
+    "🔖️Triangulate",
+    "🔖️Pnp",
+    "🔖️Tracks",
+    "🔖️Global",
+    "🔖️LoopClosure"
+   ],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📸️sfm/📐️geometry/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::sfm::geometry",
+   "header": "//! 📐️ Multi-view geometry: two-view models and essential-matrix estimation, triangulation, PnP, feature tracks, global rotation/translation averaging, loop closure and pose priors.\n"
+  },
+  "sfm": {
+   "regions": [],
+   "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📸️sfm/🦀️.rs",
+   "module": "crate::editor::remodeling::engine::sfm",
+   "mounts": "#[path = \"📐️geometry/🦀️.rs\"]\npub mod geometry;\n\n"
+  }
+ }
+}

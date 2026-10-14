@@ -4,7 +4,7 @@
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::decode;
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use protocol::{DiffRegions, Mutation};
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦖️delete-curtain-wall/✅️removes/📸️snapshot/⬅️before/🔣️.json");

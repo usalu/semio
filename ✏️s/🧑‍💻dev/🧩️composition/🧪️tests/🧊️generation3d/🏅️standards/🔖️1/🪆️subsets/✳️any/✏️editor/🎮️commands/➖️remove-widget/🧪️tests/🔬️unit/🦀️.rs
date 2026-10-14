@@ -67,7 +67,7 @@ async fn patch_flow_widgets_recomputes_preview_geometry() {
 async fn remove_widget_action_deletes_by_id() {
     let _serial = crate::editor_domain::editor_laws::serial_execution::lock();
     let mut app = app().await;
-    assert!(context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == "sides"));
+    assert!(context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == "sides"));
     dispatch(&mut app, Generation3dCommand::RemoveWidget(RemoveWidget { widget_id: "sides".into() })).await;
-    assert!(!context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_generation3d::widget_id(widget) == "sides"));
+    assert!(!context::snapshot(&app).host_snapshot.widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == "sides"));
 }

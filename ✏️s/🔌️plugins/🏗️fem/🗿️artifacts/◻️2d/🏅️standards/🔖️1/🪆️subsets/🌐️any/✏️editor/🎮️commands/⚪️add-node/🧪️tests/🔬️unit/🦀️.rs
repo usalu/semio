@@ -2,7 +2,8 @@ use super::*;
 use crate::editor::fem2d::commands::{add_bar, add_beam, add_material, add_region, add_section, add_support};
 use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_empty_app};
 use crate::editor::fem2d::Fem2dCommand;
-use crate::{FemDof, FemElement};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 
 #[semio_framework_async_macros::async_test]
 async fn add_node_action_emits_op_2d() {

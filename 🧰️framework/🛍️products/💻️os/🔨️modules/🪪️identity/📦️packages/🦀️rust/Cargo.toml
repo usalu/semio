@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-identity"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Owned native and browser identity boundary"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-identity"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 65536
+maxSourceFiles = 32
+maxActiveLines = 1000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"

@@ -1,4 +1,4 @@
-use crate::mutations::tests::every_mutation;
+use semio_s_artifact_cad_cad_mutations::tests::every_mutation;
 
 /// ⚖️ The pinned pre-migration byte fixture retired with the generic `Patch*`/`Set*` variants
 /// it exercised (SEMANTIC-MUTATIONS-OVERHAUL, 26/08/12): the wire format legitimately changed —

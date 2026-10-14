@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ClashRef, IssueViewpoint, Point2, Point3, SectionBox, ViewCamera};
+use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, IssueViewpoint, Point2, Point3, SectionBox, ViewCamera};
 
 fn model() -> ModelSnapshot {
     let mut model = ModelSnapshot::default();
@@ -97,7 +97,7 @@ fn new_records_start_with_the_conventions_and_the_latest_moment_the_model_knows(
     assert_eq!(latest_moment(&ModelSnapshot::default()), "1970-01-01");
     let Ok(ModelMutation::CreateIssue(create)) = create_issue(&model, "i-2", "", "Door swings into the corridor") else { panic!("an issue") };
     assert_eq!((create.issue.author.as_str(), create.issue.status, create.issue.priority), ("UG", IssueStatus::Open, IssuePriority::Normal));
-    assert!(crate::valid_timestamp(&create.issue.created));
+    assert!(crate::standards::v1::subsets::any::schema::snapshot::valid_timestamp(&create.issue.created));
     let Ok(ModelMutation::CreateRule(create)) = create_rule(&model, "r-2", "", "Riser") else { panic!("a rule") };
     assert_eq!((create.rule.kind, create.rule.limit), (RuleKind::MaxRiser, 0.19));
     let Ok(ModelMutation::CreateClashSet(create)) = create_clash_set(&model, "cs-2", "", "Everything") else { panic!("a clash set") };
@@ -110,7 +110,7 @@ fn new_records_start_with_the_conventions_and_the_latest_moment_the_model_knows(
 #[test]
 fn the_inferred_rows_read_the_clash_and_rule_results() {
     let model = model();
-    let mut inference = crate::ModelInference::default();
+    let mut inference = crate::standards::v1::subsets::any::schema::inferences::ModelInference::default();
     inference.clash_sets.insert("cs-1".into(), Default::default());
     inference.rule_results.insert("r-1".into(), crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult { checked: 3, violations: Vec::new() });
     let read = |rows: &'static [InferredRow], key: &str, id: &str| rows.iter().find(|row| row.key == key).and_then(|row| (row.read)(&model, &inference, id));

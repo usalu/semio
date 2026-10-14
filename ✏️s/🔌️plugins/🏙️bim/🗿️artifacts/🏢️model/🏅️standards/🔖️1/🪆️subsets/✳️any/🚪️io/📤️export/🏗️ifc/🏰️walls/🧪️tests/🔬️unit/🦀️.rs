@@ -99,10 +99,10 @@ fn openings_reduce_the_net_wall_quantities() {
 use super::{envelope, ATTACH_SET, REVEAL_SET};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, location, number_of, property_sets, text_of};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::{Opening, OpeningKind};
-use semio_s_artifact_stdio_ifc::part21::{Part21Document, Part21Value};
+use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind};
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Value};
 
-fn layout(model: &crate::ModelSnapshot, id: &str) -> crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout {
+fn layout(model: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, id: &str) -> crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout {
     inference::try_with_inference(None, model, |inferred| inferred.wall_layout[id].clone()).expect("the model infers")
 }
 

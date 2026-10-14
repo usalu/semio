@@ -5,14 +5,19 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { runCmd, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
 
 import { prepareCargoCapabilityLinksV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
+/** 📦️ Every Cargo package the remodeling artifact family is cut into: the members of its own workspace. */
+const familyRoot = resolve(import.meta.dir, "../..");
+const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
+
 /** 🔌️ Prepares source-owned optional Cargo capabilities. */
 class CompositionScript extends BundleScript {
   run(args: string[]): void {
     if (args.length !== 1 || args[0] !== "prepare") throw new Error("composition prepare");
-    console.log(`remodeling capabilities: targets=${prepareCargoCapabilityLinksV1(this.repoRoot, resolve(this.root, "../.."), "📦️packages/🦀️rust/Cargo.toml", "🧩️composition/🔗️capabilities/🔣️.json")}`);
+    console.log(`remodeling capabilities: targets=${prepareCargoCapabilityLinksV1(this.repoRoot, familyRoot, "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/📦️packages/🦀️rust/Cargo.toml", "🧩️composition/🔗️capabilities/🔣️.json")}`);
     completeCargoPreparationObservationV1();
   }
 }
@@ -40,11 +45,9 @@ class OwnedVerifyScript extends BundleScript {
       if (segments.length !== 1) throw Error("video-container-providers accepts no additional arguments");
       const { proveVideoContainerProviderOracleV1 } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🧪️tests/🔌️container-providers/🟦️.ts");
       console.log("video-container-providers: " + proveVideoContainerProviderOracleV1() + " portable oracle vectors admitted");
-      const base = ["test", "--manifest-path", join(this.root, "Cargo.toml"), "--lib"];
+      const base = ["test", "--manifest-path", join(familyRoot, "Cargo.toml"), "-p", "semio-s-artifact-remodel-remodeling-video", "--lib"];
       await runCargo([...base, "engine::video::tests::", "--", "--nocapture"], this.root);
-      for (const feature of [null, "video-mp4", "video-avi"]) {
-        await runCargo([...base, "--no-default-features", ...(feature ? ["--features", feature] : []), "video_container_provider_", "--", "--nocapture"], this.root);
-      }
+      await runCargo([...base, "video_container_provider_", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "remodel-window-ownership") {
@@ -54,7 +57,7 @@ class OwnedVerifyScript extends BundleScript {
       testRemodelWindowOwnershipOracle();
       runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schemaRoot, "🧊️model/🪟️windows/🧊️model/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "📷️capture/🪟️windows/🖼️frames/🎚️config/🧬️schema/🟦️.ts"), join(schemaRoot, "🔍️analyze/🪟️windows/📊️report/🎚️config/🧬️schema/🟦️.ts"), `${testRoot}/🟦️.ts`], { cwd: this.repoRoot });
       if (segments[1] === "native") {
-        await runCargo(["test", "--manifest-path", join(this.root, "Cargo.toml"), "--lib", "remodel_window_ownership_", "--", "--nocapture"], this.root);
+        await runCargo(["test", "--manifest-path", join(this.root, "Cargo.toml"), "--test", "editor", "remodel_window_ownership_", "--", "--nocapture"], this.root);
       }
       return;
     }
@@ -62,6 +65,6 @@ class OwnedVerifyScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-remodel-remodeling", { packages: familyPackages, commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧬️schema/🟦️.ts"] });
 
 

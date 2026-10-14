@@ -12,5 +12,5 @@
     { "id": "parent-relative", "command": "go test ../pkg/...", "values": ["../pkg/..."] },
     { "id": "escaped-backslashes", "command": "python3 \"C:\\tools\\x.py\" ./y.py", "values": ["C:", "tools", "x.py", "./y.py"] }
   ],
-  "frozenEvidenceContractId": "remaining-package-purity-history-v1"
+  "frozenEvidenceContractId": "draw-evidence-sol-fleet-s1"
 }

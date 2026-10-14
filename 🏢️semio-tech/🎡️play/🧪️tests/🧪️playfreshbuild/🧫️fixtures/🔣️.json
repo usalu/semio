@@ -17,16 +17,19 @@
   "environment": {
     "SEMIO_BUILD_MODE": "release",
     "SEMIO_NATIVE_BUILD_GENERATION": "fresh",
-    "NX_DAEMON": "false",
-    "NX_SKIP_NX_CACHE": "true",
-    "NX_SKIP_REMOTE_CACHE": "true",
-    "NX_TUI": "false"
+    "SEMIO_BUILD_TERMINAL": "false"
   },
   "driver": {
     "target": "release",
     "command": "bun ./📜️script.ts release",
     "generationEnvironment": "SEMIO_NATIVE_BUILD_GENERATION",
     "generationPrefix": "f",
+    "owner": "buildReleasePipelineV1",
+    "ownerModule": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts",
+    "ownerArguments": ["network", "control"],
+    "callers": ["📜️script.ts", "🏢️semio-tech/🎡️play/🔨️modules/📦️site/📜️script.ts"],
+    "bypass": "runNativeBuildDriverV1",
+    "freshLaunch": "📦️build🦑️workspace🚀️release🆕️fresh",
     "stores": {
       "target": "t",
       "build": "b",
@@ -92,5 +95,60 @@
     ],
     "verifyTarget": "release-verify",
     "verifyCommand": "bun ./🔨️modules/📦️site/📜️script.ts verify"
-  }
+  },
+  "arguments": [
+    "run",
+    "@semio-tech/semio-tech-play:build",
+    "--skip-cache",
+    "--skip-remote-cache",
+    "--parallel=8",
+    "--output=stream"
+  ],
+  "invocationPidEnvironment": "SEMIO_BUILD_INVOCATION_PID",
+  "invocationPidSchema": {
+    "type": "string",
+    "pattern": "^[1-9][0-9]*$"
+  },
+  "invocationPidRows": [
+    {
+      "value": "42",
+      "expected": 42
+    },
+    {
+      "value": "9007199254740991",
+      "expected": 9007199254740991
+    },
+    {
+      "value": null,
+      "expected": null
+    },
+    {
+      "value": "0",
+      "expected": null
+    },
+    {
+      "value": "-1",
+      "expected": null
+    },
+    {
+      "value": "1.5",
+      "expected": null
+    },
+    {
+      "value": "042",
+      "expected": null
+    },
+    {
+      "value": "9007199254740992",
+      "expected": null
+    },
+    {
+      "value": "4x",
+      "expected": null
+    }
+  ],
+  "developmentProjects": [
+    "🏢️semio-tech/🎡️play/📋️project.json",
+    "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json"
+  ]
 }

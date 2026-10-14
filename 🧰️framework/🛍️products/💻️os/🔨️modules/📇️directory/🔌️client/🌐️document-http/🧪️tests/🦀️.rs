@@ -1,5 +1,5 @@
 use super::*;
-use crate::{FromValue, os_directory::client::{DirectoryWsConnection, DirectoryWsPoll, HttpResponse, TransportError}};
+use crate::{FromValue, client::{DirectoryWsConnection, DirectoryWsPoll, HttpResponse, TransportError}};
 use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]

@@ -3,8 +3,8 @@
 
 use super::reader::{real, reals, text, Doc};
 use super::Import;
-use crate::{Building, Phase, Point2, Site, Storey};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use crate::standards::v1::subsets::any::schema::snapshot::{Building, Phase, Point2, Site, Storey};
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
 /// 🧭️ Degrees of an `IfcCompoundPlaneAngleMeasure` (degrees, minutes, seconds, millionths of a second; the sign sits on every part).

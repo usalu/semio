@@ -2,9 +2,19 @@
 //!
 //! STEP carries the exact geometry; the mesh formats triangulate the shape first (a stepped tessellation job) or rebuild a faceted solid from the triangles (a stepped mesh import cursor). Binary payloads travel as standard base64 text.
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::brep_curve::guarded;
-use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::phased_job::{cancelled_fault, Flow, Pipeline};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_phased_job::cancelled_fault;
+use semio_s_artifact_procedural_3d_phased_job::Flow;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use {semio_framework_3d_brep_engine::{BrepError, GeometryKind, MeshImportCursor}, semio_framework_3d_brep_representation::contract::MeshTransfer};
 use semio_framework_mesh_engine::MeshData;
 use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
@@ -74,7 +84,7 @@ fn export_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 
 fn export_dwg(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     export_mesh(kind, &inputs, "dwg", |data| {
-        let bytes = semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing(data)).map_err(|reason| WidgetFault::new(PARSE, format!("The DWG data could not be written: {reason}."), format!("Die DWG-Daten konnten nicht geschrieben werden: {reason}.")).at("shape"))?;
+        let bytes = semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing(data)).map_err(|reason| WidgetFault::new(PARSE, format!("The DWG data could not be written: {reason}."), format!("Die DWG-Daten konnten nicht geschrieben werden: {reason}.")).at("shape"))?;
         Ok(base64_standard_encode(bytes))
     })
 }
@@ -138,11 +148,13 @@ fn import_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 fn import_dwg(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     faceted(kind, &inputs, |text| {
         let drawing = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::dwg_from_bytes(&decode(text)?).map_err(|reason| parse_fault("DWG", reason))?;
-        Ok(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&drawing))
+        Ok(semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&drawing))
     })
 }
 //#endregion 🔖️Import
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-interchange", include_str!("../../../🧬️schema/🗂️catalogue/🔣️brep-interchange.json"));
 /// 🗃️ Every `brep.interchange` kind and the compute that starts its job.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.interchange.exportStep", start: export_step },

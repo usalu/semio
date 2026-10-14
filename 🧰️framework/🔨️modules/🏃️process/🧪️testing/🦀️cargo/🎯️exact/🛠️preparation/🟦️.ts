@@ -14,13 +14,14 @@ export function readExactCargoLawPreparationV1(value:unknown):ExactCargoLawPrepa
 /** 🔌️ Preserves the original build grant across caller preparation and compiler capture. */
 export function exactCargoLawPreparationPortV1(input:ExactCargoLawPreparationV1,host:Readonly<{execute:typeof runOwnedCommand;capture:ExactCargoLawPort["probe"];fingerprint:ExactCargoLawPort["fingerprint"];nativeLibraryDirectory?:ExactCargoLawPort["nativeLibraryDirectory"]}>={execute:runOwnedCommand,capture:captureOwnedProcess,fingerprint:exactExecutableFingerprint,nativeLibraryDirectory:originalNativeLibraryDirectory}):ExactCargoLawPort{
  const descriptor=readExactCargoLawPreparationV1(input);
- return {fingerprint:host.fingerprint,nativeLibraryDirectory:host.nativeLibraryDirectory,async probe(command,args,capture){
-  if(command!=="cargo")return await host.capture(command,args,capture);
+ return {fingerprint:host.fingerprint,nativeLibraryDirectory:host.nativeLibraryDirectory,probe:host.capture,async prepare(command,args,capture){
+  if(command!=="cargo")return;
   const original=capture.invocation;if(!original)throw Error("Original exact Cargo preparation invocation required");const started=performance.now();
   const budget=()=>{checkScriptInvocation(original);const remaining=original.control.remainingMilliseconds(),phase=capture.budgetMs===0?null:capture.budgetMs-(performance.now()-started),left=remaining===null?phase:phase===null?remaining:Math.min(remaining,phase);if(left!==null&&left<=0)throw Error("Original exact Cargo preparation deadline exhausted");return left??0;};
   budget();await advanceScriptInvocation(original,"exact-cargo:preparation","running");
-  await host.execute(descriptor.command,[...descriptor.args,...args],descriptor.cwd,"exact-cargo:preparation",budget(),{env:scriptInvocationEnvironment(original,{...capture.env,...descriptor.environment}),signal:original.control.signal,stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:descriptor.maximumOutputLines},onProgress:async()=>{await advanceScriptInvocation(original,"exact-cargo:preparation","running");}});
-  return await host.capture(command,args,{...capture,budgetMs:budget()});
+  const bounded=Object.fromEntries(["CARGO_HOME","CARGO_TARGET_DIR","CARGO_BUILD_BUILD_DIR","TMPDIR","TMP","TEMP","SEMIO_TEST_ARTIFACT_DIR"].flatMap(key=>capture.env?.[key]===undefined?[]:[[key,capture.env[key]]]));
+  await host.execute(descriptor.command,[...descriptor.args,...args],descriptor.cwd,"exact-cargo:preparation",budget(),{env:scriptInvocationEnvironment(original,{...capture.env,...descriptor.environment,...bounded}),signal:original.control.signal,stdout:"stderr",output:{maximumBytes:capture.maxOutputBytes,maximumLines:descriptor.maximumOutputLines},onProgress:async()=>{await advanceScriptInvocation(original,"exact-cargo:preparation","running");}});
+  budget();
  }};
 }
 /** 📥️ Receives preparation from the calling launcher without discovering any product owner. */

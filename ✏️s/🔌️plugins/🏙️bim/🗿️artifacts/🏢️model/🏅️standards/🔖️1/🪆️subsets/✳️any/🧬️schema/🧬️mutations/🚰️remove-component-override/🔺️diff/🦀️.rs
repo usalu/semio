@@ -2,7 +2,7 @@
 
 use super::super::family_rules;
 use super::RemoveComponentOverride;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &RemoveComponentOverride, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

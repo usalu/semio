@@ -8,3 +8,8 @@ The nine non-derive repairs are authored: media prepares inside the complete ori
 
 
 Prototype17 current successor: first real derive law GREEN (VLpFA9/00); plugin compile RED2 at original manifest native test lines10/11, requiring a non-Copy receiving owner outside with_retained_loan. Both errors are repaired in Source and prototype18 is running. All prior production lease signature diagnostics are absent in this census. Canonical native compiler runtime discovery is now wired through Repository/preparation ports, with actual toolchain-runtime directory receipt, so this is an executed derive law rather than source-only qualification.
+
+
+## Hard Storage Priority and Final Native Attempt
+
+Owned-output prototype21 naturally completed actual RED in1m32 at generated `exact-cargo-laws-kqAKYy/01/build.stdout`: concurrent completed-response Source cannot resolve `semio_framework_pack`. No further native owned-output retry was launched after the developer made fixed physical Rust cache storage the priority. Earlier native first-two metadata/header results remain qualified; output body repairs, manifest receiving, Surface retry and release-mode execution remain unqualified. Actual storage implementation and qualification are recorded in [native-storage-hard-enforcement.md](native-storage-hard-enforcement.md).

@@ -48,7 +48,7 @@ Named volumes keep CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`
 
 Devcontainer lifecycle commands MUST be program argv run through `bun ./📜️script.ts setup devcontainer <start|attach|gitkraken>`, never shell scripts.
 
-Devcontainer attach MUST resolve the workspace extension through the Nx packaging target, install only after that target succeeds, and validate the installation through the editor CLI's extension list.
+Devcontainer attach MUST resolve the workspace extension through the repository build packaging task, install only after that task succeeds, and validate the installation through the editor CLI's extension list.
 
 Devcontainer start MUST NOT run destructive source-control or database commands and MUST NOT append duplicate git `safe.directory` entries.
 

@@ -8,7 +8,7 @@ use super::super::create_family_solid::CreateFamilySolid;
 use super::super::family_rules;
 use super::super::set_family_parameter::SetFamilyParameter;
 use super::DeleteFamily;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteFamily, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let Some(family) = base.families.get(&payload.id) else {

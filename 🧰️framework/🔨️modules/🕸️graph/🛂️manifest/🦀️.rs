@@ -5,7 +5,7 @@ use semio_framework_value::{ValueKind, ValueType};
 #[path = "🛬️type/🦀️.rs"]
 mod type_binding;
 
-pub use crate::manifest::Manifest as GraphManifest;
+pub use crate::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
 // 🌉️ `value_type_from_value` below is a `#[value(deserialize_with = "...")]` hook (RUNTIME-
@@ -205,7 +205,7 @@ impl semio_framework_value::FromValue for PropertyValue {
 //#endregion 🔖️ToFromValue
 
 /// 🏷️ Compile-time property kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub enum PropertyKind {
     Data,
@@ -213,7 +213,7 @@ pub enum PropertyKind {
 }
 
 /// 📋️ Property definition on a kind.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PropertyDef {
     pub name: String,
@@ -271,14 +271,14 @@ impl PropertyDef {
 
 // #region 🔖️Manifest
 /// 🔌️ Port direction on a node.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub enum PortDirection {
     In,
     Out,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum PortModelAxis {
     #[default]
@@ -286,7 +286,7 @@ pub enum PortModelAxis {
     Normal,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum DirectednessAxis {
     #[default]
@@ -294,7 +294,7 @@ pub enum DirectednessAxis {
     Undirected,
 }
 
-#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ManifestAxes {
     #[value(default)]
@@ -718,3 +718,11 @@ mod property_declaration_binding;
 
 #[path="📡️delta/🦀️.rs"]
 mod map_delta;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🪆️record-owner/🦀️.rs"]
+mod canonical_record_owner_tests;
+
+#[cfg(test)]
+#[path = "../🧪️tests/♻️cold-properties/🦀️.rs"]
+mod cold_property_retirement_tests;

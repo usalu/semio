@@ -303,7 +303,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     use store::os_store::backbone::MemoryBackbone;
     async fn probe(app: &DagApp) -> (bool, bool) {
         let nodes = crate::editor::dag::unit_tests::context::live_scene(app).await.nodes;
-        (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
+        (nodes.iter().any(|node| matches!(node.kind, semio_framework_os_infinite_directed_presentation::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_os_infinite_directed_presentation::DagNodeKind::Slider { .. })))
     }
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;

@@ -22,10 +22,11 @@
 //! - `geometry`/non-unit `scale` on a placement have no IFC representation in this analyzer's
 //!   model and are dropped (`GeometryRef` is never read; `SemioTransform.scale` is ignored).
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_ifc::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
 use std::collections::HashMap;
 
@@ -310,7 +311,7 @@ pub fn ifc_from_model(from: &SemioModelSnapshot) -> IfcSnapshot {
         },
         instances,
     };
-    semio_s_artifact_stdio_ifc::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
+    semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::from_part21_document(semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::STDIO_IFC_DOCUMENT_SCHEMA, &doc)
 }
 //#endregion 🔖️Entry
 

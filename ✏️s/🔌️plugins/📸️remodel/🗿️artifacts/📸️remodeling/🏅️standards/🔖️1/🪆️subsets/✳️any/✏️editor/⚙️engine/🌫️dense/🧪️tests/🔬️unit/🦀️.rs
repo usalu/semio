@@ -1,4 +1,4 @@
-use crate::editor::remodeling::engine::step_ceiling;
+use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::step_ceiling;
 use super::*;
 
 fn lcg_next(state: &mut u64) -> f64 {
@@ -11,7 +11,7 @@ fn intrinsics_for(width: u32, height: u32) -> remodeling_camera::Intrinsics {
 }
 
 fn translated_pose(tx: f64, ty: f64, tz: f64) -> remodeling_camera::CameraPose {
-    remodeling_camera::CameraPose(remodeling_camera::Se3::exp([tx, ty, tz, 0.0, 0.0, 0.0]))
+    remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::exp([tx, ty, tz, 0.0, 0.0, 0.0]))
 }
 
 /// 🎨️ Non-periodic per-cell hashed noise texture: a checkerboard's strict periodicity creates an
@@ -169,7 +169,7 @@ fn patchmatch_mvs_recovers_known_plane_depth() {
     let (width, height) = (48u32, 48u32);
     let intr = intrinsics_for(width, height);
     let true_depth = 5.0f64;
-    let ref_pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let ref_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let src_pose1 = translated_pose(-0.6, 0.0, 0.0);
     let src_pose2 = translated_pose(0.5, -0.35, 0.0);
     let ref_img = render_plane_image(width, height, &intr, &ref_pose, true_depth, noise_texture);
@@ -200,7 +200,7 @@ fn patchmatch_mvs_recovers_known_sphere_depth() {
     let intr = intrinsics_for(width, height);
     let center = [0.0, 0.0, 5.0];
     let radius = 1.0;
-    let ref_pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let ref_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let src_pose1 = translated_pose(-0.4, 0.0, 0.0);
     let src_pose2 = translated_pose(0.3, -0.25, 0.0);
     let ref_img = render_sphere_image(width, height, &intr, &ref_pose, center, radius);
@@ -239,7 +239,7 @@ fn maximum_patchmatch_allocation_and_one_pixel_step_stay_below_hard_ceiling_in_e
     }
     let reference = remodeling_image::ImageGray { width, height, data };
     let intrinsics = intrinsics_for(width, height);
-    let pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let sources = (0..8).map(|index| (reference.clone(), translated_pose(index as f64 * 0.01, 0.0, 0.0), intrinsics)).collect::<Vec<_>>();
     let started = std::time::Instant::now();
     let mut preparation = PatchMatchPreparation::new(width, height);
@@ -265,7 +265,7 @@ fn plane_sweep_depth_recovers_known_plane_depth() {
     let (width, height) = (32u32, 32u32);
     let intr = intrinsics_for(width, height);
     let true_depth = 5.0f64;
-    let ref_pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let ref_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let src_pose1 = translated_pose(-0.6, 0.0, 0.0);
     let src_pose2 = translated_pose(0.5, -0.35, 0.0);
     let ref_img = render_plane_image(width, height, &intr, &ref_pose, true_depth, noise_texture);
@@ -295,7 +295,7 @@ fn plane_sweep_depth_recovers_known_plane_depth() {
 fn left_right_check_invalidates_planted_inconsistency() {
     let (width, height) = (20u32, 20u32);
     let intr = intrinsics_for(width, height);
-    let ref_pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let ref_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let other_pose = translated_pose(-0.1, 0.0, 0.0);
     let true_depth = 5.0f32;
 
@@ -364,7 +364,7 @@ fn margin_confidence_rewards_well_textured_high_margin() {
     let (width, height) = (24u32, 24u32);
     let intr = intrinsics_for(width, height);
     let true_depth = 5.0;
-    let ref_pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let ref_pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let src_pose = translated_pose(-0.5, 0.0, 0.0);
     let ref_img = render_plane_image(width, height, &intr, &ref_pose, true_depth, noise_texture);
     let src_img = render_plane_image(width, height, &intr, &src_pose, true_depth, noise_texture);
@@ -411,7 +411,7 @@ fn fuse_depth_maps_recovers_plane_points() {
     let (width, height) = (16u32, 16u32);
     let intr = intrinsics_for(width, height);
     let plane_z = 5.0;
-    let poses = [remodeling_camera::CameraPose(remodeling_camera::Se3::identity()), translated_pose(-0.3, 0.0, 0.0), translated_pose(0.15, -0.2, 0.0)];
+    let poses = [remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity()), translated_pose(-0.3, 0.0, 0.0), translated_pose(0.15, -0.2, 0.0)];
     let depth_maps: Vec<DepthMap> = poses.iter().map(|pose| fill_plane_depth_map(width, height, &intr, pose, plane_z)).collect();
     let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = poses.iter().map(|&p| (p, intr)).collect();
     let cfg = FusionConfig { max_relative_depth_diff: 0.02, max_normal_angle_deg: 20.0, min_consistent_views: 2 };
@@ -450,7 +450,7 @@ fn maximum_fusion_reservation_and_comparison_step_stay_below_hard_ceiling_in_eac
 fn tsdf_integrate_zero_crossing_near_true_surface() {
     let (width, height) = (24u32, 24u32);
     let intr = intrinsics_for(width, height);
-    let pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let plane_z = 3.0;
     let dm = fill_plane_depth_map(width, height, &intr, &pose, plane_z);
     let mut vol = TsdfVolume::new(0.05, 0.2);
@@ -480,7 +480,7 @@ fn tsdf_integrate_zero_crossing_near_true_surface() {
 #[test]
 fn maximum_tsdf_sample_and_malformed_parameter_steps_stay_below_hard_ceiling_in_each_build_profile() {
     let intrinsics = intrinsics_for(1, 1);
-    let pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let depth = DepthMap { width: 1, height: 1, depth: vec![4.0], normal: vec![[0.0, 0.0, -1.0]], confidence: vec![1.0] };
     let mut volume = TsdfVolume::new(0.001, 1.0);
     let mut preparation = TsdfIntegrationPreparation::new();
@@ -540,7 +540,7 @@ fn tsdf_sample_agrees_across_block_boundaries_regardless_of_integration_order() 
     // addressing agrees bit-for-bit across block boundaries regardless of integration order.
     let (width, height) = (5u32, 5u32);
     let intr = intrinsics_for(width, height);
-    let pose = remodeling_camera::CameraPose(remodeling_camera::Se3::identity());
+    let pose = remodeling_camera::CameraPose(semio_s_artifact_remodel_remodeling_lie::standards::v1::subsets::any::schema::lie_internals::Se3::identity());
     let pose2 = translated_pose(-0.05, 0.02, 0.0);
     let pose3 = translated_pose(0.04, -0.03, 0.0);
     // Plane depth chosen so its zero-crossing lands right at a TSDF block boundary (block dim

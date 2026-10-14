@@ -21,14 +21,14 @@ use crate::euler::make_edge;
 use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
 use crate::transform::transform_face;
 use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_curve::{Curve2, Curve3};
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3};
-use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_vector::matrix::{Affine3, Frame3};
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 

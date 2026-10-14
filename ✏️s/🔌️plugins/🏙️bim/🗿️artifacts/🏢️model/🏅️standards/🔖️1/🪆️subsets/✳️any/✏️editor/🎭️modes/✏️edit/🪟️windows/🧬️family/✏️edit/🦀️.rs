@@ -3,14 +3,14 @@
 //! result stands (a formula that parses, names only existing parameters and closes no circle) is decided by the mutation, not here. Formulas are canonicalised before they are emitted, so text that does
 //! not parse never reaches a mutation.
 
-use crate::mutations::create_family_solid::CreateFamilySolid;
-use crate::mutations::delete_family_solid::DeleteFamilySolid;
-use crate::mutations::remove_family_parameter::RemoveFamilyParameter;
-use crate::mutations::set_family::SetFamily;
-use crate::mutations::set_family_parameter::SetFamilyParameter;
-use crate::mutations::set_family_solid::SetFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
+use crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
+use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
+use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
 use crate::standards::v1::subsets::any::schema::authored::formula;
-use crate::{ExprPoint, ExprPoint3, FamilyCategory, FamilySolid, ModelMutation, ModelSnapshot, ParameterKind, ParametricProfile, SolidAxis, SolidShape};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint, ExprPoint3, FamilyCategory, FamilySolid, ModelSnapshot, ParameterKind, ParametricProfile, SolidAxis, SolidShape}, mutations::ModelMutation};
 
 /// 🧩️ One edit as the command carries it: the part (`family`, `parameter`, `solid`), the operation, the key (a parameter name, a parameter kind token, a solid id with a slot, a shape token) and the value.
 #[derive(Clone, Debug, Default, PartialEq)]

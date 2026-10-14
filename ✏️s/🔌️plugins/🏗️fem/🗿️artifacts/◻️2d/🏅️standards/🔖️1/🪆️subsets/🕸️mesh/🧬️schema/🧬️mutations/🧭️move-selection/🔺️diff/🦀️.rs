@@ -5,8 +5,12 @@
 //! (Error) when none of the named nodes and regions exist; `mutation.no-op` (Warning) when the transform moves none
 //! of them; and `mutation.partial` (Warning), addressed at the absent ones, when some are missing.
 use super::MoveSelection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, Fem2dNodesModification, Fem2dRegionsDelta, Fem2dRegionsModification};
-use crate::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dNodesModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsDelta;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dRegionsModification;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &MoveSelection, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {

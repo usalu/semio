@@ -9,7 +9,7 @@ use self::config::BimSectionWindowConfig;
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::{canvas_surface, meta_record, text_record};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{ModelInference, ModelSnapshot, ViewPlane};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, ViewPlane}};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::InteractionRef;
 use semio_framework_plugin::SurfaceKind;
@@ -48,7 +48,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️View
 /// 📐️ Every section and elevation view of the model in browser order: by building, sections before elevations, then name.
 pub fn vertical_views(snapshot: &ModelSnapshot) -> Vec<String> {
-    let mut rows: Vec<(&String, bool, &String, &String)> = snapshot.views.iter().filter(|(_, view)| view.kind.is_vertical() && view.plane.is_some()).map(|(id, view)| (&view.building, view.kind == crate::ViewKind::Elevation, &view.name, id)).collect();
+    let mut rows: Vec<(&String, bool, &String, &String)> = snapshot.views.iter().filter(|(_, view)| view.kind.is_vertical() && view.plane.is_some()).map(|(id, view)| (&view.building, view.kind == crate::standards::v1::subsets::any::schema::snapshot::ViewKind::Elevation, &view.name, id)).collect();
     rows.sort();
     rows.into_iter().map(|row| row.3.clone()).collect()
 }

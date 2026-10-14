@@ -9,5 +9,6 @@
     4096
   ],
   "expectedVm": 2,
-  "noBudgetContext": true
+  "noBudgetContext": true,
+  "maximumArguments": 19
 }

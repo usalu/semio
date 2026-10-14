@@ -1,6 +1,6 @@
 //! ✏️ Drawing play app — the `edit` mode: the single-window canvas authoring layout.
 
-use crate::editor::drawing::modes::edit::windows::canvas;
+use crate::modes::edit::windows::canvas;
 use semio_framework_plugin::create_default_layout;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
@@ -26,3 +26,11 @@ pub fn layout() -> WindowLayout {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "."]
+pub mod windows {
+    #[path = "🪟️windows/🖼️canvas/🦀️.rs"]
+    pub mod canvas;
+}
+//#endregion 🪢️TaxonomyMounts

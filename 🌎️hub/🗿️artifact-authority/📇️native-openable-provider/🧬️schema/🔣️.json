@@ -28,12 +28,6 @@
       "maxLength": 256,
       "pattern": "^semio:[a-z0-9-]+$"
     },
-    "cargoFeature": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 64,
-      "pattern": "^[a-z0-9-]+$"
-    },
     "linkedPackageId": {
       "enum": [
         "semio:stdio",
@@ -41,49 +35,15 @@
         "semio:vcs"
       ]
     },
-    "NativeArtifactProviderHeadlessProfileV1": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "defaultFeatures",
-        "features",
-        "directPluginDependencies"
-      ],
-      "properties": {
-        "defaultFeatures": {
-          "const": false
-        },
-        "features": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 8,
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/cargoFeature"
-          }
-        },
-        "directPluginDependencies": {
-          "type": "array",
-          "maxItems": 0,
-          "items": {
-            "$ref": "#/$defs/cargoFeature"
-          }
-        }
-      }
-    },
     "NativeCodecProviderSetIdentityV1": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "feature",
         "providerId",
         "receiptAuthority",
         "pluginDependencies"
       ],
       "properties": {
-        "feature": {
-          "$ref": "#/$defs/cargoFeature"
-        },
         "providerId": {
           "type": "string",
           "minLength": 1,

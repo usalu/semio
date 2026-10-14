@@ -13,7 +13,10 @@
     "closing",
     "birth",
     "requestFields",
-    "snapshotPreparation"
+    "snapshotPreparation",
+    "producerPreparation",
+    "completionPublication",
+    "handleReceiving"
   ],
   "properties": {
     "version": {
@@ -228,7 +231,9 @@
               "id",
               "items",
               "capacityBytes",
-              "expected"
+              "expected",
+              "copyBytes",
+              "depth"
             ],
             "properties": {
               "id": {
@@ -244,6 +249,14 @@
               },
               "expected": {
                 "type": "boolean"
+              },
+              "copyBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
               }
             }
           }
@@ -326,6 +339,145 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "producerPreparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phases",
+        "cases"
+      ],
+      "properties": {
+        "phases": {
+          "const": [
+            "body",
+            "request",
+            "frame",
+            "publication"
+          ]
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "deniedPhase",
+              "sourceRoot",
+              "incomingRoot",
+              "expectedPhases"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "deniedPhase": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4
+              },
+              "sourceRoot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "incomingRoot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expectedPhases": {
+                "type": "array",
+                "maxItems": 4,
+                "items": {
+                  "enum": [
+                    "body",
+                    "request",
+                    "frame",
+                    "publication"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "completionPublication": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "funded",
+          "busy",
+          "occupied",
+          "expectedSource",
+          "expectedReceiver"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "funded": {
+            "type": "boolean"
+          },
+          "busy": {
+            "type": "boolean"
+          },
+          "occupied": {
+            "type": "boolean"
+          },
+          "expectedSource": {
+            "type": "boolean"
+          },
+          "expectedReceiver": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "handleReceiving": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "items",
+          "copy",
+          "occupied",
+          "postRefused",
+          "expectedSource",
+          "expectedReceiver"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "boolean"
+          },
+          "copy": {
+            "type": "boolean"
+          },
+          "occupied": {
+            "type": "boolean"
+          },
+          "postRefused": {
+            "type": "boolean"
+          },
+          "expectedSource": {
+            "type": "boolean"
+          },
+          "expectedReceiver": {
+            "type": "boolean"
           }
         }
       }

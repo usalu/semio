@@ -1,7 +1,7 @@
 //! 🧵️ Remodeling play app panel — the Results tab: the products a run (partially) produced.
 
-use crate::editor::remodeling::terminology::RemodelingLabels;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::RemodelingLabels;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_plugin::tree_item;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -28,7 +28,7 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
     let results = &scene.results;
     // 🧩️ The composed handle resolves only fixed constants or committed bounded reconstruction
     // content; unavailable content reports 0/0 rather than fabricating a count.
-    let mesh = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
+    let mesh = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &results.mesh.mesh).unwrap_or_default();
     let mesh_label = format!("{}: {:?}, {} {}, {} {}", labels.mesh.as_str(), results.mesh.source, mesh.vertex_count(), labels.vertices.as_str(), mesh.triangle_count(), labels.triangles.as_str());
     let sparse_label = results
         .sparse
@@ -46,13 +46,10 @@ pub fn render(scene: &RemodelingSnapshot, labels: &RemodelingLabels, windows: &T
         ("remodeling-results.geo", geo_label),
     ];
     PanelTreeBuilder::new("remodeling-results")?
-        .window_section(windows, "remodeling-results.products", Some(crate::editor::remodeling::ui_label(labels.panel_results.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
+        .window_section(windows, "remodeling-results.products", Some(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::ui_label(labels.panel_results.as_str())?), true, &rows, |(id, text)| tree_item(*id, text.as_str()))?
         .build()
 }
 //#endregion 🔖️Render
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 //#endregion 🧪️Tests

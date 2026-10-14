@@ -1,11 +1,12 @@
 //! ↩️ `disconnect-synapse` inverse — reconstructs a `connect-synapse` from BASE state; an edge
 //! already absent from `base` has nothing to undo.
 
-use crate::standards::v1::subsets::any::schema::mutations::connect_synapse::ConnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::disconnect_synapse::DisconnectSynapse;
-use crate::standards::v1::subsets::any::schema::mutations::{synapse_index,Generation3dMutation};
+use crate::connect_synapse::ConnectSynapse;
+use crate::disconnect_synapse::DisconnectSynapse;
+use crate::synapse_index;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 /// ↩️ Missing id in `base` ⇒ `Vec::new()`.
 pub fn inverse(payload: &DisconnectSynapse, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {

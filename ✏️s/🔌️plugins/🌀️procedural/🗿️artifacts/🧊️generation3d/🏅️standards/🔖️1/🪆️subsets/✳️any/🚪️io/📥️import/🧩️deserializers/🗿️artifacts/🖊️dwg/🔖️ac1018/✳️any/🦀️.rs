@@ -12,10 +12,12 @@
 //! (`decode_dwg`) and the drawing is required to actually carry mesh geometry
 //! (`SemioMeshFromDwg`), so a curve-only or non-DWG file fails loudly here rather than evaluating
 //! to nothing later.
-use crate::standards::v1::subsets::any::io::mesh_bridge::{base64_encode, import_document, io_error};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mesh_bridge::base64_encode;
+use semio_s_artifact_procedural_3d_mesh_bridge::import_document;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
-use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 

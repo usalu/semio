@@ -4,6 +4,7 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "📦️packages/🦀️rust",
+    "💡️inference/🌉️mcp/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -106,6 +107,12 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-semio-value]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
 
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-mutations]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-stdio-svg]
 path = "../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust"
 

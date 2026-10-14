@@ -1,9 +1,9 @@
 use super::*;
 use super::super::tests::kit;
 use super::super::family_of;
-use crate::{FamilyCategory, ParameterKind};
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
 
-fn model() -> crate::ModelSnapshot {
+fn model() -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let mut snapshot = kit::model();
     kit::hea(&mut snapshot);
     kit::family(&mut snapshot, "fam-table", FamilyCategory::Furniture);
@@ -11,7 +11,7 @@ fn model() -> crate::ModelSnapshot {
     snapshot
 }
 
-fn values(snapshot: &crate::ModelSnapshot) -> BTreeMap<String, FamilyValue> {
+fn values(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> BTreeMap<String, FamilyValue> {
     snapshot.families.keys().map(|id| (id.clone(), family_of(snapshot, id, &BTreeMap::new()))).collect()
 }
 

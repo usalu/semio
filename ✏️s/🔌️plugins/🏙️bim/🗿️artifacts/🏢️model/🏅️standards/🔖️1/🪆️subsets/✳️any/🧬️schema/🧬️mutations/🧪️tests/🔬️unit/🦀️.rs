@@ -83,7 +83,7 @@ async fn the_pure_storey_elevation_equals_the_inference_engine() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_rise_to_another_storey_is_the_elevation_gap() {
-    use crate::TopConstraint;
+    use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
     let base = house();
     let gap = crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-upper").unwrap() - crate::standards::v1::subsets::any::schema::authored::storeys::elevation(&base, "st-ground").unwrap();
     let rise = placement::rise(&base, "st-ground", 0.1, &TopConstraint::Storey { storey: "st-upper".into(), offset: -0.2 }).expect("both storeys exist");

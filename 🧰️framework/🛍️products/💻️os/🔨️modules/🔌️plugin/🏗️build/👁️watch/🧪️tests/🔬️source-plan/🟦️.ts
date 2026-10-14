@@ -20,15 +20,20 @@ export async function testNativeSourceWatchPlanV1(workspace: string, artifacts: 
   const temporary = mkdtempSync(join(artifacts, "source-watch-"));
   try {
     for (const [path, bytes] of Object.entries(fixture.files)) { mkdirSync(dirname(join(temporary, path)), { recursive: true }); writeFileSync(join(temporary, path), bytes as string); }
-    const { nativeSourceWatchPlanV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
-    const plan = await nativeSourceWatchPlanV1("owners/assembly/package", temporary);
-    const node = "const {nativeSourceWatchPlanV1:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(await f('owners/assembly/package',process.argv[2])));";
-    const nodePlan = JSON.parse(execFileSync("node", ["--input-type=module", "-e", node, pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href, temporary], { encoding: "utf8" }));
-    assert.deepEqual(nodePlan, plan);
+    const { nativeSourceWatchPlanV1 } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
+    const prefix = relative(workspace, temporary).replaceAll("\\", "/"), crate = `${prefix}/owners/assembly/package`;
+    assert.ok(prefix && !prefix.split("/").includes(".."));
+    const workspacePlan = await nativeSourceWatchPlanV1(crate, workspace);
+    const node = "const {nativeSourceWatchPlanV1:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(await f(process.argv[3],process.argv[2])));";
+    const nodePlan = JSON.parse(execFileSync("node", ["--input-type=module", "-e", node, pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href, workspace, crate], { encoding: "utf8" }));
+    assert.deepEqual(nodePlan, workspacePlan);
+    const local = (paths: readonly string[]) => paths.filter(path => path.startsWith(`${prefix}/`)).map(path => path.slice(prefix.length + 1));
+    const plan = { ...workspacePlan, files: local(workspacePlan.files), includes: local(workspacePlan.includes), excludes: local(workspacePlan.excludes) };
     const cargo = JSON.parse(execFileSync("cargo", ["metadata", "--no-deps", "--format-version", "1", "--manifest-path", join(temporary, "Cargo.toml")], { cwd: temporary, encoding: "utf8" }));
     for (const owner of cargo.packages) for (const target of owner.targets) assert.ok(plan.files.includes(relative(temporary, resolve(target.src_path)).replaceAll("\\", "/")));
     const selected = (path: string) => plan.files.includes(path) || plan.includes.some((glob: string) => minimatch(path, glob, { dot: true })) && !plan.excludes.some((glob: string) => minimatch(path, glob, { dot: true }));
     for (const path of fixture.required) assert.ok(selected(path), path);
+    for (const glob of fixture.requiredExcludes) assert.ok(plan.excludes.includes(glob), glob);
     for (const event of fixture.events) {
       assert.equal(selected(event.path), event.selected, event.path);
       assert.equal(nativeSourceWatchSelectedV1(parseNativeSourceWatchPlanV1(plan), event.path), selected(event.path));

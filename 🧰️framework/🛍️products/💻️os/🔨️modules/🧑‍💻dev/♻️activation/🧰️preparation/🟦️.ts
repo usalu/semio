@@ -60,7 +60,7 @@ class PreparationScript extends BundleScript {
     const healthy = healthyPreparedComponents(verdicts, playground.pluginId);
     for (const line of preparedComponentReportLines(healthy.excluded, `bun repo run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
     if (healthy.refusal) throw new Error(healthy.refusal);
-    for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
+    for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".semio-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
     console.log(`Prepared ${variant} ${renderer} ${profile}: ${healthy.prepared.length} of ${session.plugins.length} components (${healthy.excluded.length} excluded), session, browser support and ${fonts} fonts`);
   }

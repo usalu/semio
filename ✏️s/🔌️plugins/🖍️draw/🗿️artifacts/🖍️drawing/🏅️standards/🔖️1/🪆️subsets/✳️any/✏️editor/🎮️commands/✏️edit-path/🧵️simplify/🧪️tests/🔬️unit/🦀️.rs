@@ -16,8 +16,8 @@ fn close(work:&mut Work) {
 fn retained_path_simplification_shared_cases() {
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🧮️geometry/✏️editing/🎮️operations/🎛️algorithms/🔣️.json")).unwrap();
     for case in cases.as_array().unwrap().iter().filter(|case|case["operation"]["kind"]=="simplify"&&case["error"]!=true) {
-        let source:Vec<crate::PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
-        let layer=crate::schema::create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=crate::schema::layer_base(&layer).id.clone();
+        let source:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(case["before"].clone()).unwrap();
+        let layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Simplify")).to_string().into()).expect("nonempty authored identity"), "Simplify",source.into());let id=semio_s_artifact_draw_drawing_model::layer_base(&layer).id.clone();
         let snapshot=DrawingSnapshot {layers:vec![layer].into(),..Default::default()};let saved=snapshot.clone();
         let command=DrawingCommand::EditPath(edit_path::EditPath {layer_id:id,edit:Box::new(serde_json::from_value(case["operation"].clone()).unwrap())});
         let config=NoConfig {};let history=semio_framework_plugin::HistoryView::empty();let interaction=protocol::InteractionState::default();let hover=semio_framework_plugin::app::InteractionHoverState::new();
@@ -31,7 +31,7 @@ fn retained_path_simplification_shared_cases() {
                 ArtifactCommandWorkStep::Complete(emit)=>{
                     let mut after=snapshot.clone();for mutation in emit.mutations {crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap();}
                     let DrawingLayerNode::Path(path)=after.layers.get(0).unwrap() else {unreachable!()};
-                    let expected:Vec<crate::PathSegment>=serde_json::from_value(case["after"].clone()).unwrap();assert_eq!(path.segments.iter().cloned().collect::<Vec<_>>(),expected);completed=true;break;
+                    let expected:Vec<semio_s_artifact_draw_drawing_model::PathSegment>=serde_json::from_value(case["after"].clone()).unwrap();assert_eq!(path.segments.iter().cloned().collect::<Vec<_>>(),expected);completed=true;break;
                 },_=>panic!("Unexpected retained path result"),
             }
             assert_eq!(snapshot,saved);

@@ -3,7 +3,7 @@
 use super::super::create_column_type::CreateColumnType;
 use super::super::cascade;
 use super::DeleteColumnType;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &DeleteColumnType, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.column_types.get(&payload.id) {

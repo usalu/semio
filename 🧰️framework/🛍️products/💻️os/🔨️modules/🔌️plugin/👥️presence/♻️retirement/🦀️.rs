@@ -118,7 +118,7 @@ impl<P> BoundedPresenceRootRetirement<P> {
         RetirementDemand { copy_bytes: usize::from(self.retained_bytes != 0), depth: usize::from(!self.terminal_is_empty()), ..Default::default() }
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub(crate) fn terminal_is_empty(&self) -> bool {
         self.root.is_none() && self.retained_bytes == 0
     }
 }

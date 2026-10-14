@@ -33,8 +33,5 @@
   "semio": {
     "role": "plugin",
     "id": "semio-s-plugin-fem-ts"
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

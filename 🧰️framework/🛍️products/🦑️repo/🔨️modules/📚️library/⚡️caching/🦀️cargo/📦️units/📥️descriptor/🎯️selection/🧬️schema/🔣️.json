@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "manifest",
+    "cwd",
+    "arguments",
+    "mode"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1
+    },
+    "arguments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
+    }
+  }
+}

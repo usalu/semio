@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-graph-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Jack, the shared graph query language: lexer, parser, matcher, formatter and language service."
+
+[package.metadata.semio]
+role = "framework"
+id = "graph-dsl"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_graph_dsl"
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-graph-manifest = { path = "../../../../🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = "1"

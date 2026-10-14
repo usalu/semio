@@ -210,8 +210,8 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactEphemeralOneItemPrepar
                     return match ReturnedSnapshotReadRetirement::admit(root, self.state_retirement.as_ref().expect("original state factory").clone(), child) { Ok((owner, receipt)) => { *self.retirement = Some(owner); Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.base = Some(ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(root))); drop(alias); Err(error) } };
                 }
                 ArtifactEphemeralBaseOwner::Presence(read) | ArtifactEphemeralBaseOwner::TransientRead(read) => {
-                    if read.owner.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-                    if let Some(mut lease) = read.lease.take() { lease.return_now(); *self.base_registry = Some(crate::os_store::SnapshotReadRegistryAliasRetirement::new(lease.registry)); }
+                    if read.release_original_alias() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+                    *self.base_registry = read.return_original_lease();
                     self.base.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                 }
             }

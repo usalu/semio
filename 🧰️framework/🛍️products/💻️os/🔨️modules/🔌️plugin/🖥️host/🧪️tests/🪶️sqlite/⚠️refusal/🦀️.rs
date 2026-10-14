@@ -1,5 +1,5 @@
 use crate::*;
-use semio_framework_plugin_interpreter::{sqlite_wire, GuestCallCancellation, TurnFault};
+use semio_framework_plugin_guest_contract::{sqlite_wire, GuestCallCancellation, TurnFault};
 use super::{wit_snapshot_rejection,observe_sqlite_guest};
 
 #[semio_framework_async_macros::async_test]

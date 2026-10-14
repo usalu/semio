@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "rejectedModes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "repeat",
+          "loseReceipt",
+          "reservations"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "prototype",
+              "release"
+            ]
+          },
+          "repeat": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "loseReceipt": {
+            "type": "boolean"
+          },
+          "reservations": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "rejectedModes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

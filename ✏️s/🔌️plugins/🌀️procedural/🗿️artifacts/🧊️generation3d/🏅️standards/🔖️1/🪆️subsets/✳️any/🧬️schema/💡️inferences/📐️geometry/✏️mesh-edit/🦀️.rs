@@ -1,9 +1,22 @@
 //! ✏️ `mesh.edit` computes: bevel, dissolve, merge, loop cut, knife, extrude, inset, subdivide, flip, delete and triangulate as stepped kernel mesh jobs.
 //!
 //! Selections are mesh element ids validated against the input mesh; edge ids are half-edge handles.
+#![allow(clippy::result_large_err)]
 
-use super::mesh_support::{count, modeling, owned_mesh, picked, picked_one, point3, scalar, Element, KernelResult};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::count;
+use semio_s_artifact_procedural_3d_mesh_support::modeling;
+use semio_s_artifact_procedural_3d_mesh_support::owned_mesh;
+use semio_s_artifact_procedural_3d_mesh_support::picked;
+use semio_s_artifact_procedural_3d_mesh_support::picked_one;
+use semio_s_artifact_procedural_3d_mesh_support::point3;
+use semio_s_artifact_procedural_3d_mesh_support::scalar;
+use semio_s_artifact_procedural_3d_mesh_support::Element;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::{EdgeId, FaceId, VertexId, WeldMode};
 
 fn edges(inputs: &WidgetInputs, mesh: &semio_framework_3d::mesh::HalfedgeMesh, port: &str) -> Result<Vec<EdgeId>, WidgetFault> {
@@ -116,6 +129,8 @@ fn triangulate(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     modeling(kind, move || owned_mesh(&inputs, "mesh")?.triangulate_job_owned().kernel())
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-edit", include_str!("../../../🗂️catalogue/🔣️mesh-edit.json"));
 /// 🗃️ The `mesh.edit` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "mesh.edit.bevel", start: bevel },

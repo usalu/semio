@@ -335,11 +335,11 @@ pub mod spatial {
 use semio_framework_3d_brep_representation::contract::{Aabb, Vec3};
 use crate::mass_properties::closest_point_on_face;
 use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId, SolidId};
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::Body;
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_vector::Pnt3;
 use spatial::Bvh;
 
 // #region 🔖️Bounds

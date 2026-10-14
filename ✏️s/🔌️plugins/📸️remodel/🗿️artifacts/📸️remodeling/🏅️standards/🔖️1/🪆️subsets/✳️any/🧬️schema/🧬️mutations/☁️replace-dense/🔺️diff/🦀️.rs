@@ -1,7 +1,9 @@
 //! 🔺️ Sparse diff builder for `ReplaceDense` — a whole-value swap of `results.dense`, which is
 //! always present on the snapshot, so there is no missing-target case to detect.
-use crate::diff::{RemodelingAssigned, RemodelingDiff, RemodelingResultsDiff};
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingAssigned;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingResultsDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceDense, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

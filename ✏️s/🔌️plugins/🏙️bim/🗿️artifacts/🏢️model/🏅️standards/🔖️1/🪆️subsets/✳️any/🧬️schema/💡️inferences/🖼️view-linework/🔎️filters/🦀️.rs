@@ -4,7 +4,7 @@
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanText, PlanVertex};
 use super::clip::Rect;
-use crate::{DetailLevel, ModelSnapshot, Phase, View, ViewCategory};
+use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, Phase, View, ViewCategory};
 
 /// 🧮️ The category a plan primitive of `kind` belongs to, none for the primitives of a vertical view that take the category of their element.
 pub fn category_of_kind(kind: PlanKind) -> Option<ViewCategory> {

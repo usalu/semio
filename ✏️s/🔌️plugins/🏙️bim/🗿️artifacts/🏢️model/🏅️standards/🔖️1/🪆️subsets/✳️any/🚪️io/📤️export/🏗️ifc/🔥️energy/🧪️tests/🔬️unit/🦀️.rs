@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document_in, rows, string};
-use crate::{ModelSnapshot, SpaceConditions};
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const ENERGY: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");

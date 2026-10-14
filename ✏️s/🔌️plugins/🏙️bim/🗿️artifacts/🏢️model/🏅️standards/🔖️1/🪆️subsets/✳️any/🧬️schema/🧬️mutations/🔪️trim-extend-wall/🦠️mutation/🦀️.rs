@@ -1,6 +1,6 @@
 //! 🔪️ `trim-extend-wall` payload. Trims or extends one end of a wall to the axis of another wall: the intersection of the two axes (lines and circles carried on infinitely) nearest to the old end becomes the new end, as a concrete axis. Openings keep their place in the world: when the start moves their offsets move with it, and an opening that would no longer fit refuses the call.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

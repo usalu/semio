@@ -49,7 +49,7 @@ impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
 }
 
 #[path = "../../🧪️testing/🧬️job-test-mutations/🧬️mutations/🦀️.rs"]
-mod mutations;
+pub(crate) mod mutations;
 pub(crate) use mutations::{AddValue, JobTestOp};
 
 #[path = "../🧬️job-test-mutations-unit/🦀️.rs"]

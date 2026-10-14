@@ -1,10 +1,12 @@
 //! 🚚️ `move-nodes` payload — one node-graph drag as intent (the node-graph gesture record of design §13.3): the canvas
 //! offset every addressed widget moves by from its BASE position, so editing the drag in history replays it on any base.
 
-use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::mutations::{generation3d_label_items,generation3d_label_number,Generation3dMutation};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use crate::generation3d_label_items;
+use crate::generation3d_label_number;
+use crate::Generation3dMutation;
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 //#region 🔖️MoveNodes
 /// 🚚️ Moves every addressed widget's canvas position by `(dx, dy)`.
@@ -25,12 +27,12 @@ impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for Move
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "nodes", kind: "move-nodes", record: "MovedNodes" };
 
     fn diff(&self, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
-        super::diff::diff(self, base)
+        crate::move_nodes::diff::diff(self, base)
     }
 
     fn inverse(&self, base: &Generation3dSnapshot) -> Result<Vec<Generation3dMutation>, semio_framework_value::ValueError> {
     Ok({
-        super::inverse::inverse(self, base)?
+        crate::move_nodes::inverse::inverse(self, base)?
     
     })
 }

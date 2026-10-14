@@ -3,7 +3,7 @@ use semio_framework_os_kernel::os_directory::io::text::access_policy::directory_
 use semio_framework_os_kernel::os_directory::io::text::directory_command_sha256;
 use semio_framework_os_kernel::os_directory::io::text::validate_directory_event_page_event;
 use super::*;
-#[cfg(all(feature = "integration-fixtures", feature = "native-artifact-execution"))]
+#[cfg(feature = "integration-fixtures")]
 #[path = "🪶️count-lease/🦀️.rs"]
 mod count_lease_tests;
 
@@ -330,7 +330,6 @@ use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMes
 /// 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
 const STUDIO: &str = "default";
 
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn artifact_creation_admission_cannot_activate_after_shutdown_deadline() {
     let owner = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
@@ -369,7 +368,6 @@ async fn artifact_creation_admission_cannot_activate_after_shutdown_deadline() {
 /// that knows the difference, and `owns_live_execution` is what the sweep asks before it closes
 /// anything. Ownership starts at the RESERVATION, not at the task, because the window between them
 /// is exactly where the accept fact becomes durable and visible to the sweep.
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn artifact_creation_recovery_never_closes_a_key_a_live_execution_owns() {
     let owner = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
@@ -398,7 +396,6 @@ async fn artifact_creation_recovery_never_closes_a_key_a_live_execution_owns() {
 }
 
 
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
     let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
@@ -409,7 +406,6 @@ async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root(
 /// 🚪️ A launcher that leaves while the hub is still loading its trusted catalog cancels that load:
 /// it answers `Cancelled` at once instead of being retried as a stall, and the same catalog still
 /// loads when nobody cancelled.
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn launcher_close_cancels_the_startup_catalog_load_instead_of_retrying_it() {
     let catalog_root = native_openable_stdio_bundle();
@@ -437,7 +433,6 @@ async fn configured_catalog_without_a_native_provider_fails_closed() {
     std::fs::remove_dir_all(unconfigured).expect("remove headless trusted catalog fixture");
 }
 
-#[cfg(feature = "native-artifact-execution")]
 fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let root = tempdir("native-openable-stdio");
     let stage = root.join("generation-stage");
@@ -861,9 +856,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
     let artifact_publication =
         Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test")));
     let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
-    #[cfg(feature = "native-artifact-execution")]
     let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
-    #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
         tracer: Tracer::disabled(),
@@ -875,15 +868,10 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         rebootstrap,
         artifact_authority: None,
         verified_catalog: None,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation: None,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation_commit_authority,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation_tasks: Arc::new(ArtifactCreationHttpTaskOwnerV1::new()),
-        #[cfg(feature = "native-artifact-execution")]
         gis_map_binding: None,
-        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         inference_runtime: None,
         openable_catalog: None,
         artifact_publication,
@@ -918,13 +906,8 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates: {
-            #[cfg(feature = "native-artifact-execution")]
             {
                 socket_binding_gates
-            }
-            #[cfg(not(feature = "native-artifact-execution"))]
-            {
-                Arc::new(SocketBindingGatesV1::default())
             }
         },
         extensions_root: dir.join("extension-modules"),
@@ -952,9 +935,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
     let artifact_publication =
         Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority-test")));
     let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
-    #[cfg(feature = "native-artifact-execution")]
     let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
-    #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
         tracer: Tracer::disabled(),
@@ -966,15 +947,10 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         rebootstrap,
         artifact_authority: None,
         verified_catalog: None,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation: None,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation_commit_authority,
-        #[cfg(feature = "native-artifact-execution")]
         artifact_creation_tasks: Arc::new(ArtifactCreationHttpTaskOwnerV1::new()),
-        #[cfg(feature = "native-artifact-execution")]
         gis_map_binding: None,
-        #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
         inference_runtime: None,
         openable_catalog: None,
         artifact_publication,
@@ -1009,13 +985,8 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         socket_grants: Arc::new(SocketGrantLedgerV1::default()),
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates: {
-            #[cfg(feature = "native-artifact-execution")]
             {
                 socket_binding_gates
-            }
-            #[cfg(not(feature = "native-artifact-execution"))]
-            {
-                Arc::new(SocketBindingGatesV1::default())
             }
         },
         extensions_root: dir.join("extension-modules"),
@@ -1286,7 +1257,7 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
 
 /// 📌️ One GIS Map document on the verified GIS profile: a genesis checkpoint, an author, a
 /// spectator, and the document's live actor.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 struct CheckInFixture {
     state: HubState,
     author: TestIssuedSession,
@@ -1301,7 +1272,7 @@ struct CheckInFixture {
 
 /// 🗺️ One GIS Map document on the verified GIS profile (the kind a hub opens and checks in), its
 /// genesis checkpoint published, one Author, one Spectator and a separate owner.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_fixture(label: &str) -> CheckInFixture {
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
     let profile = trusted_catalog_fixture::verified_gis_map_integration_profile(&trusted_catalog_fixture::unique_profile_root(&format!("check-in-{label}"))).await.expect("verified GIS Map check-in profile");
@@ -1344,7 +1315,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
 /// ✍️ The ledger a real GIS Map editor emits for `ids.len()` one-operation edits made on the genesis
 /// pair — each places one position — as one envelope per edit, exactly its store's own event log,
 /// addressed to the hub's document key.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<MutationEnvelope> {
     use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
@@ -1379,7 +1350,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
 }
 
 /// 📥️ Commits one envelope as its own ledger transaction and names the head it produced.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_commit(fixture: &CheckInFixture, envelope: MutationEnvelope) -> EditedArtifactFrontierV1 {
     let batch = db::document::CommandBatch::new(vec![envelope]).await.expect("check-in command batch");
     fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("check-in actor response").expect("check-in edit accepted");
@@ -1389,7 +1360,7 @@ async fn check_in_commit(fixture: &CheckInFixture, envelope: MutationEnvelope) -
 
 /// 🧮️ The pair a remote replica holds after folding `envelopes` onto the genesis pair — the oracle a
 /// hub-materialized checkpoint must equal byte for byte.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_replica_pair(fixture: &CheckInFixture, envelopes: &[MutationEnvelope]) -> (Vec<u8>, Vec<u8>) {
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
     let files = directory::os_store::replay_envelopes_onto_pair::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr, &directory::os_spr::encode_envelopes(envelopes), directory::os_store::document_store_owners::bounded_artifact_store_owners).await.expect("replica fold");
@@ -1397,7 +1368,7 @@ async fn check_in_replica_pair(fixture: &CheckInFixture, envelopes: &[MutationEn
 }
 
 /// 📮️ Posts one Check In and follows it to a terminal status.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_until_terminal(addr: SocketAddr, fixture: &CheckInFixture, token: &str, request_id: &str, head: &EditedArtifactFrontierV1) -> (u16, Option<DocumentCheckInStatusV1>) {
     let route = format!("/spaces/{}/documents/{}/check-ins", fixture.scope.space_id, fixture.scope.document_id);
     let request = DocumentCheckInV1 { schema: "semio.hub.document-check-in/v1".into(), request_id: request_id.into(), head: head.clone() }.canonical_json().expect("canonical check-in");
@@ -1421,7 +1392,7 @@ async fn check_in_until_terminal(addr: SocketAddr, fixture: &CheckInFixture, tok
 }
 
 /// 🧾️ The hub's active checkpoint pair as a cold opener reads it.
-#[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_cold_pair(addr: SocketAddr, fixture: &CheckInFixture) -> semio_hub::lag_rebootstrap::VerifiedActiveCheckpointPair {
     let authorization = format!("Bearer {}", fixture.author.token);
     let response = raw_http_request(addr, "GET", &format!("/spaces/{}/documents/{}/active-checkpoint/pair", fixture.scope.space_id, fixture.scope.document_id), &[("Authorization", authorization.as_str()), ("Accept", CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE)], &[]).await;
@@ -1429,7 +1400,7 @@ async fn check_in_cold_pair(addr: SocketAddr, fixture: &CheckInFixture) -> semio
     decode_canonical_checkpoint_pair(&response.body).expect("canonical cold pair")
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
@@ -1529,7 +1500,7 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
 
 /// 🗺️ The ledger a real GIS Map editor emits for one edit that places `gis_map_test_snapshot()`'s
 /// position and route onto an empty map: its store's own event log, exactly what a client sends.
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope> {
     use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::mutations::{create_position::CreatePosition, create_route::CreateRoute};
@@ -2104,7 +2075,6 @@ async fn healthz_reports_liveness_on_a_process_whose_readyz_still_refuses() {
 }
 
 //#region 💡️Inference
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[tokio::test]
 async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write() {
     let state = test_state().await;
@@ -2142,7 +2112,6 @@ async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_docum
 /// a refusal (G10: a post-commit directory re-check answered `503 inference.unavailable` while the
 /// document had advanced). The ingress bindings are held across the commit instead
 /// (`gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write`).
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[test]
 fn a_committed_gis_map_approval_is_answered_with_its_receipt() {
     let source = include_str!("../../🏗️bootstrap/🦀️.rs");
@@ -2155,7 +2124,6 @@ fn a_committed_gis_map_approval_is_answered_with_its_receipt() {
     }
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[tokio::test]
 async fn gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair() {
     let fanout = ShardedMap::new();
@@ -2210,7 +2178,6 @@ async fn gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstra
     assert!(matches!(second.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "one applied checkpoint emits exactly one control per peer");
 }
 
-#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 #[tokio::test]
 async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
@@ -2242,7 +2209,7 @@ async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
 }
 
 /// 🗺️ Builds a real trusted GIS Map editor profile, ledger and runtime on a live `HubState`.
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 struct GisMapInferenceFixture {
     state: HubState,
     profile: semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture::VerifiedGisMapIntegrationProfileV1,
@@ -2252,7 +2219,7 @@ struct GisMapInferenceFixture {
     ledger_path: std::path::PathBuf,
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 fn gis_map_test_snapshot() -> semio_s_artifact_gis_gismap::GisMapSnapshot {
     use directory::DslValue;
     use semio_s_artifact_gis_gismap::{GisMapSnapshot, MapFeature};
@@ -2267,7 +2234,7 @@ fn gis_map_test_snapshot() -> semio_s_artifact_gis_gismap::GisMapSnapshot {
 }
 
 /// 🧭️ Seeds one space, one Author, one Spectator, a GIS Map document and its verified checkpoint.
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) -> (GisMapInferenceFixture, TestIssuedSession, TestIssuedSession) {
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
     let mut state = test_state().await;
@@ -2306,7 +2273,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
 }
 
 /// 🧾️ Publishes one verified active checkpoint whose pack is the literal GIS Map snapshot bytes.
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str, pack: &[u8], genesis: &os_directory::ArtifactCheckpoint) {
     let spr = b"gis-map-spr";
     let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
@@ -2341,17 +2308,17 @@ async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, docum
     state.directory_service.publish_reserved_artifact_checkpoint(system, checkpoint, reservation, 100).await.expect("publish verified GIS Map checkpoint");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 fn inference_route(space_id: &str, document_id: &str, suffix: &str) -> String {
     format!("/spaces/{space_id}/documents/{document_id}/inference/gis-map/jobs{suffix}")
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 fn inference_intent(request_id: &str) -> String {
     serde_json::json!({ "schema": "semio.hub.inference-request/v1", "version": 1, "requestId": request_id, "serviceId": "s.gis.gismap.inference", "policyVersion": 1, "lifetimeMs": 120_000 }).to_string()
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id: &str, job_id: &str, headers: &[(&str, &str)], expected: &str) -> serde_json::Value {
     tokio::time::timeout(std::time::Duration::from_secs(5), async {
         loop {
@@ -2368,12 +2335,12 @@ async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id:
     .expect("inference reaches its bounded terminal state")
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 fn proposal_fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancellation() {
     let fixture = proposal_fixture();
@@ -2431,7 +2398,7 @@ async fn gis_map_proposal_owner_claims_streams_and_boundedly_retires_on_cancella
     assert_eq!(denied.status, 409, "a cancelled offer can never be approved afterwards");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_bounded() {
     let (bound, author, spectator) = gis_map_inference_fixture("reconcile-owner@example.test", "reconcile-watcher@example.test").await;
@@ -2489,7 +2456,7 @@ async fn inference_reconciliation_route_is_existing_only_reader_bound_and_body_b
     assert_eq!(revoked.status, 403, "the exact original reader loses reconciliation after session revocation");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_inference_runtime_close_signals_and_joins_actual_codec_work() {
     let (bound, author, _spectator) = gis_map_inference_fixture("close-owner@example.test", "close-watcher@example.test").await;
@@ -2510,7 +2477,7 @@ async fn gis_map_inference_runtime_close_signals_and_joins_actual_codec_work() {
     assert_eq!(runtime.retained_operation_count_for_test().await.expect("retained worker count"), 0, "close joins the outer and blocking worker before returning");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_inference_revocation_after_compute_refuses_late_publication() {
     let (bound, author, _spectator) = gis_map_inference_fixture("revoked-owner@example.test", "revoked-watcher@example.test").await;
@@ -2550,7 +2517,7 @@ async fn gis_map_inference_revocation_after_compute_refuses_late_publication() {
     assert!(page.proposal_hash.is_none(), "revocation before the final authority fence publishes no proposal");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller() {
     let fixture = proposal_fixture();
@@ -2592,7 +2559,7 @@ async fn gis_map_proposal_is_private_to_every_peer_spectator_and_stale_caller() 
     assert!(!bound.snapshot_pack.is_empty(), "the base Map pack the job froze is a real encoded snapshot");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drift() {
     let fixture = proposal_fixture();
@@ -2625,7 +2592,7 @@ async fn gis_map_approval_stamps_one_create_region_and_rejects_every_frozen_drif
     assert!(!kinds.contains(&"approved"), "no committed-WAL witness, no approved event");
 }
 
-#[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
+#[cfg(feature = "integration-fixtures")]
 #[tokio::test]
 async fn gis_map_approval_is_idempotent_across_duplicate_requests_and_restart() {
     let (bound, author, _spectator) = gis_map_inference_fixture("idempotent-owner@example.test", "idempotent-watcher@example.test").await;
@@ -4392,12 +4359,10 @@ fn a_supersession_is_admitted_whatever_its_author_and_its_refusal_leaves_the_soc
 }
 
 //#region ✏️ConcurrentSupersede
-#[cfg(feature = "native-artifact-execution")]
 type SupersedeReplica = directory::os_store::ArtifactStore<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>;
 
 /// 🧑‍🤝‍🧑️ One author of the concurrent-supersede law: a GIS Map replica authoring as the hub actor its document socket
 /// speaks for — the actor a sync actor stamps — the socket, the events it knows and every batch the hub relayed to it.
-#[cfg(feature = "native-artifact-execution")]
 struct SupersedeAuthor {
     actor: String,
     socket: tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
@@ -4407,7 +4372,6 @@ struct SupersedeAuthor {
     batch: u64,
 }
 
-#[cfg(feature = "native-artifact-execution")]
 impl SupersedeAuthor {
     /// 🔓️ Opens a document socket as `token`'s session and a replica of `document` on the GIS Map genesis pair.
     async fn open(state: &HubState, url: &str, document: &str, token: &str) -> Self {
@@ -4481,7 +4445,6 @@ impl SupersedeAuthor {
 }
 
 /// 📍️ A GIS Map position `id` at `index`, longitude `lon`.
-#[cfg(feature = "native-artifact-execution")]
 fn supersede_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_gismap::GisMapMutation {
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
     let data = directory::DslValue::object([("lon".into(), directory::DslValue::float(lon)), ("lat".into(), directory::DslValue::float(47.0))]);
@@ -4490,7 +4453,6 @@ fn supersede_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_
 
 /// 🤝️ Both replicas hold the same fold: snapshot, effective supersessions, content revision, per-mutation outcomes,
 /// alternatives and the line they stand on.
-#[cfg(feature = "native-artifact-execution")]
 fn assert_supersede_convergence(a: &SupersedeReplica, b: &SupersedeReplica, round: &str) {
     let alternatives = |replica: &SupersedeReplica| replica.envelope().vcs.alternatives.iter().map(|alternative| (alternative.id.clone(), alternative.name.clone(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>();
     assert_eq!(a.snapshot().expect("snapshot"), b.snapshot().expect("snapshot"), "{round}: the same document");
@@ -4501,7 +4463,6 @@ fn assert_supersede_convergence(a: &SupersedeReplica, b: &SupersedeReplica, roun
 }
 
 /// 🏁️ The transition of `events` the fold keeps for a contested operation: the last by `(hlc, id)`.
-#[cfg(feature = "native-artifact-execution")]
 fn last_supersession(events: &[&MutationEnvelope]) -> String {
     events.iter().max_by(|left, right| (left.timestamp.cmp_key(), &left.mutation_id.0).cmp(&(right.timestamp.cmp_key(), &right.mutation_id.0))).expect("contested events").mutation_id.0.clone()
 }
@@ -4514,7 +4475,6 @@ fn last_supersession(events: &[&MutationEnvelope]) -> String {
 /// id)`, and the trunk-scoped one takes effect exactly when its author checks the trunk out again. Under `Vigilant` the
 /// later concurrent supersession of the same operation is refused `mutation.clamped`, its author retracts it
 /// (`BackboneMessage::Retract`, audit F-m8) and converges with the other.
-#[cfg(feature = "native-artifact-execution")]
 #[test]
 fn concurrent_supersessions_through_the_hub_converge_both_replicas() {
     run_socket_test(|| async {
@@ -8644,7 +8604,6 @@ async fn a_termination_signal_prefers_the_orchestrators_verdict() {
 /// installs — `axum::serve(…).with_graceful_shutdown(termination future)` followed by
 /// `ArtifactCreationHttpTaskOwnerV1::shutdown_with_deadline` — and asserts both halves: the socket
 /// stops answering, and an in-flight artifact-creation task is drained rather than abandoned.
-#[cfg(feature = "native-artifact-execution")]
 #[tokio::test]
 async fn a_termination_signal_stops_the_listener_and_then_drains_in_flight_work() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("test listener");
@@ -9036,7 +8995,6 @@ mod quick {
         stop_recovery_server(state, shutdown, server).await;
     }
 
-    #[cfg(feature = "native-artifact-execution")]
     #[tokio::test]
     async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition() {
         let unavailable = test_state().await;
@@ -9111,7 +9069,7 @@ mod quick {
     /// 📌️ Once the edits committed since the active checkpoint reach the policy the hub checks the document in by itself, on
     /// behalf of the author whose batch reached it: the active checkpoint's baseline becomes the committed head and a cold
     /// open reads the replica fold of the ledger, byte for byte; a frontier-less hello from a seeding plan then resumes there.
-    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[cfg(feature = "integration-fixtures")]
     #[tokio::test]
     async fn the_checkpoint_policy_checks_a_document_in_at_its_committed_head() {
         let mut fixture = check_in_fixture("policy").await;
@@ -9138,7 +9096,7 @@ mod quick {
     /// edits the active checkpoint's baseline is exactly the named head, its parent is genesis, and a
     /// cold open reads the pair a remote replica holds after the same ledger, byte for byte. A third
     /// edit and a second Check In advance it again from the first checkpoint.
-    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[cfg(feature = "integration-fixtures")]
     #[tokio::test]
     async fn check_in_advances_the_active_checkpoint_to_the_named_head_and_cold_opens_from_it() {
         let fixture = check_in_fixture("advances").await;
@@ -9177,7 +9135,7 @@ mod quick {
     /// ⛔️ Only an author checks in, only a committed head of this document is materialized, a head the
     /// active checkpoint already passed is stale, and checking in the active baseline again is the
     /// same checkpoint rather than a second one.
-    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[cfg(feature = "integration-fixtures")]
     #[tokio::test]
     async fn check_in_refuses_stale_unknown_and_foreign_heads_and_is_author_owned() {
         let fixture = check_in_fixture("refusals").await;
@@ -9219,7 +9177,7 @@ mod quick {
     /// 🔁️ A retried request answers its own job, the same request id naming another head conflicts,
     /// a Check In the author cancels before publication publishes nothing, and an author removed
     /// from the space mid-flight ends it `authority-changed` with nothing published.
-    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[cfg(feature = "integration-fixtures")]
     #[tokio::test]
     async fn check_in_is_idempotent_per_request_cancellable_and_revoked_with_the_author() {
         let mut fixture = check_in_fixture("lifecycle").await;
@@ -9507,7 +9465,7 @@ mod long {
     /// 🌱️ Server-owned creation on the GIS plugin's real release component: the catalog is author-only,
     /// a stale generation or unknown kind claims nothing, two concurrent duplicates own one factory, and
     /// the guest's own genesis reaches `ready` with a descriptor and a genesis-backed active checkpoint.
-    #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
+    #[cfg(feature = "integration-fixtures")]
     #[tokio::test]
     async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_backed() {
         use semio_hub::artifact_authority::creation::ArtifactCreationOperationV1;

@@ -1,10 +1,20 @@
-use super::*;
-use crate::editor::remodeling::commands::{add_stream, import_abort, import_frame_payload, import_video_bytes_payload, import_video_done, remove_stream, set_stream_sync};
-use crate::editor::remodeling::modes::{capture, model};
-use crate::editor::remodeling::unit_tests::context::{app, dispatch, test_window, RemodelingApp};
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_frame_payload::*;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::add_stream;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_abort;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_bytes_payload;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_video_done;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::remove_stream;
+use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::set_stream_sync;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url_jpeg;
+use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_video_data_url;
+use crate::editor::remodeling::unit_tests::context::{app, dispatch, test_window, verify_import_checker_stream, RemodelingApp};
 use semio_framework_plugin::artifact_app_laws::{meta, settle_history_verb, settle_registered_typed_operation};
 use semio_framework_plugin::PluginApp;
-use crate::editor::remodeling::RemodelingCommand;
+use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn import_frame_payload_creates_a_stream_and_asset() {
@@ -19,12 +29,11 @@ async fn import_frame_payload_creates_a_stream_and_asset() {
 /// 🎞️ In-process video import (the `ImportVideoBytesPayload` fallback path): a tiny synthesized
 /// MJPEG mp4 must decode into a new video stream whose frame count matches what was muxed in.
 #[semio_framework_async_macros::async_test]
-#[cfg(feature = "video-mp4")]
 async fn import_video_bytes_payload_extracts_frames_in_process() {
     let mut app = app().await;
     // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized
     // frames are kept (a stride-sampling test belongs to the video engine topic file, not here).
-    dispatch(&mut app, RemodelingCommand::SetIngestParams(crate::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 })).await;
+    dispatch(&mut app, RemodelingCommand::SetIngestParams(semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_ingest_params::SetIngestParams { frame_sample_stride: 1, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 })).await;
     dispatch(&mut app, RemodelingCommand::ImportVideoBytesPayload(import_video_bytes_payload::ImportVideoBytesPayload { payload: checker_video_data_url(5, 32, 32, 4).await, name: "clip.mp4".into() })).await;
     let scene = app.snapshot().expect("projection");
     assert_eq!(scene.streams.len(), 1);
@@ -206,8 +215,8 @@ async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {
     dispatch(&mut app, RemodelingCommand::AddStream(add_stream::AddStream { name: "Front".into(), kind: "video".into(), camera_id: String::new() })).await;
     let still = |payload: String, index: u32| RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: format!("frame-{index}.png"), index, total: 3 });
     dispatch(&mut app, still("not-a-data-url".into(), 0)).await;
-    dispatch(&mut app, still(import_frame_payload::checker_data_url(24, 24, 3).await, 1)).await;
-    dispatch(&mut app, still(import_frame_payload::checker_data_url(24, 24, 3).await, 2)).await;
+    dispatch(&mut app, still(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, 1)).await;
+    dispatch(&mut app, still(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, 2)).await;
     let scene = app.snapshot().expect("projection");
     assert_eq!(scene.streams.len(), 2);
     assert!(scene.streams[0].frames.is_empty(), "the earlier stream is untouched");
@@ -220,7 +229,7 @@ async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {
 #[semio_framework_async_macros::async_test]
 async fn a_windowless_multi_file_pick_is_refused() {
     let mut app = app().await;
-    let first = RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: import_frame_payload::checker_data_url(24, 24, 3).await, name: "frame-0.png".into(), index: 0, total: 2 });
+    let first = RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, name: "frame-0.png".into(), index: 0, total: 2 });
     let refusal = match app.dispatch_typed(first, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await {
         Err(fault) => fault,
         Ok(_) => settle_registered_typed_operation(&mut *app, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.err().expect("a windowless multi-file pick is refused"),
@@ -230,9 +239,9 @@ async fn a_windowless_multi_file_pick_is_refused() {
 }
 /// 🎞️ Drives video ticks straight through the importing window's tool state, applying each tick's streamed operations
 /// to the document the next tick sees — the pure path the retained step runs.
-fn drive_ticks(frames: &[(u32, String)]) -> (crate::RemodelingSnapshot, crate::editor::remodeling::transient::RemodelingWindowTransient) {
-    use crate::editor::remodeling::transient::RemodelingWindowTransient;
-    let mut scene = crate::RemodelingSnapshot::default();
+fn drive_ticks(frames: &[(u32, String)]) -> (semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot, semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient) {
+    use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::transient::RemodelingWindowTransient;
+    let mut scene = semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot::default();
     let mut window = RemodelingWindowTransient::default();
     let history = semio_framework_plugin::HistoryView::empty();
     for (index, payload) in frames {
@@ -242,7 +251,7 @@ fn drive_ticks(frames: &[(u32, String)]) -> (crate::RemodelingSnapshot, crate::e
         let (emit, next) = handle_in_window(&tick, &doc, &window).expect("a tick streams");
         let mut document = scene.clone();
         for mutation in &emit.artifact_mutations {
-            document = crate::mutations::apply_remodeling_mutation(&document, mutation).expect("a streamed tick applies");
+            document = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::apply_remodeling_mutation(&document, mutation).expect("a streamed tick applies");
         }
         scene = document;
         window = next;

@@ -1,0 +1,59 @@
+{
+  "maxBytes": 1000,
+  "directories": [
+    {
+      "path": "cargo/build/debug/incremental",
+      "crates": [
+        {
+          "name": "big-aaaa",
+          "bytes": 800,
+          "working": false
+        },
+        {
+          "name": "also-bbbb",
+          "bytes": 300,
+          "working": false
+        }
+      ]
+    },
+    {
+      "path": "cargo/build/release/incremental",
+      "crates": [
+        {
+          "name": "small-cccc",
+          "bytes": 10,
+          "working": false
+        }
+      ]
+    },
+    {
+      "path": "cargo/canonical-architecture/prototype/incremental",
+      "crates": [
+        {
+          "name": "live-dddd",
+          "bytes": 9000,
+          "working": true
+        },
+        {
+          "name": "stale-eeee",
+          "bytes": 2000,
+          "working": false
+        }
+      ]
+    },
+    {
+      "path": "cargo/canonical-architecture/debug/incremental",
+      "crates": [
+        {
+          "name": "only-ffff",
+          "bytes": 5000,
+          "working": true
+        }
+      ]
+    }
+  ],
+  "expected": [
+    "cargo/build/debug/incremental",
+    "cargo/canonical-architecture/prototype/incremental/stale-eeee"
+  ]
+}

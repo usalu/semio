@@ -6,7 +6,10 @@
 
 use crate::viewer::remodeling::modes::view;
 use crate::viewer::remodeling::modes::view::windows::model;
-use crate::{default_remodeling_scene, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
@@ -52,7 +55,7 @@ pub struct RemodelingViewer;
 
 impl ArtifactViewer for RemodelingViewer {
     type Snapshot = RemodelingSnapshot;
-    type Mutation = crate::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
+    type Mutation = semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
@@ -69,7 +72,7 @@ impl ArtifactViewer for RemodelingViewer {
     /// sole command is `Noop`), so the artifact's own `default_remodeling_scene()` is only the fallback for
     /// example text that no longer parses, never the ordinary boot.
     fn initial_snapshot() -> RemodelingSnapshot {
-        crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
+        semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
     }
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config

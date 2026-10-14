@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-energy-epw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy plugin EPW extension: EnergyPlus weather files into format-independent simulation weather"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-epw = { workspace = true }
+semio-s-plugin-energy-engine-bestest = { workspace = true }
+semio-s-plugin-energy-engine-error = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }
+semio-s-plugin-energy-engine-site = { workspace = true }

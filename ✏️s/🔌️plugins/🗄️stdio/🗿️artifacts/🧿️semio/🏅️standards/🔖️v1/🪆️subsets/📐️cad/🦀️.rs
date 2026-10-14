@@ -131,4 +131,5 @@ semio_framework_value::artifact_retire_struct!(schema::snapshot::CadEntityRecord
 semio_framework_value::artifact_retire_struct!(schema::snapshot::CadBlock { name, base_point, entities });
 semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioCadSnapshot { schema, layers, blocks, entities });
 
+semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!(schema::snapshot::SemioCadSnapshot);
 semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioCadSnapshot, schema::mutations::SemioCadMutation);

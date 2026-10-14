@@ -29,10 +29,10 @@ use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, world_bounds, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexRemoval, CollisionMutationStep, CollisionPenetrationState, CollisionQueryStep, CollisionSpatialIndex, CollisionStepContext,
     CollisionStepResult,
 };
-use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
+use crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id;
 use crate::standards::v1::subsets::any::schema::{BrushCollisionFreeResult, BrushCompatibleCandidate, BrushPreviewState, EngineSceneObject, KindCatalogBundle, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, SceneConfig};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::{BrushPlacePayload, EngineSceneSnapshot};
-use crate::Puzzle3dError;
+use crate::standards::v1::subsets::any::schema::Puzzle3dError;
 use semio_framework_job::default_now_us;
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};

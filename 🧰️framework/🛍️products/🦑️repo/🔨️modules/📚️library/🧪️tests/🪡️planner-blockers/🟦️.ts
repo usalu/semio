@@ -16,7 +16,7 @@ type Fixture = { schemaVersion: number; argumentCases: { id: string; command: st
 type Token = { start: number; end: number; value: string; structuredLocation: string };
 type Edit = { path: string; structuredLocation: string; oldValue: string; newValue: string };
 const library = resolve(import.meta.dir, "../..");
-const fixture = JSON.parse(readFileSync(resolve(library, "🧫️fixtures/🪡️planner-blockers/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(library, "🧪️tests/🧫️fixtures/🪡️planner-blockers/🔣️.json"), "utf8")) as Fixture;
 const syntax = ts.createSourceFile("normalization.ts", readFileSync(resolve(library, "🧹️normalization/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
 
 /** 🧬️ Compiles the named production declarations of the normalizer into one closure over the injected dependencies. */
@@ -101,7 +101,7 @@ test("edit conflicts are named exactly when one-pass application could not repro
 test("an invalid frozen evidence document is a reportable problem with no coordinates while the preflight form aborts", () => {
   const discoverySchema = loadCatalogTaxonomy(), taxonomy = { discoverySchema };
   const contract = discoverySchema.frozenCoordinateEvidenceContracts[fixture.frozenEvidenceContractId]!;
-  const { record, authority } = production<{ record: (path: string, bytes: Uint8Array, taxonomy: unknown) => { coordinates: ReadonlySet<string>; problem: string | null } | null; authority: (path: string, bytes: Uint8Array, taxonomy: unknown) => ReadonlySet<string> | null }>(["frozenEvidenceRecord", "frozenEvidenceCoordinateAuthority", "frozenEvidenceContractIndex", "frozenEvidenceContractIndexes", "frozenEvidenceCoordinateCache"], "{ record: frozenEvidenceRecord, authority: frozenEvidenceCoordinateAuthority }", { frozenCoordinateEvidenceCoordinates, frozenMarkdownCoordinateEvidenceCoordinates });
+  const { record, authority } = production<{ record: (path: string, bytes: Uint8Array, taxonomy: unknown) => { coordinates: ReadonlySet<string>; problem: string | null } | null; authority: (path: string, bytes: Uint8Array, taxonomy: unknown) => ReadonlySet<string> | null }>(["frozenEvidenceRecord", "frozenEvidenceCoordinateAuthority", "frozenEvidenceContractIndex", "frozenEvidenceContractIndexes", "frozenEvidenceCoordinateCache", "taxonomyFixturePayloadPath"], "{ record: frozenEvidenceRecord, authority: frozenEvidenceCoordinateAuthority }", { frozenCoordinateEvidenceCoordinates, frozenMarkdownCoordinateEvidenceCoordinates });
   const registered = readFileSync(resolve(library, "../../../../..", contract.path)), tampered = Buffer.concat([registered, Buffer.from(" ")]);
   const valid = record(contract.path, registered, taxonomy)!;
   expect(valid.problem).toBeNull();

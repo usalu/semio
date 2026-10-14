@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-stdio-semio-video-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "🧬️ The semio video model: schema root, snapshot and diff with their text, binary and SQLite codecs, and the snapshot retirement implementations."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-async-macros = { workspace = true }

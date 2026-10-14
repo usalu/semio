@@ -1810,3 +1810,17 @@ pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};
 mod canonical_fields;
 pub use canonical_fields::ArtifactCanonicalEditIdentityCursor;
 pub use canonical_fields::{ArtifactCanonicalEditAuthority,ArtifactCanonicalEditAuthorityCursor};
+
+/// 🎯️ The one store step from an operation to its next projection: computes the op-stamped diff, applies it through
+/// [`protocol::apply_diff`] and retires the diff cold. Every store lane, replay, merge and backbone fold routes through
+/// here; the apply refusal stays structured for callers that must fail instead of record.
+pub fn apply_operation<P, Mutation>(state: &P, operation: &Mutation, op_index: u32) -> (crate::MutationApplyResult<P>, Vec<crate::MutationMessage>)
+where
+    Mutation: self::Mutation<P>,
+{
+    let (diff, messages) = operation.diff(state).stamp_op_index(op_index).into_parts();
+    let applied = crate::apply_diff(&diff, state);
+    <Mutation::Diff as MutationDiff<P>>::retire_cold(diff);
+    (applied, messages)
+}
+

@@ -1,10 +1,10 @@
 {
-  "contract": "actor.original-owned-job-header/v1",
-  "extent": 160,
+  "contract": "actor.original-owned-job-header/v2",
+  "extent": 184,
   "cases": [
     {
       "kind": "start",
-      "prefixHex": "534a483101020200",
+      "prefixHex": "534a483201020200",
       "body": [
         0,
         0,
@@ -16,7 +16,7 @@
     },
     {
       "kind": "step",
-      "prefixHex": "534a483102010000",
+      "prefixHex": "534a483202010000",
       "body": [
         99,
         71,
@@ -28,7 +28,7 @@
     },
     {
       "kind": "output",
-      "prefixHex": "534a483103070000",
+      "prefixHex": "534a483203070000",
       "body": [
         64,
         0,
@@ -40,7 +40,7 @@
     },
     {
       "kind": "acknowledge",
-      "prefixHex": "534a483104030000",
+      "prefixHex": "534a483204030000",
       "body": [
         0,
         0,
@@ -52,7 +52,7 @@
     },
     {
       "kind": "cancel",
-      "prefixHex": "534a483105000100",
+      "prefixHex": "534a483205000100",
       "body": [
         0,
         0,
@@ -64,7 +64,7 @@
     },
     {
       "kind": "close",
-      "prefixHex": "534a483106000000",
+      "prefixHex": "534a483206000000",
       "body": [
         0,
         0,
@@ -78,17 +78,17 @@
   "loanHandbacks": [
     {
       "pointer": "original",
-      "extent": 159,
+      "extent": 183,
       "accepted": false
     },
     {
       "pointer": "foreign",
-      "extent": 160,
+      "extent": 184,
       "accepted": false
     },
     {
       "pointer": "original",
-      "extent": 160,
+      "extent": 184,
       "accepted": true
     }
   ]

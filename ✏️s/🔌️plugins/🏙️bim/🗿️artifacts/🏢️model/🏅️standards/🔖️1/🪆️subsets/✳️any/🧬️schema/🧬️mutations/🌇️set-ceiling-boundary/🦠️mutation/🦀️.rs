@@ -1,6 +1,6 @@
 //! 🌇️ `set-ceiling-boundary` payload. Replaces the outline of a ceiling as one semantic unit: its boundary loop and its hole loops, validated together.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Vertex};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Vertex}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

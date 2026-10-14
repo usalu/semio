@@ -11,14 +11,36 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::native::{NativeF64, NativeF32};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF32;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, parse_f32, enc_bool, parse_bool, enc_list, dec_list, encode_option, decode_option, enc_point2, dec_point2, enc_transform, dec_transform, enc_rgba, dec_rgba};
+use semio_s_artifact_stdio_semio_base::io::text::codec::hex_encode;
+use semio_s_artifact_stdio_semio_base::io::text::codec::hex_decode;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_f32;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_bool;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_bool;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_rgba;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_rgba;
 
 /// 📐️ `M[to]` (MoveTo) / `L[to]` (LineTo) / `C[c1,c2,to]` (CubicTo) / `Q[c,to]` (QuadTo) /
 /// `A[rx,ry,xRotation,largeArc,sweep,to]` (ArcTo) / `Z` (Close, no payload).

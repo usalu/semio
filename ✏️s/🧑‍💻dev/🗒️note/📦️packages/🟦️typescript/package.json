@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "nx": {
-    "includedScripts": []
-  },
   "scripts": {
     "verify-note-document-contract": "bun repo run @semio-tech/s-note-composition-tests:verify-note-document-contract"
   },

@@ -7,8 +7,8 @@ use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
 use crate::editor::bim::kit::{fault, select_effect, IdMint};
 use crate::editor::bim::terminology::BimLabels;
 use crate::editor::bim::BimDispatchCtx;
-use crate::mutations::create_view::CreateView;
-use crate::{ModelMutation, ModelSnapshot, View, ViewKind};
+use crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, View, ViewKind}};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

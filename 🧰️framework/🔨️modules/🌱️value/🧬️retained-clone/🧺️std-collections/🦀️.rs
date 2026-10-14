@@ -114,6 +114,7 @@ const INSERT: u8 = 6;
 const DONE: u8 = 7;
 
 impl<M: RetainedCloneEntries> RetainedCloneCursor<M> for RetainedCloneEntriesCursor<M> {
+    fn output_ready(&self)->bool{self.output.is_some()}
     fn advance_demands(&self, source: RetainedCloneRef<'_, M>, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         if self.closing || self.spent { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "standard collection clone cannot quote a closing or spent owner")); }
         if self.output.is_some() { return Ok(Default::default()); }

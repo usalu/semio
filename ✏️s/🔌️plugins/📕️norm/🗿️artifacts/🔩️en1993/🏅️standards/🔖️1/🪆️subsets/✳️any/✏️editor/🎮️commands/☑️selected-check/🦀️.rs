@@ -4,10 +4,11 @@
 //! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
 //! actively rejects it if it ever starts emitting document operations.
 
-use crate::results_window_config::{ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
+use semio_s_plugin_norm_results_config::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
+use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::En1993Mutation;
-use crate::En1993Snapshot;
+use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 

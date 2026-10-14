@@ -1,5 +1,5 @@
 use super::*;
-use crate::schema::snapshot::{StepHeader, StepTypedValue, StepValue as SV};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepHeader, StepTypedValue, StepValue as SV};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
@@ -8,7 +8,7 @@ fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn base_snapshot() -> StepSnapshot {
-    StepSnapshot { schema: crate::STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: vec![entity(1, "CARTESIAN_POINT", vec![SV::String("".into()), SV::Real(1.0)]), entity(2, "DIRECTION", vec![SV::Unset]), entity(3, "AXIS", vec![SV::Unset])] }
+    StepSnapshot { schema: crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: vec![entity(1, "CARTESIAN_POINT", vec![SV::String("".into()), SV::Real(1.0)]), entity(2, "DIRECTION", vec![SV::Unset]), entity(3, "AXIS", vec![SV::Unset])] }
 }
 
 /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base) == { apply(&mut s, m); s }`

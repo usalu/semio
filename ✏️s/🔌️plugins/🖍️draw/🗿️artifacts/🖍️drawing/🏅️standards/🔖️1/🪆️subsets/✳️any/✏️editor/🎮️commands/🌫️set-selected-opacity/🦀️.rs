@@ -1,10 +1,10 @@
 //! 🗂️ 🗂️ Drawing play app commands command — `set-selected-opacity`.
 
-use crate::editor::drawing::commands::canvas_pointer_down::DrawingSession;
+use crate::commands::canvas_pointer_down::DrawingSession;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::op::DrawingMutation;
-use crate::schema::find_drawing_layer;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::find_drawing_layer;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
@@ -18,6 +18,6 @@ pub struct SetSelectedOpacity {
 /// dispatch is one plain edit.
 pub fn handle(payload: &SetSelectedOpacity, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let operations: Vec<DrawingMutation> = session.interaction.ids.iter().filter(|id| find_drawing_layer(document, id).is_some()).map(|id| crate::mutations::set_layer_opacity(id.clone().into(), payload.value)).collect();
+    let operations: Vec<DrawingMutation> = session.interaction.ids.iter().filter(|id| find_drawing_layer(document, id).is_some()).map(|id| semio_s_artifact_draw_drawing_style::set_layer_opacity::mutation::set_layer_opacity(id.clone().into(), payload.value)).collect();
     Ok(Emit::mutations(operations))
 }

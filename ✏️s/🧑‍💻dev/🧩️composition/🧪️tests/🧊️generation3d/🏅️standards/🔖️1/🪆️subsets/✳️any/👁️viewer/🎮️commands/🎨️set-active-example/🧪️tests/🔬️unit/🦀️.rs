@@ -1,8 +1,12 @@
 use super::*;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::{
-    PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE,
-    PROCEDURAL_EXAMPLE_SPHERE_TORUS,
-};
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_FILLET;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_BOX_SHELL;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_HEX_COLUMN;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_RECT_EXTRUDE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE;
+use semio_s_artifact_procedural_3d_model::PROCEDURAL_EXAMPLE_SPHERE_TORUS;
 use semio_s_artifact_procedural_generation3d::viewer::generation3d::modes::view::windows::preview;
 use crate::viewer_domain::viewer_laws::context;
 use crate::viewer_domain::viewer_laws::context::{app, dispatch_with_view, run_actions, view_shell_view};
@@ -32,7 +36,7 @@ const EVERY_BUNDLED_EXAMPLE: &[&str] = &[
 /// 🕳️ `None` is "nothing picked", `Some("")` the picker's own `No example` row — two different
 /// states, and the whole point of the option on the config leaf.
 fn viewed_node_ids(example_id: Option<&str>) -> Vec<String> {
-    let snapshot = semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::schema::default_snapshot();
+    let snapshot = semio_s_artifact_procedural_3d_model::default_snapshot();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = semio_framework_plugin::ArtifactView::new(&snapshot, &history);
     let config = Generation3dViewConfig { active_example_id: example_id.map(str::to_string), ..Generation3dViewConfig::default() };

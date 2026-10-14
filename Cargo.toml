@@ -3,10 +3,29 @@ cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/✉️envelope/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧭️cursor/📦️packages/🦀️rust",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎞️projection/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/📋️record-set/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛂️identity/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/⚙️codec/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🧬️schema/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
@@ -14,7 +33,9 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
@@ -25,8 +46,11 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
@@ -34,6 +58,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪪️identity/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🖥️host/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust",
@@ -322,6 +347,8 @@ semio-framework-schema-validator = { path = "🧰️framework/🔨️modules/�
 semio-framework-plugin-host-test-component = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust" }
 semio-framework-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-framework-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter-runtime = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-plugin-guest-contract = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
@@ -331,7 +358,15 @@ semio-framework-artifact-workflow-workflow = { path = "🧰️framework/🛍️p
 semio-framework-artifact-space-space = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust" }
 semio-framework-artifact-space-collection = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust" }
 semio-framework-artifact-workflow-run = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust" }
-semio-framework-math = { path = "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust" }
+semio-framework-math-sampling-vocabulary = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🔤️vocabulary/📦️packages/🦀️rust" }
+semio-framework-math-sampling-config = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🎚️config/📦️packages/🦀️rust" }
+semio-framework-math-sampling-workspace = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🧺️workspace/📦️packages/🦀️rust" }
+semio-framework-math-sampling-testing = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-math-sampling-processors = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🎛️processors/📦️packages/🦀️rust" }
+semio-framework-math-sampling-constraints = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🚧️constraints/📦️packages/🦀️rust" }
+semio-framework-math-sampling-engine = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🚂️engine/📦️packages/🦀️rust" }
+semio-framework-math-sampling-decoding = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🔍️decoding/📦️packages/🦀️rust" }
+semio-framework-math-sampling-diffusion = { path = "🧰️framework/🔨️modules/🧮️math/🎯️sampling/🌫️diffusion/📦️packages/🦀️rust" }
 semio-framework-number = { path = "🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust" }
 semio-framework-expression = { path = "🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust" }

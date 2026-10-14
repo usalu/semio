@@ -32,7 +32,7 @@ fn drive(retirement: &mut Box<dyn store::ErasedSnapshotRetirement>, turns: usize
 
 #[test]
 fn retained_cad_presence_close_preserves_shared_roots_and_exact_grants() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(include_str!("../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::parse(std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).expect("../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json").leak(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let value = presence(case);
         let oracle = value.clone();

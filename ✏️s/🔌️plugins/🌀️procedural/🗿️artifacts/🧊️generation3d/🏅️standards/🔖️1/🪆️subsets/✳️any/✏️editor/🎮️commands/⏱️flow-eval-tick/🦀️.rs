@@ -4,14 +4,14 @@
 //! is what this file keeps — the generate-mode fixture patch and the editor `Emit` type.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::preview_eval;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FRAMEWORK_TOOL_RUN_BODY_KEY};
 
-pub use crate::preview_eval::FlowEvalTick;
+
 
 /// 🪟️ The BODY one preview window kind renders — the thing a chain hop's refresh has to name, as
 /// opposed to the window kind its payload is addressed by.
@@ -77,7 +77,7 @@ pub fn evaluate(
             session.note_window_tick_outcome(window_id, false, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
             return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, preview_eval::preview_eval_publication_for(session, &doc.snapshot.host_snapshot, retained_eval)));
         }
-        patched = Some(crate::standards::v1::subsets::any::schema::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
+        patched = Some(semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
     }
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
     let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;

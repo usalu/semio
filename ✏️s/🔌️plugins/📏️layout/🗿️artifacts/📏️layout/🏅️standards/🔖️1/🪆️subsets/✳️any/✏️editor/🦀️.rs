@@ -1437,16 +1437,10 @@ impl ArtifactEditor for LayoutPlayApp {
         Ok(Some(ArtifactReservedToolJob::new(LayoutImportJob::new(request, port, media))))
     }
 
-    fn build_media_export_job(request: ArtifactMediaExportJobRequest<EditorApp<Self>>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-        use crate::editor::layout::engine::export::{LayoutExportJob, LayoutExportKind, LayoutExportRequest, LayoutMediaExportJob, LAYOUT_MEDIA_EXPORT_TOOL_ID};
-        if request.port != "layout:out" || request.tool_id != LAYOUT_MEDIA_EXPORT_TOOL_ID {
-            return Ok(None);
-        }
-        let page_id = request.snapshot.pages.first().map(|page| page.id.clone()).ok_or_else(|| Fault::from("layout-export-page-missing"))?;
-        let canonical_base_revision_hex = request.canonical_base_revision.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join("");
-        let export_request = LayoutExportRequest { kind: LayoutExportKind::Svg, page_id: Some(page_id), snapshot: request.snapshot, preflight_json: None, parent_document_id: request.parent_document_id, canonical_base_revision_hex };
-        let job = LayoutExportJob::new(request.operation, export_request).map_err(Fault::from)?.with_snapshot_close_lease(request.snapshot_close).with_output_chunks(request.output_chunks).with_media_output_credit(request.output_credit);
-        Ok(Some(ArtifactReservedToolJob::new(LayoutMediaExportJob::new(job, request.completion))))
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        use crate::editor::layout::engine::export::{LayoutMediaExportJob,LAYOUT_MEDIA_EXPORT_TOOL_ID};
+        if request.as_ref().is_some_and(|input|input.port!="layout:out"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout producer requires its exact registered output port").into())}
+        LayoutMediaExportJob::admit_original(request,body,cx)
     }
 
     fn handle(

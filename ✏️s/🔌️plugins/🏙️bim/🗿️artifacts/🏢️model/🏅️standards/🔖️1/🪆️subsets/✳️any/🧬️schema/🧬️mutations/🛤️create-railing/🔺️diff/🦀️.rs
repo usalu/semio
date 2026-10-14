@@ -4,7 +4,7 @@
 use super::super::elements;
 use super::super::placement::{host_issue, refuse_stair};
 use super::CreateRailing;
-use crate::{railing_construction_problem, Entry, ModelDiff, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn traceable(path: &[Point2]) -> bool {

@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `RotateLayers` — every surviving layer turns about the world pivot through its parent's
 //! world matrix, read off the BASE transform.
-use crate::diff::{diff_set_layer_transforms, DrawingDiff};
-use crate::mutations::{drawing_moved_transform, drawing_placed_layers, drawing_rotation_matrix, drawing_selection_partial, drawing_targets_invariant};
-use crate::schema::layer_base;
-use crate::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_diff::{diff_set_layer_transforms, DrawingDiff};
+use semio_s_artifact_draw_drawing_geometry::{drawing_moved_transform, drawing_placed_layers, drawing_rotation_matrix, drawing_selection_partial, drawing_targets_invariant};
+use semio_s_artifact_draw_drawing_model::layer_base;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::mutation::RotateLayers, base: &DrawingSnapshot) -> protocol::MutationOutcome<DrawingDiff> {

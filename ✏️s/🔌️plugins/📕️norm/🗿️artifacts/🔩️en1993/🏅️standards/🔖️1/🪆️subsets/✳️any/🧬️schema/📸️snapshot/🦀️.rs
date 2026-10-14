@@ -1,10 +1,15 @@
 //! 🧬️ En1993 snapshot schema — complete steel-structure subject (SI base units).
 
-use crate::document::AnnexChoice;
-use crate::{
-    BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase,
-    MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg,
-};
+#![allow(async_fn_in_trait)]
+
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+extern crate semio_framework_value_derive as value_derive;
+
+use semio_s_plugin_norm_compliance::AnnexChoice;
+
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -67,9 +72,6 @@ pub struct En1993Snapshot {
     #[state(artifact)]
     pub crane_runways: Vec<CraneRunway>,
 }
-//#region 🔖️HandcraftedArtifactCodecs
-
-//#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1993Snapshot {
     fn default() -> Self {
@@ -451,17 +453,367 @@ pub fn rolled_heb_catalogue() -> Vec<SteelSection> {
     vec![catalogue_heb240(), catalogue_heb260(), catalogue_heb280(), catalogue_heb300()]
 }
 
-//#region 🌉️ExternalCodecBridge
+//#region 🍃️FacetLeaves
+/// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🍃️FacetLeaves
 
 
+/// 🧱 Steel material grade entry (SI: fy/fu/E/G in Pa).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelMaterial {
+    pub id: String,
+    pub grade: String,
+    pub fy: f64,
+    pub fu: f64,
+    pub e_modulus: f64,
+    pub g_modulus: f64,
+    pub subgrade: String,
+    pub kind: String,
+}
 
+/// 📐️ Steel section with full property table (SI: m, m², m³, m⁴).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelSection {
+    pub id: String,
+    pub designation: String,
+    pub kind: String,
+    pub h: f64,
+    pub b: f64,
+    pub tw: f64,
+    pub tf: f64,
+    pub r: f64,
+    pub area: f64,
+    pub shear_area_y: f64,
+    pub shear_area_z: f64,
+    pub iy: f64,
+    pub iz: f64,
+    pub it: f64,
+    pub iw: f64,
+    pub w_el_y: f64,
+    pub w_el_z: f64,
+    pub w_pl_y: f64,
+    pub w_pl_z: f64,
+    pub area_net: f64,
+}
 
+/// 🏗️ Structural member (lengths in m; ψ dimensionless).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelMember {
+    pub id: String,
+    pub label: String,
+    pub member_type: String,
+    pub section_id: String,
+    pub material_id: String,
+    pub length: f64,
+    pub buckling_length_y: f64,
+    pub buckling_length_z: f64,
+    pub ltb_length: f64,
+    pub ltb_restraint_spacing: f64,
+    pub load_application: String,
+    pub end_moment_ratio_psi: f64,
+    pub moment_diagram: String,
+    pub deflection_limit_ratio: f64,
+    pub analysis: String,
+}
 
+/// 🏋️ Design action effects (SI: N, N·m).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct DesignAction {
+    pub n: f64,
+    pub vy: f64,
+    pub vz: f64,
+    pub my: f64,
+    pub mz: f64,
+    pub t: f64,
+}
 
+/// 📋 Load case identity.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct LoadCase {
+    pub id: String,
+    pub name: String,
+    pub kind: String,
+    pub category: String,
+}
 
+/// 🔗 Member action under a load case.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct MemberAction {
+    pub id: String,
+    pub member_id: String,
+    pub load_case_id: String,
+    pub action: DesignAction,
+}
 
+/// 📉 Characteristic scalar force under a load case (SI N).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ForceAction {
+    pub id: String,
+    pub load_case_id: String,
+    pub force: f64,
+}
 
+/// 🔩 Characteristic joint forces under a load case (SI N).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct JointForceAction {
+    pub id: String,
+    pub load_case_id: String,
+    pub shear: f64,
+    pub tension: f64,
+}
 
+/// 📊 Fatigue stress-range band (Δσ_i, n_i) for Palmgren-Miner.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FatigueBand {
+    pub id: String,
+    pub delta_sigma: f64,
+    pub cycles: f64,
+}
 
-//#endregion 🌉️ExternalCodecBridge
+/// 🔩 Bolted or welded joint.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelJoint {
+    pub id: String,
+    pub kind: String,
+    pub member_id: String,
+    pub bolt_class: String,
+    pub bolt_diameter: f64,
+    pub bolt_rows: u32,
+    pub bolts_per_row: u32,
+    pub pitch: f64,
+    pub gauge: f64,
+    pub end_distance: f64,
+    pub edge_distance: f64,
+    pub shear_planes: u32,
+    pub plate_thickness: f64,
+    pub plate_fu: f64,
+    pub weld_throat: f64,
+    pub weld_length: f64,
+    pub weld_fu: f64,
+    pub weld_grade: String,
+    #[dsl(table)]
+    pub actions: Vec<JointForceAction>,
+    pub category: String,
+    pub friction_mu: f64,
+    pub preload_force: f64,
+    pub slip_factor_ks: f64,
+    pub friction_surfaces: u32,
+}
 
+/// 🔄 Fatigue detail category assessment.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FatigueDetail {
+    pub id: String,
+    pub member_id: String,
+    pub category: u8,
+    pub method: String,
+    #[dsl(table)]
+    pub spectrum: Vec<FatigueBand>,
+}
+
+/// 🔥 Fire exposure on a member.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FireExposure {
+    pub id: String,
+    pub member_id: String,
+    pub rating: String,
+    pub protection_thickness: f64,
+    pub section_factor: f64,
+    pub mu0: f64,
+    pub design_temperature: f64,
+    pub protection_conductivity: f64,
+    pub protection_density: f64,
+    pub protection_specific_heat: f64,
+}
+
+/// ❄️ Cold-formed thin-gauge member (1-3).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ColdFormedMember {
+    pub id: String,
+    pub b_bar: f64,
+    pub thickness: f64,
+    pub k_sigma: f64,
+    pub psi: f64,
+    pub fy: f64,
+    pub gross_resistance: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🧱 Plated panel for EN 1993-1-5.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PlatedPanel {
+    pub id: String,
+    pub a: f64,
+    pub b: f64,
+    pub thickness: f64,
+    pub fy: f64,
+    pub k_sigma: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🛢️ Silo / shell of revolution.
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SiloShell {
+    pub id: String,
+    pub thickness: f64,
+    pub radius: f64,
+    pub depth: f64,
+    pub k: f64,
+    pub gamma: f64,
+    pub fy: f64,
+}
+
+/// 🪢 Tension component / cable (1-11).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct TensionComponent {
+    pub id: String,
+    pub f_uk: f64,
+    pub f_k: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🌉 Bridge fatigue parameters (EN 1993-2).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct BridgeFatigue {
+    pub id: String,
+    pub member_id: String,
+    pub lambda: f64,
+    pub phi2: f64,
+    pub delta_sigma_p: f64,
+    pub category: u8,
+    pub method: String,
+}
+
+/// 🗼 Tower leg (EN 1993-3-1).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct TowerLeg {
+    pub id: String,
+    pub member_id: String,
+    pub force_coefficient: f64,
+    pub dynamic_factor: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🪵 Steel pile (EN 1993-5).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelPile {
+    pub id: String,
+    pub section_id: String,
+    pub material_id: String,
+    pub driving_stress: f64,
+    pub embedded_length: f64,
+    pub shaft_perimeter: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🏗️ Crane runway local web check (EN 1993-6).
+#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct CraneRunway {
+    pub id: String,
+    pub member_id: String,
+    pub wheel_contact_length: f64,
+    pub dispersion: f64,
+    pub web_thickness: f64,
+    pub fy: f64,
+    pub phi: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_s_plugin_norm_app_surface::artifact_kind_spec("en1993", "EN 1993", EN1993_DOCUMENT_SCHEMA)
+}
+
+/// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
+/// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1) — lives at the ARTIFACT level, not
+/// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
+pub const EN1993_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1993", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+
+pub const EN1993_DOCUMENT_SCHEMA: &str = "semio.norm.en1993/v1";

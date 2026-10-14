@@ -560,7 +560,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> StagedRootRetirement<P, Mutation>
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         let nested = |mut demand: RetirementDemand| { demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "staged root child depth overflow"))?; Ok(demand) };
         if let Some(active) = self.active.as_ref() { return nested(super::artifact_retirement_box_demands(active, maximum_body_bytes)?); }
-        if self.edit.is_some() { return super::artifact_retirement_owner_demands(&self.edit, maximum_body_bytes); }
+        if self.edit.is_some() { return super::retirement_owner_demands(&self.edit, maximum_body_bytes); }
         if self.external_strings.iter().any(Option::is_some) { return Ok(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>(), depth: 2, ..Default::default() }); }
         if let Some(owner) = self.inline_owner() { return nested(RetirementDemand { copy_bytes: owner.next_copy_byte_demand()?, capacity_bytes: owner.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: owner.next_release_byte_demand()?, depth: owner.next_depth_demand()? }); }
         if (7..9).contains(&self.phase) {
@@ -587,7 +587,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> super::ErasedSnapshotRetirement f
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active.is_some() { return super::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.edit.is_some() { return super::artifact_retirement_owner_close(&mut self.edit, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.edit.is_some() { return super::retirement_owner_close(&mut self.edit, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=slot.take().unwrap();return match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,receipt))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*slot=Some(original);Err(error)}};}
         if let Some(owner) = self.inline_owner_mut() {
             if !owner.terminal_is_empty() {

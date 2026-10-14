@@ -4,8 +4,11 @@
 //! differ ⇒ `mutation.target-mismatch`; a result beyond the kind's envelope ⇒ `mutation.target-mismatch`.
 //! Leaves that are already stored byte for byte ⇒ Warning `mutation.no-op`, so an identical reconstruction
 //! re-lands on the same content-addressed entry without rewriting it.
-use crate::diff::{RemodelingContentHeader, RemodelingContentRow, RemodelingDiff};
-use crate::{remodeling_durable_chunk, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentHeader;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingContentRow;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::remodeling_durable_chunk;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

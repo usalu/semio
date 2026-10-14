@@ -7,7 +7,7 @@
 //! schema keyword for a 3D point, riding the same ISO 10303-21 Part-21 syntax `📐️step` AP214
 //! uses under its distinct `CARTESIAN_POINT` vocabulary).
 
-use crate::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::bounds::compute_ifc_bounds;

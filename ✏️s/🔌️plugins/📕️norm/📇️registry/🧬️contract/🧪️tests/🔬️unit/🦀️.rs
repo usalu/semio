@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 const VALID: &str = include_str!("../🧫️fixtures/✅️valid/🔣️.json");
 const INVALID: &str = include_str!("../🧫️fixtures/❌️invalid/🔣️.json");

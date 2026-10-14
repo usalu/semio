@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-3d-brep-validation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Bounded structural and geometric invariant validation of ephemeral bodies in the 3D boundary-representation kernel"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-queries.workspace = true
+semio-framework-3d-brep-representation.workspace = true
+semio-framework-value.workspace = true
+
+[dev-dependencies]
+semio-framework-trace.workspace = true
+semio-framework-3d-brep-operations.workspace = true
+semio-framework-async.workspace = true
+semio-framework-async-macros.workspace = true
+semio-framework-job = { workspace = true, features = ["testkit"] }
+serde.workspace = true
+serde_json.workspace = true

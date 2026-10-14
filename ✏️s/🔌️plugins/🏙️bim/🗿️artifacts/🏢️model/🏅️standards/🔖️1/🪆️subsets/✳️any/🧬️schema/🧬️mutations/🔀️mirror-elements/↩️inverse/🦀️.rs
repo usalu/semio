@@ -9,7 +9,7 @@ use super::super::place_elements::PlaceElements;
 use super::super::set_wall_end_join::SetWallEndJoin;
 use super::diff::map_of;
 use super::MirrorElements;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &MirrorElements, base: &ModelSnapshot) -> Vec<ModelMutation> {
     let map = map_of(payload);

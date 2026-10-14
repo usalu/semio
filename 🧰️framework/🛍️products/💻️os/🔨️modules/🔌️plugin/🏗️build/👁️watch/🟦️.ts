@@ -31,7 +31,7 @@ import { resolvePluginBuildTargets } from "../📋️plan/🟦️.ts";
  * and `DevScript`'s streaming boot, which folds this in right after the initial build pass so plugin
  * edits keep hot-swapping the running shell for the rest of the dev session. */
 async function watchPluginRebuilds(targets: readonly PluginBuildTargetV1[], control: CompilerAdmissionControl): Promise<void> {
-  const { nativeSourceWatchPlanV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🟨️.mjs");
+  const { nativeSourceWatchPlanV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs");
   const { startNativeSourceWatchV1, nativeSourceWatchSelectedV1 } = await import("./📋️plan/🟦️.ts");
   const plans = new Map<string, import("./📋️plan/🟦️.ts").NativeSourceWatchPlanV1>();
   let observation: { close(): Promise<void> } | undefined;

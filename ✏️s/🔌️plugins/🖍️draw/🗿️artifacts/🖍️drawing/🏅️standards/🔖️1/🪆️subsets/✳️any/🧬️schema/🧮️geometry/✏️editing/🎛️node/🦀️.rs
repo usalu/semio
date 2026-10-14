@@ -1,6 +1,6 @@
 //! 🎛️ Authored tangent modes keep node positions and unrelated controls stable.
 use super::{PathGeometrySource,NodeMode,endpoint};
-use crate::PathSegment;
+use semio_s_artifact_draw_drawing_model::PathSegment;
 fn cubic(segment:&PathSegment,from:[f64;2])->Result<PathSegment,&'static str> {
     let mix=|a:[f64;2],b:[f64;2],t:f64|[a[0]*(1.0-t)+b[0]*t,a[1]*(1.0-t)+b[1]*t];
     Ok(match *segment {
@@ -56,6 +56,6 @@ pub fn edit(source:&(impl PathGeometrySource+?Sized),index:usize,mode:NodeMode)-
     if mode==NodeMode::Symmetric && incoming.is_some() && outgoing.is_some() {let size=left/2.0+right/2.0;left=size;right=size;}
     if incoming.is_some() {let PathSegment::Cubic {ctrl2,..}=&mut output[incoming_index] else {unreachable!()};*ctrl2=[anchor[0]-direction[0]*left,anchor[1]-direction[1]*left];}
     if outgoing.is_some() {let PathSegment::Cubic {ctrl1,..}=&mut output[outgoing_index] else {unreachable!()};*ctrl1=[anchor[0]+direction[0]*right,anchor[1]+direction[1]*right];}
-    if !output.iter().all(crate::schema::valid_path_segment) {return Err("The edit exceeds finite coordinates");}
+    if !output.iter().all(semio_s_artifact_draw_drawing_model::valid_path_segment) {return Err("The edit exceeds finite coordinates");}
     Ok(output)
 }

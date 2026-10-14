@@ -20,6 +20,17 @@ impl ArtifactReservedToolJob {
         cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
+    /// 🪪️ Receives distinct business metadata into its admitted frame before posting original work.
+    pub fn bind_original_operation(&mut self,source:&mut Option<semio_framework_job::Operation>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        cx.original_source_parent()?;
+        let original=self.state.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved operation has no admitted shared frame"))?;
+        let mut state=match original.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};
+        if state.operation.is_some(){if source.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved business metadata was already bound").into())}return Ok(true)}
+        let grant=cx.retained_grant();let bytes=size_of::<semio_framework_job::Operation>();
+        if source.is_none()||cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+        state.operation=source.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
+    }
+
     /// 🧱️ Admits one exact concrete body box and its shared frame without a scratch allocation.
     pub fn admit_original<J:ArtifactReservedJob+Send+'static>(source:&mut Option<J>,receiving:&mut Option<Self>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         cx.original_source_parent()?;

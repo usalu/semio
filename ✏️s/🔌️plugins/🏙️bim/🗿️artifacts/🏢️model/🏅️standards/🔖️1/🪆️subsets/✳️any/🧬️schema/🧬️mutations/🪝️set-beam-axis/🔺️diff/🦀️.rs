@@ -3,7 +3,7 @@
 
 use super::super::wall_geometry::flaw;
 use super::SetBeamAxis;
-use crate::{BeamPatch, Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::BeamPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetBeamAxis, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

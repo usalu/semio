@@ -16,8 +16,15 @@ role = "framework"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-vector.workspace = true
+semio-framework-3d-brep-tolerance.workspace = true
+semio-framework-3d-brep-surface.workspace = true
+semio-framework-3d-brep-curve.workspace = true
+semio-framework-3d-brep-analysis.workspace = true
+semio-framework-3d-brep-intersect.workspace = true
+semio-framework-3d-brep-tessellation.workspace = true
+semio-framework-3d-brep-validation.workspace = true
 semio-framework-job.workspace = true
-semio-framework-3d.workspace = true
 semio-framework-3d-brep-operations.workspace = true
 semio-framework-3d-brep-queries.workspace = true
 semio-framework-3d-brep-representation.workspace = true

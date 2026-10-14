@@ -1,6 +1,7 @@
 mod tests {
     use super::*;
-    use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioFormat;
+    use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 
     /// 🧪️ A clean, valid audio snapshot delegates to `SemioAudioValidator` and reports no hard
     /// (error-severity) diagnostics.

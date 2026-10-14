@@ -15,7 +15,7 @@ import { type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️
 import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const HUB_RUST_DIR = "🌎️hub/📦️packages/🦀️rust";
@@ -52,7 +52,7 @@ class TestScript extends BundleScript {
 /** 🗄️ Runs one real-binary hub e2e scenario (`🌎️hub/🧪️tests/<scenario>`) on one storage backend: `sqlite`, or
  * `postgres`/`neo4j` on the ONE shared development server (`claimHubBackend`: a run database of its own on postgres,
  * the exclusive lease over a reset graph on neo4j), released afterwards — also when a failing run leaves through
- * `process.exit`, which skips `finally`. The hub is `OS_HUB_BINARY` when set, else the Nx-staged `build-dev-postgres`
+ * `process.exit`, which skips `finally`. The hub is `OS_HUB_BINARY` when set, else the Nx-staged `build-dev`
  * executable, which links all three drivers. */
 abstract class BackendE2eScript extends BundleScript {
   protected abstract readonly scenario: string;
@@ -62,7 +62,7 @@ abstract class BackendE2eScript extends BundleScript {
     const [name, ...extra] = segments;
     const { rest } = resolveTestLevel(extra, this.minimumLevel);
     if (name !== "sqlite" && name !== "postgres" && name !== "neo4j") throw new Error(`${this.scenario} e2e needs one backend: sqlite | postgres | neo4j`);
-    const binary = process.env.OS_HUB_BINARY ?? hubDevPostgresBinaryPath(join(this.repoRoot, HUB_RUST_DIR));
+    const binary = process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR));
     const cancel = new AbortController();
     const interrupt = (): void => cancel.abort();
     process.once("SIGINT", interrupt);

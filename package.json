@@ -15,6 +15,7 @@
     "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution",
     "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust",
@@ -108,9 +109,12 @@
     "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
     "setup": "bun repo run workspace:setup",
     "dashboard": "bun repo run @semio-tech/repo-dashboard-rs:run --output=stream",
-    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream"
+    "dashboard:install": "bun repo run @semio-tech/repo-dashboard-rs:build --exclude-dependencies --skip-cache --output=stream",
+    "test-reserved-producer-native": "bun repo run @semio-tech/framework-plugin:test-reserved-producer-native"
   },
   "devDependencies": {
+    "@babel/parser": "7.29.8",
+    "fast-glob": "3.3.3",
     "@eslint/js": "^10.0.1",
     "@iarna/toml": "2.2.5",
     "@nx/devkit": "23.2.0",
@@ -193,9 +197,6 @@
     "@semio-tech/assets": "workspace:*",
     "diff": "^8.0.3",
     "tmp": "^0.2.5"
-  },
-  "nx": {
-    "includedScripts": []
   },
   "patchedDependencies": {
     "nx@23.2.0": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🩹️patches/nx@23.2.0.patch"

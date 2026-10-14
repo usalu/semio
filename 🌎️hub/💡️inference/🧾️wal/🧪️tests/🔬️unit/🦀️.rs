@@ -1,6 +1,5 @@
 //! 🔬️ Literal hostile traces exercise the production retained WAL reader, not a second matcher.
 
-#![cfg(feature = "native-artifact-execution")]
 
 use super::*;
 use db::storage::WalStorage;
@@ -144,7 +143,7 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         schema::{gis_map_descriptor_json, gis_map_document_from_descriptor_json, gis_map_snapshot_to_drawing},
         standards::v1::subsets::any::schema::inferences::GisMapInference,
     };
-    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::apply_semio_drawing_mutation, semio_s_artifact_stdio_semio_value::schema::mutations::apply_semio_value_mutation};
+    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::apply_semio_drawing_mutation, semio_s_artifact_stdio_semio_value_mutations::schema::mutations::apply_semio_value_mutation};
 
     let base = gis_map_document_from_descriptor_json(r#"{"positions":[{"id":"point-a","lon":7,"lat":47}],"routes":[{"id":"route-a","points":[[8,46],[9,48]]}],"regions":[]}"#);
     let drawing_base = gis_map_snapshot_to_drawing(&base);

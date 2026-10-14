@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import {catalogNxContributionV1} from "../../📣️publication/🟦️.ts";
+import {catalogBuildContributionV1} from "../../📣️publication/🟦️.ts";
 import {test} from "bun:test";
 
 /** 🌐️ Every destination is authored or supplied by the actual release producer. */
@@ -16,9 +16,9 @@ export async function testPlaygroundSiteDistDefaults(): Promise<void> {
 /** 🏗️ Every plugin playground crate gets Nx `build` / `build-<variant>-site` targets wired to framework-os-dev release builds. */
 export async function testPluginSiteNxTargets(workspace: string): Promise<void> {
   const registry = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
-  const paths = JSON.parse(readFileSync(join(workspace,catalogNxContributionV1().publication.outputRoot,"🔌️plugins.json"), "utf8")).map((row: { cratePath: string }) => `${row.cratePath}/Cargo.toml`);
-  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs")).href);
-  const catalog = cacheInternals.collectPlaygroundCatalog(paths, workspace,[catalogNxContributionV1()]);
+  const paths = JSON.parse(readFileSync(join(workspace,catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")}).publication.outputRoot,"🔌️plugins.json"), "utf8")).map((row: { cratePath: string }) => `${row.cratePath}/Cargo.toml`);
+  const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
+  const catalog = cacheInternals.collectPlaygroundCatalog(paths, workspace,[catalogBuildContributionV1({readText:path=>readFileSync(join(workspace,path),"utf8")})]);
   const crates = [...new Set(catalog.map((row: { cratePath: string }) => row.cratePath))].sort();
   for (const cratePath of crates) {
     const targets = cacheInternals.pluginSiteTargetsForCrate(cratePath, catalog, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",workspace);

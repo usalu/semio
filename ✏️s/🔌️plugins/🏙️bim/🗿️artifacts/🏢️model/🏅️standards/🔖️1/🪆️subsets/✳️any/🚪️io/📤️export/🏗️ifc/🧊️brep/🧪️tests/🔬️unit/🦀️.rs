@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_geometry::mesh::extrude;
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::Point;
-use semio_s_artifact_stdio_ifc::part21::Part21Header;
+use semio_s_artifact_stdio_contract::part21::Part21Header;
 
 fn cube() -> TriMesh {
     extrude(&[Point::new(0.0, 0.0), Point::new(1.0, 0.0), Point::new(1.0, 1.0), Point::new(0.0, 1.0)], &[], ZPlane::flat(0.0), ZPlane::flat(1.0))

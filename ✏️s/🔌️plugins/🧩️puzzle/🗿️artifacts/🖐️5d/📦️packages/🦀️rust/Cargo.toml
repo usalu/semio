@@ -15,10 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = ["dep:semio-framework-os-infinite", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen", "semio-s-artifact-puzzle-3d/component-app-assembly"]
-
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -32,13 +28,12 @@ semio-framework-schema-composition = { path = "../../../../../../../🧰️frame
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-wasm-bindgen = { workspace = true, optional = true }
+wasm-bindgen = { workspace = true }
 semio-framework = { workspace = true }
-semio-framework-graph = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
-semio-framework-os-infinite = { workspace = true, optional = true }
+semio-framework-os-infinite = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 # ⏯️ Tool run contract: the fill run job translates the 3d planner's `ToolRunTick` pages into 5d ones.
@@ -59,13 +54,13 @@ semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-async = { workspace = true, optional = true }
+semio-framework-async = { workspace = true }
 # 🛠️ The transform tool is a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
 # `machine::…`, so the kernel dependency carries that name.
-machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"], optional = true }
-semio-framework-tool-machine = { workspace = true, optional = true }
-semio-framework-ui-contract = { workspace = true, optional = true }
-semio-framework-ui-scene = { workspace = true, optional = true }
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-ui-scene = { workspace = true }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = { workspace = true }

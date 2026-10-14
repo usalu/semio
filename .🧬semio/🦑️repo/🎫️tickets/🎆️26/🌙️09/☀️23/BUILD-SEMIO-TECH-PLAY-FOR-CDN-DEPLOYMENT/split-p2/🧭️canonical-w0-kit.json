@@ -1,0 +1,10 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs",
+ "crate": "semio_s_artifact_remodel_remodeling",
+ "barrels": {
+  "editor::remodeling": [
+   "editor::remodeling",
+   "editor::remodeling::kit"
+  ]
+ }
+}

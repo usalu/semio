@@ -43,8 +43,5 @@
     "unified": "11.0.5",
     "vitest": "^4.0.17",
     "@semio-tech/process": "workspace:*"
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

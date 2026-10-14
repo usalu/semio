@@ -1,8 +1,7 @@
 //! ⏱️ Remodeling mutation — `ChangeStreamSync`: sets one media stream's `sync_offset_ms`.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -20,17 +19,20 @@ pub struct ChangeStreamSync {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn change_stream_sync(id: String, new_sync_offset_ms: f64) -> RemodelingMutation {
-    RemodelingMutation::ChangeStreamSync(ChangeStreamSync { id, new_sync_offset_ms })
+pub fn change_stream_sync<Op: From<ChangeStreamSync>>(id: String, new_sync_offset_ms: f64) -> Op {
+    Op::from(ChangeStreamSync { id, new_sync_offset_ms })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ChangeStreamSync {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ChangeStreamSync
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ChangeStreamSync>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "stream", kind: "change-stream-sync", record: "ChangedStreamSync" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

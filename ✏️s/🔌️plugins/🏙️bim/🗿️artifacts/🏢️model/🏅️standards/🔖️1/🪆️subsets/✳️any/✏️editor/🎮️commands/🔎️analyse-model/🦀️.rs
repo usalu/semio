@@ -6,7 +6,7 @@
 use crate::editor::bim::kit::fault;
 use crate::editor::bim::{BimCommand, BimDispatchCtx, BimModelApp};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};

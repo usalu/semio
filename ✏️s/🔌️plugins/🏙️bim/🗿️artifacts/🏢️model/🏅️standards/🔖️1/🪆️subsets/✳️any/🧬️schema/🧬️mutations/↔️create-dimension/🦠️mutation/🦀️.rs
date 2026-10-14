@@ -1,6 +1,6 @@
 //! ↔️ `create-dimension` payload. Brings a new dimension onto a storey plan: two or more anchors (free points or elements of the model) measured along a direction; its values and text are inferred from the geometry of the anchors.
 
-use crate::{Dimension, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Dimension, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

@@ -11,7 +11,6 @@
 //! never the child's resolved content).
 
 use crate::diff::Process3dDiff;
-use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
@@ -25,14 +24,17 @@ pub struct ReplaceStockSolid {
     pub new_solid: store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>,
 }
 
-impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceStockSolid {
+impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ReplaceStockSolid
+where
+    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::replace_stock_solid::ReplaceStockSolid>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "stock", kind: "replace-stock-solid", record: "ReplacedStockSolid" };
 
     fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

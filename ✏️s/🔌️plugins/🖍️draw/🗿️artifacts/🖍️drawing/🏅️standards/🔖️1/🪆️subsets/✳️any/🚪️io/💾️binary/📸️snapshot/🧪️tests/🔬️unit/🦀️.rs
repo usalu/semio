@@ -1,28 +1,26 @@
-use crate::standards::v1::subsets::any::io::binary::snapshot::*;
-use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
-use crate::schema::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_layer_base, layer_id};
-use crate::standards::v1::subsets::any::schema::{default_drawing_document};
-use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
-use crate::{
-    DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA,
-};
+use crate::binary::snapshot::*;
+use crate::text::snapshot as dsl;
+use semio_s_artifact_draw_drawing_model::{create_drawing_boolean_layer, create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_trace_layer, default_layer_base, layer_id};
+use semio_s_artifact_draw_drawing_model::default_drawing_document;
+use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, DrawingCircle, DrawingEllipse, DrawingGroupBody, DrawingImageAsset, DrawingLayerNode, DrawingLine, DrawingPolygon, DrawingShapeBody, DrawingTextBody, FillStyle, GradientStop, PathSegment, StrokeStyle, DRAWING_DOCUMENT_SCHEMA};
 
 fn representative_drawing_document() -> DrawingSnapshot {
     let mut assets = semio_framework_value::paged::PagedMap::default();
     assets.insert("src-1", DrawingImageAsset { width: 8, height: 8, samples: vec![[0,0,0,0];64].into() });
 
-    let mut rect_shape = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect");
+    let mut rect_shape = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect_shape {
         shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 10.0, y2: 10.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() });
-        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Round, dash: Some(vec![2.0, 4.0].into()) });
+        shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round, join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Round, dash: Some(vec![2.0, 4.0].into()) });
     }
     let rect_id = layer_id(&rect_shape).clone();
 
-    let line_shape = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Line")).to_string().into()).expect("nonempty authored identity"), "Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 5.0, y2: 5.0 }), polygon: None });
+    let line_shape = DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Line")).to_string().into()).expect("nonempty authored identity"), "Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawingLine { x1: 0.0, y1: 0.0, x2: 5.0, y2: 5.0 }), polygon: None });
     let line_id = layer_id(&line_shape).clone();
 
     let polygon_shape = DrawingLayerNode::Shape(DrawingShapeBody {
-        base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Polygon")).to_string().into()).expect("nonempty authored identity"), "Polygon"),
+        base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Polygon")).to_string().into()).expect("nonempty authored identity"), "Polygon"),
         shape_kind: "polygon".into(),
         rect: None,
         ellipse: None,
@@ -31,11 +29,11 @@ fn representative_drawing_document() -> DrawingSnapshot {
         polygon: Some(DrawingPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]].into() }),
     });
 
-    let mut radial_circle = DrawingShapeBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("RadialCircle")).to_string().into()).expect("nonempty authored identity"), "RadialCircle"), shape_kind: "circle".into(), rect: None, ellipse: None, circle: Some(DrawingCircle { cx: 1.0, cy: 2.0, r: 3.0 }), line: None, polygon: None };
+    let mut radial_circle = DrawingShapeBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("RadialCircle")).to_string().into()).expect("nonempty authored identity"), "RadialCircle"), shape_kind: "circle".into(), rect: None, ellipse: None, circle: Some(DrawingCircle { cx: 1.0, cy: 2.0, r: 3.0 }), line: None, polygon: None };
     radial_circle.base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 0.0] }].into() });
     let radial_circle = DrawingLayerNode::Shape(radial_circle);
 
-    let path_layer = create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), 
+    let path_layer = create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Path")).to_string().into()).expect("nonempty authored identity"), 
         "Path",
         vec![
             PathSegment::Move { to: [0.0, 0.0] },
@@ -47,14 +45,14 @@ fn representative_drawing_document() -> DrawingSnapshot {
         ].into(),
     );
 
-    let text_layer = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Label")).to_string().into()).expect("nonempty authored identity"), "Label"), x: 4.0, y: 5.0, content: "semio \"drawing\"\ndsl".into(), size: 12.0, font_family: crate::DrawingFontFamily::Anta });
-    let image_layer = create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "src-1");
-    let trace_layer = create_drawing_trace_layer(crate::schema::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "src-1");
-    let boolean_layer = create_drawing_boolean_layer(crate::schema::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "xor", [rect_id, line_id].into_iter().collect());
+    let text_layer = DrawingLayerNode::Text(DrawingTextBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Label")).to_string().into()).expect("nonempty authored identity"), "Label"), x: 4.0, y: 5.0, content: "semio \"drawing\"\ndsl".into(), size: 12.0, font_family: semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily::Anta });
+    let image_layer = create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Image")).to_string().into()).expect("nonempty authored identity"), "Image", "src-1");
+    let trace_layer = create_drawing_trace_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Trace")).to_string().into()).expect("nonempty authored identity"), "Trace", "src-1");
+    let boolean_layer = create_drawing_boolean_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Boolean")).to_string().into()).expect("nonempty authored identity"), "Boolean", "xor", [rect_id, line_id].into_iter().collect());
 
     let ellipse_shape =
-        DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Ellipse")).to_string().into()).expect("nonempty authored identity"), "Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
-    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: default_layer_base(crate::schema::identity::DrawingIdentity::admit((("Group \"nested\"")).to_string().into()).expect("nonempty authored identity"), "Group \"nested\""), children: vec![ellipse_shape, radial_circle].into() });
+        DrawingLayerNode::Shape(DrawingShapeBody { base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Ellipse")).to_string().into()).expect("nonempty authored identity"), "Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawingEllipse { cx: 1.0, cy: 2.0, rx: 3.0, ry: 4.0 }), circle: None, line: None, polygon: None });
+    let group_layer = DrawingLayerNode::Group(DrawingGroupBody { isolation:false, base: default_layer_base(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Group \"nested\"")).to_string().into()).expect("nonempty authored identity"), "Group \"nested\""), children: vec![ellipse_shape, radial_circle].into() });
 
     DrawingSnapshot {
         schema: DRAWING_DOCUMENT_SCHEMA.into(),
@@ -94,17 +92,17 @@ async fn pack_round_trips_document_without_assets_or_artboard() {
 /// existing pack round-trip laws.
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
-    use crate::op::DrawingMutation;
+    use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let initial = default_drawing_document("doc-text-test", None);
     let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
-    let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
+    let layer = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
-    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
-    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_structure::create_layer::mutation::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![semio_s_artifact_draw_drawing_style::set_layer_opacity::mutation::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
     let edit: &Edit<DrawingMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
     store::os_store::test_support::close_plain_test_store(&mut doc_store);

@@ -1,0 +1,11 @@
+[
+ {
+  "from": "crate::editor::cad::kit",
+  "to": "crate::editor::cad::modes::edit::windows::config",
+  "items": [
+   "cad_pane_from_view",
+   "cad_window_id_for_pane",
+   "runtime_of"
+  ]
+ }
+]

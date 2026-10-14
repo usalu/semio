@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "source": "\"plain\"",
+      "decoded": "plain"
+    },
+    {
+      "source": "\"a\\n\\t\\uD83D\\uDE00\"",
+      "decoded": "a\n\t😀"
+    },
+    {
+      "source": "\"\"",
+      "decoded": ""
+    },
+    {
+      "source": "\"aä🧵\"",
+      "decoded": "aä🧵"
+    }
+  ]
+}

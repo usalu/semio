@@ -1,8 +1,13 @@
 //! 🔺️ `change-generation-value` sparse diff construction.
 
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dGenerationPatch, Generation3dGenerationModification, Generation3dGenerationsDelta, Generation3dValueRow, Generation3dValuesDelta};
-use crate::standards::v1::subsets::any::schema::mutations::change_generation_value::ChangeGenerationValue;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationPatch;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationModification;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dGenerationsDelta;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dValueRow;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dValuesDelta;
+use crate::change_generation_value::ChangeGenerationValue;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 
 pub fn diff(payload: &ChangeGenerationValue, base: &Generation3dSnapshot) -> protocol::MutationOutcome<Generation3dDiff> {
     let Some(existing) = base.generation.generations.iter().find(|entry| entry.id == payload.id) else {

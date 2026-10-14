@@ -3,7 +3,6 @@
 //! interaction the window last finalized. Per-frame state never lives in config, so typing a line, a pointer move and a
 //! possible-select publish nothing durable and list no history row; only a commit lands, as one transform-tool transaction.
 
-use crate::editor::cad::modes::edit::windows::{building, energy, shape, structure_classic};
 
 /// 🫧️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -37,16 +36,6 @@ semio_framework_plugin::transient_root! {
     fields: { engagement_input: String, engagement_step: String, engagement_pane: Option<String>, engagement_session_json: Option<String>, last_finalized_interaction_id: Option<String> },
 }
 
-semio_framework_plugin::window_transient_owners! {
-    state: CadWorldWindowTransient,
-    mutation: CadWorldWindowTransientMutation,
-    windows: {
-        CadShapeWindowTransientOwner => shape::WINDOW_KIND_ID,
-        CadBuildingWindowTransientOwner => building::WINDOW_KIND_ID,
-        CadEnergyWindowTransientOwner => energy::WINDOW_KIND_ID,
-        CadStructureClassicWindowTransientOwner => structure_classic::WINDOW_KIND_ID,
-    },
-}
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

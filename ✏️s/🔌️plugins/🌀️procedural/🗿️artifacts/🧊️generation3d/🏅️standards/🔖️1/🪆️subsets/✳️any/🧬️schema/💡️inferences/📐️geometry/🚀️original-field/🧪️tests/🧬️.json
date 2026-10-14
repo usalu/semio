@@ -1,0 +1,298 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "widgets",
+    "wires",
+    "expected",
+    "originalCaller",
+    "pending",
+    "engine",
+    "hostPolicy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "widgets": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "params"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "input-slider",
+              "mesh.primitive.plane",
+              "brep.curve.line",
+              "brep.evaluate.curvePoint",
+              "mesh.inspect.vertex",
+              "math.number",
+              "math.boolean",
+              "mesh.transform.translate"
+            ]
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "wires": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "fromPort",
+          "to",
+          "toPort"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fromPort": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "string",
+            "minLength": 1
+          },
+          "toPort": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width Ä",
+        "planePositions",
+        "curve point",
+        "position",
+        "number",
+        "flag",
+        "translated position"
+      ],
+      "properties": {
+        "width Ä": {
+          "const": 4
+        },
+        "planePositions": {
+          "const": [
+            [
+              -2,
+              0,
+              -3
+            ],
+            [
+              2,
+              0,
+              -3
+            ],
+            [
+              2,
+              0,
+              3
+            ],
+            [
+              -2,
+              0,
+              3
+            ]
+          ]
+        },
+        "curve point": {
+          "const": [
+            1.5,
+            2,
+            0
+          ]
+        },
+        "position": {
+          "const": [
+            2,
+            0,
+            3
+          ]
+        },
+        "number": {
+          "const": 2.5
+        },
+        "flag": {
+          "const": true
+        },
+        "translated position": {
+          "const": [
+            3,
+            2,
+            6
+          ]
+        }
+      }
+    },
+    "originalCaller": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "generation",
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "fuel",
+        "deadlineMicros"
+      ],
+      "properties": {
+        "operation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deadlineMicros": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "pending": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "payloadHeldOnRefusal",
+        "outputHeldOnRefusal",
+        "boxBirthPaid",
+        "boxReleasePaid",
+        "sameCallerClose"
+      ],
+      "properties": {
+        "payloadHeldOnRefusal": {
+          "const": true
+        },
+        "outputHeldOnRefusal": {
+          "const": true
+        },
+        "boxBirthPaid": {
+          "const": true
+        },
+        "boxReleasePaid": {
+          "const": true
+        },
+        "sameCallerClose": {
+          "const": true
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceOrdinalRows",
+        "borrowedSourceKeys",
+        "completedPayloadCloned",
+        "sameCallerSnapshotClose",
+        "strongSourceLoanUntilClose",
+        "requestDonorHeldOnAdmissionRefusal"
+      ],
+      "properties": {
+        "sourceOrdinalRows": {
+          "const": true
+        },
+        "borrowedSourceKeys": {
+          "const": true
+        },
+        "completedPayloadCloned": {
+          "const": false
+        },
+        "sameCallerSnapshotClose": {
+          "const": true
+        },
+        "strongSourceLoanUntilClose": {
+          "const": true
+        },
+        "requestDonorHeldOnAdmissionRefusal": {
+          "const": true
+        }
+      }
+    },
+    "hostPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "sourceWidget",
+        "value",
+        "explicitOriginalCapability",
+        "actualInputsClosed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "math.number"
+        },
+        "sourceWidget": {
+          "const": "number"
+        },
+        "value": {
+          "const": 41
+        },
+        "explicitOriginalCapability": {
+          "const": true
+        },
+        "actualInputsClosed": {
+          "const": true
+        }
+      }
+    }
+  }
+}

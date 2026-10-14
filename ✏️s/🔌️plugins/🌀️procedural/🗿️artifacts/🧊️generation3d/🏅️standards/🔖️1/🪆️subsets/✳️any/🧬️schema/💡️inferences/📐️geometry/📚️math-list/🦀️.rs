@@ -4,9 +4,19 @@
 //! instead of truncated, and a list index outside the list never wraps.
 //!
 //! 🔗️ [Arithmetic progression](https://en.wikipedia.org/wiki/Arithmetic_progression) · [Linear interpolation](https://en.wikipedia.org/wiki/Linear_interpolation)
+#![allow(clippy::result_large_err)]
 
-use super::math_arithmetic::{finite, out_of_range};
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_math_arithmetic::finite;
+use semio_s_artifact_procedural_3d_math_arithmetic::out_of_range;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 
 const MAXIMUM_COUNT: i64 = 100_000;
 
@@ -69,6 +79,8 @@ fn list_length(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish(kind, (|| Ok(outputs([("count", GeometryValue::Integer(inputs.list("list")?.len() as i64))])))())
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("math-list", include_str!("../../../🗂️catalogue/🔣️math-list.json"));
 /// 🗃️ Every math.list catalogue kind and the compute that starts it.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "math.range", start: range },

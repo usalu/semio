@@ -5,9 +5,15 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is `ArtifactStore::reset`,
 //! outside history.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use semio_s_artifact_stdio_semio_base::schema::triples::absorb_indexed_slot;
+use semio_s_artifact_stdio_semio_base::schema::triples::apply_indexed_rows;
+use semio_s_artifact_stdio_semio_base::schema::triples::inverse_indexed_rows;
+use semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedRow;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
 use crate::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -148,7 +154,8 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
-    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     use crate::schema::snapshot::demo_table_snapshot;
     let demo = demo_table_snapshot();
     vec![

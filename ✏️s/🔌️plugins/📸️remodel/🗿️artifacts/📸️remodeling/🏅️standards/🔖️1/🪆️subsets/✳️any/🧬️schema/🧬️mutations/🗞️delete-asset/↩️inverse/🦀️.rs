@@ -3,11 +3,15 @@
 //! the DOCUMENT's own durable leaf for that handle (`remodeling_asset`, `🦀️.rs:258` — the leaves this
 //! very verb removes), so this inverse is a pure function of `base` with no process state behind it.
 //! A key whose leaf the document does not carry ⇒ `Vec::new()`, never fabricated bytes.
-use crate::mutations::{append_content, rebind_asset, AppendContent, RemodelingMutation};
-use crate::{RemodelingContentKind, RemodelingSnapshot};
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::CommitReconstruction;
+use crate::standards::v1::subsets::any::schema::mutations::append_content::append_content;
+use semio_s_artifact_remodel_remodeling_mut_results::standards::v1::subsets::any::schema::mutations::commit_reconstruction::rebind_asset;
+use crate::standards::v1::subsets::any::schema::mutations::append_content::{AppendContent};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingContentKind;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+pub fn inverse<Op: From<AppendContent> + From<CommitReconstruction>>(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     let Some(handle) = base.assets.get(&payload.key) else {
         return Ok(Vec::new());
     };

@@ -12,10 +12,12 @@ pub struct KernelActivationRequest {
     pub window: Option<WindowId>,
     pub event: ActivationEvent,
     pub retained: RetainedTurnInput,
+    pub loan:OriginalActorTurnLoan,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KernelActivationFault {
+    InvalidOriginalLoan,
     Exhausted,
     Occupied,
     ForeignReservation,
@@ -63,6 +65,7 @@ pub struct KernelActivationRejected {
 
 impl Kernel {
     pub async fn reserve_activation(&mut self, request: KernelActivationRequest) -> Result<KernelActivationReservation, KernelActivationRefused> {
+        if request.loan.validate_for(request.retained).is_err(){return Err(KernelActivationRefused{request,reason:KernelActivationFault::InvalidOriginalLoan})}
         let ordinal = self.next_ordinal.get(&request.package).copied().unwrap_or(0);
         let Some(next) = ordinal.checked_add(1) else { return Err(KernelActivationRefused { request, reason: KernelActivationFault::Exhausted }) };
         let actor = ActorId::new(request.plugin_ordinal, request.kind.tag().await, ordinal, 0).await;
@@ -77,7 +80,7 @@ impl Kernel {
             self.shards.pin(actor).await
         };
         let authority = Arc::new(ReservationAuthority);
-        self.scheduler.register_actor_state(actor, request.package.clone(), request.lane, budget, shard, false, request.retained).await;
+        self.scheduler.register_actor_state(actor, request.package.clone(), request.lane, budget, shard, false, request.retained,request.loan).await;
         self.next_ordinal.insert(request.package.clone(), next);
         self.actors.insert(
             actor,

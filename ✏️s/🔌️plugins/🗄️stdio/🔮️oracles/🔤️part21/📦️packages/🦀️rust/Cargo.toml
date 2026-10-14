@@ -20,8 +20,5 @@ role = "test"
 name = "semio_s_plugin_stdio_part21_test_oracle"
 path = "../../🦀️.rs"
 
-[features]
-oracles = []
-
 [dependencies]
 "semio-repo-test-host" = { path = "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }

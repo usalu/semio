@@ -1,6 +1,6 @@
 //! 🎨️ `create-annotation-style` payload. Brings a new annotation style into the library: text height, line end mark, printed unit and precision shared by dimensions, tags, notes and leaders.
 
-use crate::{AnnotationStyle, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnnotationStyle, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

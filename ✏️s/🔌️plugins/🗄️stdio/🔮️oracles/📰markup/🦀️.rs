@@ -17,7 +17,6 @@
 //! @see ../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic/🔮️oracles/🦀️.rs
 
 //#region 🔖️Live
-#[cfg(feature = "oracles")]
 pub mod live {
     use quick_xml::events::{BytesCData, BytesDecl, BytesPI, BytesStart, BytesText, Event};
     use quick_xml::{Reader, Writer};

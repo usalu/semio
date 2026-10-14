@@ -65,7 +65,7 @@ import {readActivationReceipt,ACTIVATION_RECEIPT_FILE} from "../../../../../🧰
         const hostCoreSha256 = createHash("sha256").update("space-component").digest("hex");
         const specimens = Object.fromEntries(provenanceFixture.specimens.map((row: any) => [row.id, row]));
         const files = new Map([
-          ["🪞️vendor/.nx-artifact.json", "vendor"],
+          ["🪞️vendor/.semio-artifact.json", "vendor"],
           ["🧵️shard/🟨️shard-worker.js", "shard"],
           ["🪐️space/semio_s_plugin_space_component.core.wasm", "space-component"],
           ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],

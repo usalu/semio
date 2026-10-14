@@ -5,7 +5,7 @@
 use crate::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
 use crate::editor::bim::kit::{fault, select_effect};
 use crate::editor::bim::BimDispatchCtx;
-use crate::{ClassificationSystem, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationSystem, ModelSnapshot}, mutations::ModelMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use value_derive::{FromValue, ToValue};
 

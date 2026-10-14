@@ -1,6 +1,6 @@
 //! 📄️ `create-sheet` payload. Brings a new sheet into the drawing set: number, name, paper size, orientation and the authored fields of the title block. The frame, the title block and the revision table it prints are inferred.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Sheet};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Sheet}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

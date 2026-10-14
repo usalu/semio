@@ -10,3 +10,5 @@ pub struct OwnerRef {
     pub slot: String,
     pub child_id: String,
 }
+
+semio_framework_value::artifact_retire_struct!(OwnerRef { parent, slot, child_id });

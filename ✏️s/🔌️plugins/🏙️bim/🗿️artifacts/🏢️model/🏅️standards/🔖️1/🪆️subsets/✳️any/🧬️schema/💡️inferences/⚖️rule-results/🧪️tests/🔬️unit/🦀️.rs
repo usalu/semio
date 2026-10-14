@@ -1,7 +1,7 @@
 //! 🧪️ The rules: the corridor width of a room, who a rule measures, who violates it and what a member the model cannot measure does.
 
 use super::*;
-use crate::{Point2, RuleScope, RuleSeverity};
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, RuleScope, RuleSeverity};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
 const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");

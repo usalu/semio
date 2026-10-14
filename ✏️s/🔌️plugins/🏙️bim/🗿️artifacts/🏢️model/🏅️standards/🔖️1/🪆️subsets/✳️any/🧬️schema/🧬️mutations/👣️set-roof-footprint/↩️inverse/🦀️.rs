@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `SetRoofFootprint`: an absolute `SetRoofFootprint` back to the base footprint, none when the roof is absent.
 
 use super::SetRoofFootprint;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &SetRoofFootprint, base: &ModelSnapshot) -> Vec<ModelMutation> {
     match base.roofs.get(&payload.id) {

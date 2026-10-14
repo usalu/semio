@@ -4,7 +4,7 @@
 
 use super::super::modify::WallEnd;
 use super::SetWallEndJoin;
-use crate::{Assigned, Entry, ModelDiff, ModelSnapshot, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetWallEndJoin, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

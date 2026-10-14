@@ -5,9 +5,6 @@
   "scripts": {
     "test-shape": "bun repo run @semio-tech/schema-validator-ts:test-shape"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "exports": {
     ".": "./🟦️.ts"
   },

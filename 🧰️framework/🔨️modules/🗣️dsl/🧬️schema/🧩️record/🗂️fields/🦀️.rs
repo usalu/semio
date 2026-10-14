@@ -13,6 +13,8 @@ impl RecordFields{
     pub fn capacity(&self)->usize{self.entries.capacity()}
     /// 🔎️ Borrows one field by its declared identity.
     pub fn get(&self,id:&u16)->Option<&FieldValue>{self.entries.binary_search_by_key(id,|(id,_)|*id).ok().map(|index|&self.entries[index].1)}
+    /// 🪜️ Borrows one canonical field slot without scanning preceding identities.
+    pub fn at(&self,index:usize)->Option<(u16,&FieldValue)>{self.entries.get(index).map(|(id,value)|(*id,value))}
     /// 🔧️ Borrows one field payload for a declared owner mutation.
     pub fn get_mut(&mut self,id:&u16)->Option<&mut FieldValue>{self.entries.binary_search_by_key(id,|(id,_)|*id).ok().map(|index|&mut self.entries[index].1)}
     /// 📍️ Reports whether a declared identity is present.

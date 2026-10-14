@@ -1,14 +1,17 @@
 //! 🏋️ 🏋️ Fem2d play app commands command — `add-nodal-load`.
 
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-use crate::standards::v1::subsets::any::schema::mutations::{add_load,create_load_case};
+use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::add_load;
+use semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::create_load_case;
 
-use crate::{FemDof, FemLoad, FemLoadCase};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-type Fem2dSnapshot = crate::Fem2dSnapshot;
+type Fem2dSnapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 
 /// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
 /// found, else the document's first load case, else `None` — a missing case is not resolved here,
@@ -32,7 +35,7 @@ fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: FemLoad) 
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
 fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
-    crate::app_surface::next_id(loads.iter().map(|l| crate::load_id(l).to_string()), "l")
+    semio_s_fem_app_surface::next_id(loads.iter().map(|l| semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id(l).to_string()), "l")
 }
 
 //#region 🔖️AddNodalLoad

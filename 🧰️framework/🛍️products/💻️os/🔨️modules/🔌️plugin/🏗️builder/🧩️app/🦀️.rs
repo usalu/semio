@@ -278,7 +278,7 @@ pub struct AppBuilder {
     label: LocalizedLabel,
     document: Vec<String>,
     icon_id: Option<IconName>,
-    controller_id: String,
+    pub(crate) controller_id: String,
     modes: Vec<ModeSpec>,
     default_mode_id: Option<String>,
     window_kinds: Vec<WindowKindSpec>,

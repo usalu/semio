@@ -15,10 +15,10 @@
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate` and are
 //! asserted by the shared codec-matrix harness, not here.
 
-use crate::standards::v4::subsets::any::schema::diff::IfcDiff;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcDiff;
 use crate::standards::v4::subsets::any::schema::mutations::{apply_ifc_mutation, set_entity_arg, IfcMutation};
 
-use crate::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 
 const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-entity-arg/✏️renames/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🎛️set-entity-arg/✏️renames/📸️snapshot/➡️after/🔣️.json");
@@ -43,9 +43,9 @@ async fn applies_to_committed_after() {
     let outcome = apply_ifc_mutation(&mut snapshot, &mutation());
     assert!(outcome.messages().is_empty(), "set-entity-arg/renames-the-exterior-wall: set-entity-arg raised diagnostics it should not have");
     assert_eq!(snapshot, expected_after(), "set-entity-arg/renames-the-exterior-wall: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot.entities[0].args[2], crate::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()), "set-entity-arg/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'");
+    assert_eq!(snapshot.entities[0].args[2], semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue::String("Exterior Wall".into()), "set-entity-arg/renames-the-exterior-wall: the wall's Name attribute must land on 'Exterior Wall'");
     assert_eq!(snapshot.entities[0].name, "IFCWALL", "set-entity-arg/renames-the-exterior-wall: the EXPRESS entity keyword is untouched");
-    assert!(matches!(snapshot.entities[0].args[1], crate::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-entity-arg/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
+    assert!(matches!(snapshot.entities[0].args[1], semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcValue::Unset), "set-entity-arg/renames-the-exterior-wall: the OwnerHistory attribute stays the Part-21 unset marker");
     assert_eq!(snapshot.entities[1], before().entities[1], "set-entity-arg/renames-the-exterior-wall: the IFCPROJECT instance is identical on both sides and must survive untouched");
     assert_eq!(snapshot.header, before().header, "set-entity-arg/renames-the-exterior-wall: all three HEADER records are equal on both sides");
 }

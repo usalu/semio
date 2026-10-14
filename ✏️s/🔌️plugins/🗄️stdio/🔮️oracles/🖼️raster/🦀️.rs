@@ -60,7 +60,6 @@ impl RasterSpec {
 //#region 🔖️Png
 /// 🔮️ Creates a PNG with the registered `png` reference implementation.
 /// @see https://github.com/image-rs/image-png
-#[cfg(feature = "oracles")]
 pub fn oracle_create_png(spec: &RasterSpec) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     {
@@ -74,7 +73,6 @@ pub fn oracle_create_png(spec: &RasterSpec) -> Result<Vec<u8>, String> {
 }
 
 /// 👁️ Projects PNG bytes with the INDEPENDENT `png` decoder onto the owned `semantic-raster-v1` shape.
-#[cfg(feature = "oracles")]
 pub fn project_png(input: &[u8]) -> Result<Json, String> {
     let decoder = png::Decoder::new(std::io::Cursor::new(input));
     let mut reader = decoder.read_info().map_err(|error| format!("independent reader could not parse the PNG: {}", error))?;
@@ -85,7 +83,6 @@ pub fn project_png(input: &[u8]) -> Result<Json, String> {
     Ok(RasterSpec { width: frame.width, height: frame.height, rgba: samples }.projection("png"))
 }
 
-#[cfg(feature = "oracles")]
 fn rgba_from(buffer: &[u8], color: png::ColorType, palette: Option<&[u8]>, transparency: Option<&[u8]>) -> Result<Vec<u8>, String> {
     match color {
         png::ColorType::Rgba => Ok(buffer.to_vec()),
@@ -201,7 +198,6 @@ pub fn gif_image_interlace_flags(data: &[u8]) -> Result<Vec<bool>, String> {
 //#region 🔖️Gif
 /// 🔮️ Creates a single-frame GIF with the registered `gif` reference implementation.
 /// @see https://github.com/image-rs/image-gif
-#[cfg(feature = "oracles")]
 pub fn oracle_create_gif(spec: &RasterSpec) -> Result<Vec<u8>, String> {
     let mut out = Vec::new();
     {
@@ -216,7 +212,6 @@ pub fn oracle_create_gif(spec: &RasterSpec) -> Result<Vec<u8>, String> {
 /// 👁️ Projects GIF bytes with the INDEPENDENT `gif` decoder. GIF is palette-based and lossy about
 /// exact RGBA, so the projection reports the frame geometry and the palette-resolved sample count
 /// rather than pretending the samples survive a quantizing round trip unchanged.
-#[cfg(feature = "oracles")]
 pub fn project_gif(input: &[u8]) -> Result<Json, String> {
     let mut options = gif::DecodeOptions::new();
     options.set_color_output(gif::ColorOutput::RGBA);
@@ -247,7 +242,6 @@ pub fn project_gif(input: &[u8]) -> Result<Json, String> {
 /// 🔮️ Creates a BMP, TIFF or JPEG with the registered `image` reference implementation. One crate is
 /// the reference decoder/encoder for all three, so one oracle covers all three formats.
 /// @see https://github.com/image-rs/image
-#[cfg(feature = "oracles")]
 pub fn oracle_create_image(spec: &RasterSpec, format: &str) -> Result<Vec<u8>, String> {
     let buffer = image::RgbaImage::from_raw(spec.width, spec.height, spec.rgba.clone()).ok_or("raster spec does not fill width * height * 4 bytes")?;
     let mut out = std::io::Cursor::new(Vec::new());
@@ -267,7 +261,6 @@ pub fn oracle_create_image(spec: &RasterSpec, format: &str) -> Result<Vec<u8>, S
 /// JPEG is LOSSY, so its projection deliberately reports geometry and a coarse sample histogram
 /// rather than exact samples: asserting byte-equal pixels through a lossy codec would be a test that
 /// can only ever pass by accident.
-#[cfg(feature = "oracles")]
 pub fn project_image(input: &[u8], format: &str) -> Result<Json, String> {
     let decoded = image::load_from_memory(input).map_err(|error| format!("independent reader could not parse the {}: {}", format, error))?;
     let rgba = decoded.to_rgba8();
@@ -291,35 +284,7 @@ pub fn project_image(input: &[u8], format: &str) -> Result<Json, String> {
 //#endregion 🔖️ImageCrateFormats
 
 //#region 🔖️Unavailable
-/// 🚫️ Without the `oracles` feature the reference implementations are not linked, and every entry
-/// point fails loudly. A missing oracle must never degrade into a silently skipped test.
-#[cfg(not(feature = "oracles"))]
-mod unavailable {
-    use super::{Json, RasterSpec};
-    const MESSAGE: &str = "the `oracles` feature is disabled — this host was not built with the registered reference implementations";
 
-    pub fn create_png(_spec: &RasterSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_png(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn create_gif(_spec: &RasterSpec) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_gif(_input: &[u8]) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn create_image(_spec: &RasterSpec, _format: &str) -> Result<Vec<u8>, String> {
-        Err(MESSAGE.to_string())
-    }
-    pub fn project_image(_input: &[u8], _format: &str) -> Result<Json, String> {
-        Err(MESSAGE.to_string())
-    }
-}
-
-#[cfg(not(feature = "oracles"))]
-pub use unavailable::{create_gif as oracle_create_gif, create_image as oracle_create_image, create_png as oracle_create_png, project_gif, project_image, project_png};
 //#endregion 🔖️Unavailable
 
 //#region 🧪️Tests

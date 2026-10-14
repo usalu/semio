@@ -8,7 +8,7 @@
 
 use super::super::modify::{self, Map};
 use super::MirrorElements;
-use crate::{ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 /// 🪞️ The reflection a payload names.

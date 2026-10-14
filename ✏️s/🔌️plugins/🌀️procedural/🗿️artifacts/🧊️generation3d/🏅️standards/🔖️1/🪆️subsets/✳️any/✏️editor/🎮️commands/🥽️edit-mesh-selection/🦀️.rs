@@ -3,10 +3,12 @@
 //! (design §19), so a history edit changes "extrude distance = 0.1", never a whole operator record.
 
 use crate::editor::generation3d::{config::{Generation3dConfig, Generation3dConfigMutation}, selection::{component_group, selected_analytic_labels, DOMAIN}};
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{change_widget_input, WidgetInputValue};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::standards::v1::subsets::any::schema::{with_host, GraphEditor};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::change_widget_input;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::WidgetInputValue;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::with_host;
+use semio_s_artifact_procedural_3d_mutations::GraphEditor;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, InteractionWrite};
@@ -144,7 +146,7 @@ fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
 fn add_edit_widget(editor: &mut GraphEditor<'_>, base: &str, kind: &str, x: f64, y: f64) -> Result<String, String> {
     let mut id = base.to_string();
     let mut suffix = 2;
-    while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
+    while editor.snapshot().widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":kind}).to_string(), x, y)
 }
 
@@ -162,7 +164,7 @@ fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     let base = format!("{}__{}", target.widget, operation);
     let mut id = base.clone();
     let mut suffix = 2;
-    while editor.snapshot().widgets.iter().any(|widget| crate::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
+    while editor.snapshot().widgets.iter().any(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == id) { id = format!("{base}_{suffix}"); suffix += 1; }
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     editor.add_widget_json(&serde_json::json!({"kind":"neuron","id":id,"neuronKind":next_kind}).to_string(), x + 220.0, y)?;
     editor.insert_between(target.widget, target.channel, &id, "mesh", &output.name)?;

@@ -1,5 +1,8 @@
 //! 🌐️ Pressure-driven multizone airflow network with stack and wind effects.
 
+extern crate semio_s_plugin_energy_engine_props as props;
+extern crate semio_s_plugin_energy_engine_units as units;
+
 use crate::props::moist_air_density;
 use crate::units::{GRAVITY, RHO_AIR_REF};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

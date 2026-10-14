@@ -1,6 +1,12 @@
-use super::*;
-use crate::editor::remodeling::modes::analyze::windows::report::config::{self as report_config, RemodelingReportWindowConfig, RemodelingReportWindowConfigMutation, RemodelingReportWindowConfigOwner};
-use crate::editor::remodeling::modes::capture::windows::frames::config::{self as frames_config, RemodelingFramesWindowConfig, RemodelingFramesWindowConfigMutation, RemodelingFramesWindowConfigOwner};
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model::windows::model::config::*;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze::windows::report::config as report_config;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfig;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfigMutation;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze::windows::report::config::RemodelingReportWindowConfigOwner;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config as frames_config;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfig;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigMutation;
+use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture::windows::frames::config::RemodelingFramesWindowConfigOwner;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 
@@ -54,9 +60,17 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
         .name("remodel-window-ownership-law".into())
         .stack_size(8 * 1024 * 1024)
         .spawn(|| block_on_remodel_windows(async {
-            use crate::editor::remodeling::commands::{import_frame_payload, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
-            use crate::editor::remodeling::modes::{analyze, capture, model};
-            use crate::editor::remodeling::{create_remodeling_app, RemodelingCommand, RemodelingPlayApp};
+            use semio_s_artifact_remodel_remodeling_cmd_ingest::editor::remodeling::commands::import_frame_payload;
+            use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_camera;
+            use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_frame_cursor;
+            use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_layer_visibility;
+            use semio_s_artifact_remodel_remodeling_cmd_workflow::editor::remodeling::commands::set_report_table;
+            use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::analyze;
+            use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::capture;
+            use semio_s_artifact_remodel_remodeling_modes::editor::remodeling::modes::model;
+            use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::create_remodeling_app;
+            use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingCommand;
+            use semio_s_artifact_remodel_remodeling_editor::editor::remodeling::RemodelingPlayApp;
             use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, EditorApp, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<RemodelingPlayApp>>, command: RemodelingCommand, view: &ViewModel) -> Result<usize, String> {
@@ -104,7 +118,7 @@ fn remodel_window_ownership_runtime_isolates_renders_and_reopens_six_windows() {
             let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<RemodelingPlayApp>>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
             app.bind_instance_id(88).await;
             let outcome: Result<(), String> = async {
-                let payload = import_frame_payload::checker_data_url(8, 8, 2).await;
+                let payload = semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(8, 8, 2).await;
                 dispatch(&mut app, RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload, name: "left.png".into(), index: 0, total: 1 }), &frames_left).await?;
                 let stream_id = app.snapshot().map_err(|error| format!("{error:?}"))?.streams.first().ok_or("Remodel fixture stream was not admitted")?.id.clone();
                 let document_before = app.document_pack().await.map_err(|error| format!("{error:?}"))?;

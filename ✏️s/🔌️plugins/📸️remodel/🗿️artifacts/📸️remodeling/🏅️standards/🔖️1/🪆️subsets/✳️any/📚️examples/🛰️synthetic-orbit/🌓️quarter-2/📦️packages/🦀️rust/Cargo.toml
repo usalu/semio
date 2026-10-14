@@ -1,0 +1,18 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-orbit-q2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "synthetic-orbit example: views 9–17."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]

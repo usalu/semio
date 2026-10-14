@@ -18,7 +18,7 @@ fn emit(snapshot: &Fem2dSnapshot, payload: PatchMaterial) -> Result<Emit<Fem2dMu
 #[semio_framework_async_macros::async_test]
 async fn patch_material_edits_the_poisson_ratio_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchMaterial(PatchMaterial { id: "timber".into(), field: "nu".into(), value: "0.25".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let material = snapshot.materials.iter().find(|material| material.id == "timber").expect("timber survives the patch");

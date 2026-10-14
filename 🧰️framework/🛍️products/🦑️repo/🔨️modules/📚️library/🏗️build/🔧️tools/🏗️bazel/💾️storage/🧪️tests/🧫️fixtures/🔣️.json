@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "roots": {"tools": "/bounded/tools", "dependencies": "/bounded/dependencies", "products": "/bounded/products"},
+  "cargoAuthority": [
+    {"environment": {}, "target": "configuration"},
+    {"environment": {"CARGO_TARGET_DIR": "authored/explicit"}, "target": "authored/explicit"}
+  ],
+  "paths": [
+    {"name": "executable", "partition": "tools", "suffix": "bazel/bin"},
+    {"name": "install", "partition": "tools", "suffix": "bazel/install"},
+    {"name": "modules", "partition": "dependencies", "suffix": "bazel/modules"},
+    {"name": "workspace", "partition": "products", "suffix": "bazel/workspaces"},
+    {"name": "outputs", "partition": "products", "suffix": "bazel/outputs"},
+    {"name": "actions", "partition": "products", "suffix": "bazel/actions"},
+    {"name": "temporary", "partition": "products", "suffix": "tmp"}
+  ]
+}

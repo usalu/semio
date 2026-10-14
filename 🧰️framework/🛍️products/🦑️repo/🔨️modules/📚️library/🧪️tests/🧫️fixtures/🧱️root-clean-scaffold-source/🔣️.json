@@ -41,7 +41,15 @@
         "cleanTicketFolderForPath",
         "cleanTicketGeneratedOutputTicketRoot",
         "cleanTicketManifestIsClosed",
-        "cleanIsRootTransientName"
+        "cleanIsRootTransientName",
+        "CLEAN_RUST_INCREMENTAL_MAX_BYTES",
+        "CleanRustIncrementalCrate",
+        "CleanRustIncrementalDirectory",
+        "cleanSelectHugeRustIncremental",
+        "cleanRustIncrementalSearchRoots",
+        "cleanIsRustIncrementalRemovalPath",
+        "cleanRustIncrementalHasWorkingSession",
+        "cleanChildDirectories"
       ]
     },
     {
@@ -68,7 +76,11 @@
         "CLEAN_OVERSIZED_IGNORED_FILE_MAX_BYTES",
         "cleanCollectRootTransient",
         "cleanOpenTicketOversizedFileRemovals",
-        "cleanOversizedIgnoredRemovals"
+        "cleanOversizedIgnoredRemovals",
+        "CLEAN_RUST_INCREMENTAL_HEAVY_DIRS",
+        "cleanCollectRustIncrementalRemovals",
+        "cleanRustIncrementalDirectoryRemoval",
+        "cleanRustIncrementalBytes"
       ]
     },
     {

@@ -1,0 +1,347 @@
+{
+ "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs",
+ "crate": "semio_s_artifact_norm_en1999",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-norm-en1999-model",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "EN 1999 model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-norm-en1999-diff",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "EN 1999 diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-norm-en1999-mutations",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1999 mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-norm-en1999-schema",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "EN 1999 artifact schema and descriptor"
+  },
+  "checks": {
+   "package": "semio-s-artifact-norm-en1999-checks",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks",
+   "prefix": "standards::v1::subsets::any::schema::checks",
+   "description": "EN 1999 compliance checks"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-norm-en1999-inferences",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "EN 1999 inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-norm-en1999-io",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "EN 1999 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-norm-en1999-examples",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "",
+   "description": "EN 1999 example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-norm-en1999-editor",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::en1999",
+   "description": "EN 1999 editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-norm-en1999-viewer",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::en1999",
+   "description": "EN 1999 viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-norm-en1999",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999",
+   "prefix": "",
+   "description": "Norm en1999 artifact",
+   "role": "artifact"
+  },
+  "mut-inputs": {
+   "package": "semio-s-artifact-norm-en1999-mut-inputs",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️inputs",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1999 inputs mutation leaves"
+  },
+  "mut-members": {
+   "package": "semio-s-artifact-norm-en1999-mut-members",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️members",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1999 members mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌍️change\\-annex/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-materials/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-sections/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏗️change\\-members/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔗change\\-connections/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔥️change\\-fire\\-scenarios/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔄️change\\-fatigue\\-details/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❄️change\\-cold\\-formed/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🫙change\\-shells/",
+   "mut-inputs"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕add\\-member/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖remove\\-member/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏋️change\\-member\\-n\\-ed/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/⤴️change\\-member\\-my\\-ed/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📏️change\\-member\\-buckling\\-length/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/⚗️change\\-material\\-designation/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-plate\\-thickness/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔥️change\\-weld\\-throat/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩change\\-bolt\\-count/",
+   "mut-members"
+  ],
+  [
+   "🧬️schema/💡️inferences/⚖️checks/",
+   "checks"
+  ],
+  [
+   "🧬️schema/🧪️tests/⚖️compliance/",
+   "checks"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "🪶️en1999/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️inputs/🦀️.rs",
+   "text": "//! 🧾️ EN 1999 inputs mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️members/🦀️.rs",
+   "text": "//! 📏️ EN 1999 members mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ EN 1999 example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ EN 1999's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_en1999_model::En1999Snapshot, semio_s_artifact_norm_en1999_mutations::En1999Mutation>(&root).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  }
+ ],
+ "generic_leaves": {
+  "enum": "En1999Mutation",
+  "snapshot": "En1999Snapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::En1999Diff",
+  "mutations_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "🌍️change-annex",
+   "🧱change-materials",
+   "📐️change-sections",
+   "🏗️change-members",
+   "🔗change-connections",
+   "🔥️change-fire-scenarios",
+   "🔄️change-fatigue-details",
+   "❄️change-cold-formed",
+   "🫙change-shells",
+   "➕add-member",
+   "➖remove-member",
+   "🏋️change-member-n-ed",
+   "⤴️change-member-my-ed",
+   "📏️change-member-buckling-length",
+   "⚗️change-material-designation",
+   "🧱change-plate-thickness",
+   "🔥️change-weld-throat",
+   "🔩change-bolt-count"
+  ]
+ },
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "from_marker": "//#region 🔖️ComplianceHelpers",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🦀️.rs",
+   "doc": "//! ⚖️ EN 1999 compliance checks: the clause-by-clause verification behind the compliance report.",
+   "mount": "checks"
+  }
+ ],
+ "move_mods": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "name": "mutation_bridge",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "source_reexport": "pub use crate::standards::v1::subsets::any::schema::mutations::mutation_bridge;\npub use mutation_bridge::*;",
+   "drop_in_target": [
+    "^pub use crate::standards::v1::subsets::any::io::mutation_bridge::\\{[^}]*\\};\\n"
+   ]
+  }
+ ],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999",
+  "✏️s/🔌️plugins/📕️norm/🏭️bridge",
+  "🌎️hub/🧩️compositions/📕️norm",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-plugin-norm-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-norm-en1999-model"
+    ]
+   }
+  ]
+ }
+}

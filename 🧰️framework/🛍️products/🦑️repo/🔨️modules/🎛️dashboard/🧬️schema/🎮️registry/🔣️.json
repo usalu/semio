@@ -21,7 +21,7 @@
       "type": "string",
       "description": "🌱️ An environment variable name. The runner variables the dashboard owns are never declared.",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-      "not": { "enum": ["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "SEMIO_BUILD_DYNAMIC_OUTPUT", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
+      "not": { "enum": ["SEMIO_BUILD_TERMINAL", "SEMIO_BUILD_REUSE_GRAPH", "NX_DAEMON", "NX_ISOLATE_PLUGINS", "NX_CACHE_PROJECT_GRAPH", "NX_TUI", "NX_NATIVE_COMMAND_RUNNER", "NX_PLUGIN_NO_TIMEOUTS", "NX_FORCE_REUSE_CACHED_GRAPH", "FORCE_COLOR"] }
     },
     "Text": {
       "type": "string",

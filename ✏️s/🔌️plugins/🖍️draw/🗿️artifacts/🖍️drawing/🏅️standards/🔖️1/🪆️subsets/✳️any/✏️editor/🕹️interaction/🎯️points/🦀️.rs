@@ -1,17 +1,18 @@
 //! 🎯️ Snapshot-bound point references for framework-owned node selection.
-use crate::{PathSegment, schema::geometry::editing::PathPoint};
+use semio_s_artifact_draw_drawing_model::PathSegment;
+use semio_s_artifact_draw_drawing_geometry::editing::PathPoint;
 use semio_framework_hash::Hasher;
 use semio_framework_value::paged::Utf8Text;
 
 #[derive(Clone,Debug,PartialEq)]
-pub(crate) struct PointSelectionRef<'a> {
+pub struct PointSelectionRef<'a> {
     pub layer_id:&'a str,
     pub geometry:&'a str,
     pub index:usize,
     pub point:PathPoint,
 }
 
-pub(crate) fn point_slots(segment:&PathSegment)->&'static [PathPoint] {
+pub fn point_slots(segment:&PathSegment)->&'static [PathPoint] {
     match segment {
         PathSegment::Close=>&[],
         PathSegment::Cubic {..}=>&[PathPoint::Anchor,PathPoint::Control1,PathPoint::Control2],
@@ -20,11 +21,11 @@ pub(crate) fn point_slots(segment:&PathSegment)->&'static [PathPoint] {
     }
 }
 
-pub(crate) fn point_name(point:PathPoint)->&'static str {
+pub fn point_name(point:PathPoint)->&'static str {
     match point {PathPoint::Anchor=>"anchor",PathPoint::Control1=>"control1",PathPoint::Control2=>"control2"}
 }
 
-pub(crate) fn parse_point_id(id:&str)->Option<PointSelectionRef<'_>> {
+pub fn parse_point_id(id:&str)->Option<PointSelectionRef<'_>> {
     let (prefix,point)=id.rsplit_once(':')?;
     let (prefix,digits)=prefix.rsplit_once(':')?;
     let (layer_id,geometry)=prefix.rsplit_once(':')?;
@@ -35,7 +36,7 @@ pub(crate) fn parse_point_id(id:&str)->Option<PointSelectionRef<'_>> {
     Some(PointSelectionRef {layer_id,geometry,index:usize::try_from(index).ok()?,point})
 }
 
-pub(crate) fn point_id(layer_id:&(impl Utf8Text+?Sized),geometry:&str,index:usize,point:PathPoint)->Option<String> {
+pub fn point_id(layer_id:&(impl Utf8Text+?Sized),geometry:&str,index:usize,point:PathPoint)->Option<String> {
     let mut id=String::with_capacity(layer_id.text_bytes()+geometry.len()+32);
     for chunk in 0..layer_id.text_chunk_count() {id.push_str(layer_id.text_chunk(chunk)?);}
     let prefix=id.len();
@@ -46,14 +47,14 @@ pub(crate) fn point_id(layer_id:&(impl Utf8Text+?Sized),geometry:&str,index:usiz
     Some(id)
 }
 
-pub(crate) fn geometry_hasher()->Hasher {
+pub fn geometry_hasher()->Hasher {
     let mut hasher=Hasher::new();hasher.update(b"draw-points-v1");hasher
 }
 
-pub(crate) fn hash_segment(hasher:&mut Hasher,segment:&PathSegment)->Option<()> {
+pub fn hash_segment(hasher:&mut Hasher,segment:&PathSegment)->Option<()> {
     let number=|hasher:&mut Hasher,value:f64|{hasher.update(&(if value==0.0 {0.0_f64} else {value}).to_le_bytes());};
     let point=|hasher:&mut Hasher,value:[f64;2]|{number(hasher,value[0]);number(hasher,value[1]);};
-        if !crate::schema::valid_path_segment(segment) {return None;}
+        if !semio_s_artifact_draw_drawing_model::valid_path_segment(segment) {return None;}
         let tag=match segment {PathSegment::Move {..}=>0,PathSegment::Line {..}=>1,PathSegment::Quad {..}=>2,PathSegment::Cubic {..}=>3,PathSegment::Arc {..}=>4,PathSegment::Close=>5};
         hasher.update(&[tag]);
         match segment {
@@ -66,7 +67,7 @@ pub(crate) fn hash_segment(hasher:&mut Hasher,segment:&PathSegment)->Option<()> 
     Some(())
 }
 
-pub(crate) fn geometry_id<'a>(segments:impl IntoIterator<Item=&'a PathSegment>)->Option<String> {
+pub fn geometry_id<'a>(segments:impl IntoIterator<Item=&'a PathSegment>)->Option<String> {
     let mut hasher=geometry_hasher();
     for segment in segments {hash_segment(&mut hasher,segment)?;}
     Some(hasher.finalize().to_hex())
@@ -79,10 +80,10 @@ mod tests;
 #[derive(Clone,Copy,Debug,PartialEq,Default)]
 #[cfg_attr(test,derive(serde::Deserialize))]
 #[cfg_attr(test,serde(rename_all="camelCase"))]
-pub(crate) enum PointPickMode {#[default] Replace,Toggle,Add}
+pub enum PointPickMode {#[default] Replace,Toggle,Add}
 
 /// 🖱️ A press on a selected point retains its drag group; modified presses change membership.
-pub(crate) fn pick_point_selection(current:&[String],hit:Option<&str>,mode:PointPickMode)->Vec<String> {
+pub fn pick_point_selection(current:&[String],hit:Option<&str>,mode:PointPickMode)->Vec<String> {
     let Some(hit)=hit else {return if mode==PointPickMode::Replace {Vec::new()} else {current.to_vec()};};
     let selected=current.iter().any(|id|id==hit);
     if mode==PointPickMode::Replace {return if selected {current.to_vec()} else {vec![hit.into()]};}
@@ -91,7 +92,7 @@ pub(crate) fn pick_point_selection(current:&[String],hit:Option<&str>,mode:Point
 }
 
 /// ▧️ Marquees address world-space anchors, including rectangle edges.
-pub(crate) fn anchor_in_marquee(segment:&PathSegment,matrix:[f64;6],start:[f64;2],end:[f64;2])->bool {
+pub fn anchor_in_marquee(segment:&PathSegment,matrix:[f64;6],start:[f64;2],end:[f64;2])->bool {
     if !matrix.iter().chain(start.iter()).chain(end.iter()).all(|value|value.is_finite()) {return false;}
     let to=match segment {PathSegment::Close=>return false,PathSegment::Move {to}|PathSegment::Line {to}|PathSegment::Quad {to,..}|PathSegment::Cubic {to,..}|PathSegment::Arc {to,..}=>to};
     let x=matrix[0]*to[0]+matrix[2]*to[1]+matrix[4];let y=matrix[1]*to[0]+matrix[3]*to[1]+matrix[5];
@@ -99,7 +100,7 @@ pub(crate) fn anchor_in_marquee(segment:&PathSegment,matrix:[f64;6],start:[f64;2
 }
 
 /// 🧮️ A region merge applies membership once per distinct hit.
-pub(crate) fn merge_point_selection(current:&[String],hits:&[String],mode:PointPickMode)->Vec<String> {
+pub fn merge_point_selection(current:&[String],hits:&[String],mode:PointPickMode)->Vec<String> {
     let incoming=hits.iter().collect::<std::collections::BTreeSet<_>>();
     let existing=current.iter().collect::<std::collections::BTreeSet<_>>();
     let mut result=Vec::new();let mut seen=std::collections::BTreeSet::new();

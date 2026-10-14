@@ -65,3 +65,7 @@ path = "../../../🧪️tests/🧩️neutral-owner/🦀️.rs"
 [[test]]
 name = "owned_json"
 path = "../../🧪️tests/📚️owned-json/🦀️.rs"
+
+[[test]]
+name = "generic_retained_owner"
+path = "../../🧪️tests/🧬️generic-owner/🦀️.rs"

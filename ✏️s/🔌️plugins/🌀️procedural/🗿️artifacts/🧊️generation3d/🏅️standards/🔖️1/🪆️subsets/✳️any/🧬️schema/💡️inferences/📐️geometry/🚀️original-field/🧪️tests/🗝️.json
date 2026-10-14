@@ -1,0 +1,10 @@
+{
+ "version":1,
+ "entries":[["ö-key",17],["ä-key",41],["other",23]],
+ "needle":"ä-key",
+ "expected":41,
+ "borrowedValueIdentity":true,
+ "comparisonBytesPerStep":1,
+ "deniedComparisonHasNoEffects":true,
+ "sourceCallerClosesDictionary":true
+}

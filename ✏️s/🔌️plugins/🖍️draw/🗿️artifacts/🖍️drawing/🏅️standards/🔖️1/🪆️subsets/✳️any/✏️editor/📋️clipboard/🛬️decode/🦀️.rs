@@ -7,7 +7,7 @@ enum Kind{Layer,Retired,Text(&'static str),Segments,Points,Stops,Dash,References
 #[derive(RetireOwned)]
 struct Task{path:[usize;MAX_DEPTH],depth:usize,kind:Kind,source:DslValue,at:usize,offset:usize}
 #[derive(RetireOwned)]
-pub(super) struct ClipboardHydration{pub(super) packet:DrawingClipboard,tasks:PagedList<Task,MAX_TASKS>,at:usize,source:DslValue,rejected:Option<DslValue>,rejected_task:Option<Task>,pending_node:Option<DrawingLayerNode>,pending_asset:Option<(String,DrawingImageAsset)>,retired_key:Option<String>,asset_append:usize,rejected_error:Option<ValueError>,initialized:bool,nodes:usize}
+pub struct ClipboardHydration{pub packet:DrawingClipboard,tasks:PagedList<Task,MAX_TASKS>,at:usize,source:DslValue,rejected:Option<DslValue>,rejected_task:Option<Task>,pending_node:Option<DrawingLayerNode>,pending_asset:Option<(String,DrawingImageAsset)>,retired_key:Option<String>,asset_append:usize,rejected_error:Option<ValueError>,initialized:bool,nodes:usize}
 fn take(entries:&mut[(String,DslValue)],key:&str)->Option<DslValue>{entries.iter_mut().find(|(name,_)|name==key).map(|(_,value)|std::mem::replace(value,DslValue::Null))}
 fn bounded(value:&DslValue,budget:&mut usize)->bool{
     if *budget==0{return false;}*budget-=1;
@@ -24,7 +24,7 @@ fn append<T:FromValue>(list:&mut PagedList<T,{usize::MAX}>,source:&DslValue,cont
 }
 fn reserve<T>(values:&mut Vec<T>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if values.len()==values.capacity(){let capacity=(values.capacity().max(1)*2).min(MAX_NODES);if capacity<=values.len(){return Err(invalid());}control.charge(capacity*size_of::<T>())?;values.try_reserve_exact(capacity-values.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Drawing clipboard vector allocation failed"))?;}Ok(())}
 impl ClipboardHydration{
-    pub(super) fn new(source:DslValue)->Self{Self{packet:DrawingClipboard{schema:String::new(),roots:Vec::new(),selected:Vec::new(),assets:Default::default()},tasks:PagedList::new(),at:0,source,rejected:None,rejected_task:None,pending_node:None,pending_asset:None,retired_key:None,asset_append:0,rejected_error:None,initialized:false,nodes:0}}
+    pub fn new(source:DslValue)->Self{Self{packet:DrawingClipboard{schema:String::new(),roots:Vec::new(),selected:Vec::new(),assets:Default::default()},tasks:PagedList::new(),at:0,source,rejected:None,rejected_task:None,pending_node:None,pending_asset:None,retired_key:None,asset_append:0,rejected_error:None,initialized:false,nodes:0}}
     fn queue(&mut self,path:&[usize],kind:Kind,source:DslValue,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         let mut address=[0;MAX_DEPTH];let length=path.len().min(MAX_DEPTH);address[..length].copy_from_slice(&path[..length]);let original=Task{path:address,depth:path.len(),kind,source,at:0,offset:0};
         if path.len()>MAX_DEPTH||self.tasks.len()==MAX_TASKS{self.rejected_task=Some(original);return Err(invalid());}
@@ -57,7 +57,7 @@ impl ClipboardHydration{
         }
         Ok(())
     }
-    pub(super) fn step(&mut self,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
+    pub fn step(&mut self,control:&mut NativeDecodeControl<'_>)->Result<bool,ValueError>{
         control.checkpoint()?;
         if !self.initialized{
             let DslValue::Object(entries)=&mut self.source else{return Err(invalid());};
@@ -115,7 +115,7 @@ impl ClipboardHydration{
                 match &task.kind{
                     Kind::Segments=>{let DrawingLayerNode::Path(path)=node else{return Err(invalid());};append(&mut path.segments,value,control)?;},
                     Kind::Points=>{let DrawingLayerNode::Shape(shape)=node else{return Err(invalid());};append(&mut shape.polygon.as_mut().ok_or_else(invalid)?.points,value,control)?;},
-                    Kind::Stops=>{let Some(crate::FillStyle::LinearGradient{stops,..}|crate::FillStyle::RadialGradient{stops,..})=layer_base_mut(node).attributes.fill.as_mut()else{return Err(invalid());};append(stops,value,control)?;},
+                    Kind::Stops=>{let Some(semio_s_artifact_draw_drawing_model::FillStyle::LinearGradient{stops,..}|semio_s_artifact_draw_drawing_model::FillStyle::RadialGradient{stops,..})=layer_base_mut(node).attributes.fill.as_mut()else{return Err(invalid());};append(stops,value,control)?;},
                     Kind::Dash=>{append(layer_base_mut(node).attributes.stroke.as_mut().ok_or_else(invalid)?.dash.as_mut().ok_or_else(invalid)?,value,control)?;},
                     Kind::References=>{let DrawingLayerNode::Boolean(boolean)=node else{return Err(invalid());};append(&mut boolean.children,value,control)?;},
                     _=>return Err(invalid())

@@ -9,7 +9,7 @@ mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
@@ -22,10 +22,10 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
-use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
-use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 
 
@@ -142,7 +142,7 @@ use super::*;
 use super::*;
 use crate::schema::snapshot::*;
 use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
-use semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_audio_model::schema::snapshot::SemioAudioSnapshot;
 use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
 use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
@@ -155,10 +155,10 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
 use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
-use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
-use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
-use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 use crate::io::text::snapshot::*;
 /// 📥️ Decodes the envelope's own committed `.pack.semio` bytes into a real [`SemioSnapshot`] — the

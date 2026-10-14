@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "allocation",
+    "owner",
+    "bytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "allocation": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^repository:(rust|tooling|graph|dependencies|products|diagnostics|leases)-store$"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 33554432,
+      "maximum": 68719476736
+    }
+  },
+  "definitions": {
+    "CallbackScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "live"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "live": {
+          "const": true
+        }
+      }
+    }
+  }
+}

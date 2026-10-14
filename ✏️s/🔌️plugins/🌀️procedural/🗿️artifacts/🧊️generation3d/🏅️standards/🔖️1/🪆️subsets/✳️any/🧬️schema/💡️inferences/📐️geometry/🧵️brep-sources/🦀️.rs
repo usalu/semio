@@ -1,14 +1,16 @@
 //! 🧵️ Curve and surface sources of shape values: the value-level view `brep.evaluate` and `brep.intersect` read, so edges, wires and faces answer the same questions as bare curves and surfaces without a kernel session.
 //!
 //! A curve and an edge are parameterised by their own curve parameter; a wire of `n` members is parameterised over `[0, n]`, member `i` covering `[i, i + 1]` in the member's own direction. A face answers through its supporting surface, with the normal turned the way the face points.
+#![allow(clippy::result_large_err)]
 
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{ShapeRoot, ShapeValue};
-use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::vector::Pnt3;
+use semio_framework_3d_brep_curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_vector::Pnt3;
 
 fn axes(point: Pnt3) -> [f64; 3] {
     [point.x, point.y, point.z]

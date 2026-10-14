@@ -6,7 +6,7 @@ use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
 use crate::FlowSnapshot;
 use flow::{flow_backed_node_graph_extras, FlowEvalSession};
-use semio_framework_artifact_infinite_dag::DagHostSnapshot;
+use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

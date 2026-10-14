@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️equipment-gain/🖨️change-zone",
+  "semanticKind": "change-equipment-gain-zone",
+  "displayName": "Change Equipment Gain Zone",
+  "emoji": "🖨️",
+  "aggregateVariant": "ChangeEquipmentGainZone",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-equipment-gain-zone",
+  "binaryTag": 95,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

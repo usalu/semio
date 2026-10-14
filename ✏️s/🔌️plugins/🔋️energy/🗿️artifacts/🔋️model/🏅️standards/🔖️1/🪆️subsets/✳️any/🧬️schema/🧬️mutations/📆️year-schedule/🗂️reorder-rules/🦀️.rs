@@ -1,0 +1,48 @@
+//! 🗂️ Energy model mutation — `ReorderAnnualScheduleRules`: Moves one date rule to another position in the year's rule list. This is the one `reorder` the schedule vocabulary carries, and it earns it: precedence between two rules whose date ranges overlap IS their list order.
+
+use crate::diff::EnergyModelDiff;
+use crate::mutations::EnergyModelMutation;
+use crate::EnergyModelSnapshot;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+
+//#region 🔖️Mutation
+/// 🗂️ `reorder-annual-schedule-rules` payload. Moves one date rule to another position in the year's rule list. This is the one `reorder` the schedule vocabulary carries, and it earns it: precedence between two rules whose date ranges overlap IS their list order.
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase")]
+#[dsl(keyword = "reorder-annual-schedule-rules")]
+pub struct ReorderAnnualScheduleRules {
+    pub id: crate::schedule::ScheduleId,
+    pub from: u32,
+    pub to: u32,
+}
+
+/// 🏗️ Builder — wraps the payload in its dispatch variant.
+pub fn reorder_annual_schedule_rules(id: crate::schedule::ScheduleId, from: u32, to: u32) -> EnergyModelMutation {
+    EnergyModelMutation::ReorderAnnualScheduleRules(ReorderAnnualScheduleRules { id, from, to })
+}
+
+impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReorderAnnualScheduleRules {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "annual-schedule", kind: "reorder-annual-schedule-rules", record: "ReorderedAnnualScheduleRules" };
+
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+        super::diff::diff(self, base)
+    }
+
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
+    Ok({
+        super::inverse::inverse(self, base)?
+    
+    })
+}
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder annual schedule {} rule {} to {}", self.id.0, self.from, self.to), &format!("Jahreszeitplan {}: Regel {} an Position {} verschieben", self.id.0, self.from, self.to))
+    }
+
+    fn target(&self) -> Vec<String> {
+        vec![self.id.0.to_string()]
+    }
+}
+//#endregion 🔖️Mutation

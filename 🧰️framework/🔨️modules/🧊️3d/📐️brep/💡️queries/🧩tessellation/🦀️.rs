@@ -16,6 +16,8 @@
 //! `edge_groups`/`face_infos`/`edge_infos` fields are now filled directly. Pure algorithm only —
 //! the real `InferredField<SemioBrepSnapshot>` wrapper is future work (see
 //! `💡️inferences/✅validation-report`'s doc comment for why it's not built yet).
+//!
+//! Crate cut of `semio-framework-3d-brep-queries` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
 /// 🪡 Loop positions, surface parameters, and boundary flags.
 pub type TessellationLoopUv = (Vec<Pnt3>, Vec<(f64, f64)>, Vec<bool>);
 
@@ -27,12 +29,12 @@ type EdgeSampleCache = HistoryFoldIndex<EdgeId, Vec<(f64, Pnt3)>>;
 use semio_framework_3d_brep_representation::topology::Wire;
 use semio_framework_3d_brep_representation::contract::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind, VertexGroup};
 use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::surface::surface_ops;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_surface::surface_ops;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge};
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 // #region 🔖️Constants
 
@@ -1339,3 +1341,9 @@ fn triangle_needs_refine(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64
 mod tests;
 
 // #endregion 🔖️Tests
+
+//#region 🧪️TestSupport
+#[cfg(test)]
+#[path = "../../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
+//#endregion 🧪️TestSupport

@@ -35,11 +35,4 @@ class OwnedVerifyScript extends BundleScript {
  */
 process.env.RUST_MIN_STACK ??= "134217728";
 
-/**
- * 🎛️ The whole `editor` tree is `#[cfg(feature = "component-app-assembly")]` (crate root `🦀️.rs:14-21`),
- * so a default-feature `cargo test` compiles 286 of this crate's 577 tests and runs not one of the
- * `editor::puzzle3d` app tests — which is how a harness that could not construct its own app survived
- * a whole wave (📓️2026-09-09-wave-X-test-suite.md §6). Declared here so `nx test`, `bun ./📜️script.ts
- * test` and the dashboard commands that call them all measure the same suite.
- */
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-3d", { testFeatures: ["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTestFeatures:["component-app-assembly"],snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-3d", {commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"] });

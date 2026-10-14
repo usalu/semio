@@ -40,9 +40,9 @@ impl SurfaceRole {
 /// projected host view.
 struct SurfaceBinding {
     surface: String,
-    body_key: String,
+    pub(crate) body_key: String,
     role: SurfaceRole,
-    view_state: ViewModel,
+    pub(crate) view_state: ViewModel,
 }
 
 pub(crate) struct SurfaceContexts {
@@ -170,7 +170,7 @@ impl SurfaceContexts {
     }
 
     #[cfg(test)]
-    fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.slots.iter().flatten().count()
     }
 

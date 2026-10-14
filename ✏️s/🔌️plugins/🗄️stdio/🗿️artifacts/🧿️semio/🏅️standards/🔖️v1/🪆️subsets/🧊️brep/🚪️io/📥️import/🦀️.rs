@@ -56,7 +56,7 @@ pub mod dwg {
         }
         fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
             let drawing = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::dwg_from_bytes(bytes)?;
-            Ok(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&drawing))
+            Ok(semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&drawing))
         }
     }
 

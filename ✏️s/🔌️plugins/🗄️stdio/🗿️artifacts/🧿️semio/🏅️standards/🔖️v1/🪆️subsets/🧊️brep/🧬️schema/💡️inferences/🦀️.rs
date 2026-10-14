@@ -18,7 +18,7 @@
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_3d_brep_queries::mass_properties::solid_mass_properties;
-use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_representation::topology::Body;
 use crate::schema::snapshot::SemioBrepSnapshot;
 use framework_schema::ArtifactSchema;

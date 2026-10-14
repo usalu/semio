@@ -65,7 +65,7 @@ pub struct PluginBuilder<State, PA: PluginApp = crate::plugin_app::NoPluginApp> 
     /// 📚️ Shared schema documents of a plugin submodule — see [`Self::schema_documents`].
     schema_documents: Vec<(String, ::semio_framework_schema_registry::ScopeSchemaExports)>,
     artifact_definitions: Vec<crate::artifact_identity::ArtifactDefinition>,
-    capabilities: Vec<CapabilityRequirement>,
+    pub(crate) capabilities: Vec<CapabilityRequirement>,
     commands: Vec<(CommandDefinition, PluginCommandHandler)>,
     /// 💼️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-jobs-runtime, design-abi.md §4/§6) —
     /// `.job(kind, factory)` declarations, folded into

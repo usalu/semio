@@ -1,11 +1,12 @@
 //! 🎨️ 🎨️ Generation3d play app commands command — `set-active-example`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation, SetCamera, SetSelectedGeneration};
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 
-use crate::standards::v1::subsets::any::schema::{empty_generation3d_snapshot, is_generation3d_example_id};
-use crate::standards::v1::subsets::any::io::text::snapshot::{example_snapshot};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot;
+use semio_s_artifact_procedural_3d_model::is_generation3d_example_id;
+use semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

@@ -5,8 +5,11 @@
 //! `sequence_ui`'s own compiled window (`🎬️sequence/🎛️apps/🎬️sequence/🎭️modes/✏️edit/🪟️windows/🧬️compiled`).
 
 use crate::DagScene;
-use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
-use semio_framework_artifact_infinite_dag::{dag_host_snapshot_from_document, DagCamera};
+use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
+use semio_framework_artifact_infinite_dag::{dag_host_snapshot_from_document};
+use semio_framework_os_infinite_directed_presentation::{DagCamera};
+
+
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;

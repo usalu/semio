@@ -1,4 +1,734 @@
 {
+  "graphModuleAuthority": {
+    "implementation": "export const build = 1;\n",
+    "publication": "{\"graph\":\"canonical.json\"}\n",
+    "changes": [
+      {
+        "implementation": "export const build = 2;\n"
+      },
+      {
+        "publication": "{\"graph\":\"different.json\"}\n"
+      }
+    ]
+  },
+  "testInferenceLocation": {
+    "namespace": "inference",
+    "relative": ".cache/b/g/m/inference",
+    "override": "owned"
+  },
+  "admissionWalk": {
+    "maximumConcurrentReads": 4,
+    "files": {
+      "a/one.json": "1",
+      "a/deeper/two.json": "2",
+      "b/three.json": "3",
+      "c/four.json": "4",
+      "d/five.json": "5",
+      "e/six.json": "6"
+    },
+    "expected": [
+      "a/deeper/two.json",
+      "a/one.json",
+      "b/three.json",
+      "c/four.json",
+      "d/five.json",
+      "e/six.json"
+    ],
+    "rejected": [
+      0,
+      65,
+      1.5
+    ]
+  },
+  "pinnedPublication": {
+    "invalid": [
+      {},
+      {
+        "path": "absolute"
+      },
+      {
+        "digest": "matching"
+      },
+      {
+        "path": "relative",
+        "digest": "matching"
+      },
+      {
+        "path": "absolute",
+        "digest": "malformed"
+      },
+      {
+        "path": "absolute",
+        "digest": "different"
+      }
+    ]
+  },
+  "pluginReferences": [
+    {
+      "reference": "./plugin.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "../engine/plugin.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "./missing.mjs",
+      "lookup": false
+    },
+    {
+      "reference": "engine-plugin",
+      "lookup": true
+    }
+  ],
+  "graphReset": {
+    "files": [
+      "canonical.json",
+      "authority.json",
+      "canonical.json.aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "authority.json.bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "graph.json",
+      "graphs/pin.json",
+      "inference/fact.json",
+      "build-input-closures/input.json",
+      "build-lock-closures/lock.json",
+      "canonical.json.unowned",
+      "unrelated.json"
+    ],
+    "removed": [
+      "authority.json",
+      "authority.json.bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+      "canonical.json",
+      "canonical.json.aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    ],
+    "invalid": [
+      {
+        "kind": "symlink"
+      },
+      {
+        "kind": "directory"
+      },
+      {
+        "links": 2
+      },
+      {
+        "bytes": 536870913
+      },
+      {
+        "device": 2
+      }
+    ]
+  },
+  "engineReferences": [
+    {
+      "name": "directory-and-module",
+      "source": "const root = new URL(\"../../../../../\", import.meta.url); import value from \"./dir/\"; require(\"./dir/\");",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "directory-url",
+          "specifier": "../../../../../"
+        }
+      ]
+    },
+    {
+      "name": "same-string-distinct-use",
+      "source": "const directory = new URL(\"./dir/\", import.meta.url); import \"./dir/\"; const data = new URL(\"./data.json\", import.meta.url);",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "directory-url",
+          "specifier": "./dir/"
+        },
+        {
+          "kind": "file-url",
+          "specifier": "./data.json"
+        }
+      ]
+    },
+    {
+      "name": "comments-and-data",
+      "source": "// import \"./missing.ts\"\nconst data = \"./other.ts\"; const root = new URL(\"./made-later/\", import.meta.url); const external = new URL(\"https://example.test/\", import.meta.url);",
+      "references": [
+        {
+          "kind": "directory-url",
+          "specifier": "./made-later/"
+        }
+      ]
+    },
+    {
+      "name": "import-forms",
+      "source": "export * from \"./export.ts\"; import(\"./dynamic.ts\"); const dependency = require(\"package/subpath\"); const file = new URL(\"./missing.json\", import.meta.url);",
+      "references": [
+        {
+          "kind": "module",
+          "specifier": "./export.ts"
+        },
+        {
+          "kind": "module",
+          "specifier": "./dynamic.ts"
+        },
+        {
+          "kind": "module",
+          "specifier": "package/subpath"
+        },
+        {
+          "kind": "file-url",
+          "specifier": "./missing.json"
+        }
+      ]
+    }
+  ],
+  "nxEngineIdentity": {
+    "script": "fixture/📜️script.ts",
+    "engine": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/📜️script.ts",
+    "wire": ".🧬semio/🦑️repo/⚡️cache/build/nx-commands/wire.json"
+  },
+  "nxCommandBridge": {
+    "command": "bun ./📜️script.ts probe",
+    "args": [
+      "two words",
+      "",
+      "literal$()",
+      "quote\"value",
+      "single'quote",
+      "--"
+    ],
+    "forwarded": [
+      "caller value",
+      ""
+    ]
+  },
+  "literalArguments": {
+    "rejected": [
+      "--stdio-only",
+      "--journey wasm32",
+      "$SCRIPT",
+      "'owner/📜️script.ts'",
+      [
+        "valid",
+        1
+      ]
+    ],
+    "boundaryArguments": [
+      "two words",
+      "",
+      "literal$()",
+      "quote\"value",
+      "single'quote",
+      "--"
+    ],
+    "converted": [
+      {
+        "path": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+        "target": "native-openable-catalog-provider-check",
+        "configuration": "stdio-only",
+        "args": [
+          "--stdio-only"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32",
+        "args": [
+          "--journey",
+          "wasm32"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32-react",
+        "args": [
+          "--journey",
+          "wasm32-react"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "wasm32-native",
+        "args": [
+          "--journey",
+          "wasm32-native"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "native-react",
+        "args": [
+          "--journey",
+          "native-react"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "native-react-cursors",
+        "args": [
+          "--journey",
+          "native-react-cursors"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "cursors",
+        "args": [
+          "--journey",
+          "cursors"
+        ]
+      },
+      {
+        "path": "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu/📋️project.json",
+        "target": "collaboration-acceptance",
+        "configuration": "agent-pixels",
+        "args": [
+          "--journey",
+          "agent-pixels"
+        ]
+      }
+    ]
+  },
+  "configuredCommandSources": {
+    "files": {
+      "owner/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+      "owner/value.ts": "export const value = 'base';\n",
+      "alternate/📜️script.ts": "import { value } from './value.ts';\nconsole.log(value);\n",
+      "alternate/value.ts": "export const value = 'configured-before';\n",
+      "unrelated/📜️script.ts": "console.log('unrelated');\n"
+    },
+    "expectedSources": [
+      "alternate/value.ts",
+      "alternate/📜️script.ts",
+      "owner/value.ts",
+      "owner/📜️script.ts"
+    ],
+    "cases": [
+      {
+        "name": "commandAndCwd",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts base"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "command": "bun ./📜️script.ts configured"
+          }
+        }
+      },
+      {
+        "name": "cwdOnly",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate"
+          }
+        }
+      },
+      {
+        "name": "commandOnly",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "command": "bun ../alternate/📜️script.ts"
+          }
+        }
+      },
+      {
+        "name": "commandList",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "bun ./📜️script.ts",
+            {
+              "command": "bun ./📜️script.ts",
+              "forwardAllArgs": false
+            }
+          ]
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "commands": [
+              {
+                "command": "bun ./📜️script.ts",
+                "forwardAllArgs": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "literalArgs",
+        "options": {
+          "cwd": ".",
+          "command": "bun",
+          "args": [
+            "owner/📜️script.ts"
+          ]
+        },
+        "configurations": {
+          "release": {
+            "args": [
+              "alternate/📜️script.ts"
+            ]
+          }
+        }
+      },
+      {
+        "name": "placeholders",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "bun ./📜️script.ts"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "{workspaceRoot}/alternate"
+          }
+        }
+      },
+      {
+        "name": "baseFallback",
+        "options": {
+          "cwd": "owner",
+          "command": "echo base"
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "command": "bun ./📜️script.ts"
+          }
+        },
+        "expectedSources": [
+          "alternate/value.ts",
+          "alternate/📜️script.ts"
+        ],
+        "fallback": true
+      },
+      {
+        "name": "listFallback",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "echo base",
+            "bun ./📜️script.ts"
+          ]
+        },
+        "configurations": {
+          "release": {
+            "cwd": "alternate",
+            "commands": [
+              "bun ./📜️script.ts"
+            ]
+          }
+        },
+        "fallback": true
+      },
+      {
+        "name": "argumentData",
+        "options": {
+          "cwd": "owner",
+          "command": "bun ./📜️script.ts",
+          "args": [
+            "../alternate/📜️script.ts"
+          ]
+        },
+        "configurations": {},
+        "expectedSources": [
+          "owner/value.ts",
+          "owner/📜️script.ts"
+        ]
+      },
+      {
+        "name": "disabledArgumentForwarding",
+        "options": {
+          "cwd": "owner",
+          "commands": [
+            "bun ./📜️script.ts",
+            {
+              "command": "bun",
+              "forwardAllArgs": false
+            }
+          ],
+          "args": [
+            "../alternate/📜️script.ts"
+          ]
+        },
+        "configurations": {},
+        "expectedSources": [
+          "owner/value.ts",
+          "owner/📜️script.ts"
+        ],
+        "fallback": true
+      }
+    ],
+    "mutation": {
+      "path": "alternate/value.ts",
+      "bytes": "export const value = 'configured-after';\n"
+    },
+    "configuredLocks": {
+      "options": {
+        "command": "bun owner/📜️script.ts build"
+      },
+      "configurations": {
+        "release": {
+          "command": "bun alternate/📜️script.ts native cargo metadata --locked"
+        }
+      }
+    },
+    "expectedLocks": [
+      "{workspaceRoot}/**/Cargo.toml",
+      "{workspaceRoot}/**/Cargo.lock"
+    ]
+  },
+  "policyOwnership": [
+    {
+      "name": "@semio-tech/cad-js",
+      "root": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "workspace",
+      "root": "."
+    },
+    {
+      "name": "@semio-tech/repo-cli-go",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
+    },
+    {
+      "name": "@semio-tech/repo-client",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "@semio-tech/repo-coordinator",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript"
+    },
+    {
+      "name": "@semio-tech/repo-test-domain",
+      "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"
+    }
+  ],
+  "compactExpansion": {
+    "contracts": {
+      "source": {
+        "version": 1,
+        "files": [
+          "app/a.ts",
+          "lib/b.ts"
+        ]
+      },
+      "lock": {
+        "version": 1,
+        "manifest": "app/Cargo.toml"
+      }
+    },
+    "inputPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ],
+          "groups": [
+            [
+              "preserved",
+              {
+                "env": "$source"
+              }
+            ],
+            [
+              "tail"
+            ]
+          ],
+          "literal": {
+            "env": "$source",
+            "description": "ordinary metadata"
+          },
+          "compact": {
+            "env": "$lock"
+          }
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/inputs",
+        "value": [
+          "default",
+          {
+            "env": "$source"
+          },
+          {
+            "env": "$source"
+          },
+          {
+            "env": "$lock"
+          },
+          [
+            "retain",
+            [
+              "nested"
+            ]
+          ]
+        ]
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "--literal",
+            "space value"
+          ],
+          [
+            "tail",
+            [
+              "inner"
+            ]
+          ]
+        ]
+      }
+    ],
+    "expectedPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ],
+          "groups": [
+            [
+              "preserved",
+              "{workspaceRoot}/app/a.ts",
+              "{workspaceRoot}/lib/b.ts"
+            ],
+            [
+              "tail"
+            ]
+          ],
+          "literal": {
+            "env": "$source",
+            "description": "ordinary metadata"
+          },
+          "compact": [
+            "{workspaceRoot}/Cargo.lock",
+            "{workspaceRoot}/app/Cargo.toml"
+          ]
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/inputs",
+        "value": [
+          "default",
+          "{workspaceRoot}/app/a.ts",
+          "{workspaceRoot}/lib/b.ts",
+          "{workspaceRoot}/app/a.ts",
+          "{workspaceRoot}/lib/b.ts",
+          "{workspaceRoot}/Cargo.lock",
+          "{workspaceRoot}/app/Cargo.toml",
+          [
+            "retain",
+            [
+              "nested"
+            ]
+          ]
+        ]
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "--literal",
+            "space value"
+          ],
+          [
+            "tail",
+            [
+              "inner"
+            ]
+          ]
+        ]
+      }
+    ],
+    "ordinaryPatch": [
+      {
+        "op": "add",
+        "path": "/projects/app/metadata",
+        "value": {
+          "matrix": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              [
+                4
+              ]
+            ]
+          ]
+        }
+      },
+      {
+        "op": "add",
+        "path": "/projects/app/targets/build/execution/literalArguments",
+        "value": [
+          [
+            "first",
+            "second"
+          ],
+          [
+            "third",
+            [
+              "fourth"
+            ]
+          ]
+        ]
+      }
+    ],
+    "batch": {
+      "count": 21,
+      "maximumReads": 16,
+      "filePrefix": "app/batch-"
+    },
+    "digestError": "Build input closure content differs"
+  },
   "version": 1,
   "graph": {
     "version": 1,
@@ -122,6 +852,650 @@
       "src/*.{ts,rs}",
       "src/**/!(*.test).ts",
       "**/?(*.)+(stories|story|mdx).[cmjtshx]?([sx])?(.snap)"
+    ]
+  },
+  "bootstrap": {
+    "manifest": {
+      "name": "isolated-build-bootstrap",
+      "dependencies": {
+        "typescript": "5.9.3",
+        "@iarna/toml": "2.2.5"
+      }
+    },
+    "lock": "isolated-fixture-lock-v1",
+    "changedLock": "isolated-fixture-lock-v2",
+    "dependencies": [
+      "typescript",
+      "@iarna/toml"
+    ],
+    "expectedInstalls": 4,
+    "moduleReceiving": {
+      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
+      "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+      "operation": "prepareJavascriptDependencies",
+      "scriptHeader": "#!/usr/bin/env bun",
+      "operationExports": [
+        "runTool",
+        "runPreparedCargoDependencyPairV1",
+        "runNativeDependencyToolV1",
+        "runBun",
+        "javascriptDependencyArgumentsV1",
+        "prepareJavascriptDependencies"
+      ],
+      "commands": [
+        "SyncScript",
+        "RefreshLockScript",
+        "ContractCheckScript"
+      ]
+    }
+  },
+  "watch": {
+    "selected": "app",
+    "included": "apps/app/source.txt",
+    "excluded": "libs/lib/source.txt",
+    "expectedChangedProjects": [
+      "app"
+    ]
+  },
+  "cargoWorkspace": {
+    "files": {
+      "Cargo.toml": "[workspace]\nmembers=[]\n",
+      "nested/Cargo.toml": "[workspace]\nmembers=[\"owner\",\"dependency\"]\n[workspace.dependencies.local]\npath=\"dependency\"\n",
+      "nested/owner/Cargo.toml": "[package]\nname=\"fixture-owner\"\nversion=\"0.1.0\"\nworkspace=\"..\"\n[dependencies]\nlocal={workspace=true}\n",
+      "nested/dependency/Cargo.toml": "[package]\nname=\"fixture-dependency\"\nversion=\"0.1.0\"\nworkspace=\"..\"\n"
+    },
+    "expected": [
+      {
+        "source": "owner",
+        "target": "dependency",
+        "sourceFile": "nested/owner/Cargo.toml",
+        "type": "static"
+      }
+    ]
+  },
+  "membership": {
+    "files": {
+      "owner/Cargo.toml": "[package]\nname='owned-source'\nversion='0.1.0'\n",
+      "owner/source.rs": "pub struct Source;\n",
+      "owner/.lake/packages/proofwidgets/widget/package.json": "{\"name\":\"generated-widget\"}\n",
+      "owner/.lake/packages/proofwidgets/widget/src/widget.ts": "export const generated = true;\n"
+    },
+    "excludedPatterns": [
+      "**/.lake/**"
+    ],
+    "expected": [
+      "owner/Cargo.toml",
+      "owner/source.rs"
+    ]
+  },
+  "authority": {
+    "files": {
+      "declaration.json": "{\"target\":\"build\"}\n",
+      "unused.rs": "pub fn first() {}\n"
+    },
+    "consumed": "declaration.json",
+    "cases": [
+      {
+        "name": "unrelated leaf body",
+        "kind": "write",
+        "path": "unused.rs",
+        "content": "pub fn second() {}\n",
+        "membership": true,
+        "facts": true
+      },
+      {
+        "name": "identical declaration rewrite",
+        "kind": "write",
+        "path": "declaration.json",
+        "content": "{\"target\":\"build\"}\n",
+        "membership": true,
+        "facts": true
+      },
+      {
+        "name": "consumed declaration change",
+        "kind": "write",
+        "path": "declaration.json",
+        "content": "{\"target\":\"test\"}\n",
+        "membership": true,
+        "facts": false
+      },
+      {
+        "name": "new physical owner",
+        "kind": "write",
+        "path": "owner.json",
+        "content": "{}\n",
+        "membership": false,
+        "facts": false
+      },
+      {
+        "name": "physical owner removal",
+        "kind": "remove",
+        "path": "owner.json",
+        "membership": true,
+        "facts": false
+      }
+    ],
+    "replacedAncestor": {
+      "directory": "owner",
+      "file": "owner/source.json",
+      "content": "{}"
+    }
+  },
+  "inferenceControl": {
+    "owners": 17,
+    "manifest": "[package]\nname = \"owner-{{index}}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "phase": "build:cargo-owners",
+    "continuations": 1
+  },
+  "configurationRefusals": [
+    {
+      "name": "kind",
+      "configuration": {
+        "kind": "noop"
+      }
+    },
+    {
+      "name": "ownerArguments",
+      "configuration": {
+        "ownerArguments": true
+      }
+    },
+    {
+      "name": "nativeOwnerCommand",
+      "configuration": {
+        "nativeOwnerCommand": {}
+      }
+    },
+    {
+      "name": "outputs",
+      "configuration": {
+        "outputs": [
+          "dist/changed"
+        ]
+      }
+    },
+    {
+      "name": "inputs",
+      "configuration": {
+        "inputs": []
+      }
+    },
+    {
+      "name": "dependsOn",
+      "configuration": {
+        "dependsOn": [
+          "prepare"
+        ]
+      }
+    },
+    {
+      "name": "cache",
+      "configuration": {
+        "cache": false
+      }
+    },
+    {
+      "name": "continuous",
+      "configuration": {
+        "continuous": true
+      }
+    },
+    {
+      "name": "commands",
+      "configuration": {
+        "commands": [
+          "other"
+        ]
+      }
+    }
+  ],
+  "scriptRequirements": [
+    {
+      "source": "export const value=1;",
+      "go": false,
+      "wasm": false
+    },
+    {
+      "source": "export const value=2;",
+      "go": false,
+      "wasm": false
+    },
+    {
+      "source": "runGoTests();",
+      "go": true,
+      "wasm": false
+    },
+    {
+      "source": "buildWasmWebV1({});",
+      "go": false,
+      "wasm": true
+    }
+  ],
+  "catalogReload": {
+    "provider": {
+      "ownerRoot": "applications/design",
+      "sourcePath": "applications/design/catalog/port.ts"
+    },
+    "contribution": {
+      "version": 1,
+      "publication": {
+        "version": 1,
+        "ownerRoot": "applications/design/catalog",
+        "outputRoot": "applications/design/catalog/generated",
+        "contributions": [
+          {
+            "ownerRoot": "applications/design",
+            "packageRoots": [
+              "applications/design/plugins"
+            ]
+          }
+        ]
+      },
+      "projectRoot": "applications/design",
+      "project": "design-one",
+      "generateTarget": "generate",
+      "inputs": [
+        "applications/design/catalog/request.json"
+      ]
+    },
+    "nextProject": "design-two",
+    "source": "export function catalogBuildContributionV1(){return @@CONTRIBUTION@@;}"
+  },
+  "topCommand": {
+    "target": {
+      "command": "bun ./📜️script.ts build",
+      "options": {
+        "cwd": "app",
+        "env": {
+          "BASE": "yes"
+        }
+      },
+      "configurations": {
+        "release": {
+          "command": "bun ./📜️script.ts build release"
+        }
+      }
+    },
+    "invalid": [
+      {
+        "command": "one",
+        "options": {
+          "command": "two"
+        }
+      },
+      {
+        "command": "one",
+        "options": {
+          "commands": [
+            "two"
+          ]
+        }
+      },
+      {
+        "command": "one",
+        "configurations": {
+          "release": {
+            "commands": [
+              "two"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "rustAggregate": {
+    "mode": "release",
+    "manifest": "app/Cargo.toml",
+    "roots": [
+      "producer"
+    ],
+    "original": {
+      "execution": {
+        "kind": "command",
+        "command": "bun ./📜️script.ts build"
+      },
+      "cache": true,
+      "inputs": [
+        "production"
+      ],
+      "outputs": [
+        "dist/app"
+      ],
+      "dependsOn": [
+        "lib:build"
+      ],
+      "configurations": {
+        "prototype": {
+          "execution": {
+            "env": {
+              "MODE": "prototype"
+            }
+          }
+        },
+        "release": {
+          "execution": {
+            "env": {
+              "MODE": "release"
+            }
+          }
+        }
+      }
+    },
+    "tasks": [
+      "app:build:release",
+      "lib:build",
+      "producer:compile:release"
+    ]
+  },
+  "initialAuthoring": {
+    "storagePorts": [
+      "repositoryBuildGraphDataDirectoryV1",
+      "withRepositoryBuildGraphFactStoreV1",
+      "requireRepositoryBuildGraphWriterV1",
+      "repositoryBuildGraphWriterDirectoryV1"
+    ],
+    "missingLaunches": {
+      "omit": "launches",
+      "valid": false,
+      "error": "Build authoring capabilities refused"
+    },
+    "cases": [
+      {
+        "name": "DSL Receiving Source",
+        "launchName": "🫴️ Record · Original Receiving Source",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-source",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 180000
+          }
+        }
+      },
+      {
+        "name": "DSL Receiving Native",
+        "launchName": "🫴️ Record · Original Receiving Native",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/framework-dsl-record-rs:test-original-receiving-native",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 180000
+          }
+        }
+      },
+      {
+        "name": "Jack Composition",
+        "launchName": "⚖️verify-jack-native-composition🦀️",
+        "workspaceRoot": ".",
+        "tool": "nx",
+        "buildMode": "prototype",
+        "arguments": [
+          "run",
+          "@semio-tech/trinity-jack-rs:verify-jack-native-composition",
+          "--skip-cache",
+          "--exclude-dependencies",
+          "--parallel=1",
+          "--configuration=prototype"
+        ],
+        "native": {
+          "artifactDirectory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target",
+          "transport": {
+            "maximumBytes": 134217728,
+            "maximumLines": 1000000
+          },
+          "network": {
+            "offline": false
+          },
+          "child": {
+            "maximumElapsedMilliseconds": 1200000
+          }
+        }
+      }
+    ],
+    "parent": {
+      "version": 1,
+      "owner": "build:relative-initial-declaration",
+      "maximumElapsedMilliseconds": 30000
+    },
+    "task": {
+      "kind": "command",
+      "ownerArguments": true,
+      "nativeOwnerCommand": {
+        "kind": "native-owner-command",
+        "manifest": "app/Cargo.toml",
+        "workingDirectory": "app",
+        "program": "bun",
+        "arguments": [
+          "./📜️script.ts",
+          "native"
+        ]
+      }
+    },
+    "taskArguments": [
+      "literal space",
+      "quote\"value",
+      "$literal"
+    ],
+    "paths": [
+      {
+        "platform": "posix",
+        "root": "/work/semio",
+        "artifact": "/work/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/cargo/shared/target"
+      },
+      {
+        "platform": "win32",
+        "root": "C:\\work\\semio",
+        "artifact": "C:\\work\\semio\\.🧬semio\\🦑️repo\\⚡️cache\\rust\\fixed\\m\\cargo\\shared\\target"
+      }
+    ]
+  },
+  "dependencyInvocations": {
+    "cases": [
+      {
+        "name": "root sync",
+        "args": [
+          "dependencies",
+          "sync",
+          "--scope",
+          "."
+        ],
+        "value": {
+          "mode": "sync",
+          "selection": {
+            "kind": "scope",
+            "owner": "."
+          }
+        },
+        "forwarded": [
+          "--scope",
+          "."
+        ]
+      },
+      {
+        "name": "whole authored lock",
+        "args": [
+          "dependencies",
+          "lock",
+          "--all"
+        ],
+        "value": {
+          "mode": "lock",
+          "selection": {
+            "kind": "all"
+          }
+        },
+        "forwarded": [
+          "--all"
+        ]
+      },
+      {
+        "name": "whole authored sync",
+        "args": [
+          "dependencies",
+          "sync",
+          "--all"
+        ],
+        "value": {
+          "mode": "sync",
+          "selection": {
+            "kind": "all"
+          }
+        },
+        "forwarded": [
+          "--all"
+        ]
+      },
+      {
+        "name": "nested lock",
+        "args": [
+          "dependencies",
+          "lock",
+          "--scope",
+          "apps/owner"
+        ],
+        "value": {
+          "mode": "lock",
+          "selection": {
+            "kind": "scope",
+            "owner": "apps/owner"
+          }
+        },
+        "forwarded": [
+          "--scope",
+          "apps/owner"
+        ]
+      }
+    ],
+    "refused": [
+      [],
+      [
+        "dependencies"
+      ],
+      [
+        "dependencies",
+        "sync"
+      ],
+      [
+        "dependencies",
+        "unknown",
+        "--all"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        ""
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        "\u0000"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--all",
+        "--scope",
+        "."
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "--all"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--all",
+        "--offline=false"
+      ],
+      [
+        "dependencies",
+        "sync",
+        "--scope",
+        ".",
+        "--frozen-lockfile=false"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "--"
+      ],
+      [
+        "dependencies",
+        "lock",
+        "--scope",
+        ".",
+        "extra"
+      ],
+      [
+        "other",
+        "lock",
+        "--all"
+      ]
+    ],
+    "launches": [
+      {
+        "name": "📥️deps javascript",
+        "command": "bun repo dependencies sync --scope .",
+        "policy": {
+          "version": 1,
+          "owner": "repo:dependencies:javascript:sync",
+          "maximumElapsedMilliseconds": 600000
+        }
+      },
+      {
+        "name": "📥️deps javascript lock",
+        "command": "bun repo dependencies lock --all",
+        "policy": {
+          "version": 1,
+          "owner": "repo:dependencies:javascript:lock",
+          "maximumElapsedMilliseconds": 600000
+        }
+      }
     ]
   }
 }

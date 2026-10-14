@@ -17,7 +17,7 @@ struct IssuedPatchAck {
     receipt: ActorUiPatchReceipt,
     surface: ui_contract::SurfaceId,
     revision: u64,
-    committed: bool,
+    pub(crate) committed: bool,
 }
 
 impl IssuedPatchAck {

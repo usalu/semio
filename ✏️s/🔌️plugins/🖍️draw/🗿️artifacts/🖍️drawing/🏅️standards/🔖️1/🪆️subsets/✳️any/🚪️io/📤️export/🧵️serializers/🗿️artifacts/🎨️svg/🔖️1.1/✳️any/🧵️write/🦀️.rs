@@ -1,10 +1,10 @@
 //! 🧵️ Resolved scene custody emits scalar SVG fragments and segmented byte owners.
-use crate::schema::scene_preparation::{DocumentScenePlan,DocumentSceneContent};
-use crate::{FillStyle,PathSegment};
+use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent};
+use semio_s_artifact_draw_drawing_model::{FillStyle, PathSegment};
 use semio_framework_pixels::{png_encoding::PngEncodeJob,retirement::RasterLease};
 use semio_framework_value::{list::PagedList,retirement::{RetireOwned,RetirementCursor}};
 use std::fmt::Write;
-use crate::standards::v1::subsets::any::io::byte_writer::{Fragment,PAGE,reserve};
+use semio_s_artifact_draw_drawing_io::byte_writer::{Fragment, PAGE, reserve};
 type Pages=PagedList<Vec<u8>,{usize::MAX}>;
 type Encoder=PngEncodeJob<RasterLease>;
 #[derive(Clone,Copy)]

@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-cmd-workflow"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling workflow commands: calibration, GCPs, parameters, clearing, view state and QC export."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-calib = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-params = { workspace = true }
+semio-s-artifact-remodel-remodeling-mut-results = { workspace = true }
+semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-schema = { workspace = true }
+serde_json = { workspace = true }

@@ -1,6 +1,7 @@
 //! 🧊️ Imports decoded glTF or GLB primitives as editable polygon inputs with surface channels.
-use crate::standards::v1::subsets::any::io::mesh_bridge::{import_semio_mesh, io_error};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mesh_bridge::import_semio_mesh;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
@@ -171,7 +172,8 @@ fn restore_authored_attributes(primitive: &GltfPrimitive, polygon: &semio_framew
 
 /// 🧩️ Preserves every authored vertex stream in the same imported constructor payload.
 fn enrich_surfaces(snapshot: &mut Generation3dSnapshot, from: &GltfSnapshot) -> Result<(), semio_framework_diagnostic::TextError> {
-    use crate::standards::v1::subsets::any::io::mesh_bridge::{IMPORT_SOURCE_WIDGET, polygon_import_attribute};
+    use semio_s_artifact_procedural_3d_mesh_bridge::IMPORT_SOURCE_WIDGET;
+    use semio_s_artifact_procedural_3d_mesh_bridge::polygon_import_attribute;
     use semio_framework_pack_json::{Object, Value as Json, array, JsonMemberPolicy};
     let primitives: Vec<_> = from.document.meshes.iter().flat_map(|mesh| &mesh.primitives).collect();
     let mut total = 0usize;
@@ -273,14 +275,14 @@ pub fn apply_scene_nodes(snapshot: &mut Generation3dSnapshot, document: &GltfDoc
     }
     if instances.is_empty() { return Err(io_error("glTF selected scene contains no surfaces")); }
     let source_id = |part: usize| if part == 0 { "imported-geometry".to_string() } else { format!("imported-geometry-{part}") };
-    let ids: std::collections::BTreeSet<_> = snapshot.host_snapshot.widgets.iter().map(crate::widget_id).collect();
+    let ids: std::collections::BTreeSet<_> = snapshot.host_snapshot.widgets.iter().map(semio_s_artifact_procedural_3d_model::widget_id).collect();
     if instances.iter().any(|(_, _, part, _)| !snapshot.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == &source_id(*part) && neuron_kind == "brep.mesh.construct"))) { return Err(io_error("glTF primitive has no editable constructor")); }
     for (node, part, _, path) in &instances {
         if ids.contains(format!("imported-scene-preview-{node}-{part}").as_str()) || path.iter().any(|ancestor| ids.contains(format!("imported-transform-{node}-{part}-{ancestor}").as_str())) { return Err(io_error("glTF transform identity is occupied")); }
     }
     let host = &mut snapshot.host_snapshot;
     let removed: std::collections::BTreeSet<_> = host.widgets.iter().filter_map(|widget| match widget { Widget::OutputPreview { id, .. } => Some(id.clone()), _ => None }).collect();
-    host.widgets.retain(|widget| !removed.contains(crate::widget_id(widget)));
+    host.widgets.retain(|widget| !removed.contains(semio_s_artifact_procedural_3d_model::widget_id(widget)));
     host.synapses.retain(|wire| !removed.contains(&wire.from) && !removed.contains(&wire.to));
     for id in removed { host.layout.remove(&id); }
     for widget in &mut host.widgets { if let Widget::Neuron { neuron_kind, preview, .. } = widget { if neuron_kind == "brep.mesh.construct" { *preview = false; } } }

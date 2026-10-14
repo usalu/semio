@@ -1,3 +1,6 @@
+import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {withRepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {readNativeCallerAuthorityV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {join,resolve,isAbsolute,basename,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {mkdirSync,readFileSync,writeFileSync,rmSync,lstatSync,realpathSync} from "node:fs";
@@ -14,7 +17,7 @@ export type NxToolingUseAuthorityV1={readonly identity:string;readonly toolkitRo
 export type NxToolingUseWitnessV1={readonly version:1;readonly identity:string;readonly toolkitRoot:string;readonly processId:number;readonly nonce:string;readonly startedAt:number;readonly original:ScriptProcessEnvelope;readonly endpoint:{readonly host:"127.0.0.1";readonly port:number}};
 
 /** 🗂️ Names the shared physical toolkit lifetime namespace for one workspace. */
-export function nxToolingUseStorageV1(root:string):NxToolingUseStorageV1{return {directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),witnessDirectory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/nx-tooling-use")};}
+export function nxToolingUseStorageV1(root:string):NxToolingUseStorageV1{return {directory:join(root,".cache/b/l/m/data"),witnessDirectory:join(repositoryCachePartitionRootV1(root,"tools"),"use")};}
 
 /** 🎟️ Keeps one exact immutable toolkit in use through its original owned operation. */
 export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,authority:NxToolingUseAuthorityV1,run:()=>Promise<T>):Promise<T>{
@@ -43,9 +46,9 @@ export async function withNxToolingUseV1<T>(storage:NxToolingUseStorageV1,author
 
 /** 🧷️ The actual immutable module owns its independent process use until the original task body closes. */
 export async function withNxLoadedToolingUseV1<T>(environment:Readonly<Record<string,string|undefined>>,run:()=>Promise<T>):Promise<T>{
- const toolkitRoot=dirname(fileURLToPath(import.meta.url)),identity=basename(toolkitRoot),storage={directory:resolve(toolkitRoot,"../../../agents/resource-leases"),witnessDirectory:resolve(toolkitRoot,"../../../agents/nx-tooling-use")};
- return receiveScriptProcessInvocation(environment,original=>withNxToolingUseV1(storage,{identity,toolkitRoot,invocation:original},async()=>{
+ const toolkitRoot=dirname(fileURLToPath(import.meta.url)),identity=basename(toolkitRoot);
+ return receiveScriptProcessInvocation(environment,original=>{const root=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryToolingStoreV1(root,original,()=>withNxToolingUseV1(nxToolingUseStorageV1(root),{identity,toolkitRoot,invocation:original},async()=>{
   const key="SEMIO_NX_TASK_USE_OWNER_PID",previous=process.env[key];process.env[key]=String(process.pid);
   try{return await run()}finally{if(previous===undefined)delete process.env[key];else process.env[key]=previous;}
- }));
+ }));});
 }

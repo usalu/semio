@@ -1,4 +1,5 @@
-use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dDiffRead};
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiff;
+use semio_s_artifact_procedural_3d_model::diff::Generation3dDiffRead;
 use semio_framework_value::{FromValue, ToValue};
 
 /// 🧫️ Original sparse diff text/binary records preserve complete field values against serde_json.

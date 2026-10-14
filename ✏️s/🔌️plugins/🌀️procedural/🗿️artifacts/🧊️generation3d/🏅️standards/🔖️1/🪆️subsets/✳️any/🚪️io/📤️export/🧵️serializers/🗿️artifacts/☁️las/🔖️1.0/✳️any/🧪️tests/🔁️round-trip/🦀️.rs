@@ -4,7 +4,7 @@
 //! vertices survive quantization), read back by `s.stdio.semio/v1/mesh`'s own las import leaf.
 
 use crate::{assert_close, project, unit_cube_semio_mesh, TOLERANCE};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::las::v1_0::any as export;
+use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::las::v1_0::any as export;
 use {semio_s_artifact_stdio_semio_mesh_import::decode_mesh, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat};
 
 fn exported() -> Vec<u8> {

@@ -1,19 +1,13 @@
-//! 🏗️ FEM core: the headless finite-element calculation library — model, element trait, assembly
-//! pipeline, and linear-static analysis, extended by sibling modules for sparse solvers,
-//! quadrature/element formulation, the 2D/3D element libraries, meshing, and multi-case analyses.
-//! No UI, no VCS, no framework dependency — `fem_2d`/`fem_3d`/`fem-plugin` are the UI layer built
-//! on top of this crate.
+//! 🏗️ FEM element contract: degrees of freedom, nodes, supports, loads, the `Element` trait every finite element
+//! implements, the result records and the error vocabulary. The closed element set, the assembled `Model` and the
+//! linear-static solve live in `semio-s-fem-static`; the element libraries in `semio-s-fem-elements2d`/`-elements3d`.
 
-pub use crate::elements2d::{Bar2, BeamEb2, PlateDkt, Quad4, Quad8, Tri3Cst, Tri6Lst};
-pub use crate::elements3d::{Bar3, Frame3, Hex8, ShellFacet3, Tet4};
-
-use crate::algebra::{MatD, VecD};
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use semio_s_fem_algebra::{MatD, VecD};
+use semio_framework_dispatch_macros::dyn_enum;
 use std::fmt;
 
 /// 🪶 Retires one exact string backing from a mounted element's borrowed identity owners.
-pub(crate) fn close_mounted_strings<'a>(owners: impl IntoIterator<Item = &'a mut String>) -> Option<usize> {
+pub fn close_mounted_strings<'a>(owners: impl IntoIterator<Item = &'a mut String>) -> Option<usize> {
     let owner = owners.into_iter().find(|owner| owner.capacity() != 0)?;
     let bytes = owner.capacity();
     *owner = String::new();
@@ -21,7 +15,7 @@ pub(crate) fn close_mounted_strings<'a>(owners: impl IntoIterator<Item = &'a mut
 }
 
 /// 🔭 Observes the next mounted identity allocation without changing its owner.
-pub(crate) fn mounted_string_bytes<'a>(owners: impl IntoIterator<Item = &'a String>) -> Option<usize> {
+pub fn mounted_string_bytes<'a>(owners: impl IntoIterator<Item = &'a String>) -> Option<usize> {
     owners.into_iter().find(|owner| owner.capacity() != 0).map(String::capacity)
 }
 
@@ -185,52 +179,6 @@ impl Element for AxialSpring {
     }
 }
 
-dyn_enum_close! {
-    /// 🧬️ O1 closed-set dispatch for `Element` — 13 first-party implementors, all in this crate (12 real
-    /// 2D/3D elements in `elements2d`/`elements3d`, plus `AxialSpring` above); see
-    /// `📓️terra-fem-report.md`. Must sit textually AFTER the `#[dyn_enum]` trait in this same module (the
-    /// generated `__semio_dispatch_Element!` is a bare, textually-scoped `macro_rules!` invocation).
-    pub enum Elements: Element {
-        AxialSpring(AxialSpring),
-        Bar2(Bar2),
-        BeamEb2(BeamEb2),
-        Tri3Cst(Tri3Cst),
-        Tri6Lst(Tri6Lst),
-        Quad4(Quad4),
-        Quad8(Quad8),
-        PlateDkt(PlateDkt),
-        Bar3(Bar3),
-        Frame3(Frame3),
-        Tet4(Tet4),
-        Hex8(Hex8),
-        ShellFacet3(ShellFacet3),
-    }
-}
-
-/// 🏗️ The assembled structural model handed to `solve_linear_static`.
-#[derive(Default)]
-pub struct Model {
-    pub nodes: Vec<Node>,
-    pub elements: Vec<Elements>,
-    pub supports: Vec<Support>,
-    pub nodal_loads: Vec<NodalLoad>,
-    pub member_loads: Vec<(String, MemberUdl)>,
-}
-
-/// 🔍️ No `Elements` variant derives `Debug`, so print element ids/count instead — this is what lets
-/// `Result<Model, _>` be used with `unwrap_err()`/`expect_err()` in caller test code.
-impl fmt::Debug for Model {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Model")
-            .field("nodes", &self.nodes)
-            .field("elements", &self.elements.iter().map(|e| e.id()).collect::<Vec<_>>())
-            .field("supports", &self.supports)
-            .field("nodal_loads", &self.nodal_loads)
-            .field("member_loads", &self.member_loads)
-            .finish()
-    }
-}
-// #endregion 🔖️Model
 
 // #region 🔖️Results
 /// 📐️ Per-node displacement, indexed by `Dof::index()`; inactive DOFs stay `0.0`.
@@ -352,217 +300,3 @@ impl fmt::Display for FemError {
 
 impl std::error::Error for FemError {}
 //#endregion ⚠️ Errors
-
-// #region 🔖️DofMap
-struct DofMap {
-    index: HashMap<(String, Dof), usize>,
-    order: Vec<(String, Dof)>,
-}
-
-impl DofMap {
-    fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
-        self.index.get(&(node_id.to_string(), dof)).copied()
-    }
-
-    fn len(&self) -> usize {
-        self.order.len()
-    }
-}
-
-/// 🔢️ Numbers each node's active DOFs (the union of `dofs_per_node()` over elements touching it),
-/// so nodes with no rotational stiffness never get a spurious, singular rotational equation.
-fn build_dof_map(model: &Model) -> DofMap {
-    let mut order = Vec::new();
-    let mut index = HashMap::new();
-    for node in &model.nodes {
-        let mut active: Vec<Dof> = Vec::new();
-        for element in &model.elements {
-            if element.node_ids().iter().any(|id| id == &node.id) {
-                for &dof in element.dofs_per_node() {
-                    if !active.contains(&dof) {
-                        active.push(dof);
-                    }
-                }
-            }
-        }
-        active.sort_by_key(|d| d.index());
-        for dof in active {
-            index.insert((node.id.clone(), dof), order.len());
-            order.push((node.id.clone(), dof));
-        }
-    }
-    DofMap { index, order }
-}
-// #endregion 🔖️DofMap
-
-// #region 🔖️Validate
-fn validate(model: &Model) -> Result<(), FemError> {
-    if model.nodes.is_empty() {
-        return Err(FemError::EmptyModel);
-    }
-    let mut seen = HashSet::new();
-    for node in &model.nodes {
-        if !seen.insert(node.id.clone()) {
-            return Err(FemError::DuplicateNodeId(node.id.clone()));
-        }
-    }
-    let node_exists = |id: &str| model.nodes.iter().any(|n| n.id == id);
-    for element in &model.elements {
-        for id in element.node_ids() {
-            if !node_exists(&id) {
-                return Err(FemError::DanglingNodeRef(id));
-            }
-        }
-    }
-    for support in &model.supports {
-        if !node_exists(&support.node_id) {
-            return Err(FemError::DanglingNodeRef(support.node_id.clone()));
-        }
-    }
-    for load in &model.nodal_loads {
-        if !node_exists(&load.node_id) {
-            return Err(FemError::DanglingNodeRef(load.node_id.clone()));
-        }
-    }
-    Ok(())
-}
-// #endregion 🔖️Validate
-
-// #region 🔖️Assembly
-fn positions_of(model: &Model, node_ids: &[String]) -> Vec<[f64; 3]> {
-    node_ids.iter().map(|id| model.nodes.iter().find(|n| &n.id == id).map(|n| n.pos).unwrap_or_default()).collect()
-}
-
-fn element_global_indices(dof_map: &DofMap, node_ids: &[String], dofs: &[Dof]) -> Option<Vec<usize>> {
-    let mut indices = Vec::with_capacity(node_ids.len() * dofs.len());
-    for node_id in node_ids {
-        for &dof in dofs {
-            indices.push(dof_map.get(node_id, dof)?);
-        }
-    }
-    Some(indices)
-}
-
-fn extract_submatrix(k: &MatD, rows: &[usize], cols: &[usize]) -> MatD {
-    let mut out = MatD::zeros(rows.len(), cols.len());
-    for (i, &row) in rows.iter().enumerate() {
-        for (j, &col) in cols.iter().enumerate() {
-            out.set(i, j, k.get(row, col));
-        }
-    }
-    out
-}
-// #endregion 🔖️Assembly
-
-// #region 🔖️Solve
-/// 🧮️ Assembles and solves the model for linear-static equilibrium `Ku = F`, partitioned by
-/// support restraints (dense elimination — small/single-case scale; `analyses::solve_multi_case`
-/// is the sparse multi-case/combination pipeline for larger models), then recovers reactions and
-/// per-element internal forces from the solved displacement vector.
-pub fn solve_linear_static(model: &Model) -> Result<StaticResult, FemError> {
-    validate(model)?;
-    let dof_map = build_dof_map(model);
-    let ndof = dof_map.len();
-    let mut k = MatD::zeros(ndof, ndof);
-    let mut f = VecD::zeros(ndof);
-
-    for element in &model.elements {
-        let node_ids = element.node_ids();
-        let dofs = element.dofs_per_node();
-        let indices = match element_global_indices(&dof_map, &node_ids, dofs) {
-            Some(indices) => indices,
-            None => continue,
-        };
-        let ctx = ElementContext { positions: positions_of(model, &node_ids) };
-        let ke = element.stiffness_global(&ctx);
-        for (local_row, &global_row) in indices.iter().enumerate() {
-            for (local_col, &global_col) in indices.iter().enumerate() {
-                k.add_at(global_row, global_col, ke.get(local_row, local_col));
-            }
-        }
-        if let Some((_, udl)) = model.member_loads.iter().find(|(id, _)| id.as_str() == element.id()) {
-            if let Some(fe) = element.equivalent_nodal_loads(&ctx, udl) {
-                for (local_row, &global_row) in indices.iter().enumerate() {
-                    f.add_at(global_row, fe.get(local_row));
-                }
-            }
-        }
-    }
-
-    for load in &model.nodal_loads {
-        if let Some(idx) = dof_map.get(&load.node_id, load.dof) {
-            f.add_at(idx, load.value);
-        }
-    }
-
-    let mut constrained_set = BTreeSet::new();
-    for support in &model.supports {
-        for &dof in &support.fixed {
-            if let Some(idx) = dof_map.get(&support.node_id, dof) {
-                constrained_set.insert(idx);
-            }
-        }
-    }
-    let free: Vec<usize> = (0..ndof).filter(|i| !constrained_set.contains(i)).collect();
-    let constrained: Vec<usize> = constrained_set.into_iter().collect();
-
-    let kff = extract_submatrix(&k, &free, &free);
-    let ff = VecD::from_vec(free.iter().map(|&i| f.get(i)).collect());
-    let uf = kff.lu_solve(&ff).ok_or(FemError::Singular)?;
-
-    let mut u = VecD::zeros(ndof);
-    for (i, &idx) in free.iter().enumerate() {
-        u.set(idx, uf.get(i));
-    }
-
-    let mut reactions = Vec::with_capacity(constrained.len());
-    for &c in &constrained {
-        let mut r = 0.0;
-        for j in 0..ndof {
-            r += k.get(c, j) * u.get(j);
-        }
-        r -= f.get(c);
-        let (node_id, dof) = dof_map.order[c].clone();
-        reactions.push(NodeReaction { node_id, dof, value: r });
-    }
-
-    let mut displacements: Vec<NodeDisplacement> = model.nodes.iter().map(|node| NodeDisplacement { node_id: node.id.clone(), values: [0.0; 6] }).collect();
-    for (idx, (node_id, dof)) in dof_map.order.iter().enumerate() {
-        if let Some(entry) = displacements.iter_mut().find(|d| &d.node_id == node_id) {
-            entry.values[dof.index()] = u.get(idx);
-        }
-    }
-
-    let mut elements = Vec::with_capacity(model.elements.len());
-    for element in &model.elements {
-        let node_ids = element.node_ids();
-        let dofs = element.dofs_per_node();
-        let indices = match element_global_indices(&dof_map, &node_ids, dofs) {
-            Some(indices) => indices,
-            None => continue,
-        };
-        let ctx = ElementContext { positions: positions_of(model, &node_ids) };
-        let u_local = VecD::from_vec(indices.iter().map(|&idx| u.get(idx)).collect());
-        let udl = model.member_loads.iter().find(|(id, _)| id.as_str() == element.id()).map(|(_, udl)| udl);
-        elements.push((element.id().to_string(), element.recover(&ctx, &u_local, udl)));
-    }
-
-    let mut reaction_sum = [0.0; 6];
-    for r in &reactions {
-        reaction_sum[r.dof.index()] += r.value;
-    }
-    for (idx, (_, dof)) in dof_map.order.iter().enumerate() {
-        reaction_sum[dof.index()] += f.get(idx);
-    }
-    let ku = k.mul_vec(&u);
-    let ku_free = VecD::from_vec(free.iter().map(|&i| ku.get(i)).collect());
-    let residual_norm = ku_free.sub(&ff).norm2() / ff.norm2().max(1e-9);
-
-    Ok(StaticResult { displacements, reactions, elements, checks: SolutionChecks { residual_norm, reaction_sum } })
-}
-// #endregion 🔖️Solve
-
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

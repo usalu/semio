@@ -1,6 +1,10 @@
 //! 🧭️ The object editor's edit rules: which snapshot pointer raises which ONE concrete object mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, resolve, slot_edit, spread_snake, Slot};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::slot_edit;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::spread_snake;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Slot;
 use crate::schema::mutations::SemioObjectMutation;
 use crate::schema::snapshot::SemioObjectSnapshot;
 use semio_framework_plugin::Fault;

@@ -1,5 +1,5 @@
 //! 📦️ One original issued batch owns cumulative retained authority across borrowed envelope recipients.
-use super::{RetainedTurnInput,RetainedTurnReceipt};
+use super::{RetainedTurnInput,RetainedTurnReceipt,OriginalActorTurnWork};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 
 #[derive(Debug, PartialEq)]
@@ -10,6 +10,8 @@ pub struct IssuedRetainedBatch {
     issued: Option<RetainedTurnInput>,
     spent: RetainedCloneProgress,
     active_progress: RetainedCloneProgress,
+    work_units_spent: u64,
+    active_work_units_spent: u64,
     returned: bool,
 }
 
@@ -17,12 +19,14 @@ impl IssuedRetainedBatch {
     pub fn new(original: RetainedTurnInput, envelopes: usize) -> Result<Self, ValueError> {
         original.validate()?;
         if envelopes == 0 { return Err(Self::refusal("issued shard batch requires an original envelope")); }
-        Ok(Self { original, envelopes, next: 0, issued: None, spent: Default::default(), active_progress: Default::default(), returned: false })
+        Ok(Self { original, envelopes, next: 0, issued: None, spent: Default::default(), active_progress: Default::default(), work_units_spent: 0, active_work_units_spent: 0, returned: false })
     }
     pub fn original_input(&self) -> &RetainedTurnInput { &self.original }
     pub fn remaining_input(&self) -> Result<RetainedTurnInput, ValueError> {
         if self.returned { return Err(Self::refusal("issued shard batch has already returned")); }
-        Ok(RetainedTurnInput { grant: self.original_input().return_original(self.spent.checked_add(self.active_progress)?)?.remaining, ..*self.original_input() })
+        let work=self.work_units_spent.checked_add(self.active_work_units_spent).ok_or_else(||Self::refusal("issued batch work counter overflow"))?;
+        let receipt=self.original_input().return_original(self.spent.checked_add(self.active_progress)?,work)?;
+        Ok(RetainedTurnInput { grant: receipt.remaining,work:OriginalActorTurnWork{fuel:receipt.remaining_fuel,..self.original.work}, ..*self.original_input() })
     }
     pub fn issue_envelope(&mut self, index: usize) -> Result<RetainedTurnInput, ValueError> {
         if index != self.next || index >= self.envelopes || self.issued.is_some() { return Err(Self::refusal("issued shard envelope is absent, duplicated, or out of order")); }
@@ -37,9 +41,11 @@ impl IssuedRetainedBatch {
         let active = self.active_progress;
         if receipt.spent.copied_items < active.copied_items || receipt.spent.copied_bytes < active.copied_bytes || receipt.spent.retained_capacity_bytes < active.retained_capacity_bytes || receipt.spent.released_bytes < active.released_bytes { return Err(Self::refusal("issued shard receipt omits already received physical spans")); }
         let spent = self.spent.checked_add(receipt.spent)?;
-        let whole = self.original_input().return_original(spent)?;
+        if receipt.work_units_spent<self.active_work_units_spent{return Err(Self::refusal("issued shard receipt omits already received actual work"))}
+        let work=self.work_units_spent.checked_add(receipt.work_units_spent).ok_or_else(||Self::refusal("issued batch settled work overflow"))?;
+        let whole = self.original_input().return_original(spent,work)?;
         let next = self.next.checked_add(1).ok_or_else(|| Self::refusal("issued shard envelope index overflow"))?;
-        self.spent = spent; self.active_progress = Default::default(); self.issued = None; self.next = next;
+        self.spent = spent; self.active_progress = Default::default(); self.work_units_spent=work;self.active_work_units_spent=0;self.issued = None; self.next = next;
         if next == self.envelopes { self.returned = true; Ok(Some(whole)) } else { Ok(None) }
     }
     pub fn envelope_recipient(&mut self, index: usize) -> Result<IssuedRetainedRecipient<'_>, ValueError> {
@@ -72,19 +78,22 @@ impl IssuedRetainedRecipient<'_> {
     pub fn settled_progress(&self) -> RetainedCloneProgress { self.turn.spent }
     pub fn remaining_grant(&self) -> Result<RetainedCloneGrant, ValueError> {
         if self.finished { return Err(IssuedRetainedBatch::refusal("issued recipient has already settled")); }
-        Ok(self.input.return_original(self.turn.active_progress)?.remaining)
+        Ok(self.input.return_original(self.turn.active_progress,self.turn.active_work_units_spent)?.remaining)
     }
     /// 🧾️ Retains the actual child delta before reporting an exceeded original grant.
     pub fn record_progress(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError> {
         if self.finished { return Err(IssuedRetainedBatch::refusal("issued shard recipient has already settled")); }
         let next = self.turn.active_progress.checked_add(progress)?;
         self.turn.active_progress = next;
-        self.input.return_original(next).map(|_| ())
+        self.input.return_original(next,self.turn.active_work_units_spent).map(|_| ())
     }
+    pub fn remaining_work(&self)->Result<OriginalActorTurnWork,ValueError>{if self.finished{return Err(IssuedRetainedBatch::refusal("issued work recipient has already settled"))}let receipt=self.input.return_original(self.turn.active_progress,self.turn.active_work_units_spent)?;Ok(OriginalActorTurnWork{fuel:receipt.remaining_fuel,..self.input.work})}
+    pub fn record_work(&mut self,work_units_spent:u64)->Result<(),ValueError>{if self.finished{return Err(IssuedRetainedBatch::refusal("issued work recipient has already settled"))}let work=self.turn.active_work_units_spent.checked_add(work_units_spent).ok_or_else(||IssuedRetainedBatch::refusal("issued recipient work counter overflow"))?;self.turn.active_work_units_spent=work;self.input.return_original(self.turn.active_progress,work).map(|_|())}
+    pub fn record_receipt(&mut self,progress:RetainedCloneProgress,work_units_spent:u64)->Result<(),ValueError>{let physical=self.record_progress(progress);let work=self.record_work(work_units_spent);physical.and(work)}
     /// 📬️ Validates one envelope return and emits a parent receipt only at batch completion.
     pub fn finish(&mut self) -> Result<Option<RetainedTurnReceipt>, ValueError> {
         if self.finished { return Err(IssuedRetainedBatch::refusal("issued shard recipient cannot return twice")); }
-        let receipt = self.input.return_original(self.turn.active_progress)?;
+        let receipt = self.input.return_original(self.turn.active_progress,self.turn.active_work_units_spent)?;
         let whole = self.turn.settle_envelope(self.index, receipt)?;
         self.finished = true;
         Ok(whole)

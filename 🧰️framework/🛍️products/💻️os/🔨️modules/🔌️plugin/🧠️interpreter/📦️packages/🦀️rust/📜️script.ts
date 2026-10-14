@@ -15,7 +15,7 @@ class CheckScript extends BundleScript {
   }
 }
 
-/** 🧪️ Runs the interpreter, owned runtime and shared wire laws of the crate's library tests. */
+/** 🧪️ Runs the core interpreter's library laws. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
@@ -36,9 +36,9 @@ class TestJobExportsScript extends BundleScript {
 class TestJobExportsNativeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("Native job export contract checks accept no arguments");
-    const laws = ["interpreter::tests::original_owned_job_export_selectors_match_authored_contract_and_wasmtime", "runtime::owned_runtime_tests::owned_result_preserves_original_fixed_actor_receipt_without_allocation", "original_actor_context::guest_entry::owned_job_receipt::tests::original_owned_job_header_matches_portable_oracle_without_allocation"];
-    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation, 600_000) }, cwd: this.repoRoot, groups: [{ package: "semio-framework-plugin-interpreter", target: { kind: "lib" }, laws }], progress: event => console.log(`[DEBUG] original interpreter job contract ${event.stage} ${event.law ?? ""}`) });
-    console.log(`[DEBUG] original interpreter job contract nativeGroups=${receipts.length} exactLaws=${laws.length}`);
+    const groups = [{ package: "semio-framework-plugin-interpreter", target: { kind: "lib" as const }, laws: ["tests::original_owned_job_export_selectors_match_authored_contract_and_wasmtime"] }, { package: "semio-framework-plugin-interpreter-runtime", target: { kind: "lib" as const }, laws: ["owned_runtime_tests::owned_result_preserves_original_fixed_actor_receipt_without_allocation"] }, { package: "semio-framework-plugin-guest-contract", target: { kind: "lib" as const }, laws: ["original_actor_context::guest_entry::owned_job_receipt::tests::original_owned_job_header_matches_portable_oracle_without_allocation"] }];
+    const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: scriptInvocationBudget(this.invocation, 600_000) }, cwd: this.repoRoot, groups, progress: event => console.log(`[DEBUG] original interpreter job contract ${event.stage} ${event.law ?? ""}`) });
+    console.log(`[DEBUG] original interpreter job contract nativeGroups=${receipts.length} exactLaws=${groups.reduce((sum, group) => sum + group.laws.length, 0)}`);
   }
 }
 
@@ -48,6 +48,14 @@ class TestPollInputSourceScript extends BundleScript{
 }
 /** 🦀️ Runs the production resident Entry and its original caller/System conservation. */
 class TestPollInputNativeScript extends BundleScript{
- async run(args:string[]):Promise<void>{if(args.length)throw Error("original poll input native accepts no arguments");const receipts=await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,600000)},cwd:this.repoRoot,groups:[{package:"semio-framework-plugin-interpreter",target:{kind:"test",name:"original_actor_poll_input"},laws:["original_poll_input_pre_lift_denials_same_backing_partial_close_and_caller_conservation"]}],progress:event=>console.log(`[DEBUG] original Entry poll input ${event.stage} ${event.law??""}`)});console.log(`[DEBUG] original Entry poll input nativeGroups=${receipts.length}`);}
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original poll input native accepts no arguments");const receipts=await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,600000)},cwd:this.repoRoot,groups:[{package:"semio-framework-plugin-guest-contract",target:{kind:"test",name:"original_actor_poll_input"},laws:["original_poll_input_pre_lift_denials_same_backing_partial_close_and_caller_conservation"]}],progress:event=>console.log(`[DEBUG] original Entry poll input ${event.stage} ${event.law??""}`)});console.log(`[DEBUG] original Entry poll input nativeGroups=${receipts.length}`);}
 }
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test-poll-input-source",TestPollInputSourceScript).register("test-poll-input-native",TestPollInputNativeScript).register("check", CheckScript).register("test", TestScript).register("test-job-exports", TestJobExportsScript).register("test-job-exports-native", TestJobExportsNativeScript), { invocation: original }));
+/** 📦️ Qualifies the canonical Completed donor, bounded decoder and full native Fault source. */
+class TestCompletedSourceScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original Completed source accepts no arguments");const source=resolve(this.root,"../../../⚛️reactor/🔄️turn/📥️receiving/📦️completed/🧪️tests/🟦️.ts");for(const command of [[Bun.resolveSync("typescript/bin/tsc",this.repoRoot),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun,node",source],["test",source]])await runOwnedCommand(process.execPath,command,this.repoRoot,"plugin-interpreter:completed:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});}
+}
+/** 🦀️ Runs the genuine Completed receiving owner with original source and System conservation. */
+class TestCompletedNativeScript extends BundleScript{
+ async run(args:string[]):Promise<void>{if(args.length)throw Error("original Completed native accepts no arguments");const receipts=await runRepositoryExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation:this.invocation,policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:scriptInvocationBudget(this.invocation,600000)},cwd:this.repoRoot,groups:[{package:"semio-framework-plugin",target:{kind:"lib"},laws:["reactor::turn::original_receiving::completed::tests::original_completed_full_fault_same_input_zero_work_and_paid_close","reactor::turn::original_receiving::completed::tests::original_completed_parked_future_preserves_pages_and_same_source_until_paid_close","host::requests::tests::original_completed_result_preserves_refused_donor_and_redispatch_occupancy","reactor::turn::original_receiving::tests::original_completed_stale_donor_zero_work_preserved_and_actual_source_close"]}],progress:event=>console.log(`[DEBUG] original Completed input ${event.stage} ${event.law??""}`)});console.log(`[DEBUG] original Completed input nativeGroups=${receipts.length}`);}
+}
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test-completed-source",TestCompletedSourceScript).register("test-completed-native",TestCompletedNativeScript).register("test-poll-input-source",TestPollInputSourceScript).register("test-poll-input-native",TestPollInputNativeScript).register("check", CheckScript).register("test", TestScript).register("test-job-exports", TestJobExportsScript).register("test-job-exports-native", TestJobExportsNativeScript), { invocation: original }));

@@ -15,7 +15,7 @@ use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::bim_window_action;
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
-use crate::{ModelInference, ModelSnapshot, Phase, Schedule, ScheduleField, ScheduleKey, ScheduleOp};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, Phase, Schedule, ScheduleField, ScheduleKey, ScheduleOp}};
 use semio_framework_plugin::DslValue;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::TableCell;
@@ -226,7 +226,7 @@ pub fn editor_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Ve
     let mut rows: Vec<DslValue> = Vec::new();
     let name_action = bim_window_action("editSchedule", Some(object([("id", id), ("part", "name"), ("op", "set"), ("key", "")])));
     push(&mut rows, labels.sf_name.as_str(), String::new(), TableCell::EditableText { value: schedule.name.clone(), action: name_action }, Vec::new());
-    let categories: Vec<UiTreeItemAction> = crate::ScheduleCategory::ALL.into_iter().filter(|category| *category != schedule.category).map(|category| edit_button(id, "table", &vocabulary::category_label(labels, category), "category", "set", "", category.token())).collect();
+    let categories: Vec<UiTreeItemAction> = crate::standards::v1::subsets::any::schema::snapshot::ScheduleCategory::ALL.into_iter().filter(|category| *category != schedule.category).map(|category| edit_button(id, "table", &vocabulary::category_label(labels, category), "category", "set", "", category.token())).collect();
     push(&mut rows, labels.field_category.as_str(), vocabulary::category_label(labels, schedule.category), text(schedule.category.token()), categories);
     let mut keys = field_pool(schedule);
     keys.extend(property_keys(schedule));

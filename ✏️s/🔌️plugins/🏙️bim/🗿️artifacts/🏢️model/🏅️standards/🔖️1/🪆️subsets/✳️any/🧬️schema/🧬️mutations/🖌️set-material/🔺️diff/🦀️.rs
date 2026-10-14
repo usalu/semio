@@ -2,7 +2,7 @@
 //! non-negative, colour channels in 0..1; a patch that changes nothing is a no-op. Everything derived from the material follows by inference.
 
 use super::SetMaterial;
-use crate::{Entry, MaterialPatch, ModelDiff, ModelSnapshot, Patch, Rgb};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::MaterialPatch, ModelDiff, Patch}, snapshot::{ModelSnapshot, Rgb}};
 use protocol::{MutationOutcome, OutcomeCode};
 
 fn unit(color: &Rgb) -> bool {

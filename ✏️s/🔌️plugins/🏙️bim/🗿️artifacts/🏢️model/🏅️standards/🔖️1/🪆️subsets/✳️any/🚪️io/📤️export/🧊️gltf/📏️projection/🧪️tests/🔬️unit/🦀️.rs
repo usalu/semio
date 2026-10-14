@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::io::export::gltf::testkit::{house, read}
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 
-fn build(snapshot: &crate::ModelSnapshot) -> (GltfModel, Vec<String>) {
+fn build(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot) -> (GltfModel, Vec<String>) {
     inference::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
 }
 
@@ -56,7 +56,7 @@ fn through_applies_the_rotation_before_the_translation() {
 
 #[test]
 fn an_empty_scene_reports_zero_bounds() {
-    let report = project(&build(&crate::ModelSnapshot::default()).0);
+    let report = project(&build(&crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot::default()).0);
     assert_eq!((report.nodes, report.triangles, report.min, report.max), (0, 0, [0.0; 3], [0.0; 3]));
 }
 

@@ -15,40 +15,16 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "config_mutation"
-path = "../../../../🪟️results/🎚️config/🧪️tests/🎚️config/🦀️.rs"
-
-[features]
-default = []
-compliance-testing = ["dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
-
 [dependencies]
-semio-framework-artifact-reference = { workspace = true, optional = true }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-serde = { workspace = true, optional = true }
-serde_json = { workspace = true, optional = true }
-semio-framework = { workspace = true }
-semio-framework-dispatch-macros = { workspace = true }
-semio-framework-job = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
-semio-framework-ui-contract = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-pack = { workspace = true }
 
 [dev-dependencies]
-semio-framework-artifact-reference = { workspace = true }
-semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-serde = { workspace = true }
 serde_json = { workspace = true }

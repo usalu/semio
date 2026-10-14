@@ -1,5 +1,24 @@
 //! 🚀️ Engine orchestration: Model + SimulationConfig → Results.
 
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_kernel as kernel;
+extern crate semio_s_plugin_energy_engine_meters as meters;
+extern crate semio_s_plugin_energy_engine_metrics as metrics;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_output as output;
+extern crate semio_s_plugin_energy_engine_precompute as precompute;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_site as site;
+extern crate semio_s_plugin_energy_engine_sizing as sizing;
+extern crate semio_s_plugin_energy_engine_units as units;
+#[cfg(test)]
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_plugin_energy_engine_sim_retirement as retirement;
+extern crate semio_s_plugin_energy_engine_sim_wire as wire;
+
+use crate::retirement::{ENERGY_RUNG_DEMAND, close_config_step, close_meter_table_step, close_model_step, close_results_step, close_sizing_step, close_string_step, close_string_vector_step, close_summaries_step, close_time_series_step, config_is_terminal_empty, energy_done, energy_grant_covers, energy_guarded, energy_idle, energy_one, energy_rung, energy_self_funded, energy_turn, model_is_terminal_empty, summaries_are_terminal_empty};
+use crate::wire::{ENERGY_WIRE_HEADER_BYTES, ENERGY_WIRE_QUEUE_SLOTS, EnergyCommitReservation, EnergyJobCursor, EnergyJobPreview, EnergyJobStage, EnergyNumericalBounds, EnergyNumericalCensus, EnergyNumericalDimension, EnergyPublicationChannels, EnergyQualityTier, EnergyWireBuild, EnergyWireIdentity, EnergyWireKind, EnergyWireLease, EnergyWirePacket, EnergyWireRejection, close_retained_packet, decode_preview_packet, end_use_code, energy_spend, energy_wire_header, fuel_code, unit_code, weather_copy_target};
 use crate::error::Error;
 use crate::kernel::{HourWeather, SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, TimestepBuilder, TimestepWork, WindowState, ZoneState};
 use crate::meters::{EndUse, FuelType, Meter, MeterTable};
@@ -7,13 +26,13 @@ use crate::metrics::{EmissionFactors, EnvironmentalMetrics, ResilienceMetrics, S
 use crate::model::{FixedTable, Model};
 use crate::output::{TimeSeries, TimeSeriesAppendError, TimeSeriesTable};
 use crate::precompute::{PrecomputeBuilder, PrecomputedModel};
-use crate::results::{Results, RunMetadata, SizingResult, SizingTables, SummaryRow, SummaryTables};
+use crate::results::{Results, RunMetadata, SizingTables, SummaryRow, SummaryTables};
 use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
 use semio_framework_job::{
-    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedJobPayload, RevisionId,
-    StepBudget, StepContext,
+    allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId,
+    OriginalTurnFailure, StepBudget, StepContext,
 };
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -22,75 +41,12 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Mutex;
 use std::time::Instant;
 
-// #region 🔖️RetainedWire
-const ENERGY_WIRE_MAGIC: [u8; 8] = *b"SMENERGY";
 /// 🌡️ Temperature every zone and construction node starts from before warmup.
 const INITIAL_TEMPERATURE_C: f64 = 23.0;
-const ENERGY_WIRE_VERSION: u16 = 1;
-const ENERGY_WIRE_QUEUE_SLOTS: usize = 4;
-const ENERGY_WIRE_LEASE_SLOTS: usize = 64;
-const ENERGY_WIRE_HEADER_BYTES: usize = 80;
-const ENERGY_CHECKPOINT_BYTES: usize = 164;
-
-/// 🪜️ Upper bound of one ladder rung: a single popped owner or one UTF-8 character of a string.
-const ENERGY_RUNG_DEMAND: RetirementDemand = RetirementDemand { copy_bytes: 0, capacity_bytes: 0, release_bytes: 4, depth: 1 };
-
-/// 🎟️ Whether one grant covers one quoted demand with at least one item.
-fn energy_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
-    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
-}
-
-/// 🛡️ Closes one owner frontier only when the grant covers its own quote, otherwise reports an idle turn.
-fn energy_guarded(grant: RetainedCloneGrant, demand: Result<RetirementDemand, ValueError>, close: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
-    if !energy_grant_covers(grant, demand?) {
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-    }
-    close()
-}
-
-/// 🧯️ Maps one owner close turn onto the job close vocabulary and reports whether that owner finished.
-fn energy_turn(step: Result<RetainedCloneStep, ValueError>) -> (InteractiveJobCloseStep, bool) {
-    match step {
-        Ok(RetainedCloneStep::Progress(progress)) => (InteractiveJobCloseStep::Pending { progress }, false),
-        Ok(RetainedCloneStep::Complete(progress)) => (InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }, true),
-        Err(error) => (InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() }, false),
-    }
-}
-
-/// 💸️ Charges one owner close turn to the running step's own wallet and reports whether that owner finished.
-fn energy_spend(context: &mut StepContext<'_>, step: Result<RetainedCloneStep, ValueError>) -> Result<bool, EnergyWireRejection> {
-    let (progress, done) = match step {
-        Ok(RetainedCloneStep::Progress(progress)) => (progress, false),
-        Ok(RetainedCloneStep::Complete(progress)) => (progress, true),
-        Err(_) => return Err(EnergyWireRejection::Backing),
-    };
-    context.consume_retained(progress).map_err(|_| EnergyWireRejection::Backing)?;
-    Ok(done)
-}
-
-/// 🪜️ One popped ladder owner releasing `released_bytes` of character backing.
-fn energy_rung(released: (usize, usize)) -> InteractiveJobCloseStep {
-    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes: released.1, ..Default::default() } }
-}
-
-/// 🪜️ One popped ladder owner without backing bytes.
-fn energy_one() -> InteractiveJobCloseStep {
-    energy_rung((1, 0))
-}
-
-/// 💤️ A turn the grant could not fund.
-fn energy_idle() -> InteractiveJobCloseStep {
-    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }
-}
-
-/// 🏁️ A close ladder with nothing left.
-fn energy_done() -> InteractiveJobCloseStep {
-    InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }
-}
 
 /// 🧭️ What one internal step decided before any outcome is lent to the caller.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum EnergyRun {
+pub enum EnergyRun {
     Yield,
     Cancelled,
     Preview,
@@ -117,550 +73,6 @@ impl Default for EnergyOutcomeMarkers {
             commit_state: RetainedJobPayload::empty(JobPayloadStream::CommitState),
             commit_output: RetainedJobPayload::empty(JobPayloadStream::CommitOutput),
         }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(u8)]
-pub enum EnergyWireKind {
-    Preview = 1,
-    Checkpoint = 2,
-    Commit = 3,
-    Fault = 4,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct EnergyWireIdentity {
-    pub operation: u64,
-    pub base_revision: u64,
-    pub generation: u64,
-    pub seed: u64,
-    pub sequence: u64,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EnergyWireRejection {
-    Header,
-    Version,
-    Kind,
-    Identity,
-    Items,
-    Pages,
-    Operations,
-    ProcessJobs,
-    Saturated,
-    Backing,
-}
-
-pub struct EnergyWirePacket {
-    kind: EnergyWireKind,
-    identity: EnergyWireIdentity,
-    payload: RetainedJobPayload,
-    preview: Option<EnergyJobPreview>,
-    reservation: Option<EnergyCommitReservation>,
-}
-
-pub struct EnergyWireLease {
-    kind: EnergyWireKind,
-    token: u64,
-    recovery_slot: usize,
-    packet: Option<EnergyWirePacket>,
-}
-
-impl std::fmt::Debug for EnergyWireLease {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.debug_struct("EnergyWireLease").field("kind", &self.kind).field("token", &self.token).field("identity", &self.packet.as_ref().map(|packet| packet.identity)).finish()
-    }
-}
-
-impl EnergyWireLease {
-    pub fn identity(&self) -> EnergyWireIdentity {
-        self.packet.as_ref().expect("live lease owns packet").identity
-    }
-
-    pub fn packet(&self) -> &EnergyWirePacket {
-        self.packet.as_ref().expect("live lease owns packet")
-    }
-
-    pub fn packet_mut(&mut self) -> &mut EnergyWirePacket {
-        self.packet.as_mut().expect("live lease owns packet")
-    }
-}
-
-#[expect(clippy::large_enum_variant, reason = "The fixed recovery registry accepts abandoned packet ownership from Drop without allocating.")]
-enum EnergyWireLeaseRecoverySlot {
-    Vacant,
-    Reserved(u64),
-    Abandoned(u64, EnergyWirePacket),
-}
-
-static ENERGY_WIRE_LEASE_RECOVERY: Mutex<[EnergyWireLeaseRecoverySlot; ENERGY_WIRE_LEASE_SLOTS]> = Mutex::new([const { EnergyWireLeaseRecoverySlot::Vacant }; ENERGY_WIRE_LEASE_SLOTS]);
-
-impl Drop for EnergyWireLease {
-    fn drop(&mut self) {
-        let Some(packet) = self.packet.take() else { return };
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        debug_assert!(matches!(registry[self.recovery_slot], EnergyWireLeaseRecoverySlot::Reserved(token) if token == self.token));
-        registry[self.recovery_slot] = EnergyWireLeaseRecoverySlot::Abandoned(self.token, packet);
-    }
-}
-
-impl std::fmt::Debug for EnergyWirePacket {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.debug_struct("EnergyWirePacket").field("kind", &self.kind).field("identity", &self.identity).field("pages", &self.payload.page_count()).field("bytes", &self.payload.len()).finish()
-    }
-}
-
-impl EnergyWirePacket {
-    pub fn identity(&self) -> EnergyWireIdentity {
-        self.identity
-    }
-
-    pub fn preview(&self) -> Option<&EnergyJobPreview> {
-        self.preview.as_ref()
-    }
-
-    /// 📏️ Quotes the next original payload page or ledger this packet would release.
-    pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
-        self.payload.retirement_demands()
-    }
-
-    /// 🎟️ Releases one payload frontier only when the caller's grant covers its quote.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let demand = self.payload.retirement_demands()?;
-        if !energy_grant_covers(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        }
-        self.payload.close_step(grant)
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.payload.terminal_is_empty()
-    }
-}
-
-struct EnergyWireQueue {
-    kind: EnergyWireKind,
-    slots: [Option<EnergyWirePacket>; ENERGY_WIRE_QUEUE_SLOTS],
-    head: usize,
-    len: usize,
-    next_token: u64,
-    in_flight: Option<EnergyWireInFlight>,
-    reserved_push: bool,
-}
-
-#[derive(Clone, Copy)]
-struct EnergyWireInFlight {
-    token: u64,
-    recovery_slot: usize,
-    generation: u64,
-    pages: usize,
-    bytes: usize,
-}
-
-impl EnergyWireQueue {
-    fn new(kind: EnergyWireKind) -> Self {
-        Self { kind, slots: std::array::from_fn(|_| None), head: 0, len: 0, next_token: 0, in_flight: None, reserved_push: false }
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn push(&mut self, packet: EnergyWirePacket) -> Result<(), EnergyWirePacket> {
-        if packet.kind != self.kind || self.len == ENERGY_WIRE_QUEUE_SLOTS || self.reserved_push {
-            return Err(packet);
-        }
-        let index = (self.head + self.len) % ENERGY_WIRE_QUEUE_SLOTS;
-        self.slots[index] = Some(packet);
-        self.len += 1;
-        Ok(())
-    }
-
-    fn reserve_push(&mut self) -> Result<(), EnergyWireRejection> {
-        if self.len == ENERGY_WIRE_QUEUE_SLOTS || self.reserved_push {
-            return Err(EnergyWireRejection::Saturated);
-        }
-        self.reserved_push = true;
-        Ok(())
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn push_reserved(&mut self, packet: EnergyWirePacket) -> Result<(), EnergyWirePacket> {
-        if packet.kind != self.kind || !self.reserved_push || self.len == ENERGY_WIRE_QUEUE_SLOTS {
-            return Err(packet);
-        }
-        self.reserved_push = false;
-        let index = (self.head + self.len) % ENERGY_WIRE_QUEUE_SLOTS;
-        self.slots[index] = Some(packet);
-        self.len += 1;
-        Ok(())
-    }
-
-    fn take(&mut self) -> Option<EnergyWireLease> {
-        self.recover_lost();
-        if self.len == 0 || self.in_flight.is_some() {
-            return None;
-        }
-        let packet = self.slots[self.head].take()?;
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let Some(recovery_slot) = registry.iter().position(|slot| matches!(slot, EnergyWireLeaseRecoverySlot::Vacant)) else {
-            self.slots[self.head] = Some(packet);
-            return None;
-        };
-        let token = self.next_token;
-        self.next_token = self.next_token.checked_add(1).expect("Energy queue lease sequence exhausted");
-        registry[recovery_slot] = EnergyWireLeaseRecoverySlot::Reserved(token);
-        self.in_flight = Some(EnergyWireInFlight { token, recovery_slot, generation: packet.identity.generation, pages: packet.payload.page_count(), bytes: packet.payload.len() });
-        Some(EnergyWireLease { kind: self.kind, token, recovery_slot, packet: Some(packet) })
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn retry(&mut self, mut lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
-        if lease.kind != self.kind || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation)) {
-            return Err(lease);
-        }
-        let packet = lease.packet.take().expect("retry lease owns exact packet");
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if !matches!(registry[lease.recovery_slot], EnergyWireLeaseRecoverySlot::Reserved(token) if token == lease.token) {
-            lease.packet = Some(packet);
-            return Err(lease);
-        }
-        registry[lease.recovery_slot] = EnergyWireLeaseRecoverySlot::Vacant;
-        self.slots[self.head] = Some(packet);
-        self.in_flight = None;
-        Ok(())
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn ack(&mut self, mut lease: EnergyWireLease) -> Result<(), EnergyWireLease> {
-        if lease.kind != self.kind
-            || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation))
-            || !lease.packet().terminal_is_empty()
-        {
-            return Err(lease);
-        }
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if !matches!(registry[lease.recovery_slot], EnergyWireLeaseRecoverySlot::Reserved(token) if token == lease.token) {
-            return Err(lease);
-        }
-        lease.packet.take();
-        registry[lease.recovery_slot] = EnergyWireLeaseRecoverySlot::Vacant;
-        self.in_flight = None;
-        self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
-        self.len -= 1;
-        Ok(())
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    fn ack_transfer(&mut self, mut lease: EnergyWireLease) -> Result<EnergyWirePacket, EnergyWireLease> {
-        if lease.kind != self.kind || !self.in_flight.is_some_and(|flight| flight.token == lease.token && flight.recovery_slot == lease.recovery_slot && lease.packet.as_ref().is_some_and(|packet| packet.identity.generation == flight.generation)) {
-            return Err(lease);
-        }
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if !matches!(registry[lease.recovery_slot], EnergyWireLeaseRecoverySlot::Reserved(token) if token == lease.token) {
-            return Err(lease);
-        }
-        let packet = lease.packet.take().expect("transfer lease owns exact packet");
-        registry[lease.recovery_slot] = EnergyWireLeaseRecoverySlot::Vacant;
-        self.in_flight = None;
-        self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
-        self.len -= 1;
-        Ok(packet)
-    }
-
-    fn recover_lost(&mut self) -> bool {
-        let Some(EnergyWireInFlight { token, recovery_slot, generation, .. }) = self.in_flight else { return false };
-        let mut registry = ENERGY_WIRE_LEASE_RECOVERY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if !matches!(&registry[recovery_slot], EnergyWireLeaseRecoverySlot::Abandoned(candidate, packet) if *candidate == token && packet.identity.generation == generation) {
-            return false;
-        }
-        let EnergyWireLeaseRecoverySlot::Abandoned(_, packet) = std::mem::replace(&mut registry[recovery_slot], EnergyWireLeaseRecoverySlot::Vacant) else { unreachable!("matched abandoned wire lease") };
-        self.slots[self.head] = Some(packet);
-        self.in_flight = None;
-        true
-    }
-
-    fn take_terminal(&mut self) -> Option<EnergyWirePacket> {
-        self.recover_lost();
-        if self.len == 0 || self.in_flight.is_some() {
-            return None;
-        }
-        let packet = self.slots[self.head].take()?;
-        self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
-        self.len -= 1;
-        Some(packet)
-    }
-
-    fn retained_totals_at(&self, index: usize) -> Option<(usize, usize, usize)> {
-        if index < ENERGY_WIRE_QUEUE_SLOTS {
-            return self.slots[index].as_ref().map(|packet| (packet.payload.page_count(), packet.payload.len(), packet.payload.page_count().saturating_add(1)));
-        }
-        if index == ENERGY_WIRE_QUEUE_SLOTS {
-            return self.in_flight.map(|flight| (flight.pages, flight.bytes, flight.pages.saturating_add(1)));
-        }
-        None
-    }
-
-    fn retirement_demands(&self) -> Option<Result<RetirementDemand, ValueError>> {
-        if self.in_flight.is_some() {
-            return Some(Ok(RetirementDemand::default()));
-        }
-        if self.len == 0 && self.reserved_push {
-            return Some(Ok(RetirementDemand { depth: 1, ..Default::default() }));
-        }
-        self.slots[self.head].as_ref().map(EnergyWirePacket::retirement_demands)
-    }
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Option<InteractiveJobCloseStep> {
-        self.recover_lost();
-        if self.in_flight.is_some() {
-            return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-        }
-        if self.len == 0 && self.reserved_push {
-            if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
-                return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
-            }
-            self.reserved_push = false;
-            return Some(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
-        }
-        let packet = self.slots[self.head].as_mut()?;
-        let (step, done) = energy_turn(packet.close_step(grant));
-        if done {
-            self.slots[self.head] = None;
-            self.head = (self.head + 1) % ENERGY_WIRE_QUEUE_SLOTS;
-            self.len -= 1;
-        }
-        Some(step)
-    }
-}
-
-struct EnergyPublicationChannels {
-    preview: Option<EnergyWirePacket>,
-    retiring_preview: Option<EnergyWirePacket>,
-    checkpoints: EnergyWireQueue,
-    commits: EnergyWireQueue,
-    faults: EnergyWireQueue,
-}
-
-impl Default for EnergyPublicationChannels {
-    fn default() -> Self {
-        Self { preview: None, retiring_preview: None, checkpoints: EnergyWireQueue::new(EnergyWireKind::Checkpoint), commits: EnergyWireQueue::new(EnergyWireKind::Commit), faults: EnergyWireQueue::new(EnergyWireKind::Fault) }
-    }
-}
-
-struct EnergyWireBuild {
-    kind: EnergyWireKind,
-    identity: EnergyWireIdentity,
-    writer: semio_framework_job::RetainedJobPayloadWriter,
-    field: u8,
-}
-
-fn energy_wire_header(kind: EnergyWireKind, identity: EnergyWireIdentity, census: EnergyNumericalCensus, stage: EnergyJobStage, tier: EnergyQualityTier) -> [u8; ENERGY_WIRE_HEADER_BYTES] {
-    let mut bytes = [0; ENERGY_WIRE_HEADER_BYTES];
-    bytes[..8].copy_from_slice(&ENERGY_WIRE_MAGIC);
-    bytes[8..10].copy_from_slice(&ENERGY_WIRE_VERSION.to_le_bytes());
-    bytes[10] = kind as u8;
-    bytes[11] = stage.code();
-    bytes[12] = tier.code();
-    bytes[16..24].copy_from_slice(&identity.operation.to_le_bytes());
-    bytes[24..32].copy_from_slice(&identity.base_revision.to_le_bytes());
-    bytes[32..40].copy_from_slice(&identity.generation.to_le_bytes());
-    bytes[40..48].copy_from_slice(&identity.seed.to_le_bytes());
-    bytes[48..56].copy_from_slice(&identity.sequence.to_le_bytes());
-    bytes[56..64].copy_from_slice(&(census.observed_items as u64).to_le_bytes());
-    bytes[64..72].copy_from_slice(&(census.pages as u64).to_le_bytes());
-    bytes[72..76].copy_from_slice(&(census.operations as u32).to_le_bytes());
-    bytes[76..80].copy_from_slice(&(census.process_jobs as u32).to_le_bytes());
-    bytes
-}
-// #endregion
-
-// #region 🔖️EnergyJob
-/// ⚡️ Fidelity label carried by every preview so provisional fields cannot be mistaken for a
-/// validated final simulation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub enum EnergyQualityTier {
-    SteadyStateEstimate,
-    DesignDay,
-    CoarseTimestep,
-    Final,
-}
-
-/// 🧭️ Persistent stage of [`EnergyJob`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub enum EnergyJobStage {
-    Validate,
-    ResolveWeather,
-    Precompute,
-    InitializeZones,
-    InitializeSurfaces,
-    InitializeWarmupHistory,
-    WarmupTimestep,
-    WarmupConvergence,
-    StartRun,
-    RunZoneTimestep,
-    AggregateZone,
-    AggregateFacility,
-    PublishTimestep,
-    Finalize,
-    Size,
-    FinalizeSummaries,
-    FinalizeMetrics,
-    FinalizeEconomics,
-    BuildResults,
-    PublishFinal,
-    EncodeOutput,
-    Complete,
-}
-
-/// 📸️ Typed view of the latest replaceable energy preview.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub struct EnergyJobPreview {
-    pub sequence: u64,
-    pub tier: EnergyQualityTier,
-    pub stage: EnergyJobStage,
-    pub warmup_hour: u32,
-    pub timestep: u32,
-    pub total_timesteps: u32,
-    pub facility_electricity_kwh: f64,
-}
-
-/// 🧭️ Live numerical cursor of [`EnergyJob`]: what a host projects into run progress without decoding a
-/// retained preview packet. `timestep` counts completed run timesteps, `warmup_hour` the warmup cursor.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct EnergyJobCursor {
-    pub stage: EnergyJobStage,
-    pub tier: EnergyQualityTier,
-    pub warmup_hour: u32,
-    pub warmup_hours: u32,
-    pub timestep: u32,
-    pub total_timesteps: u32,
-    pub facility_electricity_kwh: f64,
-}
-
-// #region 🔖️NumericalAdmission
-/// 📏️ Schema-first simultaneous working-set census for an Energy numerical job.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub struct EnergyNumericalCensus {
-    pub zones: usize,
-    pub surfaces: usize,
-    pub fenestrations: usize,
-    pub people: usize,
-    pub lighting: usize,
-    pub equipment: usize,
-    pub infiltrations: usize,
-    pub airflow_nodes: usize,
-    pub airflow_links: usize,
-    pub mechanical_ventilations: usize,
-    pub thermostats: usize,
-    pub humidistats: usize,
-    pub ideal_loads: usize,
-    pub faults: usize,
-    pub zone_equipment: usize,
-    pub plant_loops: usize,
-    pub plant_equipment: usize,
-    pub pv_systems: usize,
-    pub batteries: usize,
-    pub service_hot_water: usize,
-    pub refrigeration: usize,
-    pub water: usize,
-    pub weather_records: usize,
-    pub timesteps: usize,
-    pub meters: usize,
-    pub series: usize,
-    pub samples: usize,
-    pub history_values: usize,
-    pub summary_rows: usize,
-    pub identifier_bytes: usize,
-    pub observed_items: usize,
-    pub observed_bytes: usize,
-    pub pages: usize,
-    pub operations: usize,
-    pub process_jobs: usize,
-}
-
-/// 🚧️ The independent admitted dimension that rejected an exact owner graph.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EnergyNumericalDimension {
-    Zones,
-    Surfaces,
-    Fenestrations,
-    People,
-    Lighting,
-    Equipment,
-    Infiltrations,
-    AirflowNodes,
-    AirflowLinks,
-    MechanicalVentilations,
-    Thermostats,
-    Humidistats,
-    IdealLoads,
-    Faults,
-    ZoneEquipment,
-    PlantLoops,
-    PlantEquipment,
-    PvSystems,
-    Batteries,
-    ServiceHotWater,
-    Refrigeration,
-    Water,
-    WeatherRecords,
-    Timesteps,
-    Meters,
-    Series,
-    Samples,
-    HistoryValues,
-    SummaryRows,
-    IdentifierBytes,
-    ObservedItems,
-    ObservedBytes,
-    Pages,
-    Operations,
-    ProcessJobs,
-    ArithmeticOverflow,
-}
-
-/// 🛡️ Checked maxima for every independent numerical dimension.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct EnergyNumericalBounds(pub EnergyNumericalCensus);
-
-impl Default for EnergyNumericalBounds {
-    fn default() -> Self {
-        Self(EnergyNumericalCensus {
-            zones: 65_536,
-            surfaces: 1_048_576,
-            fenestrations: 1_048_576,
-            people: 1_048_576,
-            lighting: 1_048_576,
-            equipment: 1_048_576,
-            infiltrations: 1_048_576,
-            airflow_nodes: 1_048_576,
-            airflow_links: 1_048_576,
-            mechanical_ventilations: 1_048_576,
-            thermostats: 65_536,
-            humidistats: 65_536,
-            ideal_loads: 1_048_576,
-            faults: 1_048_576,
-            zone_equipment: 1_048_576,
-            plant_loops: 65_536,
-            plant_equipment: 1_048_576,
-            pv_systems: 1_048_576,
-            batteries: 1_048_576,
-            service_hot_water: 1_048_576,
-            refrigeration: 1_048_576,
-            water: 1_048_576,
-            weather_records: 1_048_576,
-            timesteps: 1_048_576,
-            meters: 1_048_576,
-            series: 65_536,
-            samples: 67_108_864,
-            history_values: 67_108_864,
-            summary_rows: 1_048_576,
-            identifier_bytes: 268_435_456,
-            observed_items: 134_217_728,
-            observed_bytes: 2_147_483_648,
-            pages: 131_072,
-            operations: 1,
-            process_jobs: 1,
-        })
     }
 }
 
@@ -705,874 +117,6 @@ impl EnergyAdmissionRejected {
         model_is_terminal_empty(&self.model) && config_is_terminal_empty(&self.config)
     }
 }
-
-/// ♻️ Exact retained wire and Model+Config owner rejected before restore admission.
-#[derive(Debug)]
-pub struct EnergyCheckpointRejected {
-    pub operation: Operation,
-    pub model: Model,
-    pub config: SimulationConfig,
-    pub packet: EnergyWirePacket,
-    pub census: EnergyNumericalCensus,
-    pub reason: EnergyCheckpointRejectionReason,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EnergyCheckpointRejectionReason {
-    InvalidHeader,
-    InvalidPayload,
-    OperationMismatch,
-    Numerical(EnergyNumericalDimension),
-    ProcessJobs,
-}
-
-impl EnergyCheckpointRejected {
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    pub fn retry(self, bounds: EnergyNumericalBounds) -> Result<EnergyRestoreJob, Self> {
-        EnergyRestoreJob::admit(self.operation, self.model, self.config, self.packet, bounds)
-    }
-
-    /// 📏️ Quotes the retained packet page first, then one popped model or config owner.
-    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
-        if !self.packet.terminal_is_empty() {
-            return self.packet.retirement_demands();
-        }
-        Ok(if self.terminal_is_empty() { RetirementDemand::default() } else { ENERGY_RUNG_DEMAND })
-    }
-
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if !self.packet.terminal_is_empty() {
-            return energy_turn(self.packet.close_step(grant)).0;
-        }
-        if self.terminal_is_empty() {
-            return energy_done();
-        }
-        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
-            return energy_idle();
-        }
-        if let Some(released) = close_model_step(&mut self.model, grant.maximum_release_bytes) {
-            return energy_rung(released);
-        }
-        if let Some(released) = close_config_step(&mut self.config, grant.maximum_release_bytes) {
-            return energy_rung(released);
-        }
-        energy_done()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.packet.terminal_is_empty() && model_is_terminal_empty(&self.model) && config_is_terminal_empty(&self.config)
-    }
-}
-
-/// 📥️ Retained field-at-a-time restore authority; no model owner moves until decoding completes.
-pub struct EnergyRestoreJob {
-    operation: Operation,
-    model: Option<Model>,
-    config: Option<SimulationConfig>,
-    packet: Option<EnergyWirePacket>,
-    census: EnergyNumericalCensus,
-    field: u8,
-    stage: EnergyJobStage,
-    tier: EnergyQualityTier,
-    warmup_hour: u32,
-    hour_index: u32,
-    total_timesteps: u32,
-    rng_state: u64,
-    weather_cursor: usize,
-    weather_target: usize,
-    aggregate_zone_cursor: usize,
-    aggregate_facility_cursor: u8,
-    initialize_backing_stage: u8,
-    run_backing_stage: u8,
-    checkpoint_due: bool,
-    time_series_count: usize,
-    meter_count: usize,
-    history_count: usize,
-    digest: u64,
-    bounds: EnergyNumericalBounds,
-    rebuild: Option<EnergyJob>,
-    replay_retiring: Option<EnergyWirePacket>,
-    replay_checkpoint_lease: Option<EnergyWireLease>,
-    replay_failed: Option<EnergyWireRejection>,
-    ready: bool,
-    abandonment_slot: usize,
-}
-
-impl std::fmt::Debug for EnergyRestoreJob {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.debug_struct("EnergyRestoreJob").field("operation", &self.operation).field("field", &self.field).field("mounted", &self.packet.is_some()).finish()
-    }
-}
-
-struct EnergyRestoreAbandoned {
-    model: Option<Model>,
-    config: Option<SimulationConfig>,
-    packet: EnergyWirePacket,
-    census: EnergyNumericalCensus,
-    field: u8,
-    stage: EnergyJobStage,
-    tier: EnergyQualityTier,
-    warmup_hour: u32,
-    hour_index: u32,
-    total_timesteps: u32,
-    rng_state: u64,
-    weather_cursor: usize,
-    weather_target: usize,
-    aggregate_zone_cursor: usize,
-    aggregate_facility_cursor: u8,
-    initialize_backing_stage: u8,
-    run_backing_stage: u8,
-    checkpoint_due: bool,
-    time_series_count: usize,
-    meter_count: usize,
-    history_count: usize,
-    digest: u64,
-    bounds: EnergyNumericalBounds,
-    rebuild: Option<EnergyJob>,
-    replay_retiring: Option<EnergyWirePacket>,
-    replay_checkpoint_lease: Option<EnergyWireLease>,
-    replay_failed: Option<EnergyWireRejection>,
-    ready: bool,
-}
-
-enum EnergyRestoreAbandonmentSlot {
-    Vacant,
-    Reserved(Operation),
-    Abandoned(Operation, Box<EnergyRestoreAbandoned>),
-}
-
-static ENERGY_RESTORE_ABANDONMENT_REGISTRY: Mutex<[EnergyRestoreAbandonmentSlot; ENERGY_ABANDONMENT_SLOTS]> = Mutex::new([const { EnergyRestoreAbandonmentSlot::Vacant }; ENERGY_ABANDONMENT_SLOTS]);
-
-impl EnergyRestoreJob {
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    pub fn admit(operation: Operation, model: Model, config: SimulationConfig, packet: EnergyWirePacket, bounds: EnergyNumericalBounds) -> Result<Self, EnergyCheckpointRejected> {
-        let census = EnergyNumericalCensus::observe(&model, &config).unwrap_or_default();
-        let reject = |model, config, packet, reason| EnergyCheckpointRejected { operation, model, config, packet, census, reason };
-        let Some(observed) = EnergyNumericalCensus::observe(&model, &config) else {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::Numerical(EnergyNumericalDimension::ArithmeticOverflow)));
-        };
-        if let Some(dimension) = observed.first_exceeded(bounds.0) {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::Numerical(dimension)));
-        }
-        if packet.kind != EnergyWireKind::Checkpoint || packet.payload.page_count() != 1 || packet.payload.page_count() > observed.pages || packet.payload.len() != ENERGY_CHECKPOINT_BYTES {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::InvalidHeader));
-        }
-        let Some(header) = packet.payload.page(0).filter(|page| page.len() >= ENERGY_WIRE_HEADER_BYTES) else {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::InvalidHeader));
-        };
-        if header[..8] != ENERGY_WIRE_MAGIC || u16::from_le_bytes([header[8], header[9]]) != ENERGY_WIRE_VERSION || header[10] != EnergyWireKind::Checkpoint as u8 {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::InvalidHeader));
-        }
-        let declared_items = u64::from_le_bytes(header[56..64].try_into().expect("fixed item cap"));
-        let declared_pages = u64::from_le_bytes(header[64..72].try_into().expect("fixed page cap"));
-        let declared_operations = u32::from_le_bytes(header[72..76].try_into().expect("fixed operation cap"));
-        let declared_jobs = u32::from_le_bytes(header[76..80].try_into().expect("fixed process cap"));
-        if declared_items != observed.observed_items as u64 || declared_pages != observed.pages as u64 || declared_operations != 1 || declared_jobs != 1 {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::InvalidPayload));
-        }
-        let identity = EnergyWireIdentity {
-            operation: u64::from_le_bytes(header[16..24].try_into().expect("fixed operation field")),
-            base_revision: u64::from_le_bytes(header[24..32].try_into().expect("fixed revision field")),
-            generation: u64::from_le_bytes(header[32..40].try_into().expect("fixed generation field")),
-            seed: u64::from_le_bytes(header[40..48].try_into().expect("fixed seed field")),
-            sequence: u64::from_le_bytes(header[48..56].try_into().expect("fixed sequence field")),
-        };
-        if identity != packet.identity || identity.operation != operation.operation.0 || identity.base_revision != operation.base_revision.0 || identity.generation != operation.generation.0 || identity.seed != operation.seed {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::OperationMismatch));
-        }
-        let mut registry = ENERGY_RESTORE_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let Some(abandonment_slot) = registry.iter().position(|slot| matches!(slot, EnergyRestoreAbandonmentSlot::Vacant)) else {
-            return Err(reject(model, config, packet, EnergyCheckpointRejectionReason::ProcessJobs));
-        };
-        registry[abandonment_slot] = EnergyRestoreAbandonmentSlot::Reserved(operation);
-        drop(registry);
-        Ok(Self {
-            operation,
-            model: Some(model),
-            config: Some(config),
-            packet: Some(packet),
-            census: observed,
-            field: 0,
-            stage: EnergyJobStage::Validate,
-            tier: EnergyQualityTier::SteadyStateEstimate,
-            warmup_hour: 0,
-            hour_index: 0,
-            total_timesteps: 0,
-            rng_state: 0,
-            weather_cursor: 0,
-            weather_target: 0,
-            aggregate_zone_cursor: 0,
-            aggregate_facility_cursor: 0,
-            initialize_backing_stage: 0,
-            run_backing_stage: 0,
-            checkpoint_due: false,
-            time_series_count: 0,
-            meter_count: 0,
-            history_count: 0,
-            digest: 0,
-            bounds,
-            rebuild: None,
-            replay_retiring: None,
-            replay_checkpoint_lease: None,
-            replay_failed: None,
-            ready: false,
-            abandonment_slot,
-        })
-    }
-
-    pub fn recover_abandoned(operation: Operation) -> Option<Self> {
-        let mut registry = ENERGY_RESTORE_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        let index = registry.iter().position(|slot| matches!(slot, EnergyRestoreAbandonmentSlot::Abandoned(candidate, _) if candidate.operation == operation.operation && candidate.generation == operation.generation))?;
-        let EnergyRestoreAbandonmentSlot::Abandoned(_, authority) = std::mem::replace(&mut registry[index], EnergyRestoreAbandonmentSlot::Reserved(operation)) else { unreachable!("matched restore authority") };
-        Some(Self {
-            operation,
-            model: authority.model,
-            config: authority.config,
-            packet: Some(authority.packet),
-            census: authority.census,
-            field: authority.field,
-            stage: authority.stage,
-            tier: authority.tier,
-            warmup_hour: authority.warmup_hour,
-            hour_index: authority.hour_index,
-            total_timesteps: authority.total_timesteps,
-            rng_state: authority.rng_state,
-            weather_cursor: authority.weather_cursor,
-            weather_target: authority.weather_target,
-            aggregate_zone_cursor: authority.aggregate_zone_cursor,
-            aggregate_facility_cursor: authority.aggregate_facility_cursor,
-            initialize_backing_stage: authority.initialize_backing_stage,
-            run_backing_stage: authority.run_backing_stage,
-            checkpoint_due: authority.checkpoint_due,
-            time_series_count: authority.time_series_count,
-            meter_count: authority.meter_count,
-            history_count: authority.history_count,
-            digest: authority.digest,
-            bounds: authority.bounds,
-            rebuild: authority.rebuild,
-            replay_retiring: authority.replay_retiring,
-            replay_checkpoint_lease: authority.replay_checkpoint_lease,
-            replay_failed: authority.replay_failed,
-            ready: authority.ready,
-            abandonment_slot: index,
-        })
-    }
-
-    pub fn step(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return Err(EnergyWireRejection::Identity);
-        }
-        if context.is_cancelled() || context.should_yield() {
-            return Ok(false);
-        }
-        if self.field < 4 {
-            context.consume_fuel(1);
-            let page = self.packet.as_ref().and_then(|packet| packet.payload.single_page()).ok_or(EnergyWireRejection::Header)?;
-            match self.field {
-                0 => {
-                    self.stage = energy_stage_from_code(page[11]).ok_or(EnergyWireRejection::Header)?;
-                    self.tier = energy_tier_from_code(page[12]).ok_or(EnergyWireRejection::Header)?;
-                }
-                1 => {
-                    self.warmup_hour = u32::from_le_bytes(page[80..84].try_into().map_err(|_| EnergyWireRejection::Header)?);
-                    self.hour_index = u32::from_le_bytes(page[84..88].try_into().map_err(|_| EnergyWireRejection::Header)?);
-                    self.total_timesteps = u32::from_le_bytes(page[88..92].try_into().map_err(|_| EnergyWireRejection::Header)?);
-                }
-                2 => {
-                    self.rng_state = u64::from_le_bytes(page[92..100].try_into().map_err(|_| EnergyWireRejection::Header)?);
-                    self.weather_cursor = u64::from_le_bytes(page[100..108].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    self.weather_target = u64::from_le_bytes(page[108..116].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    if self.weather_cursor > self.weather_target || self.weather_target > self.census.weather_records {
-                        return Err(EnergyWireRejection::Items);
-                    }
-                }
-                3 => {
-                    let aggregate_zone_cursor = u64::from_le_bytes(page[116..124].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    self.time_series_count = u64::from_le_bytes(page[132..140].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    self.meter_count = u64::from_le_bytes(page[140..148].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    self.history_count = u64::from_le_bytes(page[148..156].try_into().map_err(|_| EnergyWireRejection::Header)?) as usize;
-                    if aggregate_zone_cursor > self.census.zones || self.time_series_count > self.census.series || self.meter_count > self.census.meters || self.history_count > self.census.history_values {
-                        return Err(EnergyWireRejection::Items);
-                    }
-                    self.aggregate_zone_cursor = aggregate_zone_cursor;
-                    self.aggregate_facility_cursor = page[124];
-                    self.initialize_backing_stage = page[125];
-                    self.run_backing_stage = page[126];
-                    self.checkpoint_due = page[127] != 0;
-                    self.digest = u64::from_le_bytes(page[156..164].try_into().map_err(|_| EnergyWireRejection::Header)?);
-                }
-                _ => unreachable!("decode field is bounded"),
-            }
-            self.field += 1;
-            return Ok(false);
-        }
-        if let Some(packet) = self.replay_retiring.as_mut() {
-            if packet.terminal_is_empty() {
-                self.replay_retiring = None;
-            } else {
-                let step = packet.close_step(context.retained_grant());
-                energy_spend(context, step)?;
-            }
-            return Ok(false);
-        }
-        if let Some(lease) = self.replay_checkpoint_lease.as_mut() {
-            if !lease.packet().terminal_is_empty() {
-                let step = lease.packet_mut().close_step(context.retained_grant());
-                energy_spend(context, step)?;
-                return Ok(false);
-            }
-            let lease = self.replay_checkpoint_lease.take().expect("empty replay checkpoint lease remains owned");
-            if let Err(lease) = self.rebuild.as_mut().ok_or(EnergyWireRejection::Backing)?.ack_checkpoint_packet(lease) {
-                self.replay_checkpoint_lease = Some(lease);
-                return Err(EnergyWireRejection::Backing);
-            }
-            return Ok(false);
-        }
-        if let Some(failure) = self.replay_failed {
-            return Err(failure);
-        }
-        if self.rebuild.is_none() {
-            context.consume_fuel(1);
-            let model = self.model.take().ok_or(EnergyWireRejection::Backing)?;
-            let config = self.config.take().ok_or(EnergyWireRejection::Backing)?;
-            match EnergyJob::admit(self.operation, model, config, self.bounds) {
-                Ok(job) => self.rebuild = Some(job),
-                Err(rejected) => {
-                    self.model = Some(rejected.model);
-                    self.config = Some(rejected.config);
-                    return Err(EnergyWireRejection::Backing);
-                }
-            }
-            return Ok(false);
-        }
-        let expected = (
-            self.stage,
-            self.tier,
-            self.warmup_hour,
-            self.hour_index,
-            self.total_timesteps,
-            self.rng_state,
-            self.weather_cursor,
-            self.weather_target,
-            self.aggregate_zone_cursor,
-            self.aggregate_facility_cursor,
-            self.initialize_backing_stage,
-            self.run_backing_stage,
-            self.checkpoint_due,
-            self.time_series_count,
-            self.meter_count,
-            self.history_count,
-            self.digest,
-        );
-        let rebuild = self.rebuild.as_mut().expect("rebuild mounted");
-        let scalar_match = rebuild.stage == expected.0
-            && rebuild.tier == expected.1
-            && rebuild.warmup_hour == expected.2
-            && rebuild.hour_index == expected.3
-            && rebuild.total_timesteps == expected.4
-            && rebuild.rng_state == expected.5
-            && rebuild.weather_cursor == expected.6
-            && rebuild.weather_target == expected.7
-            && rebuild.aggregate_zone_cursor == expected.8
-            && rebuild.aggregate_facility_cursor == expected.9
-            && rebuild.initialize_backing_stage == expected.10
-            && rebuild.run_backing_stage == expected.11
-            && rebuild.time_series.series.len() == expected.13
-            && rebuild.meters.meters.len() == expected.14
-            && rebuild.zone_temperature_history.len() == expected.15
-            && rebuild.result_backing.series_slots >= expected.13
-            && rebuild.result_backing.meter_slots >= expected.14
-            && rebuild.result_backing.history_slots >= expected.15;
-        if scalar_match && rebuild.checkpoint_due != expected.12 {
-            context.consume_fuel(1);
-            rebuild.checkpoint_due = expected.12;
-            return Ok(false);
-        }
-        if scalar_match && rebuild.numerical_digest() == expected.16 {
-            self.ready = true;
-            return Ok(true);
-        }
-        match rebuild.run(context) {
-            EnergyRun::Yield | EnergyRun::Cancelled => {}
-            EnergyRun::Preview => {
-                self.replay_retiring = rebuild.take_preview_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)?;
-            }
-            EnergyRun::Checkpoint(_) => {
-                if let Some(lease) = rebuild.take_checkpoint_packet(self.operation.generation).map_err(|_| EnergyWireRejection::Identity)? {
-                    self.replay_checkpoint_lease = Some(lease);
-                }
-            }
-            EnergyRun::Fault => {
-                self.replay_failed = Some(EnergyWireRejection::Backing);
-                return Err(EnergyWireRejection::Backing);
-            }
-            EnergyRun::Complete => {
-                self.replay_failed = Some(EnergyWireRejection::Items);
-                self.replay_retiring = rebuild.commit_output.take();
-                return Err(EnergyWireRejection::Items);
-            }
-        }
-        Ok(false)
-    }
-
-    #[expect(clippy::result_large_err, reason = "Returns the exact rejected packet, lease, model, or job owner for retry and bounded retirement without allocating on refusal.")]
-    pub fn finish(mut self, context: &StepContext<'_>) -> Result<EnergyJob, Self> {
-        if context.operation() != self.operation.operation || context.generation() != self.operation.generation || !self.ready {
-            return Err(self);
-        }
-        let Some(mut job) = self.rebuild.take() else {
-            return Err(self);
-        };
-        if job.time_series.series.len() != self.time_series_count
-            || job.meters.meters.len() != self.meter_count
-            || job.zone_temperature_history.len() != self.history_count
-            || job.result_backing.series_slots < self.time_series_count
-            || job.result_backing.meter_slots < self.meter_count
-            || job.result_backing.history_slots < self.history_count
-            || job.numerical_digest() != self.digest
-        {
-            self.rebuild = Some(job);
-            return Err(self);
-        }
-        job.restore_input = self.packet.take();
-        let mut registry = ENERGY_RESTORE_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        registry[self.abandonment_slot] = EnergyRestoreAbandonmentSlot::Vacant;
-        drop(registry);
-        Ok(job)
-    }
-
-    /// 📏️ Quotes the next close frontier: replay packets, the restore input, the rebuild job, then one popped owner.
-    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
-        if let Some(packet) = self.replay_retiring.as_ref() {
-            return packet.retirement_demands();
-        }
-        if let Some(lease) = self.replay_checkpoint_lease.as_ref() {
-            return if lease.packet().terminal_is_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { lease.packet().retirement_demands() };
-        }
-        if let Some(packet) = self.packet.as_ref() {
-            return packet.retirement_demands();
-        }
-        if let Some(rebuild) = self.rebuild.as_ref() {
-            return rebuild.close_demands();
-        }
-        Ok(if self.model.is_some() || self.config.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() })
-    }
-
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        if let Some(packet) = self.replay_retiring.as_mut() {
-            let (step, _) = energy_turn(packet.close_step(grant));
-            if packet.terminal_is_empty() {
-                self.replay_retiring = None;
-            }
-            return step;
-        }
-        if let Some(mut lease) = self.replay_checkpoint_lease.take() {
-            if !lease.packet().terminal_is_empty() {
-                let (step, _) = energy_turn(lease.packet_mut().close_step(grant));
-                self.replay_checkpoint_lease = Some(lease);
-                return step;
-            }
-            if !energy_grant_covers(grant, RetirementDemand { depth: 1, ..Default::default() }) {
-                self.replay_checkpoint_lease = Some(lease);
-                return energy_idle();
-            }
-            let Some(rebuild) = self.rebuild.as_mut() else {
-                self.replay_checkpoint_lease = Some(lease);
-                return InteractiveJobCloseStep::Blocked;
-            };
-            if let Err(lease) = rebuild.ack_checkpoint_packet(lease) {
-                self.replay_checkpoint_lease = Some(lease);
-                return InteractiveJobCloseStep::Blocked;
-            }
-            return energy_one();
-        }
-        if let Some(packet) = self.packet.as_mut() {
-            let (step, _) = energy_turn(packet.close_step(grant));
-            if packet.terminal_is_empty() {
-                self.packet = None;
-            }
-            return step;
-        }
-        if let Some(rebuild) = self.rebuild.as_mut() {
-            rebuild.begin_close();
-            return match rebuild.close_step(grant) {
-                InteractiveJobCloseStep::Complete { progress } => {
-                    self.rebuild = None;
-                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } }
-                }
-                step => step,
-            };
-        }
-        if self.model.is_none() && self.config.is_none() {
-            return energy_done();
-        }
-        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
-            return energy_idle();
-        }
-        if let Some(model) = self.model.as_mut() {
-            if let Some(released) = close_model_step(model, grant.maximum_release_bytes) {
-                return energy_rung(released);
-            }
-            self.model = None;
-            return energy_one();
-        }
-        if let Some(config) = self.config.as_mut() {
-            if let Some(released) = close_config_step(config, grant.maximum_release_bytes) {
-                return energy_rung(released);
-            }
-            self.config = None;
-            return energy_one();
-        }
-        energy_done()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.model.is_none() && self.config.is_none() && self.rebuild.is_none() && self.replay_retiring.is_none() && self.replay_checkpoint_lease.is_none()
-    }
-}
-
-impl Drop for EnergyRestoreJob {
-    fn drop(&mut self) {
-        let Some(packet) = self.packet.take() else { return };
-        let authority = EnergyRestoreAbandoned {
-            model: self.model.take(),
-            config: self.config.take(),
-            packet,
-            census: self.census,
-            field: self.field,
-            stage: self.stage,
-            tier: self.tier,
-            warmup_hour: self.warmup_hour,
-            hour_index: self.hour_index,
-            total_timesteps: self.total_timesteps,
-            rng_state: self.rng_state,
-            weather_cursor: self.weather_cursor,
-            weather_target: self.weather_target,
-            aggregate_zone_cursor: self.aggregate_zone_cursor,
-            aggregate_facility_cursor: self.aggregate_facility_cursor,
-            initialize_backing_stage: self.initialize_backing_stage,
-            run_backing_stage: self.run_backing_stage,
-            checkpoint_due: self.checkpoint_due,
-            time_series_count: self.time_series_count,
-            meter_count: self.meter_count,
-            history_count: self.history_count,
-            digest: self.digest,
-            bounds: self.bounds,
-            rebuild: self.rebuild.take(),
-            replay_retiring: self.replay_retiring.take(),
-            replay_checkpoint_lease: self.replay_checkpoint_lease.take(),
-            replay_failed: self.replay_failed.take(),
-            ready: self.ready,
-        };
-        let mut registry = ENERGY_RESTORE_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        debug_assert!(matches!(registry.get(self.abandonment_slot), Some(EnergyRestoreAbandonmentSlot::Reserved(candidate)) if candidate.operation == self.operation.operation && candidate.generation == self.operation.generation));
-        registry[self.abandonment_slot] = EnergyRestoreAbandonmentSlot::Abandoned(self.operation, Box::new(authority));
-    }
-}
-
-impl EnergyNumericalCensus {
-    fn observe(model: &Model, config: &SimulationConfig) -> Option<Self> {
-        let timesteps = SimulationKernel::run_period(config).total_hours() as usize;
-        let weather_records = observed_weather_records(config);
-        let airflow_nodes = model.airflow_network.as_ref().map_or(0, |network| network.zone_node_ids.capacity().saturating_add(1));
-        let airflow_links = model.airflow_network.as_ref().map_or(0, |network| network.link_ids.capacity());
-        let plant_equipment = checked_sum(model.plant_loops.iter().map(|plant| plant.equipment_ids.capacity()))?;
-        let meters = model.zones.capacity().checked_mul(3)?.checked_add(2)?;
-        let series = model.zones.capacity();
-        let samples = timesteps.checked_mul(series)?;
-        let history_values = samples;
-        let summary_rows = 7usize;
-        let identifier_bytes = observed_identifier_bytes(model, config)?;
-        let dimensions = [
-            model.zones.capacity(),
-            model.surfaces.capacity(),
-            model.fenestrations.capacity(),
-            model.people.capacity(),
-            model.lighting.capacity(),
-            model.equipment.capacity(),
-            model.infiltrations.capacity(),
-            airflow_nodes,
-            airflow_links,
-            model.mechanical_ventilations.capacity(),
-            model.thermostats.capacity(),
-            model.humidistats.capacity(),
-            model.ideal_loads.capacity(),
-            model.faults.capacity(),
-            model.zone_equipment.capacity(),
-            model.plant_loops.capacity(),
-            plant_equipment,
-            model.pv_systems.capacity(),
-            model.battery_storage.capacity(),
-            model.shw_systems.capacity(),
-            model.refrigeration_systems.capacity(),
-            model.water_systems.capacity(),
-            weather_records,
-            timesteps,
-            meters,
-            series,
-            samples,
-            history_values,
-            summary_rows,
-            identifier_bytes,
-        ];
-        let observed_items = checked_sum(dimensions)?;
-        let observed_bytes = observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
-        let pages = observed_bytes.checked_add(16_383)?.checked_div(16_384)?;
-        Some(Self {
-            zones: model.zones.capacity(),
-            surfaces: model.surfaces.capacity(),
-            fenestrations: model.fenestrations.capacity(),
-            people: model.people.capacity(),
-            lighting: model.lighting.capacity(),
-            equipment: model.equipment.capacity(),
-            infiltrations: model.infiltrations.capacity(),
-            airflow_nodes,
-            airflow_links,
-            mechanical_ventilations: model.mechanical_ventilations.capacity(),
-            thermostats: model.thermostats.capacity(),
-            humidistats: model.humidistats.capacity(),
-            ideal_loads: model.ideal_loads.capacity(),
-            faults: model.faults.capacity(),
-            zone_equipment: model.zone_equipment.capacity(),
-            plant_loops: model.plant_loops.capacity(),
-            plant_equipment,
-            pv_systems: model.pv_systems.capacity(),
-            batteries: model.battery_storage.capacity(),
-            service_hot_water: model.shw_systems.capacity(),
-            refrigeration: model.refrigeration_systems.capacity(),
-            water: model.water_systems.capacity(),
-            weather_records,
-            timesteps,
-            meters,
-            series,
-            samples,
-            history_values,
-            summary_rows,
-            identifier_bytes,
-            observed_items,
-            observed_bytes,
-            pages,
-            operations: 1,
-            process_jobs: 1,
-        })
-    }
-
-    fn first_exceeded(self, maximum: Self) -> Option<EnergyNumericalDimension> {
-        macro_rules! dimension {
-            ($field:ident, $variant:ident) => {
-                if self.$field > maximum.$field {
-                    return Some(EnergyNumericalDimension::$variant);
-                }
-            };
-        }
-        dimension!(zones, Zones);
-        dimension!(surfaces, Surfaces);
-        dimension!(fenestrations, Fenestrations);
-        dimension!(people, People);
-        dimension!(lighting, Lighting);
-        dimension!(equipment, Equipment);
-        dimension!(infiltrations, Infiltrations);
-        dimension!(airflow_nodes, AirflowNodes);
-        dimension!(airflow_links, AirflowLinks);
-        dimension!(mechanical_ventilations, MechanicalVentilations);
-        dimension!(thermostats, Thermostats);
-        dimension!(humidistats, Humidistats);
-        dimension!(ideal_loads, IdealLoads);
-        dimension!(faults, Faults);
-        dimension!(zone_equipment, ZoneEquipment);
-        dimension!(plant_loops, PlantLoops);
-        dimension!(plant_equipment, PlantEquipment);
-        dimension!(pv_systems, PvSystems);
-        dimension!(batteries, Batteries);
-        dimension!(service_hot_water, ServiceHotWater);
-        dimension!(refrigeration, Refrigeration);
-        dimension!(water, Water);
-        dimension!(weather_records, WeatherRecords);
-        dimension!(timesteps, Timesteps);
-        dimension!(meters, Meters);
-        dimension!(series, Series);
-        dimension!(samples, Samples);
-        dimension!(history_values, HistoryValues);
-        dimension!(summary_rows, SummaryRows);
-        dimension!(identifier_bytes, IdentifierBytes);
-        dimension!(observed_items, ObservedItems);
-        dimension!(observed_bytes, ObservedBytes);
-        dimension!(pages, Pages);
-        dimension!(operations, Operations);
-        dimension!(process_jobs, ProcessJobs);
-        None
-    }
-}
-
-fn observed_weather_records(config: &SimulationConfig) -> usize {
-    config.weather.as_ref().map_or_else(
-        || match config.environment {
-            SimulationEnvironment::HeatingDesignDay | SimulationEnvironment::CoolingDesignDay => 24,
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => 8_760,
-        },
-        |weather| weather.records.capacity().max(weather.records.len().max(1)),
-    )
-}
-
-fn weather_copy_target(config: &SimulationConfig) -> usize {
-    config.weather.as_ref().map_or_else(
-        || match config.environment {
-            SimulationEnvironment::HeatingDesignDay | SimulationEnvironment::CoolingDesignDay => 24,
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => 8_760,
-        },
-        |weather| weather.records.len().max(1),
-    )
-}
-
-fn checked_sum(values: impl IntoIterator<Item = usize>) -> Option<usize> {
-    values.into_iter().try_fold(0usize, usize::checked_add)
-}
-
-fn observed_identifier_bytes(model: &Model, config: &SimulationConfig) -> Option<usize> {
-    let mut bytes = model.name.capacity().checked_add(model.version.capacity())?;
-    macro_rules! names {
-        ($owners:expr) => {
-            for owner in $owners {
-                bytes = bytes.checked_add(owner.name.capacity())?;
-            }
-        };
-    }
-    names!(&model.zones);
-    names!(&model.spaces);
-    names!(&model.surfaces);
-    names!(&model.fenestrations);
-    names!(&model.materials);
-    names!(&model.glazing_materials);
-    names!(&model.gas_materials);
-    names!(&model.constructions);
-    names!(&model.setpoint_managers);
-    names!(&model.air_loops);
-    names!(&model.plant_loops);
-    names!(&model.shading_surfaces);
-    names!(&model.space_lists);
-    names!(&model.thermal_enclosures);
-    names!(&model.electrical_load_centers);
-    for output in &model.output_variables {
-        bytes = bytes.checked_add(output.name.capacity())?.checked_add(output.key.capacity())?;
-    }
-    if let Some(weather) = &config.weather {
-        bytes = bytes.checked_add(weather.location.capacity())?;
-    }
-    for zone in &model.zones {
-        let temperature = "Zone Air Temperature [".len().checked_add(zone.name.len())?.checked_add(1)?;
-        let heating = zone.name.len().checked_add(" Heating".len())?;
-        let cooling = zone.name.len().checked_add(" Cooling".len())?;
-        let fans = zone.name.len().checked_add(" Fans".len())?;
-        bytes = bytes.checked_add(temperature.checked_mul(3)?)?;
-        bytes = bytes.checked_add(heating.checked_add(cooling)?.checked_add(fans)?.checked_mul(3)?)?;
-    }
-    bytes = bytes.checked_add(("Facility Heating".len() + "Facility PV".len()).checked_mul(3)?)?;
-    bytes = bytes.checked_add(model.name.len())?.checked_add(model.version.len())?;
-    if let Some(weather) = &config.weather {
-        bytes = bytes.checked_add(weather.location.len())?;
-    }
-    for (key, unit) in [("Electricity", "kWh"), ("Natural Gas", "kWh"), ("Energy Use Intensity", "kWh/m²"), ("Annual Energy Cost", "USD"), ("LCCA Present Value", "USD")] {
-        bytes = bytes.checked_add(key.len())?.checked_add(unit.len())?;
-    }
-    Some(bytes)
-}
-
-fn observed_model_bytes(model: &Model, config: &SimulationConfig) -> Option<usize> {
-    let mut bytes = 0usize;
-    macro_rules! backing {
-        ($owners:expr) => {
-            bytes = bytes.checked_add(observed_vector_bytes(&$owners)?)?;
-        };
-    }
-    backing!(model.zones);
-    backing!(model.spaces);
-    backing!(model.surfaces);
-    backing!(model.fenestrations);
-    backing!(model.materials);
-    backing!(model.glazing_materials);
-    backing!(model.gas_materials);
-    backing!(model.constructions);
-    backing!(model.people);
-    backing!(model.lighting);
-    backing!(model.equipment);
-    backing!(model.thermostats);
-    backing!(model.humidistats);
-    backing!(model.setpoint_managers);
-    backing!(model.ideal_loads);
-    backing!(model.zone_equipment);
-    backing!(model.air_loops);
-    backing!(model.plant_loops);
-    backing!(model.outdoor_air_systems);
-    backing!(model.infiltrations);
-    backing!(model.mechanical_ventilations);
-    backing!(model.shading_surfaces);
-    backing!(model.space_lists);
-    backing!(model.thermal_enclosures);
-    backing!(model.adjacency_pairs);
-    backing!(model.electrical_load_centers);
-    backing!(model.pv_systems);
-    backing!(model.battery_storage);
-    backing!(model.shw_systems);
-    backing!(model.solar_thermal_systems);
-    backing!(model.refrigeration_systems);
-    backing!(model.water_systems);
-    backing!(model.faults);
-    backing!(model.output_variables);
-    backing!(model.sizing_objects);
-    backing!(model.daylight_zones);
-    backing!(model.room_air_models);
-    for surface in &model.surfaces {
-        bytes = bytes.checked_add(surface.vertices_m.capacity().checked_mul(size_of::<[f64; 3]>())?)?;
-    }
-    for construction in &model.constructions {
-        bytes = bytes.checked_add(construction.layer_material_ids.capacity().checked_mul(size_of::<crate::model::EntityId>())?)?;
-    }
-    for plant in &model.plant_loops {
-        bytes = bytes.checked_add(plant.equipment_ids.capacity().checked_mul(size_of::<crate::model::EntityId>())?)?;
-    }
-    for air_loop in &model.air_loops {
-        bytes = bytes.checked_add(observed_vector_bytes(&air_loop.terminal_zone_ids)?)?;
-    }
-    for shading in &model.shading_surfaces {
-        bytes = bytes.checked_add(observed_vector_bytes(&shading.vertices_m)?)?;
-    }
-    for list in &model.space_lists {
-        bytes = bytes.checked_add(observed_vector_bytes(&list.space_ids)?)?;
-    }
-    for enclosure in &model.thermal_enclosures {
-        bytes = bytes.checked_add(observed_vector_bytes(&enclosure.zone_ids)?)?;
-    }
-    for center in &model.electrical_load_centers {
-        bytes = bytes.checked_add(observed_vector_bytes(&center.generator_ids)?)?;
-        bytes = bytes.checked_add(observed_vector_bytes(&center.pv_ids)?)?;
-        bytes = bytes.checked_add(observed_vector_bytes(&center.battery_ids)?)?;
-    }
-    if let Some(network) = &model.airflow_network {
-        bytes = bytes.checked_add(network.zone_node_ids.capacity().checked_mul(size_of::<(crate::model::EntityId, u32)>())?)?;
-        bytes = bytes.checked_add(network.link_ids.capacity().checked_mul(size_of::<u32>())?)?;
-    }
-    if let Some(weather) = &config.weather {
-        bytes = bytes.checked_add(weather.records.capacity().checked_mul(size_of::<WeatherRecord>())?)?;
-    }
-    backing!(config.schedules.constants);
-    backing!(config.schedules.daily);
-    backing!(config.schedules.weekly);
-    backing!(config.schedules.annual);
-    backing!(config.schedules.time_series);
-    for schedule in &config.schedules.annual {
-        bytes = bytes.checked_add(observed_vector_bytes(&schedule.rules)?)?;
-        bytes = bytes.checked_add(observed_vector_bytes(&schedule.holiday_dates)?)?;
-    }
-    for schedule in &config.schedules.time_series {
-        bytes = bytes.checked_add(observed_vector_bytes(&schedule.values)?)?;
-    }
-    Some(bytes)
-}
-
-fn observed_vector_bytes<T>(owners: &Vec<T>) -> Option<usize> {
-    owners.capacity().checked_mul(size_of::<T>())
-}
-// #endregion 🔖️NumericalAdmission
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum WarmupConvergenceStage {
@@ -1642,10 +186,10 @@ struct ValidationWork {
     cursor: usize,
     child_cursor: usize,
     zone_reference_family: u8,
-    zone_ids: FixedTable<crate::model::EntityId, ()>,
-    material_ids: FixedTable<crate::model::EntityId, ()>,
-    construction_ids: FixedTable<crate::model::EntityId, ()>,
-    surface_ids: FixedTable<crate::model::EntityId, ()>,
+    zone_ids: FixedTable<model::EntityId, ()>,
+    material_ids: FixedTable<model::EntityId, ()>,
+    construction_ids: FixedTable<model::EntityId, ()>,
+    surface_ids: FixedTable<model::EntityId, ()>,
     fatal_code: u8,
 }
 
@@ -1796,11 +340,11 @@ impl AggregateZoneWork {
 }
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-struct EnergyAdmittedResultBacking {
-    series_slots: usize,
-    meter_slots: usize,
+pub struct EnergyAdmittedResultBacking {
+    pub series_slots: usize,
+    pub meter_slots: usize,
     samples_per_series: usize,
-    history_slots: usize,
+    pub history_slots: usize,
     summary_slots: usize,
 }
 
@@ -1853,38 +397,6 @@ impl Default for CommitCensusWork {
     }
 }
 
-#[derive(Debug)]
-struct EnergyCommitReservation {
-    pages: usize,
-    bytes: usize,
-    items: usize,
-    prepared: usize,
-    sources: [Option<semio_framework_job::JobPayloadPageSource>; semio_framework_job::JOB_PAYLOAD_OPERATION_PAGES],
-}
-
-impl EnergyCommitReservation {
-    fn new(pages: usize, bytes: usize, items: usize) -> Self {
-        Self { pages, bytes, items, prepared: 0, sources: std::array::from_fn(|_| None) }
-    }
-
-    fn take_source(&mut self, index: usize) -> Option<semio_framework_job::JobPayloadPageSource> {
-        self.sources.get_mut(index)?.take()
-    }
-
-    fn restore_source(&mut self, index: usize, source: semio_framework_job::JobPayloadPageSource) {
-        self.sources[index] = Some(source);
-    }
-
-    fn close_source_demand(&self) -> Option<RetirementDemand> {
-        self.sources.iter().flatten().next().map(|source| RetirementDemand { release_bytes: source.allocated_capacity_bytes(), depth: 1, ..Default::default() })
-    }
-
-    fn close_source_step(&mut self) -> Option<usize> {
-        let source = self.sources.iter_mut().find(|source| source.is_some())?;
-        source.take().map(|source| source.allocated_capacity_bytes())
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 enum WeatherFault {
     SlotRejected,
@@ -1910,48 +422,48 @@ impl Default for ValidationWork {
 /// warmup, metering and publication are cursor-owned; the batch API drives this same job.
 #[doc(hidden)]
 pub struct EnergyJobAuthority {
-    operation: Operation,
+    pub operation: Operation,
     model: Model,
     config: SimulationConfig,
     numerical_census: EnergyNumericalCensus,
-    stage: EnergyJobStage,
-    tier: EnergyQualityTier,
+    pub stage: EnergyJobStage,
+    pub tier: EnergyQualityTier,
     weather: FixedTable<usize, WeatherRecord>,
-    weather_cursor: usize,
-    weather_target: usize,
+    pub weather_cursor: usize,
+    pub weather_target: usize,
     precompute: Option<PrecomputeBuilder>,
     validation: ValidationWork,
     pre: Option<PrecomputedModel>,
     state: Option<SimulationModel>,
     initialize_cursor: usize,
-    initialize_backing_stage: u8,
-    warmup_hour: u32,
+    pub initialize_backing_stage: u8,
+    pub warmup_hour: u32,
     previous_temperatures: Vec<f64>,
     previous_loads: Vec<f64>,
     warmup_convergence: Option<WarmupConvergenceWork>,
-    run_hours: Option<crate::calendar::RunPeriodHours>,
-    total_timesteps: u32,
-    run_backing_stage: u8,
-    hour_index: u32,
-    aggregate_zone_cursor: usize,
+    run_hours: Option<calendar::RunPeriodHours>,
+    pub total_timesteps: u32,
+    pub run_backing_stage: u8,
+    pub hour_index: u32,
+    pub aggregate_zone_cursor: usize,
     aggregate_zone_work: Option<AggregateZoneWork>,
-    aggregate_facility_cursor: u8,
+    pub aggregate_facility_cursor: u8,
     aggregate_facility_work: Option<AggregateZoneWork>,
     timestep_work: Option<TimestepWork>,
     timestep_builder: Option<TimestepBuilder>,
-    rng_state: u64,
-    checkpoint_due: bool,
-    result_backing: EnergyAdmittedResultBacking,
-    time_series: TimeSeriesTable,
-    meters: MeterTable,
+    pub rng_state: u64,
+    pub checkpoint_due: bool,
+    pub result_backing: EnergyAdmittedResultBacking,
+    pub time_series: TimeSeriesTable,
+    pub meters: MeterTable,
     time_series_order: Vec<String>,
     meter_order: Vec<String>,
-    zone_temperature_history: Vec<f64>,
+    pub zone_temperature_history: Vec<f64>,
     facility_electricity_j: f64,
     publication: EnergyPublicationChannels,
-    restore_input: Option<EnergyWirePacket>,
+    pub restore_input: Option<EnergyWirePacket>,
     wire_build: Option<EnergyWireBuild>,
-    wire_ready: Option<EnergyWirePacket>,
+    pub wire_ready: Option<EnergyWirePacket>,
     result: Option<Results>,
     sizing_builder: Option<SizingBuilder>,
     final_sizing: Option<SizingTables>,
@@ -1965,7 +477,7 @@ pub struct EnergyJobAuthority {
     commit_census: Option<CommitCensusWork>,
     commit_reservation: Option<EnergyCommitReservation>,
     commit_acknowledged: bool,
-    commit_output: Option<EnergyWirePacket>,
+    pub commit_output: Option<EnergyWirePacket>,
     markers: EnergyOutcomeMarkers,
     pending_outcome: Option<EnergyRun>,
     commit_pages_mounted: usize,
@@ -1982,7 +494,7 @@ pub struct EnergyJobAuthority {
     close_string_owner: String,
 }
 
-const ENERGY_ABANDONMENT_SLOTS: usize = 64;
+pub const ENERGY_ABANDONMENT_SLOTS: usize = 64;
 
 enum EnergyAbandonmentSlot {
     Vacant,
@@ -2266,7 +778,7 @@ impl EnergyJobAuthority {
     /// physics before the job settles, since the framework tool-run driver discards the settled
     /// `Complete` candidate's payload unread. A run job reads this on a tier boundary and encodes it
     /// into its tick payload (`ToolRunView::payload`). `None` before the state is initialized.
-    pub fn per_surface_energy(&self) -> Option<&crate::results::SurfaceEnergyTable> {
+    pub fn per_surface_energy(&self) -> Option<&results::SurfaceEnergyTable> {
         self.state.as_ref().map(|state| &state.per_surface)
     }
 
@@ -2281,7 +793,7 @@ impl EnergyJobAuthority {
             return 0;
         }
         let period = SimulationKernel::run_period(&self.config);
-        (crate::calendar::SimDate::new(period.year, period.start_month, period.start_day).day_of_year() as usize - 1) * 24
+        (calendar::SimDate::new(period.year, period.start_month, period.start_day).day_of_year() as usize - 1) * 24
     }
 
     /// 🌦️ The hour at `index` with its neighbours the way an hourly weather file is interpolated:
@@ -2304,9 +816,9 @@ impl EnergyJobAuthority {
             }
         }
         match self.config.environment {
-            SimulationEnvironment::HeatingDesignDay => design_day_hour(index as u32, -10.0),
-            SimulationEnvironment::CoolingDesignDay => design_day_hour(index as u32, 35.0),
-            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => synthetic_hour(index as u32),
+            SimulationEnvironment::HeatingDesignDay => site::design_day_hour(index as u32, -10.0),
+            SimulationEnvironment::CoolingDesignDay => site::design_day_hour(index as u32, 35.0),
+            SimulationEnvironment::WeatherRunPeriod | SimulationEnvironment::CustomDesignPeriod => site::synthetic_hour(index as u32),
         }
     }
 
@@ -2314,7 +826,7 @@ impl EnergyJobAuthority {
         EnergyWireIdentity { operation: self.operation.operation.0, base_revision: self.operation.base_revision.0, generation: self.operation.generation.0, seed: self.operation.seed, sequence }
     }
 
-    fn start_wire(&mut self, kind: EnergyWireKind, sequence: u64, stream: JobPayloadStream) -> Result<(), EnergyWireRejection> {
+    pub fn start_wire(&mut self, kind: EnergyWireKind, sequence: u64, stream: JobPayloadStream) -> Result<(), EnergyWireRejection> {
         if self.numerical_census.operations != 1 || self.numerical_census.process_jobs != 1 {
             return Err(EnergyWireRejection::Operations);
         }
@@ -2369,7 +881,7 @@ impl EnergyJobAuthority {
         Some((bytes, length))
     }
 
-    fn step_wire_build(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
+    pub fn step_wire_build(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
         let (kind, field) = self.wire_build.as_ref().map(|build| (build.kind, build.field)).ok_or(EnergyWireRejection::Backing)?;
         let Some((fragment, length)) = self.wire_fragment(kind, field) else {
             let build = self.wire_build.as_mut().expect("wire build remains mounted");
@@ -2484,7 +996,7 @@ impl EnergyJobAuthority {
         ]
     }
 
-    fn numerical_digest(&self) -> u64 {
+    pub fn numerical_digest(&self) -> u64 {
         let mut digest = 0xcbf2_9ce4_8422_2325u64;
         for value in [
             self.stage.code() as u64,
@@ -2691,7 +1203,7 @@ impl EnergyJobAuthority {
                     if !work.zone_ids.contains_key(&surface.zone_id) || !work.construction_ids.contains_key(&surface.construction_id) || surface.vertices_m.len() < 3 {
                         work.fatal_code = 11;
                     }
-                    if let crate::model::OutsideBoundary::Interzone(other) = surface.outside_boundary_condition {
+                    if let model::OutsideBoundary::Interzone(other) = surface.outside_boundary_condition {
                         if !work.surface_ids.contains_key(&other) {
                             work.fatal_code = 12;
                         }
@@ -3381,7 +1893,7 @@ impl EnergyJobAuthority {
         Ok(false)
     }
 
-    fn run(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
+    pub fn run(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return Self::fault();
         }
@@ -3506,7 +2018,7 @@ impl EnergyJobAuthority {
                 if self.initialize_backing_stage == 5 {
                     if let Some(fenestration) = self.model.fenestrations.get(self.initialize_cursor) {
                         if self.pre.as_ref().is_some_and(|pre| pre.windows.contains_key(&fenestration.id)) {
-                            if self.state.as_mut().expect("state exists while initializing").windows.insert(fenestration.id, WindowState { face_temperatures_c: [INITIAL_TEMPERATURE_C; 2 * crate::fenestration::MAX_PANES], inside_convection_w_m2k: 0.0 }).is_err() {
+                            if self.state.as_mut().expect("state exists while initializing").windows.insert(fenestration.id, WindowState { face_temperatures_c: [INITIAL_TEMPERATURE_C; 2 * model::MAX_PANES], inside_convection_w_m2k: 0.0 }).is_err() {
                                 { return self.begin_fault(); }
                             }
                             if self.state.as_mut().expect("state exists while initializing").per_surface.insert_window(fenestration.id).is_err() {
@@ -3565,7 +2077,7 @@ impl EnergyJobAuthority {
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
                     let start = self.run_start_record();
                     let weather = self.hour_weather(start + self.warmup_hour as usize % 24, true);
-                    let date = crate::calendar::SimDate::new(weather.current.year, weather.current.month, weather.current.day);
+                    let date = calendar::SimDate::new(weather.current.year, weather.current.month, weather.current.day);
                     self.timestep_builder = Some(TimestepBuilder::new(weather, date, self.warmup_hour as f64));
                     return EnergyRun::Yield;
                 }
@@ -3928,7 +2440,7 @@ impl EnergyJobAuthority {
     }
 
     /// 📏️ Quotes the next close frontier: a payload owner, a staged page source, or one popped ladder rung.
-    fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
+    pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         if authority_is_terminal_empty(self) {
             return Ok(RetirementDemand::default());
         }
@@ -3957,42 +2469,42 @@ impl EnergyJobAuthority {
         Ok(ENERGY_RUNG_DEMAND)
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         self.closing = true;
         if authority_is_terminal_empty(self) {
-            return energy_done();
+            return Ok(energy_done());
         }
         if let Some(build) = self.wire_build.as_mut() {
             build.writer.begin_close();
-            let (step, done) = energy_turn(energy_guarded(grant, build.writer.retirement_demands(), || build.writer.close_step(grant)));
+            let (step, done) = energy_turn(energy_guarded(grant, build.writer.retirement_demands(), || build.writer.close_step(grant)))?;
             if done {
                 self.wire_build = None;
             }
-            return step;
+            return Ok(step);
         }
         if let Some(writer) = self.output_writer.as_mut() {
             writer.begin_close();
-            let (step, done) = energy_turn(energy_guarded(grant, writer.retirement_demands(), || writer.close_step(grant)));
+            let (step, done) = energy_turn(energy_guarded(grant, writer.retirement_demands(), || writer.close_step(grant)))?;
             if done {
                 self.output_writer = None;
             }
-            return step;
+            return Ok(step);
         }
         if let Some(payload) = self.output_payload.as_mut() {
-            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant)));
+            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant)))?;
             if done {
                 self.output_payload = None;
             }
-            return step;
+            return Ok(step);
         }
         macro_rules! close_packet {
             ($packet:expr) => {
                 if let Some(packet) = $packet.as_mut() {
-                    let (step, done) = energy_turn(packet.close_step(grant));
+                    let (step, done) = energy_turn(packet.close_step(grant))?;
                     if done {
                         $packet = None;
                     }
-                    return step;
+                    return Ok(step);
                 }
             };
         }
@@ -4002,83 +2514,83 @@ impl EnergyJobAuthority {
         close_packet!(self.publication.retiring_preview);
         close_packet!(self.commit_output);
         for queue in [&mut self.publication.checkpoints, &mut self.publication.commits, &mut self.publication.faults] {
-            if let Some(step) = queue.close_step(grant) {
-                return step;
+            if let Some(step) = queue.close_step(grant)? {
+                return Ok(step);
             }
         }
         macro_rules! close_sources {
             ($reservation:expr) => {
                 if let Some(demand) = $reservation.as_ref().and_then(EnergyCommitReservation::close_source_demand) {
                     if !energy_grant_covers(grant, demand) {
-                        return energy_idle();
+                        return Ok(energy_idle());
                     }
                     let released_bytes = $reservation.as_mut().and_then(EnergyCommitReservation::close_source_step).unwrap_or_default();
-                    return energy_rung((1, released_bytes));
+                    return Ok(energy_rung((1, released_bytes)));
                 }
             };
         }
         if let Some(work) = self.commit_census.as_mut() {
             close_sources!(work.reservation);
             self.commit_census = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if self.commit_reservation.is_some() {
             close_sources!(self.commit_reservation);
             self.commit_reservation = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
-            return energy_idle();
+            return Ok(energy_idle());
         }
         let maximum_bytes = grant.maximum_release_bytes;
         let maximum_items = grant.maximum_items;
         if std::mem::take(&mut self.commit_pages_mounted) != 0 || std::mem::take(&mut self.commit_items_encoded) != 0 {
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.close_string_owner, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         macro_rules! pop_owner {
             ($owners:expr) => {
                 if $owners.pop().is_some() {
-                    return energy_one();
+                    return Ok(energy_one());
                 }
             };
         }
         pop_owner!(self.weather);
         if let Some((released_items, released_bytes)) = close_string_vector_step(&mut self.time_series_order, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some((released_items, released_bytes)) = close_string_vector_step(&mut self.meter_order, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some((released_items, released_bytes)) = close_time_series_step(&mut self.time_series, &mut self.close_string_owner, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some((released_items, released_bytes)) = close_meter_table_step(&mut self.meters, &mut self.close_string_owner, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         pop_owner!(self.zone_temperature_history);
         pop_owner!(self.previous_temperatures);
         pop_owner!(self.previous_loads);
         if let Some(work) = self.aggregate_zone_work.as_mut() {
             if let Some((released_items, released_bytes)) = close_aggregate_work_step(work, maximum_bytes) {
-                return energy_rung((released_items, released_bytes));
+                return Ok(energy_rung((released_items, released_bytes)));
             }
             self.aggregate_zone_work = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(work) = self.aggregate_facility_work.as_mut() {
             if let Some((released_items, released_bytes)) = close_aggregate_work_step(work, maximum_bytes) {
-                return energy_rung((released_items, released_bytes));
+                return Ok(energy_rung((released_items, released_bytes)));
             }
             self.aggregate_facility_work = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         macro_rules! remove_validation_entry {
             ($owners:expr) => {{
                 if $owners.pop().is_some() {
-                    return energy_one();
+                    return Ok(energy_one());
                 }
             }};
         }
@@ -4087,97 +2599,97 @@ impl EnergyJobAuthority {
         remove_validation_entry!(self.validation.construction_ids);
         remove_validation_entry!(self.validation.surface_ids);
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.finalization.row_unit, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some((released_items, released_bytes)) = close_string_step(&mut self.finalization.row_key, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if !self.result_build.model_name.is_empty() || !self.result_build.model_version.is_empty() || !self.result_build.weather_location.is_empty() {
             if maximum_bytes == 0 {
-                return energy_idle();
+                return Ok(energy_idle());
             }
             let released_bytes = self.result_build.weather_location.pop().or_else(|| self.result_build.model_version.pop()).or_else(|| self.result_build.model_name.pop()).map_or(0, |character| character.len_utf8());
-            return energy_rung((0, released_bytes));
+            return Ok(energy_rung((0, released_bytes)));
         }
         if let Some(builder) = self.timestep_builder.as_mut() {
             if !builder.close_step(maximum_items) {
-                return energy_one();
+                return Ok(energy_one());
             }
             self.timestep_builder = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(work) = self.timestep_work.as_mut() {
             if !work.close_step(maximum_items) {
-                return energy_one();
+                return Ok(energy_one());
             }
             self.timestep_work = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(builder) = self.precompute.as_mut() {
             if !builder.close_step(maximum_items) {
-                return energy_one();
+                return Ok(energy_one());
             }
             self.precompute = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(pre) = self.pre.as_mut() {
             if !pre.close_step(maximum_items) {
-                return energy_one();
+                return Ok(energy_one());
             }
             self.pre = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(state) = self.state.as_mut() {
             if state.zones.pop().is_some() {
-                return energy_one();
+                return Ok(energy_one());
             }
             if state.surfaces.pop().is_some() {
-                return energy_one();
+                return Ok(energy_one());
             }
             if state.windows.pop().is_some() {
-                return energy_one();
+                return Ok(energy_one());
             }
             if state.per_surface.pop() {
-                return energy_one();
+                return Ok(energy_one());
             }
             self.state = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(results) = self.result.as_mut() {
             if let Some((released_items, released_bytes)) = close_results_step(results, &mut self.close_string_owner, maximum_bytes) {
-                return energy_rung((released_items, released_bytes));
+                return Ok(energy_rung((released_items, released_bytes)));
             }
             self.result = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some(sizing) = self.final_sizing.as_mut() {
             if let Some((released_items, released_bytes)) = close_sizing_step(sizing, maximum_bytes) {
-                return energy_rung((released_items, released_bytes));
+                return Ok(energy_rung((released_items, released_bytes)));
             }
             self.final_sizing = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some((released_items, released_bytes)) = close_summaries_step(&mut self.final_summaries, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some(builder) = self.sizing_builder.as_mut() {
             let (complete, released_items, released_bytes) = builder.close_step(maximum_bytes);
             if !complete {
-                return energy_rung((released_items, released_bytes));
+                return Ok(energy_rung((released_items, released_bytes)));
             }
             self.sizing_builder = None;
-            return energy_one();
+            return Ok(energy_one());
         }
         if let Some((released_items, released_bytes)) = close_model_step(&mut self.model, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if let Some((released_items, released_bytes)) = close_config_step(&mut self.config, maximum_bytes) {
-            return energy_rung((released_items, released_bytes));
+            return Ok(energy_rung((released_items, released_bytes)));
         }
         if self.run_hours.take().is_some() || self.final_environmental.take().is_some() || self.final_resilience.take().is_some() || self.output_fault.take().is_some() || self.weather_fault.take().is_some() {
-            return energy_one();
+            return Ok(energy_one());
         }
-        energy_done()
+        Ok(energy_done())
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -4186,7 +2698,7 @@ impl EnergyJobAuthority {
 }
 
 impl InteractiveJob for EnergyJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         let authority = &mut **self;
         let run = match authority.pending_outcome.take() {
             Some(run) => run,
@@ -4227,8 +2739,8 @@ impl InteractiveJob for EnergyJob {
         EnergyJobAuthority::begin_close(self);
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        EnergyJobAuthority::close_step(self, grant)
+    fn close_step(&mut self, context: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        Ok(EnergyJobAuthority::close_step(self, context.retained_grant())?)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
@@ -4249,158 +2761,6 @@ impl InteractiveJob for EnergyJob {
 
     fn terminal_is_empty(&self) -> bool {
         EnergyJobAuthority::terminal_is_empty(self)
-    }
-}
-
-
-impl EnergyJobStage {
-    fn label(self) -> &'static str {
-        match self {
-            EnergyJobStage::Validate => "energy.validate",
-            EnergyJobStage::ResolveWeather => "energy.resolve-weather",
-            EnergyJobStage::Precompute => "energy.precompute",
-            EnergyJobStage::InitializeZones => "energy.initialize-zones",
-            EnergyJobStage::InitializeSurfaces => "energy.initialize-surfaces",
-            EnergyJobStage::InitializeWarmupHistory => "energy.initialize-warmup-history",
-            EnergyJobStage::WarmupTimestep => "energy.warmup-timestep",
-            EnergyJobStage::WarmupConvergence => "energy.warmup-convergence",
-            EnergyJobStage::StartRun => "energy.start-run",
-            EnergyJobStage::RunZoneTimestep => "energy.run-zone-timestep",
-            EnergyJobStage::AggregateZone => "energy.aggregate-zone",
-            EnergyJobStage::AggregateFacility => "energy.aggregate-facility",
-            EnergyJobStage::PublishTimestep => "energy.publish-timestep",
-            EnergyJobStage::Finalize => "energy.finalize",
-            EnergyJobStage::Size => "energy.size",
-            EnergyJobStage::FinalizeSummaries => "energy.finalize-summaries",
-            EnergyJobStage::FinalizeMetrics => "energy.finalize-metrics",
-            EnergyJobStage::FinalizeEconomics => "energy.finalize-economics",
-            EnergyJobStage::BuildResults => "energy.build-results",
-            EnergyJobStage::PublishFinal => "energy.publish-final",
-            EnergyJobStage::EncodeOutput => "energy.encode-output",
-            EnergyJobStage::Complete => "energy.complete",
-        }
-    }
-
-    fn code(self) -> u8 {
-        self as u8
-    }
-}
-
-impl EnergyQualityTier {
-    fn code(self) -> u8 {
-        self as u8
-    }
-}
-
-fn energy_stage_from_code(code: u8) -> Option<EnergyJobStage> {
-    const STAGES: [EnergyJobStage; 22] = [
-        EnergyJobStage::Validate,
-        EnergyJobStage::ResolveWeather,
-        EnergyJobStage::Precompute,
-        EnergyJobStage::InitializeZones,
-        EnergyJobStage::InitializeSurfaces,
-        EnergyJobStage::InitializeWarmupHistory,
-        EnergyJobStage::WarmupTimestep,
-        EnergyJobStage::WarmupConvergence,
-        EnergyJobStage::StartRun,
-        EnergyJobStage::RunZoneTimestep,
-        EnergyJobStage::AggregateZone,
-        EnergyJobStage::AggregateFacility,
-        EnergyJobStage::PublishTimestep,
-        EnergyJobStage::Finalize,
-        EnergyJobStage::Size,
-        EnergyJobStage::FinalizeSummaries,
-        EnergyJobStage::FinalizeMetrics,
-        EnergyJobStage::FinalizeEconomics,
-        EnergyJobStage::BuildResults,
-        EnergyJobStage::PublishFinal,
-        EnergyJobStage::EncodeOutput,
-        EnergyJobStage::Complete,
-    ];
-    STAGES.get(code as usize).copied()
-}
-
-fn energy_tier_from_code(code: u8) -> Option<EnergyQualityTier> {
-    const TIERS: [EnergyQualityTier; 4] = [EnergyQualityTier::SteadyStateEstimate, EnergyQualityTier::DesignDay, EnergyQualityTier::CoarseTimestep, EnergyQualityTier::Final];
-    TIERS.get(code as usize).copied()
-}
-
-fn decode_preview_packet(packet: &EnergyWirePacket) -> Option<EnergyJobPreview> {
-    let page = packet.payload.single_page()?;
-    if packet.kind != EnergyWireKind::Preview
-        || page.len() != ENERGY_WIRE_HEADER_BYTES + 20
-        || page[..8] != ENERGY_WIRE_MAGIC
-        || u16::from_le_bytes(page[8..10].try_into().ok()?) != ENERGY_WIRE_VERSION
-        || page[10] != EnergyWireKind::Preview as u8
-        || u64::from_le_bytes(page[16..24].try_into().ok()?) != packet.identity.operation
-        || u64::from_le_bytes(page[24..32].try_into().ok()?) != packet.identity.base_revision
-        || u64::from_le_bytes(page[32..40].try_into().ok()?) != packet.identity.generation
-        || u64::from_le_bytes(page[40..48].try_into().ok()?) != packet.identity.seed
-        || u64::from_le_bytes(page[48..56].try_into().ok()?) != packet.identity.sequence
-    {
-        return None;
-    }
-    Some(EnergyJobPreview {
-        sequence: packet.identity.sequence,
-        tier: energy_tier_from_code(page[12])?,
-        stage: energy_stage_from_code(page[11])?,
-        warmup_hour: u32::from_le_bytes(page[80..84].try_into().ok()?),
-        timestep: u32::from_le_bytes(page[84..88].try_into().ok()?),
-        total_timesteps: u32::from_le_bytes(page[88..92].try_into().ok()?),
-        facility_electricity_kwh: f64::from_le_bytes(page[92..100].try_into().ok()?),
-    })
-}
-
-fn fuel_code(fuel: FuelType) -> u8 {
-    match fuel {
-        FuelType::Electricity => 0,
-        FuelType::NaturalGas => 1,
-        FuelType::Propane => 2,
-        FuelType::FuelOil => 3,
-        FuelType::DistrictHeating => 4,
-        FuelType::DistrictCooling => 5,
-        FuelType::Steam => 6,
-        FuelType::Water => 7,
-        FuelType::OnSiteGeneration => 8,
-    }
-}
-
-fn end_use_code(end_use: EndUse) -> u32 {
-    match end_use {
-        EndUse::Heating => 0,
-        EndUse::Cooling => 1,
-        EndUse::InteriorLighting => 2,
-        EndUse::ExteriorLighting => 3,
-        EndUse::InteriorEquipment => 4,
-        EndUse::ExteriorEquipment => 5,
-        EndUse::Fans => 6,
-        EndUse::Pumps => 7,
-        EndUse::HeatRejection => 8,
-        EndUse::Humidification => 9,
-        EndUse::Dehumidification => 10,
-        EndUse::WaterSystems => 11,
-        EndUse::Refrigeration => 12,
-        EndUse::Generators => 13,
-        EndUse::Custom(value) => 0x8000_0000 | value,
-    }
-}
-
-fn unit_code(unit: Unit) -> u8 {
-    match unit {
-        Unit::Dimensionless => 0,
-        Unit::Meters => 1,
-        Unit::SquareMeters => 2,
-        Unit::CubicMeters => 3,
-        Unit::Kelvin => 4,
-        Unit::Celsius => 5,
-        Unit::Pascals => 6,
-        Unit::Watts => 7,
-        Unit::Joules => 8,
-        Unit::KilogramsPerSecond => 9,
-        Unit::CubicMetersPerSecond => 10,
-        Unit::KilowattHours => 11,
-        Unit::HumidityRatio => 12,
-        Unit::Percent => 13,
     }
 }
 
@@ -4509,18 +2869,6 @@ fn insert_admitted_meter(table: &mut MeterTable, order: &mut Vec<String>, work: 
     order.push(order_key);
 }
 
-fn close_string_vector_step(owners: &mut Vec<String>, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let owner = owners.last_mut()?;
-    if !owner.is_empty() {
-        if maximum_bytes == 0 {
-            return Some((0, 0));
-        }
-        return owner.pop().map(|character| (0, character.len_utf8()));
-    }
-    owners.pop();
-    Some((1, 0))
-}
-
 fn close_aggregate_work_step(work: &mut AggregateZoneWork, maximum_bytes: usize) -> Option<(usize, usize)> {
     if work.timestamps.pop().is_some() || work.values.pop().is_some() {
         return Some((1, 0));
@@ -4531,379 +2879,6 @@ fn close_aggregate_work_step(work: &mut AggregateZoneWork, maximum_bytes: usize)
         }
     }
     None
-}
-
-fn close_results_step(results: &mut Results, close_string_owner: &mut String, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if let Some(released) = close_time_series_step(&mut results.time_series, close_string_owner, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some(released) = close_meter_table_step(&mut results.meters, close_string_owner, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some(released) = close_summaries_step(&mut results.summaries, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some(released) = close_sizing_step(&mut results.sizing, maximum_bytes) {
-        return Some(released);
-    }
-    // 🧱️ Per-surface rows are plain `Copy` scalars — one bounded pop per step, no owned strings.
-    if results.per_surface.pop().is_some() {
-        return Some((1, 0));
-    }
-    if let Some(error) = results.diagnostics.messages.last_mut() {
-        if let Some(context) = error.context.as_mut() {
-            if let Some(released) = close_string_step(context, maximum_bytes) {
-                return Some(released);
-            }
-            error.context = None;
-            return Some((1, 0));
-        }
-        if let Some(released) = close_string_step(&mut error.message, maximum_bytes) {
-            return Some(released);
-        }
-        results.diagnostics.messages.pop();
-        return Some((1, 0));
-    }
-    if let Some(released) = close_string_step(&mut results.run_metadata.weather_location, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some(released) = close_string_step(&mut results.run_metadata.model_version, maximum_bytes) {
-        return Some(released);
-    }
-    close_string_step(&mut results.run_metadata.model_name, maximum_bytes)
-}
-
-fn close_time_series_step(table: &mut TimeSeriesTable, close_string_owner: &mut String, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if let Some((_, series)) = table.series.last_mut() {
-        if series.values.pop().is_some() || series.timestamps_hours.pop().is_some() {
-            return Some((1, 0));
-        }
-        if let Some(released) = close_string_step(&mut series.key, maximum_bytes) {
-            return Some(released);
-        }
-    }
-    if table.series.is_empty() {
-        return None;
-    }
-    if let Some((key, _)) = table.series.pop() {
-        *close_string_owner = key;
-    }
-    Some((1, 0))
-}
-
-fn close_meter_table_step(table: &mut MeterTable, close_string_owner: &mut String, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if let Some((_, meter)) = table.meters.last_mut() {
-        if let Some(released) = close_string_step(&mut meter.name, maximum_bytes) {
-            return Some(released);
-        }
-    }
-    if table.meters.is_empty() {
-        return None;
-    }
-    if let Some((key, _)) = table.meters.pop() {
-        *close_string_owner = key;
-    }
-    Some((1, 0))
-}
-
-fn close_summaries_step(summaries: &mut SummaryTables, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if let Some(released) = close_summary_rows_step(&mut summaries.annual_energy, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some((_, rows)) = summaries.monthly_energy.last_mut() {
-        if let Some(released) = close_summary_rows_step(rows, maximum_bytes) {
-            return Some(released);
-        }
-    }
-    if !summaries.monthly_energy.is_empty() {
-        summaries.monthly_energy.pop();
-        return Some((1, 0));
-    }
-    if let Some(released) = close_summary_rows_step(&mut summaries.peak_loads, maximum_bytes) {
-        return Some(released);
-    }
-    close_summary_rows_step(&mut summaries.comfort, maximum_bytes)
-}
-
-fn close_summary_rows_step(rows: &mut Vec<SummaryRow>, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let row = rows.last_mut()?;
-    if let Some(released) = close_string_step(&mut row.unit, maximum_bytes) {
-        return Some(released);
-    }
-    if let Some(released) = close_string_step(&mut row.key, maximum_bytes) {
-        return Some(released);
-    }
-    rows.pop();
-    Some((1, 0))
-}
-
-fn close_sizing_step(sizing: &mut SizingTables, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if let Some(released) = close_sizing_rows_step(&mut sizing.zone_loads, maximum_bytes) {
-        return Some(released);
-    }
-    close_sizing_rows_step(&mut sizing.equipment, maximum_bytes)
-}
-
-fn close_sizing_rows_step(rows: &mut Vec<SizingResult>, maximum_bytes: usize) -> Option<(usize, usize)> {
-    let row = rows.last_mut()?;
-    if let Some(released) = close_string_step(&mut row.component, maximum_bytes) {
-        return Some(released);
-    }
-    rows.pop();
-    Some((1, 0))
-}
-
-fn close_string_step(owner: &mut String, maximum_bytes: usize) -> Option<(usize, usize)> {
-    if owner.is_empty() {
-        return None;
-    }
-    if maximum_bytes == 0 {
-        return Some((0, 0));
-    }
-    owner.pop().map(|character| (0, character.len_utf8()))
-}
-
-fn summaries_are_terminal_empty(summaries: &SummaryTables) -> bool {
-    summaries.annual_energy.is_empty() && summaries.monthly_energy.is_empty() && summaries.peak_loads.is_empty() && summaries.comfort.is_empty()
-}
-
-fn close_model_step(model: &mut Model, maximum_bytes: usize) -> Option<(usize, usize)> {
-    macro_rules! close_string {
-        ($owner:expr) => {
-            if !$owner.is_empty() {
-                if maximum_bytes == 0 {
-                    return Some((0, 0));
-                }
-                let bytes = $owner.pop().map_or(0, |character| character.len_utf8());
-                return Some((0, bytes));
-            }
-        };
-    }
-    macro_rules! close_named {
-        ($owners:expr) => {
-            if let Some(owner) = $owners.last_mut() {
-                close_string!(owner.name);
-                $owners.pop();
-                return Some((1, 0));
-            }
-        };
-    }
-    macro_rules! close_plain {
-        ($owners:expr) => {
-            if $owners.pop().is_some() {
-                return Some((1, 0));
-            }
-        };
-    }
-    close_string!(model.name);
-    close_string!(model.version);
-    close_named!(model.zones);
-    close_named!(model.spaces);
-    if let Some(surface) = model.surfaces.last_mut() {
-        close_plain!(surface.vertices_m);
-        close_string!(surface.name);
-        model.surfaces.pop();
-        return Some((1, 0));
-    }
-    close_named!(model.fenestrations);
-    close_named!(model.materials);
-    close_named!(model.glazing_materials);
-    close_named!(model.gas_materials);
-    if let Some(construction) = model.constructions.last_mut() {
-        close_plain!(construction.layer_material_ids);
-        close_string!(construction.name);
-        model.constructions.pop();
-        return Some((1, 0));
-    }
-    close_plain!(model.people);
-    close_plain!(model.lighting);
-    close_plain!(model.equipment);
-    close_plain!(model.thermostats);
-    close_plain!(model.humidistats);
-    close_named!(model.setpoint_managers);
-    close_plain!(model.ideal_loads);
-    close_plain!(model.zone_equipment);
-    if let Some(loop_owner) = model.air_loops.last_mut() {
-        close_plain!(loop_owner.terminal_zone_ids);
-        close_string!(loop_owner.name);
-        model.air_loops.pop();
-        return Some((1, 0));
-    }
-    if let Some(loop_owner) = model.plant_loops.last_mut() {
-        close_plain!(loop_owner.equipment_ids);
-        close_string!(loop_owner.name);
-        model.plant_loops.pop();
-        return Some((1, 0));
-    }
-    close_plain!(model.outdoor_air_systems);
-    close_plain!(model.infiltrations);
-    close_plain!(model.mechanical_ventilations);
-    if let Some(shading) = model.shading_surfaces.last_mut() {
-        close_plain!(shading.vertices_m);
-        close_string!(shading.name);
-        model.shading_surfaces.pop();
-        return Some((1, 0));
-    }
-    if let Some(list) = model.space_lists.last_mut() {
-        close_plain!(list.space_ids);
-        close_string!(list.name);
-        model.space_lists.pop();
-        return Some((1, 0));
-    }
-    if let Some(enclosure) = model.thermal_enclosures.last_mut() {
-        close_plain!(enclosure.zone_ids);
-        close_string!(enclosure.name);
-        model.thermal_enclosures.pop();
-        return Some((1, 0));
-    }
-    close_plain!(model.adjacency_pairs);
-    if let Some(network) = model.airflow_network.as_mut() {
-        close_plain!(network.zone_node_ids);
-        close_plain!(network.link_ids);
-        model.airflow_network = None;
-        return Some((1, 0));
-    }
-    if let Some(center) = model.electrical_load_centers.last_mut() {
-        close_plain!(center.generator_ids);
-        close_plain!(center.pv_ids);
-        close_plain!(center.battery_ids);
-        close_string!(center.name);
-        model.electrical_load_centers.pop();
-        return Some((1, 0));
-    }
-    close_plain!(model.pv_systems);
-    close_plain!(model.battery_storage);
-    close_plain!(model.shw_systems);
-    close_plain!(model.solar_thermal_systems);
-    close_plain!(model.refrigeration_systems);
-    close_plain!(model.water_systems);
-    close_plain!(model.faults);
-    if let Some(output) = model.output_variables.last_mut() {
-        close_string!(output.key);
-        close_string!(output.name);
-        model.output_variables.pop();
-        return Some((1, 0));
-    }
-    close_plain!(model.sizing_objects);
-    close_plain!(model.daylight_zones);
-    close_plain!(model.room_air_models);
-    None
-}
-
-/// 🧹 Exact-owner bounded disposer for a partially captured Energy model. Mounted product capture
-/// uses this narrow interface so cancellation never drops a nested record, string, or page whole.
-pub struct EnergyModelCloseCursor {
-    model: Option<Model>,
-}
-
-impl EnergyModelCloseCursor {
-    pub fn new(model: Model) -> Self {
-        Self { model: Some(model) }
-    }
-
-    /// 📏️ Quotes the next popped model owner.
-    pub fn close_demands(&self) -> RetirementDemand {
-        if self.model.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() }
-    }
-
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let Some(model) = self.model.as_mut() else { return energy_done() };
-        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
-            return energy_idle();
-        }
-        if let Some(released) = close_model_step(model, grant.maximum_release_bytes) {
-            return energy_rung(released);
-        }
-        self.model = None;
-        energy_one()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.model.is_none()
-    }
-}
-
-fn close_config_step(config: &mut SimulationConfig, maximum_bytes: usize) -> Option<(usize, usize)> {
-    macro_rules! close_plain {
-        ($owners:expr) => {
-            if $owners.pop().is_some() {
-                return Some((1, 0));
-            }
-        };
-    }
-    if let Some(weather) = config.weather.as_mut() {
-        close_plain!(weather.records);
-        if !weather.location.is_empty() {
-            if maximum_bytes == 0 {
-                return Some((0, 0));
-            }
-            return weather.location.pop().map(|character| (0, character.len_utf8()));
-        }
-        config.weather = None;
-        return Some((1, 0));
-    }
-    if let Some(schedule) = config.schedules.time_series.last_mut() {
-        close_plain!(schedule.values);
-        config.schedules.time_series.pop();
-        return Some((1, 0));
-    }
-    if let Some(schedule) = config.schedules.annual.last_mut() {
-        close_plain!(schedule.rules);
-        close_plain!(schedule.holiday_dates);
-        config.schedules.annual.pop();
-        return Some((1, 0));
-    }
-    close_plain!(config.schedules.weekly);
-    close_plain!(config.schedules.daily);
-    close_plain!(config.schedules.constants);
-    None
-}
-
-fn model_is_terminal_empty(model: &Model) -> bool {
-    model.name.is_empty()
-        && model.version.is_empty()
-        && model.zones.is_empty()
-        && model.spaces.is_empty()
-        && model.surfaces.is_empty()
-        && model.fenestrations.is_empty()
-        && model.materials.is_empty()
-        && model.glazing_materials.is_empty()
-        && model.gas_materials.is_empty()
-        && model.constructions.is_empty()
-        && model.people.is_empty()
-        && model.lighting.is_empty()
-        && model.equipment.is_empty()
-        && model.thermostats.is_empty()
-        && model.humidistats.is_empty()
-        && model.setpoint_managers.is_empty()
-        && model.ideal_loads.is_empty()
-        && model.zone_equipment.is_empty()
-        && model.air_loops.is_empty()
-        && model.plant_loops.is_empty()
-        && model.outdoor_air_systems.is_empty()
-        && model.infiltrations.is_empty()
-        && model.mechanical_ventilations.is_empty()
-        && model.shading_surfaces.is_empty()
-        && model.space_lists.is_empty()
-        && model.thermal_enclosures.is_empty()
-        && model.adjacency_pairs.is_empty()
-        && model.airflow_network.is_none()
-        && model.electrical_load_centers.is_empty()
-        && model.pv_systems.is_empty()
-        && model.battery_storage.is_empty()
-        && model.shw_systems.is_empty()
-        && model.solar_thermal_systems.is_empty()
-        && model.refrigeration_systems.is_empty()
-        && model.water_systems.is_empty()
-        && model.faults.is_empty()
-        && model.output_variables.is_empty()
-        && model.sizing_objects.is_empty()
-        && model.daylight_zones.is_empty()
-        && model.room_air_models.is_empty()
-}
-
-fn config_is_terminal_empty(config: &SimulationConfig) -> bool {
-    config.weather.is_none() && config.schedules.constants.is_empty() && config.schedules.daily.is_empty() && config.schedules.weekly.is_empty() && config.schedules.annual.is_empty() && config.schedules.time_series.is_empty()
 }
 
 fn authority_is_terminal_empty(authority: &EnergyJobAuthority) -> bool {
@@ -4963,9 +2938,7 @@ fn authority_is_terminal_empty(authority: &EnergyJobAuthority) -> bool {
         && model_is_terminal_empty(&authority.model)
         && config_is_terminal_empty(&authority.config)
 }
-// #endregion 🔖️EnergyJob
 
-// #region 🔖️Engine
 /// ⚡️ Headless BEM simulation engine.
 pub struct Engine;
 
@@ -5027,27 +3000,12 @@ impl Engine {
         result
     }
 }
-// #endregion 🔖️Engine
 
 /// 🎟️ The bounded five-currency authority the batch adapter supplies to every admitted step.
-const ENERGY_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
-
-/// 🎟️ A grant that pays exactly one quoted close turn.
-fn energy_self_funded(demand: RetirementDemand) -> RetainedCloneGrant {
-    RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
-}
-
-/// ♻️ Releases one locally owned packet turn by turn with grants it quotes itself.
-fn close_retained_packet(packet: &mut EnergyWirePacket) {
-    while !packet.terminal_is_empty() {
-        let grant = energy_self_funded(packet.retirement_demands().expect("a locally owned packet quotes its close demand"));
-        let (step, _) = energy_turn(packet.close_step(grant));
-        assert!(!matches!(step, InteractiveJobCloseStep::Refused { .. }), "a locally owned packet close is never refused");
-    }
-}
+pub const ENERGY_BATCH_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 /// 🚪️ Runs the job's own close ladder to completion with grants it quotes itself.
-fn close_owned_job(job: &mut EnergyJob) {
+pub fn close_owned_job(job: &mut EnergyJob) {
     InteractiveJob::begin_close(job);
     let mut idle = 0usize;
     loop {
@@ -5055,121 +3013,13 @@ fn close_owned_job(job: &mut EnergyJob) {
             return;
         }
         let grant = energy_self_funded(job.close_demands().expect("a locally owned energy job quotes its close demand"));
-        let step = InteractiveJob::close_step(job, grant);
+        let step = EnergyJobAuthority::close_step(job, grant).expect("a locally owned energy job close is never refused");
         assert!(step.progress().fits(grant), "an energy close receipt must fit its own quoted grant");
-        assert!(!matches!(step, InteractiveJobCloseStep::Blocked | InteractiveJobCloseStep::Refused { .. }), "a locally owned energy job close has no external owner and no refusal");
+        assert!(!matches!(step, InteractiveJobCloseStep::Blocked), "a locally owned energy job close has no external owner");
         idle = if step.progress() == RetainedCloneProgress::default() && !matches!(step, InteractiveJobCloseStep::Complete { .. }) { idle + 1 } else { 0 };
         assert!(idle < 1_000, "the energy close ladder stalled");
     }
 }
-
-fn synthetic_hour(h: u32) -> WeatherRecord {
-    let day = h / 24;
-    let hour = h % 24;
-    let month = (day / 30 + 1).min(12) as u8;
-    let t_base = 15.0 + 10.0 * ((day as f64 / 365.0) * 2.0 * std::f64::consts::PI).sin();
-    let t_daily = 5.0 * ((hour as f64 - 14.0) / 12.0 * std::f64::consts::PI).cos();
-    WeatherRecord {
-        year: 2026,
-        month,
-        day: (day % 30 + 1) as u8,
-        hour: hour as u8,
-        minute: 0,
-        dry_bulb_c: t_base + t_daily,
-        dew_point_c: t_base - 5.0,
-        relative_humidity: 0.5,
-        atmospheric_pressure_pa: 101_325.0,
-        wind_speed_m_s: 3.0,
-        wind_direction_deg: 180.0,
-        direct_normal_irradiance_w_m2: if (6..18).contains(&hour) { 500.0 } else { 0.0 },
-        diffuse_horizontal_irradiance_w_m2: if (6..18).contains(&hour) { 100.0 } else { 0.0 },
-        horizontal_infrared_w_m2: 250.0,
-        precipitation_mm: 0.0,
-        snow_depth_mm: 0.0,
-    }
-}
-
-fn design_day_hour(hour: u32, dry_bulb_c: f64) -> WeatherRecord {
-    WeatherRecord {
-        year: 2026,
-        month: 1,
-        day: 1,
-        hour: hour as u8,
-        minute: 0,
-        dry_bulb_c,
-        dew_point_c: dry_bulb_c - 10.0,
-        relative_humidity: 0.5,
-        atmospheric_pressure_pa: 101_325.0,
-        wind_speed_m_s: 3.0,
-        wind_direction_deg: 180.0,
-        direct_normal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 800.0 } else { 0.0 },
-        diffuse_horizontal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 150.0 } else { 0.0 },
-        horizontal_infrared_w_m2: 250.0,
-        precipitation_mm: 0.0,
-        snow_depth_mm: 0.0,
-    }
-}
-
-// #region 🔖️Fixtures
-/// 🧪️ Build a minimal test model for integration tests.
-pub fn test_model_single_zone() -> Model {
-    use crate::model::*;
-    Model {
-        name: "BESTEST Single Zone".into(),
-        version: "1.0".into(),
-        site: Site { latitude_deg: 45.0, longitude_deg: 0.0, elevation_m: 100.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
-        zones: vec![Zone { id: EntityId(1), name: "Zone1".into(), volume_m3: 106.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
-        materials: vec![Material {
-            id: EntityId(10),
-            name: "Insulation".into(),
-            roughness: SurfaceRoughness::MediumRough,
-            thickness_m: 0.1,
-            conductivity_w_m_k: 0.04,
-            density_kg_m3: 50.0,
-            specific_heat_j_kg_k: 1000.0,
-            thermal_absorptance: 0.9,
-            solar_absorptance: 0.7,
-            visible_absorptance: 0.7,
-        }],
-        constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
-        surfaces: vec![Surface {
-            id: EntityId(30),
-            name: "ExtWall".into(),
-            zone_id: EntityId(1),
-            class: SurfaceClass::ExteriorWall,
-            vertices_m: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 3.0], [0.0, 0.0, 3.0]],
-            construction_id: EntityId(20),
-            outside_boundary_condition: OutsideBoundary::OutdoorAir,
-            sun_exposed: true,
-            wind_exposed: true,
-            multiplier: 1,
-        }],
-        ideal_loads: vec![IdealLoadsSystem {
-            id: EntityId(40),
-            zone_id: EntityId(1),
-            max_heating_supply_air_temp_c: 50.0,
-            min_cooling_supply_air_temp_c: 13.0,
-            max_heating_capacity_w: None,
-            max_cooling_capacity_w: None,
-            outdoor_air_per_person_m3_s: 0.00944,
-            outdoor_air_per_area_m3_s_m2: 0.0,
-        }],
-        ..Default::default()
-    }
-}
-
-/// 🧪️ Full topology test model with plant, PV, AFN, daylight.
-pub fn test_model_full_topology() -> Model {
-    use crate::model::*;
-    let mut model = test_model_single_zone();
-    model.name = "Full Topology".into();
-    model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
-    model.plant_loops.push(PlantLoopConfig { id: EntityId(60), name: "Hot Water".into(), loop_type: PlantLoopType::Heating, supply_temperature_c: 55.0, return_temperature_c: 45.0, design_flow_kg_s: 2.0, equipment_ids: vec![EntityId(61)] });
-    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96 });
-    model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
-    model
-}
-// #endregion 🔖️Fixtures
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

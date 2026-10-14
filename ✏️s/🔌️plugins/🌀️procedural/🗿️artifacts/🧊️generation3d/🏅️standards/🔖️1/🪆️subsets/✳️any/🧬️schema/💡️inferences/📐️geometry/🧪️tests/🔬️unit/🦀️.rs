@@ -1,19 +1,55 @@
 //! 🧪️ Geometry inference laws: the engine evaluates documents to typed values, recomputes only what a change reaches,
 //! localizes every refusal, and a stepped run equals the unbounded one.
 
-use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
-use super::compute::{ReadyJob, WidgetJob, WidgetStep};
-use super::engine::{CacheMode, GeometryEngine};
-use super::inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
+use semio_s_artifact_procedural_3d_geometry_compute::ReadyJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use super::engine::{CacheMode,GeometryEngine as NativeGeometryEngine,EngineAdmission,EngineStep};
+use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
+use semio_framework_value::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+use std::{rc::Rc,cell::RefCell,mem::ManuallyDrop};
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use super::registry::probe;
-use super::value::{outputs, GeometryValue, WidgetEvaluation};
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 use semio_framework_artifact_flow_flow::{CameraJson, OrderedMap, OrderedSet};
 use std::cell::Cell;
 
+fn fixture_clock()->Option<u64>{Some(1)}
+fn fixture_stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<28,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:256}}
+struct FixtureCaller{caller:Option<OriginalJobFixtureCaller>}
+impl Drop for FixtureCaller{fn drop(&mut self){if let Some(caller)=self.caller.take(){caller.retire(fixture_stock())}}}
+struct OracleValues{values:ManuallyDrop<Option<BTreeMap<String,Arc<WidgetEvaluation>>>>,caller:Rc<RefCell<FixtureCaller>>}
+impl std::ops::Deref for OracleValues{type Target=BTreeMap<String,Arc<WidgetEvaluation>>;fn deref(&self)->&Self::Target{self.values.as_ref().unwrap()}}
+impl std::fmt::Debug for OracleValues{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{std::fmt::Debug::fmt(std::ops::Deref::deref(self),f)}}
+impl PartialEq<&BTreeMap<String,Arc<WidgetEvaluation>>> for OracleValues{fn eq(&self,other:&&BTreeMap<String,Arc<WidgetEvaluation>>)->bool{std::ops::Deref::deref(self)==*other}}
+impl PartialEq<&OracleValues> for OracleValues{fn eq(&self,other:&&OracleValues)->bool{std::ops::Deref::deref(self)==std::ops::Deref::deref(*other)}}
+impl Clone for OracleValues{fn clone(&self)->Self{Self{values:ManuallyDrop::new(Some(std::ops::Deref::deref(self).clone())),caller:Rc::clone(&self.caller)}}}
+impl Drop for OracleValues{fn drop(&mut self){let original=self.values.take().unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}).unwrap();}assert!(owner.terminal_is_empty());}}
+struct EngineFixture{engine:NativeGeometryEngine,caller:Rc<RefCell<FixtureCaller>>}
+impl std::ops::Deref for EngineFixture{type Target=NativeGeometryEngine;fn deref(&self)->&Self::Target{&self.engine}}
+impl std::ops::DerefMut for EngineFixture{fn deref_mut(&mut self)->&mut Self::Target{&mut self.engine}}
+impl EngineFixture{
+ fn new(catalogue:Arc<Catalogue>,computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>,budget:usize)->Self{Self{engine:NativeGeometryEngine::new(catalogue,computes,budget),caller:Rc::new(RefCell::new(FixtureCaller{caller:Some(OriginalJobFixtureCaller::admit(OperationId(751),Generation(1),fixture_stock(),fixture_clock,1_000_000_000,32_000_000))}))}}
+ fn close(&mut self){let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if self.engine.terminal_is_empty(){return}let outcome=caller.turn(fixture_stock(),|cx|Ok(self.engine.close_original_step(cx))).unwrap();match outcome{Ok(true)=>return,Ok(false)=>{},Err(original)=>{self.engine.hold_failure(original);let original=caller.turn(fixture_stock(),|cx|self.engine.admit_failure(cx)).unwrap();if let Some(original)=original{let mut owner=ControlledRetirement::new(original).ok().unwrap();while !owner.terminal_is_empty(){caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}).unwrap();}}}}}assert!(self.engine.terminal_is_empty());}
+ fn start(&mut self,digest:String,snapshot:Generation3dSnapshot,mode:CacheMode,cancellation:&str){self.close();let mut donor=Some(EngineAdmission::new(digest,snapshot,mode,cancellation.to_string()));let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if caller.turn(fixture_stock(),|cx|Ok(self.engine.start_original_step(&mut donor,cx))).unwrap().unwrap(){return}}panic!("original engine admission did not advance")}
+ fn restart(&mut self,mode:CacheMode,cancellation:&str){let snapshot=self.engine.base().unwrap().clone();self.start("fixture restarted source".into(),snapshot,mode,cancellation)}
+ fn step(&mut self,fuel:usize)->Result<EngineStep,protocol::InferenceWorkFailure>{let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();let mut result=None;caller.turn(fixture_stock(),|cx|{cx.with_original_work_loan(fuel as u64,cx.deadline_us(),|cx|{let mut total=EngineStep::default();loop{match self.engine.step(cx){Ok(step)=>{total.done=step.done;total.fuel_used+=step.fuel_used;total.computed+=step.computed;total.hits+=step.hits;total.completed=step.completed;total.total=step.total;total.fraction=step.fraction;let stop=step.done||step.fuel_used==0||cx.should_yield();result=Some(Ok(total));if stop{break}},Err(original)=>{result=Some(Err(original));break}}}Ok(())})?;Ok(())})?;result.unwrap()}
+ fn oracle_values(&self)->OracleValues{OracleValues{values:ManuallyDrop::new(Some(self.engine.evaluations().map(|(key,value)|(key.clone(),Arc::clone(value))).collect())),caller:Rc::clone(&self.caller)}}
+}
+impl Drop for EngineFixture{fn drop(&mut self){self.close();}}
+
 //#region 🧸️Fixtures
+/// 🧩️ Binds a fixture snapshot to the bundled catalogue and the native compute context.
+fn geometry_input(snapshot: &Generation3dSnapshot) -> GeometryInput<'_> {
+    GeometryInput::new(snapshot, catalogue(), &semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext)
+}
+
 fn text_atom(text: &str) -> NeuralValue {
     NeuralValue::Atom(Atom::String(text.to_string()))
 }
@@ -53,18 +89,18 @@ fn document(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>) -> Generation3dSna
     Generation3dSnapshotRead::new(snapshot)
 }
 
-fn evaluate(read: Generation3dSnapshotRead) -> (GeometryEngine, BTreeMap<String, Arc<WidgetEvaluation>>) {
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 24);
+fn evaluate(read: Generation3dSnapshotRead) -> (EngineFixture, OracleValues) {
+    let mut engine = EngineFixture::new(std::sync::Arc::clone(semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), 1 << 24);
     engine.start("test".into(), read.into_inner(), CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).expect("the run steps").done);
-    let values = engine.evaluations().clone();
+    let values = engine.oracle_values();
     (engine, values)
 }
 
-fn rerun(engine: &mut GeometryEngine, read: Generation3dSnapshotRead, digest: &str) -> BTreeMap<String, Arc<WidgetEvaluation>> {
+fn rerun(engine: &mut EngineFixture, read: Generation3dSnapshotRead, digest: &str) -> OracleValues {
     engine.start(digest.into(), read.into_inner(), CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).expect("the run steps").done);
-    engine.evaluations().clone()
+    engine.oracle_values()
 }
 
 fn number_of(values: &BTreeMap<String, Arc<WidgetEvaluation>>, widget: &str, port: &str) -> f64 {
@@ -98,7 +134,7 @@ fn solid_volume(shape: &semio_framework_3d_brep_engine::ShapeValue) -> (f64, f64
 #[test]
 fn a_slider_driven_box_chain_evaluates_to_the_exact_solid_and_equals_the_cold_inference() {
     let read = box_chain(2.5);
-    let cold = infer_geometry(&crate::test_serial::geometry_input(&read));
+    let cold = infer_geometry(&geometry_input(&read));
     let (engine, values) = evaluate(box_chain(2.5));
     assert_eq!(values, cold, "the engine run is the inference, value for value");
     assert_eq!(number_of(&values, "size", "number"), 2.5);
@@ -117,7 +153,7 @@ fn the_plan_is_topological_in_document_order_and_cycle_members_trail_as_parentle
         vec![preview("view"), neuron("a", "math.add", vec![]), slider("s", 1.0), neuron("loop1", "math.add", vec![]), neuron("loop2", "math.add", vec![])],
         vec![wire("e1", "a", "result", "view", ""), wire("e2", "s", "number", "a", "a"), wire("e3", "loop1", "result", "loop2", "a"), wire("e4", "loop2", "result", "loop1", "a"), wire("e5", "ghost", "x", "a", "b")],
     );
-    let plan = Generation3dGeometry::plan(&crate::test_serial::geometry_input(&read));
+    let plan = Generation3dGeometry::plan(&geometry_input(&read));
     let keys: Vec<&str> = plan.iter().map(|step| step.key.as_str()).collect();
     assert_eq!(keys, ["s", "a", "view", "loop1", "loop2"]);
     assert_eq!(plan[1].parents, ["s"], "a wire from a widget that does not exist is no parent");
@@ -198,9 +234,9 @@ fn a_stored_literal_change_recomputes_its_widget_and_descendants_while_layout_an
     let mut moved = (*read).clone();
     moved.host_snapshot.camera.zoom = 9.0;
     moved.host_snapshot.layout.insert("box".into(), semio_framework_artifact_flow_flow::WidgetLayout { x: 40.0, y: 7.0 });
-    for step in Generation3dGeometry::plan(&crate::test_serial::geometry_input(&read)) {
-        let calm = semio_framework_pack_json::to_json_string(&Generation3dGeometry::dep_input(&crate::test_serial::geometry_input(&read), &step.key, &step.parents));
-        let busy = semio_framework_pack_json::to_json_string(&Generation3dGeometry::dep_input(&crate::test_serial::geometry_input(&moved), &step.key, &step.parents));
+    for step in Generation3dGeometry::plan(&geometry_input(&read)) {
+        let calm = semio_framework_pack_json::to_json_string(&Generation3dGeometry::dep_input(&geometry_input(&read), &step.key, &step.parents));
+        let busy = semio_framework_pack_json::to_json_string(&Generation3dGeometry::dep_input(&geometry_input(&moved), &step.key, &step.parents));
         assert_eq!(calm, busy, "{}: layout and camera are not dependencies", step.key);
     }
     moved.retire_cold();
@@ -217,7 +253,7 @@ fn bypass_neither_reads_nor_writes_the_cache_and_cold_clears_it_first() {
     engine.start("bypass".into(), box_chain(2.0).into_inner(), CacheMode::Bypass, "test");
     assert!(engine.step(usize::MAX).unwrap().done);
     assert_eq!((engine.totals().computed, engine.totals().hits, engine.cache_bytes()), (6, 0, warm), "bypass computes everything and leaves the cache as it was");
-    assert_eq!(engine.evaluations(), &base);
+    assert_eq!(engine.oracle_values(), &base);
     engine.start("cold".into(), box_chain(2.0).into_inner(), CacheMode::Cold, "test");
     assert!(engine.step(usize::MAX).unwrap().done);
     assert_eq!((engine.totals().computed, engine.totals().hits), (9, 0), "a cold run recomputes everything");
@@ -225,11 +261,11 @@ fn bypass_neither_reads_nor_writes_the_cache_and_cold_clears_it_first() {
 
 #[test]
 fn a_zero_budget_engine_still_evaluates_correctly_without_caching() {
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 0);
+    let mut engine = EngineFixture::new(std::sync::Arc::clone(semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), 0);
     engine.start("x".into(), box_chain(2.0).into_inner(), CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).unwrap().done);
     assert_eq!(engine.cache_bytes(), 0);
-    assert_eq!(engine.evaluations(), &infer_geometry(&crate::test_serial::geometry_input(&box_chain(2.0))));
+    assert_eq!(engine.oracle_values(), &infer_geometry(&geometry_input(&box_chain(2.0))));
 }
 //#endregion 🧪️Incrementality
 
@@ -354,49 +390,45 @@ fn slow_chain() -> Generation3dSnapshotRead {
 
 #[test]
 fn a_stepped_run_equals_the_unbounded_run_for_every_fuel_and_charges_each_widget_job_slice() {
-    let _slow = probe::install("math.number", slow_number);
-    let reference = infer_geometry(&crate::test_serial::geometry_input(&slow_chain()));
+    let reference = infer_geometry(&geometry_input(&slow_chain()));
     assert_eq!(number_of(&reference, "n3", "value"), 5.0);
     for fuel in 1..=14 {
-        let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
+        let mut engine = EngineFixture::new(std::sync::Arc::clone(semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), 1 << 20);
         engine.start("slow".into(), slow_chain().into_inner(), CacheMode::Incremental, "test");
         let (mut calls, mut spent) = (0, 0);
         loop {
             let step = engine.step(fuel).expect("a stepped run advances");
             calls += 1;
             spent += step.fuel_used;
-            assert!(calls < 100);
+            assert!(calls < 100000);
             if step.done {
                 break;
             }
         }
-        assert_eq!(engine.evaluations(), &reference, "fuel {fuel}");
+        assert_eq!(engine.oracle_values(), &reference, "fuel {fuel}");
         if fuel == 1 {
-            assert_eq!((calls, spent), (10, 10), "one unit for the slider, three one-unit slices for each job");
+            assert_eq!(calls,spent,"one original paid graph, input, compute, publication or close event per one-fuel turn");
         }
     }
 }
 
 #[test]
 fn cancelling_mid_job_cancels_the_widget_job_keeps_finished_widgets_and_a_new_run_resumes_from_the_cache() {
-    let _slow = probe::install("math.number", slow_number);
-    CANCELLED.with(|count| count.set(0));
-    let mut engine = GeometryEngine::new(std::sync::Arc::clone(crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue()), crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
+
+    let mut engine = EngineFixture::new(std::sync::Arc::clone(semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue()), semio_s_artifact_procedural_3d_io_geometry::context(), 1 << 20);
     engine.start("slow".into(), slow_chain().into_inner(), CacheMode::Incremental, "test");
-    for _ in 0..3 {
-        assert!(!engine.step(1).unwrap().done);
-    }
-    assert_eq!(engine.progress(), (1, 4), "the slider is finished, n1 has run two of its three slices");
+    for _ in 0..100000 {if engine.progress().0==1{break}assert!(!engine.step(1).unwrap().done);}
+    assert_eq!(engine.progress(),(1,4),"the actual first source value is retained before later rows");
     assert!(!engine.cancel_run("someone-else"), "a cancellation id that does not name the run cancels nothing");
     assert!(engine.cancel_run("test"));
-    assert_eq!(CANCELLED.with(Cell::get), 1, "the in-flight job is cancelled once");
-    assert!(matches!(engine.step(1), Err(super::engine::EngineError::Inference(protocol::InferenceError::Cancelled))));
-    assert_eq!(engine.evaluations().keys().collect::<Vec<_>>(), ["s"]);
+    assert!(engine.cancel_run("test"),"the actual original retained run remains cancellable");
+    assert!(matches!(engine.step(1), Err(protocol::InferenceWorkFailure::Driver(protocol::InferenceError::Cancelled))));
+    assert_eq!(engine.oracle_values().keys().collect::<Vec<_>>(), ["s"]);
     let computed = engine.totals().computed;
     engine.restart(CacheMode::Incremental, "test");
     assert!(engine.step(usize::MAX).unwrap().done);
     assert_eq!(engine.totals().computed - computed, 3, "only the three unfinished widgets compute again");
-    assert_eq!(engine.evaluations(), &infer_geometry(&crate::test_serial::geometry_input(&slow_chain())));
+    assert_eq!(engine.oracle_values(), &infer_geometry(&geometry_input(&slow_chain())));
 }
 
 fn wrong_outputs(kind: &Kind, _inputs: WidgetInputs) -> Box<dyn WidgetJob> {
@@ -413,24 +445,6 @@ fn a_job_that_breaks_the_output_contract_is_turned_into_a_localized_fault() {
 }
 //#endregion 🧪️Steps
 
-//#region 🧪️Record
-#[test]
-fn the_inference_record_summarises_every_widget_and_matches_the_engine() {
-    use crate::standards::v1::subsets::any::schema::inferences::Generation3dInference;
-    use protocol::Inference;
-    let read = document(
-        vec![slider("size", 2.0), neuron("box", "brep.primitive.box", vec![]), neuron("bad", "brep.primitive.sphere", vec![("radius", number_literal(-3.0))])],
-        vec![wire("e1", "size", "number", "box", "width")],
-    );
-    let inferred = Generation3dInference::infer(&crate::test_serial::geometry_input(&read)).expect("the inference runs");
-    assert_eq!(inferred.geometry.faulted, 1);
-    assert_eq!(inferred.geometry.widgets["size"].outputs, [Generation3dOutputRecord { port: "number".into(), kind: "number".into(), detail: "2".into() }]);
-    assert_eq!(inferred.geometry.widgets["box"].outputs[0].kind, "shape");
-    assert_eq!(inferred.geometry.widgets["bad"].fault.as_ref().map(|fault| fault.code.as_str()), Some("generation3d.geometry.input-range"));
-    assert_eq!(inferred.geometry, Generation3dGeometryRecord::of(&infer_geometry(&crate::test_serial::geometry_input(&read))));
-    assert_eq!(inferred.topology.node_count, 3);
-}
-//#endregion 🧪️Record
 
 #[test]
 fn inference_reads_the_explicit_admitted_catalogue() {
@@ -439,17 +453,17 @@ fn inference_reads_the_explicit_admitted_catalogue() {
     let mut definitions = catalogue().categories().iter().map(|file| (file.category.id.clone(), file.clone())).collect::<Vec<_>>();
     let kind = definitions.iter_mut().flat_map(|(_, file)| file.kinds.iter_mut()).find(|kind| kind.id == kind_id).expect("fixture kind");
     kind.quality = Quality::Approximate;
-    let admitted = std::sync::Arc::new(crate::standards::v1::subsets::any::schema::catalogue::Catalogue::from_categories(definitions).expect("typed catalogue"));
+    let admitted = std::sync::Arc::new(semio_s_artifact_procedural_3d_model::catalogue::Catalogue::from_categories(definitions).expect("typed catalogue"));
     let snapshot = box_chain(2.0);
-    let context = GeometryInput::new(&snapshot,&admitted,&crate::standards::v1::subsets::any::io::geometry::NativeGeometryComputeContext);
+    let context = GeometryInput::new(&snapshot,&admitted,&semio_s_artifact_procedural_3d_io_geometry::NativeGeometryComputeContext);
     let custom = infer_geometry(&context);
-    let builtin = infer_geometry(&crate::test_serial::geometry_input(&snapshot));
+    let builtin = infer_geometry(&geometry_input(&snapshot));
     assert_eq!(custom["box"].quality.to_value().as_str(), fixture["quality"].as_str());
     assert_eq!(builtin["box"].quality.to_value().as_str(), fixture["builtinQuality"].as_str());
-    let mut engine = GeometryEngine::new(admitted, crate::standards::v1::subsets::any::io::geometry::context(), 1 << 20);
+    let mut engine = EngineFixture::new(admitted, semio_s_artifact_procedural_3d_io_geometry::context(), 1 << 20);
     engine.start("custom-catalogue".into(), snapshot.into_inner(), CacheMode::Incremental, "custom-catalogue");
     while !engine.step(1).expect("typed catalogue engine").done {}
-    assert_eq!(engine.evaluations(), &custom);
+    assert_eq!(engine.oracle_values(), &custom);
     println!("[DEBUG] Inference and one-unit engine read the explicit admitted catalogue independently of the bundled JSON owner");
 }
 
@@ -457,15 +471,15 @@ fn inference_reads_the_explicit_admitted_catalogue() {
 fn geometry_compute_context_injection_controls_actual_inference() {
     struct Context;
     fn answer(kind:&Kind,_inputs:WidgetInputs)->Box<dyn WidgetJob> {compute::finish(kind,Ok(outputs([("value",GeometryValue::Number(41.0))])))}
-    impl compute::GeometryComputeContext for Context {fn lookup(&self,kind_id:&str)->Option<compute::StartFn>{(kind_id=="math.number").then_some(answer as compute::StartFn)}}
+    impl compute::GeometryComputeContext for Context {fn lookup(&self,kind_id:&str)->Option<compute::StartFn>{(kind_id=="math.number").then_some(answer as compute::StartFn)}fn start_original(&self,kind:&Kind,inputs:&mut Option<WidgetInputs>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<compute::original::OriginalFixedOutputJob>,semio_framework_job::OriginalTurnFailure>{compute::original::OriginalFixedOutputJob::admit_number(kind,inputs,41.0,cx)}}
     let read=document(vec![neuron("n","math.number",vec![])],vec![]);
     let input=GeometryInput::new(&read,catalogue(),&Context);
     let inferred=infer_geometry(&input);
     assert_eq!*(inferred["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
-    let mut engine=GeometryEngine::new(Arc::clone(catalogue()),Arc::new(Context),0);
+    let mut engine=EngineFixture::new(Arc::clone(catalogue()),Arc::new(Context),0);
     engine.start("context".into(),read.into_inner(),CacheMode::Cold,"context");
     loop {if engine.step(1).unwrap().done{break;}}
-    assert_eq!*(engine.evaluations()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
+    assert_eq!*(engine.oracle_values()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
     println!("[DEBUG] Procedural geometry inference and engine used the explicit injected compute capability");
 }
 

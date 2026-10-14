@@ -1,5 +1,5 @@
 use crate::editor::bim::gestures::tests::fixture::{model, room, Rig};
-use crate::{ModelMutation, Point2, SpaceBoundary, StairFlight, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{Point2, SpaceBoundary, StairFlight, TopConstraint}};
 
 #[semio_framework_async_macros::async_test]
 async fn one_click_stands_a_column_of_the_first_type_on_the_storey() {

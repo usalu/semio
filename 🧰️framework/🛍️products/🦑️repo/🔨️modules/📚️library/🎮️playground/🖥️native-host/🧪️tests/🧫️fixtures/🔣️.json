@@ -138,5 +138,51 @@
       "directory": "dist/native-release",
       "suffix": ".exe"
     }
-  ]
+  ],
+  "scriptAdmission": {
+    "maximumBytes": 1048576,
+    "before": "export const result = 1;",
+    "bodyChanged": "export const result = 200; export function run() {}",
+    "vectors": [
+      {
+        "id": "ascii-limit",
+        "character": "a",
+        "count": 1048576,
+        "withinLimit": true
+      },
+      {
+        "id": "ascii-oversized",
+        "character": "a",
+        "count": 1048577,
+        "withinLimit": false
+      },
+      {
+        "id": "multibyte-limit",
+        "character": "😀",
+        "count": 262144,
+        "withinLimit": true
+      },
+      {
+        "id": "multibyte-oversized",
+        "character": "😀",
+        "count": 262145,
+        "withinLimit": false
+      }
+    ],
+    "invalidResults": [
+      null,
+      {},
+      {
+        "withinLimit": "true"
+      },
+      {
+        "withinLimit": true,
+        "byteLength": 20
+      }
+    ],
+    "readError": "script source read refused",
+    "invalidUtf8": [
+      255
+    ]
+  }
 }

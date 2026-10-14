@@ -51,7 +51,7 @@ async function publishActivatedExtension(target: DeployedRegistryEntryV1, source
   signal.throwIfAborted();
   const output = join(installRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]}))), recordPath = join(output, EXTENSION_INSTALL_META);
   const files = artifactFiles(source);
-  files.delete(".nx-artifact.json");
+  files.delete(".semio-artifact.json");
   if (existsSync(recordPath) && JSON.parse(readFileSync(recordPath, "utf8")).packageHash === artifactSha256 && [...files.keys()].every((name) => existsSync(join(output, name)))) return;
   mkdirSync(installRoot, { recursive: true });
   const temporary = mkdtempSync(join(installRoot, `.extension-${target.pluginId}-`));

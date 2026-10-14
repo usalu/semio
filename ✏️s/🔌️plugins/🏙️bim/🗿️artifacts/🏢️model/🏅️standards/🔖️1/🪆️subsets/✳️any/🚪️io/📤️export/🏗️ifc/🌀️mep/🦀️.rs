@@ -9,7 +9,7 @@ use super::data::{label, property_set};
 use super::writer::{en, opt_text, refs, rf, unset, V};
 use super::{Export, Quantity};
 use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
-use crate::{MepSystem, MepShape};
+use crate::standards::v1::subsets::any::schema::snapshot::{MepSystem, MepShape};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🏷️ The `Semio_Authoring` row that holds the authored MEP element record.
@@ -65,7 +65,7 @@ fn segment_type(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, kind: Mep
     object
 }
 
-fn segment(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, id: &str, row: &crate::MepElement) {
+fn segment(x: &mut Export<'_>, types: &mut BTreeMap<String, u64>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::MepElement) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("mep element", id, "its storey is missing");
         return;

@@ -4,7 +4,7 @@
 
 use super::{number, parse_count, parse_number, parse_point, parse_text, partial, point, variant, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
-use crate::{AnchorEnd, AnnotationAnchor, AnnotationStyle, Assigned, Dimension, DimensionUnit, Leader, ModelMutation, ModelSnapshot, Point2, Tag, TagCategory, Terminator, TextNote, WallSide};
+use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, AnnotationStyle, Dimension, DimensionUnit, Leader, ModelSnapshot, Point2, Tag, TagCategory, Terminator, TextNote, WallSide}, diff::Assigned, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
 //#region 🔖️Text
@@ -112,7 +112,7 @@ pub static DIMENSION_FIELDS: &[FieldRow] = &[
     field!("angle", field_direction_angle, Number, |s, id| s.dimensions.get(id).map(|row| number(row.angle)), parse_number => set_dimension::SetDimension),
     field!("offset", field_offset, Number, |s, id| s.dimensions.get(id).map(|row| number(row.offset)), parse_number => set_dimension::SetDimension),
     field!("style", field_style, Text, |s, id| s.dimensions.get(id).map(|row| row.style.clone()), choices: style_choices, parse_text => set_dimension::SetDimension),
-    field!("lock", field_lock, Number, |s, id| s.dimensions.get(id).map(|row| row.lock.map_or_else(String::new, number)), |_, id, value| partial::<crate::mutations::set_dimension::SetDimension, _>(id, "lock", &parse_lock(value)?).map(ModelMutation::SetDimension)),
+    field!("lock", field_lock, Number, |s, id| s.dimensions.get(id).map(|row| row.lock.map_or_else(String::new, number)), |_, id, value| partial::<crate::standards::v1::subsets::any::schema::mutations::set_dimension::SetDimension, _>(id, "lock", &parse_lock(value)?).map(ModelMutation::SetDimension)),
 ];
 
 /// 🧾️ The authored parameters of a tag.
@@ -156,7 +156,7 @@ pub static STYLE_FIELDS: &[FieldRow] = &[
 //#endregion 🔖️Fields
 
 //#region 🔖️Inferred
-fn layout<'a>(inference: &'a crate::ModelInference, storey: &str) -> Option<&'a crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations> {
+fn layout<'a>(inference: &'a crate::standards::v1::subsets::any::schema::inferences::ModelInference, storey: &str) -> Option<&'a crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations> {
     inference.annotations.get(storey)
 }
 
@@ -184,26 +184,26 @@ fn container(snapshot: &ModelSnapshot, parent: &str) -> Result<String, &'static 
 pub fn create_dimension(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let (storey, style) = (container(snapshot, parent)?, style_of(snapshot)?);
     let anchors = vec![AnnotationAnchor::Point { point: Point2 { x: 0.0, y: 0.0 } }, AnnotationAnchor::Point { point: Point2 { x: 1.0, y: 0.0 } }];
-    Ok(ModelMutation::CreateDimension(crate::mutations::create_dimension::CreateDimension { id: id.into(), dimension: Dimension { storey, anchors, angle: 0.0, offset: -0.5, style, lock: None, name: name.into() } }))
+    Ok(ModelMutation::CreateDimension(crate::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension { id: id.into(), dimension: Dimension { storey, anchors, angle: 0.0, offset: -0.5, style, lock: None, name: name.into() } }))
 }
 
 /// 🏷️ A new tag: on the first wall of the storey, reading its name.
 pub fn create_tag(snapshot: &ModelSnapshot, id: &str, parent: &str, _name: &str) -> Created {
     let (storey, style) = (container(snapshot, parent)?, style_of(snapshot)?);
     let element = snapshot.walls.iter().find(|(_, wall)| wall.storey == storey).map(|(wall, _)| wall.clone()).ok_or("bim.create.wall-missing")?;
-    Ok(ModelMutation::CreateTag(crate::mutations::create_tag::CreateTag { id: id.into(), tag: Tag { storey, element, category: TagCategory::Name, offset: Point2 { x: 0.0, y: 0.5 }, style } }))
+    Ok(ModelMutation::CreateTag(crate::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag { id: id.into(), tag: Tag { storey, element, category: TagCategory::Name, offset: Point2 { x: 0.0, y: 0.5 }, style } }))
 }
 
 /// 🗒️ A new text note at the origin of the storey, named by its text.
 pub fn create_text_note(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let (storey, style) = (container(snapshot, parent)?, style_of(snapshot)?);
-    Ok(ModelMutation::CreateTextNote(crate::mutations::create_text_note::CreateTextNote { id: id.into(), text_note: TextNote { storey, position: Point2 { x: 0.0, y: 0.0 }, text: name.into(), rotation: 0.0, style } }))
+    Ok(ModelMutation::CreateTextNote(crate::standards::v1::subsets::any::schema::mutations::create_text_note::CreateTextNote { id: id.into(), text_note: TextNote { storey, position: Point2 { x: 0.0, y: 0.0 }, text: name.into(), rotation: 0.0, style } }))
 }
 
 /// ↗️ A new leader from the origin of the storey to a metre beside it, named by its text.
 pub fn create_leader(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {
     let (storey, style) = (container(snapshot, parent)?, style_of(snapshot)?);
-    Ok(ModelMutation::CreateLeader(crate::mutations::create_leader::CreateLeader { id: id.into(), leader: Leader { storey, anchor: AnnotationAnchor::Point { point: Point2 { x: 0.0, y: 0.0 } }, offset: Point2 { x: 1.0, y: 1.0 }, text: name.into(), style } }))
+    Ok(ModelMutation::CreateLeader(crate::standards::v1::subsets::any::schema::mutations::create_leader::CreateLeader { id: id.into(), leader: Leader { storey, anchor: AnnotationAnchor::Point { point: Point2 { x: 0.0, y: 0.0 } }, offset: Point2 { x: 1.0, y: 1.0 }, text: name.into(), style } }))
 }
 
 /// 🎨️ The standard annotation style: a quarter-metre text at 1:50, slanted ticks, metres with two decimals.
@@ -213,7 +213,7 @@ pub fn standard_style(name: &str) -> AnnotationStyle {
 
 /// 🎨️ A new annotation style: the standard one.
 pub fn create_annotation_style(_: &ModelSnapshot, id: &str, _parent: &str, name: &str) -> Created {
-    Ok(ModelMutation::CreateAnnotationStyle(crate::mutations::create_annotation_style::CreateAnnotationStyle { id: id.into(), annotation_style: standard_style(name) }))
+    Ok(ModelMutation::CreateAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle { id: id.into(), annotation_style: standard_style(name) }))
 }
 //#endregion 🔖️Create
 

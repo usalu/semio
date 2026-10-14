@@ -16,7 +16,9 @@
 //! `Vec<T>`-of-struct field (streams→samples) plus this file's own generic collection-triple
 //! wrapper both individually block the derive macro.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 
 
 

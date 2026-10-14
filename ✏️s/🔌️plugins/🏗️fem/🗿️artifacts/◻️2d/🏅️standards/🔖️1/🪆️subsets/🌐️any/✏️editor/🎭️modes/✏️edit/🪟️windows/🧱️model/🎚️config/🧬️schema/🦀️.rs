@@ -6,7 +6,7 @@
 #[artifact(id = "fem.2d.modelwindowconfig")]
 pub struct Fem2dModelWindowConfig {
     #[dsl(block)]
-    pub camera: crate::Viewport2d,
+    pub camera: semio_framework_os_kernel::Viewport2d,
 }
 
 /// 🩹 Owned-field patch of [`Fem2dModelWindowConfig`]: exactly the fields an update sets. It is both the update payload and the sparse diff.
@@ -15,7 +15,7 @@ pub struct Fem2dModelWindowConfig {
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Fem2dModelWindowConfigPatch {
     #[dsl(block)]
-    pub camera: Option<crate::Viewport2d>,
+    pub camera: Option<semio_framework_os_kernel::Viewport2d>,
 }
 
 impl Fem2dModelWindowConfigPatch {

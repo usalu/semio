@@ -6,12 +6,17 @@ import { dirname, join, resolve } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {repositoryCargoPreparationStorageV1, runTool } from "../../📦️dependencies/📜️script.ts";
+import {runTool} from "../../📦️dependencies/🟦️.ts";
+import {repositoryCargoPreparationStorageV1} from "../../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import binaryenManifest from "./🔣️.json";
+import {withRepositoryToolingStoreV1,type RepositoryToolingStoreV1} from "../../../💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
+import {repositoryCachePartitionRootV1} from "../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
+import {requireNativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 export type BinaryenDistribution = { readonly platform: string; readonly architecture: string; readonly archive: string; readonly bytes: number; readonly sha256: string };
 const manifest: { version: string; release: string; platforms: BinaryenDistribution[] } = binaryenManifest;
-const store = ".🧬semio/🦑️repo/⚡️cache/tools/binaryen", owner = "workspace:deps-wasm-opt";
+const owner = "workspace:deps-wasm-opt";
 const digest = (path: string): string => createHash("sha256").update(readFileSync(path)).digest("hex");
 
 /** 🧭️ Selects a published, checksum-pinned native distribution. */
@@ -41,7 +46,7 @@ export function binaryenMembers(members: readonly string[], platform: string): s
 /** 🛣️ Keeps immutable native tools outside compiler and task-result stores. */
 export function binaryenDirectory(workspace: string): string {
   const row = binaryenDistribution();
-  return join(workspace, store, manifest.version, `${row.platform}-${row.architecture}-${row.sha256}`);
+  return join(repositoryCachePartitionRootV1(workspace,"tools"), "binaryen", manifest.version, `${row.platform}-${row.architecture}-${row.sha256}`);
 }
 
 /** 🔒️ Rejects substituted directories before reading or publishing tool state. */
@@ -70,11 +75,11 @@ export function preparedBinaryen(workspace: string): string {
 }
 
 /** 📥️ Acquires one pinned optimizer in an isolated directory and publishes it atomically. */
-export async function prepareBinaryen(workspace: string, signal: AbortSignal): Promise<string> {
-  signal.throwIfAborted();
-  const row = binaryenDistribution(), directory = binaryenDirectory(workspace), parent = dirname(directory);
+export async function prepareBinaryen(workspace: string, store:RepositoryToolingStoreV1): Promise<string> {
+  requireNativeStorageReservationV1(store.storage,store.control);await store.recheck();if(store.root!==repositoryCachePartitionRootV1(workspace,"tools"))throw Error("Original declared Binaryen tools partition required");const signal=store.control.signal;signal.throwIfAborted();
+  const row = binaryenDistribution(), directory = requireNativeStoragePathV1(store.root,binaryenDirectory(workspace)), parent = dirname(directory);
   regularDirectory(parent); mkdirSync(parent, { recursive: true });
-  return withResourceLeases({ directory: join(workspace, ".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"), signal, resources: [{ resource: binaryenIdentity(), mode: "exclusive" }] }, async () => {
+  return withResourceLeases({ directory: join(workspace, ".cache/b/l/m/data"), signal,control:store.control, resources: [{ resource: binaryenIdentity(), mode: "exclusive" }] }, async () => {
     let present = true;
     try { lstatSync(directory); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; present = false; }
     if (present) return preparedBinaryen(workspace);
@@ -96,18 +101,18 @@ export async function prepareBinaryen(workspace: string, signal: AbortSignal): P
         }
       } catch (error) { await reader.cancel().catch(() => undefined); throw error; } finally { await file.close(); }
       if (bytes !== row.bytes || hash.digest("hex") !== row.sha256) throw new Error("Binaryen archive checksum mismatch");
-      const members = (await runTool("tar",["-tzf", archive],temporary,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()))).trim().split(/\r?\n/);
+      const members = (await runTool("tar",["-tzf", archive],temporary,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace))).trim().split(/\r?\n/);
       const selected = binaryenMembers(members, process.platform), prefix = `binaryen-version_${manifest.version}`;
       const executable = `bin/wasm-opt${process.platform === "win32" ? ".exe" : ""}`;
       if (!selected.includes(executable)) throw new Error("Binaryen archive has no optimizer");
-      await runTool("tar",["-xzf", archive, "-C", temporary, ...selected.map(path => `${prefix}/${path}`)],temporary,signal,false,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
+      await runTool("tar",["-xzf", archive, "-C", temporary, ...selected.map(path => `${prefix}/${path}`)],temporary,signal,false,store.environment,repositoryCargoPreparationStorageV1(workspace));
       const payload = join(temporary, prefix), files: Record<string, string> = {};
       for (const name of selected) {
         const path = join(payload, name); regularDirectory(dirname(path));
         if (!lstatSync(path).isFile() || lstatSync(path).isSymbolicLink()) throw new Error(`Invalid Binaryen payload: ${name}`);
         files[name] = digest(path);
       }
-      const version = await runTool(join(payload, executable),["--version"],temporary,signal,true,process.env,repositoryCargoPreparationStorageV1(process.cwd()));
+      const version = await runTool(join(payload, executable),["--version"],temporary,signal,true,store.environment,repositoryCargoPreparationStorageV1(workspace));
       if (version.trim() !== `wasm-opt version ${manifest.version} (version_${manifest.version})`) throw new Error(`Binaryen version mismatch: ${version.trim()}`);
       writeFileSync(join(payload, ".toolchain.json"), JSON.stringify({ owner, identity: binaryenIdentity(), files }) + "\n");
       signal.throwIfAborted(); renameSync(payload, directory);
@@ -119,10 +124,7 @@ export async function prepareBinaryen(workspace: string, signal: AbortSignal): P
 class PrepareScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Optimizer preparation accepts no arguments");
-    const controller = new AbortController(), stop = (): void => controller.abort(new Error("Optimizer preparation cancelled"));
-    process.once("SIGINT", stop); process.once("SIGTERM", stop);
-    try { console.log(`Prepared ${await prepareBinaryen(this.root, AbortSignal.any([controller.signal, AbortSignal.timeout(300000)]))}`); }
-    finally { process.removeListener("SIGINT", stop); process.removeListener("SIGTERM", stop); }
+    await withRepositoryToolingStoreV1(this.root,this.invocation,async store=>{const executable=await prepareBinaryen(this.root,store);console.log(`[DEBUG] Prepared bounded Binaryen ${executable}`);});
   }
 }
 

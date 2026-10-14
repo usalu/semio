@@ -3,13 +3,13 @@
 //! payload shape and the release law live in `🧵️preview-eval`, shared verbatim with `👁️viewer`.
 
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
-use crate::preview_eval;
-use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_preview_eval;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-pub use crate::preview_eval::FlowEvalRelease;
+
 
 /// 🔓️ Emits the `evaluateCancel` and `tessellateCancel` invocations; the session was already quiesced
 /// by the run's close, so this hop touches it no further.

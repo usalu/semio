@@ -61,8 +61,5 @@
   },
   "scripts": {
     "generate-font-metrics": "bun repo run @semio-tech/print:generate-font-metrics"
-  },
-  "nx": {
-    "includedScripts": []
   }
 }

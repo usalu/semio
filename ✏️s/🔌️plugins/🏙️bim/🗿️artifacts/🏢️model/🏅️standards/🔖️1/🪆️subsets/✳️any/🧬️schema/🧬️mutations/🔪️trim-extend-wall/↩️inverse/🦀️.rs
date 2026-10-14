@@ -6,7 +6,7 @@ use super::super::elements::{self, Placement};
 use super::super::place_elements::PlaceElements;
 use super::diff::plan;
 use super::TrimExtendWall;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use std::collections::BTreeMap;
 
 pub fn inverse(payload: &TrimExtendWall, base: &ModelSnapshot) -> Vec<ModelMutation> {

@@ -23,7 +23,6 @@ use semio_repo_test_host::Json;
 /// `params` is the leaf's wire payload (`payload_value()`), read by the same field names the schema
 /// declares. An unrecognised kind is an error, never a silent no-op: a mutation that is quietly
 /// skipped reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
     match spec.str("kind").as_str() {
@@ -46,7 +45,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// H.264 samples are container-typed and payload-opaque, so this is the exact comparison PDF/OBJ
 /// use, not the lossy raster oracles' bucket/histogram approximation — a digest stands in for the
 /// raw payload only because a real sample can run tens of kilobytes.
-#[cfg(feature = "oracles")]
 pub fn project_mp4_mutation(input: &[u8]) -> Result<Json, String> {
     reference::project(input)
 }
@@ -57,7 +55,6 @@ pub fn project_mp4_mutation(input: &[u8]) -> Result<Json, String> {
 /// (`../🧬️schema/🧬️mutations/🦀️.rs`) reasons over `Mp4Snapshot` — "restore `base`'s own
 /// value for the facet this kind touched" — reimplemented here over this module's own
 /// `DecodedMovie`, never by calling that trait.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -68,35 +65,16 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
 
 /// 🔁️ The `@id-identity-round-trip` scenario's own independent computation: parse the real movie
 /// with `Mp4Reader` and re-mux it with `Mp4Writer` from the decoded model ALONE.
-#[cfg(feature = "oracles")]
 pub fn oracle_identity_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     reference::remux(input)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_original_input: &[u8], _spec: &Json, _mutated: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_identity_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_mp4_mutation(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Reference
-#[cfg(feature = "oracles")]
 mod reference {
     use semio_repo_test_host::{digest, Json};
     use std::io::Cursor;
@@ -494,7 +472,7 @@ mod reference {
 }
 //#endregion 🔖️Reference
 
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 mod tests {
     use super::project_mp4_mutation;
 

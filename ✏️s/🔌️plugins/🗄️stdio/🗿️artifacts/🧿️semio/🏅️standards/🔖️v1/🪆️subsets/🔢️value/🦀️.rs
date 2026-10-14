@@ -17,46 +17,6 @@ pub mod io {
     pub use component::*;
 }
 #[path = "."]
-pub mod schema {
-    #[path = "🧬️schema/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🧬️schema/➕️algebra-internals/🦀️.rs"]
-    pub mod algebra_internals;
-    #[path = "🧬️schema/🌫️fuzzy-internals/🦀️.rs"]
-    pub mod fuzzy_internals;
-    #[path = "."]
-    pub mod snapshot {
-        #[path = "🧬️schema/📸️snapshot/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod diff {
-        #[path = "🧬️schema/🔺️diff/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod inferences {
-        #[path = "🧬️schema/💡️inferences/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod census {
-            #[path = "🧬️schema/💡️inferences/🌳census/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-    }
-    #[path = "."]
-    pub mod mutations {
-        #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-}
-#[path = "."]
 pub mod examples {
     #[path = "📚️examples/🕸️graph/🦀️.rs"]
     pub mod graph;
@@ -130,9 +90,3 @@ pub mod viewer {
     }
 }
 
-semio_framework_value::artifact_retire_struct!(schema::snapshot::ValueId { value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioValueEntry { key, value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioValueNode { id, value });
-semio_framework_value::artifact_retire_struct!(schema::snapshot::SemioValueSnapshot { schema, root, nodes });
-
-semio_s_artifact_stdio_semio_base::semio_member_owner!(schema::snapshot::SemioValueSnapshot, schema::mutations::SemioValueMutation);

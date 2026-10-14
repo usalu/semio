@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️year-schedule/📚️create",
+  "semanticKind": "create-annual-schedule",
+  "displayName": "Create Annual Schedule",
+  "emoji": "📚️",
+  "aggregateVariant": "CreateAnnualSchedule",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "create-annual-schedule",
+  "binaryTag": 263,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

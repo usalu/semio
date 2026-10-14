@@ -1,11 +1,13 @@
 mod tests {
     use super::*;
-    use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream};
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioRational;
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSample;
+    use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn clean_snapshot() -> SemioVideoSnapshot {
         SemioVideoSnapshot {
-            schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+            schema: semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
             streams: vec![SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
                 codec: "h264".into(),
@@ -79,7 +81,9 @@ mod tests {
     /// waves establish.
     mod conformance_laws {
 
-        use crate::schema::{diff, mutations, snapshot};
+        use semio_s_artifact_stdio_semio_video_model::schema::diff;
+        use semio_s_artifact_stdio_semio_video_mutations::schema::mutations;
+        use semio_s_artifact_stdio_semio_video_model::schema::snapshot;
         use protocol::{DiffBinary,DiffText, OpBinary, OpText};
 
         /// ✅️ "committed files parse": all 6 handcrafted `.grammar.semio`/`.protocol.semio` files
@@ -87,11 +91,11 @@ mod tests {
         /// `walk_protocol` laws below.
         #[semio_framework_async_macros::async_test]
         async fn committed_facet_files_parse() {
-            for (label, text) in [("snapshot grammar", crate::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", crate::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", crate::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
+            for (label, text) in [("snapshot grammar", semio_s_artifact_stdio_semio_video_model::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO), ("mutations grammar", semio_s_artifact_stdio_semio_video_mutations::io::text::mutations::COMPONENT_GRAMMAR_SEMIO), ("diff grammar", semio_s_artifact_stdio_semio_video_model::io::text::diff::COMPONENT_GRAMMAR_SEMIO)] {
                 let grammar = semio_framework_dsl::parse_grammar(text).unwrap_or_else(|e| panic!("{label}: parse_grammar failed: {e:?}"));
                 assert_eq!(grammar.dialect, semio_framework_dsl::SemioDialect::Grammar, "{label}: expected grammar dialect");
             }
-            for (label, text) in [("snapshot protocol", crate::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", crate::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
+            for (label, text) in [("snapshot protocol", semio_s_artifact_stdio_semio_video_model::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO), ("mutations protocol", semio_s_artifact_stdio_semio_video_mutations::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO), ("diff protocol", semio_s_artifact_stdio_semio_video_model::io::binary::diff::COMPONENT_PROTOCOL_SEMIO)] {
                 semio_framework_dsl::parse_protocol(text).unwrap_or_else(|e| panic!("{label}: parse_protocol failed: {e:?}"));
             }
         }
@@ -103,7 +107,7 @@ mod tests {
         /// graduated.
         #[semio_framework_async_macros::async_test]
         async fn grammar_conformance_law() {
-            let grammar = semio_framework_dsl::parse_grammar(crate::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
+            let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_video_model::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
             let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             let text = pack::snapshot::ArtifactDsl::print_dsl(&snapshot::demo_video_snapshot());
             let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
@@ -115,7 +119,7 @@ mod tests {
         /// for every `SemioVideoMutation` variant (`mutations::demo_mutation_cases()`).
         #[semio_framework_async_macros::async_test]
         async fn ops_grammar_conformance_law() {
-            let grammar = semio_framework_dsl::parse_grammar(crate::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
+            let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_video_mutations::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse mutations grammar");
             let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             for mutation in mutations::demo_mutation_cases() {
                 let printed = mutation.print_op();
@@ -128,7 +132,7 @@ mod tests {
         /// (no-op) diff.
         #[semio_framework_async_macros::async_test]
         async fn diff_grammar_conformance_law() {
-            let grammar = semio_framework_dsl::parse_grammar(crate::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
+            let grammar = semio_framework_dsl::parse_grammar(semio_s_artifact_stdio_semio_video_model::io::text::diff::COMPONENT_GRAMMAR_SEMIO).expect("parse diff grammar");
             let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
             for d in diff::demo_diff_cases() {
                 let printed = d.print_diff();
@@ -141,20 +145,20 @@ mod tests {
         /// `encode_op`, and every demo diff's `encode_diff` — asserting `consumed == bytes.len()`.
         #[semio_framework_async_macros::async_test]
         async fn protocol_walk_law() {
-            let pack_spec = semio_framework_dsl::parse_protocol(crate::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
+            let pack_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_semio_video_model::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
             let packed = pack::snapshot::ArtifactPack::encode_pack(&snapshot::demo_video_snapshot());
             let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
             let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
             assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
 
-            let op_spec = semio_framework_dsl::parse_protocol(crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
+            let op_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_semio_video_mutations::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
             for mutation in mutations::demo_mutation_cases() {
                 let bytes = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed for {mutation:?}: {e:?}"));
                 let trace = semio_framework_dsl::walk_protocol(&op_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(op) failed for {mutation:?} @{}: {}", e.offset, e.message));
                 assert_eq!(trace.consumed, bytes.len(), "op walk did not consume every byte for {mutation:?}");
             }
 
-            let diff_spec = semio_framework_dsl::parse_protocol(crate::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
+            let diff_spec = semio_framework_dsl::parse_protocol(semio_s_artifact_stdio_semio_video_model::io::binary::diff::COMPONENT_PROTOCOL_SEMIO).expect("parse diff protocol");
             for d in diff::demo_diff_cases() {
                 let bytes = d.encode_diff().unwrap_or_else(|e| panic!("encode_diff failed for {d:?}: {e:?}"));
                 let trace = semio_framework_dsl::walk_protocol(&diff_spec, &bytes).unwrap_or_else(|e| panic!("walk_protocol(diff) failed for {d:?} @{}: {}", e.offset, e.message));

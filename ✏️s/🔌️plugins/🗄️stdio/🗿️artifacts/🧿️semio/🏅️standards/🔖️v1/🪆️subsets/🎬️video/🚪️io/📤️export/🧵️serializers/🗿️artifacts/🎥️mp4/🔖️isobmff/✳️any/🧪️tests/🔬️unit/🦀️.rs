@@ -1,6 +1,10 @@
 use super::*;
 use semio_s_artifact_stdio_semio_video_import::deserializers::artifacts::mp4::v_isobmff::any::SemioVideoFromMp4;
-use semio_s_artifact_stdio_semio_video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioRational;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoSample;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStream;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::SemioVideoStreamKind;
+use semio_s_artifact_stdio_semio_video_model::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA;
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

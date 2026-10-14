@@ -1,6 +1,8 @@
 //! 📐 `replace-primitive-geometry` — whole-value swap of a primitive's positions/normals/uvs/colors/indices buffer set. SMO-approved rename of the old `set-primitive-geometry`: a multi-array vertex-buffer blob is a structured sub-payload, so `set` was the wrong verb. SMO approved the reasoning and reserved the edit; SMO wound down without doing it; DKM completes it here.
 
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 use crate::schema::mutations::SemioMeshMutation;
 use crate::schema::snapshot::SemioMeshSnapshot;
 

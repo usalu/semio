@@ -843,7 +843,7 @@ fn worker_pool_active_workers_and_occupancy_reflect_running_jobs() {
 //#endregion 🧵️WorkerPoolTests
 
 //#region 🔖️Typegen
-#[cfg(feature = "typegen")]
+#[cfg(test)]
 #[semio_framework_async_macros::async_test]
 async fn exports_typescript_bindings() {
     schema_metadata::validate().unwrap();

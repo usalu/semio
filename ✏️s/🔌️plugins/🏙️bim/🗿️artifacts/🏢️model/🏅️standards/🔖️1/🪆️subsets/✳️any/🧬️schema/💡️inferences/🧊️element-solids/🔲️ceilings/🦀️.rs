@@ -10,7 +10,7 @@
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{Ceiling, CeilingType, ModelSnapshot, Point2, Slope};
+use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, ModelSnapshot, Point2, Slope};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
 use semio_framework_geometry::placement::ZPlane;

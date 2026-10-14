@@ -1,9 +1,12 @@
 #!/usr/bin/env bun
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {configuredExactCargoLawPolicyV1} from "../../../🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🔲️ The canonical native Pixels task owner retains the complete original package workload. */
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
-import {runExactCargoLaws} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -11,12 +14,12 @@ import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️ty
 class ImageFundingScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     if(args.length||!process.env.SEMIO_TEST_ARTIFACT_DIR||!process.env.CARGO_TARGET_DIR)throw Error("image funding requires original caller artifact and target directories");
-    const receipts=await runExactCargoLaws({manifestPaths:{"semio-framework-pixels":resolve(this.root,"Cargo.toml")},cargoTargetDir:process.env.CARGO_TARGET_DIR,cwd:this.repoRoot,groups:[{package:"semio-framework-pixels",target:{kind:"lib"},laws:["png_decoding::tests::png_decode_original_funding_and_cancellation_match_actual_allocator","image_decoding::tests::image_sources_original_funding_and_jpeg_allocator_custody","image_decoding::tests::image_sources_decode_shared_rfc_transport_and_all_png_forms","image_decoding::tests::image_sources_exact_limits_and_live_phase_cancellation"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3600000,listBudgetMs:60000,lawBudgetMs:120000});console.log(`[DEBUG] Original PNG/JPEG funding native receipts=${receipts.length}`);
+    const receipts=await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:3600000,listMilliseconds:60000,lawMilliseconds:120000},invocation:this.invocation,manifestPaths:{"semio-framework-pixels":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-pixels",target:{kind:"lib"},laws:["png_decoding::tests::png_decode_original_funding_and_cancellation_match_actual_allocator","image_decoding::tests::image_sources_original_funding_and_jpeg_allocator_custody","image_decoding::tests::image_sources_decode_shared_rfc_transport_and_all_png_forms","image_decoding::tests::image_sources_exact_limits_and_live_phase_cancellation"]}]});console.log(`[DEBUG] Original PNG/JPEG funding native receipts=${receipts.length}`);
   }
 }
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargoTestsV1({ manifestPath: resolve(this.root,"Cargo.toml"),packages:["semio-framework-pixels","semio-framework-deflate","semio-framework-io-base64","semio-framework-io-binary-source"],cwd:resolve(this.root,"../.."),extraArgs:segments },readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root,"Cargo.toml"),packages:["semio-framework-pixels","semio-framework-deflate","semio-framework-io-base64","semio-framework-io-binary-source"],cwd:resolve(this.root,"../.."),extraArgs:segments },readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 

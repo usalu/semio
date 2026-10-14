@@ -1,6 +1,9 @@
 //! 🗿️ Imports decoded OBJ surfaces as editable polygon inputs with surface channels.
-use crate::standards::v1::subsets::any::io::mesh_bridge::{import_polygon_meshes, polygon_import_payload, polygon_import_attribute, io_error};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_mesh_bridge::import_polygon_meshes;
+use semio_s_artifact_procedural_3d_mesh_bridge::polygon_import_payload;
+use semio_s_artifact_procedural_3d_mesh_bridge::polygon_import_attribute;
+use semio_s_artifact_procedural_3d_mesh_bridge::io_error;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
 use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;

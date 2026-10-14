@@ -13,7 +13,7 @@ macro_rules! original_session{($owner:ident)=>{impl<J:InteractiveJob+'static> Or
  fn close_original(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{self.close_step(cx)}
 }}}
 original_session!(WorkerJobSession);original_session!(MountedWorkerJobSession);original_session!(BatchJobSession);
-pub struct OriginalJobFixtureCaller{operation:OperationId,generation:Generation,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,clock:fn()->Option<u64>,deadline:u64,fuel:u64,clock_stride:super::ClockStride,stock:RetainedCloneGrant,spent:RetainedCloneProgress,born:usize,roots_released:usize,last:RetainedCloneProgress}
+pub struct OriginalJobFixtureCaller{operation:OperationId,generation:Generation,parent:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,clock:fn()->Option<u64>,clock_binding:u64,deadline:u64,fuel:u64,clock_stride:super::ClockStride,stock:RetainedCloneGrant,spent:RetainedCloneProgress,born:usize,roots_released:usize,last:RetainedCloneProgress}
 impl OriginalJobFixtureCaller{
     pub fn admit(operation:OperationId,generation:Generation,source:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,mut fuel:u64)->Self{
         let mut spent=RetainedCloneProgress::default();let mut born=0;let mut clock_stride=super::ClockStride::new();
@@ -23,15 +23,16 @@ impl OriginalJobFixtureCaller{
         let((authority,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||JobPayloadAuthority::admit(operation,generation,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(heap.requested_bytes,heap.released_bytes));spent=spent.checked_add(receipt).unwrap();born+=heap.requested_bytes;fuel=fuel.checked_sub(receipt.copied_items as u64).expect("original payload root consumes initiating work");
         assert!(fixture_work_open(clock,deadline,fuel,&mut clock_stride));let grant=fixture_remaining(source,spent);
         let((parent,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalCallerSourceParent::admit(authority,cancel,grant).ok().unwrap());assert!(receipt.fits(grant));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(heap.requested_bytes,heap.released_bytes));spent=spent.checked_add(receipt).unwrap();born+=heap.requested_bytes;fuel=fuel.checked_sub(receipt.copied_items as u64).expect("original source parent consumes initiating work");
-        Self{operation,generation,parent:ManuallyDrop::new(Some(parent)),sequence:0,clock,deadline,fuel,clock_stride,stock:source,spent,born,roots_released:0,last:RetainedCloneProgress::default()}
+        Self{operation,generation,parent:ManuallyDrop::new(Some(parent)),sequence:0,clock,clock_binding:semio_framework_trace::allocate_operation_id().0,deadline,fuel,clock_stride,stock:source,spent,born,roots_released:0,last:RetainedCloneProgress::default()}
     }
     pub fn born_bytes(&self)->usize{self.born}
+    pub fn original_clock_binding(&self)->u64{self.clock_binding}
     pub fn cancel(&self)->&CancelToken{self.parent.as_ref().expect("original fixture caller retains its parent").cancellation().expect("original fixture caller retains its root")}
     pub fn admit_alias(&mut self,source:RetainedCloneGrant)->CancelToken{let alias=self.turn(source,|cx|{let alias=cx.admit_original_cancel_alias()?;if alias.is_some(){cx.consume_fuel(1);}Ok(alias)}).expect("original fixture alias turn").expect("original fixture alias admitted");assert!(alias.is_same_node(self.cancel()));assert_eq!(self.last,RetainedCloneProgress{copied_items:1,..Default::default()});alias}
     pub fn turn<R>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->Result<R,OriginalTurnFailure>{
         let before=self.spent;let issued_fuel=self.fuel;let mut value=None;self.clock_stride.begin((self.clock)());
         let mut cx=self.parent.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original fixture parent has already closed"))?.borrow_context(StepBudget::new(self.fuel,self.deadline,self.stock),self.clock,&mut self.sequence,&mut self.spent)?;
-        cx.clock.set(self.clock_stride);assert_eq!(cx.operation(),self.operation);assert_eq!(cx.generation(),self.generation);
+        cx.bind_original_clock_binding(self.clock_binding)?;cx.clock.set(self.clock_stride);assert_eq!(cx.operation(),self.operation);assert_eq!(cx.generation(),self.generation);
         let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||cx.with_retained_loan(grant,|cx|{value=Some(advance(cx)?);Ok(())})));
         self.fuel=cx.fuel_remaining().min(issued_fuel);self.clock_stride=cx.clock.get();drop(cx);self.last=fixture_delta(before,self.spent);
         match result{Ok(result)=>{if result.is_ok(){assert!(self.last.fits(grant));assert!(self.spent.fits(self.stock));}result.map(|()|value.expect("original fixture callback returned its original value"))},Err(payload)=>std::panic::resume_unwind(payload)}

@@ -1,7 +1,7 @@
 //! 📦 STL/OBJ/GLB/mesh mesh import/export bridged to native B-Rep.
 //!
 //! Triangle soups interchange through `semio_framework_mesh_engine` codecs where available; solids
-//! tessellate via [`semio_framework_3d_brep_queries::tessellation`] and import as
+//! tessellate via [`semio_framework_3d_brep_tessellation`] and import as
 //! one planar face per triangle with shared vertices and edges, returning an open shell or a
 //! closed solid. `export_mesh`/`import_mesh`/`export_solid_mesh`/`import_mesh_to_body` take their mesh
 //! codec as a `MeshExporter`/`MeshImporter` parameter (ticket
@@ -28,13 +28,13 @@ use semio_framework_3d_brep_operations::euler::{add_shell, add_solid};
 use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_mesh_engine::HistoryFoldIndex;
-use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_tessellation::tessellate_solid;
 use semio_framework_3d_brep_representation::arena::SolidId;
 use semio_framework_3d_brep_representation::error::KernelError;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use semio_framework_mesh_engine::{MeshData};
 use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
 use semio_framework_mesh_engine::io::binary::{mesh_from_stl, mesh_to_stl};
@@ -88,11 +88,11 @@ enum RemovedImportEntity {
     Face {value:semio_framework_3d_brep_representation::topology::Face},
     Shell {value:semio_framework_3d_brep_representation::topology::Shell},
     Solid {value:semio_framework_3d_brep_representation::topology::Solid},
-    Curve3 {value:semio_framework_3d_brep_representation::curve::Curve3},
-    Curve2 {value:semio_framework_3d_brep_representation::curve::Curve2},
-    Surface {value:semio_framework_3d_brep_representation::surface::Surface},
+    Curve3 {value:semio_framework_3d_brep_curve::Curve3},
+    Curve2 {value:semio_framework_3d_brep_curve::Curve2},
+    Surface {value:semio_framework_3d_brep_surface::Surface},
 }
-semio_framework_3d_brep_representation::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
+semio_framework_3d_brep_vector::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
 enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<OpRecorder>) }
 impl ImportCloseOwner {
     fn owner(&self)->&dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}

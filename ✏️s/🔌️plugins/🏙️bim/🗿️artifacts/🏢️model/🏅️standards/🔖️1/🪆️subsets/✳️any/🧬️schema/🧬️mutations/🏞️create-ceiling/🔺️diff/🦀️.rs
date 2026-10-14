@@ -5,7 +5,7 @@
 use super::super::elements;
 use super::super::horizontal_rules::{holes_fault, loop_fault, slope_fault};
 use super::CreateCeiling;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateCeiling, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

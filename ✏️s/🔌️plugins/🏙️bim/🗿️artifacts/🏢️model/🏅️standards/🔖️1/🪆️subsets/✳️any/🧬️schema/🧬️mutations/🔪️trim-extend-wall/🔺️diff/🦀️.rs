@@ -10,7 +10,7 @@ use super::super::placement::width_of;
 use super::super::wall_geometry::{flaw, snap};
 use super::TrimExtendWall;
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
-use crate::{Entry, KeyedDelta, ModelDiff, ModelSnapshot, OpeningPatch, WallPatch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 

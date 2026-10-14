@@ -158,7 +158,8 @@ function guestFaultOracle(): number {
   const host = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
   const retained = readFileSync(join(hostRoot, "🧬️component-codec", "🎟️retained-turn", "🦀️.rs"), "utf8");
   const owned = readFileSync(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"), "utf8");
-  assert(owned.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
+  const contract = readFileSync(join(hostRoot, "..", "🧬️guest-contract", "🦀️.rs"), "utf8");
+  assert(contract.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
   assert(host.includes("original.map_err(retained_turn_wire::failure_from_wit)"), "real Wasmtime poll must return the original actor failure receipt");
   assert(owned.includes("result.map_err(|error| decode_guest_fault_bytes(&error))"), "owned ABI must use typed decoder");
   assert(retained.includes("TurnFault::ActorCall(call)"), "actor failure must retain its physical input and spending");

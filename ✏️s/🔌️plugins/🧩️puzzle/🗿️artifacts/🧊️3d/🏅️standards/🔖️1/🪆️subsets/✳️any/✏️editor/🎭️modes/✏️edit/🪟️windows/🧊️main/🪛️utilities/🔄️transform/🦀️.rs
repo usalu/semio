@@ -11,11 +11,12 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §8). Both hosts
 //! paint the gesture locally and dispatch it ONCE on release, so every gesture is a one-shot transaction.
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use semio_framework_pack_json::json;
-use crate::apply_puzzle3d_mutation;
+use crate::standards::v1::subsets::any::schema::mutations::apply_puzzle3d_mutation;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{derive_attraction_params, puzzle3d_action, puzzle3d_vortex_full_id, PUZZLE3D_PLAY_CONTROLLER_ID};
+use {crate::standards::v1::subsets::any::schema::derive_attraction_params, crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::standards::v1::subsets::any::schema::puzzle3d_vortex_full_id};
 use crate::standards::v1::subsets::any::schema::mutations::{connect_vortices,drag_selection,rotate_selection,scale_selection,Puzzle3dMutation};
 
 use crate::Puzzle3dSnapshot;
@@ -157,7 +158,7 @@ impl Puzzle3dSelectionRecord {
             }
             "rotate" => {
                 let (before, after) = (quaternion("before")?, quaternion("after")?);
-                let turn = crate::standards::v1::subsets::any::schema::mutations::quat_mul(after, [-before[0], -before[1], -before[2], before[3]]);
+                let turn = crate::standards::v1::subsets::any::schema::quat_mul(after, [-before[0], -before[1], -before[2], before[3]]);
                 let sine = (1.0 - turn[3] * turn[3]).max(0.0).sqrt();
                 let axis = if sine < 1e-9 { [0.0, 0.0, 1.0] } else { [turn[0] / sine, turn[1] / sine, turn[2] / sine] };
                 Puzzle3dSelectionMotion::Rotate { axis, angle: 2.0 * turn[3].clamp(-1.0, 1.0).acos() }
@@ -264,7 +265,7 @@ impl Puzzle3dRelocateScan {
 
 /// 🌐️ A vortex's local `position` placed in the world by its object's `origin` and `orientation`.
 fn puzzle3d_world_point(origin: [f64; 3], orientation: Option<[f64; 4]>, local: [f64; 3]) -> [f64; 3] {
-    let turned = crate::editor::puzzle3d::quat_rotate_vector(orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), local);
+    let turned = crate::standards::v1::subsets::any::schema::quat_rotate_vector(orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), local);
     [origin[0] + turned[0], origin[1] + turned[1], origin[2] + turned[2]]
 }
 

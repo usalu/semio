@@ -1,11 +1,15 @@
 //! 🎚️ The kernel's tolerance model: a fixed global [`Resolution`], per-entity [`Tol`] values with
 //! a containment ordering (vertex ≥ its edges ≥ their faces), and a certified interval type [`Iv`]
-//! used by [`crate::vector::predicates`] to decide when a fast `f64` computation is trustworthy versus
+//! used by [`semio_framework_3d_brep_vector::predicates`] to decide when a fast `f64` computation is trustworthy versus
 //! when it must escalate to exact arithmetic. Geometric decision code should never compare raw
 //! `f64`s with `==`/`<` — it should go through a `Tol` or an `Iv`.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/📏️tolerance` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4.
+//!
+//! Crate cut of `semio-framework-3d-brep-representation` (wave E4 source admission ceiling, `📓️2026-10-14-wave-e4-3d-architect-bim.md`).
+
+extern crate semio_framework_value_derive as value_derive;
 
 // #region 🔖️Resolution
 

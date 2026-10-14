@@ -45,31 +45,26 @@
 use semio_repo_test_host::Json;
 
 //#region 🔖️JsonHelpers
-#[cfg(feature = "oracles")]
 fn num_field(value: &Json, key: &str) -> Result<f64, String> {
     match value.get(key) {
         Some(Json::Number(number)) => Ok(*number),
         _ => Err(format!("expected numeric field {key:?}")),
     }
 }
-#[cfg(feature = "oracles")]
 fn str_field(value: &Json, key: &str) -> Result<String, String> {
     match value.get(key) {
         Some(Json::String(text)) => Ok(text.clone()),
         _ => Err(format!("expected string field {key:?}")),
     }
 }
-#[cfg(feature = "oracles")]
 fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
     num_field(value, key).map(|number| number as usize)
 }
-#[cfg(feature = "oracles")]
 fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
     num_field(value, key).map(|number| number as u64)
 }
 //#endregion 🔖️JsonHelpers
 
-#[cfg(feature = "oracles")]
 mod oracles {
     use super::{num_field, str_field, u64_field, usize_field};
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
@@ -621,7 +616,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     if kind.is_empty() {
@@ -633,32 +627,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 }
 
 /// 🔁️ Decodes and re-encodes the artifact with no mutation — the identity cycle every law's baseline runs.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
-#[cfg(feature = "oracles")]
 pub fn project_ifc_4_any(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-#[cfg(not(feature = "oracles"))]
-pub fn project_ifc_4_any(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
@@ -666,7 +645,7 @@ pub fn project_ifc_4_any(_bytes: &[u8]) -> Result<Json, String> {
 /// kind against the real Nakagin Capsule Tower fixture, confirming the exact ids/indices/values the
 /// feature file's `Examples` tables carry are real. `cargo test --features oracles` from this
 /// crate's own directory.
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

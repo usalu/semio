@@ -1,5 +1,10 @@
 //! 🌦️ EPW-specific conversion into format-independent simulation weather.
 
+extern crate semio_s_plugin_energy_engine_bestest as bestest;
+extern crate semio_s_plugin_energy_engine_error as error;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_site as site;
+
 use crate::error::{Diagnostics, Error};
 use crate::site::{WeatherData, WeatherRecord};
 use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;

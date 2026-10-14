@@ -1,0 +1,1 @@
+{"heldFile":"original.lock","oracle":"fcntl.flock","expectedWhileHeld":"blocked","expectedAfterClose":"acquired"}

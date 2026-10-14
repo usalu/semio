@@ -1,8 +1,8 @@
 //! 🚥️ `set-clash-set` payload. Sparsely changes a clash set: its name, either selector (replaced as a whole), the tolerance and the clearance. The clashes are inferred and follow.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use crate::{ClashSetPatch, ElementSelector};
+use crate::standards::v1::subsets::any::schema::{diff::patches::ClashSetPatch, snapshot::ElementSelector};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

@@ -1,8 +1,8 @@
 //! 🪢️ `update-tension-component-inputs` diff — upserts the row by id: a known id is replaced in place, an unknown id is appended.
 
-use super::UpdateTensionComponentInputs;
-use crate::diff::{En1993Diff, En1993TensionComponentDelta};
-use crate::En1993Snapshot;
+use crate::update_tension_component_inputs::UpdateTensionComponentInputs;
+use semio_s_artifact_norm_en1993_diff::{En1993Diff, En1993TensionComponentDelta};
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 pub fn diff(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
     let delta = match base.tension_components.iter().position(|row| row.id == payload.tension_component.id) {

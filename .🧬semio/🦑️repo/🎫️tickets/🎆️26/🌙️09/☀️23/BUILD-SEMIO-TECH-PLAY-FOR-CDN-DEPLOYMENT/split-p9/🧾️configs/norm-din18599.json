@@ -1,0 +1,362 @@
+{
+ "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs",
+ "crate": "semio_s_artifact_norm_din18599",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-norm-din18599-model",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "DIN V 18599 model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-norm-din18599-diff",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "DIN V 18599 diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-norm-din18599-mutations",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN V 18599 mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-norm-din18599-schema",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "DIN V 18599 artifact schema and descriptor"
+  },
+  "checks": {
+   "package": "semio-s-artifact-norm-din18599-checks",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks",
+   "prefix": "standards::v1::subsets::any::schema::checks",
+   "description": "DIN V 18599 compliance checks"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-norm-din18599-inferences",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "DIN V 18599 inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-norm-din18599-io",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "DIN V 18599 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-norm-din18599-examples",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "",
+   "description": "DIN V 18599 example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-norm-din18599-editor",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::din18599",
+   "description": "DIN V 18599 editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-norm-din18599-viewer",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::din18599",
+   "description": "DIN V 18599 viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-norm-din18599",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599",
+   "prefix": "",
+   "description": "Norm din18599 artifact",
+   "role": "artifact"
+  },
+  "mut-building": {
+   "package": "semio-s-artifact-norm-din18599-mut-building",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️building",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN V 18599 building mutation leaves"
+  },
+  "mut-systems": {
+   "package": "semio-s-artifact-norm-din18599-mut-systems",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️systems",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN V 18599 systems mutation leaves"
+  },
+  "mut-zoning": {
+   "package": "semio-s-artifact-norm-din18599-mut-zoning",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️zoning",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "DIN V 18599 zoning mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏠️change\\-building\\-category/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-attachment/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-use\\-class/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧮change\\-method/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-net\\-floor\\-area\\-m2/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📦change\\-heated\\-volume\\-m3/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/⚖️change\\-geg\\-qp\\-factor/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌉change\\-delta\\-u\\-wb/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎛️change\\-automation\\-class/",
+   "mut-building"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔥specify\\-heating\\-system/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🚿specify\\-dhw\\-system/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌬️update\\-ventilation/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❄️update\\-cooling/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💡update\\-lighting/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/☀️update\\-renewables/",
+   "mut-systems"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🗺️replace\\-zones/",
+   "mut-zoning"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧩replace\\-elements/",
+   "mut-zoning"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌡️change\\-element\\-u/",
+   "mut-zoning"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌦️update\\-climate/",
+   "mut-zoning"
+  ],
+  [
+   "🧬️schema/💡️inferences/⚖️checks/",
+   "checks"
+  ],
+  [
+   "🧬️schema/🧪️tests/⚖️compliance/",
+   "checks"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "⚡️din18599/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️building/🦀️.rs",
+   "text": "//! 🏢️ DIN V 18599 building mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️systems/🦀️.rs",
+   "text": "//! ⚙️ DIN V 18599 systems mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️zoning/🦀️.rs",
+   "text": "//! 🗺️ DIN V 18599 zoning mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ DIN V 18599 example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ DIN V 18599's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_din18599_model::Din18599Snapshot, semio_s_artifact_norm_din18599_mutations::Din18599Mutation>(&root).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  }
+ ],
+ "generic_leaves": {
+  "enum": "Din18599Mutation",
+  "snapshot": "Din18599Snapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::Din18599Diff",
+  "mutations_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "🏠️change-building-category",
+   "🧱change-attachment",
+   "🏷️change-use-class",
+   "🧮change-method",
+   "📐️change-net-floor-area-m2",
+   "📦change-heated-volume-m3",
+   "⚖️change-geg-qp-factor",
+   "🌉change-delta-u-wb",
+   "🎛️change-automation-class",
+   "🔥specify-heating-system",
+   "🚿specify-dhw-system",
+   "🌬️update-ventilation",
+   "❄️update-cooling",
+   "💡update-lighting",
+   "☀️update-renewables",
+   "🗺️replace-zones",
+   "🧩replace-elements",
+   "🌡️change-element-u",
+   "🌦️update-climate"
+  ]
+ },
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "from_marker": "//#region 🔖️ComplianceHelpers",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🦀️.rs",
+   "doc": "//! ⚖️ DIN V 18599 compliance checks: the clause-by-clause verification behind the compliance report.",
+   "mount": "checks"
+  }
+ ],
+ "move_mods": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "name": "mutation_bridge",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "source_reexport": "pub use crate::standards::v1::subsets::any::schema::mutations::mutation_bridge;\npub use mutation_bridge::*;",
+   "drop_in_target": [
+    "^pub use crate::standards::v1::subsets::any::io::mutation_bridge::\\{[^}]*\\};\\n"
+   ]
+  }
+ ],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599",
+  "✏️s/🔌️plugins/📕️norm/🏭️bridge",
+  "🌎️hub/🧩️compositions/📕️norm",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-plugin-norm-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-norm-din18599-model"
+    ]
+   }
+  ]
+ }
+}

@@ -25,12 +25,13 @@
   "originalCaller": {
     "operation": 745,
     "generation": 3,
-    "items": 50000,
-    "copyBytes": 4194304,
-    "capacityBytes": 4194304,
-    "releaseBytes": 4194304,
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
     "depth": 128,
-    "fuel": 1000000,
+    "fuel": 100000,
     "deadlineMicros": 1000000000
-  }
+  },
+  "valueText": "Original Resolved Ü"
 }

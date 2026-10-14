@@ -5,6 +5,14 @@
 //! and checkpointed here. Browser hosts keep using the browser's WebAssembly engine.
 
 use std::collections::{BTreeMap, BTreeSet};
+
+/// 🪪️ The interpreter's authored source: the half of the owned engine identity that names every instruction a guest executes.
+pub const INTERPRETER_SOURCE: &str = include_str!("🦀️.rs");
+
+/// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
+#[cfg(test)]
+#[global_allocator]
+static INTERPRETER_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 
@@ -595,10 +603,10 @@ impl OwnedSemioExport {
             Self::Allocate => FunctionType { parameters: vec![ValueType::I32], results: vec![ValueType::I32] },
             Self::Deallocate => FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![] },
             Self::Checkpoint | Self::Describe | Self::ChannelVersion => FunctionType { parameters: vec![], results: vec![ValueType::I64] },
-            Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;12],results:vec![ValueType::I64]},
-            Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;11],results:vec![ValueType::I64]},
+            Self::StepJob | Self::ReadJobOutput | Self::AcknowledgeJobOutput | Self::CancelJob => FunctionType{parameters:vec![ValueType::I64;20],results:vec![ValueType::I64]},
+            Self::CloseJobs => FunctionType{parameters:vec![ValueType::I64;19],results:vec![ValueType::I64]},
             Self::BorrowJobOutput=>FunctionType{parameters:vec![ValueType::I64;5],results:vec![ValueType::I64]},
-            Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;14],results:vec![ValueType::I64]},
+            Self::AcknowledgeJobOutputChunk=>FunctionType{parameters:vec![ValueType::I64;22],results:vec![ValueType::I64]},
             Self::Restore | Self::StartJob | Self::Poll | Self::AdmitActorContext | Self::CloseActorContext | Self::PackSchemaHash | Self::Genesis | Self::PrintMirror | Self::ApplyOps | Self::ReplayEnvelopes | Self::SqliteSchema | Self::SqliteExport | Self::SqliteImport | Self::SqliteRetirement | Self::SqliteClose | Self::SqliteTakeFile | Self::SqliteTakePayload => {
                 FunctionType { parameters: vec![ValueType::I32, ValueType::I32], results: vec![ValueType::I64] }
             }

@@ -31,7 +31,6 @@ use semio_repo_test_host::Json;
 /// 🧊️ Independent triangle-soup reading behind `stl_io` — the reader half every dispatch arm below
 /// starts from (see this file's top doc comment for why the writer half cannot come from the same
 /// crate).
-#[cfg(feature = "oracles")]
 mod triangle_soup {
     #[derive(Clone, Copy)]
     pub(super) struct RefTriangle {
@@ -61,7 +60,6 @@ mod triangle_soup {
 /// precedent the OBJ subset's oracle already follows for a format whose Rust reference is a reader:
 /// the second producer is this module, the independent READER every result is projected through is
 /// still `stl_io`, and nothing here touches the subject's `decode_stl_ascii`/`encode_stl_ascii`.
-#[cfg(feature = "oracles")]
 mod ascii {
     use super::triangle_soup::RefTriangle;
 
@@ -98,25 +96,21 @@ mod ascii {
 //#endregion 🔖️Ascii
 
 //#region 🔖️SpecReaders
-#[cfg(feature = "oracles")]
 fn mutation_params(spec: &Json) -> Json {
     spec.get("params").cloned().unwrap_or(Json::Null)
 }
-#[cfg(feature = "oracles")]
 fn number(value: &Json, key: &str) -> Option<f64> {
     match value.get(key) {
         Some(Json::Number(number)) => Some(*number),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn string(value: &Json, key: &str) -> Option<String> {
     match value.get(key) {
         Some(Json::String(text)) => Some(text.clone()),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn json_vec3(value: &Json) -> Option<[f32; 3]> {
     match value {
         Json::Array(items) if items.len() == 3 => {
@@ -132,36 +126,30 @@ fn json_vec3(value: &Json) -> Option<[f32; 3]> {
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn vec3(value: &Json, key: &str) -> Option<[f32; 3]> {
     json_vec3(value.get(key)?)
 }
-#[cfg(feature = "oracles")]
 fn vertices3(value: &Json, key: &str) -> Option<[[f32; 3]; 3]> {
     match value.get(key) {
         Some(Json::Array(items)) if items.len() == 3 => Some([json_vec3(&items[0])?, json_vec3(&items[1])?, json_vec3(&items[2])?]),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn triangle_of(value: &Json) -> Option<triangle_soup::RefTriangle> {
     Some(triangle_soup::RefTriangle { normal: vec3(value, "normal")?, vertices: vertices3(value, "vertices")? })
 }
-#[cfg(feature = "oracles")]
 fn triangle_json(triangle: &triangle_soup::RefTriangle) -> Json {
     Json::Object(vec![
         ("normal".to_string(), Json::Array(triangle.normal.iter().map(|value| Json::Number(*value as f64)).collect())),
         ("vertices".to_string(), Json::Array(triangle.vertices.iter().map(|vertex| Json::Array(vertex.iter().map(|value| Json::Number(*value as f64)).collect())).collect())),
     ])
 }
-#[cfg(feature = "oracles")]
 fn triangles_of(value: &Json, key: &str) -> Option<Vec<triangle_soup::RefTriangle>> {
     match value.get(key) {
         Some(Json::Array(items)) => items.iter().map(triangle_of).collect(),
         _ => None,
     }
 }
-#[cfg(feature = "oracles")]
 fn spec_of(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
@@ -171,7 +159,6 @@ fn spec_of(kind: &str, params: Json) -> Json {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
@@ -214,11 +201,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     }
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Inverse
@@ -227,7 +209,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 /// `StlMutation::inverse()` (`../🧬️schema/🧬️mutations/🦀️.rs`) independently: an
 /// out-of-range index that the forward mutation would have rejected leaves nothing to undo
 /// (`None`), exactly as that method's empty inverse does. Every spec carries the leaf wire payload.
-#[cfg(feature = "oracles")]
 pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, String> {
     let params = mutation_params(spec);
     Ok(Some(match spec.str("kind").as_str() {
@@ -272,11 +253,6 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, Str
     }))
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Option<Json>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Inverse
 
 //#region 🔖️DocumentProjection
@@ -286,7 +262,6 @@ pub fn oracle_inverse_spec(_base: &[u8], _spec: &Json) -> Result<Option<Json>, S
 /// recomputed from winding. STL states its normals rather than deriving them, so `set-triangle-
 /// normal` is a real change to the document even when every corner stays exactly where it was —
 /// the shared mesh projection reports resolved corners only and cannot see it.
-#[cfg(feature = "oracles")]
 pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
     let triangles = triangle_soup::read(input)?;
     Ok(Json::Object(vec![
@@ -296,10 +271,6 @@ pub fn oracle_document_projection(input: &[u8]) -> Result<Json, String> {
     ]))
 }
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️DocumentProjection
 
 //#region 🔖️RoundTrip
@@ -307,20 +278,14 @@ pub fn oracle_document_projection(_input: &[u8]) -> Result<Json, String> {
 /// its `IndexedMesh` and this module re-emits the whole grammar from that model alone. It cannot
 /// coincidentally reproduce the input, because `stl_io` resolves every coordinate through `f32`
 /// while the committed fixture carries `f64` decimals.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     ascii::write(&ascii::read_name(input)?, &triangle_soup::read(input)?)
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️RoundTrip
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests

@@ -3,7 +3,7 @@
 //! function rather than an `InferredField` dependency chain — `fixture` is small and always
 //! recomputed wholesale (widget/synapse edits are already coarse-grained mutations).
 
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::Widget;
 use std::collections::{BTreeMap, VecDeque};
 

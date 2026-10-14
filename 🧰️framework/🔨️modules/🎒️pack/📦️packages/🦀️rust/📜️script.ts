@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
-import { runExactCargoLaws, configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {repositoryCargoNetworkV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import {buildRepositoryCargoArtifacts} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import {configuredExactCargoLawPolicyV1} from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { buildBudgetMs } from '../../../🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts';
 import { scriptCompilerAdmissionControlV1 } from '../../../🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts';
@@ -8,11 +12,10 @@ import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦�
 /** 🖥️ `semio-framework-pack` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { resolve } from "node:path";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter,scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -24,14 +27,14 @@ class TestScript extends BundleScript {
       if (segments[0] === "original-owned-wire-native") {
         const left = this.invocation.control.remainingMilliseconds();
         if (left === null || left <= 0) throw Error("Original owned wire exhausted before native admission");
-        await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left }, manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR });
+        await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: left, listMilliseconds: left, lawMilliseconds: left },manifestPaths: { "semio-framework-pack": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,groups: [{ package: "semio-framework-pack", target: { kind: "test", name: "original-owned-wire" }, laws: ["original_owned_source_header_returns_without_payload_copy", "original_owned_pack_wire_returns_same_source_and_matches_normal_decoder", "original_owned_pack_wire_cancellation_closes_all_original_backing", "original_owned_pack_wire_physical_retirement_closes_actual_native_fields"] }]});
       }
       return;
     }
     const { rest } = resolveTestLevel(segments);
     await runRetainedIntrinsicSource(this.root,this.repoRoot);
     await runOccurrenceOrderSource(this.root,this.repoRoot);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -49,7 +52,7 @@ class AbsoluteVarintSourceScript extends BundleScript {
 class AbsoluteVarintNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test-absolute-varint-native accepts no arguments");
-    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: ["--lib", "pack_absolute_unsigned_varint_complete_boundaries", "--no-fail-fast"]}, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: ["--lib", "pack_absolute_unsigned_varint_complete_boundaries", "--no-fail-fast"]}, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -67,7 +70,7 @@ class BorrowedPreflightSourceScript extends BundleScript {
 class BorrowedPreflightNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-borrowed-preflight-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","record_borrowed_preflight_","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","record_borrowed_preflight_","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -75,7 +78,7 @@ class BorrowedPreflightNativeScript extends BundleScript {
 class SchemaHashNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-schema-hash-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--test","pack_schema_hash","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--test","pack_schema_hash","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -83,13 +86,13 @@ class SchemaHashNativeScript extends BundleScript {
 class SchemaStorageNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-schema-storage-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, readCargoArtifactBuildPolicyV1(process.env,this.root),{control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
+    await buildRepositoryCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot,{network:repositoryCargoNetworkV1(this.invocation,this.repoRoot),control:scriptCompilerAdmissionControlV1(this.invocation,"cargo:build",buildBudgetMs())});
   }
 }
 
@@ -100,7 +103,7 @@ class OriginalStorageScript extends BundleScript {
   const test=resolve(this.root,'../../🌱️value/🎟️storage/🧪️tests/🟦️.ts');
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync('typescript/bin/tsc',this.root),'--noEmit','--strict','--skipLibCheck','--allowImportingTsExtensions','--resolveJsonModule','--target','ESNext','--module','ESNext','--moduleResolution','bundler','--types','bun',test],{cwd:this.repoRoot,budgetMs:30000,throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,['test',test],{cwd:this.repoRoot,budgetMs:15000,throwOnFailure:true});
-  if(kind==='native')await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-pack'],cwd:this.root,extraArgs:['--lib','pack_original_value_stack_storage_','--','--nocapture']},readCargoTestPolicyV1(process.env));
+  if(kind==='native')await runCargoTestsV1({manifestPath:resolve(this.root,'Cargo.toml'),packages:['semio-framework-pack'],cwd:this.root,extraArgs:['--lib','pack_original_value_stack_storage_','--','--nocapture']},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 
@@ -108,7 +111,7 @@ class OriginalStorageScript extends BundleScript {
 class RetainedIntrinsicNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-retained-intrinsic-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","retained_intrinsic_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","retained_intrinsic_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -116,7 +119,7 @@ class RetainedIntrinsicNativeScript extends BundleScript {
 class IntrinsicSchemaNativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length)throw Error("test-intrinsic-schema-native accepts no arguments");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","intrinsic_document_schema_refusal_","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","intrinsic_document_schema_refusal_","--no-fail-fast"]},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -160,7 +163,7 @@ class OriginalRecordReceivingScript extends BundleScript{
   const source=resolve(this.root,"../../🌱️value/🛬️decode/🫴️receiving/🧪️tests/🟦️.ts");
   await runBudgetedTestCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
   await runBudgetedTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,budgetMs:scriptInvocationBudget(this.invocation,15000),signal:this.invocation.control.signal,throwOnFailure:true});
-  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--offline","--lib","original_record_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env));
+  if(mode==="native")await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--offline","--lib","original_record_receiving_","--no-fail-fast","--success-output","immediate"],signal:this.invocation.control.signal,remainingMilliseconds:this.invocation.control.remainingMilliseconds},readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
  }
 }
 router.register("test-original-record-receiving",OriginalRecordReceivingScript);

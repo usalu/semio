@@ -1,6 +1,6 @@
 //! 🍰️ `split-slab` payload. Cuts a slab along the infinite line through two points into two slabs: the piece to the left of the line (seen from its first point to its second) stays, the piece to the right is created with the type, offset, slope and name of the original; holes go with the piece they lie in, split arcs keep their circle. The line must cross the outline exactly twice and no hole.
 
-use crate::{ModelDiff, ModelMutation, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

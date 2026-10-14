@@ -33,7 +33,7 @@ import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦�
 class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
-    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["repo", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 
@@ -92,7 +92,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("clean", CleanScript)
   .register("dependency", DependencyScript)
   .register("metrics", MetricsScript)
-  .register("nx", NxScript)
+  .register("repo", NxScript)
   .register("doctor", DoctorScript)
   .register("inventory", InventoryScript)
   .register("inventory-provider-check", class extends Script { run(args: string[]): void { if (args.length) throw new Error("inventory-provider-check accepts no overrides"); console.log(`mutation inventory provider: ${runMutationInventoryProviderChecksV1()} laws`); } })

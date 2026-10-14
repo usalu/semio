@@ -34,6 +34,13 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "test-native-mesh-receiving-source": {
+      "executor": "repo:script",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native-mesh-receiving-source"
+      }
     }
   }
 }

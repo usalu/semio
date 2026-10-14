@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::En1993Snapshot;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
@@ -25,16 +25,13 @@ mod tests;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
-use super::*;
-use super::*;
-use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::document::AnnexChoice;
-use crate::{
-    BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase,
-    MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg,
-};
+use crate::binary::snapshot::*;
+use crate::binary::snapshot::*;
+use semio_s_artifact_norm_en1993_model::*;
+use semio_s_plugin_norm_compliance::AnnexChoice;
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::any::io::text::snapshot::*;
+use crate::text::snapshot::*;
 /// 📦️ Decodes a [`En1993Snapshot`] from the binary `.pack.semio` envelope — an independently written
 /// codec from the DSL grammar above, which is what makes their agreement evidence that the document
 /// was parsed rather than copied.
@@ -48,6 +45,6 @@ pub fn encode_en1993_pack(snapshot: &En1993Snapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(snapshot)
 }
 }
-pub use native_snapshot_codec::*;
+pub use crate::binary::snapshot::native_snapshot_codec::*;
 
-crate::impl_norm_artifact_record!(@binary En1993Snapshot, extension="en1993", envelope_id="norm.en1993", sqlite=crate::standards::v1::subsets::any::io::sqlite::snapshot::codec);
+semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1993Snapshot, extension="en1993", envelope_id="norm.en1993", sqlite=crate::sqlite::snapshot::codec);

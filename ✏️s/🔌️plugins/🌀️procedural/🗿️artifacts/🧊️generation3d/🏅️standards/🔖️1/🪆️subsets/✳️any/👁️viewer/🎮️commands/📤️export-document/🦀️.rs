@@ -13,9 +13,9 @@
 //! @see ../../../🚪️io/🦀️.rs — `document_io::export_document`, shared verbatim with the editor.
 //! @see ../../../✏️editor/🎮️commands/📤️export-document/🦀️.rs — the editor's binding of the same verb.
 
-use crate::standards::v1::subsets::any::io::document_io;
+use semio_s_artifact_procedural_3d_io::document_io;
 use crate::viewer::generation3d::config::{Generation3dViewConfig, Generation3dViewConfigMutation};
-use crate::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Fault, FaultCode, FaultOrigin, ViewEmit};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -32,7 +32,7 @@ pub struct ExportDocument {
 pub fn retained_meshes(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dViewConfig>, session: &semio_framework_os_flow::FlowEvalSession) -> Result<Option<Vec<semio_framework_plugin::MeshData>>, Fault> {
     crate::editor::generation3d::export_meshes_from_evaluation(&doc.snapshot.host_snapshot, session, None)
         .map(Some)
-        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))
+        .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_EXPORT), error.to_string()))
 }
 
 /// 📤️ Encodes the viewed document in the picked format and hands the shell one download.
@@ -45,8 +45,8 @@ pub fn emit(payload: &ExportDocument, doc: &ArtifactView<'_, Generation3dSnapsho
     let export = (if payload.format == "txt" {
         document_io::export_document(doc.snapshot)
     } else {
-        meshes.ok_or_else(|| crate::standards::v1::subsets::any::io::mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
+        meshes.ok_or_else(|| semio_s_artifact_procedural_3d_mesh_bridge::io_error("generation3d geometry export requires prepared geometry from the retained evaluation"))
             .and_then(|meshes| document_io::export_prepared_geometry(meshes, &payload.format))
-    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(crate::GENERATION3D_IO_EXPORT), error.to_string()))?;
+    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_IO_EXPORT), error.to_string()))?;
     Ok(ViewEmit::effect(Effect::DownloadMediaExport { filename: export.filename, mime_type: export.mime_type, data: export.data, encoding: export.encoding }))
 }

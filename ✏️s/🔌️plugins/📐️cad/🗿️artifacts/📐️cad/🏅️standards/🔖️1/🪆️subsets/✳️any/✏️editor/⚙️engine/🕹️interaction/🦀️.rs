@@ -5,8 +5,10 @@
 //! statechart any more: the four `aec.building` placements that used to be bespoke are the
 //! `placeWall`/`placeBeam`/`placeColumn`/`placeSlab` assets like every other interaction.
 
-use crate::standards::v1::subsets::any::schema::geometry::{CadObject, CadPrimitiveSlot};
-use crate::{evaluate_expr, CadPaneId, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
+
+use semio_s_artifact_cad_cad_model::{geometry::CadObject, geometry::CadPrimitiveSlot};
+use semio_s_artifact_cad_cad_interaction_spec::{evaluate_expr, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
+use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -89,91 +91,10 @@ pub struct InteractionCatalogEntry {
 //#endregion 🔖️Types
 
 //#region 🔖️Registry
-/// `(modelDefinitionId, raw JSON)` for every `🕹️interactions/*.json` asset embedded at build time —
-/// pinned against the on-disk tree by `every_interaction_asset_on_disk_parses_as_interaction_spec`.
-const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌙️arc.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🟨️area.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/➖️booleanDifference.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✖️booleanIntersection.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/➕️booleanUnion.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📦️box.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪓️chamfer.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⭕️circle.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/〰️constructCurve.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🗺️constructSurface.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎛️controlPointCurve.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📋️copy.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/⚓️createAnchor.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🥫️cylinder.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/💥️explode.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🚀️extrudeCrv.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🧱️extrudeWire.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🍥️fillet.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌊️interpolateCurve.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔗️join.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📏️length.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🖊️line.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🎢️loft.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪞️mirror.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🚚️move.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🕸️networkSrf.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🧭️offsetSurface.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✈️plane.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/📈️polyline.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🔃️rotate.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/↕️scale1d.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🪗️scale3d.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌐️sphere.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✂️split.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌀️sweep1.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/🌪️sweep2.json")),
-    ("spatial.shape", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📐️spatial.shape/🕹️interactions/✏️trim.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪵️placeBeam.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/⬆️placeCeiling.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🏛️placeColumn.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🚪️placeDoor.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪨️placeFoundation.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🚧️placeRailing.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🏠️placeRoof.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🧱️placeSlab.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪜️placeStair.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🛡️placeWall.json")),
-    ("aec.building", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🏢️aec.building/🕹️interactions/🪟️placeWindow.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🧱️constructBasePlate.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚧️constructExternalWall.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🚢️constructHull.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🏠️constructRoof.json")),
-    ("aec.building.energy", include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🔥️aec.building.energy/🕹️interactions/🪟️constructWindows.json")),
-    (
-        "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🧱️constructOneWayRe-72a083.json"),
-    ),
-    (
-        "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🏛️constructReinforc-411bd6.json"),
-    ),
-    (
-        "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🛡️constructReinforc-c38891.json"),
-    ),
-    (
-        "aec.building.structure.classic",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🌉️aec.building/🕹️interactions/🚧️constructReinforc-e8fc67.json"),
-    ),
-    (
-        "aec.building.structure.fem.line",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/📏️aec.building/🕹️interactions/🔣️constructLineElem-0d404b.json"),
-    ),
-    (
-        "aec.building.structure.fem.solid",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🧊️aec.building/🕹️interactions/🔣️constructSolidEle-105046.json"),
-    ),
-    (
-        "aec.building.structure.fem.surface",
-        include_str!("../../../../../../../../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets/🏗️modelDefinitions/🗺️aec.building/🕹️interactions/🔣️constructSurfaceE-7da86f.json"),
-    ),
-];
+/// `(modelDefinitionId, raw JSON)` for every `🕹️interactions/*.json` asset, one slice per catalog (`✏️editor/🗂️catalog`) —
+/// pinned against the on-disk tree by `every_interaction_asset_on_disk_parses_as_interaction_spec`. `spatial.shape`'s
+/// slices are re-merged into the asset names' order once parsed.
+const RAW_INTERACTION_ASSETS: &[&[(&str, &str)]] = &[semio_s_artifact_cad_cad_catalog_shape_curves::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_surfaces::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_solids::INTERACTIONS, semio_s_artifact_cad_cad_catalog_shape_edits::INTERACTIONS, semio_s_artifact_cad_cad_catalog_building::INTERACTIONS, semio_s_artifact_cad_cad_catalog_energy::INTERACTIONS, semio_s_artifact_cad_cad_catalog_structure::INTERACTIONS, semio_s_artifact_cad_cad_catalog_fem::INTERACTIONS];
 
 fn parse_interaction_spec(raw: &str) -> Option<InteractionSpec> {
     semio_framework_pack_json::from_json_str(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()
@@ -183,7 +104,11 @@ fn parse_interaction_spec(raw: &str) -> Option<InteractionSpec> {
 /// JSON) and every pointer move used to re-parse all of them.
 fn parsed_specs() -> &'static [(&'static str, InteractionSpec)] {
     static SPECS: OnceLock<Vec<(&'static str, InteractionSpec)>> = OnceLock::new();
-    SPECS.get_or_init(|| RAW_INTERACTION_ASSETS.iter().filter_map(|(model_def, raw)| parse_interaction_spec(raw).map(|spec| (*model_def, spec))).collect())
+    SPECS.get_or_init(|| {
+        let mut specs: Vec<(&'static str, InteractionSpec)> = RAW_INTERACTION_ASSETS.iter().flat_map(|assets| assets.iter()).filter_map(|(model_def, raw)| parse_interaction_spec(raw).map(|spec| (*model_def, spec))).collect();
+        specs.sort_by_cached_key(|(model_def, spec)| (*model_def != "spatial.shape", if *model_def == "spatial.shape" { spec.id.rsplit('.').next().unwrap_or_default().to_lowercase() } else { String::new() }));
+        specs
+    })
 }
 
 fn spec_by_id(id: &str) -> Option<&'static InteractionSpec> {
@@ -702,7 +627,7 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
 /// tessellation).
 fn solid_object(kernel: &mut Brep, typology: &str, label: String, origin: [f64; 3], extent: [f64; 3], orientation: [f64; 4], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let extent = [extent[0].max(0.02), extent[1].max(0.02), extent[2].max(0.02)];
-    let solid = match crate::standards::v1::subsets::any::schema::inferences::typology_mesh_kind(typology) {
+    let solid = match semio_s_artifact_cad_cad_inferences::typology_mesh_kind(typology) {
         "cylinder" => kernel.cylinder_prim(extent[0].max(extent[1]) * 0.5, extent[2]).ok()?,
         "sphere" => kernel.sphere_prim(extent[0].max(extent[1]).max(extent[2]) * 0.5).ok()?,
         _ => kernel.box_prim(extent[0], extent[1], extent[2]).ok()?,

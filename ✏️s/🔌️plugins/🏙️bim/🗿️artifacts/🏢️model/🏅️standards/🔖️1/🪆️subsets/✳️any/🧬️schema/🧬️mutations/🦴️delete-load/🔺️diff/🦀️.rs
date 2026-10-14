@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative delete-load diff; no derived state is evaluated.
 use super::DeleteLoad;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &DeleteLoad, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
 

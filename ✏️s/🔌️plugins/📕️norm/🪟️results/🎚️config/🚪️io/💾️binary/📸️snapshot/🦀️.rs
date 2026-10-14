@@ -1,5 +1,5 @@
 //! 🚪️ Norm Results configuration physical snapshot representation.
-use crate::results_window_config::NormResultsWindowConfig;
+use crate::schema::NormResultsWindowConfig;
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl pack::snapshot::ArtifactPack for NormResultsWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

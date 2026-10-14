@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::fem2d::commands::set_active_example::SetActiveExample;
 use crate::editor::fem2d::unit_tests::context::{dispatch, fem2d_app};
 use crate::editor::fem2d::Fem2dCommand;
-use crate::load_id;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::load_id;
 use pack::snapshot::ArtifactDsl;
 
 fn demo() -> Fem2dSnapshot {
@@ -23,7 +23,7 @@ fn load_of(snapshot: &Fem2dSnapshot, id: &str) -> FemLoad {
 #[semio_framework_async_macros::async_test]
 async fn patch_load_edits_a_nodal_magnitude_on_the_demo_2d() {
     let mut app = fem2d_app();
-    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+    dispatch(&mut app, Fem2dCommand::SetActiveExample(SetActiveExample { example_id: semio_s_artifact_fem_2d_io::examples::demo::ID.into() })).await;
     dispatch(&mut app, Fem2dCommand::PatchLoad(PatchLoad { id: "l6".into(), field: "value".into(), value: "-8000".into() })).await;
     let FemLoad::Nodal { node_id, dof, value, .. } = load_of(&app.snapshot().expect("snapshot"), "l6") else { panic!("l6 stays nodal") };
     assert_eq!(value, -8000.0);

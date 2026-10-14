@@ -108,7 +108,6 @@ class HomeDirectoryProjectionPersistenceCheckScript extends BundleScript {
       const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
-          cargoArgs: ["--features", "component-app-assembly"],
           laws: ["editor::home::transient::component::tests::the_projection_wire_round_trips_documents_and_rejects_corruption"],
         }], progress(event) { console.log(`home-directory-projection-persistence ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
       console.log(`home-directory-projection-persistence-native-receipts: ${JSON.stringify(receipts)}`);
@@ -210,7 +209,6 @@ class HomeDirectoryEventPageOwnerCheckScript extends BundleScript {
       const receipts = await runRepositoryExactCargoLaws({ preparation: configuredRepositoryCargoPreparationPolicyV1(), invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1() }, cwd: this.root, ...homeExactCargoEnvironment(), groups: [{
           package: "semio-s-artifact-space-home",
           target: { kind: "lib" },
-          cargoArgs: ["--features", "component-app-assembly"],
           laws: [
             "editor::home::commands::apply_directory_event_page::tests::sealed_page_replaces_projection_once_and_rejects_races",
             "editor::home::transient::component::tests::a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bound",
@@ -420,7 +418,6 @@ class HomeDirectoryIdentityRowsCheckScript extends BundleScript {
           {
             package: "semio-s-artifact-space-home",
             target: { kind: "lib" },
-            cargoArgs: ["--features", "component-app-assembly"],
             laws: [
               "editor::home::modes::explore::windows::main::component::tests::a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions",
               "editor::home::modes::explore::windows::main::component::tests::spectator_and_unbound_hub_rows_only_carry_open",

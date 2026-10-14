@@ -1,5 +1,5 @@
 use super::*;
-use semio_s_artifact_stdio_ifc::part21::{Part21Header, Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance, Part21Value};
 
 fn header(schema: &str) -> Part21Header {
     let mut header = Part21Header::iso_10303_21_minimum();

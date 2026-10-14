@@ -1,8 +1,22 @@
 //! 🧭️ The value editor's edit rules: which snapshot pointer raises which ONE concrete value mutation kind. An edit no kind expresses is refused, never approximated.
 
-use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, edited, ent, event_path, field, item, keyed, named, position, record, rem, resolve, segments, unsupported, Reshape};
-use crate::schema::mutations::SemioValueMutation;
-use crate::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::build;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::edited;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::ent;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::event_path;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::field;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::item;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::keyed;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::named;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::position;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::record;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::rem;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::resolve;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::segments;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::unsupported;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::Reshape;
+use semio_s_artifact_stdio_semio_value_mutations::schema::mutations::SemioValueMutation;
+use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};

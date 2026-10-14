@@ -1,0 +1,18 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-cad-cad-catalog-energy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "cad energy model-definition catalog assets"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]

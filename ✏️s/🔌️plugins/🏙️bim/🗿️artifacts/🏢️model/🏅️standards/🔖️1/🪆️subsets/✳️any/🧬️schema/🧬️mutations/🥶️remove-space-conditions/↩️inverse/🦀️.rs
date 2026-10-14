@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `RemoveSpaceConditions`: one absolute `SetSpaceConditions` that states every field of the removed record (an unstated field as an assigned null), none when the space has no conditions.
 
 use super::RemoveSpaceConditions;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use super::super::set_space_conditions::SetSpaceConditions;
 
 pub fn inverse(payload: &RemoveSpaceConditions, base: &ModelSnapshot) -> Vec<ModelMutation> {

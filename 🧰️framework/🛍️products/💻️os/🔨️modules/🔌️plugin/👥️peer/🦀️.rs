@@ -427,7 +427,7 @@ type PeerPresencePacks = [Option<(String, Vec<u8>)>; PEER_PRESENCE_SLOTS];
 
 pub(crate) struct PeerRosterPublication<A: ArtifactApp> {
     pub(crate) seq: u64,
-    generation: u64,
+    pub(crate) generation: u64,
     own_color: Option<u8>,
     now_ms: i64,
     pub(crate) cancel: semio_framework_job::CancelToken,
@@ -750,7 +750,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             }
         }
         if self.pending_commit_retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.pending_commit_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return semio_framework_value_retirement_owner::retirement_owner_close(&mut self.pending_commit_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
         if self.pending_actor.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_actor, &mut self.rejected, grant).map(|step| PluginLifecycleStep::Progress(step.progress())); }
         if self.pending_presence.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_presence, &mut self.rejected, grant).map(|step| PluginLifecycleStep::Progress(step.progress())); }

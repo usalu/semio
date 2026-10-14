@@ -64,7 +64,7 @@ async fn offset_sphere_matches_closed_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn offset_nurbs_surface_within_bound() {
-    use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+    use semio_framework_3d_brep_curve::bspline::KnotVector;
     let u_knots = KnotVector::clamped_uniform(3, 2);
     let v_knots = KnotVector::clamped_uniform(3, 2);
     let controls = vec![

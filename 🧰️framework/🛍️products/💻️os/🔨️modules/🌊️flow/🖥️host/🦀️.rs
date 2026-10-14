@@ -4,7 +4,7 @@ use crate::infinite::board::schema::dag_input::{DagSelectionDomains,DagNodeStatu
 use crate::infinite::board::ports::directed_dag as dag;
 use semio_framework_canvas as canvas;
 use neural_engine as neural;
-use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
+use semio_framework_os_infinite_directed_presentation::dag_host_snapshot_to_wire_literal;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::{Arc};
@@ -16,10 +16,12 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 
 use semio_framework_os_infinite::board::schema::layout::{DagLayoutOptions};
 use dag::{fit_node_size, would_create_cycle, DagHost};
-use semio_framework_artifact_infinite_dag::{dag_host_snapshot_execution_rows, DagHostSnapshot, DagHostSnapshotEdge, DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
+use semio_framework_os_infinite_directed_presentation::{dag_host_snapshot_execution_rows, DagHostSnapshot, DagHostSnapshotEdge};
+
+use semio_framework_os_infinite_directed_presentation::{DagNodeKind, DagNodeSpec, EdgeRouteStyle, IoPortSpec};
 use semio_framework_artifact_flow_flow::{retire_flow_mutation, widget_id_for, AddSynapse, AddWidget, ChangeLayout, ChangeSynapse, ChangeWidget, FlowLayoutEntry, FlowMutation, FlowStore, RemoveSynapse, RemoveWidget, FLOW_DOCUMENT_SCHEMA};
-use graph::dsl::{WireEdge, WireNode};
-use graph::manifest::{PropertyBag, PropertyValue};
+use semio_framework_graph_dsl::{WireEdge, WireNode};
+use semio_framework_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{
     channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, EvalStepBudget, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot,
     Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND,
@@ -462,7 +464,7 @@ impl FlowHost {
             geometry_port: None,
             operator_registry: None,
             host_snapshot: host_snapshot,
-            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             current_channels: None,
             export_payloads: HistoryFoldIndex::new(),
             last_eval_json: String::new(),
@@ -2241,7 +2243,7 @@ impl FlowHost {
                 Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             })
             .collect();
-        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
+        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
@@ -5383,20 +5385,20 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hist
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = semio_framework_artifact_infinite_dag::normalize_node_display(&display_name, &abbreviation);
+            let (normalized_name, _) = semio_framework_os_infinite_directed_presentation::normalize_node_display(&display_name, &abbreviation);
             (dag::computation_node_width(&normalized_name, &inputs, &outputs), dag::computation_node_height(1, 1, false, false))
         }
         Widget::OutputPreview { preview, expanded, .. } => dag::preview_widget_size(&dag_preview_content_from_dict(preview), &expanded.iter().cloned().collect()),
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => {
             let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = semio_framework_artifact_infinite_dag::normalize_node_display(&display_name, &abbreviation);
+            let (normalized_name, _) = semio_framework_os_infinite_directed_presentation::normalize_node_display(&display_name, &abbreviation);
             (dag::computation_node_width(&normalized_name, &inputs, &outputs), dag::computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs))
         }
         Widget::Cluster { id, name, tree, .. } => {
             let (inputs, outputs) = cluster_io_layout(id, name, tree, synapses);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
-            let (normalized_name, _) = semio_framework_artifact_infinite_dag::normalize_node_display(&display_name, &abbreviation);
+            let (normalized_name, _) = semio_framework_os_infinite_directed_presentation::normalize_node_display(&display_name, &abbreviation);
             (dag::computation_node_width(&normalized_name, &inputs, &outputs), dag::computation_node_height(inputs.len(), outputs.len(), false, false))
         }
     }

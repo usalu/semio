@@ -2,7 +2,7 @@
 //! stays a finite, non-negative number of persons per square metre; providing only equal values is a no-op.
 
 use super::SetZone;
-use crate::{Entry, ModelDiff, ModelSnapshot, Patch};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &SetZone, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

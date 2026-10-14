@@ -1,8 +1,8 @@
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::house;
 use crate::standards::v1::subsets::any::io::export::ifc::{codec, export_ifc2x3, export_ifc4, model_to_part21, Schema};
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
-use crate::{ModelSnapshot, StairFlight};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, StairFlight};
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn without_row(model: &ModelSnapshot, row: &str) -> (ModelSnapshot, Vec<String>) {
     let mut document = model_to_part21(Schema::Ifc2x3, model).expect("the model exports").0;

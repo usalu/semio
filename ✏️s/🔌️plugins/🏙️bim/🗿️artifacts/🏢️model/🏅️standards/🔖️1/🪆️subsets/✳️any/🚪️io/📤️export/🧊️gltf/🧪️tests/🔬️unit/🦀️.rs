@@ -9,7 +9,7 @@ use semio_framework_os_kernel::io::io_mechanism::IoEntryDirection;
 fn the_declaration_lists_the_gltf_export_between_the_bim_and_the_gltf_dialect() {
     let declaration = io();
     let entry = declaration.entries.iter().find(|entry| entry.into == GLTF_DIALECT).expect("the glTF entry");
-    assert_eq!((entry.from, entry.direction), (crate::BIM_MODEL_DIALECT, IoEntryDirection::Export));
+    assert_eq!((entry.from, entry.direction), (crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT, IoEntryDirection::Export));
     assert_eq!(GLTF_DIALECT.artifact_kind, "s.stdio.gltf");
 }
 

@@ -1,0 +1,292 @@
+{
+ "artifact": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad",
+ "crate": "semio_s_artifact_cad_cad",
+ "consumers": [
+  "✏️s",
+  "🌎️hub"
+ ],
+ "aliases": {
+  "dsl": "semio_framework_os_kernel",
+  "protocol": "semio_framework_os_kernel",
+  "store": "semio_framework_os_kernel",
+  "framework_schema": "semio_framework_schema"
+ },
+ "crates": [
+  {
+   "package": "semio-s-artifact-cad-cad-model",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "description": "cad model: artifact schema, snapshot records, diff, references and geometry",
+   "doc": "//! 🧬️ The `s.cad.cad` model: artifact schema, snapshot records and pane vocabulary, diff algebra, references and geometry."
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mutations",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/[^/]+/🧪️tests/"
+   ],
+   "description": "cad mutation vocabulary: the dispatch enum and every leaf's fixture laws",
+   "flatten": [
+    "/🧬️mutations/[^/]+/🧪️tests/"
+   ]
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mut-slots",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️slots",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🗂️ CAD model-slot lifecycle mutations: create and delete the shape, building, energy and structure-classic model children.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(🧱create-shape-model|🧨delete-shape-model|🏢create-building-model|💥delete-building-model|⚡create-energy-model|🔌delete-energy-model|🏛️create-structure-classic|💣delete-structure-classic-model)/(?!🧪️tests/)"
+   ],
+   "description": "cad model-slot lifecycle mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mut-documents",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄️documents",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 📄️ CAD child-document collection mutations: create and delete drawing and brep children.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(📐️create-drawing|🧹delete-drawing|🧊️create-brep|🧹delete-brep)/(?!🧪️tests/)"
+   ],
+   "description": "cad drawing and brep child mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mut-nodes",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕸️nodes",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🕸️ CAD scene-graph node mutations: create, delete and rename nodes.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(➕create-node|🗑️delete-node|🏷️rename-node)/(?!🧪️tests/)"
+   ],
+   "description": "cad node mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-mut-references",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️references",
+   "module": "standards::v1::subsets::any::schema::mutations",
+   "create_root": "//! 🖼️ CAD reference mutations: visibility, lock, width, placement, media and list replacement of references.",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/(👁️change-reference-hidden|🔒change-reference-locked|📏change-reference-width|📍move-reference|🖇️replace-reference-media|📎replace-references)/(?!🧪️tests/)"
+   ],
+   "description": "cad reference mutation leaves"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-inferences",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "description": "cad inference owners"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-io",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "description": "cad io: text and binary codecs, import, export and geometry bridges"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-io-sqlite",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite",
+   "description": "cad SQLite snapshot codec"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-play",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import",
+   "description": "cad bundled play scene, genesis catalogue and composed panes"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-examples",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo",
+   "description": "cad demo example"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-interaction-spec",
+   "owner": "🎬️interaction-spec",
+   "description": "cad declarative spatial interaction spec types"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-host",
+   "owner": "🔨️modules/🏠️host/🧰️owned",
+   "description": "cad document store authorities"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-testing",
+   "owner": "🧪️tests/🧩️sample-scene",
+   "description": "cad shared sample records for tests"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-structure",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏛️structure",
+   "description": "cad structure model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-building",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🏢️building",
+   "description": "cad building model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-fem",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📏️fem",
+   "description": "cad fem model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-energy",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🔥️energy",
+   "description": "cad energy model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-shape",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/📐️shape",
+   "description": "cad shape model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-shape-curves",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/〰️shape-curves",
+   "description": "cad shape-curves model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-shape-surfaces",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🗺️shape-surfaces",
+   "description": "cad shape-surfaces model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-shape-solids",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/🧊️shape-solids",
+   "description": "cad shape-solids model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-catalog-shape-edits",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗂️catalog/✂️shape-edits",
+   "description": "cad shape-edits model-definition catalog assets"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-typology",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology",
+   "description": "cad typology and model-definition engine"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-interaction",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction",
+   "description": "cad interaction statechart engine"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-picking",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧲️picking",
+   "description": "cad geometry picking engine"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-config",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config",
+   "description": "cad editor config"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-presence",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+   "description": "cad editor presence"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-kit",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit",
+   "claims": [
+    "^🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/"
+   ],
+   "description": "cad editor kit: runtime, view, dispatch context, helpers and terminology"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-transient",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient",
+   "description": "cad world-window engagement transient"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-transform",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform",
+   "description": "cad transform tool"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-modes",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit",
+   "description": "cad edit mode, world windows and options"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-commands",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands",
+   "module": "editor::cad::commands",
+   "create_root": "//! 🎮️ CAD editor command handlers: camera, contributions, engagement, io, model definition, nodes, objects, references, sun, transform and utility.",
+   "description": "cad editor command handlers"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-panels",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels",
+   "module": "editor::cad::panels",
+   "create_root": "//! 📌️ CAD editor panels: catalogue, document and inspection.",
+   "description": "cad editor panels"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-editor",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "description": "cad editor app: play app, retained commands, store preparation and manifest"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-viewer",
+   "owner": "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "description": "cad viewer"
+  }
+ ],
+ "tests": [
+  {
+   "package": "semio-s-artifact-cad-cad",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_editor_unit"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🦀️.rs",
+   "name": "cad_model_document_contract"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_model_diff"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-modes",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🧪️tests/🔬️window/🦀️.rs",
+   "name": "cad_modes_window_config"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_panels_inspection"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_panels_artifact"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-panels",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_panels_catalogue"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-transform",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🧭️transform/🧪️tests/🔬️unit/🦀️.rs",
+   "name": "cad_transform_tool"
+  },
+  {
+   "package": "semio-s-artifact-cad-cad-io-sqlite",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+   "name": "cad_io_sqlite_snapshot"
+  }
+ ],
+ "moves_files": [
+  "🚚️domain.moved.json",
+  "🚚️editor-kit.moved.json",
+  "🚚️window-runtime.moved.json",
+  "🚚️patches.moved.json",
+  "🚚️artifact-kind.moved.json"
+ ],
+ "existing_tests": [
+  {
+   "package": "semio-s-artifact-cad-cad-model",
+   "file": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/⚖️retirement-law/🦀️.rs",
+   "name": "retirement_law"
+  }
+ ],
+ "header": []
+}

@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-remodel-remodeling-inferences"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "remodeling inferences: bounds and relative-pose inference owners and their descriptor."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-remodel-remodeling-algebra = { workspace = true }
+semio-s-artifact-remodel-remodeling-lie = { workspace = true }
+semio-s-artifact-remodel-remodeling-model = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-remodel-remodeling-io = { workspace = true }
+serde_json = { workspace = true }

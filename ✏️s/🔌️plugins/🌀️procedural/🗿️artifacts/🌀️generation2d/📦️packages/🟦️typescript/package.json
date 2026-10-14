@@ -23,9 +23,6 @@
   "dependencies": {},
   "license": "LGPL-3.0-or-later",
   "bundleKind": "library",
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/framework": "workspace:*"
   }

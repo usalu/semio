@@ -11,9 +11,6 @@
     "test-schema-hash-native": "bun repo run @semio-tech/framework-pack-rs:test-schema-hash-native",
     "test-schema-storage-native": "bun repo run @semio-tech/framework-pack-rs:test-schema-storage-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@webassemblyjs/leb128": "1.13.2",
     "@semio-tech/process": "workspace:*"

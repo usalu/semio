@@ -43,7 +43,6 @@ pub const UNOBSERVABLE: &[&str] = &["insert-object"];
 //#endregion 🔖️Vocabulary
 
 
-#[cfg(feature = "oracles")]
 //#region 🔖️Oracles
 mod oracles {
     use semio_s_plugin_stdio_document_test_oracle::{self, oracle_delete_page, oracle_replace_metadata};
@@ -761,7 +760,6 @@ mod oracles {
 /// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -771,7 +769,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 /// ↩️ Applies one declared mutation kind and then its own computed inverse, in sequence, proving
 /// the same `apply(inverse(m, base), apply(m, base)) == base` law `PdfMutation::inverse` proves at
 /// the Rust-model level, here against the registered reference library instead.
-#[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let kind = spec.str("kind");
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -779,54 +776,33 @@ pub fn oracle_apply_mutation_inverse(input: &[u8], spec: &Json) -> Result<Vec<u8
 }
 
 /// 🔄️ Parses and reserializes through the independent implementation without a fake mutation.
-#[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
 /// 👁️ This subset's own semantic projection -- `document::project_pdf` augmented with per-page
 /// `/Rotate`. @see [`oracles::project_pdf_1_7`].
-#[cfg(feature = "oracles")]
 pub fn project_pdf_1_7(bytes: &[u8]) -> Result<Json, String> {
     oracles::project_pdf_1_7(bytes)
 }
 
 /// 🔒️ Reads actual file encryption independently without exposing reference-library types.
-#[cfg(feature = "oracles")]
 pub fn encryption_present(bytes: &[u8]) -> Result<bool, String> {
     lopdf::Document::load_mem(bytes).map(|document| document.trailer.get(b"Encrypt").is_ok()).map_err(|error| error.to_string())
 }
 
-/// 🚫️ Without the `oracles` feature the reference implementation is not linked at all.
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 
-#[cfg(not(feature = "oracles"))]
-pub fn project_pdf_1_7(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
 //#endregion 🔖️Dispatch
 
 //#region 🧪️Tests
-#[cfg(all(test, feature = "oracles"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
 
 /// 🔢️ Reads native text operand code groups through the independent content parser.
-#[cfg(feature = "oracles")]
 pub fn reference_content_codes(input: &[u8], width: usize) -> Result<Vec<Vec<u32>>, String> {
     if !(1..=4).contains(&width) { return Err("invalid reference codespace width".into()); }
     let content = lopdf::content::Content::decode(input).map_err(|error|error.to_string())?;
@@ -838,7 +814,6 @@ pub fn reference_content_codes(input: &[u8], width: usize) -> Result<Vec<Vec<u32
 }
 
 /// 🪪️ Decodes one complete native text operand through the independent PDF grammar and text codec.
-#[cfg(feature = "oracles")]
 pub fn reference_text_operand(input:&[u8])->Result<String,String> {
     let content=lopdf::content::Content::decode(input).map_err(|error|error.to_string())?;
     let operand=content.operations.first().and_then(|operation|operation.operands.first()).ok_or("independent text operand absent")?;
@@ -846,7 +821,6 @@ pub fn reference_text_operand(input:&[u8])->Result<String,String> {
 }
 
 /// 🧪️ Reads sampled-function native words' physical stream through the independent reader.
-#[cfg(feature = "oracles")]
 pub fn reference_sampled_function_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     let mut streams=Vec::new();
@@ -862,29 +836,24 @@ pub fn reference_sampled_function_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)
 }
 
 /// 🖼️ Independently reads native image sample streams through lopdf without production PDF APIs.
-#[cfg(feature="oracles")]
 pub fn reference_image_sample_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)>,String>{let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;let mut result=Vec::new();for object in document.objects.values(){if let lopdf::Object::Stream(stream)=object{if stream.dict.get(b"Subtype").ok().and_then(|value|value.as_name().ok())==Some(b"Image".as_slice()){let bits=u32::try_from(stream.dict.get(b"BitsPerComponent").map_err(|error|error.to_string())?.as_i64().map_err(|error|error.to_string())?).map_err(|error|error.to_string())?;result.push((bits,stream.get_plain_content().map_err(|error|error.to_string())?));}}}Ok(result)}
 
 /// 📄️ Counts pages through the independent native PDF reader.
-#[cfg(feature="oracles")]
 pub fn reference_page_count(input:&[u8])->Result<usize,String> {Ok(lopdf::Document::load_mem(input).map_err(|error|error.to_string())?.get_pages().len())}
 
 /// 🌈️ Reads retained ICC stream bodies through the independent native PDF reader.
-#[cfg(feature="oracles")]
 pub fn reference_profile_streams(input:&[u8])->Result<Vec<Vec<u8>>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     document.objects.values().filter_map(|object|object.as_stream().ok()).filter(|stream|stream.dict.get(b"N").is_ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
 }
 
 /// 📦️ Reads native stream bodies through the independent PDF filter implementation.
-#[cfg(feature="oracles")]
 pub fn reference_stream_bodies(input:&[u8])->Result<Vec<Vec<u8>>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     document.objects.values().filter_map(|object|object.as_stream().ok()).map(|stream|stream.get_plain_content().map_err(|error|error.to_string())).collect()
 }
 
 /// 📄️ Reads each native page's operator spelling through the independent PDF grammar.
-#[cfg(feature = "oracles")]
 pub fn reference_page_operator_names(input:&[u8])->Result<Vec<Vec<String>>,String> {
     let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
     document.get_pages().values().map(|page|lopdf::content::Content::decode(&document.get_page_content(*page)).map(|content|content.operations.into_iter().map(|operation|operation.operator).collect()).map_err(|error|error.to_string())).collect()

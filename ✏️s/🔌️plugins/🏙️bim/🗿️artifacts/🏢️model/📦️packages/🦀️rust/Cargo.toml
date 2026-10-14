@@ -36,7 +36,8 @@ semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-deflate = { path = "../../../../../../../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
-semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }

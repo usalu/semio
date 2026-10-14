@@ -7,9 +7,9 @@
 //! otherwise pass.
 
 use crate::{assert_is_unit_cube, assert_oracle_agrees_on_unit_cube, project, retire_document, unit_cube_semio_mesh};
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::stl::v_ascii::any as export;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::stl::v_ascii::any as import;
-use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::mesh_bridge;
+use semio_s_artifact_procedural_3d_io_export::serializers::artifacts::stl::v_ascii::any as export;
+use semio_s_artifact_procedural_3d_io_import::deserializers::artifacts::stl::v_ascii::any as import;
+use semio_s_artifact_procedural_3d_mesh_bridge;
 
 fn exported() -> Vec<u8> {
     export::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as stl")

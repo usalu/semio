@@ -2,7 +2,7 @@
 use super::*;
 use std::alloc::{GlobalAlloc,Layout,System};
 std::thread_local!{static REQUEST_BYTES:std::cell::Cell<Option<usize>>=const{std::cell::Cell::new(None)};static SLOT_REQUESTS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
-fn record(size:usize,alignment:usize){REQUEST_BYTES.with(|value|{if let Some(bytes)=value.get(){value.set(Some(bytes.checked_add(size).expect("property request observation overflow")));if alignment==std::mem::align_of::<(String,graph::manifest::PropertyValue)>(){SLOT_REQUESTS.with(|count|count.set(count.get()+1));}}});}
+fn record(size:usize,alignment:usize){REQUEST_BYTES.with(|value|{if let Some(bytes)=value.get(){value.set(Some(bytes.checked_add(size).expect("property request observation overflow")));if alignment==std::mem::align_of::<(String,semio_framework_graph_manifest::PropertyValue)>(){SLOT_REQUESTS.with(|count|count.set(count.get()+1));}}});}
 std::thread_local!{static HEAP:std::cell::Cell<Option<(usize,usize)>>=const{std::cell::Cell::new(None)};}
 fn heap_event(born:usize,released:usize){HEAP.with(|value|{if let Some((a,b))=value.get(){value.set(Some((a+born,b+released)));}});}
 pub(crate) fn heap<T>(operation:impl FnOnce()->T)->(T,usize,usize){let prior=HEAP.with(|value|value.replace(Some((0,0))));let result=operation();let(a,b)=HEAP.with(|value|value.replace(prior).unwrap());(result,a,b)}
@@ -20,7 +20,7 @@ impl Drop for Restore{fn drop(&mut self){REQUEST_BYTES.with(|value|value.set(sel
 fn requests<T>(operation:impl FnOnce()->T)->(T,usize,usize){let restore=Restore(REQUEST_BYTES.with(|value|value.replace(Some(0))),SLOT_REQUESTS.with(|value|value.replace(0)));let result=operation();let bytes=REQUEST_BYTES.with(|value|value.get().unwrap());let slots=SLOT_REQUESTS.with(std::cell::Cell::get);drop(restore);(result,bytes,slots)}
 #[test]
 fn sqlite_snapshot_framework_dag_property_backing_is_admitted_before_actual_requests(){
- use graph::manifest::PropertyBag;
+ use semio_framework_graph_manifest::PropertyBag;
  use semio_framework_value::{NativeDecodeControl,ValueRefusalKind};
  for cardinality in laws()["propertyMembers"]["cardinalities"].as_array().unwrap(){
   let count=cardinality.as_u64().unwrap()as usize;

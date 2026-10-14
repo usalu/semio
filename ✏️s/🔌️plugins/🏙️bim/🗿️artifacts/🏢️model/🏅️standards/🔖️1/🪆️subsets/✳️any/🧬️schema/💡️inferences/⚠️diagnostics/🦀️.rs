@@ -25,7 +25,7 @@ use super::super::ramp_runs::RampRun;
 use super::super::stair_runs::StairRun;
 use super::super::storey_levels::StoreyLevel;
 use super::super::wall_layout::WallLayout;
-use crate::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -336,7 +336,7 @@ pub fn storey_dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     let ceilings = snapshot.ceilings.iter().filter(|(_, row)| row.storey == storey);
     let roofs = snapshot.roofs.iter().filter(|(_, row)| row.storey == storey);
     let spaces = snapshot.spaces.iter().filter(|(_, row)| row.storey == storey).map(|(id, space)| (id.clone(), dep_value(&space.boundary)));
-    let profiles = |rows: Vec<(&String, Option<crate::Profile>)>| DslValue::object(rows.into_iter().map(|(id, profile)| (id.clone(), dep_value(&profile))));
+    let profiles = |rows: Vec<(&String, Option<crate::standards::v1::subsets::any::schema::snapshot::Profile>)>| DslValue::object(rows.into_iter().map(|(id, profile)| (id.clone(), dep_value(&profile))));
     dep_object([
         ("storey", dep_value(&snapshot.storeys.get(storey).cloned())),
         ("curtain_walls", dep_records(snapshot.curtain_walls.iter().filter(|(_, row)| row.storey == storey))),

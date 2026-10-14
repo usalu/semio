@@ -82,6 +82,5 @@ pub mod stage;
 mod component;
 pub use component::*;
 
-/// 🧪️ The JSON codec the Protocol v2 subject hosts decode the shared vectors with — enabled by the `sut` feature only.
-#[cfg(feature = "sut")]
+/// 🧪️ The JSON codec the Protocol v2 subject hosts decode the shared vectors with.
 pub use serde_json;

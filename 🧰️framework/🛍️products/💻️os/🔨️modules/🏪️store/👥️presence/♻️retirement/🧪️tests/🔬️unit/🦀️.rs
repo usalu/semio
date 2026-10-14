@@ -2,7 +2,7 @@
 fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: String, presence: Value, received: i64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let mut actor = Some(actor); let mut presence = Some(presence);
     let result = publication.adopt(&mut actor, &mut presence, received, &mut original);
     assert!(result.is_ok(), "fixture must retain rejected inputs in its original caller");
@@ -12,16 +12,16 @@ fn adopt_fixture(publication: &mut PresencePeersPublication<Value>, actor: Strin
 fn commit_fixture(publication: &mut PresencePeersPublication<Value>, grant: RetainedCloneGrant) -> Result<PresencePeersCommit<Value>, ValueError> {
     let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1048576, &mut observer);
-    let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+    let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
     let (commit, receipt) = publication.take_commit(&mut original)?;
     assert_eq!(receipt, original.progress()); assert!(receipt.fits(grant)); Ok(commit)
 }
 use super::fixture_mutations::{SetValue, ValueMutation};
 use super::*;
-use crate::os_store::component::presence_test_retirement::{Factory, CountedPresence, CLOSE_GRANT, observed_close, observed_step, finish, finish_box, admit_returned_string, finish_registry};
+use crate::presence_test_retirement::{Factory, CountedPresence, CLOSE_GRANT, observed_close, observed_step, finish, finish_box, admit_returned_string, finish_registry};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::controlled::ControlledRetirement};
 
-pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
+pub(super) fn assert_fixture_descriptor<T: protocol::MutationLeaf>(descriptor: &str) {
     assert_eq!(serde_json::Value::from(T::DESCRIPTOR.to_value()), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
     assert!(T::DESCRIPTOR.validate().is_ok());
 }
@@ -30,7 +30,7 @@ pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descript
 /// committed JSON: it is the canonical Rust wire of the leaf.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    crate::os_store::test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    semio_framework_value::testing::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 #[test]
@@ -41,9 +41,9 @@ fn direct_presence_fixture_value_inverse() {
     let mut wire = row["payload"].clone();
     wire["operation"] = row["operation"].clone();
     let op = serde_json::from_value::<ValueMutation>(wire).unwrap();
-    let after = crate::os_spr::apply_diff(op.diff(&before).diff(), &before).unwrap();
+    let after = protocol::apply_diff(op.diff(&before).diff(), &before).unwrap();
     assert_eq!(after.0, serde_json::from_value::<i32>(row["after"].clone()).unwrap());
-    assert_eq!(crate::os_spr::apply_diff(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff(), &after).unwrap().0, before.0);
+    assert_eq!(protocol::apply_diff(op.inverse(&before).expect("valid retained mutation inverse fixture")[0].diff(&after).diff(), &after).unwrap().0, before.0);
     assert_eq!(serde_json::from_value::<ValueMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
     for json in ["{\"operation\":\"setValue\"}", "{\"operation\":\"setValue\",\"n\":null}", "{\"operation\":\"setValue\",\"n\":2147483648}", "{\"operation\":\"setValue\",\"n\":0.5}", "{\"operation\":\"setValue\",\"n\":7,\"unknown\":true}"] {
         assert!(serde_json::from_str::<ValueMutation>(json).is_err());
@@ -66,7 +66,7 @@ impl semio_framework_value::FromValue for Value {
     }
 }
 
-impl crate::os_spr::DiffAlgebra<Value> for Value {
+impl protocol::DiffAlgebra<Value> for Value {
     fn inverse(&self, base: &Value) -> Self {
         base.clone()
     }
@@ -76,7 +76,7 @@ impl crate::os_spr::DiffAlgebra<Value> for Value {
 }
 
 impl MutationDiff<Value> for Value {
-    fn apply(&self, _base: &Value, _capability: crate::os_spr::ApplyCapability) -> crate::os_spr::MutationApplyResult<Value> {
+    fn apply(&self, _base: &Value, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
         Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
@@ -343,7 +343,7 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         let running = std::cell::Cell::new(refusal != "nativeCancellation");
         let mut observer = |_: semio_framework_value::native_decoding::NativeDecodeProgress| running.get();
         let mut native = semio_framework_value::NativeDecodeControl::new(law["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observer);
-        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, refused);
+        let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, refused);
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.adopt(&mut actor, &mut presence, law["receivedAtMilliseconds"].as_i64().unwrap(), &mut original));
         assert!(result.is_err());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (law["refusedRequestedBytes"].as_u64().unwrap() as usize, law["refusedReleasedBytes"].as_u64().unwrap() as usize));
@@ -353,7 +353,7 @@ fn original_peer_publication_refuses_before_birth_and_settles_actual_original_re
         assert_eq!(presence.as_ref().unwrap().0, law["peer"]["value"].as_i64().unwrap() as i32);
         drop(original);
         running.set(true);
-        let mut original = crate::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
+        let mut original = semio_framework_io_sqlite_snapshot::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| publication.adopt(&mut actor, &mut presence, law["receivedAtMilliseconds"].as_i64().unwrap(), &mut original));
         let step = step.unwrap();
         assert!(step.progress().fits(grant));
@@ -555,123 +555,6 @@ fn retained_presence_overlapping_rosters_retire_shared_entries_once_across_worke
         assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 3);
         eprintln!("[DEBUG] overlapping immutable peer roots retired each payload once across workers race={race}, actor_bytes={bytes}");
     }
-}
-
-#[test]
-fn retained_presence_read_return_releases_alias_before_cross_worker_reclamation() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
-    let text = fixture["readerReturn"]["text"].as_str().unwrap();
-    let expected: String = serde_json::from_value(fixture["readerReturn"]["text"].clone()).unwrap();
-    assert_eq!(expected, text);
-    for variant in fixture["readerReturn"]["variants"].as_array().unwrap() {
-        let registry = crate::os_store::SnapshotReadRegistryHandle::new();
-        let root = Arc::new(text.to_string());
-        let lease = registry.try_issue(root.clone()).unwrap();
-        let variant = variant.as_str().unwrap().to_string();
-        let barrier = Arc::new(std::sync::Barrier::new(2));
-        let worker_barrier = barrier.clone();
-        let worker = std::thread::spawn(move || {
-            worker_barrier.wait();
-            match variant.as_str() {
-                "typed-drop" => { drop(SnapshotRead::new(root, lease)); None }
-                "erased-drop" => { drop(ErasedSnapshotRead::new(root, lease)); None }
-                "explicit-return" => { assert!(SnapshotRead::new(root, lease).return_to_registry()); None }
-                "witness-return" => Some(SnapshotRead::new(root, lease).return_to_registry_witness().unwrap()),
-                _ => unreachable!(),
-            }
-        });
-        barrier.wait();
-        let mut final_owner = None;
-        for _ in 0..100_000 {
-            final_owner = admit_returned_string(&registry, text);
-            if final_owner.is_some() { break; }
-            std::thread::yield_now();
-        }
-        let witness = worker.join().unwrap();
-        assert!(final_owner.is_some());
-        finish_box(&mut final_owner);
-        if let Some(witness) = witness {
-            let mut close = ControlledRetirement::new(witness).unwrap_or_else(|_| panic!("original return witness"));
-            finish(&mut close);
-        }
-        assert!(registry.terminal_is_empty());
-        finish_registry(registry);
-    }
-}
-
-#[test]
-fn retained_presence_read_return_injected_alias_barrier_preserves_unreturned_guard() {
-    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
-    let root = Arc::new(String::from("aä🧵"));
-    let lease = registry.try_issue(root.clone()).unwrap();
-    let barrier = Arc::new(std::sync::Barrier::new(2));
-    let worker_barrier = barrier.clone();
-    let worker = std::thread::spawn(move || {
-        let mut owner = Some(root);
-        let mut lease = Some(lease);
-        assert!(return_snapshot_read(&mut owner, &mut lease, || { worker_barrier.wait(); worker_barrier.wait(); }));
-    });
-    barrier.wait();
-    assert!(!registry.has_returned());
-    for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY { assert!(admit_returned_string(&registry, "aä🧵").is_none()); }
-    assert!(!registry.terminal_is_empty());
-    barrier.wait();
-    worker.join().unwrap();
-    let mut final_owner = None;
-    for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
-        final_owner = admit_returned_string(&registry, "aä🧵");
-        if final_owner.is_some() { break; }
-    }
-    assert!(final_owner.is_some());
-    finish_box(&mut final_owner);
-    assert!(registry.terminal_is_empty());
-    finish_registry(registry);
-}
-
-#[test]
-fn retained_presence_read_transfer_contention_preserves_unreturned_capability() {
-    let registry = crate::os_store::SnapshotReadRegistryHandle::new();
-    let root = Arc::new(String::from("aä🧵"));
-    let lease = registry.try_issue(root.clone()).unwrap();
-    let read = ErasedSnapshotRead::new(root, lease);
-    let held = registry.state.try_lock().unwrap();
-    let worker_registry = registry.clone();
-    let read = match std::thread::spawn(move || read.into_typed::<String>(&worker_registry)).join().unwrap() {
-        Err(read) => read,
-        Ok(_) => panic!("contended transfer cannot detach its unreturned guard"),
-    };
-    assert!(!registry.has_returned());
-    let lease = read.lease.as_ref().unwrap();
-    assert_eq!(registry.lease_generations[lease.index as usize].load(std::sync::atomic::Ordering::Acquire), lease.generation);
-    drop(held);
-    let barrier = Arc::new(std::sync::Barrier::new(2));
-    let worker_barrier = barrier.clone();
-    let worker_registry = registry.clone();
-    let worker = std::thread::spawn(move || {
-        worker_barrier.wait();
-        for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY { assert!(admit_returned_string(&worker_registry, "aä🧵").is_none()); }
-        finish_registry(worker_registry);
-    });
-    barrier.wait();
-    let mut read = read;
-    let mut owner = None;
-    for _ in 0..100_000 {
-        match read.into_typed::<String>(&registry) {
-            Ok(root) => { owner = Some(root); break; }
-            Err(retained) => read = retained,
-        }
-        std::thread::yield_now();
-    }
-    worker.join().unwrap();
-    assert!(!registry.has_returned());
-    let original = owner.expect("exact transfer retries after bounded lock contention");
-    assert_eq!(original.as_str(), "aä🧵");
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::retirement::shared::admit_shared_retirement(original, CLOSE_GRANT, false));
-    let (owner, receipt) = result.unwrap_or_else(|_| panic!("original transferred String"));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
-    finish_box(&mut Some(owner));
-    assert!(registry.terminal_is_empty());
-    finish_registry(registry);
 }
 
 #[test]

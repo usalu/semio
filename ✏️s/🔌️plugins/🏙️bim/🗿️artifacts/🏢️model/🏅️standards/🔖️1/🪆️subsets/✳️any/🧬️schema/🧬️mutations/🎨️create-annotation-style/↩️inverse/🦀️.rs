@@ -2,7 +2,7 @@
 
 use super::super::delete_annotation_style::DeleteAnnotationStyle;
 use super::CreateAnnotationStyle;
-use crate::{ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 
 pub fn inverse(payload: &CreateAnnotationStyle, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if base.annotation_styles.contains_key(&payload.id) {

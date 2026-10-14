@@ -1,6 +1,6 @@
 //! 🎚️ Norm configuration mutation 📝️text codec.
 
-use crate::results_window_config::NormResultsWindowConfigMutation;
+use crate::mutations::NormResultsWindowConfigMutation;
 
 impl protocol::OpText for NormResultsWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {

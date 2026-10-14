@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::authored::references::{edges, fi
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
-use crate::{Axis, ModelSnapshot, Wall};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Wall};
 use semio_framework_geometry::loops::{self, Vertex};
 use semio_framework_geometry::placement::ZPlane;
 use semio_framework_geometry::vector::{cross, lerp, perp};
@@ -473,7 +473,7 @@ fn strips_volume(axis: &Axis, layout: &WallLayout, grid: &[f64], heights: &[f64]
 /// 🧪️ The builders of the small models the wall depth tests share: one building with a ground storey of 3 m, a wall type of one 0.3 m layer, door, window, slab and roof types and the materials `m` and `paint`.
 #[cfg(test)]
 pub mod testing {
-    use crate::ModelSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
     use serde_json::{json, Value};
 

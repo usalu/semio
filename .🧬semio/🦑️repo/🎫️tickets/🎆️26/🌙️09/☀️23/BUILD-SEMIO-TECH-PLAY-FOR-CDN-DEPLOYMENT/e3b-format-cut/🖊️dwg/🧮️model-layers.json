@@ -1,0 +1,141 @@
+{
+ "order": [
+  "geometry",
+  "objects",
+  "drawing",
+  "document",
+  "sqlite-objects",
+  "sqlite-drawing",
+  "snapshot",
+  "diff",
+  "mutations",
+  "inferences",
+  "model"
+ ],
+ "allow": {
+  "geometry": [],
+  "objects": [],
+  "drawing": [
+   "geometry",
+   "objects"
+  ],
+  "document": [],
+  "sqlite-objects": [
+   "objects"
+  ],
+  "sqlite-drawing": [
+   "document",
+   "drawing",
+   "objects",
+   "sqlite-objects"
+  ],
+  "snapshot": [
+   "document",
+   "drawing",
+   "geometry",
+   "objects",
+   "sqlite-objects"
+  ],
+  "diff": [
+   "document",
+   "drawing",
+   "snapshot"
+  ],
+  "mutations": [
+   "diff",
+   "document",
+   "drawing",
+   "snapshot"
+  ],
+  "inferences": [
+   "drawing",
+   "objects",
+   "snapshot"
+  ],
+  "model": [
+   "diff",
+   "document",
+   "drawing",
+   "mutations",
+   "snapshot"
+  ]
+ },
+ "rules": [
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/",
+   "geometry"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/",
+   "objects"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/",
+   "drawing"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📄️document/",
+   "document"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🦀️\\.rs$",
+   "snapshot"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/(🔢️number|🫳️reader|🎨️color|🏷️xrecord|🗃️tables|📐️entities|📦️objects|🧩️blocks|🧮️evaluation)/",
+   "sqlite-objects"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/(🔧️header|✏️drawing|🔗️associativity|🎬️actions|🖌️styles|📃️layout|📏️constraints)/",
+   "sqlite-drawing"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "snapshot"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/(📄️document|📏️encoding)/",
+   "snapshot"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/",
+   "snapshot"
+  ],
+  [
+   "(🔟ac1024|4️⃣ac1018)/🪆️subsets/✳️any/🚪️io/(💾️binary|📝️text)/📸️snapshot/",
+   "snapshot"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "(🔟ac1024|4️⃣ac1018)/🪆️subsets/✳️any/🚪️io/(💾️binary|📝️text)/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "(🔟ac1024|4️⃣ac1018)/🪆️subsets/✳️any/🚪️io/(💾️binary|📝️text)/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "🔟ac1024/🪆️subsets/✳️any/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "(🔟ac1024|4️⃣ac1018)/🪆️subsets/✳️any/🚪️io/(💾️binary|📝️text)/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   ".",
+   "model"
+  ]
+ ]
+}

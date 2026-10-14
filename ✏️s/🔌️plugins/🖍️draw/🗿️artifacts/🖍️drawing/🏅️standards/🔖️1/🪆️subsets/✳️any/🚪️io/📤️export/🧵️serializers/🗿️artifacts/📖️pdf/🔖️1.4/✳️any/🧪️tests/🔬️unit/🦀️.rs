@@ -3,10 +3,10 @@
 //! document's outlines, fills, strokes, shadings, text and images as real painting operators.
 
 use super::*;
-use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
-use crate::standards::v1::subsets::any::schema::default_drawing_document;
-use crate::standards::v1::subsets::any::schema::create_drawing_path_layer;
-use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode};
+use semio_s_artifact_draw_drawing_model::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
+use semio_s_artifact_draw_drawing_model::default_drawing_document;
+use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, DrawingLayerNode};
 
 fn find(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {
     haystack[from..].windows(needle.len()).position(|window| window == needle).map(|index| index + from)
@@ -42,8 +42,8 @@ fn inflate_forms(pdf:&[u8])->Vec<String> {
 }
 
 fn demo() -> DrawingSnapshot {
-    let source = crate::standards::v1::subsets::any::examples().iter().find(|source| source.id() == "demo").expect("demo example");
-    <DrawingSnapshot as crate::ArtifactDsl>::parse_dsl(&source.document_json()).expect("demo parses")
+    let source = semio_s_artifact_draw_drawing_examples::examples().iter().find(|source| source.id() == "demo").expect("demo example");
+    <DrawingSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(&source.document_json()).expect("demo parses")
 }
 
 #[test]
@@ -69,16 +69,16 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     let mut doc = default_drawing_document("laws", None);
     doc.artboard = Some(DrawingArtboard { width: 300.0, height: 150.0 });
     doc.layers.clear();
-    let mut rect = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
+    let mut rect = create_drawing_shape_layer_rect(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Gradient")).to_string().into()).expect("nonempty authored identity"), "Gradient");
     {
         let base = layer_base_mut(&mut rect);
         base.opacity = 0.5;
         base.blend_mode = "multiply".into();
         base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 100.0, y2: 0.0, stops: vec![GradientStop { offset: 0.2, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 0.5, color: [0.0, 1.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }].into() });
-        base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: crate::StrokeCap::Round, join: crate::StrokeJoin::Bevel, dash: Some(vec![4.0, 2.0].into()) });
+        base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.5, cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Round, join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Bevel, dash: Some(vec![4.0, 2.0].into()) });
     }
     doc.layers.push(rect);
-    let mut text = create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Caption")).to_string().into()).expect("nonempty authored identity"), "Caption");
+    let mut text = create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Caption")).to_string().into()).expect("nonempty authored identity"), "Caption");
     if let DrawingLayerNode::Text(body) = &mut text {
         body.content = "Hi (there) \\ café".into();
         body.size = 14.0;
@@ -89,14 +89,14 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     doc.layers.push(text);
     // 🖼️ A 2×2 RGBA PNG with one transparent pixel.
     let png = semio_framework_pixels::encode_png(&semio_framework_pixels::RasterImage { width: 2, height: 2, pixels: vec![255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0] }).expect("png encodes");
-    doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), crate::standards::v1::subsets::any::io::image::drawing_image_from_png(&png));
-    let mut image = create_drawing_image_layer(crate::schema::identity::DrawingIdentity::admit((("Picture")).to_string().into()).expect("nonempty authored identity"), "Picture", "pic");
+    doc.assets.insert(semio_framework_value::paged::PagedUtf8::from("pic"), semio_s_artifact_draw_drawing_io::image::drawing_image_from_png(&png));
+    let mut image = create_drawing_image_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Picture")).to_string().into()).expect("nonempty authored identity"), "Picture", "pic");
     if let DrawingLayerNode::Image(body) = &mut image {
         body.width = 40.0;
         body.height = 30.0;
     }
     doc.layers.push(image);
-    let mut arc = create_drawing_path_layer(crate::schema::identity::DrawingIdentity::admit((("Arc")).to_string().into()).expect("nonempty authored identity"), "Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close].into());
+    let mut arc = create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Arc")).to_string().into()).expect("nonempty authored identity"), "Arc", vec![PathSegment::Move { to: [10.0, 10.0] }, PathSegment::Arc { rx: 20.0, ry: 20.0, rotation: 0.0, large_arc: false, sweep: true, to: [50.0, 10.0] }, PathSegment::Quad { ctrl: [30.0, 60.0], to: [10.0, 10.0] }, PathSegment::Close].into());
     layer_base_mut(&mut arc).attributes.fill = Some(FillStyle::RadialGradient { cx: 30.0, cy: 20.0, r: 25.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }].into() });
     doc.layers.push(arc);
 
@@ -154,13 +154,13 @@ fn numbers_and_strings_follow_the_pdf_lexicon() {
 
 #[test]
 fn text_export_preserves_lines_origin_and_paint_modes() {
-    let mut text = create_drawing_text_layer(crate::schema::identity::DrawingIdentity::admit((("Lines")).to_string().into()).expect("nonempty authored identity"), "Lines");
+    let mut text = create_drawing_text_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit((("Lines")).to_string().into()).expect("nonempty authored identity"), "Lines");
     let DrawingLayerNode::Text(body) = &mut text else { unreachable!() };
     body.x = 7.0;
     body.y = 11.0;
     body.content = "First\r\n\r\nThird".into();
     body.size = 10.0;
-    body.base.attributes.stroke = Some(StrokeStyle { color: [1.0, 0.0, 0.0, 1.0], width: 2.0, cap: crate::StrokeCap::Butt, join: crate::StrokeJoin::Miter, dash: None });
+    body.base.attributes.stroke = Some(StrokeStyle { color: [1.0, 0.0, 0.0, 1.0], width: 2.0, cap: semio_s_artifact_draw_drawing_model::stroke::StrokeCap::Butt, join: semio_s_artifact_draw_drawing_model::stroke::StrokeJoin::Miter, dash: None });
     let mut doc = DrawingSnapshot { layers: vec![text].into(), ..Default::default() };
     let content = inflate_content(&drawing_document_to_pdf(&doc).unwrap());
     assert!(content.contains("1 0 0 1 7 11 cm"));

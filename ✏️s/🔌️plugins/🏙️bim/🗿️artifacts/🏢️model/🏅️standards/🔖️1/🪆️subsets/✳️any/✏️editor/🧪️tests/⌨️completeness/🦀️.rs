@@ -20,7 +20,7 @@ fn set(snapshot: &ModelSnapshot, ids: &[&str], field: &str, value: &str) -> Resu
 fn with(snapshot: ModelSnapshot, kind: &str, id: &str, parent: &str) -> ModelSnapshot {
     let create = kind_of(kind).and_then(|row| row.create).expect("a creatable kind");
     let mutation = create(&snapshot, id, parent, "Sample").expect("creates");
-    crate::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
+    crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation(&snapshot, &mutation).expect("applies")
 }
 
 fn furnished() -> ModelSnapshot {
@@ -125,7 +125,7 @@ async fn a_roof_footprint_and_shape_are_edited_as_text() {
     let snapshot = furnished();
     let footprint = applied(&snapshot, &set(&snapshot, &["roof-1"], "footprint", "0, 0; 8, 0; 8, 6; 0, 6").expect("sets the footprint"));
     assert_eq!(footprint.roofs["roof-1"].footprint.len(), 4);
-    for (text, expected) in [("flat", crate::RoofShape::Flat), ("shed 0.2 1.57", crate::RoofShape::Shed { pitch: 0.2, direction: 1.57 }), ("gable 0.52 0", crate::RoofShape::Gable { pitch: 0.52, ridge_direction: 0.0 }), ("hip 0.4", crate::RoofShape::Hip { pitch: 0.4 }), ("MANSARD 1.2 0.5 2", crate::RoofShape::Mansard { lower_pitch: 1.2, upper_pitch: 0.5, break_height: 2.0 })] {
+    for (text, expected) in [("flat", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Flat), ("shed 0.2 1.57", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Shed { pitch: 0.2, direction: 1.57 }), ("gable 0.52 0", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Gable { pitch: 0.52, ridge_direction: 0.0 }), ("hip 0.4", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Hip { pitch: 0.4 }), ("MANSARD 1.2 0.5 2", crate::standards::v1::subsets::any::schema::snapshot::RoofShape::Mansard { lower_pitch: 1.2, upper_pitch: 0.5, break_height: 2.0 })] {
         let emit = set(&snapshot, &["roof-1"], "shape", text).unwrap_or_else(|fault| panic!("{text}: {}", fault.message));
         assert_eq!(applied(&snapshot, &emit).roofs["roof-1"].shape, expected, "{text}");
     }
@@ -137,18 +137,18 @@ async fn a_roof_footprint_and_shape_are_edited_as_text() {
 async fn a_stair_flight_is_edited_as_text() {
     let snapshot = furnished();
     for (text, expected) in [
-        ("l-turn 1.5 left", crate::StairFlight::LTurn { split: 1.5, turn: crate::Turn::Left }),
-        ("u-turn 0.2", crate::StairFlight::UTurn { gap: 0.2 }),
-        ("spiral 1.5 6.28", crate::StairFlight::Spiral { radius: 1.5, sweep: 6.28 }),
+        ("l-turn 1.5 left", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::LTurn { split: 1.5, turn: crate::standards::v1::subsets::any::schema::snapshot::Turn::Left }),
+        ("u-turn 0.2", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::UTurn { gap: 0.2 }),
+        ("spiral 1.5 6.28", crate::standards::v1::subsets::any::schema::snapshot::StairFlight::Spiral { radius: 1.5, sweep: 6.28 }),
     ] {
         let emit = set(&snapshot, &["stair-1"], "flight", text).unwrap_or_else(|fault| panic!("{text}: {}", fault.message));
         assert_eq!(applied(&snapshot, &emit).stairs["stair-1"].flight, expected, "{text}");
     }
     let bent = applied(&snapshot, &set(&snapshot, &["stair-1"], "flight", "u-turn 0.2").expect("bends"));
     let straightened = applied(&bent, &set(&bent, &["stair-1"], "flight", "straight").expect("straightens"));
-    assert_eq!(straightened.stairs["stair-1"].flight, crate::StairFlight::Straight);
+    assert_eq!(straightened.stairs["stair-1"].flight, crate::standards::v1::subsets::any::schema::snapshot::StairFlight::Straight);
     assert_eq!(code(set(&snapshot, &["stair-1"], "flight", "l-turn 1.5 up")), Some("bim.set.value-invalid".to_string()));
-    assert_eq!(crate::editor::bim::entities::flight_text(&crate::StairFlight::LTurn { split: 1.5, turn: crate::Turn::Right }), "l-turn 1.5 right", "the text reads back as it was written");
+    assert_eq!(crate::editor::bim::entities::flight_text(&crate::standards::v1::subsets::any::schema::snapshot::StairFlight::LTurn { split: 1.5, turn: crate::standards::v1::subsets::any::schema::snapshot::Turn::Right }), "l-turn 1.5 right", "the text reads back as it was written");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -158,7 +158,7 @@ async fn the_project_record_is_edited_through_the_project_id() {
     assert_eq!(renamed.project.name, "Villa Rosa");
     let described = applied(&snapshot, &set(&snapshot, &["project"], "phase_names", "Design, Build ,, Handover").expect("sets the phases"));
     assert_eq!(described.project.phase_names, vec!["Design", "Build", "Handover"]);
-    let reads: [(&str, fn(&crate::Project) -> String); 3] = [("description", |p| p.description.clone()), ("author", |p| p.author.clone()), ("organization", |p| p.organization.clone())];
+    let reads: [(&str, fn(&crate::standards::v1::subsets::any::schema::snapshot::Project) -> String); 3] = [("description", |p| p.description.clone()), ("author", |p| p.author.clone()), ("organization", |p| p.organization.clone())];
     for (field, read) in reads {
         assert_eq!(read(&applied(&snapshot, &set(&snapshot, &["project"], field, "Text").expect(field)).project), "Text", "{field}");
     }
@@ -182,11 +182,11 @@ async fn the_wall_sweep_the_attach_and_the_reveal_are_reachable_from_the_ui_thro
     }
     assert_eq!(code(set(&snapshot, &["sw-1"], "side", "Up")), Some("bim.set.value-invalid".to_string()));
     let attached = applied(&snapshot, &set(&snapshot, &["w-south"], "top_attach", "roof-1").expect("attaches the top"));
-    assert!(matches!(attached.walls["w-south"].top, crate::TopConstraint::Roof { .. }));
+    assert!(matches!(attached.walls["w-south"].top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::Roof { .. }));
     let based = applied(&attached, &set(&attached, &["w-south"], "base_slab", "slab-1").expect("follows the slab"));
     assert_eq!(based.walls["w-south"].base_slab.as_deref(), Some("slab-1"));
     let freed = applied(&based, &set(&based, &["w-south"], "top_attach", "").expect("frees the top"));
-    assert!(matches!(freed.walls["w-south"].top, crate::TopConstraint::StoreyTop { .. }));
+    assert!(matches!(freed.walls["w-south"].top, crate::standards::v1::subsets::any::schema::snapshot::TopConstraint::StoreyTop { .. }));
     let revealed = applied(&snapshot, &set(&snapshot, &["op-1"], "reveal_depth", "0.1").expect("sets the reveal"));
     assert_eq!(revealed.openings["op-1"].reveal_depth, Some(0.1));
     let json = serde_json::to_string(&create_bim_app()).expect("app definition json");
@@ -215,8 +215,8 @@ fn panel(snapshot: &ModelSnapshot, elements: &[&str], library: &[&str], locale: 
 #[semio_framework_async_macros::async_test]
 async fn a_wall_offers_flip_split_place_classification_and_property_rows_in_both_languages() {
     let mut snapshot = demo();
-    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset".to_string(), std::collections::BTreeMap::from([("Load".to_string(), crate::PropertyValue::Real { value: 2.5 })]))]));
-    snapshot.classification_systems.insert("cs-uni".into(), crate::ClassificationSystem { name: "Uniclass 2015".into(), edition: String::new(), source: None, entries: vec![crate::ClassificationItem { code: "Ss_25".into(), title: "Walls".into(), parent: None }] });
+    snapshot.properties.insert("w-south".into(), std::collections::BTreeMap::from([("Pset".to_string(), std::collections::BTreeMap::from([("Load".to_string(), crate::standards::v1::subsets::any::schema::snapshot::PropertyValue::Real { value: 2.5 })]))]));
+    snapshot.classification_systems.insert("cs-uni".into(), crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem { name: "Uniclass 2015".into(), edition: String::new(), source: None, entries: vec![crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem { code: "Ss_25".into(), title: "Walls".into(), parent: None }] });
     let english = panel(&snapshot, &["w-south"], &[], Locale::En);
     for expected in ["Flip wall", "Split wall at", "Place at x, y", "bim-properties.action.split.input", "bim-properties.action.place.input", "Classification", "bim-properties.classification.cs-uni.input", "Property sets", "Pset · Load (real)", "bim-properties.property.Pset.Load.input", "Remove property Pset.Load", "Add property: Set.Property = value", "bim-properties.property.add.input"] {
         assert!(english.contains(expected), "the English wall panel shows '{expected}': {english}");

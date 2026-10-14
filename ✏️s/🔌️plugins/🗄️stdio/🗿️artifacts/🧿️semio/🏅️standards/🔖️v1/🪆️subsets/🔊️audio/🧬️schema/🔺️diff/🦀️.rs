@@ -13,7 +13,10 @@
 //! no `DslField` impl of its own.
 
 use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use semio_s_artifact_stdio_semio_base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::self;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

@@ -7,9 +7,6 @@
   "scripts": {
     "test-native": "bun repo run @semio-tech/framework-mesh-engine-rs:test-native"
   },
-  "nx": {
-    "includedScripts": []
-  },
   "devDependencies": {
     "@semio-tech/process": "workspace:*"
   }

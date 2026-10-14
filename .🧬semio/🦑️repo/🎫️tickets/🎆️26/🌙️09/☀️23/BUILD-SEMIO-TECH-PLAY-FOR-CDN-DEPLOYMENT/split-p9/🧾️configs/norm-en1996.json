@@ -1,0 +1,617 @@
+{
+ "root": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs",
+ "crate": "semio_s_artifact_norm_en1996",
+ "header": [
+  "#![allow(async_fn_in_trait)]",
+  "",
+  "extern crate semio_framework_os_kernel as dsl;",
+  "extern crate semio_framework_os_kernel as protocol;",
+  "extern crate semio_framework_os_kernel as store;",
+  "extern crate semio_framework_schema as framework_schema;",
+  "extern crate semio_framework_value_derive as value_derive;"
+ ],
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-norm-en1996-model",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot",
+   "prefix": "standards::v1::subsets::any::schema::snapshot",
+   "description": "EN 1996 model: document records, dialect and snapshot"
+  },
+  "diff": {
+   "package": "semio-s-artifact-norm-en1996-diff",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff",
+   "prefix": "standards::v1::subsets::any::schema::diff",
+   "description": "EN 1996 diff"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-norm-en1996-mutations",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 mutations: the dispatch enum over every mutation group"
+  },
+  "schema": {
+   "package": "semio-s-artifact-norm-en1996-schema",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+   "prefix": "standards::v1::subsets::any::schema",
+   "description": "EN 1996 artifact schema and descriptor"
+  },
+  "checks": {
+   "package": "semio-s-artifact-norm-en1996-checks",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks",
+   "prefix": "standards::v1::subsets::any::schema::checks",
+   "description": "EN 1996 compliance checks"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-norm-en1996-inferences",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences",
+   "prefix": "standards::v1::subsets::any::schema::inferences",
+   "description": "EN 1996 inferences"
+  },
+  "io": {
+   "package": "semio-s-artifact-norm-en1996-io",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io",
+   "prefix": "standards::v1::subsets::any::io",
+   "description": "EN 1996 io: composition, builder, analyzer, mutation bridge and the text, binary and SQLite codecs"
+  },
+  "examples": {
+   "package": "semio-s-artifact-norm-en1996-examples",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples",
+   "prefix": "",
+   "description": "EN 1996 example documents"
+  },
+  "editor": {
+   "package": "semio-s-artifact-norm-en1996-editor",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor",
+   "prefix": "editor::en1996",
+   "description": "EN 1996 editor"
+  },
+  "viewer": {
+   "package": "semio-s-artifact-norm-en1996-viewer",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer",
+   "prefix": "viewer::en1996",
+   "description": "EN 1996 viewer"
+  },
+  "agg": {
+   "package": "semio-s-artifact-norm-en1996",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996",
+   "prefix": "",
+   "description": "Norm en1996 artifact",
+   "role": "artifact"
+  },
+  "mut-project": {
+   "package": "semio-s-artifact-norm-en1996-mut-project",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️project",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 project mutation leaves"
+  },
+  "mut-walls": {
+   "package": "semio-s-artifact-norm-en1996-mut-walls",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️walls",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 walls mutation leaves"
+  },
+  "mut-eccentricity": {
+   "package": "semio-s-artifact-norm-en1996-mut-eccentricity",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️eccentricity",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 eccentricity mutation leaves"
+  },
+  "mut-loads": {
+   "package": "semio-s-artifact-norm-en1996-mut-loads",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️loads",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 loads mutation leaves"
+  },
+  "mut-concentrated": {
+   "package": "semio-s-artifact-norm-en1996-mut-concentrated",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️concentrated",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 concentrated mutation leaves"
+  },
+  "mut-openings": {
+   "package": "semio-s-artifact-norm-en1996-mut-openings",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️openings",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 openings mutation leaves"
+  },
+  "mut-units": {
+   "package": "semio-s-artifact-norm-en1996-mut-units",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️units",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 units mutation leaves"
+  },
+  "mut-mortar": {
+   "package": "semio-s-artifact-norm-en1996-mut-mortar",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️mortar",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 mortar mutation leaves"
+  },
+  "mut-reinforcement": {
+   "package": "semio-s-artifact-norm-en1996-mut-reinforcement",
+   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️reinforcement",
+   "prefix": "standards::v1::subsets::any::schema::mutations",
+   "description": "EN 1996 reinforcement mutation leaves"
+  }
+ },
+ "rules": [
+  [
+   "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/",
+   "agg",
+   "sqlite_snapshot_tests"
+  ],
+  [
+   "✏️editor/🏷️field-meta/",
+   "editor",
+   "field_meta"
+  ],
+  [
+   "✏️editor/",
+   "editor"
+  ],
+  [
+   "👁️viewer/",
+   "viewer"
+  ],
+  [
+   "📚️examples/",
+   "examples"
+  ],
+  [
+   "🧬️schema/📸️snapshot/",
+   "model"
+  ],
+  [
+   "🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "🧬️schema/🧬️mutations/(🦀️\\.rs|🧭️edit-rules/|🧪️tests/)",
+   "mutations"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌍️change\\-annex/",
+   "mut-project"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏗️change\\-is\\-basement/",
+   "mut-project"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏢️change\\-storeys/",
+   "mut-project"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔥️change\\-fire\\-rei/",
+   "mut-project"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-imposed\\-category/",
+   "mut-project"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️insert\\-wall/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-wall/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↔️change\\-wall\\-length/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↕️change\\-wall\\-height/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↕️change\\-wall\\-thickness/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-wall\\-type/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-wall\\-label\\-de/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏷️change\\-wall\\-label\\-en/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-support\\-sides/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/💧️change\\-exposure/",
+   "mut-walls"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↗️change\\-eccentricity\\-bottom/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↘️change\\-eccentricity\\-top/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/♾️change\\-phi\\-infinity/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/↔️change\\-slab\\-span/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-slab\\-bearing\\-depth/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-tributary\\-area/",
+   "mut-eccentricity"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️insert\\-load\\-case/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-load\\-case/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎭️change\\-load\\-case\\-situation/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🎭️change\\-design\\-situation/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏋️change\\-gk\\-slab/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏋️change\\-qk\\-imposed/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/❄️change\\-qk\\-snow/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🌬️change\\-qp\\-wind/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪨change\\-hk\\-earth/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧮change\\-c\\-pe/",
+   "mut-loads"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️insert\\-concentrated/",
+   "mut-concentrated"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-concentrated/",
+   "mut-concentrated"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏋️change\\-concentrated\\-force/",
+   "mut-concentrated"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📏change\\-concentrated\\-bearing\\-length/",
+   "mut-concentrated"
+  ],
+  [
+   "🧬️schema/🧬️mutations/📐️change\\-concentrated\\-bearing\\-area/",
+   "mut-concentrated"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➕️insert\\-opening/",
+   "mut-openings"
+  ],
+  [
+   "🧬️schema/🧬️mutations/➖️remove\\-opening/",
+   "mut-openings"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪟change\\-opening\\-height/",
+   "mut-openings"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪟change\\-opening\\-sill/",
+   "mut-openings"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🪟change\\-opening\\-width/",
+   "mut-openings"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-fb/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-group/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-height/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-length/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-material/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-unit\\-width/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧱change\\-density/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🏭️change\\-masonry\\-class/",
+   "mut-units"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧈change\\-mortar\\-class/",
+   "mut-mortar"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧈change\\-mortar\\-type/",
+   "mut-mortar"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🥪️change\\-bed\\-joint\\-thickness/",
+   "mut-mortar"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧈change\\-fm/",
+   "mut-mortar"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🧲️change\\-mu/",
+   "mut-mortar"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩change\\-reinforced/",
+   "mut-reinforcement"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩change\\-as\\-horizontal/",
+   "mut-reinforcement"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩change\\-as\\-vertical/",
+   "mut-reinforcement"
+  ],
+  [
+   "🧬️schema/🧬️mutations/🔩change\\-f\\-yd/",
+   "mut-reinforcement"
+  ],
+  [
+   "🧬️schema/💡️inferences/⚖️checks/",
+   "checks"
+  ],
+  [
+   "🧬️schema/🧪️tests/⚖️compliance/",
+   "checks"
+  ],
+  [
+   "🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "🧬️schema/",
+   "schema"
+  ],
+  [
+   "🚪️io/",
+   "io"
+  ],
+  [
+   "🧪️tests/",
+   "agg"
+  ],
+  [
+   "🪨️en1996/🦀️\\.rs$",
+   "agg"
+  ]
+ ],
+ "create": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️project/🦀️.rs",
+   "text": "//! 🏢️ EN 1996 project mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️walls/🦀️.rs",
+   "text": "//! 🧱️ EN 1996 walls mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️eccentricity/🦀️.rs",
+   "text": "//! 📐️ EN 1996 eccentricity mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️loads/🦀️.rs",
+   "text": "//! ⚖️ EN 1996 loads mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️concentrated/🦀️.rs",
+   "text": "//! 📍️ EN 1996 concentrated mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️openings/🦀️.rs",
+   "text": "//! 🪟️ EN 1996 openings mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️units/🦀️.rs",
+   "text": "//! 🟫️ EN 1996 units mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️mortar/🦀️.rs",
+   "text": "//! 🪣️ EN 1996 mortar mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️reinforcement/🦀️.rs",
+   "text": "//! 🔩️ EN 1996 reinforcement mutation leaves.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs",
+   "text": "//! 📚️ EN 1996 example documents.\n"
+  },
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+   "text": "//! 🧫️ EN 1996's committed mutation vectors (`🧪️tests/🧫️fixtures/🧬️mutations`) through production dispatch; the law table is\n//! the shared `semio_s_plugin_norm_mutation_vectors`.\n\n#[semio_framework_async_macros::async_test]\nasync fn committed_vectors_hold() {\n    let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../../../../🧪️tests/🧫️fixtures/🧬️mutations\");\n    semio_s_plugin_norm_mutation_vectors::assert_committed_vectors::<semio_s_artifact_norm_en1996_model::En1996Snapshot, semio_s_artifact_norm_en1996_mutations::En1996Mutation>(&root).await;\n}\n"
+  }
+ ],
+ "transforms": [
+  {
+   "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "sub": [
+    [
+     "(?:#\\[cfg\\(test\\)\\]\\s*)?#\\[path = \\\"🧪️tests/🔬️(?:fixture|middle-row)/🦀️\\.rs\\\"\\]\\s*(?:#\\[cfg\\(test\\)\\]\\s*)?(?:pub\\s+)?mod \\w+;\\n?",
+     ""
+    ]
+   ]
+  }
+ ],
+ "generic_leaves": {
+  "enum": "En1996Mutation",
+  "snapshot": "En1996Snapshot",
+  "diff_path": "crate::standards::v1::subsets::any::schema::diff::En1996Diff",
+  "mutations_dir": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+  "mutations_path": "crate::standards::v1::subsets::any::schema::mutations",
+  "leaves": [
+   "🌍️change-annex",
+   "🏗️change-is-basement",
+   "🏢️change-storeys",
+   "🔥️change-fire-rei",
+   "🏷️change-imposed-category",
+   "➕️insert-wall",
+   "➖️remove-wall",
+   "↔️change-wall-length",
+   "↕️change-wall-height",
+   "↕️change-wall-thickness",
+   "🧱change-wall-type",
+   "🏷️change-wall-label-de",
+   "🏷️change-wall-label-en",
+   "🧱change-support-sides",
+   "💧️change-exposure",
+   "↗️change-eccentricity-bottom",
+   "↘️change-eccentricity-top",
+   "♾️change-phi-infinity",
+   "↔️change-slab-span",
+   "📐️change-slab-bearing-depth",
+   "📐️change-tributary-area",
+   "➕️insert-load-case",
+   "➖️remove-load-case",
+   "🎭️change-load-case-situation",
+   "🎭️change-design-situation",
+   "🏋️change-gk-slab",
+   "🏋️change-qk-imposed",
+   "❄️change-qk-snow",
+   "🌬️change-qp-wind",
+   "🪨change-hk-earth",
+   "🧮change-c-pe",
+   "➕️insert-concentrated",
+   "➖️remove-concentrated",
+   "🏋️change-concentrated-force",
+   "📏change-concentrated-bearing-length",
+   "📐️change-concentrated-bearing-area",
+   "➕️insert-opening",
+   "➖️remove-opening",
+   "🪟change-opening-height",
+   "🪟change-opening-sill",
+   "🪟change-opening-width",
+   "🧱change-unit-fb",
+   "🧱change-unit-group",
+   "🧱change-unit-height",
+   "🧱change-unit-length",
+   "🧱change-unit-material",
+   "🧱change-unit-width",
+   "🧱change-density",
+   "🏭️change-masonry-class",
+   "🧈change-mortar-class",
+   "🧈change-mortar-type",
+   "🥪️change-bed-joint-thickness",
+   "🧈change-fm",
+   "🧲️change-mu",
+   "🔩change-reinforced",
+   "🔩change-as-horizontal",
+   "🔩change-as-vertical",
+   "🔩change-f-yd"
+  ]
+ },
+ "facet_leaves": {
+  "schema_file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+  "facets": {
+   "snapshot": [
+    "📸️snapshot",
+    "SNAPSHOT_LEAVES",
+    "crate::standards::v1::subsets::any::schema::snapshot"
+   ],
+   "diff": [
+    "🔺️diff",
+    "DIFF_LEAVES",
+    "crate::standards::v1::subsets::any::schema::diff"
+   ],
+   "mutations": [
+    "🧬️mutations",
+    "MUTATION_LEAVES",
+    "crate::standards::v1::subsets::any::schema::mutations"
+   ]
+  }
+ },
+ "regions": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "from_marker": "//#region 🔖️ComplianceHelpers",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🦀️.rs",
+   "doc": "//! ⚖️ EN 1996 compliance checks: the clause-by-clause verification behind the compliance report.",
+   "mount": "checks"
+  }
+ ],
+ "move_mods": [
+  {
+   "file": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "name": "mutation_bridge",
+   "to": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs",
+   "source_reexport": "pub use crate::standards::v1::subsets::any::schema::mutations::mutation_bridge;\npub use mutation_bridge::*;",
+   "drop_in_target": [
+    "^pub use crate::standards::v1::subsets::any::io::mutation_bridge::\\{[^}]*\\};\\n"
+   ]
+  }
+ ],
+ "root_to": "model",
+ "delete_unmounted": true,
+ "consumers": [
+  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996",
+  "✏️s/🔌️plugins/📕️norm/🏭️bridge",
+  "🌎️hub/🧩️compositions/📕️norm",
+  "✏️s/🧑‍💻dev/🧹️fixture-sweep"
+ ],
+ "test_targets": {
+  "mutations": [
+   {
+    "name": "mutation_vectors",
+    "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️vectors/🦀️.rs",
+    "dev": [
+     "semio-s-plugin-norm-mutation-vectors",
+     "semio-framework-async-macros",
+     "semio-s-artifact-norm-en1996-model"
+    ]
+   }
+  ]
+ }
+}

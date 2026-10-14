@@ -867,7 +867,12 @@ impl Mesh3dSchema {
         }
     }
 
-    fn validate(self) -> Result<Mesh3dLayout, Mesh3dFault> {
+    /// 🧮️ Refuses a schema whose field counts disagree or whose packed geometry exceeds the mesh owner byte capacity.
+    pub fn validate(self) -> Result<(), Mesh3dFault> {
+        self.layout().map(|_| ())
+    }
+
+    fn layout(self) -> Result<Mesh3dLayout, Mesh3dFault> {
         if (self.vertices == 0 && (self.edges == 0 || self.indices != 0))
             || (self.indices == 0 && self.edges == 0 && self.vertex_ids == 0)
             || !self.indices.is_multiple_of(3)
@@ -1206,7 +1211,7 @@ impl Mesh3dAuthority {
     }
 
     fn begin(&mut self, generation: u64, revision: u64, schema: Mesh3dSchema,grant:RetainedCloneGrant) -> Result<(Mesh3dWriteToken,RetainedCloneProgress), Mesh3dFault> {
-        let layout = schema.validate()?;
+        let layout = schema.layout()?;
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<mesh3d_begin_capacity_byte_demand(){return Err(Mesh3dFault::ByteCapacity);}
         let pages = usize::from(layout.page_count);
         if self.reserved_pages.checked_add(pages).is_none_or(|pages| pages > MESH3D_AUTHORITY_PAGE_CAPACITY) {
@@ -1559,7 +1564,7 @@ pub fn mesh3d_terminal_is_empty(lease: Mesh3dLease) -> bool {
 
 #[path = "📦️resource/🦀️.rs"]
 mod mesh3d_resource;
-pub use mesh3d_resource::{Mesh3dResourceIdentity, Mesh3dResourceLoan, Mesh3dResourceOwner};
+pub use mesh3d_resource::{Mesh3dResourceIdentity, Mesh3dResourceLoan, Mesh3dResourceOwner, Mesh3dResourceReceiving, Mesh3dReceivingStep, MESH3D_RESOURCE_COMPONENT_COUNT_CAPACITY};
 
 impl Mesh3dLease {
     /// 📃️ Lends one original initialized page while the existing native arena guard is held.

@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync } from
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import plugin from "../../../🟨️.mjs";
+import plugin from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 import { getWorkspaceRoot } from "../../../📦️packages/🟦️typescript/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
 

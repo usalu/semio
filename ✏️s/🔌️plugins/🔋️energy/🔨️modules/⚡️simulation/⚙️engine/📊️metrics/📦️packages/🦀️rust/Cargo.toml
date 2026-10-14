@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-metrics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `metrics`: Environmental and resilience metrics"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true }

@@ -143,7 +143,7 @@ struct WorkCapacityCase {
     name: String,
     invertible_items: usize,
     items: usize,
-    rows: usize,
+    pub(crate) rows: usize,
     work_items: usize,
     admitted: bool,
 }

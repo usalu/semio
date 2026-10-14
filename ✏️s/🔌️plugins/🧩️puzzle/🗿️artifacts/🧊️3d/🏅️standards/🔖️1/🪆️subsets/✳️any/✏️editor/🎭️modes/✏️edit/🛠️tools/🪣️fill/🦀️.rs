@@ -4,13 +4,14 @@
 //! publishes them as one edit on finalize. This module declares the definition, the count measure (shared
 //! configuration the driver watches) and builds the run and revalidate jobs.
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_FILL_TOOL_ID;
 use crate::editor::puzzle3d::config::{Puzzle3dConfig, Puzzle3dRuntime};
 use crate::editor::puzzle3d::modes::edit::windows::main;
 use crate::editor::puzzle3d::precompute::fill::{fill_run_placements, FillPreparationRoots, FillRevalidateJob, FillRunJob, FillRunPlacement, FILL_RUN_OPS_PER_PLACEMENT};
 use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, CollisionBody};
 use crate::editor::puzzle3d::precompute::{brush_mesh_digest, shared_brush_mesh};
 use crate::editor::puzzle3d::terminology::{puzzle3d_fill_run_counters, puzzle3d_fill_run_reasons, puzzle3d_fill_run_stages, puzzle3d_fill_run_unit, Puzzle3dLabels};
-use crate::editor::puzzle3d::{puzzle3d_action, puzzle3d_distribution_group, puzzle3d_fallback_mesh_buffers, puzzle3d_scene_snapshot_from_document, scene_config, Puzzle3dPlayApp, Puzzle3dScene, PUZZLE3D_FALLBACK_MESH_KIND};
+use {crate::editor::puzzle3d::snapshot::puzzle3d_action, crate::editor::puzzle3d::snapshot::puzzle3d_distribution_group, crate::editor::puzzle3d::session::puzzle3d_fallback_mesh_buffers, crate::editor::puzzle3d::snapshot::puzzle3d_scene_snapshot_from_document, crate::editor::puzzle3d::session::scene_config, crate::editor::puzzle3d::session::Puzzle3dEditor, crate::editor::puzzle3d::snapshot::Puzzle3dScene, crate::editor::puzzle3d::snapshot::PUZZLE3D_FALLBACK_MESH_KIND};
 use crate::standards::v1::subsets::any::schema::{FillRunCheckpoint, SceneConfig};
 use semio_framework_job::{allocate_operation_id, Generation, InteractiveJob, InteractiveJobCloseStep, Operation, RevisionId, StepContext};
 use semio_framework_plugin::ActionDescriptor;
@@ -28,7 +29,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 //#region 🔖️Constants
-pub const TOOL_ID: &str = "fill";
+
 /// 🧵️ `ToolRunDefinition.runJob` of the fill tool.
 pub const RUN_JOB_KIND: &str = "s.puzzle.puzzle3d.fill.run";
 /// 🔍️ `ToolRunDefinition.revalidateJob` of the fill tool.
@@ -42,7 +43,7 @@ pub const RUN_SETTINGS_CONFIG: [&str; 4] = ["/fillCount", "/contactTolerance", "
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
 pub fn definition(label: LocalizedLabel) -> ToolDefinition {
-    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket")) }
+    ToolDefinition { run: Some(run_definition()), ..::semio_framework_async::poll::resolve_ready(ToolDefinition::new(PUZZLE3D_FILL_TOOL_ID, label, "paint-bucket")) }
 }
 
 /// ⏯️ A mutating `instance3d` run: provisional placements rebase by revalidation at finalize, and a count
@@ -93,7 +94,7 @@ pub fn measures(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, tool_run: Opt
 
 /// 🏃️ The fill run of this document instance while it is not terminal.
 pub(crate) fn live_fill_run(tool_run: Option<&ToolRunView>) -> Option<&ToolRunView> {
-    tool_run.filter(|run| run.tool_id == TOOL_ID && !run.state.is_terminal())
+    tool_run.filter(|run| run.tool_id == PUZZLE3D_FILL_TOOL_ID && !run.state.is_terminal())
 }
 
 /// 🛑️ `toolRunAbort` bound to the live fill run's current identity, or `None` without one.
@@ -107,13 +108,13 @@ pub fn abort_action(tool_run: Option<&ToolRunView>) -> Option<ActionDescriptor> 
 /// 🧵️ Builds the fill run (`Run`) or finalize revalidation (`Revalidate`) job for the framework ledger as a
 /// retargetable job; `None` for any other tool. Revalidated placements take their trace keys from the run's
 /// allocator.
-pub fn build_run_job(request: ToolRunJobRequest<'_, EditorApp<Puzzle3dPlayApp>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Puzzle3dConfig>>>, Fault> {
-    if request.tool_id != TOOL_ID {
+pub fn build_run_job<A: Puzzle3dEditor>(request: ToolRunJobRequest<'_, EditorApp<A>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Puzzle3dConfig>>>, Fault> {
+    if request.tool_id != PUZZLE3D_FILL_TOOL_ID {
         return Ok(None);
     }
     let config = request.config.as_ref();
     let runtime = Puzzle3dRuntime { fill_count: config.fill_count, contact_tolerance: config.contact_tolerance, object_kind_weights: config.object_kind_weights.clone(), vortex_kind_weights: config.vortex_kind_weights.clone(), ..Puzzle3dRuntime::default() };
-    let envelope = Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(request.snapshot.typed()), runtime, active_utility: TOOL_ID.into() };
+    let envelope = Puzzle3dScene { scene_snapshot: puzzle3d_scene_snapshot_from_document(request.snapshot.typed()), runtime, active_utility: PUZZLE3D_FILL_TOOL_ID.into() };
     let scene = scene_config(&envelope).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("puzzle3d.fill.scene-unavailable"), "the fill run's document builds no engine scene"))?;
     let lane = main::mesh_lane(&envelope.scene_snapshot);
     let target = match request.purpose {

@@ -1,6 +1,7 @@
 //! 🌊️ Writes named nodes, ordered parameters, exact coordinates and independent edge ports.
 use crate::schema::snapshot::{SemioFlowSnapshot, FlowNode, FlowParam, FlowEdge, PortRef};
-use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::self;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::Writer;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
 pub(crate) fn encode(snapshot:&SemioFlowSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.flow.dsl v1\n","stdio.semio.flow.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(snapshot,writer,encoding),native_owner)}
 fn parameter(value:&FlowParam,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding)->Result<(),ValueError>{writer.delimiter(b"[",encoding)?;writer.string(&value.key,encoding)?;writer.delimiter(b",",encoding)?;writer.string(&value.value,encoding)?;writer.delimiter(b"]",encoding)}

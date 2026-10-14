@@ -1,6 +1,6 @@
 //! ⚡️ Text op codec of `ModelMutation`: one compact JSON line per operation, plus the committed-fixture decoder.
 
-use crate::ModelMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

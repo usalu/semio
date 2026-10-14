@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_remodel_remodeling_panels::editor::remodeling::panels::tracks::*;
 use crate::editor::remodeling::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]

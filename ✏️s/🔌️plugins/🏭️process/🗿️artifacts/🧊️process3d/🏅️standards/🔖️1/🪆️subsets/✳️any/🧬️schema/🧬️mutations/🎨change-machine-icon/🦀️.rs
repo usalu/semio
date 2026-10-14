@@ -1,7 +1,6 @@
 //! 🔧 `change-machine-icon` payload — changes an id-keyed [`WorkshopMachine`]'s `icon_id`.
 
 use crate::diff::Process3dDiff;
-use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -15,14 +14,17 @@ pub struct ChangeMachineIcon {
     pub new_icon_id: String,
 }
 
-impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ChangeMachineIcon {
+impl<Op> protocol::MutationKind<Process3dSnapshot, Op> for ChangeMachineIcon
+where
+    Op: protocol::Mutation<Process3dSnapshot, Diff = crate::standards::v1::subsets::any::schema::diff::Process3dDiff> + From<crate::standards::v1::subsets::any::schema::mutations::change_machine_icon::ChangeMachineIcon>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "machine", kind: "change-machine-icon", record: "ChangedMachineIcon" };
 
     fn diff(&self, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
         super::diff::diff(self, base)
     }
 
-    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Process3dMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &Process3dSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

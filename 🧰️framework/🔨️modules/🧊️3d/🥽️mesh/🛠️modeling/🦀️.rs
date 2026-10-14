@@ -2,8 +2,8 @@
 
 use super::*;
 use protocol::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as GeometryVector};
-use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Mat3};
+use semio_framework_3d_brep_vector::{Pnt3, Vec3 as GeometryVector};
+use semio_framework_3d_brep_vector::matrix::{Affine3, Mat3};
 use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -19,7 +19,7 @@ mod snapshot_preparation;
 
 #[path = "📥️input/🦀️.rs"]
 mod input;
-pub use input::MeshTranslationInput;
+pub use input::{MeshTranslationInput,MeshPlaneProduction,MeshTranslationProduction};
 
 /// 📊 Completed work and a conservative remaining-work estimate, finalized on completion.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

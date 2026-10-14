@@ -10,7 +10,12 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_norm_contract::{app_surface, document, impl_norm_artifact_record, norm_owned_tool_job_factory, norm_results_window_config_owner, results_window_config};
+pub use semio_s_plugin_norm_app_surface as app_surface;
+pub use semio_s_plugin_norm_compliance as document;
+pub use semio_s_plugin_norm_results_config as results_window_config;
+pub use semio_s_plugin_norm_compliance::impl_norm_artifact_record;
+pub use semio_s_plugin_norm_app_surface::norm_owned_tool_job_factory;
+pub use semio_s_plugin_norm_results_config::norm_results_window_config_owner;
 
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -232,7 +237,6 @@ pub struct BarLayer {
     pub aggregate_size: f64,
 }
 
-
 /// ➰ Shear reinforcement (spacing/diameter in m).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -258,7 +262,6 @@ pub struct PunchingSpec {
     pub asw: f64,
 }
 
-
 /// 🗜️ Prestress — force N, area m², eccentricity m, long-term loss ratio → P_m,∞.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -271,7 +274,6 @@ pub struct PrestressSpec {
     pub eccentricity: f64,
     pub loss_ratio: f64,
 }
-
 
 /// 🔥 Fire exposure (axis distance in m).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -306,7 +308,6 @@ pub struct LoadCaseActions {
     pub t_k: f64,
     pub v_k_punch: f64,
 }
-
 
 /// 🏛️ Reinforced/prestressed concrete member.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -571,7 +572,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-
 
                         #[path = "."]
                         pub mod change_annex {
@@ -871,16 +871,11 @@ pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
 
-
-
-
 pub mod diff {
     pub use crate::standards::v1::subsets::any::schema::diff::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::diff::*;
     }
-
-
 
 }
 pub mod mutations {
@@ -889,16 +884,12 @@ pub mod mutations {
         pub use crate::standards::v1::subsets::any::schema::mutations::*;
     }
 
-
-
 }
 pub mod snapshot {
     pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     pub mod schema {
         pub use crate::standards::v1::subsets::any::schema::snapshot::*;
     }
-
-
 
 }
 pub use crate::standards::v1::subsets::any::schema::diff::En1992Diff;

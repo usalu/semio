@@ -1,12 +1,14 @@
 //! 🪅️ Owned standalone B-Rep geometry value: a minimal [`Body`] holding exactly the entity closure of one shape's roots, plus the root references and every [`PersistentLabel`], so a pure inference can pass geometry between widgets without any session handle.
 use super::{map_err, entity_roots, label_of_entity, Brep, BrepError, Entity, GeometryHandle, GeometryKind, MeshTransfer};
 use semio_framework_3d_brep_representation::topology::Wire;
-use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationProgress, TessellationReport, TessellationStep};
+use semio_framework_3d_brep_tessellation::{TessellationJob, TessellationProgress, TessellationReport, TessellationStep};
 use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId, ShellId, SolidId, VertexId};
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_representation::topology::history::{LabelSource, PersistentLabel};
 use semio_framework_3d_brep_representation::topology::Body;
+#[path="🎟️original/🦀️.rs"]
+mod original;
 
 /// 🧵️ An ordered chain of oriented edges, labelled because a wire has no arena identity of its own.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]
@@ -204,7 +206,7 @@ impl ShapeTessellationJob {
     /// ⏱️ Advances by at most `budget` units.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn step(&mut self, budget: usize) -> Result<TessellationStep, BrepError> {
-        use semio_framework_3d_brep_queries::tessellation::TessellationInput;
+        use semio_framework_3d_brep_tessellation::TessellationInput;
         let input=match &self.shape.root {
             ShapeRoot::Vertex(id)=>TessellationInput::Vertex(*id),ShapeRoot::Solid(id)=>TessellationInput::Solid(*id),ShapeRoot::Face(id)=>TessellationInput::Face(*id),ShapeRoot::Shell(id)=>TessellationInput::Shell(*id),ShapeRoot::Compound {solids,..}=>TessellationInput::Solids(solids),ShapeRoot::Wire(wire)=>TessellationInput::Wire(&wire.members),_=>return Err(BrepError::InvalidInput("invalid tessellation root".into())),
         };

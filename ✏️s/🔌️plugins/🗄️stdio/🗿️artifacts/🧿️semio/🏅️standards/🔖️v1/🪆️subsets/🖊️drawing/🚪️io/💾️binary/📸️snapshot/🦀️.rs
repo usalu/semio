@@ -9,14 +9,31 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod snapshot_codec {
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::native::{NativeF64, NativeF32};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF32;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
-use semio_s_artifact_stdio_semio_base::io::binary::codec::{write_bytes_lp, read_bytes_lp, write_str_lp, read_str_lp, write_point2, read_point2, write_transform, read_transform, read_f32_le, write_rgba, read_rgba, write_bool, read_bool};
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_bytes_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_bytes_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_point2;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_point2;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_transform;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_transform;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_f32_le;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_rgba;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_rgba;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_bool;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_bool;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
@@ -290,8 +307,12 @@ mod native_snapshot_codec {
 use super::*;
 use super::*;
 use crate::schema::snapshot::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::native::{NativeF64, NativeF32};
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF32;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;

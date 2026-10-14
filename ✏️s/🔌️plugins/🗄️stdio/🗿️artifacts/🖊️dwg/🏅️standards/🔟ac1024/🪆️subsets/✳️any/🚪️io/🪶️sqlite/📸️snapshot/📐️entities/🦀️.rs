@@ -1,11 +1,36 @@
 //! 📐️ DWG entity geometry is reconstructed from explicit component and reference tables.
+/// 🗄️ The DDL of the tables this module projects.
+pub const SQL: &str = include_str!("🗄️.sql");
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use super::{drawing::optional_words,number::Projection,reader::{boolean,byte,full_unsigned,high,low,optional_integer,optional_real,optional_text,optional_unsigned,ordinal,real,signed_word,unsigned,word,Reader},entity_dimension,entity_viewport};
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgArcEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockBeginEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgBlockEndEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgCircleEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEllipseEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityBody;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColor;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityColorKind;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityReferenceMode;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgFace3dEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgInsertEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLwPolylineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgLwPolylineVertex;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPointEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyfaceFaceEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyfaceMeshEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgPolyline3dEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgSequenceEndEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgSplineEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgTextEntity;
+use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgVertexEntity;
+use super::{reader::optional_words,number::Projection,reader::{boolean,byte,full_unsigned,high,low,optional_integer,optional_real,optional_text,optional_unsigned,ordinal,real,signed_word,unsigned,word,Reader},entity_dimension,entity_viewport};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::Cell;
 use Cell::{Integer as I,Real as R,Text as T,Null as N};
 
-pub(super) fn project(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEntityBody)->Result<(),ValueError>{
+pub fn project(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEntityBody)->Result<(),ValueError>{
     let(kind,common)=match value{DwgEntityBody::Line(v)=>("line",&v.common),DwgEntityBody::Arc(v)=>("arc",&v.common),DwgEntityBody::LwPolyline(v)=>("lwpolyline",&v.common),DwgEntityBody::BlockBegin(v)=>("block_begin",&v.common),DwgEntityBody::BlockEnd(v)=>("block_end",&v.common),DwgEntityBody::Insert(v)=>("insert",&v.common),DwgEntityBody::DimensionLinear(v)=>("dimension_linear",&v.dimension.common),DwgEntityBody::Viewport(v)=>("viewport",&v.common),DwgEntityBody::Point(v)=>("point",&v.common),DwgEntityBody::Circle(v)=>("circle",&v.common),DwgEntityBody::Ellipse(v)=>("ellipse",&v.common),DwgEntityBody::Text(v)=>("text",&v.common),DwgEntityBody::Spline(v)=>("spline",&v.common),DwgEntityBody::Face3d(v)=>("face3d",&v.common),DwgEntityBody::Polyline3d(v)=>("polyline3d",&v.common),DwgEntityBody::PolyfaceMesh(v)=>("polyface_mesh",&v.common),DwgEntityBody::Vertex(v)=>("vertex",&v.common),DwgEntityBody::PolyfaceFace(v)=>("polyface_face",&v.common),DwgEntityBody::SequenceEnd(v)=>("sequence_end",&v.common)};
     projection.insert_key("dwg_entity",id,&[T(kind)])?;project_common(projection,id,common)?;
     match value{
@@ -34,10 +59,10 @@ pub(super) fn project(projection:&mut Projection<'_,'_>,id:i64,value:&DwgEntityB
         DwgEntityBody::DimensionLinear(v)=>entity_dimension::project(projection,id,v),DwgEntityBody::Viewport(v)=>entity_viewport::project(projection,id,v)
     }
 }
-pub(super) fn coordinates(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,values:&[f64])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){projection.insert(table,&[I(id),I(ordinal(index)?),R(*value)])?;}Ok(())}
-pub(super) fn read_coordinates(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<Vec<f64>,ValueError>{reader.list(table,1,id,2)?.into_iter().map(|row|real(row,3)).collect()}
-pub(super) fn handles(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,values:&[u64])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){projection.insert(table,&[I(id),I(ordinal(index)?),I(high(*value)),I(low(*value))])?;}Ok(())}
-pub(super) fn read_handles(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<Vec<u64>,ValueError>{reader.list(table,1,id,2)?.into_iter().map(|row|full_unsigned(row,3,4)).collect()}
+pub fn coordinates(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,values:&[f64])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){projection.insert(table,&[I(id),I(ordinal(index)?),R(*value)])?;}Ok(())}
+pub fn read_coordinates(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<Vec<f64>,ValueError>{reader.list(table,1,id,2)?.into_iter().map(|row|real(row,3)).collect()}
+pub fn handles(projection:&mut Projection<'_,'_>,table:&'static str,id:i64,values:&[u64])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){projection.insert(table,&[I(id),I(ordinal(index)?),I(high(*value)),I(low(*value))])?;}Ok(())}
+pub fn read_handles(reader:&mut Reader<'_,'_,'_>,table:&'static str,id:i64)->Result<Vec<u64>,ValueError>{reader.list(table,1,id,2)?.into_iter().map(|row|full_unsigned(row,3,4)).collect()}
 fn reference(value:DwgEntityReferenceMode)->&'static str{match value{DwgEntityReferenceMode::ByLayer=>"by_layer",DwgEntityReferenceMode::ByBlock=>"by_block",DwgEntityReferenceMode::Continuous=>"continuous",DwgEntityReferenceMode::Explicit=>"explicit"}}
 fn read_reference(value:&str)->Result<DwgEntityReferenceMode,ValueError>{match value{"by_layer"=>Ok(DwgEntityReferenceMode::ByLayer),"by_block"=>Ok(DwgEntityReferenceMode::ByBlock),"continuous"=>Ok(DwgEntityReferenceMode::Continuous),"explicit"=>Ok(DwgEntityReferenceMode::Explicit),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG entity reference mode is unknown"))}}
 fn project_common(projection:&mut Projection<'_,'_>,id:i64,v:&DwgEntityCommon)->Result<(),ValueError>{
@@ -52,7 +77,7 @@ fn read_common(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgEntityCommon,Valu
     let color=DwgEntityColor{kind:match r.text(1)?{"by_layer"=>DwgEntityColorKind::ByLayer,"by_block"=>DwgEntityColorKind::ByBlock,"index"=>DwgEntityColorKind::Index,"true_color"=>DwgEntityColorKind::TrueColor,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG entity color kind is unknown"))},index:word(r,2)?,rgb:unsigned(r,3)?,transparency:optional_integer(r,4)?,name:optional_text(r,5)?,book_name:optional_text(r,6)?,color_handle:optional_unsigned(r,7,8)?};
     Ok(DwgEntityCommon{mode:match row.text(1)?{"explicit_owner"=>DwgEntityMode::ExplicitOwner,"paper_space"=>DwgEntityMode::PaperSpace,"model_space"=>DwgEntityMode::ModelSpace,"reserved"=>DwgEntityMode::Reserved,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG entity mode is unknown"))},color,linetype_scale:real(row,2)?,linetype:read_reference(row.text(3)?)?,plot_style:read_reference(row.text(4)?)?,material:read_reference(row.text(5)?)?,shadow:byte(row,6)?,invisible:word(row,7)?,lineweight:byte(row,8)?,layer_handle:full_unsigned(row,9,10)?,linetype_handle:optional_unsigned(row,11,12)?,material_handle:optional_unsigned(row,13,14)?,shadow_handle:optional_unsigned(row,15,16)?,plot_style_handle:optional_unsigned(row,17,18)?,full_visual_style_handle:optional_unsigned(row,19,20)?,face_visual_style_handle:optional_unsigned(row,21,22)?,edge_visual_style_handle:optional_unsigned(row,23,24)?})
 }
-pub(super) fn reconstruct(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgEntityBody,ValueError>{
+pub fn reconstruct(reader:&mut Reader<'_,'_,'_>,id:i64)->Result<DwgEntityBody,ValueError>{
     let row=reader.component("dwg_entity",id)?;let common=read_common(reader,id)?;
     match row.text(1)?{
         "line"=>{let r=reader.component("dwg_line_entity",id)?;Ok(DwgEntityBody::Line(DwgLineEntity{common,start:read_coordinates(reader,"dwg_entity_line_start_coordinate",id)?,end:read_coordinates(reader,"dwg_entity_line_end_coordinate",id)?,thickness:real(r,1)?,extrusion:read_coordinates(reader,"dwg_entity_extrusion_coordinate",id)?}))},

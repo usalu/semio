@@ -1,9 +1,9 @@
 //! 🔁 Remodeling mutation — `ReplaceStreamSource`: whole-value swap of one media stream's `VideoSource`
 //! provenance, written wholesale by `ImportVideoDone`.
 
-use crate::diff::RemodelingDiff;
-use crate::mutations::RemodelingMutation;
-use crate::{RemodelingSnapshot, VideoSource};
+use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -24,17 +24,20 @@ pub struct ReplaceStreamSource {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn replace_stream_source(id: String, source: Option<VideoSource>) -> RemodelingMutation {
-    RemodelingMutation::ReplaceStreamSource(ReplaceStreamSource { id, source })
+pub fn replace_stream_source<Op: From<ReplaceStreamSource>>(id: String, source: Option<VideoSource>) -> Op {
+    Op::from(ReplaceStreamSource { id, source })
 }
 
-impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for ReplaceStreamSource {
+impl<Op> protocol::MutationKind<RemodelingSnapshot, Op> for ReplaceStreamSource
+where
+    Op: protocol::Mutation<RemodelingSnapshot, Diff = RemodelingDiff> + From<ReplaceStreamSource>,
+{
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "stream", kind: "replace-stream-source", record: "ReplacedStreamSource" };
 
     fn diff(&self, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
         super::diff::diff(self, base)
     }
-    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
+    fn inverse(&self, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
     Ok({
         super::inverse::inverse(self, base)?
     

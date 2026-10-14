@@ -1,9 +1,13 @@
 #!/usr/bin/env bun
+import type {ScriptInvocation} from "./../../../🏃️process/🧭️routing/🟦️.ts";
+import {runRepositoryExactCargoLaws as runExactCargoLaws,configuredRepositoryCargoPreparationPolicyV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import {runRepositoryCargoCommandV1} from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryCargoTestsV1 as runCargoTestsV1 } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runExactCargoLaws } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
+
 import { resolve } from "node:path";
-import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { resolveTestLevel } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { runBudgetedTestCommand } from "../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🎛️execution/🟦️.ts";
@@ -55,7 +59,7 @@ class WorkerMaintenanceCheckScript extends BundleScript {
     for (const api of ["install_maintenance_hook", "request_maintenance", "remove_maintenance_hook"]) assert.equal(pool.match(new RegExp(`pub fn ${api}\\(`, "g"))?.length, 2, `native/cooperative API mismatch: ${api}`);
     assert(pool.includes("job.run(&inner.maintenance)") && pool.includes("job.run(&self.inner.maintenance)"), "both pool schedulers must run fixed work under their existing permits");
     if (segments[0] !== "--native") return;
-    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["worker_maintenance_matches_neutral_retention_and_aba_lifecycle", "worker_maintenance_capacity_and_pool_identity_are_exact", "worker_maintenance_running_callback_retires_requested_generation_exactly_once", "worker_maintenance_native_idle_wake_uses_no_queued_job", "worker_maintenance_native_self_retire_reuses_all_fixed_slots", "worker_maintenance_cooperative_wake_obeys_pump_and_drr", "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation", "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks", "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks", "native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn", "cooperative_maintenance_snapshot_contention_preserves_queued_job"] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`worker-maintenance-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: ["worker_maintenance_matches_neutral_retention_and_aba_lifecycle", "worker_maintenance_capacity_and_pool_identity_are_exact", "worker_maintenance_running_callback_retires_requested_generation_exactly_once", "worker_maintenance_native_idle_wake_uses_no_queued_job", "worker_maintenance_native_self_retire_reuses_all_fixed_slots", "worker_maintenance_cooperative_wake_obeys_pump_and_drr", "worker_maintenance_native_running_close_and_shutdown_keep_exact_invocation", "worker_maintenance_native_interleaves_io_jobs_and_rotating_hooks", "worker_maintenance_cooperative_interleaves_io_jobs_and_rotating_hooks", "native_drr_finishes_eligible_deficit_frontier_before_idle", "cooperative_maintenance_retains_deficit_until_later_host_turn", "cooperative_maintenance_snapshot_contention_preserves_queued_job"] }],progress(event) { console.log(`worker-maintenance-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
     for (const receipt of receipts) console.log(`worker-maintenance-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
@@ -92,7 +96,7 @@ class WorkerParkingCheckScript extends BundleScript {
     assert(pool.length > 0 && !pool.includes("wait_timeout(guard") && !pool.includes("notify_all"), "the native pool must not poll or broadcast");
     console.log(`[DEBUG] worker-parking-independent-oracle: protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks} far-keeper-chains=${fixture.farKeeper.chains}`);
     if (segments[0] !== "--native") return;
-    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-async",
         target: { kind: "lib", name: "semio_framework_async" },
         laws: [
@@ -103,7 +107,7 @@ class WorkerParkingCheckScript extends BundleScript {
           "native_pool::tests::a_timer_re_armed_from_its_own_callback_wakes_only_the_keeper",
           "native_pool::tests::a_timer_re_armed_by_a_firing_callback_never_waits_behind_a_far_keeper",
         ],
-      }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`worker-parking-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      }],progress(event) { console.log(`worker-parking-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
     for (const receipt of receipts) console.log(`worker-parking-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
@@ -137,7 +141,7 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
     const markerCount = fixture.runtimeMarkers.async.length;
     console.log(`[DEBUG] worker-deferred-wake-independent-oracle: cases=${fixture.cases.length} fixed-waiters=${capacity.totalWaiters} inline-wakes=0 runtime-markers=${markerCount}/${markerCount}`);
     if (segments[0] !== "--native") return;
-    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{
         package: "semio-framework-async",
         target: { kind: "lib", name: "semio_framework_async" },
         laws: [
@@ -145,7 +149,7 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
           "native_pool::tests::worker_deferred_wake_native_never_runs_inline_and_shutdown_drains_accepted_owner",
           "wasm_pool::cooperative_tests::worker_deferred_wake_cooperative_shutdown_requires_later_pump_to_drain",
         ],
-      }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`worker-deferred-wake-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      }],progress(event) { console.log(`worker-deferred-wake-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
     for (const receipt of receipts) console.log(`worker-deferred-wake-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
@@ -186,11 +190,11 @@ class WorkerPoolUseCheckScript extends BundleScript {
     }
     console.log(`[DEBUG] worker-pool-use-independent-oracle: cases=${fixture.cases.length} native-source=1 cooperative-source=1`);
     if (segments[0] !== "--native") return;
-    const receipts = await runExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 }, manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory, cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: [
+    const receipts = await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") },cwd: this.repoRoot,...exactCargoStageEnvironments(),groups: [{ package: "semio-framework-async", target: { kind: "lib", name: "semio_framework_async" }, laws: [
         "native_pool::tests::worker_pool_use_native_busy_keeps_executor_running_until_final_release",
         "native_pool::tests::worker_pool_use_acquire_and_shutdown_linearize_exactly_once",
         "wasm_pool::cooperative_tests::worker_pool_use_cooperative_busy_keeps_executor_running_until_final_release",
-      ] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, progress(event) { console.log(`worker-pool-use-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      ] }],progress(event) { console.log(`worker-pool-use-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
     for (const receipt of receipts) console.log(`worker-pool-use-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
@@ -198,7 +202,7 @@ class WorkerPoolUseCheckScript extends BundleScript {
 //#region 🦀️Checks
 class CheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runOwnedCommand("cargo",["check","--manifest-path",resolve(this.root,"Cargo.toml"),...segments],this.root,"async:check",buildBudgetMs());
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["check","--manifest-path",resolve(this.root,"Cargo.toml"),...segments],this.root,process.env,buildBudgetMs());
   }
 }
 //#endregion 🦀️Checks
@@ -210,16 +214,14 @@ class PublicationDocsTestScript extends BundleScript {
     const policy = readCargoTestPolicyV1(process.env), manifest = resolve(this.root, "Cargo.toml");
     if (policy.manifestPath !== manifest) throw new Error("publication doctests require the actual Async manifest policy");
     mkdirSync(policy.artifactDirectory, { recursive: true });
-    await runOwnedCommand("cargo", ["test", "--locked", "--doc", "--manifest-path", manifest, "-p", "semio-framework-async"], this.root, "async:publication-docs", policy.buildBudgetMs, {
-      env: { ...process.env, CARGO_TARGET_DIR: policy.targetDirectory, RUST_MIN_STACK: policy.rustMinStack, TMPDIR: policy.artifactDirectory, TMP: policy.artifactDirectory, TEMP: policy.artifactDirectory },
-    });
+    await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test", "--locked", "--doc", "--manifest-path", manifest, "-p", "semio-framework-async"],this.root,{ ...process.env, CARGO_TARGET_DIR: policy.targetDirectory, RUST_MIN_STACK: policy.rustMinStack, TMPDIR: policy.artifactDirectory, TMP: policy.artifactDirectory, TEMP: policy.artifactDirectory },policy.buildBudgetMs);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-async"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-async"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env), this.repoRoot, this.invocation);
   }
 }
 
@@ -232,16 +234,16 @@ function generatedBindingsPath(root: string): string {
   return join(root, "..", "..", "🤖️generated", "⏳️async", "🟦️.ts");
 }
 
-async function runTypegenExportTest(root: string, outPath: string): Promise<void> {
+async function runTypegenExportTest(original:ScriptInvocation,workspace:string,root: string, outPath: string): Promise<void> {
   const env = { ...process.env, SEMIO_TYPEGEN_OUT: outPath };
-  await runOwnedCommand("cargo",["test","--manifest-path",resolve(root,"Cargo.toml"),"--features","typegen",TYPEGEN_TEST_FILTER],root,"async:typegen",buildBudgetMs(),{env});
+  await runRepositoryCargoCommandV1(original,workspace,["test","--manifest-path",resolve(root,"Cargo.toml"),"--features","typegen",TYPEGEN_TEST_FILTER],root,env,buildBudgetMs());
 }
 
 class TypegenScript extends BundleScript {
   async run(): Promise<void> {
     const outPath = generatedBindingsPath(this.root);
     mkdirSync(dirname(outPath), { recursive: true });
-    await runTypegenExportTest(this.root, outPath);
+    await runTypegenExportTest(this.invocation,this.repoRoot,this.root, outPath);
     for (const name of readdirSync(dirname(outPath))) if (name !== basename(outPath)) rmSync(join(dirname(outPath), name), { recursive: true, force: true });
     console.log(`framework-async typescript mirror refreshed -> ${outPath}`);
   }
@@ -255,8 +257,7 @@ class PreviewGeneratedScript extends BundleScript {
     let content: Buffer;
     try {
       const outPath = join(temp, basename(targetPath));
-      const result = Bun.spawnSync(["cargo", "test", "--locked", "--features", "typegen", TYPEGEN_TEST_FILTER], { cwd: this.root, env: { ...process.env, CARGO_TARGET_DIR: join(temp, "target"), SEMIO_TYPEGEN_OUT: outPath }, stderr: "pipe", stdout: "pipe" });
-      if (result.exitCode !== 0) throw new Error(`framework-async preview export failed: ${result.stderr.toString()}`);
+      await runRepositoryCargoCommandV1(this.invocation,this.repoRoot,["test","--locked","--manifest-path",join(this.root,"Cargo.toml"),"--features","typegen",TYPEGEN_TEST_FILTER],this.root,{...process.env,SEMIO_TYPEGEN_OUT:outPath},buildBudgetMs(),false);
       content = readFileSync(outPath);
     } finally {
       rmSync(temp, { recursive: true, force: true });
@@ -281,7 +282,7 @@ class CancelReturnScript extends BundleScript{
   await runBudgetedTestCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--types","bun",file,claim],{cwd:this.repoRoot,budgetMs:120000,throwOnFailure:true});
   if(segments[0]==="source")return;
   if(!process.env.SEMIO_TEST_ARTIFACT_DIR)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
-  const receipts=await runExactCargoLaws({manifestPaths:{"semio-framework-async":resolve(this.root,"Cargo.toml")},cargoTargetDir:readCargoTestPolicyV1(process.env).targetDirectory,cwd:this.repoRoot,groups:[{package:"semio-framework-async",target:{kind:"lib"},laws:["component::cancellation_retirement::tests::cancel_token_retirement_original_ancestor_nodes_release_without_recursive_drop","component::cancellation_retirement::tests::cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original","component::cancellation_retirement::tests::cancel_token_borrowed_original_alias_return_keeps_root_waiters_and_exact_pointer","component::cancellation_retirement::tests::cancel_token_borrowed_alias_return_rejects_foreign_root_and_keeps_original","component::publication_claim::tests::original_publication_permit_return_slot_has_exact_allocator_and_parallel_custody"]}],artifactDir:process.env.SEMIO_TEST_ARTIFACT_DIR,buildBudgetMs:3600000,listBudgetMs:60000,lawBudgetMs:120000});
+  const receipts=await runExactCargoLaws({preparation:configuredRepositoryCargoPreparationPolicyV1(),policy:{...configuredExactCargoLawPolicyV1(),buildMilliseconds:3600000,listMilliseconds:60000,lawMilliseconds:120000},invocation:this.invocation,manifestPaths:{"semio-framework-async":resolve(this.root,"Cargo.toml")},cwd:this.repoRoot,groups:[{package:"semio-framework-async",target:{kind:"lib"},laws:["component::cancellation_retirement::tests::cancel_token_retirement_original_ancestor_nodes_release_without_recursive_drop","component::cancellation_retirement::tests::cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original","component::cancellation_retirement::tests::cancel_token_borrowed_original_alias_return_keeps_root_waiters_and_exact_pointer","component::cancellation_retirement::tests::cancel_token_borrowed_alias_return_rejects_foreign_root_and_keeps_original","component::publication_claim::tests::original_publication_permit_return_slot_has_exact_allocator_and_parallel_custody"]}]});
   console.log(`[DEBUG] original cancellation graph nativeReceipts=${receipts.length}`);
  }
 }

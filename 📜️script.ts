@@ -107,7 +107,7 @@ const REPO_CLI_ENTRY_GO = join(REPO_CLIENT_GO, "cmd", "repo");
 const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌️mcp");
 const REPO_MCP_PROFILE_ENV = "SEMIO_REPO_MCP_CLIENT";
 
-/** 🚪️Gates the repo MCP client on the Nx-cached `repo-mcp:build` output instead of
+/** 🚪️Gates the repo MCP client on the cached `repo-mcp:build` output instead of
  * rebuilding it inline — a continuous `dev` session must stay thin and consume cached deliverables. */
 function requireRepoMcpBinary(root: string): string {
   const bin = resolveMcpBin(root);
@@ -178,7 +178,7 @@ export class SetupScript extends Script {
         git: () => this.runGit(),
         native: (rest) => new NativeOsScript(this.root, this.repoRoot, this.invocation).run(rest),
         deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot, this.invocation).run(rest),
-        prepare: () => console.log("[prepare] Nx prerequisites completed"),
+        prepare: () => console.log("[prepare] Build prerequisites completed"),
         devcontainer: (rest) => this.runDevcontainer(rest),
       },
       "bun ./📜️script.ts setup [postinstall|git|native|deps|prepare|devcontainer <start|attach|gitkraken>]",
@@ -240,7 +240,7 @@ export class SetupScript extends Script {
   }
 
   private runFull(): void {
-    console.log("[setup] locked dependency environments are ready through the Nx prerequisite graph");
+    console.log("[setup] locked dependency environments are ready through the repository build graph");
     console.log("[setup] staging semio-os-mcp so `.mcp.json` initialize never waits on a cold build");
     ensureMcpBinary(this.root);
   }
@@ -387,7 +387,7 @@ export class DevScript extends Script {
   }
 
   /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio, which is what `.mcp.json` launches.
-   * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (Nx target `@semio-tech/framework-os-mcp-rs:dev`).
+   * Streamable HTTP is the dashboard tool `tool:workspace/os-mcp-http` (build task `@semio-tech/framework-os-mcp-rs:dev`).
    * Extra argv passes straight through to the binary (`--folder`, `--hub`, `--principal`, `--scopes`, `--auto-approve`, …). */
   private runMcpOs(extra: string[]): void {
     runCmd(ensureMcpBinary(this.root), ["stdio", ...extra], { cwd: this.root, ...daemonBudgetOpts() });
@@ -531,10 +531,8 @@ export class GenerateScript extends Script {
 //#region 🔖️LintScript
 export class LintScript extends Script {
   run(segments: string[]): void {
-    // nx orchestrators: exempt — total wall time spans every project and legitimately exceeds any single
-    // command's budget; each leaf project's own build/test/lint commands are individually budgeted.
     if (segments[0] === "repo") {
-      console.log("[lint] Nx completed the repository lint graph.");
+      console.log("[lint] Completed the repository lint graph.");
       return;
     }
     runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
@@ -6675,8 +6673,8 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
 
 /**
  * ⚖️The 12 single-rule stdio-artifact policy gates, previously only reachable via an inline `bun -e`
- * eval that bypassed Nx entirely. `verify policy-breach
- * <rule>` gives each one a real CLI surface routable through a cached `nx:run-commands` target.
+ * eval that bypassed the build framework entirely. `verify policy-breach
+ * <rule>` gives each one a real CLI surface routable through a cached `repo:script` task.
  */
 const POLICY_BREACH_GATES: Record<string, (repoRoot: string) => BreachRecord[]> = {
   "artifact-builder": policyArtifactBuilderBreaches,
@@ -7386,7 +7384,7 @@ export class VerifyScript extends Script {
     
     if (segments[0] === "reset-document-ownership") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "-p", "semio-s-artifact-trinity-rewriting", "--features", "semio-s-artifact-trinity-rewriting/component-app-assembly", "--lib", "reset_document_ownership", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "-p", "semio-s-artifact-trinity-rewriting", "--lib", "reset_document_ownership", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "wires-pointer-move") {
@@ -7396,7 +7394,7 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "jack-results-window-transient") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-trinity-jack", "--features", "semio-s-artifact-trinity-jack/component-app-assembly", "--lib", "results_window_large_output_", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-trinity-jack", "--lib", "results_window_large_output_", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "shared-value-canonical-json") {
@@ -7476,7 +7474,7 @@ export class VerifyScript extends Script {
     
     if (segments[0] === "block3d-window-transient") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-block-3d", "--features", "component-app-assembly", "--lib", "preview_", "--", "--nocapture"], this.root);
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-block-3d", "--lib", "preview_", "--", "--nocapture"], this.root);
       return;
     }
     if (segments[0] === "ephemeral-transfer-preparation") {
@@ -7542,20 +7540,19 @@ export class VerifyScript extends Script {
         }
         if (nativePhase === undefined || nativePhase === "consumers") {
           const consumers = [
-          ["semio-s-artifact-procedural-generation2d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
-          ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"], ["component-app-assembly"]],
-          ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"], []],
-          ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"], []],
-          ["semio-hub-space", ["node_graph_viewport_writes_typed_workflow_camera_config"], []],
-          ["semio-s-artifact-dag-dag", ["every_command_round_trips_through_text_and_binary"], []],
-          ["semio-s-artifact-flow-flow", ["node_graph_viewport_moves_the_camera"], []],
-          ["semio-s-artifact-mathematical-equation", ["node_graph_viewport_writes_config_not_mutations"], []],
-          ["semio-s-artifact-trinity-rewriting", ["trinity_rewriting_command_text_and_binary_round_trip"], ["component-app-assembly"]],
-          ["semio-s-artifact-trinity-jack", ["trinity_jack_command_text_and_binary_round_trip"], ["component-app-assembly"]],
+          ["semio-s-artifact-procedural-generation2d", ["every_command_round_trips_through_text_and_binary"]],
+          ["semio-s-artifact-procedural-generation3d", ["every_command_round_trips_through_text_and_binary"]],
+          ["semio-s-artifact-architect-program", ["every_command_round_trips_text_and_binary_under_its_declared_wire_keyword"]],
+          ["semio-s-artifact-reasoning-wires", ["every_command_round_trips_through_text_and_binary"]],
+          ["semio-hub-space", ["node_graph_viewport_writes_typed_workflow_camera_config"]],
+          ["semio-s-artifact-dag-dag", ["every_command_round_trips_through_text_and_binary"]],
+          ["semio-s-artifact-flow-flow", ["node_graph_viewport_moves_the_camera"]],
+          ["semio-s-artifact-mathematical-equation", ["node_graph_viewport_writes_config_not_mutations"]],
+          ["semio-s-artifact-trinity-rewriting", ["trinity_rewriting_command_text_and_binary_round_trip"]],
+          ["semio-s-artifact-trinity-jack", ["trinity_jack_command_text_and_binary_round_trip"]],
           ] as const;
-          const features = consumers.flatMap(([packageName, , features]) => features.map((feature) => `${packageName}/${feature}`));
           const filters = [...new Set(consumers.flatMap(([, filters]) => [...filters]))];
-          await runCargo(["test", "--manifest-path", "Cargo.toml", ...consumers.flatMap(([packageName]) => ["-p", packageName]), "--features", features.join(","), "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
+          await runCargo(["test", "--manifest-path", "Cargo.toml", ...consumers.flatMap(([packageName]) => ["-p", packageName]), "--lib", "--", "--nocapture", "--test-threads=1", ...filters], this.root);
         }
       }
       return;
@@ -7884,7 +7881,7 @@ export class VerifyScript extends Script {
    * ⚖️Standalone entry point for the `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`
    * gate bundle (`policyMutationOutcomeMergePolicyBreaches`'s 16 rules) — the same checks `runGate()`'s
    * "mutation-outcome / merge-policy law" block enforces, runnable in isolation via
-   * `bun ./📜️script.ts verify mutation-outcome-law` (the `mutation-outcome-law` nx target in
+   * `bun ./📜️script.ts verify mutation-outcome-law` (the `mutation-outcome-law` build task in
    * `📋️project.json` wires this ahead of `verify-gate`).
    */
   /**
@@ -8340,7 +8337,7 @@ export class VerifyScript extends Script {
     runCmd("bun", ["repo", "run-many", "-p", "@semio-tech/repo-lib", "-t", "lint-dependency-direction", "lint-rust-source-direction", "lint-cargo-dependency-direction", "--skip-cache", ...semioBuildParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
-  /** 🏛️ Executes architecture contract checks contributed by their owning Nx projects. */
+  /** 🏛️ Executes architecture contract checks contributed by their owning build projects. */
   private runCanonicalArchitecture(): void {
     console.log("[verify canonical-architecture] checking owner-contributed dependency, state and I/O contracts…");
     runCmd("bun", ["repo", "run-many", "-t", "canonical-architecture", "--all", "--exclude", "workspace", "--skip-cache", ...semioBuildParallelFlag()], {
@@ -8351,14 +8348,13 @@ export class VerifyScript extends Script {
 
   private async runGate(): Promise<void> {
     this.runCanonicalArchitecture();
-    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`nx run-many -t lint --all`:
+    // Deliberately calls dependency-cruiser directly rather than `LintScript`/`bun repo run-many --targets=lint --all`:
     // several unrelated projects have pre-existing broken eslint configs,
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
     runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
     console.log("[verify] generated catalog freshness…");
-    // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["repo", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] region/host-contract script lints…");
     runCmd("bun", ["repo", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -8691,7 +8687,7 @@ const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "✏️s/🧑‍💻dev/🧩️cat
 const INTERACTIVITY_ALL_APP_REGISTRY_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🎮️registry/🦀️.rs";
 /** 🧬️ The schema every `metadata.semio.dashboard` declaration is written against. */
 const INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json";
-/** 🏠️ The workspace root project whose Nx targets and dashboard declarations the gates are checked against. */
+/** 🏠️ The workspace root project whose build tasks and dashboard declarations the gates are checked against. */
 const INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE = "📋️project.json";
 /** 🔌️ Every tree whose depth-4 and extension `🔣️.json` files are plugin descriptors. */
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_ROOTS: readonly string[] = ["✏️s/🔌️plugins", "🌎️hub/🧩️compositions"];
@@ -8903,7 +8899,7 @@ function interactivityAllAppSurfaceCoverageFailures(descriptors: readonly Intera
   return failures;
 }
 
-/** ⚖️Proves every required verification gate is startable from the dashboard: the workspace `verify` Nx target forwards free arguments to `📜️script.ts verify` and declares one positional text parameter. */
+/** ⚖️Proves every required verification gate is startable from the dashboard: the workspace `verify` build task forwards free arguments to `📜️script.ts verify` and declares one positional text parameter. */
 function interactivityAllAppGateFailures(manifestSource: string, schemaSource: string, gates: readonly { readonly id: string; readonly check: readonly string[] }[] = INTERACTIVITY_ALL_APP_REQUIRED_GATES): string[] {
   const failures: string[] = [];
   const record = (value: unknown): Record<string, unknown> => (value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {});
@@ -9412,7 +9408,7 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   interactivityMountedLayoutTextSelfTests(repoRoot);
   const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs");
   const mountedEngine = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs");
-  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🌳️tree/🦀️.rs");
+  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/🦀️.rs");
   const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs");
   const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs");
   const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs");
@@ -13533,7 +13529,7 @@ function repoTaxonomy(root: string): Record<string, unknown> {
 /**
  * 🧪️Root test router — a thin delegate.
  *
- * It resolves the level, resolves the scope, invokes Nx and enforces the gates. Everything that
+ * It resolves the level, resolves the scope, invokes the build framework and enforces the gates. Everything that
  * knows what a test *is* (discovery, the feature contract, oracles, hosts, comparison, reports)
  * lives in the testing domain the taxonomy names; everything that knows how to *run a
  * process* stays in the repo library. No test phase is special-cased here any more, no `compose`
@@ -13548,7 +13544,7 @@ export class TestScript extends Script {
       const { repositoryProcessOwnerContextV1, repositoryCargoTestPolicyV1, repositoryVitestPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_TEST_LEVEL: level });
       if (native) {
-        const {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+        const [{ repositoryCargoPreparationStorageV1 }, { prepareCargoWorkspaceInvocation }] = await Promise.all([import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts")]);
         prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["test", "--manifest-path", join(cwd, "Cargo.toml")],cwd,process.env);
         env.SEMIO_CARGO_TEST_POLICY = JSON.stringify(repositoryCargoTestPolicyV1(join(cwd, "Cargo.toml"), cwd));
       } else env.SEMIO_VITEST_POLICY = JSON.stringify(repositoryVitestPolicyV1(cwd, env));
@@ -14318,7 +14314,7 @@ export class PublishScript extends Script {
       console.error(`[publish] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["repo", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() }); // nx orchestrator — leaves individually budgeted
+    runCmd("bun", ["repo", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 //#endregion 🔖️PublishScript
@@ -14847,7 +14843,7 @@ export class SchemaScript extends Script {
 class ComponentsScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [subcommand, ...rest] = segments;
-    if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0));
+    if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:describe", 0), (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")).repositoryCargoNetworkV1(this.invocation, this.repoRoot));
     if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, scriptCompilerAdmissionControlV1(this.invocation, "components:profile", 0));
     if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!, scriptCompilerAdmissionControlV1(this.invocation, "components:iterate", 0));
     throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
@@ -14860,13 +14856,13 @@ class ComponentsScript extends Script {
  * the jobs this project's `release` target declares (descriptor emitter, fonts, browser support) under one jobserver, memory admission and telemetry, and
  * streams each component through describe, transpile, `wasm-opt`, its module probe and publication as Cargo links it; `SEMIO_NATIVE_BUILD_GENERATION=fresh`
  * compiles cold into a new generation.
+ * @see ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts
  * @see ./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
 class ReleaseScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_NATIVE_BUILD_GENERATION=fresh selects a cold generation");
-    const [{ nativeBuildGenerationKindV1, runNativeBuildDriverV1 }, { cargoDirectories, nativeBuildPipelinePlanV1 }, { componentDriverStagesV1 }] = await Promise.all([import("./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"), import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")]);
-    const { plan, jobEnvironment } = nativeBuildPipelinePlanV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release);
-    await runNativeBuildDriverV1({ plan, compilerConfiguration: join(this.repoRoot,".cargo/config.toml"), cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: nativeBuildGenerationKindV1(process.env), leaseDirectory: join(this.repoRoot, ".cache", "framework", "leases"), environment: process.env, control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0), stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
+    const [{ buildReleasePipelineV1 }, { repositoryCargoNetworkV1 }] = await Promise.all([import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts")]);
+    await buildReleasePipelineV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release, { network: repositoryCargoNetworkV1(this.invocation, this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
   }
 }
 //#endregion 🔖️ReleaseScript
@@ -14920,7 +14916,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
+ * the repo build inference into the synthetic `breach-script_ts` lint task (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -16933,7 +16929,7 @@ function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
         line,
         priority: "high",
         reason: "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
-        solution: `At ${relPath}:${line}, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs.`,
+        solution: `At ${relPath}:${line}, replace budgetMs: null with orchestratorBudgetOpts() for build/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs.`,
       });
     }
   }
@@ -18801,7 +18797,7 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
 const POLICY_PLUGIN_DEP_ALLOWLIST = new Set<string>();
 
 /** ✅️What a plugin legitimately needs per 📓️w0-d-sdk-surface.md §3.1: the plugin SDK, the os-kernel crate, the 3d crates (base plus the four brep crates of the wave E4 cut) where genuinely used, and schema. Everything else pointing into 🧰️framework/ is a bypass of the curated SDK surface. */
-const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
+const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-polynomial", "semio-framework-3d-brep-vector", "semio-framework-3d-brep-tolerance", "semio-framework-3d-brep-curve", "semio-framework-3d-brep-surface", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-intersect", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-tessellation", "semio-framework-3d-brep-validation", "semio-framework-3d-brep-analysis", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
 /** ✅️serde-family third-party crates are always allowed regardless of how they're declared (version-pinned, not path-pointed at 🧰️framework, so they never reach this rule's path filter anyway — kept for defense in depth). */
 const POLICY_PLUGIN_DEP_SERDE_RE = /^serde(_json|-wasm-bindgen)?$/;
 

@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl, BIM_EXAMPLE_TEXT};
-use crate::{ModelInference, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

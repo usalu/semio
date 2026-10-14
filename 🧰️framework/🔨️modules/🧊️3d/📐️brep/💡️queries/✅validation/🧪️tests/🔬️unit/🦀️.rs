@@ -1,11 +1,11 @@
 use super::*;
 use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
-use semio_framework_3d_brep_representation::curve::Curve3;
-use semio_framework_3d_brep_representation::surface::Surface;
-use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_curve::Curve3;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
-use semio_framework_3d_brep_representation::vector::matrix::Frame3;
-use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_vector::matrix::Frame3;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
@@ -15,9 +15,9 @@ fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
         let Curve3::Line { origin, dir } = *body.curves3.get(edge.curve).unwrap() else { continue };
         let local_o = frame.to_local(origin);
         let local_d = frame.to_local_vector(dir);
-        let pcurve = body.curves2.insert(semio_framework_3d_brep_representation::curve::Curve2::Line {
-            origin: semio_framework_3d_brep_representation::vector::Pnt2::new(local_o.x, local_o.y),
-            dir: semio_framework_3d_brep_representation::vector::Vec2::new(local_d.x, local_d.y),
+        let pcurve = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Line {
+            origin: semio_framework_3d_brep_vector::Pnt2::new(local_o.x, local_o.y),
+            dir: semio_framework_3d_brep_vector::Vec2::new(local_d.x, local_d.y),
         });
         // 🩺 A p-curve is always parametrized in the EDGE's own curve order — never reversed
         // to match a particular coedge's traversal direction (W1-E's binding convention, see
@@ -159,9 +159,9 @@ async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curv
     let coedge_id = body.loop_coedges(outer)[0];
     // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
     // clearly-wrong 2D point far from where the 3D edge actually projects.
-    let bad_pcurve = body.curves2.insert(semio_framework_3d_brep_representation::curve::Curve2::Line {
-        origin: semio_framework_3d_brep_representation::vector::Pnt2::new(500.0, 500.0),
-        dir: semio_framework_3d_brep_representation::vector::Vec2::new(0.0, 0.0),
+    let bad_pcurve = body.curves2.insert(semio_framework_3d_brep_curve::Curve2::Line {
+        origin: semio_framework_3d_brep_vector::Pnt2::new(500.0, 500.0),
+        dir: semio_framework_3d_brep_vector::Vec2::new(0.0, 0.0),
     });
     let coedge = body.coedges.get_mut(coedge_id).unwrap();
     coedge.pcurve = Some(bad_pcurve);
@@ -179,8 +179,8 @@ fn validation_same_parameter_retains_all_original_adaptive_passes_and_verdict() 
     let face = body.solid_faces(solid)[probe["face"].as_u64().unwrap() as usize];
     let coedge = body.face_coedges(face)[probe["coedge"].as_u64().unwrap() as usize];
     let pcurve = body.coedges.get(coedge).unwrap().pcurve.unwrap();
-    let semio_framework_3d_brep_representation::curve::Curve2::Line { dir, .. } = body.curves2.get_mut(pcurve).unwrap() else { panic!("neutral original planar edge"); };
-    *dir = semio_framework_3d_brep_representation::vector::Vec2::new(0.0, 0.0);
+    let semio_framework_3d_brep_curve::Curve2::Line { dir, .. } = body.curves2.get_mut(pcurve).unwrap() else { panic!("neutral original planar edge"); };
+    *dir = semio_framework_3d_brep_vector::Vec2::new(0.0, 0.0);
     let mut job = BodyValidationJob::new(&body);
     let mut samples = 0;
     while !job.is_complete() {
@@ -528,7 +528,7 @@ fn original_validation_same_parameter_retains_scratch_samples_and_one_original_c
  }
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();let law=&fixture["retainedSameParameter"];
  for width in [1,3,64]{for malformed in [false,true]{for stop in law["cancelStops"].as_array().unwrap(){
-  let mut body=Body::new();let solid=build_tetrahedron(&mut body,&mut OpRecorder::new());let face=body.solid_faces(solid)[0];let coedge=body.face_coedges(face)[0];if malformed{let pcurve=body.coedges.get(coedge).unwrap().pcurve.unwrap();let semio_framework_3d_brep_representation::curve::Curve2::Line{dir,..}=body.curves2.get_mut(pcurve).unwrap()else{panic!("original planar fixture")};*dir=semio_framework_3d_brep_representation::vector::Vec2::new(0.0,0.0);}
+  let mut body=Body::new();let solid=build_tetrahedron(&mut body,&mut OpRecorder::new());let face=body.solid_faces(solid)[0];let coedge=body.face_coedges(face)[0];if malformed{let pcurve=body.coedges.get(coedge).unwrap().pcurve.unwrap();let semio_framework_3d_brep_curve::Curve2::Line{dir,..}=body.curves2.get_mut(pcurve).unwrap()else{panic!("original planar fixture")};*dir=semio_framework_3d_brep_vector::Vec2::new(0.0,0.0);}
   let source=&body as*const Body;let policy=grant(&law["policy"]);let mut caller=OriginalJobFixtureCaller::admit(OperationId(941),Generation(37),grant(&law["stock"]),clock,law["deadline"].as_u64().unwrap(),law["fuel"].as_u64().unwrap());let(mut job,h)=observe(||BodyValidationJob::new(&body));assert_eq!(h,(0,0));
   while job.phase!=BodyValidationPhase::SameParameter{let(r,h)=observe(||caller.turn(policy,|cx|turn(&mut job,&body,cx)));let r=r.unwrap();assert_ne!(r,Default::default());assert_eq!(r,caller.receipt());assert_eq!(h,(r.retained_capacity_bytes,r.released_bytes));}
   let policy=Grant{maximum_copy_bytes:width,..policy};let mut samples=0;let mut events=0;let mut born=0;let mut denied=0;let mut recipient=0;

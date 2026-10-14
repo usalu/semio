@@ -4,7 +4,7 @@
 use super::super::annotating;
 use super::super::elements;
 use super::CreateTextNote;
-use crate::{Entry, ModelDiff, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 
 pub fn diff(payload: &CreateTextNote, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

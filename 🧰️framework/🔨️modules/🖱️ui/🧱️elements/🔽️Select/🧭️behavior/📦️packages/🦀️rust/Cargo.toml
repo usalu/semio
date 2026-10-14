@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-ui-select-behavior"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-select-behavior"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-theme = { path = "../../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async-macros = { path = "../../../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+serde_json = "1.0.140"

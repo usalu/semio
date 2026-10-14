@@ -1,6 +1,6 @@
 //! ⚡️ En1993 mutations — OpText via JSON tokens (hierarchical steel subject).
 
-use crate::artifact_schema::mutations::En1993Mutation;
+use semio_s_artifact_norm_en1993_mutations::En1993Mutation;
 
 use protocol::OpText;
 
@@ -20,64 +20,65 @@ impl OpText for En1993Mutation {
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use super::*;
-use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::{En1993Diff, En1993Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::change_annex;
-use crate::standards::v1::subsets::any::schema::mutations::update_bolt_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_bridge_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_cold_formed_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_crane_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_fatigue_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_fire_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_hss_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_member_properties;
-use crate::standards::v1::subsets::any::schema::mutations::update_pile_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_plated_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_silo_shell_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_stainless_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_tension_component_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_through_thickness_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_tower_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::update_weld_inputs;
-use crate::standards::v1::subsets::any::schema::mutations::insert_material;
-use crate::standards::v1::subsets::any::schema::mutations::remove_material;
-use crate::standards::v1::subsets::any::schema::mutations::insert_section;
-use crate::standards::v1::subsets::any::schema::mutations::remove_section;
-use crate::standards::v1::subsets::any::schema::mutations::insert_member;
-use crate::standards::v1::subsets::any::schema::mutations::remove_member;
-use crate::standards::v1::subsets::any::schema::mutations::insert_load_case;
-use crate::standards::v1::subsets::any::schema::mutations::remove_load_case;
-use crate::standards::v1::subsets::any::schema::mutations::insert_member_action;
-use crate::standards::v1::subsets::any::schema::mutations::remove_member_action;
-use crate::standards::v1::subsets::any::schema::mutations::insert_joint;
-use crate::standards::v1::subsets::any::schema::mutations::remove_joint;
-use crate::standards::v1::subsets::any::schema::mutations::insert_fatigue_detail;
-use crate::standards::v1::subsets::any::schema::mutations::remove_fatigue_detail;
-use crate::standards::v1::subsets::any::schema::mutations::insert_fire_exposure;
-use crate::standards::v1::subsets::any::schema::mutations::remove_fire_exposure;
-use crate::standards::v1::subsets::any::schema::mutations::insert_cold_formed_member;
-use crate::standards::v1::subsets::any::schema::mutations::remove_cold_formed_member;
-use crate::standards::v1::subsets::any::schema::mutations::insert_plated_panel;
-use crate::standards::v1::subsets::any::schema::mutations::remove_plated_panel;
-use crate::standards::v1::subsets::any::schema::mutations::insert_silo_shell;
-use crate::standards::v1::subsets::any::schema::mutations::remove_silo_shell;
-use crate::standards::v1::subsets::any::schema::mutations::insert_tension_component;
-use crate::standards::v1::subsets::any::schema::mutations::remove_tension_component;
-use crate::standards::v1::subsets::any::schema::mutations::insert_bridge_fatigue;
-use crate::standards::v1::subsets::any::schema::mutations::remove_bridge_fatigue;
-use crate::standards::v1::subsets::any::schema::mutations::insert_tower_leg;
-use crate::standards::v1::subsets::any::schema::mutations::remove_tower_leg;
-use crate::standards::v1::subsets::any::schema::mutations::insert_pile;
-use crate::standards::v1::subsets::any::schema::mutations::remove_pile;
-use crate::standards::v1::subsets::any::schema::mutations::insert_crane_runway;
-use crate::standards::v1::subsets::any::schema::mutations::remove_crane_runway;
+use crate::text::mutations::*;
+use semio_s_artifact_norm_en1993_mutations::*;
+use semio_s_artifact_norm_en1993_diff::En1993Diff;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+use semio_s_artifact_norm_en1993_mut_general::change_annex;
+use semio_s_artifact_norm_en1993_mut_connections::update_bolt_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_bridge_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_cold_formed_inputs;
+use semio_s_artifact_norm_en1993_mut_cranes::update_crane_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_fatigue_inputs;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::update_fire_inputs;
+use semio_s_artifact_norm_en1993_mut_connections::update_hss_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_member_properties;
+use semio_s_artifact_norm_en1993_mut_towers::update_pile_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_plated_inputs;
+use semio_s_artifact_norm_en1993_mut_thin_walled::update_silo_shell_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_stainless_inputs;
+use semio_s_artifact_norm_en1993_mut_cranes::update_tension_component_inputs;
+use semio_s_artifact_norm_en1993_mut_general::update_through_thickness_inputs;
+use semio_s_artifact_norm_en1993_mut_towers::update_tower_inputs;
+use semio_s_artifact_norm_en1993_mut_connections::update_weld_inputs;
+use semio_s_artifact_norm_en1993_mut_general::insert_material;
+use semio_s_artifact_norm_en1993_mut_general::remove_material;
+use semio_s_artifact_norm_en1993_mut_general::insert_section;
+use semio_s_artifact_norm_en1993_mut_general::remove_section;
+use semio_s_artifact_norm_en1993_mut_general::insert_member;
+use semio_s_artifact_norm_en1993_mut_general::remove_member;
+use semio_s_artifact_norm_en1993_mut_connections::insert_load_case;
+use semio_s_artifact_norm_en1993_mut_connections::remove_load_case;
+use semio_s_artifact_norm_en1993_mut_connections::insert_member_action;
+use semio_s_artifact_norm_en1993_mut_connections::remove_member_action;
+use semio_s_artifact_norm_en1993_mut_connections::insert_joint;
+use semio_s_artifact_norm_en1993_mut_connections::remove_joint;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_fatigue_detail;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_fatigue_detail;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_fire_exposure;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_fire_exposure;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_cold_formed_member;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_cold_formed_member;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_plated_panel;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_plated_panel;
+use semio_s_artifact_norm_en1993_mut_thin_walled::insert_silo_shell;
+use semio_s_artifact_norm_en1993_mut_thin_walled::remove_silo_shell;
+use semio_s_artifact_norm_en1993_mut_cranes::insert_tension_component;
+use semio_s_artifact_norm_en1993_mut_cranes::remove_tension_component;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::insert_bridge_fatigue;
+use semio_s_artifact_norm_en1993_mut_fire_fatigue::remove_bridge_fatigue;
+use semio_s_artifact_norm_en1993_mut_towers::insert_tower_leg;
+use semio_s_artifact_norm_en1993_mut_towers::remove_tower_leg;
+use semio_s_artifact_norm_en1993_mut_towers::insert_pile;
+use semio_s_artifact_norm_en1993_mut_towers::remove_pile;
+use semio_s_artifact_norm_en1993_mut_cranes::insert_crane_runway;
+use semio_s_artifact_norm_en1993_mut_cranes::remove_crane_runway;
 
 pub fn decode_en1993_mutation_json(text: &str) -> Result<En1993Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use mutations_codec::*;
+pub use crate::text::mutations::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

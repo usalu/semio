@@ -2,8 +2,9 @@
 //! id-keyed entity graph (never a raw `Part21Document` — same specific-code mandate as the
 //! snapshot itself).
 
-use crate::schema::snapshot::{StepEntity, StepHeader};
-use crate::{StepSnapshot, STDIO_STEP_DOCUMENT_SCHEMA};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity, StepHeader};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot};
+use crate::standards::v_ap214::subsets::base::schema::snapshot::STDIO_STEP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -43,8 +44,8 @@ impl StepArtifact {
     /// 🧐️ Derived BrepMesh analyzer view — computed on demand from the typed entity graph via
     /// `StepSnapshot::to_part21_document`, never stored.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn brep_mesh(&self) -> crate::engine::brep::BrepMeshView {
-        crate::engine::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
+    pub fn brep_mesh(&self) -> crate::standards::v_ap214::subsets::base::io::brep::BrepMeshView {
+        crate::standards::v_ap214::subsets::base::io::brep::analyze_brep_mesh(&self.to_snapshot().to_part21_document())
     }
 }
 //#endregion 🔖️Conversions
@@ -94,7 +95,7 @@ pub fn step_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::engine::empty_step_snapshot` through the `engine` barrel shim.
+/// `crate::standards::v_ap214::subsets::base::schema::empty_step_snapshot` through the `engine` barrel shim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_step_snapshot() -> StepSnapshot {
     StepSnapshot::default()
@@ -107,7 +108,7 @@ pub fn empty_step_snapshot() -> StepSnapshot {
 /// for `mutations::demo_mutation_cases()`/`diff::demo_diff_cases()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_step_snapshot() -> StepSnapshot {
-    use crate::schema::snapshot::{StepEntity as _StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepHeader as _StepHeader, StepValue};
+    use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepEntity as _StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepHeader as _StepHeader, StepValue};
     StepSnapshot {
         schema: STDIO_STEP_DOCUMENT_SCHEMA.into(),
         header: _StepHeader {

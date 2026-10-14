@@ -1,8 +1,10 @@
 //! 🔺️ Diff for `RemoveMark`.
 
-use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::schema::diff::{SemioTextDiff, SemioTextRunDiff};
-use crate::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::diff::SemioTextRunDiff;
+use semio_s_artifact_stdio_semio_text_model::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Removes the mark at `index`: the run's `marks` triple names exactly that removal.

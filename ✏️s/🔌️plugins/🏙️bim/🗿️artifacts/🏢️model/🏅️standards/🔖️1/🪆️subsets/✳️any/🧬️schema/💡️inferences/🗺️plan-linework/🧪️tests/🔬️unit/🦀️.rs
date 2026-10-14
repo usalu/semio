@@ -1,7 +1,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
-use crate::{Axis, ModelInference, OpeningKind, Phase, Point2, TopConstraint};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, OpeningKind, Phase, Point2, TopConstraint}, inferences::ModelInference};
 use protocol::Inference;
 use std::collections::BTreeSet;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -244,7 +244,7 @@ async fn a_plan_depends_on_its_own_storey_the_storeys_its_tops_target_and_the_va
 
 #[semio_framework_async_macros::async_test]
 async fn a_height_edit_recomputes_the_plans_of_the_storeys_it_reaches_and_a_density_edit_none() {
-    use crate::{Entry, MaterialPatch, ModelDiff, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff};
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();
@@ -270,7 +270,7 @@ async fn the_plan_is_cut_at_the_height_its_storey_authors_and_at_the_convention_
     assert!(close(plans["st-ground"].cut_height, 0.5) && close(plans["st-ground"].cut_elevation, 0.5), "the ground storey authors 0.5");
     assert!(close(plans["st-first"].cut_height, 1.2) && close(plans["st-first"].cut_elevation, 3.0 + 1.2), "the first storey authors none: the convention");
     assert_eq!(compute_plan_linework(&cut_at(None)), compute_plan_linework(&house()), "no authored height is the default height");
-    assert!(close(storey_cut_height(&house(), "missing"), crate::DEFAULT_CUT_HEIGHT));
+    assert!(close(storey_cut_height(&house(), "missing"), crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -288,7 +288,7 @@ async fn lowering_the_cut_below_a_sill_and_raising_it_above_a_door_open_and_clos
 
 #[test]
 fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
-    use crate::{Assigned, Entry, ModelDiff, StoreyPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Assigned, Entry, ModelDiff, patches::StoreyPatch};
     let snapshot = house();
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
@@ -391,7 +391,7 @@ async fn the_ramp_primitives_have_unique_ids_and_name_their_ramp() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_ramp_edit_redraws_the_plan_of_its_storey_only() {
-    use crate::{Entry, ModelDiff, RampPatch};
+    use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::RampPatch};
     let snapshot = ramps();
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).plan_linework.clone();

@@ -1,0 +1,270 @@
+[
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect"
+  ],
+  "moves": [
+   {
+    "from": "crate::intersect",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::tessellation",
+    "to": "semio_framework_3d_brep_tessellation",
+    "names": "*"
+   },
+   {
+    "from": "crate::validation",
+    "to": "semio_framework_3d_brep_validation",
+    "names": "*"
+   },
+   {
+    "from": "crate::analysis",
+    "to": "semio_framework_3d_brep_analysis",
+    "names": "*"
+   },
+   {
+    "from": "crate::bounding_volume",
+    "to": "semio_framework_3d_brep_queries::bounding_volume",
+    "names": "*"
+   },
+   {
+    "from": "crate::classification",
+    "to": "semio_framework_3d_brep_queries::classification",
+    "names": "*"
+   },
+   {
+    "from": "crate::mass_properties",
+    "to": "semio_framework_3d_brep_queries::mass_properties",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation"
+  ],
+  "moves": [
+   {
+    "from": "crate::tessellation",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::intersect",
+    "to": "semio_framework_3d_brep_intersect",
+    "names": "*"
+   },
+   {
+    "from": "crate::validation",
+    "to": "semio_framework_3d_brep_validation",
+    "names": "*"
+   },
+   {
+    "from": "crate::analysis",
+    "to": "semio_framework_3d_brep_analysis",
+    "names": "*"
+   },
+   {
+    "from": "crate::bounding_volume",
+    "to": "semio_framework_3d_brep_queries::bounding_volume",
+    "names": "*"
+   },
+   {
+    "from": "crate::classification",
+    "to": "semio_framework_3d_brep_queries::classification",
+    "names": "*"
+   },
+   {
+    "from": "crate::mass_properties",
+    "to": "semio_framework_3d_brep_queries::mass_properties",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation"
+  ],
+  "moves": [
+   {
+    "from": "crate::validation",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::intersect",
+    "to": "semio_framework_3d_brep_intersect",
+    "names": "*"
+   },
+   {
+    "from": "crate::tessellation",
+    "to": "semio_framework_3d_brep_tessellation",
+    "names": "*"
+   },
+   {
+    "from": "crate::analysis",
+    "to": "semio_framework_3d_brep_analysis",
+    "names": "*"
+   },
+   {
+    "from": "crate::bounding_volume",
+    "to": "semio_framework_3d_brep_queries::bounding_volume",
+    "names": "*"
+   },
+   {
+    "from": "crate::classification",
+    "to": "semio_framework_3d_brep_queries::classification",
+    "names": "*"
+   },
+   {
+    "from": "crate::mass_properties",
+    "to": "semio_framework_3d_brep_queries::mass_properties",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🔎️analysis"
+  ],
+  "moves": [
+   {
+    "from": "crate::analysis",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::intersect",
+    "to": "semio_framework_3d_brep_intersect",
+    "names": "*"
+   },
+   {
+    "from": "crate::tessellation",
+    "to": "semio_framework_3d_brep_tessellation",
+    "names": "*"
+   },
+   {
+    "from": "crate::validation",
+    "to": "semio_framework_3d_brep_validation",
+    "names": "*"
+   },
+   {
+    "from": "crate::bounding_volume",
+    "to": "semio_framework_3d_brep_queries::bounding_volume",
+    "names": "*"
+   },
+   {
+    "from": "crate::classification",
+    "to": "semio_framework_3d_brep_queries::classification",
+    "names": "*"
+   },
+   {
+    "from": "crate::mass_properties",
+    "to": "semio_framework_3d_brep_queries::mass_properties",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🌳bounding-volume",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🏷️classification",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "crate::intersect",
+    "to": "semio_framework_3d_brep_intersect",
+    "names": "*"
+   },
+   {
+    "from": "crate::tessellation",
+    "to": "semio_framework_3d_brep_tessellation",
+    "names": "*"
+   },
+   {
+    "from": "crate::validation",
+    "to": "semio_framework_3d_brep_validation",
+    "names": "*"
+   },
+   {
+    "from": "crate::analysis",
+    "to": "semio_framework_3d_brep_analysis",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️mesh-io/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🪅️shape-value/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔎️analysis-session/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔎️analysis-session/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/⏱️jobs/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔁️transform/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️differential/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔺️euler/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔺️euler/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🧰️oracle-support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔀️mesh-convert/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧭️admission/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/⏱️tessellation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/✅validation-report/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "semio_framework_3d_brep_queries::intersect",
+    "to": "semio_framework_3d_brep_intersect",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_queries::tessellation",
+    "to": "semio_framework_3d_brep_tessellation",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_queries::validation",
+    "to": "semio_framework_3d_brep_validation",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d_brep_queries::analysis",
+    "to": "semio_framework_3d_brep_analysis",
+    "names": "*"
+   }
+  ]
+ }
+]

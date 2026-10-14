@@ -23,9 +23,6 @@ path = "../../🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs"
 name = "compliance_gate"
 path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
 
-[features]
-cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en1993/cross-fem"]
-
 [dependencies]
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
@@ -52,6 +49,8 @@ semio-s-artifact-norm-vdi3805 = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }

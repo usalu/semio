@@ -1,7 +1,7 @@
 use super::*;
 use crate::primitives::{make_box, make_cylinder, make_sphere};
 use crate::transform::transform_solid;
-use semio_framework_3d_brep_representation::vector::matrix::Affine3;
+use semio_framework_3d_brep_vector::matrix::Affine3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn translate_solid(body: &mut Body, solid: SolidId, delta: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {

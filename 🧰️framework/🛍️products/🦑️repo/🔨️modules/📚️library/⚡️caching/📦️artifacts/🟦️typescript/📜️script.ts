@@ -29,7 +29,7 @@ export async function runArtifactTypeScriptPackageMain(packageRoot: string, pack
   const source = resolve(packageRoot, "../../🟦️.ts"), mode = compilerCommand ? readBuildMode(process.env.SEMIO_BUILD_MODE) : "prototype", activeOutput = resolve(packageRoot, "dist");
   let output = join(packageRoot, "📤️dist", mode), signal = original.control.signal, environment: Readonly<Record<string, string | undefined>> = process.env;
   const compile = async (run: (control: CompilerAdmissionControl) => Promise<void>, requestedParallelism?: 1): Promise<void> => {
-    const control = scriptCompilerAdmissionControlV1(original, "artifact:typescript", 120_000), lease = await acquireCompilerCapacityLeaseV1({ directory: join(getWorkspaceRoot(), ".cache/framework/leases"), control, environment, requestedParallelism }), previous = environment;
+    const control = scriptCompilerAdmissionControlV1(original, "artifact:typescript", 120_000), lease = await acquireCompilerCapacityLeaseV1({ directory: join(getWorkspaceRoot(), ".cache/b/l/m/data"), control, environment, requestedParallelism }), previous = environment;
     environment = { ...environment, SEMIO_COMPILER_CAPACITY_HELD: "true", SEMIO_COMPILER_PARALLELISM: String(lease.parallelism), GOMAXPROCS: String(lease.parallelism) };
     try { await run(control); } finally { environment = previous; lease.release(); }
   };
@@ -101,6 +101,6 @@ if (import.meta.main) await receiveScriptProcessInvocation(process.env, async in
   const [command, entry, output, workspace] = process.argv.slice(2);
   if (command !== "emit-declarations" || process.argv.length !== 6) throw Error("Expected emit-declarations <entry> <output> <workspace>");
   const { emitTypeScriptDeclarations } = await import("./🧬️declarations/🟦️.ts");
-  const lease = await acquireCompilerCapacityLeaseV1({ directory: join(resolve(workspace), ".cache/framework/leases"), control: scriptCompilerAdmissionControlV1(invocation, "artifact:declarations", 120_000), environment: process.env, requestedParallelism: 1 });
+  const lease = await acquireCompilerCapacityLeaseV1({ directory: join(resolve(workspace), ".cache/b/l/m/data"), control: scriptCompilerAdmissionControlV1(invocation, "artifact:declarations", 120_000), environment: process.env, requestedParallelism: 1 });
   try { invocation.control.signal.throwIfAborted(); console.log(`[artifact-typescript] declarations=${emitTypeScriptDeclarations(resolve(entry), resolve(output), resolve(workspace))}`); } finally { lease.release(); }
 });

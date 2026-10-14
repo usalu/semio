@@ -2,7 +2,8 @@
 use super::*;
 use semio_framework_dsl_record::{RecordValue as R,FieldValue as F};
 use semio_framework_value::{DslValue as V,NativeDecodeControl};
-use semio_s_artifact_norm_contract::sqlite_native::{self as n,Column::*};
+use semio_s_artifact_norm_contract::sqlite_native as n;
+use semio_s_artifact_norm_contract::sqlite_native::Column::*;
 type Object<'a>=&'a[(String,V)];
 fn attributes(configuration:&R)->Result<Object<'_>,ValueError>{match n::field(configuration,1)?{F::Value(V::Object(fields))=>Ok(fields),_=>Err(invalid("VDI native attributes require their authored value object"))}}
 fn vf<'a>(fields:Object<'a>,key:&str)->Result<&'a V,ValueError>{crate::sheet_attribute_field(fields,key)}

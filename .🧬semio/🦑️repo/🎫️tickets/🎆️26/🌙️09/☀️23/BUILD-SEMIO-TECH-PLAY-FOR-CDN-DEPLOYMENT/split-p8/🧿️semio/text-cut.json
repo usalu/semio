@@ -1,0 +1,48 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text",
+ "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust/Cargo.toml",
+ "layers": "text-layers.json",
+ "crate": "semio_s_artifact_stdio_semio_text",
+ "aggregator": "text",
+ "crates": {
+  "descriptor": {
+   "package": "semio-s-artifact-stdio-semio-text-descriptor",
+   "dir": "🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+   "doc": "//! 📇️ The semio text schema descriptor: every schema facet leaf of the subset, for the schema registry."
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-semio-text-inferences",
+   "dir": "🧬️schema/💡️inferences/📦️packages/🦀️rust",
+   "doc": "//! 💡️ The semio text inferences derived from a snapshot, with their text and binary codecs."
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-semio-text-mutations",
+   "dir": "🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio text mutation vocabulary: every mutation with its diff and inverse, their text and binary codecs, and the member store owner."
+  },
+  "model": {
+   "package": "semio-s-artifact-stdio-semio-text-model",
+   "dir": "🧬️schema/📦️packages/🦀️rust",
+   "doc": "//! 🧬️ The semio text model: schema root, snapshot and diff with their text, binary and SQLite codecs, and the snapshot retirement implementations."
+  }
+ },
+ "move": [
+  {
+   "match": "^semio_framework_value::artifact_retire_\\w+!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_snapshot_retirement!\\([^;]*\\);\\n",
+   "to": "model"
+  },
+  {
+   "match": "^semio_s_artifact_stdio_semio_base::semio_member_owner!\\([^;]*\\);\\n",
+   "to": "mutations"
+  }
+ ],
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework"
+ ]
+}

@@ -75,6 +75,15 @@ features = [ "derive" ]
 version = "1.0.149"
 features = [ "raw_value" ]
 
+[workspace.dependencies.semio-s-plugin-norm-app-surface]
+path = "../../📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-compliance]
+path = "../../⚖️compliance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-results-config]
+path = "../../🪟️results/🎚️config/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

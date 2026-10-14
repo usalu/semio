@@ -1,4 +1,4 @@
-use super::*;
+use crate::*;
 
 /// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
 /// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the

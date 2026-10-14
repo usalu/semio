@@ -3,7 +3,8 @@ import { lstat, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/pro
 import { join, sep } from "node:path";
 import { nxGraphSourceMembershipV2 } from "./📥️membership/🟦️.ts";
 export { nxGraphSourceMembershipV2 };
-import { inferenceHeaderLine, observationsHold } from "../../../🔌️nx-plugin/👁️observation/🟨️.mjs";
+import * as observation from "../../../🏗️build/👁️observation/🟨️.mjs";
+const {inferenceHeaderLine,observationsHold}=observation as {inferenceHeaderLine(path:string):string|null;observationsHold(observations:readonly unknown[],limit:number,stableDirectories:Set<string>,symlinks:Set<string>,signal?:AbortSignal):Promise<boolean>};
 
 /** 🔏️ The persisted seal format; see `./🧬️schema/🔣️.json`. */
 export const NX_GRAPH_SEAL_FORMAT = 2;
@@ -57,7 +58,7 @@ async function graphInputTree(root:string,signal?:AbortSignal):Promise<{director
  const source=await nxGraphSourceMembershipV2(root,signal),paths=new Set([""]),directories:DirectoryRow[]=[],inputs:[string,Stamp][]=[];
  for(const file of source.files.filter(file=>INPUT_FILE.test(file.split("/").at(-1)!))){const parts=file.split("/");for(let i=1;i<parts.length;i++)paths.add(parts.slice(0,i).join("/"));}
  await boundedRows([...paths].sort(),WALK_CONCURRENCY,async path=>{const value=await lstat(nativePath(root,path));if(!value.isDirectory()||value.isSymbolicLink())throw Error("Graph source ancestry requires original real directory custody");directories.push([path,stampOf(value),[],[],[]]);},signal);
- await boundedRows(source.files.filter(file=>INPUT_FILE.test(file.split("/").at(-1)!)),WALK_CONCURRENCY,async path=>inputs.push([path,stampOf(await lstat(nativePath(root,path)))]),signal);
+ await boundedRows(source.files.filter(file=>INPUT_FILE.test(file.split("/").at(-1)!)),WALK_CONCURRENCY,async path=>{inputs.push([path,stampOf(await lstat(nativePath(root,path)))]);},signal);
  return {directories:directories.sort(([a],[b])=>a<b?-1:a>b?1:0),inputs:inputs.sort(([a],[b])=>a<b?-1:a>b?1:0),membership:source.digest};
 }
 

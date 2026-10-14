@@ -1,9 +1,10 @@
 //! 🌐️ Edit-mode window option — the grid group: visibility and snap toggles plus the spacing
 //! slider (the same spacing `addTargetVolume` snaps new voxel volumes onto).
 
+use crate::editor::puzzle3d::snapshot::PUZZLE3D_PLAY_CONTROLLER_ID;
 use crate::editor::puzzle3d::config::Puzzle3dRuntime;
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID};
+use crate::editor::puzzle3d::snapshot::puzzle3d_action;
 use semio_framework_plugin::WindowMeasure;
 
 pub fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {

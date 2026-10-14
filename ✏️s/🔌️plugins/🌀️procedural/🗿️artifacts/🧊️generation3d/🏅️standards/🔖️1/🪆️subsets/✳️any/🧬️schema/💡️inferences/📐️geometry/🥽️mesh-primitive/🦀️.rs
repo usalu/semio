@@ -1,9 +1,20 @@
 //! 🥽️ `mesh.primitive` computes: box, plane, cylinder, cone, ico sphere, torus, uv sphere all as stepped kernel mesh jobs.
 //!
 //! Torus and uv sphere are generated as indexed polygon sources by the mesh engine and reconstructed by the kernel's polygon source job.
+#![allow(clippy::result_large_err)]
+extern crate self as semio_s_artifact_procedural_3d_mesh_primitive;
 
-use super::mesh_support::{capacity_fault, count, import_fault, modeling, scalar, KernelResult};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_mesh_support::capacity_fault;
+use semio_s_artifact_procedural_3d_mesh_support::count;
+use semio_s_artifact_procedural_3d_mesh_support::import_fault;
+use semio_s_artifact_procedural_3d_mesh_support::modeling;
+use semio_s_artifact_procedural_3d_mesh_support::scalar;
+use semio_s_artifact_procedural_3d_mesh_support::KernelResult;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_mesh_engine::{PolygonMeshSource};
 
@@ -56,6 +67,8 @@ fn uv_sphere(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     })
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("mesh-primitive", include_str!("../../../🗂️catalogue/🔣️mesh-primitive.json"));
 /// 🗃️ The `mesh.primitive` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "mesh.primitive.box", start: box_ },

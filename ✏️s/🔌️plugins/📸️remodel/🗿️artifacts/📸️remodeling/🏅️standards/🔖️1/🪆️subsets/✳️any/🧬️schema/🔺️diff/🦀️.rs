@@ -3,10 +3,32 @@
 //! results. Every row names exactly the entity and fields it changes; the central applier is the only caller of
 //! [`MutationDiff::apply`].
 
-use crate::{
-    ByteBuffer, CameraCalibration, CameraTrajectory, DenseCloud, DenseParams, FeatureParams, FrameRef, GcpObservation, GeoParams, GeoProducts, GroundControlPoint, IngestParams, MatchParams, MediaStream, MeshParams, MotionParams, MotionTrackSummary,
-    QcReportSnapshot, RemodelingAssetChild, RemodelingDurableArtifact, RemodelingMesh, RemodelingSnapshot, RigExtrinsic, SfmParams, SparseCloud, VideoSource,
-};
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ByteBuffer;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraCalibration;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CameraTrajectory;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseCloud;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::DenseParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FeatureParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::FrameRef;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GcpObservation;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GeoProducts;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::IngestParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MatchParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MeshParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionTrackSummary;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingAssetChild;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RigExtrinsic;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SfmParams;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SparseCloud;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoSource;
 use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -578,7 +600,7 @@ pub struct RemodelingParamsDiff {
 macro_rules! facet_algebra {
     ($($slot:ident),+) => {
         impl RemodelingParamsDiff {
-            fn apply_rows(&self, params: &mut crate::ReconstructionParams) {
+            fn apply_rows(&self, params: &mut semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams) {
                 $(if let Some(facet) = &self.$slot {
                     params.$slot = facet.clone();
                 })+
@@ -591,7 +613,7 @@ macro_rules! facet_algebra {
             }
 
             /// 🔁️ The delta that restores `base` for exactly the facets this delta names.
-            pub fn restoring(&self, base: &crate::ReconstructionParams) -> Self {
+            pub fn restoring(&self, base: &semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams) -> Self {
                 Self { $($slot: self.$slot.as_ref().map(|_| base.$slot.clone()),)+ }
             }
 
@@ -622,7 +644,7 @@ pub struct RemodelingResultsDiff {
 }
 
 impl RemodelingResultsDiff {
-    fn apply_rows(&self, results: &mut crate::ReconstructionResults) {
+    fn apply_rows(&self, results: &mut semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionResults) {
         if let Some(sparse) = &self.sparse {
             results.sparse = sparse.value.clone();
         }
@@ -658,7 +680,7 @@ impl RemodelingResultsDiff {
     }
 
     /// 🔁️ The delta that restores `base` for exactly the slots this delta names.
-    pub fn restoring(&self, base: &crate::ReconstructionResults) -> Self {
+    pub fn restoring(&self, base: &semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionResults) -> Self {
         Self {
             sparse: self.sparse.as_ref().map(|_| RemodelingAssigned::new(base.sparse.clone())),
             dense: self.dense.as_ref().map(|_| RemodelingAssigned::new(base.dense.clone())),
@@ -825,9 +847,13 @@ impl DiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::schema::RemodelingArtifact;
 //#endregion 🔁️Re-exports
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🔖️Leaves
+/// 🧾️ The diff facet's five format leaves.
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+//#endregion 🔖️Leaves

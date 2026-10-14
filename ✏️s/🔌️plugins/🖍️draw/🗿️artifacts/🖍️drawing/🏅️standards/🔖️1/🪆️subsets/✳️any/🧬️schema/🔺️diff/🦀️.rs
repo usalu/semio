@@ -3,8 +3,16 @@
 //! asset moved to `🚪️io/📝️text/🔺️diff/🦀️.rs`, but `apply`/`absorb` are not a byte-boundary
 //! codec — they transform already-decoded `DrawingDiff`/`DrawingSnapshot` values — so they stayed here).
 
-use crate::schema::{layer_base, layer_base_mut, layer_id, remove_layer_from_tree, update_layer_in_tree};
-use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, DrawingSnapshot, FillStyle, StrokeStyle};
+#![allow(clippy::result_large_err)]
+#![allow(unexpected_cfgs)]
+extern crate semio_framework_os_kernel as dsl;
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_schema as framework_schema;
+
+use semio_s_artifact_draw_drawing_model::{layer_base, layer_base_mut, layer_id, remove_layer_from_tree, update_layer_in_tree};
+use semio_s_artifact_draw_drawing_model::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode, FillStyle, StrokeStyle};
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use std::collections::{BTreeMap, BTreeSet};
@@ -159,20 +167,20 @@ pub struct DrawingLayerPatch {
     pub name: Option<String>,
     pub opacity: Option<f64>,
     pub blend_mode: Option<String>,
-    pub fill_rule: Option<crate::FillRule>,
+    pub fill_rule: Option<semio_s_artifact_draw_drawing_model::fill_rule::FillRule>,
     #[value(skip_serializing_if="Option::is_none")]
     #[cfg_attr(test,serde(skip_serializing_if="Option::is_none"))]
     pub isolation:Option<bool>,
-    pub transform: Option<crate::DrawingTransform>,
+    pub transform: Option<semio_s_artifact_draw_drawing_model::DrawingTransform>,
     pub fill: Option<DrawingFillPatch>,
     pub stroke: Option<DrawingStrokePatch>,
     pub boolean_operation: Option<String>,
-    pub trace_params: Option<crate::DrawingTraceParams>,
+    pub trace_params: Option<semio_s_artifact_draw_drawing_model::DrawingTraceParams>,
     pub layer: Option<DrawingLayerNode>,
-    pub path_segments: Option<PagedList<crate::PathSegment, {usize::MAX}>>,
+    pub path_segments: Option<PagedList<semio_s_artifact_draw_drawing_model::PathSegment, {usize::MAX}>>,
     pub text_content: Option<String>,
     pub text_size: Option<f64>,
-    pub font_family: Option<crate::DrawingFontFamily>,
+    pub font_family: Option<semio_s_artifact_draw_drawing_model::font_family::DrawingFontFamily>,
     pub image_key: Option<String>,
     pub image_width: Option<f64>,
     pub image_height: Option<f64>,
@@ -384,14 +392,14 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         return Ok(());
     }
     if let Some(segments) = &patch.path_segments {
-        if !segments.iter().all(crate::schema::valid_path_segment) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid path geometry")); }
+        if !segments.iter().all(semio_s_artifact_draw_drawing_model::valid_path_segment) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid path geometry")); }
         let DrawingLayerNode::Path(path) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Geometry target is not a path")); };
         path.segments = segments.clone();
     }
     if !patch.shape_coordinates.is_empty() {
         let DrawingLayerNode::Shape(shape)=layer else{return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target","Shape target has another kind"));};
         for coordinate in &patch.shape_coordinates {
-            crate::schema::shape_geometry::set_shape_coordinate(shape,coordinate.field,coordinate.index,coordinate.value).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-value",message))?;
+            semio_s_artifact_draw_drawing_model::shape_geometry::set_shape_coordinate(shape,coordinate.field,coordinate.index,coordinate.value).map_err(|message|protocol::MutationApplyError::new("mutation.apply.invalid-value",message))?;
         }
     }
     if patch.image_key.is_some() || patch.image_width.is_some() || patch.image_height.is_some() {
@@ -429,7 +437,7 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
     }
     if let Some(fill_rule) = patch.fill_rule {base.attributes.fill_rule=fill_rule;}
     if let Some(blend_mode) = &patch.blend_mode {
-        if !crate::DRAWING_BLEND_MODES.contains(&blend_mode.as_str()) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Unsupported blend mode.").at(["blendMode"])); }
+        if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.contains(&blend_mode.as_str()) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Unsupported blend mode.").at(["blendMode"])); }
         base.blend_mode = blend_mode.clone().into();
     }
     if let Some(transform) = &patch.transform {
@@ -525,7 +533,7 @@ impl DrawingLayerPatch {
             DrawingLayerNode::Path(path) if self.path_segments.is_some() => inverse.path_segments = Some(path.segments.clone()),
             DrawingLayerNode::Shape(shape)=>{
                 for coordinate in &self.shape_coordinates {
-                    if let Ok(value)=crate::schema::shape_geometry::shape_coordinate(shape,&coordinate.field,coordinate.index){inverse.shape_coordinates.push(DrawingShapeCoordinatePatch{field:coordinate.field,index:coordinate.index,value});}
+                    if let Ok(value)=semio_s_artifact_draw_drawing_model::shape_geometry::shape_coordinate(shape,&coordinate.field,coordinate.index){inverse.shape_coordinates.push(DrawingShapeCoordinatePatch{field:coordinate.field,index:coordinate.index,value});}
                 }
             }
             DrawingLayerNode::Image(image) => {
@@ -962,24 +970,17 @@ pub fn diff_set_layer_blend_mode(layer_id: &(impl std::fmt::Display + ?Sized), b
 }
 
 
-
-
-
 /// ✏️ Several paths' geometry patches in one sparse delta, in the given order.
-pub fn diff_set_path_geometries<S: IntoIterator<Item = crate::PathSegment>>(entries: impl IntoIterator<Item = (String, S)>) -> DrawingDiff {
+pub fn diff_set_path_geometries<S: IntoIterator<Item = semio_s_artifact_draw_drawing_model::PathSegment>>(entries: impl IntoIterator<Item = (String, S)>) -> DrawingDiff {
     let modified = entries.into_iter().map(|(id, segments)| DrawingLayerModification { id, patch: DrawingLayerPatch { path_segments: Some(segments.into_iter().collect()), ..Default::default() } }).collect();
     DrawingDiff { layers: Some(DrawingLayersDelta { modified, ..Default::default() }), ..Default::default() }
 }
-
-
-
 
 
 /// 🔀 Boolean operation patch.
 pub fn diff_set_boolean_operation(layer_id: &(impl std::fmt::Display + ?Sized), boolean_operation: &(impl std::fmt::Display + ?Sized)) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { boolean_operation: Some(boolean_operation.to_string()), ..Default::default() })
 }
-
 
 
 /// 🌱️ Layer insertion into `parent_id` (root when `None`) at the after index `index` (clamped to the end of the child list).
@@ -1020,7 +1021,7 @@ pub fn diff_assets(entries: DrawingAssetsDelta) -> DrawingDiff {
 //#endregion 🔖️Builders
 
 /// ✏️ Replaces only the path geometry facet.
-pub fn diff_set_path_geometry(layer_id: &(impl std::fmt::Display + ?Sized), segments: &(impl crate::schema::geometry::editing::PathGeometrySource + ?Sized)) -> DrawingDiff {
+pub fn diff_set_path_geometry(layer_id: &(impl std::fmt::Display + ?Sized), segments: &(impl semio_s_artifact_draw_drawing_geometry::editing::PathGeometrySource + ?Sized)) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { path_segments: Some(segments.path_segments().cloned().collect()), ..Default::default() })
 }
 
@@ -1031,12 +1032,12 @@ pub fn diff_set_layer_fill_rule(layer_id:&(impl std::fmt::Display + ?Sized),fill
 pub fn diff_set_group_isolation(layer_id:&(impl std::fmt::Display + ?Sized),isolation:bool)->DrawingDiff {layer_base_patch(layer_id,DrawingLayerPatch {isolation:Some(isolation),..Default::default()})}
 
 /// ↔️ Layer transform patch.
-pub fn diff_set_layer_transform(layer_id: &(impl std::fmt::Display + ?Sized), transform: &crate::DrawingTransform) -> DrawingDiff {
+pub fn diff_set_layer_transform(layer_id: &(impl std::fmt::Display + ?Sized), transform: &semio_s_artifact_draw_drawing_model::DrawingTransform) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { transform: Some(transform.clone()), ..Default::default() })
 }
 
 /// ↔️ Several layers' transform patches in one sparse delta, in the given order.
-pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, crate::DrawingTransform)>) -> DrawingDiff {
+pub fn diff_set_layer_transforms(entries: impl IntoIterator<Item = (String, semio_s_artifact_draw_drawing_model::DrawingTransform)>) -> DrawingDiff {
     let modified = entries.into_iter().map(|(id, transform)| DrawingLayerModification { id, patch: DrawingLayerPatch { transform: Some(transform), ..Default::default() } }).collect();
     DrawingDiff { layers: Some(DrawingLayersDelta { modified, ..Default::default() }), ..Default::default() }
 }
@@ -1052,11 +1053,11 @@ pub fn diff_set_stroke(layer_id: &(impl std::fmt::Display + ?Sized), stroke: &Op
 }
 
 /// 🖼️ Trace params patch.
-pub fn diff_set_trace_params(layer_id: &(impl std::fmt::Display + ?Sized), params: &crate::DrawingTraceParams) -> DrawingDiff {
+pub fn diff_set_trace_params(layer_id: &(impl std::fmt::Display + ?Sized), params: &semio_s_artifact_draw_drawing_model::DrawingTraceParams) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { trace_params: Some(params.clone()), ..Default::default() })
 }
 
-pub(crate) fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
+pub fn layer_base_patch(layer_id: &(impl std::fmt::Display + ?Sized), patch: DrawingLayerPatch) -> DrawingDiff {
     DrawingDiff { layers: Some(DrawingLayersDelta { modified: vec![DrawingLayerModification { id: layer_id.to_string(), patch }], ..Default::default() }), ..Default::default() }
 }
 

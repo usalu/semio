@@ -8,9 +8,15 @@ mod diff_codec {
 use super::*;
 use crate::io::text::snapshot::{encode_option, decode_option};
 use crate::schema::diff::*;
-use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
-use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_added;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_named_triple;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_added;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_named_triple;
 use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
 use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
@@ -97,7 +103,8 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
-use semio_s_artifact_stdio_semio_base::io::text::codec::plain::{enc_transform, dec_transform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_transform;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {

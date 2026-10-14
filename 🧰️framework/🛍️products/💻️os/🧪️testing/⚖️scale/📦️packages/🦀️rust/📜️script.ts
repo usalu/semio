@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🧪️ `@semio-tech/framework-os-scale-fixture` test task router — F1-scale-fixture
@@ -28,7 +29,7 @@ class CheckWasmScript extends BundleScript {
 class BuildWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Scale component build has a fixed output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], this.repoRoot, { control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), 
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], this.repoRoot, {network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0), 
       command: "rustc",
       output: "dist/component",
       validate(files) {

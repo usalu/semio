@@ -2,7 +2,7 @@
 //! kernel (`BulgeSeg`) is the framework's, never re-derived here.
 
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
-use crate::{Axis, Point2, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, Vertex};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::Point;
 

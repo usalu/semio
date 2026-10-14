@@ -1,11 +1,15 @@
 //! 🧵️ Mounted Fem2d revision job: fixed session arena, retained worker step and live visual lease.
 
-use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
+use semio_s_fem_analyses::{FemJobGraph, FemJobStage, FemStagePlan};
+use semio_s_fem_analyses_assembly::{AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction};
+use semio_s_fem_analyses_model::AnalysisModel;
 use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualLease, Fem2dVisualFreshness, Fem2dVisualJob, FemVisualState, RegionVisualQuality};
-use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
-use crate::model::Element;
-use crate::sparse::{PcgJob, PcgJobConstruction};
-use crate::{Fem2dSnapshot, FemElement, FemLoad};
+use semio_s_fem_mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
+use semio_s_fem_model::Element;
+use semio_s_fem_sparse_pcg::{PcgJob, PcgJobConstruction};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_framework::kernel::{Effect, JobPlacement};
 #[cfg(test)]
 use semio_framework_job::CommitValidation;
@@ -287,7 +291,7 @@ struct MountedModelBuild {
     pending_element_id: Option<String>,
     pending_element_start: Option<String>,
     pending_element_end: Option<String>,
-    pending_support: Option<crate::model::Support>,
+    pending_support: Option<semio_s_fem_model::Support>,
     pending_region_element_id: Option<String>,
     pending_region_element_nodes: [Option<String>; 3],
     pending_region_element_node_cursor: usize,
@@ -342,21 +346,21 @@ impl MountedModelBuild {
         match self.stage {
             ModelBuildStage::ReserveNodes => {
                 self.model.nodes.try_reserve_exact(snapshot.nodes.len() + mesh_points).map_err(|_| b"fem2d.model-node-allocation".to_vec())?;
-                if self.model.nodes.capacity() * size_of::<crate::model::Node>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.nodes.capacity() * size_of::<semio_s_fem_model::Node>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-node-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveElements;
             }
             ModelBuildStage::ReserveElements => {
                 self.model.elements.try_reserve_exact(snapshot.elements.len() + mesh_triangles).map_err(|_| b"fem2d.model-element-allocation".to_vec())?;
-                if self.model.elements.capacity() * size_of::<crate::model::Elements>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.elements.capacity() * size_of::<semio_s_fem_static::Elements>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-element-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveSupports;
             }
             ModelBuildStage::ReserveSupports => {
                 self.model.supports.try_reserve_exact(snapshot.supports.len()).map_err(|_| b"fem2d.model-support-allocation".to_vec())?;
-                if self.model.supports.capacity() * size_of::<crate::model::Support>() > SESSION_OWNER_PAGE_BYTES {
+                if self.model.supports.capacity() * size_of::<semio_s_fem_model::Support>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-support-page-capacity".to_vec());
                 }
                 self.stage = ModelBuildStage::ReserveRegionNodeIds;
@@ -380,7 +384,7 @@ impl MountedModelBuild {
                 let node = snapshot.nodes.get(self.node_cursor).ok_or_else(|| b"fem2d.model-node-owner-missing".to_vec())?;
                 bounded_derived_string(self.pending_node_id.as_ref().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?)?;
                 let id = self.pending_node_id.take().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?;
-                self.model.nodes.push(crate::model::Node { id, pos: [node.x, node.y, 0.0] });
+                self.model.nodes.push(semio_s_fem_model::Node { id, pos: [node.x, node.y, 0.0] });
                 self.node_cursor += 1;
                 self.stage = ModelBuildStage::Nodes;
             }
@@ -480,7 +484,7 @@ impl MountedModelBuild {
                 let material = &snapshot.materials[self.resolved_material];
                 let section = &snapshot.sections[self.resolved_section];
                 let resolved = match element {
-                    FemElement::Bar { .. } => crate::elements2d::Bar2 {
+                    FemElement::Bar { .. } => semio_s_fem_elements2d::Bar2 {
                         id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
                         start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
                         end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
@@ -489,7 +493,7 @@ impl MountedModelBuild {
                         density: material.rho,
                     }
                     .into(),
-                    FemElement::Beam { .. } => crate::elements2d::BeamEb2 {
+                    FemElement::Beam { .. } => semio_s_fem_elements2d::BeamEb2 {
                         id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
                         start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
                         end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
@@ -506,7 +510,7 @@ impl MountedModelBuild {
             }
             ModelBuildStage::Supports => {
                 if let Some(support) = snapshot.supports.get(self.support_cursor) {
-                    self.pending_support = Some(crate::model::Support { node_id: support.node_id.clone(), fixed: Vec::new() });
+                    self.pending_support = Some(semio_s_fem_model::Support { node_id: support.node_id.clone(), fixed: Vec::new() });
                     self.stage = ModelBuildStage::SupportReserveDofs;
                 } else {
                     self.stage = ModelBuildStage::RegionNodeCoordinate;
@@ -517,7 +521,7 @@ impl MountedModelBuild {
                 let owner = self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?;
                 bounded_derived_string(&owner.node_id)?;
                 owner.fixed.try_reserve_exact(source.fixed.len()).map_err(|_| b"fem2d.model-support-dof-allocation".to_vec())?;
-                if owner.fixed.capacity() * size_of::<crate::model::Dof>() > SESSION_OWNER_PAGE_BYTES {
+                if owner.fixed.capacity() * size_of::<semio_s_fem_model::Dof>() > SESSION_OWNER_PAGE_BYTES {
                     return Err(b"fem2d.model-support-dof-page-capacity".to_vec());
                 }
                 self.lookup_cursor = 0;
@@ -598,7 +602,7 @@ impl MountedModelBuild {
             ModelBuildStage::RegionNodeModelOwner => {
                 let point = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied().ok_or_else(|| b"fem2d.model-region-point-missing".to_vec())?;
                 let id = self.pending_region_id.as_ref().ok_or_else(|| b"fem2d.model-region-node-owner-missing".to_vec())?.clone();
-                self.model.nodes.push(crate::model::Node { id, pos: [point[0], point[1], 0.0] });
+                self.model.nodes.push(semio_s_fem_model::Node { id, pos: [point[0], point[1], 0.0] });
                 self.pending_region_insert = false;
                 self.stage = ModelBuildStage::RegionNodeCommit;
             }
@@ -678,13 +682,13 @@ impl MountedModelBuild {
                 let material = &snapshot.materials[self.resolved_material];
                 let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
                 self.model.elements.push(
-                    crate::elements2d::Tri3Cst {
+                    semio_s_fem_elements2d::Tri3Cst {
                         id: self.pending_region_element_id.take().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?,
                         nodes,
                         e: material.e,
                         nu: material.nu,
                         thickness: region.thickness,
-                        kind: crate::elements2d::PlaneKind::Stress,
+                        kind: semio_s_fem_elements2d::PlaneKind::Stress,
                         density: material.rho,
                     }
                     .into(),
@@ -736,7 +740,7 @@ impl MountedModelBuild {
             if support.fixed.pop().is_some() {
                 return (false, 1, 0);
             }
-            let bytes = support.fixed.capacity() * size_of::<crate::model::Dof>();
+            let bytes = support.fixed.capacity() * size_of::<semio_s_fem_model::Dof>();
             if bytes != 0 {
                 if bytes > maximum_bytes {
                     return (false, 0, 0);
@@ -766,7 +770,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 1 => {
-                    let bytes = self.model.nodes.capacity() * size_of::<crate::model::Node>();
+                    let bytes = self.model.nodes.capacity() * size_of::<semio_s_fem_model::Node>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -793,7 +797,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 3 => {
-                    let bytes = self.model.elements.capacity() * size_of::<crate::model::Elements>();
+                    let bytes = self.model.elements.capacity() * size_of::<semio_s_fem_static::Elements>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -817,7 +821,7 @@ impl MountedModelBuild {
                     if support.fixed.pop().is_some() {
                         return (false, 1, 0);
                     }
-                    let bytes = support.fixed.capacity() * size_of::<crate::model::Dof>();
+                    let bytes = support.fixed.capacity() * size_of::<semio_s_fem_model::Dof>();
                     if bytes != 0 {
                         if bytes > maximum_bytes {
                             return (false, 0, 0);
@@ -829,7 +833,7 @@ impl MountedModelBuild {
                     return (false, 1, 0);
                 }
                 5 => {
-                    let bytes = self.model.supports.capacity() * size_of::<crate::model::Support>();
+                    let bytes = self.model.supports.capacity() * size_of::<semio_s_fem_model::Support>();
                     if bytes > maximum_bytes {
                         return (false, 0, 0);
                     }
@@ -1944,15 +1948,15 @@ impl SnapshotAdmissionCursor {
     fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
         if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
             let bytes = match self.lane {
-                0 => snapshot.nodes.capacity() * size_of::<crate::FemNode>(),
+                0 => snapshot.nodes.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode>(),
                 1 => snapshot.elements.capacity() * size_of::<FemElement>(),
-                2 => snapshot.regions.capacity() * size_of::<crate::FemRegion>(),
+                2 => snapshot.regions.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion>(),
                 3 => 0,
-                5 => snapshot.materials.capacity() * size_of::<crate::FemMaterial>(),
-                6 => snapshot.sections.capacity() * size_of::<crate::FemSection>(),
-                7 => snapshot.supports.capacity() * size_of::<crate::FemSupport>(),
-                8 => snapshot.load_cases.capacity() * size_of::<crate::FemLoadCase>(),
-                10 => snapshot.combinations.capacity() * size_of::<crate::FemCombination>(),
+                5 => snapshot.materials.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemMaterial>(),
+                6 => snapshot.sections.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection>(),
+                7 => snapshot.supports.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport>(),
+                8 => snapshot.load_cases.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase>(),
+                10 => snapshot.combinations.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombination>(),
                 _ => 0,
             };
             self.owner_opened = true;
@@ -2048,7 +2052,7 @@ impl SnapshotAdmissionCursor {
                     return Err(b"fem2d.session-support-capacity");
                 }
                 match snapshot.supports.get(self.outer) {
-                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * size_of::<crate::FemDof>()),
+                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof>()),
                     None => None,
                 }
             }
@@ -2095,7 +2099,7 @@ impl SnapshotAdmissionCursor {
                 };
                 if !self.owner_opened {
                     self.owner_opened = true;
-                    self.charge(1, combination.terms.capacity() * size_of::<crate::FemCombinationTerm>())?;
+                    self.charge(1, combination.terms.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemCombinationTerm>())?;
                     return Ok(false);
                 }
                 if let Some(term) = combination.terms.get(self.inner) {

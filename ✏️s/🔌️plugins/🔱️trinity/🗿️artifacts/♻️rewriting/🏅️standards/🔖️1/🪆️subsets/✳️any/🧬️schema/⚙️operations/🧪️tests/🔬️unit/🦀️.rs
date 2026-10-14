@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_bin
 use crate::LayoutPoint;
 use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
-use semio_framework_graph::manifest::PropertyValue;
+use semio_framework_graph_manifest::PropertyValue;
 
 
 fn sample_rule_state() -> RewritingSnapshot {

@@ -1,6 +1,6 @@
 //! 🏞️ `create-ceiling` payload. Brings a new ceiling onto a storey; its boundary and holes are closed counter-clockwise loops, area, solid and the clear height of the rooms below are inferred.
 
-use crate::{Ceiling, ModelDiff, ModelMutation, ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]

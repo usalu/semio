@@ -252,7 +252,6 @@ fn sqlite_snapshot_block5d_actual_declared_erased_binary_text_queries_every_doma
     }
 }
 
-#[cfg(feature="component-app-assembly")]
 mod populated_public_owner {
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::*;use semio_framework_plugin::__semio_dispatch_PluginApp;use semio_framework_plugin::plugin_app_close_prelude::*;use store::sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits};
 semio_framework_dispatch_macros::dyn_enum_close! {

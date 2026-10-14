@@ -604,37 +604,6 @@ pub mod __rt {
 
 //#endregion 🔖️Runtime
 
-//#region 🔖️OpTextRt
-/// 🔤️ Handcrafted `OpText` helper — the text twin of [`variants_binary`].
-///
-/// An operation line is ONE terminal keyword-tagged record, so it parses through
-/// [`parse_exact`], which rejects every token outside the variant's own schema body: a trailing
-/// `unknown-field 1` is not a second statement, it is garbage the line must refuse. Plain
-/// [`parse`] stops at the end of the record it recognises and silently drops the rest, which is
-/// the document-mode contract, not the op-line one.
-pub mod variants_text {
-    use super::{print, DslVariants, JoinMode, Limits, ParseOptions, SourceMode, TextError};
-
-    pub fn parse_op<T: DslVariants>(line: &str) -> Result<T, TextError> {
-        let variants = T::variants();
-        for (keyword, spec_fn) in &variants {
-            if line == keyword.as_str() || line.starts_with(&format!("{keyword} ")) {
-                let record = super::parse_exact(line, &(spec_fn.ordinary)(), &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline })?;
-                return T::from_named_record(keyword, &record);
-            }
-        }
-        Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,format!("unknown operation line '{line}'"),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
-
-    pub fn print_op<T: DslVariants>(op: &T) -> String {
-        let (keyword, record) = op.to_named_record();
-        let variants = T::variants();
-        let spec_fn = variants.iter().find(|(key, _)| key == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
-        print(&record, &(spec_fn.ordinary)(), JoinMode::Inline)
-    }
-}
-//#endregion 🔖️OpTextRt
-
 #[path = "🏷️type/🦀️.rs"]
 mod value_type_binding;
 

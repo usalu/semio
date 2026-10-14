@@ -9,9 +9,9 @@ use super::reader::{text, Doc, Loop, Section};
 use super::spatial::authoring_of;
 use super::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW;
-use crate::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use semio_s_artifact_stdio_ifc::part21::Part21Value;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
 
 fn vertices(ring: &Loop, to_building: &impl Fn([f64; 2]) -> Point2) -> Vec<Vertex> {
     ring.iter().map(|(point, bulge)| Vertex { point: to_building(*point), bulge: *bulge }).collect()

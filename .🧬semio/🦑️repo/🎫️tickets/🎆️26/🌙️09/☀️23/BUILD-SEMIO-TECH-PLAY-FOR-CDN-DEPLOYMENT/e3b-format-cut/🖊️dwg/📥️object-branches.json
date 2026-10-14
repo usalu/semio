@@ -1,0 +1,71 @@
+{
+ "file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/🦀️.rs",
+ "function": "decode_r2004_object_records",
+ "chain": "^        if type_code == 82 \\|\\| object\\.class_name ==",
+ "params": [
+  [
+   "handle",
+   "u64",
+   "handle"
+  ],
+  [
+   "type_code",
+   "u16",
+   "type_code"
+  ],
+  [
+   "payload",
+   "&[u8]",
+   "payload"
+  ],
+  [
+   "payload_size",
+   "usize",
+   "payload_size"
+  ],
+  [
+   "data_end_bit",
+   "usize",
+   "data_end_bit"
+  ],
+  [
+   "main_end_bit",
+   "usize",
+   "main_end_bit"
+  ],
+  [
+   "data",
+   "&mut DwgBitReader<'_>",
+   "&mut data"
+  ],
+  [
+   "handle_reader",
+   "&mut DwgBitReader<'_>",
+   "&mut handle_reader"
+  ],
+  [
+   "strings",
+   "&mut Option<DwgBitReader<'_>>",
+   "&mut strings"
+  ],
+  [
+   "object",
+   "&mut semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObject",
+   "&mut object"
+  ],
+  [
+   "xrecord_terminal_fills",
+   "&mut Vec<(u8, u8)>",
+   "&mut xrecord_terminal_fills"
+  ]
+ ],
+ "names": {
+  "2": "decode_block_parameter_grip_object",
+  "3": "decode_block_alignment_and_action_object",
+  "4": "decode_block_constraint_parameter_object",
+  "32": "decode_table_control_object",
+  "33": "decode_xrecord_object",
+  "31": "decode_table_record_object"
+ },
+ "default_doc": "🧩️ Decodes one `{name}` object body from its main, string and handle streams."
+}

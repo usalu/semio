@@ -1,12 +1,33 @@
 //! 🏳️ `brep.surface` computes: planes, faces from points and wires, free-form patches and face offsets.
 //!
 //! This module also owns the planar fit every profile of the solid computes shares: a closed wire is filled with a face whose normal is the wire's own orientation normal, whatever plane the wire lies in, so extrusions, sweeps and lofts of the face see a consistently oriented boundary.
+#![allow(clippy::result_large_err)]
+extern crate self as semio_s_artifact_procedural_3d_brep_surface;
 
-use super::brep_curve::{coincide, cross, direction, dot, guarded, minus, norm, points, refusal};
-use super::phased_job::{Pipeline, Work};
-use super::super::prelude::*;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_brep_curve::coincide;
+use semio_s_artifact_procedural_3d_brep_curve::cross;
+use semio_s_artifact_procedural_3d_brep_curve::direction;
+use semio_s_artifact_procedural_3d_brep_curve::dot;
+use semio_s_artifact_procedural_3d_brep_curve::guarded;
+use semio_s_artifact_procedural_3d_brep_curve::minus;
+use semio_s_artifact_procedural_3d_brep_curve::norm;
+use semio_s_artifact_procedural_3d_brep_curve::points;
+use semio_s_artifact_procedural_3d_brep_curve::refusal;
+use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_phased_job::Work;
+use semio_s_artifact_procedural_3d_geometry_compute::finish;
+use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
+use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
+use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
+use semio_s_artifact_procedural_3d_geometry_value::outputs;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_framework_3d_brep_engine::{BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_curve::Curve3;
 use std::f64::consts::PI;
 
 //#region 🔖️Fit
@@ -235,6 +256,8 @@ cheap! {
     coons => coons_outputs,
 }
 
+/// 📚️ This facet's catalogue category: its slug and its schema-first definition.
+pub const CATEGORY: (&str, &str) = ("brep-surface", include_str!("../../../🗂️catalogue/🔣️brep-surface.json"));
 /// 🗃️ The `brep.surface` registrations.
 pub const COMPUTES: &[ComputeEntry] = &[
     ComputeEntry { id: "brep.surface.plane", start: plane },

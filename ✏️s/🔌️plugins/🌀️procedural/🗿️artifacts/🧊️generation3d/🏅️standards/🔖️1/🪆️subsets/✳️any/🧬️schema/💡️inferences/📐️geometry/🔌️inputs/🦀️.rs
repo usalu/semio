@@ -1,10 +1,23 @@
 //! 🔌️ Input resolution: for every catalogue input port of a widget, the connected output, else the stored literal, else the
 //! catalogue default — type-checked, range-checked and localized, before any compute runs.
+#![allow(clippy::result_large_err)]
 
-use super::value::{shape_kind, GeometryValue, Outputs, PlaneValue, SelectionKind, SelectionValue, WidgetEvaluation, WidgetFault};
-use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Localized, Port, PortType, SelectionComponent};
+use semio_s_artifact_procedural_3d_geometry_value::shape_kind;
+use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
+use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
+use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
+use semio_s_artifact_procedural_3d_model::catalogue::Kind;
+use semio_s_artifact_procedural_3d_model::catalogue::Localized;
+use semio_s_artifact_procedural_3d_model::catalogue::Port;
+use semio_s_artifact_procedural_3d_model::catalogue::PortType;
+use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;
 use semio_framework_artifact_flow_flow::neural::{Dictionary, Value as NeuralValue};
-use crate::standards::v1::subsets::any::schema::mutations::change_widget_input::{neural_number, neural_boolean};
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::neural_number;
+use semio_s_artifact_procedural_3d_mutations::change_widget_input::neural_boolean;
 use semio_framework_artifact_flow_flow::SynapseSpec;
 use semio_framework_3d_brep_engine::ShapeValue;
 use semio_framework_3d::mesh::HalfedgeMesh;
@@ -66,8 +79,10 @@ impl WidgetInputs {
     }
 
     fn require(&self, port: &str) -> Result<&GeometryValue, WidgetFault> {
-        let (en, de) = self.label(port);
-        self.values.get(port).ok_or_else(|| WidgetFault::new(INPUT_MISSING, format!("Input \u{201c}{en}\u{201d} has no value."), format!("Eingang \u{201c}{de}\u{201d} hat keinen Wert.")).at(port))
+        self.values.get(port).ok_or_else(|| {
+            let (en, de) = self.label(port);
+            WidgetFault::new(INPUT_MISSING, format!("Input \u{201c}{en}\u{201d} has no value."), format!("Eingang \u{201c}{de}\u{201d} hat keinen Wert.")).at(port)
+        })
     }
 
     fn mismatch(&self, port: &str, expected: (&str, &str)) -> WidgetFault {
@@ -200,7 +215,7 @@ fn id_of(value: &DslValue) -> Option<u64> {
     }
 }
 
-fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValue> {
+pub(super) fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValue> {
     Some(match port_type {
         PortType::Number | PortType::Length | PortType::Angle => GeometryValue::Number(value.as_f64()?),
         PortType::Integer => {
@@ -221,7 +236,7 @@ fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValu
     })
 }
 
-fn element_literal(port_type: PortType, value: &NeuralValue) -> Option<GeometryValue> {
+pub(super) fn element_literal(port_type: PortType, value: &NeuralValue) -> Option<GeometryValue> {
     let literal = value.as_dictionary()?;
     let schema = literal.schema()?;
     let scalar = literal.get("value");
@@ -502,3 +517,7 @@ pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&
     Ok(WidgetInputs::new_cold(widget, kind, resolved))
 }
 //#endregion 🔖️Resolve
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod original_construction_tests;
